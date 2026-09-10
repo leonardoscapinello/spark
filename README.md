@@ -2,7 +2,7 @@
 
 Plataforma interna que unifica **CRM**, **Atendimento omnichannel**, **Automação de Marketing**, **Publicação social**, **Catálogo de produtos** e **Construtor de páginas** num único produto — substituindo internamente Pipedrive, ManyChat, Buffer e ActiveCampaign.
 
-> **Status:** definição de arquitetura concluída. Implementação ainda não iniciada.
+> **Status:** Fase 0 em andamento — Blocos 1 a 7 de 7 construídos e verificados (monorepo, domínio, design system, banco com RLS, API, sincronização local-first, `apps/web` real). Falta só o que depende de infraestrutura que ainda não existe: VPS + staging no ar. Ver [`docs/arquitetura/fase-0.md`](docs/arquitetura/fase-0.md) e o critério de saída em [`docs/arquitetura/roadmap.md`](docs/arquitetura/roadmap.md).
 >
 > **Comece por [`docs/arquitetura/licoes-do-twenty.md`](docs/arquitetura/licoes-do-twenty.md)** — o diagnóstico dos dois sistemas anteriores. Metade dos ADRs existe por causa dele.
 > Depois, [`docs/adr/`](docs/adr/), antes de escrever a primeira linha de código.
