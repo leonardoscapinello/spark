@@ -1,6 +1,12 @@
 import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
-import { SupabaseJwtGuard, CurrentSupabaseUser, type SupabaseJwtClaims } from "../../../auth/index.js";
+import {
+  SupabaseJwtGuard,
+  CapabilityGuard,
+  RequireCapability,
+  CurrentSupabaseUser,
+  type SupabaseJwtClaims,
+} from "../../../auth/index.js";
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { CreateContactUseCase } from "../application/create-contact.usecase.js";
 import { CreateContactDto, CreateContactResponseDto } from "../dto/contact.dto.js";
@@ -14,7 +20,8 @@ export class ContactsController {
   ) {}
 
   @Post()
-  @UseGuards(SupabaseJwtGuard)
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("contacts:write")
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: CreateContactResponseDto })
   async create(

@@ -4,7 +4,8 @@ import { CreateContactUseCase } from "./application/create-contact.usecase.js";
 import { ContactsRepository } from "./infrastructure/contacts.repository.js";
 import { GetCurrentUserUseCase } from "../identity/application/get-current-user.usecase.js";
 import { UsersRepository } from "../identity/infrastructure/users.repository.js";
-import { SupabaseJwtGuard } from "../../auth/index.js";
+import { PermissionGroupsRepository } from "../identity/infrastructure/permission-groups.repository.js";
+import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
 
 @Module({
   controllers: [ContactsController],
@@ -13,7 +14,9 @@ import { SupabaseJwtGuard } from "../../auth/index.js";
     ContactsRepository,
     GetCurrentUserUseCase,
     UsersRepository,
+    PermissionGroupsRepository,
     SupabaseJwtGuard,
+    CapabilityGuard,
   ],
 })
 export class ContactsModule {}

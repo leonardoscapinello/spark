@@ -23,7 +23,12 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { spawn, type ChildProcess } from "node:child_process";
 import { SignJWT } from "jose";
 import postgres from "postgres";
-import { orgId as orgIdFactory, userId as userIdFactory, type OrgId } from "@spark/core";
+import {
+  orgId as orgIdFactory,
+  userId as userIdFactory,
+  permissionGroupId as permissionGroupIdFactory,
+  type OrgId,
+} from "@spark/core";
 import { setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client";
 import { createContactsCollection, contatoOtimista, type ContactsCollection } from "../src/contacts-collection.js";
 
@@ -76,6 +81,15 @@ beforeAll(async () => {
   await admin`INSERT INTO users (id, org_id, supabase_user_id, nome, email) VALUES
     (${localUserId}, ${org}, ${supabaseUserId}, 'Pessoa packages/data', 'data@empresa.com')`;
 
+  // POST /v1/contacts agora exige a capacidade contacts:write
+  // (docs/adr/0029) — este teste não passa pelo dev-login (que semeia os
+  // grupos padrão sozinho), então precisa da própria permissão direto.
+  const grupo = permissionGroupIdFactory.novo();
+  await admin`INSERT INTO permission_groups (id, org_id, nome, capacidades) VALUES
+    (${grupo}, ${org}, 'Gerente', ${JSON.stringify(["contacts:read", "contacts:write"])}::jsonb)`;
+  await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
+    (${org}, ${localUserId}, ${grupo})`;
+
   processo = spawn("node", ["--loader", "ts-node/esm", "src/main.ts"], {
     cwd: new URL("../../../apps/api", import.meta.url).pathname,
     env: {
@@ -108,6 +122,8 @@ afterEach(async () => {
 afterAll(async () => {
   processo?.kill();
   await admin`DELETE FROM contacts WHERE org_id = ${org}`;
+  await admin`DELETE FROM user_permission_groups WHERE org_id = ${org}`;
+  await admin`DELETE FROM permission_groups WHERE org_id = ${org}`;
   await admin`DELETE FROM users WHERE org_id = ${org}`;
   await admin`DELETE FROM organizations WHERE id = ${org}`;
   await admin.end();
