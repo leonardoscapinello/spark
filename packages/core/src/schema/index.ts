@@ -4,3 +4,6 @@ export * from "./contact.js";
 export * from "./user.js";
 export * from "./identity.js";
 export * from "./event.js";
+export * from "./pipeline.js";
+export * from "./stage.js";
+export * from "./deal.js";

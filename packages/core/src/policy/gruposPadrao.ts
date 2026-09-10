@@ -1,17 +1,21 @@
-import type { Capacidade } from "./capability.js";
+import { CAPACIDADES, type Capacidade } from "./capability.js";
 
 /**
- * Os cinco grupos que toda organização nova recebe (docs/adr/0029). Hoje
- * Gerente e Agente saem idênticos — não é lacuna, é honesto: só existem
- * duas capacidades de negócio no sistema ainda (contacts:*). A distinção
- * real (ex.: Agente só nos próprios leads, Gerente no pipeline inteiro)
- * aparece quando `deals:*`/`pipelines:*` ganharem rota — nunca fabricar
- * diferença artificial antes de existir capacidade pra diferenciar.
+ * Os cinco grupos que toda organização nova recebe (docs/adr/0029).
+ * Gerente x Agente: a diferença real é `pipelines:manage` — Gerente
+ * configura estágio e funil, Agente só trabalha o negócio dentro do que
+ * já existe. Visibilidade por registro (Agente só nos próprios leads)
+ * fica fora do v1 por decisão do próprio ADR-0029 ("ACL por registro
+ * individual... descartado como v1") — a diferença hoje é só de
+ * capacidade, não de escopo de dado.
  */
 export const GRUPOS_PADRAO: ReadonlyArray<{ nome: string; capacidades: readonly Capacidade[] }> = [
-  { nome: "Proprietário", capacidades: ["contacts:read", "contacts:write", "permission_groups:manage"] },
-  { nome: "Administrador", capacidades: ["contacts:read", "contacts:write", "permission_groups:manage"] },
-  { nome: "Gerente", capacidades: ["contacts:read", "contacts:write"] },
-  { nome: "Agente", capacidades: ["contacts:read", "contacts:write"] },
-  { nome: "Visualizador", capacidades: ["contacts:read"] },
+  { nome: "Proprietário", capacidades: CAPACIDADES },
+  { nome: "Administrador", capacidades: CAPACIDADES },
+  {
+    nome: "Gerente",
+    capacidades: ["contacts:read", "contacts:write", "pipelines:manage", "deals:read", "deals:write", "deals:move"],
+  },
+  { nome: "Agente", capacidades: ["contacts:read", "contacts:write", "deals:read", "deals:write", "deals:move"] },
+  { nome: "Visualizador", capacidades: ["contacts:read", "deals:read"] },
 ];

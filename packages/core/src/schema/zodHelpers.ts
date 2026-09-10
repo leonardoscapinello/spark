@@ -29,11 +29,15 @@ import {
   userId as toUserId,
   dealId as toDealId,
   permissionGroupId as toPermissionGroupId,
+  pipelineId as toPipelineId,
+  stageId as toStageId,
   type OrgId,
   type ContactId,
   type UserId,
   type DealId,
   type PermissionGroupId,
+  type PipelineId,
+  type StageId,
 } from "../identity/id.js";
 
 function bridged<Out>(construir: (valor: string) => Out) {
@@ -57,6 +61,8 @@ export const zContactId = bridged<ContactId>(toContactId.de);
 export const zUserId = bridged<UserId>(toUserId.de);
 export const zDealId = bridged<DealId>(toDealId.de);
 export const zPermissionGroupId = bridged<PermissionGroupId>(toPermissionGroupId.de);
+export const zPipelineId = bridged<PipelineId>(toPipelineId.de);
+export const zStageId = bridged<StageId>(toStageId.de);
 
 /** Aceita centavos inteiros (número) — é o formato de transporte, nunca decimal. */
 export const zMoney = z.number().int().transform((valor, ctx) => {

@@ -13,6 +13,8 @@ export type UserId = Id<"User">;
 export type ContactId = Id<"Contact">;
 export type DealId = Id<"Deal">;
 export type PermissionGroupId = Id<"PermissionGroup">;
+export type PipelineId = Id<"Pipeline">;
+export type StageId = Id<"Stage">;
 
 export class InvalidIdError extends Error {
   constructor(tipo: string, value: string) {
@@ -40,3 +42,5 @@ export const userId = makeIdFactory("User");
 export const contactId = makeIdFactory("Contact");
 export const dealId = makeIdFactory("Deal");
 export const permissionGroupId = makeIdFactory("PermissionGroup");
+export const pipelineId = makeIdFactory("Pipeline");
+export const stageId = makeIdFactory("Stage");

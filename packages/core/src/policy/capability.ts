@@ -4,7 +4,15 @@
  * ainda não tem rota nenhuma (deals, automation etc. entram quando
  * ganharem endpoint, não antes).
  */
-export const CAPACIDADES = ["contacts:read", "contacts:write", "permission_groups:manage"] as const;
+export const CAPACIDADES = [
+  "contacts:read",
+  "contacts:write",
+  "permission_groups:manage",
+  "pipelines:manage",
+  "deals:read",
+  "deals:write",
+  "deals:move",
+] as const;
 
 export type Capacidade = (typeof CAPACIDADES)[number];
 
