@@ -1,0 +1,121 @@
+.pagina {
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  height: 100%;
+  min-height: 0;
+}
+
+.titulo {
+  margin: 0;
+  font-family: var(--typography-fontFamily-display);
+  font-size: var(--typography-size-2xl);
+  font-weight: var(--typography-weight-semibold);
+}
+
+.vazio {
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+/* Board rola na horizontal — nunca vidro aqui dentro (docs/adr/0025). */
+.board {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: var(--space-2);
+}
+
+.coluna {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-surface2);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  min-height: 0;
+}
+
+.colunaCabecalho {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.colunaNome {
+  font-weight: var(--typography-weight-medium);
+  font-size: var(--typography-size-sm);
+}
+
+.colunaTotal {
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.listaCartoes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  min-height: 40px;
+}
+
+.cartao {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  /* feedback de estado (arrastando), não movimento contínuo — a posição
+   * do card durante o arraste já é o navegador quem desenha. */
+  transition: opacity var(--motion-duration-instant) var(--motion-ease-out);
+}
+
+.cartao:active {
+  cursor: grabbing;
+}
+
+.cartaoArrastando {
+  opacity: 0.4;
+}
+
+.colunaSobreArraste {
+  outline: 2px dashed var(--color-accent);
+  outline-offset: -2px;
+  transition: outline-color var(--motion-duration-instant) var(--motion-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartao {
+    transition: none;
+  }
+}
+
+.cartaoNome {
+  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-medium);
+}
+
+.cartaoValor {
+  font-size: var(--typography-size-xs);
+  color: var(--color-inkMuted);
+  font-variant-numeric: tabular-nums;
+}
+
+.formNovo {
+  display: flex;
+  gap: var(--space-2);
+}

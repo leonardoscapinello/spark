@@ -35,6 +35,9 @@ export default function AppLayout() {
           <Link to="/" className={styles.navItem}>
             Contatos
           </Link>
+          <Link to="/deals" className={styles.navItem}>
+            Negócios
+          </Link>
         </nav>
         <Button variant="ghost" size="sm" onClick={sair} className={styles.sair}>
           Sair

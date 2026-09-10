@@ -16,6 +16,7 @@
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
+import { snakeCamelMapper } from "@electric-sql/client";
 import { ContactSchema, contactId, type Contact, type CreateContactInput, type OrgId } from "@spark/core";
 import { contactsControllerCreate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
@@ -53,6 +54,13 @@ export function createContactsCollection() {
       getKey: (contato) => contato.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/contacts`,
+        // Electric replica coluna do Postgres (snake_case) — nosso schema
+        // Zod é todo camelCase (ADR-0019). Sem isto, campo composto
+        // (orgId, criadoEm...) chega undefined em runtime, sem erro de
+        // tipo nenhum (achado testando de verdade no navegador, não só
+        // no compilador — a suíte de teste só exercitava campo de uma
+        // palavra só, onde snake_case e camelCase são idênticos).
+        columnMapper: snakeCamelMapper(),
         headers: {
           // função, não string — reavaliada a cada request do stream, pra
           // acompanhar renovação de token sem recriar a coleção inteira.

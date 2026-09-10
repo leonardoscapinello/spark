@@ -5,5 +5,6 @@ export default [
   layout("routes/app-layout.tsx", [
     index("routes/contacts.tsx"),
     route("contacts/:contactId", "routes/contact-detail.tsx"),
+    route("deals", "routes/deals.tsx"),
   ]),
 ] satisfies RouteConfig;

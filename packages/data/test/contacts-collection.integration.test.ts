@@ -147,6 +147,12 @@ describe("packages/data — coleção de contatos local-first (Bloco 6)", () => 
 
     expect(decorrido).toBeLessThan(1_000);
     expect(colecaoB.get(contato.id)?.nome).toBe("Contato Sincronizado");
+    // campo de mais de uma palavra — é o que pegaria o bug real já
+    // corrigido de columnMapper ausente: Electric replica coluna do
+    // Postgres (snake_case, "criado_em"), e sem o mapper o campo
+    // camelCase do schema Zod chega undefined, sem erro de tipo nenhum.
+    // "nome" sozinho nunca pegaria isso — é igual nos dois casings.
+    expect(typeof colecaoB.get(contato.id)?.criadoEm).toBe("string");
 
     // a escrita otimista da própria A também precisa ter sido persistida
     // de verdade no servidor, não só aparecido localmente.

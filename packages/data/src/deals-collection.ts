@@ -6,7 +6,8 @@
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { DealSchema, dealId, toCentavos, type Deal, type CreateDealInput, type OrgId } from "@spark/core";
+import { snakeCamelMapper } from "@electric-sql/client";
+import { DealSchema, dealId, money, toCentavos, type Deal, type Money, type CreateDealInput, type OrgId } from "@spark/core";
 import { dealsControllerCreate, dealsControllerMove, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
 export function negocioOtimista(entrada: Omit<CreateDealInput, "id">, orgId: OrgId): Deal {
@@ -28,6 +29,34 @@ export function negocioOtimista(entrada: Omit<CreateDealInput, "id">, orgId: Org
   };
 }
 
+/**
+ * `collection.insert()` exige o formato PRÉ-transform do schema (o que o
+ * Standard Schema chama de "input") — `valor` como number, não `Money`.
+ * É o oposto de `onInsert`, que já recebe o negócio PÓS-transform (por
+ * isso `onInsert` acima usa `toCentavos` direto, sem passar por aqui).
+ * `Money` é opaco por Symbol e não é estruturalmente um `number` — ao
+ * contrário de Email/ContactId (marca por interseção, que widen pra
+ * string sozinhos), este converte de verdade ou o `tsc` reprova.
+ */
+export function paraInsercao(negocio: Deal) {
+  return { ...negocio, valor: toCentavos(negocio.valor) };
+}
+
+/**
+ * `useLiveQuery`/`collection.toArray` devolvem a linha do jeito que o
+ * Electric sincronizou — achado testando de verdade no navegador (não só
+ * no compilador, que confia no tipo `Deal` declarado): schema do Zod só
+ * transforma ESCRITA local (`onInsert`/`onUpdate`), nunca LEITURA
+ * sincronizada. `negocio.valor` chega como o Postgres manda (bigint da
+ * coluna, não `Money`) — indexar direto com a chave de Symbol de Money
+ * dá `undefined`, e qualquer conta em cima vira NaN. Todo lugar que lê
+ * `valor` de um negócio VINDO DA COLEÇÃO (não um que você acabou de
+ * montar com `negocioOtimista`) passa por aqui primeiro.
+ */
+export function valorSincronizado(valorBruto: unknown): Money {
+  return money(Number(valorBruto));
+}
+
 export function createDealsCollection() {
   return createCollection(
     electricCollectionOptions({
@@ -36,6 +65,9 @@ export function createDealsCollection() {
       getKey: (negocio) => negocio.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/deals`,
+        // Electric replica coluna do Postgres (snake_case); schema Zod é
+        // camelCase (ADR-0019) — ver o mesmo comentário em contacts-collection.ts.
+        columnMapper: snakeCamelMapper(),
         headers: {
           authorization: () => {
             const token = getSparkAuthToken();

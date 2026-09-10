@@ -4,6 +4,7 @@
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
+import { snakeCamelMapper } from "@electric-sql/client";
 import { PipelineSchema, pipelineId, type Pipeline, type CreatePipelineInput, type OrgId } from "@spark/core";
 import { pipelinesControllerCreate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
@@ -28,6 +29,9 @@ export function createPipelinesCollection() {
       getKey: (pipeline) => pipeline.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/pipelines`,
+        // Electric replica coluna do Postgres (snake_case); schema Zod é
+        // camelCase (ADR-0019) — ver o mesmo comentário em contacts-collection.ts.
+        columnMapper: snakeCamelMapper(),
         headers: {
           authorization: () => {
             const token = getSparkAuthToken();

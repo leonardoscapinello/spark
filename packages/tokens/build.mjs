@@ -16,6 +16,7 @@ const BASE_SOURCES = [
   "tokens/radius.json",
   "tokens/effect.json",
   "tokens/typography.json",
+  "tokens/motion.json",
 ];
 
 async function buildTheme(nome, semanticFile) {
