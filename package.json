@@ -13,6 +13,7 @@
     "check": "turbo run typecheck lint test --filter=...[HEAD~1]",
     "check:full": "turbo run typecheck lint test",
     "size": "turbo run size",
+    "lighthouse": "turbo run lighthouse",
     "db:migrate": "pnpm --filter @spark/db migrate",
     "db:generate": "pnpm --filter @spark/db generate",
     "gen:api": "pnpm --filter @spark/contracts gen:openapi && pnpm --filter @spark/api-client gen",

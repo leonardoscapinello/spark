@@ -1,0 +1,64 @@
+.shell {
+  display: flex;
+  min-height: 100%;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-4);
+  gap: var(--space-6);
+  border-radius: 0;
+}
+
+.marca {
+  font-family: var(--typography-fontFamily-display);
+  font-size: var(--typography-size-lg);
+  font-weight: var(--typography-weight-semibold);
+  padding: 0 var(--space-2);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.navItem {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-ink);
+  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-medium);
+}
+
+.navItem:hover {
+  background: var(--color-glassEdge);
+}
+
+.sair {
+  align-self: flex-start;
+}
+
+.conteudo {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.carregando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-sm);
+}

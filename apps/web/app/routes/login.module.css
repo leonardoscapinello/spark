@@ -1,0 +1,42 @@
+.container {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.card {
+  width: 100%;
+  max-width: 360px;
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.titulo {
+  margin: 0;
+  font-family: var(--typography-fontFamily-display);
+  font-size: var(--typography-size-2xl);
+  font-weight: var(--typography-weight-semibold);
+}
+
+.subtitulo {
+  margin: calc(var(--space-2) * -1) 0 0;
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-sm);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.erroGeral {
+  margin: 0;
+  font-size: var(--typography-size-xs);
+  color: var(--color-statusDanger);
+}

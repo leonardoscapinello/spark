@@ -1,4 +1,2 @@
-// Coleções TanStack DB + Electric; escrita otimista (ADR-0018).
-// Esqueleto — Bloco 1 da Fase 0. Conteúdo real chega nos blocos seguintes.
-
-export const PACKAGE_NAME = "@spark/data" as const;
+// Coleções TanStack DB + Electric; escrita otimista (docs/adr/0018).
+export * from "./contacts-collection.js";

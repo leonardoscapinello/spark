@@ -8,6 +8,9 @@ build/
 .turbo/
 *.tsbuildinfo
 
+# typegen do React Router 8 (apps/web) — regenerado a cada dev/build/typecheck
+.react-router/
+
 # ambiente — NUNCA commitar (ver ADR-0011)
 .env
 .env.*
@@ -38,3 +41,6 @@ coverage/
 
 # storybook
 storybook-static/
+
+# Lighthouse CI — relatórios locais de cada run
+.lighthouseci/

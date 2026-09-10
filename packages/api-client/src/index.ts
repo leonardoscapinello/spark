@@ -2,3 +2,4 @@
 // (docs/adr/0004). src/generated.ts nunca é editado à mão — rodar `pnpm gen`.
 export * from "./generated.js";
 export * from "./http-client.js";
+export * from "./dev-login.js";

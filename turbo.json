@@ -35,6 +35,13 @@
       ],
       "outputs": []
     },
+    "lighthouse": {
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [],
+      "cache": false
+    },
     "clean": {
       "cache": false
     }

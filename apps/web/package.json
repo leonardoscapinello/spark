@@ -3,14 +3,74 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "start": "react-router-serve ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc --noEmit",
     "lint": "eslint .",
-    "build": "tsc",
-    "dev": "echo \"apps/web — dev server chega no bloco que implementa este app\"",
-    "test": "echo \"sem testes ainda — apps/web\""
+    "test": "vitest run",
+    "size": "size-limit",
+    "lighthouse": "lhci autorun"
   },
-  "devDependencies": {}
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router": "8.3.1",
+    "@react-router/node": "8.3.1",
+    "@react-router/serve": "8.3.1",
+    "@tanstack/react-db": "0.3.7",
+    "@spark/core": "workspace:*",
+    "@spark/api-client": "workspace:*",
+    "@spark/data": "workspace:*",
+    "@spark/ui-web": "workspace:*",
+    "@spark/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@react-router/dev": "8.3.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/node": "^24.0.0",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0",
+    "vite-plugin-pwa": "^1.3.0",
+    "workbox-precaching": "^7.4.1",
+    "workbox-window": "^7.4.1",
+    "size-limit": "11.2.0",
+    "@size-limit/file": "11.2.0",
+    "@lhci/cli": "^0.15.1",
+    "jsdom": "^30.0.1"
+  },
+  "size-limit": [
+    {
+      "name": "Shell inicial (login + layout + roteador) — docs/adr/0017",
+      "path": ["build/client/assets/entry.client-*.js", "build/client/assets/root-*.js", "build/client/assets/rolldown-runtime-*.js"],
+      "limit": "120 kB",
+      "gzip": true
+    },
+    {
+      "name": "Camada de sync local-first (Electric + TanStack DB — compartilhada entre toda rota com dado, não é código de UMA rota; medida à parte porque a tabela original do ADR-0017 foi escrita antes de medir o peso real do differential dataflow do TanStack DB — 100,63 KB gzip medido no Bloco 7; 120 KB dá folga sem esconder que é o item mais pesado do app, carregado uma vez só e cacheado)",
+      "path": ["build/client/assets/contacts-collection.client-*.js", "build/client/assets/useLiveQuery-*.js"],
+      "limit": "120 kB",
+      "gzip": true
+    },
+    {
+      "name": "Rota: /login",
+      "path": ["build/client/assets/login-*.js"],
+      "limit": "60 kB",
+      "gzip": true
+    },
+    {
+      "name": "Rota: /contacts (lista)",
+      "path": ["build/client/assets/contacts-main-*.js", "build/client/assets/contacts-client-loader-*.js"],
+      "limit": "60 kB",
+      "gzip": true
+    },
+    {
+      "name": "Rota: /contacts/:id (detalhe)",
+      "path": ["build/client/assets/contact-detail-*.js"],
+      "limit": "60 kB",
+      "gzip": true
+    }
+  ]
 }

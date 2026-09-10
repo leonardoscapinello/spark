@@ -17,6 +17,17 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
   app.useGlobalPipes(new ZodValidationPipe());
   app.setGlobalPrefix("", { exclude: [] });
 
+  // apps/web (e desktop/mobile embutindo webview) fala com a API de outra
+  // origem — sem isto o preflight OPTIONS nem chega nas rotas (404 puro,
+  // Fastify não trata OPTIONS sozinho). x-electric-txid: nenhum header
+  // customizado nosso hoje precisa expose, mas Authorization é o que o
+  // sparkHttpClient manda (packages/api-client/src/http-client.ts).
+  app.enableCors({
+    origin: process.env.WEB_ORIGIN ?? "http://localhost:3100",
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  });
+
   return app;
 }
 

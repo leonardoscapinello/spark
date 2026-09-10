@@ -1,0 +1,33 @@
+/**
+ * Reset e base global — a ÚNICA folha de estilo não-modular do app.
+ * @spark/tokens/css só define custom properties em :root, nunca estilo de
+ * elemento; aplicar em html/body é responsabilidade de quem consome.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--typography-fontFamily-body);
+  font-size: var(--typography-size-md);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100%;
+}
+
+a {
+  color: inherit;
+}

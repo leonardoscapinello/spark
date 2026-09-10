@@ -26,7 +26,17 @@ const ELEMENTS = [
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/build/**", "**/.output/**", "**/node_modules/**", "**/coverage/**", "**/.tmp/**"],
+    ignores: [
+      "**/dist/**",
+      "**/build/**",
+      "**/.output/**",
+      "**/node_modules/**",
+      "**/coverage/**",
+      "**/.tmp/**",
+      // .react-router/types — typegen do React Router 8 (apps/web), gerado
+      // a cada `dev`/`build`/`typecheck`. Mesma categoria de dist/build.
+      "**/.react-router/**",
+    ],
   },
   ...tseslint.configs.recommended,
   {
