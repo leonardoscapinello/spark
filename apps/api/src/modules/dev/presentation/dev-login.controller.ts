@@ -7,6 +7,7 @@ import { ConfigService } from "@nestjs/config";
 import { createDbClient, users, organizations } from "@spark/db";
 import { eq } from "drizzle-orm";
 import { orgId as orgIdFactory, userId as userIdFactory } from "@spark/core";
+import { PermissionGroupsRepository } from "../../identity/infrastructure/permission-groups.repository.js";
 
 const DevLoginInputSchema = z.object({
   email: z.email(),
@@ -28,7 +29,10 @@ class DevLoginInput extends createZodDto(DevLoginInputSchema) {}
 @ApiExcludeController()
 @Controller("v1/dev")
 export class DevLoginController {
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly permissionGroups: PermissionGroupsRepository,
+  ) {}
 
   @Post("login")
   async login(@Body() body: DevLoginInput): Promise<{ token: string; orgId: string; userId: string }> {
@@ -54,6 +58,14 @@ export class DevLoginController {
       nome: body.nome ?? body.email.split("@")[0] ?? body.email,
       email: body.email,
     });
+
+    // toda organização nasce com os cinco grupos padrão; quem cria a org
+    // é o Proprietário dela (docs/adr/0029).
+    const grupos = await this.permissionGroups.semearGruposPadrao(novoOrgId);
+    const proprietario = grupos.find((g) => g.nome === "Proprietário");
+    if (proprietario) {
+      await this.permissionGroups.atribuirGrupo(novoUserId, proprietario.id);
+    }
 
     const token = await assinarToken(supabaseUserId, this.config);
     return { token, orgId: novoOrgId, userId: novoUserId };

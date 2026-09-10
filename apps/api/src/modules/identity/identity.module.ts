@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { MeController } from "./presentation/me.controller.js";
 import { GetCurrentUserUseCase } from "./application/get-current-user.usecase.js";
 import { UsersRepository } from "./infrastructure/users.repository.js";
+import { PermissionGroupsRepository } from "./infrastructure/permission-groups.repository.js";
 import { SupabaseJwtGuard } from "../../auth/index.js";
 
 // ConfigModule NÃO é importado aqui de propósito — já é global via
@@ -11,6 +12,6 @@ import { SupabaseJwtGuard } from "../../auth/index.js";
 // configuração de infraestrutura por módulo de domínio).
 @Module({
   controllers: [MeController],
-  providers: [GetCurrentUserUseCase, UsersRepository, SupabaseJwtGuard],
+  providers: [GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard],
 })
 export class IdentityModule {}
