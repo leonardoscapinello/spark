@@ -11,8 +11,17 @@ services:
       POSTGRES_PASSWORD: spark_dev
       POSTGRES_DB: spark
     command:
-      # replicação lógica ligada — requisito duro do Electric (ADR-0018)
       - postgres
+      # a imagem supabase/postgres escuta só em 127.0.0.1/::1 por padrão —
+      # certo dentro do stack completo deles (tudo atrás do Kong/Supavisor,
+      # na mesma rede Docker), errado aqui: conexão publicada do host chega
+      # pela interface do container, não por loopback, e o Postgres derruba
+      # a conexão em silêncio (nem erro de auth — só fecha). O sintoma foi
+      # "connection closed unexpectedly" e uma CLI (drizzle-kit) travada
+      # pra sempre retentando. Sem isto, nada fora do container conecta.
+      - -c
+      - listen_addresses=*
+      # replicação lógica ligada — requisito duro do Electric (ADR-0018)
       - -c
       - wal_level=logical
       - -c

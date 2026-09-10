@@ -9,7 +9,20 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "build": "tsc",
-    "test": "echo \"sem testes ainda — packages/db\""
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:push": "drizzle-kit push"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10",
+    "dotenv": "^17.4.2",
+    "vitest": "^5.0.0"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.9",
+    "@spark/core": "workspace:*",
+    "uuid": "^14.0.2"
+  }
 }
