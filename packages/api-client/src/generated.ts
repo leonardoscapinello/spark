@@ -130,6 +130,289 @@ export interface CreateContactResponseDto {
   txid: number;
 }
 
+export interface CreatePipelineDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  padrao?: boolean;
+}
+
+export type CreatePipelineResponseDtoPipeline = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  padrao?: boolean;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  criadoEm: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  atualizadoEm: string;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  arquivadoEm: string | null;
+};
+
+export interface CreatePipelineResponseDto {
+  pipeline: CreatePipelineResponseDtoPipeline;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface CreateStageDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  ordem: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  probabilidade?: number;
+}
+
+export type CreateStageResponseDtoStage = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  ordem: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  probabilidade?: number;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  criadoEm: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  atualizadoEm: string;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  arquivadoEm: string | null;
+};
+
+export interface CreateStageResponseDto {
+  stage: CreateStageResponseDtoStage;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type CreateDealDtoStatus = typeof CreateDealDtoStatus[keyof typeof CreateDealDtoStatus];
+
+
+export const CreateDealDtoStatus = {
+  aberto: 'aberto',
+  ganho: 'ganho',
+  perdido: 'perdido',
+} as const;
+
+export interface CreateDealDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /** @minLength 1 */
+  stageId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  valor: number;
+  status?: CreateDealDtoStatus;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  dataFechamentoEsperada?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  motivoPerda?: string | null;
+}
+
+export type CreateDealResponseDtoDealStatus = typeof CreateDealResponseDtoDealStatus[keyof typeof CreateDealResponseDtoDealStatus];
+
+
+export const CreateDealResponseDtoDealStatus = {
+  aberto: 'aberto',
+  ganho: 'ganho',
+  perdido: 'perdido',
+} as const;
+
+export type CreateDealResponseDtoDeal = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /** @minLength 1 */
+  stageId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  valor: number;
+  status?: CreateDealResponseDtoDealStatus;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  dataFechamentoEsperada: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  motivoPerda: string | null;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  criadoEm: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  atualizadoEm: string;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  excluidoEm: string | null;
+};
+
+export interface CreateDealResponseDto {
+  deal: CreateDealResponseDtoDeal;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface MoveDealDto {
+  /** @minLength 1 */
+  stageId: string;
+}
+
+export type MoveDealResponseDtoDealStatus = typeof MoveDealResponseDtoDealStatus[keyof typeof MoveDealResponseDtoDealStatus];
+
+
+export const MoveDealResponseDtoDealStatus = {
+  aberto: 'aberto',
+  ganho: 'ganho',
+  perdido: 'perdido',
+} as const;
+
+export type MoveDealResponseDtoDeal = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /** @minLength 1 */
+  stageId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  valor: number;
+  status?: MoveDealResponseDtoDealStatus;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  dataFechamentoEsperada: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  motivoPerda: string | null;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  criadoEm: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  atualizadoEm: string;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  excluidoEm: string | null;
+};
+
+export interface MoveDealResponseDto {
+  deal: MoveDealResponseDtoDeal;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
@@ -299,4 +582,253 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getContactsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const pipelinesControllerCreate = (
+    createPipelineDto: CreatePipelineDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CreatePipelineResponseDto>(
+      {url: `/v1/pipelines`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createPipelineDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPipelinesControllerCreateMutationKey = () => ['pipelinesControllerCreate'] as const;
+
+export const getPipelinesControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pipelinesControllerCreate>>, TError,PipelinesControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof pipelinesControllerCreate>>, TError,PipelinesControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getPipelinesControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof pipelinesControllerCreate>>, PipelinesControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  pipelinesControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PipelinesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof pipelinesControllerCreate>>>
+    export type PipelinesControllerCreateMutationBody = CreatePipelineDto
+    export type PipelinesControllerCreateMutationError = unknown
+    export type PipelinesControllerCreateMutationVariables = {data: CreatePipelineDto}
+
+    export const usePipelinesControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pipelinesControllerCreate>>, TError,PipelinesControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof pipelinesControllerCreate>>,
+        TError,
+        PipelinesControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPipelinesControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const stagesControllerCreate = (
+    createStageDto: CreateStageDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CreateStageResponseDto>(
+      {url: `/v1/stages`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createStageDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getStagesControllerCreateMutationKey = () => ['stagesControllerCreate'] as const;
+
+export const getStagesControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerCreate>>, TError,StagesControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof stagesControllerCreate>>, TError,StagesControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getStagesControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stagesControllerCreate>>, StagesControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  stagesControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StagesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof stagesControllerCreate>>>
+    export type StagesControllerCreateMutationBody = CreateStageDto
+    export type StagesControllerCreateMutationError = unknown
+    export type StagesControllerCreateMutationVariables = {data: CreateStageDto}
+
+    export const useStagesControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerCreate>>, TError,StagesControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof stagesControllerCreate>>,
+        TError,
+        StagesControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStagesControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const dealsControllerCreate = (
+    createDealDto: CreateDealDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CreateDealResponseDto>(
+      {url: `/v1/deals`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createDealDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealsControllerCreateMutationKey = () => ['dealsControllerCreate'] as const;
+
+export const getDealsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerCreate>>, TError,DealsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealsControllerCreate>>, TError,DealsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getDealsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealsControllerCreate>>, DealsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  dealsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof dealsControllerCreate>>>
+    export type DealsControllerCreateMutationBody = CreateDealDto
+    export type DealsControllerCreateMutationError = unknown
+    export type DealsControllerCreateMutationVariables = {data: CreateDealDto}
+
+    export const useDealsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerCreate>>, TError,DealsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealsControllerCreate>>,
+        TError,
+        DealsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const dealsControllerMove = (
+    id: string,
+    moveDealDto: MoveDealDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<MoveDealResponseDto>(
+      {url: `/v1/deals/${id}/move`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: moveDealDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealsControllerMoveMutationKey = () => ['dealsControllerMove'] as const;
+
+export const getDealsControllerMoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerMove>>, TError,DealsControllerMoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealsControllerMove>>, TError,DealsControllerMoveMutationVariables, TContext> => {
+
+const mutationKey = getDealsControllerMoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealsControllerMove>>, DealsControllerMoveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  dealsControllerMove(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealsControllerMoveMutationResult = NonNullable<Awaited<ReturnType<typeof dealsControllerMove>>>
+    export type DealsControllerMoveMutationBody = MoveDealDto
+    export type DealsControllerMoveMutationError = unknown
+    export type DealsControllerMoveMutationVariables = {id: string;data: MoveDealDto}
+
+    export const useDealsControllerMove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerMove>>, TError,DealsControllerMoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealsControllerMove>>,
+        TError,
+        DealsControllerMoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealsControllerMoveMutationOptions(options), queryClient);
     }

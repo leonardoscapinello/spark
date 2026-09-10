@@ -4,6 +4,7 @@ import { LoggerModule } from "nestjs-pino";
 import { IdentityModule } from "./modules/identity/identity.module.js";
 import { SyncModule } from "./modules/sync/sync.module.js";
 import { ContactsModule } from "./modules/contacts/contacts.module.js";
+import { CrmModule } from "./modules/crm/crm.module.js";
 import { DevModule } from "./modules/dev/dev.module.js";
 
 // DevModule só entra fora de produção — a rota /v1/dev/login literalmente
@@ -30,6 +31,7 @@ const modulosCondicionais = process.env.NODE_ENV === "production" ? [] : [DevMod
     IdentityModule,
     SyncModule,
     ContactsModule,
+    CrmModule,
     ...modulosCondicionais,
   ],
 })

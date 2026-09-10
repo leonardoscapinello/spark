@@ -32,3 +32,10 @@ export type CreatePipelineInput = z.infer<typeof CreatePipelineInputSchema>;
 
 export const UpdatePipelineInputSchema = CreatePipelineInputSchema.omit({ id: true }).partial();
 export type UpdatePipelineInput = z.infer<typeof UpdatePipelineInputSchema>;
+
+/** Envelope de resposta de escrita — mesmo motivo de CreateContactResponseSchema (docs/adr/0018). */
+export const CreatePipelineResponseSchema = z.object({
+  pipeline: PipelineSchema,
+  txid: z.number().int(),
+});
+export type CreatePipelineResponse = z.infer<typeof CreatePipelineResponseSchema>;

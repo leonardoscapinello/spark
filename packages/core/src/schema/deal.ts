@@ -48,3 +48,16 @@ export const MoveDealInputSchema = z.object({
   stageId: zStageId,
 });
 export type MoveDealInput = z.infer<typeof MoveDealInputSchema>;
+
+/** Envelope de resposta de escrita — mesmo motivo de CreateContactResponseSchema (docs/adr/0018). */
+export const CreateDealResponseSchema = z.object({
+  deal: DealSchema,
+  txid: z.number().int(),
+});
+export type CreateDealResponse = z.infer<typeof CreateDealResponseSchema>;
+
+export const MoveDealResponseSchema = z.object({
+  deal: DealSchema,
+  txid: z.number().int(),
+});
+export type MoveDealResponse = z.infer<typeof MoveDealResponseSchema>;

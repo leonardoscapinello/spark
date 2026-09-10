@@ -32,3 +32,10 @@ export type CreateStageInput = z.infer<typeof CreateStageInputSchema>;
 
 export const UpdateStageInputSchema = CreateStageInputSchema.omit({ id: true }).partial();
 export type UpdateStageInput = z.infer<typeof UpdateStageInputSchema>;
+
+/** Envelope de resposta de escrita — mesmo motivo de CreateContactResponseSchema (docs/adr/0018). */
+export const CreateStageResponseSchema = z.object({
+  stage: StageSchema,
+  txid: z.number().int(),
+});
+export type CreateStageResponse = z.infer<typeof CreateStageResponseSchema>;
