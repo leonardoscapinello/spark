@@ -65,6 +65,38 @@ function cssValue(v) {
   return v;
 }
 
+// Mapa peso/estilo -> arquivo. FH Duo e FH Duo Display têm o mesmo conjunto
+// de pesos (docs em packages/tokens/README.md). Ativo proprietário — ver
+// packages/tokens/fonts/LICENSE-NOTICE.md antes de reusar fora deste monorepo.
+const PESOS = [
+  ["Light", 300], ["Regular", 400], ["Medium", 500],
+  ["SemiBold", 600], ["Bold", 700], ["Black", 900],
+];
+
+function buildFontFaceCss() {
+  const familias = [
+    { nome: "FH Duo", pasta: "fh-duo", prefixo: "FHDuo" },
+    { nome: "FH Duo Display", pasta: "fh-duo-display", prefixo: "FHDuoDisplay" },
+  ];
+
+  const blocos = [];
+  for (const { nome, pasta, prefixo } of familias) {
+    for (const [sufixo, peso] of PESOS) {
+      for (const [styleSufixo, styleValor] of [["", "normal"], ["Italic", "italic"]]) {
+        const arquivo = `${prefixo}-${sufixo}${styleSufixo}.woff2`;
+        blocos.push(`@font-face {
+  font-family: "${nome}";
+  src: url("../fonts/${pasta}/${arquivo}") format("woff2");
+  font-weight: ${peso};
+  font-style: ${styleValor};
+  font-display: swap;
+}`);
+      }
+    }
+  }
+  return blocos.join("\n") + "\n\n";
+}
+
 async function main() {
   const light = flatten(await buildTheme("light", "tokens/color.semantic.light.json"));
   const dark = flatten(await buildTheme("dark", "tokens/color.semantic.dark.json"));
@@ -98,7 +130,16 @@ ${toCssVars(darkOnly)}
 `;
 
   await fs.mkdir("dist/css", { recursive: true });
-  await fs.writeFile("dist/css/tokens.css", css);
+  await fs.mkdir("dist/fonts/fh-duo", { recursive: true });
+  await fs.mkdir("dist/fonts/fh-duo-display", { recursive: true });
+  for (const familia of ["fh-duo", "fh-duo-display"]) {
+    for (const arquivo of await fs.readdir(`fonts/${familia}`)) {
+      await fs.copyFile(`fonts/${familia}/${arquivo}`, `dist/fonts/${familia}/${arquivo}`);
+    }
+  }
+
+  const fontFace = buildFontFaceCss();
+  await fs.writeFile("dist/css/tokens.css", fontFace + css);
 
   const nativeTheme = `// Gerado por packages/tokens/build.mjs — NÃO editar à mão.
 export const lightTheme = ${JSON.stringify(light, null, 2)} as const;

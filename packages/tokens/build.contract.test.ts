@@ -41,3 +41,21 @@ describe("cascata de tema em três estados (ADR-0025)", () => {
     expect(native).toContain("export const darkTheme");
   });
 });
+
+describe("tipografia da marca — FH Duo (ver assets/brand/README.md do landingsuite)", () => {
+  it("declara @font-face para as duas famílias, nos seis pesos, normal e itálico", () => {
+    const total = (css.match(/\@font-face/g) ?? []).length;
+    expect(total).toBe(24); // 2 famílias × 6 pesos × 2 estilos
+  });
+
+  it("aponta pros arquivos copiados em dist/fonts, não pro landingsuite", () => {
+    expect(css).toMatch(/url\("\.\.\/fonts\/fh-duo\//);
+    expect(css).toMatch(/url\("\.\.\/fonts\/fh-duo-display\//);
+    expect(css).not.toMatch(/landingsuite/);
+  });
+
+  it("FH Duo Display é a família de título; FH Duo é a de corpo", () => {
+    expect(css).toMatch(/--typography-fontFamily-display: .FH Duo Display./);
+    expect(css).toMatch(/--typography-fontFamily-body: .FH Duo.(?!\s*Display)/);
+  });
+});
