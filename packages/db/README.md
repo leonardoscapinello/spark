@@ -28,6 +28,10 @@ pnpm test                       # inclui o teste de isolamento de RLS — precis
 
 A imagem `supabase/postgres` escuta só em `127.0.0.1`/`::1` por padrão — correto dentro do stack completo deles (tudo na mesma rede Docker, atrás do Kong), errado quando algo de **fora** do container (seu `DATABASE_URL` apontando pra `localhost:5432`) tenta conectar: a conexão chega pela interface do container, não por loopback, e o Postgres a derruba **em silêncio** — nem erro de autenticação, só fecha. `docker-compose.yml` já tem `-c listen_addresses=*` para isso. Se algum dia trocar de imagem base, confirmar que essa flag continua lá.
 
+## Migration 0002 — escrita à mão, fora do journal do drizzle-kit
+
+`0002_electric_publication.sql` (`CREATE PUBLICATION`) foi escrita direto, sem passar por `drizzle-kit generate` — não muda schema de tabela nenhuma, então não faz sentido nascer de um diff. Consequência prática: o journal do drizzle-kit (`migrations/meta/_journal.json`) não sabe que ela existe, e todo `pnpm db:generate` daqui pra frente propõe o PRÓXIMO número da sequência DELE (que já não bate com o próximo arquivo de verdade). **Depois de rodar `db:generate`, confira se o arquivo gerado colide com um nome já existente** — se colidir, renomeie o `.sql` pro número certo e corrija só o campo `tag` da entrada correspondente em `_journal.json` (o `idx` pode ficar como está — é numeração interna do drizzle-kit, `migrate.mjs` não olha pra ela, só ordena os nomes de arquivo). Já aconteceu duas vezes (`0003_rich_shotgun`, `0004_curly_speed_demon`) — é o preço de ter uma migration fora do fluxo normal, não um bug pra caçar.
+
 ## Migration 0000 — o que foi editado à mão
 
 `drizzle-kit generate` produz DDL de tabela comum; três coisas não saem dele e foram editadas direto no `.sql` gerado (comentários `EDITADO 1/3`, `2/3`, `3/3` no arquivo):

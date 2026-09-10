@@ -5,3 +5,6 @@ export * from "./identities.js";
 export * from "./events.js";
 export * from "./permission-groups.js";
 export * from "./user-permission-groups.js";
+export * from "./pipelines.js";
+export * from "./stages.js";
+export * from "./deals.js";

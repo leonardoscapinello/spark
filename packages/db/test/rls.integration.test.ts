@@ -11,6 +11,9 @@ import {
   orgId as orgIdFactory,
   contactId as contactIdFactory,
   permissionGroupId as permissionGroupIdFactory,
+  pipelineId as pipelineIdFactory,
+  stageId as stageIdFactory,
+  dealId as dealIdFactory,
 } from "@spark/core";
 
 const DATABASE_URL =
@@ -153,5 +156,70 @@ describe("RLS — permission_groups e user_permission_groups isolam por org (doc
     });
     expect(linhas.every((l) => l.org_id === orgD)).toBe(true);
     expect(linhas.some((l) => l.id === grupoOrgC)).toBe(false);
+  });
+});
+
+describe("RLS — pipelines, stages e deals isolam por org (roadmap.md, Fase 1)", () => {
+  const orgE = orgIdFactory.novo();
+  const orgF = orgIdFactory.novo();
+  const pipelineOrgE = pipelineIdFactory.novo();
+  const pipelineOrgF = pipelineIdFactory.novo();
+  const stageOrgE = stageIdFactory.novo();
+  const stageOrgF = stageIdFactory.novo();
+  const dealOrgE = dealIdFactory.novo();
+  const dealOrgF = dealIdFactory.novo();
+
+  beforeAll(async () => {
+    await admin`INSERT INTO organizations (id, nome, slug) VALUES
+      (${orgE}, 'Organização E', ${"org-e-" + orgE}),
+      (${orgF}, 'Organização F', ${"org-f-" + orgF})`;
+
+    await admin`INSERT INTO pipelines (id, org_id, nome, padrao) VALUES
+      (${pipelineOrgE}, ${orgE}, 'Funil E', true),
+      (${pipelineOrgF}, ${orgF}, 'Funil F', true)`;
+
+    await admin`INSERT INTO stages (id, org_id, pipeline_id, nome, ordem) VALUES
+      (${stageOrgE}, ${orgE}, ${pipelineOrgE}, 'Qualificação', 0),
+      (${stageOrgF}, ${orgF}, ${pipelineOrgF}, 'Qualificação', 0)`;
+
+    await admin`INSERT INTO deals (id, org_id, pipeline_id, stage_id, nome, valor) VALUES
+      (${dealOrgE}, ${orgE}, ${pipelineOrgE}, ${stageOrgE}, 'Negócio E', 500000),
+      (${dealOrgF}, ${orgF}, ${pipelineOrgF}, ${stageOrgF}, 'Negócio F', 300000)`;
+  });
+
+  afterAll(async () => {
+    await admin`DELETE FROM deals WHERE org_id IN (${orgE}, ${orgF})`;
+    await admin`DELETE FROM stages WHERE org_id IN (${orgE}, ${orgF})`;
+    await admin`DELETE FROM pipelines WHERE org_id IN (${orgE}, ${orgF})`;
+    await admin`DELETE FROM organizations WHERE id IN (${orgE}, ${orgF})`;
+  });
+
+  it("org E só vê o próprio pipeline, estágio e negócio", async () => {
+    const [negocios, estagios, funis] = await appUser.begin(async (tx) => {
+      await tx.unsafe(`SET LOCAL app.current_org_id = '${orgE}'`);
+      return Promise.all([
+        tx`SELECT id, valor FROM deals`,
+        tx`SELECT id FROM stages`,
+        tx`SELECT id FROM pipelines`,
+      ]);
+    });
+    expect(negocios).toHaveLength(1);
+    expect(negocios[0]?.id).toBe(dealOrgE);
+    expect(Number(negocios[0]?.valor)).toBe(500000);
+    expect(estagios).toHaveLength(1);
+    expect(estagios[0]?.id).toBe(stageOrgE);
+    expect(funis).toHaveLength(1);
+    expect(funis[0]?.id).toBe(pipelineOrgE);
+  });
+
+  it("org F não enxerga negócio, estágio nem pipeline da org E, mesmo sem WHERE", async () => {
+    const [negocios, estagios, funis] = await appUser.begin(async (tx) => {
+      await tx.unsafe(`SET LOCAL app.current_org_id = '${orgF}'`);
+      return Promise.all([tx`SELECT * FROM deals`, tx`SELECT * FROM stages`, tx`SELECT * FROM pipelines`]);
+    });
+    expect(negocios.every((l) => l.org_id === orgF)).toBe(true);
+    expect(estagios.every((l) => l.org_id === orgF)).toBe(true);
+    expect(funis.every((l) => l.org_id === orgF)).toBe(true);
+    expect(negocios.some((l) => l.id === dealOrgE)).toBe(false);
   });
 });

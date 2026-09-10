@@ -22,6 +22,13 @@
       "when": 1789078234314,
       "tag": "0003_rich_shotgun",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789079022808,
+      "tag": "0004_curly_speed_demon",
+      "breakpoints": true
     }
   ]
 }
