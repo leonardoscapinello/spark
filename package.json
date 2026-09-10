@@ -1,0 +1,33 @@
+{
+  "name": "spark",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "check": "turbo run typecheck lint test --filter=...[HEAD~1]",
+    "check:full": "turbo run typecheck lint test",
+    "size": "turbo run size",
+    "db:migrate": "pnpm --filter @spark/db migrate",
+    "db:generate": "pnpm --filter @spark/db generate",
+    "gen:api": "pnpm --filter @spark/contracts gen:openapi && pnpm --filter @spark/api-client gen",
+    "gen:tokens": "pnpm --filter @spark/tokens build",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0",
+    "eslint": "^9.17.0",
+    "typescript-eslint": "^8.19.0",
+    "eslint-plugin-boundaries": "^5.0.1",
+    "prettier": "^3.4.2",
+    "@size-limit/preset-small-lib": "^11.1.6",
+    "size-limit": "^11.1.6",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.31.0"
+  }
+}

@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: supabase/postgres:15.8.1.040
+        ports: ["5432:5432"]
+        env:
+          POSTGRES_PASSWORD: spark_dev
+          POSTGRES_DB: spark
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # turbo --filter=...[HEAD~1] precisa do commit anterior
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # ADR-0024 — mesmo comando do dia a dia, mesmo orçamento de tempo (60s local;
+      # aqui rodamos check:full porque é a esteira que protege a main.
+      - run: pnpm check:full
+        env:
+          DATABASE_URL: postgresql://postgres:spark_dev@localhost:5432/spark
+
+      - run: pnpm size

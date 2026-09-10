@@ -1,0 +1,56 @@
+# Ambiente local de desenvolvimento — ver docs/adr/0005, 0011
+# Produção usa Supabase Cloud (Postgres) + VPS (o resto). Isto é só para rodar na sua máquina.
+name: spark-dev
+
+services:
+  postgres:
+    image: supabase/postgres:15.8.1.040
+    restart: unless-stopped
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_PASSWORD: spark_dev
+      POSTGRES_DB: spark
+    command:
+      # replicação lógica ligada — requisito duro do Electric (ADR-0018)
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=10
+      - -c
+      - max_wal_senders=10
+    volumes:
+      - spark_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    ports: ["6379:6379"]
+    command: valkey-server --appendonly yes
+    volumes:
+      - spark_valkey_data:/data
+
+  electric:
+    image: electricsql/electric:1.0
+    restart: unless-stopped
+    ports: ["3010:3000"]
+    environment:
+      DATABASE_URL: postgresql://postgres:spark_dev@postgres:5432/spark?sslmode=disable
+      ELECTRIC_INSECURE: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports: ["8025:8025", "1025:1025"] # UI / SMTP — captura e-mail local, sem enviar de verdade
+
+volumes:
+  spark_pg_data:
+  spark_valkey_data:

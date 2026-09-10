@@ -1,0 +1,34 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# ambiente — NUNCA commitar (ver ADR-0011)
+.env
+.env.*
+!.env.example
+
+# artefatos nativos (vão para Releases/R2, não para o git)
+apps/desktop/src-tauri/target/
+apps/mobile/ios/
+apps/mobile/android/
+*.ipa
+*.apk
+*.aab
+*.dmg
+*.msi
+
+# ferramentas
+.DS_Store
+coverage/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# turbo
+.turbo/
