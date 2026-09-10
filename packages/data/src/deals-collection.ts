@@ -52,8 +52,20 @@ export function paraInsercao(negocio: Deal) {
  * dá `undefined`, e qualquer conta em cima vira NaN. Todo lugar que lê
  * `valor` de um negócio VINDO DA COLEÇÃO (não um que você acabou de
  * montar com `negocioOtimista`) passa por aqui primeiro.
+ *
+ * A mesma linha muda de forma ao longo da vida dela na coleção: um
+ * insert recém-feito (ainda otimista, não confirmado pelo servidor) já
+ * passou pelo transform local, então `valor` já é `Money` de verdade —
+ * também achado testando de verdade (criar um negócio pela UI quebrava
+ * com o mesmo NaN, porque `Number(umMoney)` também não é um número).
+ * `Money` é sempre objeto (chave de symbol); o valor cru do Electric é
+ * sempre primitivo — é essa diferença de `typeof` que distingue os dois
+ * casos sem precisar saber a origem da linha.
  */
 export function valorSincronizado(valorBruto: unknown): Money {
+  if (typeof valorBruto === "object" && valorBruto !== null) {
+    return valorBruto as Money;
+  }
   return money(Number(valorBruto));
 }
 

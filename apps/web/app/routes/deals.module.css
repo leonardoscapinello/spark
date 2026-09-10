@@ -117,5 +117,17 @@
 
 .formNovo {
   display: flex;
+  flex-direction: column;
   gap: var(--space-2);
+}
+
+.formNovoLinha {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+
+.formNovoValor {
+  flex: 1;
+  min-width: 0;
 }

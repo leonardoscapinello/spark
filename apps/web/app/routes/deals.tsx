@@ -156,10 +156,15 @@ export default function Deals() {
                   <Label>Novo negócio</Label>
                   <Input name="nome" placeholder="Nome" />
                 </Field>
-                <Input name="valor" placeholder="0,00" inputMode="decimal" />
-                <Button type="submit" size="sm">
-                  +
-                </Button>
+                <div className={styles.formNovoLinha}>
+                  <Field className={styles.formNovoValor}>
+                    <Label>Valor</Label>
+                    <Input name="valor" placeholder="0,00" inputMode="decimal" />
+                  </Field>
+                  <Button type="submit" size="sm">
+                    +
+                  </Button>
+                </div>
               </form>
             </section>
           );
