@@ -51,3 +51,85 @@
 .valor {
   font-size: var(--typography-size-md);
 }
+
+.atividades {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: var(--typography-size-lg);
+  font-weight: var(--typography-weight-semibold);
+}
+
+.listaAtividades {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.atividade {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+}
+
+.atividadeConcluida {
+  opacity: 0.55;
+}
+
+.atividadeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.atividadeTipo {
+  font-size: var(--typography-size-xs);
+  color: var(--color-accent);
+  font-weight: var(--typography-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.atividadeTitulo {
+  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-medium);
+}
+
+.atividadeConcluida .atividadeTitulo {
+  text-decoration: line-through;
+}
+
+.atividadeData {
+  font-size: var(--typography-size-xs);
+  color: var(--color-inkMuted);
+  font-variant-numeric: tabular-nums;
+}
+
+.formAtividade {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+}
+
+.tipoLinha {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
