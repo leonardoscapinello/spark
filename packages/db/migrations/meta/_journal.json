@@ -15,6 +15,13 @@
       "when": 1789071195814,
       "tag": "0001_even_gravity",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789078234314,
+      "tag": "0003_rich_shotgun",
+      "breakpoints": true
     }
   ]
 }

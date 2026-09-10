@@ -14,8 +14,8 @@
     "check:full": "turbo run typecheck lint test",
     "size": "turbo run size",
     "lighthouse": "turbo run lighthouse",
-    "db:migrate": "pnpm --filter @spark/db migrate",
-    "db:generate": "pnpm --filter @spark/db generate",
+    "db:migrate": "pnpm --filter @spark/db db:migrate",
+    "db:generate": "pnpm --filter @spark/db db:generate",
     "gen:api": "pnpm --filter @spark/contracts gen:openapi && pnpm --filter @spark/api-client gen",
     "gen:tokens": "pnpm --filter @spark/tokens build",
     "clean": "turbo run clean && rm -rf node_modules"

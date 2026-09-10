@@ -7,7 +7,11 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import postgres from "postgres";
-import { orgId as orgIdFactory, contactId as contactIdFactory } from "@spark/core";
+import {
+  orgId as orgIdFactory,
+  contactId as contactIdFactory,
+  permissionGroupId as permissionGroupIdFactory,
+} from "@spark/core";
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
@@ -103,5 +107,51 @@ describe("RLS — isolamento entre organizações (docs/adr/0022, docs/adr/0026)
   it("o admin (bypass RLS) continua vendo as duas — é o caminho de migration/suporte, não o de negócio", async () => {
     const linhas = await admin`SELECT id FROM contacts WHERE org_id IN (${orgA}, ${orgB})`;
     expect(linhas).toHaveLength(2);
+  });
+});
+
+describe("RLS — permission_groups e user_permission_groups isolam por org (docs/adr/0029)", () => {
+  // orgs próprias deste describe, não as do bloco de cima — dois describe
+  // irmãos rodam em sequência (afterAll do primeiro roda antes do beforeAll
+  // do segundo), então reusar orgA/orgB apagaria a FK debaixo deste teste.
+  const orgC = orgIdFactory.novo();
+  const orgD = orgIdFactory.novo();
+  const grupoOrgC = permissionGroupIdFactory.novo();
+  const grupoOrgD = permissionGroupIdFactory.novo();
+
+  beforeAll(async () => {
+    await admin`INSERT INTO organizations (id, nome, slug) VALUES
+      (${orgC}, 'Organização C', ${"org-c-" + orgC}),
+      (${orgD}, 'Organização D', ${"org-d-" + orgD})`;
+
+    await admin`INSERT INTO permission_groups (id, org_id, nome, capacidades) VALUES
+      (${grupoOrgC}, ${orgC}, 'Gerente', ${JSON.stringify(["contacts:read", "contacts:write"])}::jsonb),
+      (${grupoOrgD}, ${orgD}, 'Gerente', ${JSON.stringify(["contacts:read"])}::jsonb)`;
+  });
+
+  afterAll(async () => {
+    await admin`DELETE FROM permission_groups WHERE org_id IN (${orgC}, ${orgD})`;
+    await admin`DELETE FROM organizations WHERE id IN (${orgC}, ${orgD})`;
+  });
+
+  it("org C só vê o grupo da org C", async () => {
+    const linhas = await appUser.begin(async (tx) => {
+      await tx.unsafe(`SET LOCAL app.current_org_id = '${orgC}'`);
+      return tx`SELECT id, capacidades FROM permission_groups`;
+    });
+    expect(linhas).toHaveLength(1);
+    expect(linhas[0]?.id).toBe(grupoOrgC);
+    // postgres.js (driver cru, sem o mapeamento de tipos do Drizzle) devolve
+    // jsonb como string — parse explícito, não é bug de aplicação.
+    expect(JSON.parse(linhas[0]?.capacidades as string)).toEqual(["contacts:read", "contacts:write"]);
+  });
+
+  it("org D não enxerga o grupo da org C mesmo sem WHERE", async () => {
+    const linhas = await appUser.begin(async (tx) => {
+      await tx.unsafe(`SET LOCAL app.current_org_id = '${orgD}'`);
+      return tx`SELECT * FROM permission_groups`;
+    });
+    expect(linhas.every((l) => l.org_id === orgD)).toBe(true);
+    expect(linhas.some((l) => l.id === grupoOrgC)).toBe(false);
   });
 });
