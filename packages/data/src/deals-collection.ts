@@ -8,6 +8,7 @@
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
+import { z } from "zod";
 import { DealSchema, dealId, money, toCentavos, type Deal, type Money, type CreateDealInput, type OrgId } from "@spark/core";
 import {
   dealsControllerCreate,
@@ -76,11 +77,34 @@ export function valorSincronizado(valorBruto: unknown): Money {
   return money(Number(valorBruto));
 }
 
+/**
+ * `DealSchema` com `valor` mais permissivo — só para o schema da
+ * coleção, NUNCA para `createZodDto`/OpenAPI (por isso vive aqui, não em
+ * packages/core: `z.toJSONSchema()`, usado por trás do gerador de
+ * OpenAPI, lança `Error: BigInt cannot be represented in JSON Schema` —
+ * achado tentando fazer essa mesma flexibilização em `zMoney`
+ * compartilhado). `collection.update()` da TanStack DB revalida o
+ * registro MESCLADO (estado atual da linha + patch) contra este schema
+ * a cada chamada — e o "estado atual" de uma linha sincronizada é
+ * sempre bigint cru (Electric nunca transforma). JSON nunca carrega
+ * bigint, então nenhuma entrada de API de verdade passa por aqui.
+ */
+const DealSchemaColecao = DealSchema.extend({
+  valor: z.union([z.number().int(), z.bigint()]).transform((valor, ctx) => {
+    try {
+      return money(Number(valor));
+    } catch (erro) {
+      ctx.addIssue({ code: "custom", message: erro instanceof Error ? erro.message : "inválido" });
+      return z.NEVER;
+    }
+  }),
+});
+
 export function createDealsCollection() {
   return createCollection(
     electricCollectionOptions({
       id: "deals",
-      schema: DealSchema,
+      schema: DealSchemaColecao,
       getKey: (negocio) => negocio.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/deals`,

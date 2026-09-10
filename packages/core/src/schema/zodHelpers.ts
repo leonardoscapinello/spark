@@ -31,6 +31,7 @@ import {
   permissionGroupId as toPermissionGroupId,
   pipelineId as toPipelineId,
   stageId as toStageId,
+  activityId as toActivityId,
   type OrgId,
   type ContactId,
   type UserId,
@@ -38,6 +39,7 @@ import {
   type PermissionGroupId,
   type PipelineId,
   type StageId,
+  type ActivityId,
 } from "../identity/id.js";
 
 function bridged<Out>(construir: (valor: string) => Out) {
@@ -63,22 +65,24 @@ export const zDealId = bridged<DealId>(toDealId.de);
 export const zPermissionGroupId = bridged<PermissionGroupId>(toPermissionGroupId.de);
 export const zPipelineId = bridged<PipelineId>(toPipelineId.de);
 export const zStageId = bridged<StageId>(toStageId.de);
+export const zActivityId = bridged<ActivityId>(toActivityId.de);
 
 /**
- * Aceita centavos inteiros como número (formato de transporte da API,
- * nunca decimal) ou bigint. O bigint existe por causa de uma coluna
- * sincronizada pelo Electric: Electric nunca transforma linha
- * sincronizada, só escrita local passa pelo `.transform()` — e
- * `collection.update()` da TanStack DB revalida o registro INTEIRO
- * (mudou ou não) contra este schema a cada chamada (achado testando
- * fechar negócio no navegador: `update()` de QUALQUER campo de um
- * negócio já sincronizado quebrava, porque `valor` da linha "atual"
- * ainda era bigint cru). JSON nunca carrega bigint — aceitar os dois
- * aqui não afrouxa validação de entrada de API de verdade nenhuma.
+ * Aceita centavos inteiros — é o formato de transporte, nunca decimal.
+ * Fica estrito de propósito (só `number`, nunca `bigint`): este mesmo
+ * schema alimenta o OpenAPI via `createZodDto`, e `z.toJSONSchema()` da
+ * zod (usado por trás) lança `Error: BigInt cannot be representable in
+ * JSON Schema` — achado tentando fazer `zMoney` aceitar bigint aqui pra
+ * resolver a revalidação da TanStack DB numa linha sincronizada; JSON
+ * Schema não tem como representar bigint, ponto final, não é limite que
+ * dê pra contornar. O acomodo certo pra bigint fica só em
+ * packages/data/src/deals-collection.ts, que NUNCA passa por
+ * createZodDto — é o mesmo motivo de `valorSincronizado` já existir lá
+ * pra leitura, não aqui.
  */
-export const zMoney = z.union([z.number().int(), z.bigint()]).transform((valor, ctx) => {
+export const zMoney = z.number().int().transform((valor, ctx) => {
   try {
-    return toMoney(Number(valor));
+    return toMoney(valor);
   } catch (erro) {
     ctx.addIssue({ code: "custom", message: erro instanceof Error ? erro.message : "inválido" });
     return z.NEVER;

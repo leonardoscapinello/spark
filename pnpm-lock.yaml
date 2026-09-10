@@ -290,6 +290,9 @@ importers:
       '@tanstack/react-db':
         specifier: 0.3.7
         version: 0.3.7(react@19.3.0)(typescript@5.9.3)
+      zod:
+        specifier: ^4.6.1
+        version: 4.6.1
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
