@@ -30,6 +30,8 @@ const gerente = userIdFactory.novo();
 const supabaseIdGerente = crypto.randomUUID();
 const agente = userIdFactory.novo();
 const supabaseIdAgente = crypto.randomUUID();
+const visualizador = userIdFactory.novo();
+const supabaseIdVisualizador = crypto.randomUUID();
 
 async function assinarJwt(sub: string) {
   const chave = new TextEncoder().encode(JWT_SECRET);
@@ -47,16 +49,20 @@ beforeAll(async () => {
   await admin`INSERT INTO organizations (id, nome, slug) VALUES (${org}, 'Org CRM', ${"org-crm-" + org})`;
   await admin`INSERT INTO users (id, org_id, supabase_user_id, nome, email) VALUES
     (${gerente}, ${org}, ${supabaseIdGerente}, 'Gerente', 'gerente@empresa.com'),
-    (${agente}, ${org}, ${supabaseIdAgente}, 'Agente', 'agente@empresa.com')`;
+    (${agente}, ${org}, ${supabaseIdAgente}, 'Agente', 'agente@empresa.com'),
+    (${visualizador}, ${org}, ${supabaseIdVisualizador}, 'Visualizador', 'visualizador@empresa.com')`;
 
   const grupoGerente = permissionGroupIdFactory.novo();
   const grupoAgente = permissionGroupIdFactory.novo();
+  const grupoVisualizador = permissionGroupIdFactory.novo();
   await admin`INSERT INTO permission_groups (id, org_id, nome, capacidades) VALUES
     (${grupoGerente}, ${org}, 'Gerente', ${JSON.stringify(["pipelines:manage", "deals:read", "deals:write", "deals:move"])}::jsonb),
-    (${grupoAgente}, ${org}, 'Agente', ${JSON.stringify(["deals:read", "deals:write", "deals:move"])}::jsonb)`;
+    (${grupoAgente}, ${org}, 'Agente', ${JSON.stringify(["deals:read", "deals:write", "deals:move"])}::jsonb),
+    (${grupoVisualizador}, ${org}, 'Visualizador', ${JSON.stringify(["deals:read"])}::jsonb)`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
     (${org}, ${gerente}, ${grupoGerente}),
-    (${org}, ${agente}, ${grupoAgente})`;
+    (${org}, ${agente}, ${grupoAgente}),
+    (${org}, ${visualizador}, ${grupoVisualizador})`;
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
@@ -143,5 +149,106 @@ describe("CRM ponta a ponta — pipeline → estágio → negócio → mover (do
     expect(resMove.statusCode).toBe(200);
     expect(resMove.json().deal.stageId).toBe(stageBId);
     expect(resMove.json().deal.valor).toBe(150000);
+  });
+
+  it("Gerente fecha negócio como ganho, e outro como perdido com motivo", async () => {
+    const tokenGerente = await assinarJwt(supabaseIdGerente);
+
+    const resPipeline = await app.inject({
+      method: "POST",
+      url: "/v1/pipelines",
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { id: pipelineIdFactory.novo(), nome: "Funil de Fechamento" },
+    });
+    const pipelineId = resPipeline.json().pipeline.id;
+
+    const stageId = stageIdFactory.novo();
+    await app.inject({
+      method: "POST",
+      url: "/v1/stages",
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { id: stageId, pipelineId, nome: "Negociação", ordem: 0 },
+    });
+
+    async function criarNegocio(nome: string) {
+      const id = dealIdFactory.novo();
+      await app.inject({
+        method: "POST",
+        url: "/v1/deals",
+        headers: { authorization: `Bearer ${tokenGerente}` },
+        payload: { id, pipelineId, stageId, nome, valor: 100000 },
+      });
+      return id;
+    }
+
+    const negocioGanho = await criarNegocio("Negócio Ganho");
+    const resGanho = await app.inject({
+      method: "PATCH",
+      url: `/v1/deals/${negocioGanho}/close`,
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { status: "ganho" },
+    });
+    expect(resGanho.statusCode).toBe(200);
+    expect(resGanho.json().deal.status).toBe("ganho");
+    expect(resGanho.json().deal.motivoPerda).toBeNull();
+
+    const negocioPerdido = await criarNegocio("Negócio Perdido");
+    const resPerdido = await app.inject({
+      method: "PATCH",
+      url: `/v1/deals/${negocioPerdido}/close`,
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { status: "perdido", motivoPerda: "Preço acima do orçamento do cliente" },
+    });
+    expect(resPerdido.statusCode).toBe(200);
+    expect(resPerdido.json().deal.status).toBe("perdido");
+    expect(resPerdido.json().deal.motivoPerda).toBe("Preço acima do orçamento do cliente");
+
+    // "aberto" não é um status de fechamento válido — só ganho/perdido
+    // existem na união discriminada de CloseDealInputSchema.
+    const negocioInvalido = await criarNegocio("Negócio Status Inválido");
+    const resInvalido = await app.inject({
+      method: "PATCH",
+      url: `/v1/deals/${negocioInvalido}/close`,
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { status: "aberto" },
+    });
+    expect(resInvalido.statusCode).toBe(400);
+  });
+
+  it("Visualizador sem deals:move não fecha negócio: 403", async () => {
+    const tokenGerente = await assinarJwt(supabaseIdGerente);
+    const tokenVisualizador = await assinarJwt(supabaseIdVisualizador);
+
+    const resPipeline = await app.inject({
+      method: "POST",
+      url: "/v1/pipelines",
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { id: pipelineIdFactory.novo(), nome: "Funil Fechamento Negado" },
+    });
+    const pipelineId = resPipeline.json().pipeline.id;
+
+    const stageId = stageIdFactory.novo();
+    await app.inject({
+      method: "POST",
+      url: "/v1/stages",
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { id: stageId, pipelineId, nome: "Negociação", ordem: 0 },
+    });
+
+    const dealId = dealIdFactory.novo();
+    await app.inject({
+      method: "POST",
+      url: "/v1/deals",
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { id: dealId, pipelineId, stageId, nome: "Negócio", valor: 100000 },
+    });
+
+    const resFechar = await app.inject({
+      method: "PATCH",
+      url: `/v1/deals/${dealId}/close`,
+      headers: { authorization: `Bearer ${tokenVisualizador}` },
+      payload: { status: "ganho" },
+    });
+    expect(resFechar.statusCode).toBe(403);
   });
 });

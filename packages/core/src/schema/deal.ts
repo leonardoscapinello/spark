@@ -61,3 +61,26 @@ export const MoveDealResponseSchema = z.object({
   txid: z.number().int(),
 });
 export type MoveDealResponse = z.infer<typeof MoveDealResponseSchema>;
+
+/**
+ * Fechar negócio como ganho ou perdido — a outra ação central do board,
+ * além de mover de estágio. `motivoPerda` só faz sentido junto de
+ * "perdido" — mesma escolha de não impor a regra cruzada no schema que já
+ * existe em `DealSchema.motivoPerda` acima (quem decide se pede o campo é
+ * a tela, não o schema). Não é união discriminada por `status`: testado e
+ * confirmado que `createZodDto` (nestjs-zod@5.5.0) quebra ao gerar o
+ * OpenAPI de um `z.discriminatedUnion` do zod v4 — crash incondicional,
+ * sem stack útil, reproduzido até no caso mínimo, sem nenhum campo
+ * cruzado. Objeto simples é o que já funciona em todo outro DTO da API.
+ */
+export const CloseDealInputSchema = z.object({
+  status: z.enum(["ganho", "perdido"]),
+  motivoPerda: z.string().max(500).nullable().optional(),
+});
+export type CloseDealInput = z.infer<typeof CloseDealInputSchema>;
+
+export const CloseDealResponseSchema = z.object({
+  deal: DealSchema,
+  txid: z.number().int(),
+});
+export type CloseDealResponse = z.infer<typeof CloseDealResponseSchema>;

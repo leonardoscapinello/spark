@@ -6,6 +6,7 @@ import { CreatePipelineUseCase } from "./application/create-pipeline.usecase.js"
 import { CreateStageUseCase } from "./application/create-stage.usecase.js";
 import { CreateDealUseCase } from "./application/create-deal.usecase.js";
 import { MoveDealUseCase } from "./application/move-deal.usecase.js";
+import { CloseDealUseCase } from "./application/close-deal.usecase.js";
 import { PipelinesRepository } from "./infrastructure/pipelines.repository.js";
 import { StagesRepository } from "./infrastructure/stages.repository.js";
 import { DealsRepository } from "./infrastructure/deals.repository.js";
@@ -21,6 +22,7 @@ import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
     CreateStageUseCase,
     CreateDealUseCase,
     MoveDealUseCase,
+    CloseDealUseCase,
     PipelinesRepository,
     StagesRepository,
     DealsRepository,

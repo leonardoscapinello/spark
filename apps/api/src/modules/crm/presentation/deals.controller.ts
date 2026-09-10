@@ -5,7 +5,16 @@ import { SupabaseJwtGuard, CapabilityGuard, RequireCapability, CurrentSupabaseUs
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { CreateDealUseCase } from "../application/create-deal.usecase.js";
 import { MoveDealUseCase } from "../application/move-deal.usecase.js";
-import { CreateDealDto, CreateDealResponseDto, MoveDealDto, MoveDealResponseDto, paraDealDto } from "../dto/deal.dto.js";
+import { CloseDealUseCase } from "../application/close-deal.usecase.js";
+import {
+  CreateDealDto,
+  CreateDealResponseDto,
+  MoveDealDto,
+  MoveDealResponseDto,
+  CloseDealDto,
+  CloseDealResponseDto,
+  paraDealDto,
+} from "../dto/deal.dto.js";
 
 @ApiTags("crm")
 @Controller("v1/deals")
@@ -14,6 +23,7 @@ export class DealsController {
     private readonly getCurrentUser: GetCurrentUserUseCase,
     private readonly createDeal: CreateDealUseCase,
     private readonly moveDeal: MoveDealUseCase,
+    private readonly closeDeal: CloseDealUseCase,
   ) {}
 
   @Post()
@@ -43,5 +53,20 @@ export class DealsController {
     const usuario = await this.getCurrentUser.execute(claims.sub);
     const { deal, txid } = await this.moveDeal.execute(usuario.orgId, dealIdFactory.de(id), body.stageId);
     return { deal: paraDealDto(deal), txid } as MoveDealResponseDto;
+  }
+
+  @Patch(":id/close")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("deals:move")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: CloseDealResponseDto })
+  async close(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Param("id") id: string,
+    @Body() body: CloseDealDto,
+  ): Promise<CloseDealResponseDto> {
+    const usuario = await this.getCurrentUser.execute(claims.sub);
+    const { deal, txid } = await this.closeDeal.execute(usuario.orgId, dealIdFactory.de(id), body);
+    return { deal: paraDealDto(deal), txid } as CloseDealResponseDto;
   }
 }

@@ -413,6 +413,87 @@ export interface MoveDealResponseDto {
   txid: number;
 }
 
+export type CloseDealDtoStatus = typeof CloseDealDtoStatus[keyof typeof CloseDealDtoStatus];
+
+
+export const CloseDealDtoStatus = {
+  ganho: 'ganho',
+  perdido: 'perdido',
+} as const;
+
+export interface CloseDealDto {
+  status: CloseDealDtoStatus;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  motivoPerda?: string | null;
+}
+
+export type CloseDealResponseDtoDealStatus = typeof CloseDealResponseDtoDealStatus[keyof typeof CloseDealResponseDtoDealStatus];
+
+
+export const CloseDealResponseDtoDealStatus = {
+  aberto: 'aberto',
+  ganho: 'ganho',
+  perdido: 'perdido',
+} as const;
+
+export type CloseDealResponseDtoDeal = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /** @minLength 1 */
+  stageId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  valor: number;
+  status?: CloseDealResponseDtoDealStatus;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  dataFechamentoEsperada: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  motivoPerda: string | null;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  criadoEm: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  atualizadoEm: string;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  excluidoEm: string | null;
+};
+
+export interface CloseDealResponseDto {
+  deal: CloseDealResponseDtoDeal;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
@@ -831,4 +912,67 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getDealsControllerMoveMutationOptions(options), queryClient);
+    }
+
+export const dealsControllerClose = (
+    id: string,
+    closeDealDto: CloseDealDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CloseDealResponseDto>(
+      {url: `/v1/deals/${id}/close`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: closeDealDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealsControllerCloseMutationKey = () => ['dealsControllerClose'] as const;
+
+export const getDealsControllerCloseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerClose>>, TError,DealsControllerCloseMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealsControllerClose>>, TError,DealsControllerCloseMutationVariables, TContext> => {
+
+const mutationKey = getDealsControllerCloseMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealsControllerClose>>, DealsControllerCloseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  dealsControllerClose(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealsControllerCloseMutationResult = NonNullable<Awaited<ReturnType<typeof dealsControllerClose>>>
+    export type DealsControllerCloseMutationBody = CloseDealDto
+    export type DealsControllerCloseMutationError = unknown
+    export type DealsControllerCloseMutationVariables = {id: string;data: CloseDealDto}
+
+    export const useDealsControllerClose = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerClose>>, TError,DealsControllerCloseMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealsControllerClose>>,
+        TError,
+        DealsControllerCloseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealsControllerCloseMutationOptions(options), queryClient);
     }

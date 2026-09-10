@@ -1,11 +1,23 @@
 import { createZodDto } from "nestjs-zod";
-import { toCentavos, type Deal, DealSchema, CreateDealInputSchema, CreateDealResponseSchema, MoveDealInputSchema, MoveDealResponseSchema } from "@spark/core";
+import {
+  toCentavos,
+  type Deal,
+  DealSchema,
+  CreateDealInputSchema,
+  CreateDealResponseSchema,
+  MoveDealInputSchema,
+  MoveDealResponseSchema,
+  CloseDealInputSchema,
+  CloseDealResponseSchema,
+} from "@spark/core";
 
 export class DealDto extends createZodDto(DealSchema) {}
 export class CreateDealDto extends createZodDto(CreateDealInputSchema) {}
 export class CreateDealResponseDto extends createZodDto(CreateDealResponseSchema) {}
 export class MoveDealDto extends createZodDto(MoveDealInputSchema) {}
 export class MoveDealResponseDto extends createZodDto(MoveDealResponseSchema) {}
+export class CloseDealDto extends createZodDto(CloseDealInputSchema) {}
+export class CloseDealResponseDto extends createZodDto(CloseDealResponseSchema) {}
 
 /**
  * `Deal.valor` é `Money` — tipo opaco de verdade, chave de Symbol

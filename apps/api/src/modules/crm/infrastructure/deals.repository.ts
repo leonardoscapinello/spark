@@ -1,7 +1,16 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, deals, type SparkDb } from "@spark/db";
-import { money, toCentavos, type Deal, type CreateDealInput, type OrgId, type DealId, type StageId } from "@spark/core";
+import {
+  money,
+  toCentavos,
+  type Deal,
+  type CreateDealInput,
+  type CloseDealInput,
+  type OrgId,
+  type DealId,
+  type StageId,
+} from "@spark/core";
 
 @Injectable()
 export class DealsRepository {
@@ -45,6 +54,27 @@ export class DealsRepository {
       const [linha] = await tx
         .update(deals)
         .set({ stageId, atualizadoEm: new Date() })
+        .where(eq(deals.id, dealId))
+        .returning();
+
+      if (!linha) throw new NotFoundException(`Negócio ${dealId} não encontrado.`);
+
+      return { deal: paraDeal(linha), txid };
+    });
+  }
+
+  /** Fechar como ganho ou perdido — a outra ação central do board. */
+  async fechar(orgId: OrgId, dealId: DealId, input: CloseDealInput): Promise<{ deal: Deal; txid: number }> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const txid = await capturarTxid(tx);
+
+      const [linha] = await tx
+        .update(deals)
+        .set({
+          status: input.status,
+          motivoPerda: input.status === "perdido" ? (input.motivoPerda ?? null) : null,
+          atualizadoEm: new Date(),
+        })
         .where(eq(deals.id, dealId))
         .returning();
 
