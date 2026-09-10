@@ -14,8 +14,28 @@ export const GRUPOS_PADRAO: ReadonlyArray<{ nome: string; capacidades: readonly 
   { nome: "Administrador", capacidades: CAPACIDADES },
   {
     nome: "Gerente",
-    capacidades: ["contacts:read", "contacts:write", "pipelines:manage", "deals:read", "deals:write", "deals:move"],
+    capacidades: [
+      "contacts:read",
+      "contacts:write",
+      "pipelines:manage",
+      "deals:read",
+      "deals:write",
+      "deals:move",
+      "activities:read",
+      "activities:write",
+    ],
   },
-  { nome: "Agente", capacidades: ["contacts:read", "contacts:write", "deals:read", "deals:write", "deals:move"] },
-  { nome: "Visualizador", capacidades: ["contacts:read", "deals:read"] },
+  {
+    nome: "Agente",
+    capacidades: [
+      "contacts:read",
+      "contacts:write",
+      "deals:read",
+      "deals:write",
+      "deals:move",
+      "activities:read",
+      "activities:write",
+    ],
+  },
+  { nome: "Visualizador", capacidades: ["contacts:read", "deals:read", "activities:read"] },
 ];

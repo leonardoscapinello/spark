@@ -7,3 +7,4 @@ export * from "./event.js";
 export * from "./pipeline.js";
 export * from "./stage.js";
 export * from "./deal.js";
+export * from "./activity.js";

@@ -12,6 +12,8 @@ export const CAPACIDADES = [
   "deals:read",
   "deals:write",
   "deals:move",
+  "activities:read",
+  "activities:write",
 ] as const;
 
 export type Capacidade = (typeof CAPACIDADES)[number];

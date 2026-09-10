@@ -19,6 +19,7 @@ export const SHAPE_TABLES: Readonly<Record<string, ShapeTableConfig>> = {
   pipelines: { coluna: "org_id" },
   stages: { coluna: "org_id" },
   deals: { coluna: "org_id" },
+  activities: { coluna: "org_id" },
 };
 
 export function isTabelaSincronizavel(tabela: string): tabela is keyof typeof SHAPE_TABLES {

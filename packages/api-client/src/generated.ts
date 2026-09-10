@@ -268,10 +268,6 @@ export interface CreateDealDto {
      */
   valor: number;
   status?: CreateDealDtoStatus;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   dataFechamentoEsperada?: string | null;
   /**
      * @maxLength 500
@@ -314,24 +310,14 @@ export type CreateDealResponseDtoDeal = {
      */
   valor: number;
   status?: CreateDealResponseDtoDealStatus;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   dataFechamentoEsperada: string | null;
   /**
      * @maxLength 500
      * @nullable
      */
   motivoPerda: string | null;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   criadoEm: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   atualizadoEm: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   excluidoEm: string | null;
 };
 
@@ -383,24 +369,14 @@ export type MoveDealResponseDtoDeal = {
      */
   valor: number;
   status?: MoveDealResponseDtoDealStatus;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   dataFechamentoEsperada: string | null;
   /**
      * @maxLength 500
      * @nullable
      */
   motivoPerda: string | null;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   criadoEm: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   atualizadoEm: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   excluidoEm: string | null;
 };
 
@@ -464,29 +440,164 @@ export type CloseDealResponseDtoDeal = {
      */
   valor: number;
   status?: CloseDealResponseDtoDealStatus;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   dataFechamentoEsperada: string | null;
   /**
      * @maxLength 500
      * @nullable
      */
   motivoPerda: string | null;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   criadoEm: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   atualizadoEm: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   excluidoEm: string | null;
 };
 
 export interface CloseDealResponseDto {
   deal: CloseDealResponseDtoDeal;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type CreateActivityDtoTipo = typeof CreateActivityDtoTipo[keyof typeof CreateActivityDtoTipo];
+
+
+export const CreateActivityDtoTipo = {
+  tarefa: 'tarefa',
+  ligacao: 'ligacao',
+  reuniao: 'reuniao',
+  email: 'email',
+} as const;
+
+export interface CreateActivityDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  dealId?: string | null;
+  tipo: CreateActivityDtoTipo;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  titulo: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  notas?: string | null;
+  dataHora: string;
+}
+
+export type CreateActivityResponseDtoActivityTipo = typeof CreateActivityResponseDtoActivityTipo[keyof typeof CreateActivityResponseDtoActivityTipo];
+
+
+export const CreateActivityResponseDtoActivityTipo = {
+  tarefa: 'tarefa',
+  ligacao: 'ligacao',
+  reuniao: 'reuniao',
+  email: 'email',
+} as const;
+
+export type CreateActivityResponseDtoActivity = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  dealId: string | null;
+  tipo: CreateActivityResponseDtoActivityTipo;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  titulo: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  notas: string | null;
+  dataHora: string;
+  concluida?: boolean;
+  concluidaEm: string | null;
+  criadoEm: string;
+  atualizadoEm: string;
+};
+
+export interface CreateActivityResponseDto {
+  activity: CreateActivityResponseDtoActivity;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface CompleteActivityDto {
+  concluida: boolean;
+}
+
+export type CompleteActivityResponseDtoActivityTipo = typeof CompleteActivityResponseDtoActivityTipo[keyof typeof CompleteActivityResponseDtoActivityTipo];
+
+
+export const CompleteActivityResponseDtoActivityTipo = {
+  tarefa: 'tarefa',
+  ligacao: 'ligacao',
+  reuniao: 'reuniao',
+  email: 'email',
+} as const;
+
+export type CompleteActivityResponseDtoActivity = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  dealId: string | null;
+  tipo: CompleteActivityResponseDtoActivityTipo;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  titulo: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  notas: string | null;
+  dataHora: string;
+  concluida?: boolean;
+  concluidaEm: string | null;
+  criadoEm: string;
+  atualizadoEm: string;
+};
+
+export interface CompleteActivityResponseDto {
+  activity: CompleteActivityResponseDtoActivity;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
@@ -975,4 +1086,129 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getDealsControllerCloseMutationOptions(options), queryClient);
+    }
+
+export const activitiesControllerCreate = (
+    createActivityDto: CreateActivityDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CreateActivityResponseDto>(
+      {url: `/v1/activities`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createActivityDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getActivitiesControllerCreateMutationKey = () => ['activitiesControllerCreate'] as const;
+
+export const getActivitiesControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerCreate>>, TError,ActivitiesControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerCreate>>, TError,ActivitiesControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getActivitiesControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activitiesControllerCreate>>, ActivitiesControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  activitiesControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivitiesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof activitiesControllerCreate>>>
+    export type ActivitiesControllerCreateMutationBody = CreateActivityDto
+    export type ActivitiesControllerCreateMutationError = unknown
+    export type ActivitiesControllerCreateMutationVariables = {data: CreateActivityDto}
+
+    export const useActivitiesControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerCreate>>, TError,ActivitiesControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof activitiesControllerCreate>>,
+        TError,
+        ActivitiesControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActivitiesControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const activitiesControllerComplete = (
+    id: string,
+    completeActivityDto: CompleteActivityDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CompleteActivityResponseDto>(
+      {url: `/v1/activities/${id}/complete`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: completeActivityDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getActivitiesControllerCompleteMutationKey = () => ['activitiesControllerComplete'] as const;
+
+export const getActivitiesControllerCompleteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerComplete>>, TError,ActivitiesControllerCompleteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerComplete>>, TError,ActivitiesControllerCompleteMutationVariables, TContext> => {
+
+const mutationKey = getActivitiesControllerCompleteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activitiesControllerComplete>>, ActivitiesControllerCompleteMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  activitiesControllerComplete(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivitiesControllerCompleteMutationResult = NonNullable<Awaited<ReturnType<typeof activitiesControllerComplete>>>
+    export type ActivitiesControllerCompleteMutationBody = CompleteActivityDto
+    export type ActivitiesControllerCompleteMutationError = unknown
+    export type ActivitiesControllerCompleteMutationVariables = {id: string;data: CompleteActivityDto}
+
+    export const useActivitiesControllerComplete = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerComplete>>, TError,ActivitiesControllerCompleteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof activitiesControllerComplete>>,
+        TError,
+        ActivitiesControllerCompleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActivitiesControllerCompleteMutationOptions(options), queryClient);
     }
