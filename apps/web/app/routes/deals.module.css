@@ -115,6 +115,30 @@
   font-variant-numeric: tabular-nums;
 }
 
+.cartaoAcoes {
+  display: flex;
+  gap: var(--space-1);
+  margin: calc(var(--space-1) * -1) calc(var(--space-1) * -1) 0;
+}
+
+.cartaoBadge {
+  align-self: flex-start;
+  font-size: var(--typography-size-xs);
+  font-weight: var(--typography-weight-medium);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+}
+
+.cartaoBadgeGanho {
+  color: var(--color-statusSuccess);
+  background: color-mix(in srgb, var(--color-statusSuccess) 14%, transparent);
+}
+
+.cartaoBadgePerdido {
+  color: var(--color-statusDanger);
+  background: color-mix(in srgb, var(--color-statusDanger) 14%, transparent);
+}
+
 .formNovo {
   display: flex;
   flex-direction: column;

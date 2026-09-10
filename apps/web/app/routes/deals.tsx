@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
-import { money, sum, formatBRL, type StageId } from "@spark/core";
+import { money, sum, formatBRL, type StageId, type DealStatus } from "@spark/core";
 import { pipelineOtimista, estagioOtimista, negocioOtimista, paraInsercao, valorSincronizado } from "@spark/data";
 import { Button, Field, Input, Label } from "@spark/ui-web";
 import { obterSessao } from "../lib/auth.client";
@@ -85,6 +85,12 @@ export default function Deals() {
     setColunaAlvo(null);
   }
 
+  function fecharNegocio(id: string, status: Extract<DealStatus, "ganho" | "perdido">) {
+    dealsCollection.update(id, (draft) => {
+      draft.status = status;
+    });
+  }
+
   if (!carregandoPipelines && !pipelinePrincipal) {
     return (
       <div className={styles.pagina}>
@@ -129,26 +135,48 @@ export default function Deals() {
               </div>
 
               <div className={styles.listaCartoes}>
-                {negociosDoEstagio.map((negocio) => (
-                  <article
-                    key={negocio.id}
-                    className={[styles.cartao, arrastando === negocio.id ? styles.cartaoArrastando : ""]
-                      .filter(Boolean)
-                      .join(" ")}
-                    draggable
-                    onDragStart={(evento) => {
-                      evento.dataTransfer.effectAllowed = "move";
-                      setArrastando(negocio.id);
-                    }}
-                    onDragEnd={() => {
-                      setArrastando(null);
-                      setColunaAlvo(null);
-                    }}
-                  >
-                    <span className={styles.cartaoNome}>{negocio.nome}</span>
-                    <span className={styles.cartaoValor}>{formatBRL(valorSincronizado(negocio.valor))}</span>
-                  </article>
-                ))}
+                {negociosDoEstagio.map((negocio) => {
+                  const aberto = negocio.status === "aberto";
+                  return (
+                    <article
+                      key={negocio.id}
+                      className={[styles.cartao, arrastando === negocio.id ? styles.cartaoArrastando : ""]
+                        .filter(Boolean)
+                        .join(" ")}
+                      draggable={aberto}
+                      onDragStart={(evento) => {
+                        evento.dataTransfer.effectAllowed = "move";
+                        setArrastando(negocio.id);
+                      }}
+                      onDragEnd={() => {
+                        setArrastando(null);
+                        setColunaAlvo(null);
+                      }}
+                    >
+                      <span className={styles.cartaoNome}>{negocio.nome}</span>
+                      <span className={styles.cartaoValor}>{formatBRL(valorSincronizado(negocio.valor))}</span>
+                      {aberto ? (
+                        <div className={styles.cartaoAcoes}>
+                          <Button variant="ghost" size="sm" onClick={() => fecharNegocio(negocio.id, "ganho")}>
+                            Ganho
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => fecharNegocio(negocio.id, "perdido")}>
+                            Perdido
+                          </Button>
+                        </div>
+                      ) : (
+                        <span
+                          className={[
+                            styles.cartaoBadge,
+                            negocio.status === "ganho" ? styles.cartaoBadgeGanho : styles.cartaoBadgePerdido,
+                          ].join(" ")}
+                        >
+                          {negocio.status === "ganho" ? "Ganho" : "Perdido"}
+                        </span>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
 
               <form className={styles.formNovo} onSubmit={(evento) => adicionarNegocio(evento, estagio.id)}>

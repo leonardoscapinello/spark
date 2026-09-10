@@ -64,12 +64,37 @@ export const zPermissionGroupId = bridged<PermissionGroupId>(toPermissionGroupId
 export const zPipelineId = bridged<PipelineId>(toPipelineId.de);
 export const zStageId = bridged<StageId>(toStageId.de);
 
-/** Aceita centavos inteiros (número) — é o formato de transporte, nunca decimal. */
-export const zMoney = z.number().int().transform((valor, ctx) => {
+/**
+ * Aceita centavos inteiros como número (formato de transporte da API,
+ * nunca decimal) ou bigint. O bigint existe por causa de uma coluna
+ * sincronizada pelo Electric: Electric nunca transforma linha
+ * sincronizada, só escrita local passa pelo `.transform()` — e
+ * `collection.update()` da TanStack DB revalida o registro INTEIRO
+ * (mudou ou não) contra este schema a cada chamada (achado testando
+ * fechar negócio no navegador: `update()` de QUALQUER campo de um
+ * negócio já sincronizado quebrava, porque `valor` da linha "atual"
+ * ainda era bigint cru). JSON nunca carrega bigint — aceitar os dois
+ * aqui não afrouxa validação de entrada de API de verdade nenhuma.
+ */
+export const zMoney = z.union([z.number().int(), z.bigint()]).transform((valor, ctx) => {
   try {
-    return toMoney(valor);
+    return toMoney(Number(valor));
   } catch (erro) {
     ctx.addIssue({ code: "custom", message: erro instanceof Error ? erro.message : "inválido" });
     return z.NEVER;
   }
 });
+
+/**
+ * Carimbo de tempo gerado pelo servidor (criadoEm/atualizadoEm/etc. — não
+ * campo digitado por gente). Aceita ISO 8601 estrito (o que a API
+ * devolve, e o que escrita local já validada tem) ou qualquer string não
+ * vazia: o texto que o Postgres/Electric manda numa linha sincronizada
+ * não é ISO estrito ("2026-09-10 22:42:39.07083+00" — espaço em vez de
+ * "T", offset sem dois-pontos) e a precisão/formato pode variar por
+ * DateStyle do ambiente — travar num regex específico só troca uma
+ * fragilidade por outra. Mesmo motivo de `zMoney` aceitar bigint: o
+ * campo nunca é escrito por um cliente, só relido pela própria TanStack
+ * DB ao revalidar o registro inteiro em `update()`.
+ */
+export const zTimestampServidor = z.union([z.iso.datetime(), z.string().min(1)]);

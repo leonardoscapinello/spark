@@ -1,14 +1,21 @@
 /**
  * Coleção local-first de negócios — mesmo padrão de contacts-collection.ts
- * (docs/adr/0018, docs/adr/0026). `onUpdate` só cobre mover de estágio
- * (arrastar-e-soltar) — é a única mutação que a API aceita hoje
- * (PATCH /v1/deals/:id/move); editar outro campo do negócio é rota futura.
+ * (docs/adr/0018, docs/adr/0026). `onUpdate` cobre as duas mutações que a
+ * API aceita hoje: mover de estágio (PATCH .../move) e fechar como
+ * ganho/perdido (PATCH .../close) — editar outro campo do negócio é rota
+ * futura.
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { DealSchema, dealId, money, toCentavos, type Deal, type Money, type CreateDealInput, type OrgId } from "@spark/core";
-import { dealsControllerCreate, dealsControllerMove, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import {
+  dealsControllerCreate,
+  dealsControllerMove,
+  dealsControllerClose,
+  getSparkApiBaseUrl,
+  getSparkAuthToken,
+} from "@spark/api-client";
 
 export function negocioOtimista(entrada: Omit<CreateDealInput, "id">, orgId: OrgId): Deal {
   const agora = new Date().toISOString();
@@ -113,14 +120,33 @@ export function createDealsCollection() {
         if (!mutacao) throw new Error("onUpdate chamado sem mutação pendente.");
 
         const camposAlterados = Object.keys(mutacao.changes);
-        if (camposAlterados.length !== 1 || camposAlterados[0] !== "stageId") {
-          throw new Error(
-            `Só é possível mover negócio de estágio hoje — campo(s) alterado(s): ${camposAlterados.join(", ")}.`,
-          );
+
+        if (camposAlterados.length === 1 && camposAlterados[0] === "stageId") {
+          const resposta = await dealsControllerMove(mutacao.original.id, { stageId: mutacao.modified.stageId });
+          return { txid: resposta.txid };
         }
 
-        const resposta = await dealsControllerMove(mutacao.original.id, { stageId: mutacao.modified.stageId });
-        return { txid: resposta.txid };
+        // fechar (ganho/perdido) muda "status" e, só no caso de perdido,
+        // também "motivoPerda" junto — nunca sozinho.
+        const ehFechamento =
+          camposAlterados.includes("status") &&
+          camposAlterados.every((campo) => campo === "status" || campo === "motivoPerda") &&
+          mutacao.modified.status !== "aberto";
+        if (ehFechamento) {
+          const status = mutacao.modified.status as "ganho" | "perdido";
+          // `exactOptionalPropertyTypes` trata `motivoPerda: undefined` como
+          // diferente de omitir a chave — por isso o corpo é montado por
+          // ramo, não com um `undefined` explícito num objeto só.
+          const resposta = await dealsControllerClose(
+            mutacao.original.id,
+            status === "perdido" ? { status, motivoPerda: mutacao.modified.motivoPerda } : { status },
+          );
+          return { txid: resposta.txid };
+        }
+
+        throw new Error(
+          `Só é possível mover de estágio ou fechar (ganho/perdido) hoje — campo(s) alterado(s): ${camposAlterados.join(", ")}.`,
+        );
       },
     }),
   );

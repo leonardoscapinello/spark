@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zOrgId, zPipelineId, zStageId, zContactId, zDealId, zMoney } from "./zodHelpers.js";
+import { zOrgId, zPipelineId, zStageId, zContactId, zDealId, zMoney, zTimestampServidor } from "./zodHelpers.js";
 
 /** Paridade com o modelo do Pipedrive — é o vocabulário real do produto que estamos substituindo. */
 export const DealStatusSchema = z.enum(["aberto", "ganho", "perdido"]);
@@ -19,13 +19,13 @@ export const DealSchema = z.object({
   nome: z.string().min(1, { error: "Nome do negócio é obrigatório" }).max(200),
   valor: zMoney,
   status: DealStatusSchema.default("aberto"),
-  dataFechamentoEsperada: z.iso.datetime().nullable(),
+  dataFechamentoEsperada: zTimestampServidor.nullable(),
   /** só tem sentido quando status é "perdido" — não é imposto aqui como
    * regra cruzada de schema; a tela é quem decide se pede o campo. */
   motivoPerda: z.string().max(500).nullable(),
-  criadoEm: z.iso.datetime(),
-  atualizadoEm: z.iso.datetime(),
-  excluidoEm: z.iso.datetime().nullable(),
+  criadoEm: zTimestampServidor,
+  atualizadoEm: zTimestampServidor,
+  excluidoEm: zTimestampServidor.nullable(),
 });
 
 export type Deal = z.infer<typeof DealSchema>;
