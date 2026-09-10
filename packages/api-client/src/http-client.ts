@@ -23,6 +23,20 @@ export function setSparkApiBaseUrl(baseUrl: string): void {
   instance.defaults.baseURL = baseUrl;
 }
 
+/**
+ * Getters — packages/data usa pra montar a URL do shape proxy
+ * (`${baseUrl}/v1/shapes/:tabela`) e o header de auth do ShapeStream do
+ * Electric, sem duplicar a configuração já feita aqui pelo app via
+ * setSparkApiBaseUrl/setSparkAuthTokenProvider (docs/adr/0018).
+ */
+export function getSparkApiBaseUrl(): string {
+  return instance.defaults.baseURL ?? "http://localhost:3000";
+}
+
+export function getSparkAuthToken(): string | null {
+  return getToken?.() ?? null;
+}
+
 export async function sparkHttpClient<T>(config: AxiosRequestConfig): Promise<T> {
   const token = getToken?.();
   const res = await instance.request<T>({

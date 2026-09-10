@@ -17,7 +17,8 @@ export const EventSchema = z.object({
 
 export type Event = z.infer<typeof EventSchema>;
 
-export const CreateEventInputSchema = EventSchema.omit({ id: true }).partial({
+// orgId nunca vem do cliente — mesma regra de contact.ts (docs/adr/0026).
+export const CreateEventInputSchema = EventSchema.omit({ id: true, orgId: true }).partial({
   contactId: true,
   dados: true,
   ocorridoEm: true,

@@ -1,0 +1,19 @@
+import { Module } from "@nestjs/common";
+import { ContactsController } from "./presentation/contacts.controller.js";
+import { CreateContactUseCase } from "./application/create-contact.usecase.js";
+import { ContactsRepository } from "./infrastructure/contacts.repository.js";
+import { GetCurrentUserUseCase } from "../identity/application/get-current-user.usecase.js";
+import { UsersRepository } from "../identity/infrastructure/users.repository.js";
+import { SupabaseJwtGuard } from "../../auth/index.js";
+
+@Module({
+  controllers: [ContactsController],
+  providers: [
+    CreateContactUseCase,
+    ContactsRepository,
+    GetCurrentUserUseCase,
+    UsersRepository,
+    SupabaseJwtGuard,
+  ],
+})
+export class ContactsModule {}

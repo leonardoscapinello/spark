@@ -23,13 +23,32 @@ export const ContactSchema = z.object({
 
 export type Contact = z.infer<typeof ContactSchema>;
 
+// orgId nunca vem do cliente — quem decide é o servidor, a partir do
+// usuário autenticado (docs/adr/0026). Se um DTO de criação aceitasse
+// orgId do corpo da requisição, o cliente poderia escrever em qualquer
+// organização só mudando um campo do JSON.
+//
+// id, ao contrário, é obrigatório e vem do cliente — escrita otimista
+// (TanStack DB) precisa da chave final ANTES da resposta do servidor,
+// pra inserir localmente sem re-render quando o Electric replicar de
+// volta (docs/adr/0030). Não é o mesmo tipo de campo que orgId: id não é
+// fronteira de autorização, é só identidade do recurso sendo criado.
 export const CreateContactInputSchema = ContactSchema.omit({
-  id: true,
+  orgId: true,
   criadoEm: true,
   atualizadoEm: true,
   excluidoEm: true,
 }).partial({ email: true, telefone: true, score: true, customFields: true, tags: true });
 export type CreateContactInput = z.infer<typeof CreateContactInputSchema>;
 
-export const UpdateContactInputSchema = CreateContactInputSchema.partial().omit({ orgId: true });
+export const UpdateContactInputSchema = CreateContactInputSchema.partial();
 export type UpdateContactInput = z.infer<typeof UpdateContactInputSchema>;
+
+/** Envelope de resposta de escrita — o txid é o que o TanStack DB usa pra
+ * confirmar a escrita otimista contra o que o Electric replicou de volta
+ * (docs/adr/0018, packages/data). */
+export const CreateContactResponseSchema = z.object({
+  contact: ContactSchema,
+  txid: z.number().int(),
+});
+export type CreateContactResponse = z.infer<typeof CreateContactResponseSchema>;

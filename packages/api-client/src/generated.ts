@@ -6,23 +6,29 @@
  * OpenAPI spec version: 1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import { sparkHttpClient } from './http-client';
 export interface UserDto {
+  /** @minLength 1 */
   id: string;
+  /** @minLength 1 */
   orgId: string;
   /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
   supabaseUserId: string;
@@ -31,6 +37,7 @@ export interface UserDto {
      * @maxLength 200
      */
   nome: string;
+  /** @minLength 1 */
   email: string;
   /** @nullable */
   avatarUrl: string | null;
@@ -43,6 +50,84 @@ export interface UserDto {
      * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
      */
   desativadoEm: string | null;
+}
+
+export type CreateContactDtoCustomFields = {[key: string]: unknown};
+
+export interface CreateContactDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  telefone?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score?: number;
+  customFields?: CreateContactDtoCustomFields;
+  tags?: string[];
+}
+
+export type CreateContactResponseDtoContactCustomFields = {[key: string]: unknown};
+
+export type CreateContactResponseDtoContact = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  telefone: string | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score?: number;
+  customFields?: CreateContactResponseDtoContactCustomFields;
+  tags?: string[];
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  criadoEm: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  atualizadoEm: string;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  excluidoEm: string | null;
+};
+
+export interface CreateContactResponseDto {
+  contact: CreateContactResponseDtoContact;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -147,3 +232,71 @@ export function useMeControllerMe<TData = Awaited<ReturnType<typeof meController
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+
+
+
+
+
+
+export const contactsControllerCreate = (
+    createContactDto: CreateContactDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CreateContactResponseDto>(
+      {url: `/v1/contacts`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createContactDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getContactsControllerCreateMutationKey = () => ['contactsControllerCreate'] as const;
+
+export const getContactsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerCreate>>, TError,ContactsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof contactsControllerCreate>>, TError,ContactsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getContactsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof contactsControllerCreate>>, ContactsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  contactsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ContactsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof contactsControllerCreate>>>
+    export type ContactsControllerCreateMutationBody = CreateContactDto
+    export type ContactsControllerCreateMutationError = unknown
+    export type ContactsControllerCreateMutationVariables = {data: CreateContactDto}
+
+    export const useContactsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerCreate>>, TError,ContactsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof contactsControllerCreate>>,
+        TError,
+        ContactsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getContactsControllerCreateMutationOptions(options), queryClient);
+    }

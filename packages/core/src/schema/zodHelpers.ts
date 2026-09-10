@@ -3,9 +3,20 @@
  * fonte de validação — dela derivam tipo TypeScript, validação de runtime,
  * OpenAPI, formulário e schema Drizzle (docs/adr/0004, docs/adr/0019).
  *
- * Padrão: `z.string().transform((valor, ctx) => {...})` chamando o
+ * Padrão: `z.string().min(1).transform((valor, ctx) => {...})` chamando o
  * construtor do tipo marcado. Se o construtor lança, viramos `z.NEVER` com
  * uma mensagem de issue — nunca duplicamos a regra de validação aqui.
+ *
+ * O `.min(1)` não é só validação — string vazia já cairia no catch do
+ * construtor de qualquer forma. É o que faz o zod v4 gerar o JSON Schema
+ * de ".nullable()" como `anyOf: [{type}, {type:"null"}]` em vez do atalho
+ * `type: [X,"null"]`. O atalho é json-schema-2020-12 válido, mas
+ * `@nestjs/swagger` lê `type` array como "propriedade é um array" — vira
+ * `{type:"array"}` errado no DTO de entrada de qualquer campo opcional e
+ * nulável construído com bridged(). anyOf sobrevive intacto até o
+ * cleanupOpenApiDoc da nestjs-zod, que aí sim converte pra
+ * `nullable: true` corretamente (confirmado testando os dois caminhos
+ * direto no gerador do zod — ver histórico do Bloco 6).
  */
 import { z } from "zod";
 import { email as toEmail, type Email } from "../format/email.js";
@@ -24,7 +35,7 @@ import {
 } from "../identity/id.js";
 
 function bridged<Out>(construir: (valor: string) => Out) {
-  return z.string().transform((valor, ctx) => {
+  return z.string().min(1, { error: "não pode ser vazio" }).transform((valor, ctx) => {
     try {
       return construir(valor);
     } catch (erro) {

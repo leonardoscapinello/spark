@@ -2,6 +2,14 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { LoggerModule } from "nestjs-pino";
 import { IdentityModule } from "./modules/identity/identity.module.js";
+import { SyncModule } from "./modules/sync/sync.module.js";
+import { ContactsModule } from "./modules/contacts/contacts.module.js";
+import { DevModule } from "./modules/dev/dev.module.js";
+
+// DevModule só entra fora de produção — a rota /v1/dev/login literalmente
+// não existe em prod (nem mapeada, não é "existe mas nega" — docs/adr/0005,
+// apps/api/src/modules/dev/presentation/dev-login.controller.ts).
+const modulosCondicionais = process.env.NODE_ENV === "production" ? [] : [DevModule];
 
 @Module({
   imports: [
@@ -20,6 +28,9 @@ import { IdentityModule } from "./modules/identity/identity.module.js";
       },
     }),
     IdentityModule,
+    SyncModule,
+    ContactsModule,
+    ...modulosCondicionais,
   ],
 })
 export class AppModule {}

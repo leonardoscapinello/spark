@@ -41,6 +41,7 @@ Cada arquivo aqui registra **uma decisão**, o contexto em que foi tomada, as al
 | [0027](0027-catalogo-de-gatilhos.md) | Catálogo de gatilhos: todo evento de domínio dispara automação | Aceito |
 | [0028](0028-armazenamento-s3.md) | Armazenamento: um adaptador S3, provedor trocável | Aceito |
 | [0029](0029-paineis-e-grupos-de-permissao.md) | Dois painéis, um app; permissão por grupo | Aceito |
+| [0030](0030-id-gerado-no-cliente.md) | ID gerado no cliente para escrita otimista | Aceito |
 
 ## Leitura obrigatória antes do primeiro código
 

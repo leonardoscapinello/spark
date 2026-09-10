@@ -31,7 +31,8 @@ export const IdentitySchema = z.object({
 
 export type Identity = z.infer<typeof IdentitySchema>;
 
-export const CreateIdentityInputSchema = IdentitySchema.omit({ id: true, criadoEm: true }).partial({
+// orgId nunca vem do cliente — mesma regra de contact.ts (docs/adr/0026).
+export const CreateIdentityInputSchema = IdentitySchema.omit({ id: true, orgId: true, criadoEm: true }).partial({
   verificado: true,
 });
 export type CreateIdentityInput = z.infer<typeof CreateIdentityInputSchema>;

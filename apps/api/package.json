@@ -44,6 +44,7 @@
     "@spark/db": "workspace:*",
     "fastify": "^5.12.3",
     "drizzle-orm": "^0.45.2",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "@electric-sql/client": "1.5.28"
   }
 }

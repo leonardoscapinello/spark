@@ -23,8 +23,12 @@ export const UserSchema = z.object({
 
 export type User = z.infer<typeof UserSchema>;
 
+// orgId nunca vem do cliente — mesma regra de contact.ts (docs/adr/0026).
+// Um convite de usuário é sempre "convide alguém PRA MINHA organização",
+// nunca "crie um usuário na organização que eu disser".
 export const CreateUserInputSchema = UserSchema.omit({
   id: true,
+  orgId: true,
   criadoEm: true,
   atualizadoEm: true,
   desativadoEm: true,
