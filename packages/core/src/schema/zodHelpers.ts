@@ -28,10 +28,12 @@ import {
   contactId as toContactId,
   userId as toUserId,
   dealId as toDealId,
+  permissionGroupId as toPermissionGroupId,
   type OrgId,
   type ContactId,
   type UserId,
   type DealId,
+  type PermissionGroupId,
 } from "../identity/id.js";
 
 function bridged<Out>(construir: (valor: string) => Out) {
@@ -54,6 +56,7 @@ export const zOrgId = bridged<OrgId>(toOrgId.de);
 export const zContactId = bridged<ContactId>(toContactId.de);
 export const zUserId = bridged<UserId>(toUserId.de);
 export const zDealId = bridged<DealId>(toDealId.de);
+export const zPermissionGroupId = bridged<PermissionGroupId>(toPermissionGroupId.de);
 
 /** Aceita centavos inteiros (número) — é o formato de transporte, nunca decimal. */
 export const zMoney = z.number().int().transform((valor, ctx) => {
