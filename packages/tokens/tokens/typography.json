@@ -1,0 +1,100 @@
+{
+  "typography": {
+    "$description": "PLACEHOLDER — família tipográfica da marca ainda não recebida. Só o campo fontFamily.* muda quando a fonte chegar; a escala (tamanho, peso, altura de linha, tracking) já é definitiva. Ver README de packages/tokens.",
+    "fontFamily": {
+      "display": {
+        "$type": "fontFamily",
+        "$value": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "system-ui",
+          "sans-serif"
+        ]
+      },
+      "body": {
+        "$type": "fontFamily",
+        "$value": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "system-ui",
+          "sans-serif"
+        ]
+      },
+      "mono": {
+        "$type": "fontFamily",
+        "$value": [
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "monospace"
+        ]
+      }
+    },
+    "size": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "12px"
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "14px"
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "16px"
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "19px"
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "24px"
+      },
+      "2xl": {
+        "$type": "dimension",
+        "$value": "32px"
+      },
+      "3xl": {
+        "$type": "dimension",
+        "$value": "40px"
+      }
+    },
+    "weight": {
+      "regular": {
+        "$type": "fontWeight",
+        "$value": 400
+      },
+      "medium": {
+        "$type": "fontWeight",
+        "$value": 500
+      },
+      "semibold": {
+        "$type": "fontWeight",
+        "$value": 600
+      }
+    },
+    "lineHeight": {
+      "tight": {
+        "$type": "number",
+        "$value": 1.15
+      },
+      "body": {
+        "$type": "number",
+        "$value": 1.55
+      }
+    },
+    "tracking": {
+      "tight": {
+        "$type": "dimension",
+        "$value": "-0.01em"
+      },
+      "wide": {
+        "$type": "dimension",
+        "$value": "0.08em"
+      }
+    }
+  }
+}

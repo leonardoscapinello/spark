@@ -32,3 +32,9 @@ coverage/
 
 # turbo
 .turbo/
+
+# artefato intermediário do build de tokens (style-dictionary)
+.tmp/
+
+# storybook
+storybook-static/

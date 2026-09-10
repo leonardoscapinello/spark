@@ -9,7 +9,13 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "build": "tsc",
-    "test": "echo \"sem testes ainda — packages/core\""
+    "test": "vitest run"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vitest": "^5.0.0"
+  },
+  "dependencies": {
+    "zod": "^4.6.1",
+    "uuid": "^14.0.2"
+  }
 }

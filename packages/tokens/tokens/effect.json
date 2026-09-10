@@ -1,0 +1,37 @@
+{
+  "effect": {
+    "$description": "Sombra e vidro. O vidro é theme-independent em blur/saturação — só a cor (glassBg etc.) muda por tema. Ver docs/adr/0025-identidade-visual-liquid-glass.md: SÓ packages/ui-web/src/Glass usa isto.",
+    "shadow": {
+      "sm": {
+        "$type": "shadow",
+        "$value": {
+          "color": "rgba(30, 38, 43, 0.08)",
+          "offsetX": "0px",
+          "offsetY": "1px",
+          "blur": "3px",
+          "spread": "0px"
+        }
+      },
+      "md": {
+        "$type": "shadow",
+        "$value": {
+          "color": "rgba(30, 38, 43, 0.10)",
+          "offsetX": "0px",
+          "offsetY": "8px",
+          "blur": "24px",
+          "spread": "0px"
+        }
+      }
+    },
+    "glass": {
+      "blur": {
+        "$type": "dimension",
+        "$value": "20px"
+      },
+      "saturate": {
+        "$type": "number",
+        "$value": 1.4
+      }
+    }
+  }
+}

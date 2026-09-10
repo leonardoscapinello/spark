@@ -1,0 +1,125 @@
+{
+  "color": {
+    "$description": "Rampa de cor primitiva — a paleta Luna (sálvia, ardósia, areia). Ver docs/adr/0025-identidade-visual-liquid-glass.md. Componente nunca referencia isto direto — só a camada semântica (color.semantic.json).",
+    "sage": {
+      "100": {
+        "$type": "color",
+        "$value": "#E7EDEA"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#D3DEDA"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#B2C6C1"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#7E9A94"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#4C6660"
+      }
+    },
+    "slate": {
+      "100": {
+        "$type": "color",
+        "$value": "#EAF0F3"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#C6D3DB"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#A2B9C6"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#6D8B9C"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#3F5866"
+      }
+    },
+    "sand": {
+      "100": {
+        "$type": "color",
+        "$value": "#F1ECE1"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#E4DCCE"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#CFC3B0"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#A8977E"
+      }
+    },
+    "teal": {
+      "400": {
+        "$type": "color",
+        "$value": "#4FA39A"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#2F6F7E"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#173D45"
+      }
+    },
+    "status": {
+      "success": {
+        "$type": "color",
+        "$value": "#2E7D5B"
+      },
+      "warning": {
+        "$type": "color",
+        "$value": "#9A6B1F"
+      },
+      "danger": {
+        "$type": "color",
+        "$value": "#A33C39"
+      }
+    },
+    "white": {
+      "$type": "color",
+      "$value": "#FFFFFF"
+    },
+    "black": {
+      "$type": "color",
+      "$value": "#0C1413"
+    },
+    "neutral": {
+      "50": {
+        "$type": "color",
+        "$value": "#F2F5F4"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#DCE3E1"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#94A3A8"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#55646B"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#1E262B"
+      }
+    }
+  }
+}

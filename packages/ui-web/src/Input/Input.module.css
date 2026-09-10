@@ -1,0 +1,41 @@
+.root {
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--space-3);
+  font-family: var(--typography-fontFamily-body);
+  font-size: var(--typography-size-md);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  transition: border-color 100ms ease-out, box-shadow 100ms ease-out;
+}
+
+.root::placeholder {
+  color: var(--color-inkFaint);
+}
+
+/* Base UI expõe o estado via data-attribute — estilizamos por atributo,
+ * nunca reimplementamos o estado em React (docs/adr/0020). */
+.root[data-focused] {
+  outline: 2px solid var(--color-focusRing);
+  outline-offset: 1px;
+  border-color: var(--color-focusRing);
+}
+
+.root[data-invalid] {
+  border-color: var(--color-statusDanger);
+}
+
+.root[data-disabled] {
+  cursor: not-allowed;
+  background: var(--color-surface2);
+  color: var(--color-inkFaint);
+}
+
+.sm { height: 32px; font-size: var(--typography-size-sm); }
+.lg { height: 48px; font-size: var(--typography-size-lg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .root { transition: none; }
+}

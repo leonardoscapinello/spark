@@ -1,0 +1,5 @@
+.root {
+  font-family: var(--typography-fontFamily-body);
+  font-size: var(--typography-size-xs);
+  color: var(--color-statusDanger);
+}

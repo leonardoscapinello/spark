@@ -26,9 +26,16 @@ const ELEMENTS = [
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/build/**", "**/.output/**", "**/node_modules/**", "**/coverage/**"],
+    ignores: ["**/dist/**", "**/build/**", "**/.output/**", "**/node_modules/**", "**/coverage/**", "**/.tmp/**"],
   },
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      // convenção: prefixo _ marca "intencionalmente não usado" (ex.: provas
+      // de tipo em *.types-test.ts, parâmetro de callback ignorado).
+      "@typescript-eslint/no-unused-vars": ["error", { varsIgnorePattern: "^_", argsIgnorePattern: "^_" }],
+    },
+  },
   {
     plugins: { boundaries },
     settings: {

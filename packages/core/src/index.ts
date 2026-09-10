@@ -1,4 +1,9 @@
-// Regras de domínio puras — a única fonte da verdade (ADR-0019).
-// Esqueleto — Bloco 1 da Fase 0. Conteúdo real chega nos blocos seguintes.
+// packages/core — a única fonte de verdade das regras de domínio do Spark.
+// Nada aqui faz I/O. Nada aqui importa de apps/, db/ ou ui-*/.
+// Ver docs/adr/0019-nucleo-compartilhado.md.
 
-export const PACKAGE_NAME = "@spark/core" as const;
+export * from "./money/index.js";
+export * from "./format/index.js";
+export * from "./identity/index.js";
+export * from "./errors/index.js";
+export * from "./schema/index.js";

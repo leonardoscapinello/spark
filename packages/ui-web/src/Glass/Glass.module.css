@@ -1,0 +1,41 @@
+/* Único arquivo do repositório onde backdrop-filter é permitido — verificado
+ * por lint (eslint.config.mjs) e por convenção (ADR-0025). Vidro vive na
+ * camada de navegação flutuante: sidebar, topbar, sheet, modal, toast.
+ * Nunca em conteúdo que rola — recomputa o backdrop a cada frame. */
+
+.root {
+  background: var(--color-glassBg);
+  backdrop-filter: var(--effect-glass-blur) saturate(var(--effect-glass-saturate));
+  -webkit-backdrop-filter: var(--effect-glass-blur) saturate(var(--effect-glass-saturate));
+  border-radius: var(--radius-glass);
+  box-shadow:
+    inset 0 1px 0 var(--color-glassEdge),
+    var(--effect-shadow-md);
+  /* isola os limites de pintura — mitiga o custo de rasterização (ADR-0017) */
+  contain: paint;
+}
+
+/* Sem suporte a backdrop-filter (ou usuário pediu menos transparência):
+ * cai para superfície sólida, nunca invisível. */
+@media (prefers-reduced-transparency: reduce) {
+  .root {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--color-surface);
+  }
+}
+
+@media (forced-colors: active) {
+  .root {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: Canvas;
+    border: 1px solid CanvasText;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .root {
+    background: var(--color-surface);
+  }
+}

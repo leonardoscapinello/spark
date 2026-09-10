@@ -1,0 +1,24 @@
+{
+  "radius": {
+    "sm": {
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    "md": {
+      "$type": "dimension",
+      "$value": "10px"
+    },
+    "lg": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "glass": {
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    "full": {
+      "$type": "dimension",
+      "$value": "9999px"
+    }
+  }
+}
