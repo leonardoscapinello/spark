@@ -8,6 +8,13 @@
       "when": 1789070003206,
       "tag": "0000_giant_slipstream",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789071195814,
+      "tag": "0001_even_gravity",
+      "breakpoints": true
     }
   ]
 }

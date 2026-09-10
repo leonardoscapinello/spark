@@ -12,6 +12,9 @@ export const users = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => organizations.id),
+    /** sub do JWT da Supabase Auth — liga este usuário local à identidade
+     * autenticada (docs/adr/0005, apps/api/src/auth). */
+    supabaseUserId: uuid("supabase_user_id").notNull().unique(),
     nome: text("nome").notNull(),
     email: text("email").notNull(),
     avatarUrl: text("avatar_url"),

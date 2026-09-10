@@ -1,4 +1,4 @@
-// Cliente HTTP tipado, gerado do OpenAPI (ADR-0004).
-// Esqueleto — Bloco 1 da Fase 0. Conteúdo real chega nos blocos seguintes.
-
-export const PACKAGE_NAME = "@spark/api-client" as const;
+// packages/api-client — cliente HTTP tipado, gerado de packages/contracts/openapi.json
+// (docs/adr/0004). src/generated.ts nunca é editado à mão — rodar `pnpm gen`.
+export * from "./generated.js";
+export * from "./http-client.js";

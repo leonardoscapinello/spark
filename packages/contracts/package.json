@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "build": "tsc",
-    "test": "echo \"sem testes ainda — packages/contracts\""
+    "test": "echo \"sem testes ainda — packages/contracts\"",
+    "gen:openapi": "pnpm --filter @spark/api run emit:openapi"
   },
   "devDependencies": {}
 }

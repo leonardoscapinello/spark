@@ -9,6 +9,10 @@ import { zOrgId, zUserId, zEmail } from "./zodHelpers.js";
 export const UserSchema = z.object({
   id: zUserId,
   orgId: zOrgId,
+  /** sub do JWT emitido pela Supabase Auth (docs/adr/0005). Nunca confundir
+   * com `id` — são espaços de identificador diferentes; este é o que liga
+   * os dois (ver migration 0001, packages/db). */
+  supabaseUserId: z.uuid(),
   nome: z.string().min(1, { error: "Nome é obrigatório" }).max(200),
   email: zEmail,
   avatarUrl: z.url().nullable(),

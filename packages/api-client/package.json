@@ -9,7 +9,22 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "build": "tsc",
-    "test": "echo \"sem testes ainda — packages/api-client\""
+    "test": "vitest run",
+    "gen": "orval --config orval.config.ts"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "orval": "^8.31.0",
+    "axios": "^1.20.0",
+    "@types/react": "^19.3.0",
+    "vitest": "^5.0.0",
+    "jose": "^6.2.12",
+    "postgres": "^3.4.9",
+    "@types/node": "^24.0.0",
+    "@nestjs/platform-fastify": "^11.2.3"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.102.8",
+    "react": "^19.3.0",
+    "@spark/core": "workspace:*"
+  }
 }

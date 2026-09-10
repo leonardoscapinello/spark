@@ -1,15 +1,12 @@
 import { mergeConfig, defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
 import { sharedTestConfig } from "../../vitest.shared.js";
 
 export default mergeConfig(
   sharedTestConfig,
   defineConfig({
-    plugins: [react()],
     test: {
-      environment: "jsdom",
-      setupFiles: ["./src/test-setup.ts"],
-      css: true,
+      // integração real com Postgres — mais lenta que teste puro de core.
+      testTimeout: 10_000,
     },
   }),
 );
