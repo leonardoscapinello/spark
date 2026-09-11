@@ -19,6 +19,7 @@ import { PanelExamples } from "./PanelExamples.js";
 import { AdornedFields } from "./AdornedFields.js";
 import { FieldLayouts } from "./FieldLayouts.js";
 import { DateProgressExamples } from "./DateProgressExamples.js";
+import { ChangeExamples } from "./ChangeExamples.js";
 import { ExtendedCatalog } from "./ExtendedCatalog.js";
 import styles from "./Catalog.module.css";
 
@@ -48,9 +49,8 @@ function Catalog() {
     <main className={styles.main}>
       <header className={styles.header}><div><h1>Componentes</h1><p>Biblioteca compartilhada · referência Intercom</p></div><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => setSelection("Nova visualização")}>Criar novo</Button></header>
       <div className={styles.selection} role="status">{selection}</div>
-      <div className={styles.dashboard}><Suspense fallback={<p>Carregando gráficos…</p>}><DashboardExamples /></Suspense></div>
       <div className={styles.grid}>
-        <DateProgressExamples /><FieldLayouts /><AdornedFields /><FieldExamples /><OverlayExamples /><PanelExamples /><ExtendedCatalog />
+        <DateProgressExamples /><ChangeExamples /><FieldLayouts /><AdornedFields /><FieldExamples /><OverlayExamples /><PanelExamples /><ExtendedCatalog />
         <section className={styles.card}><h2>Botões</h2><div className={styles.rows}>
           <div className={styles.row}><Button>Salvar</Button><Button variant="secondary">Cancelar</Button><Button variant="ghost">Ver tudo</Button><Button variant="raised">Adicionar</Button></div>
           <div className={styles.row}><Button size="sm">Pequeno</Button><Button>Médio</Button><Button size="lg">Grande</Button><Button shape="rounded">Retangular</Button></div>
@@ -61,6 +61,7 @@ function Catalog() {
         <section className={styles.surface}><Tabs label="Detalhes do contato" items={[{value:"details",label:"Detalhes",content:<Accordion defaultValue={["attributes"]} items={[{value:"attributes",title:"Atributos de conversa",icon:<Icon name="inbox" />,content:<dl className={styles.attributes}><dt>Titular</dt><dd><InlineEdit label="Titular" value={owner} onSave={setOwner} options={[{value:"",label:"Não atribuído"},{value:"maria",label:"Maria"},{value:"joao",label:"João"}]} /></dd><dt>Inbox de equipe</dt><dd><InlineEdit label="Inbox de equipe" value={team} onSave={setTeam} /></dd></dl>},{value:"user",title:"Dados do usuário",icon:<Icon name="user" />,content:<p>Nome, e-mail e identidades do contato.</p>},{value:"notes",title:"Notas do usuário",content:<p>As notas internas ficam nesta seção.</p>}]} />},{value:"copilot",label:"Copiloto",content:<p>O conteúdo muda sem sair do painel.</p>}]} /></section>
         <section className={styles.card}><h2>Estados dos campos</h2><div className={styles.rows}><Field invalid><Label>E-mail</Label><Input defaultValue="nome@" /><ErrorText>Informe um e-mail válido.</ErrorText></Field><Field disabled><Label>Desabilitado</Label><Input defaultValue="Não editável" /></Field><Field><Label>Somente leitura</Label><Input readOnly defaultValue="Atendimento" /></Field></div></section>
       </div>
+      <div className={styles.dashboard}><Suspense fallback={<p>Carregando gráficos…</p>}><DashboardExamples /></Suspense></div>
     </main>
   </div>;
 }

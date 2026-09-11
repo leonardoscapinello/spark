@@ -1,0 +1,4 @@
+.root { display: flex; flex-direction: column; gap: var(--space-4); }
+.result { font-weight: var(--typography-weight-semibold); color: var(--color-ink); }
+.result p,.hint { color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.hint { margin: 0; }

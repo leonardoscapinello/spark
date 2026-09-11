@@ -42,3 +42,5 @@ export { FormField, type FormFieldProps, type FormFieldLayout } from "./FormFiel
 
 export { DatePicker, TimePicker, DateTimePicker, type DateTimePickerProps, type DateTimeMode } from "./DateTimePicker/DateTimePicker.js";
 export { ProgressComparison, type ProgressMeasure } from "./ProgressComparison/ProgressComparison.js";
+
+export { ChangeCalculator, type ChangeCalculatorProps } from "./ChangeCalculator/ChangeCalculator.js";
