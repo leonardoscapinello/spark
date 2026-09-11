@@ -20,3 +20,4 @@ export * from "./automation-versions.js";
 export * from "./automation-runtime.js";
 export * from "./integrations.js";
 export * from "./files.js";
+export * from "./catalog.js";

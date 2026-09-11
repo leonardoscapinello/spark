@@ -16,3 +16,4 @@ export * from "./automation-runs-collection.js";
 export * from "./automation-run-steps-collection.js";
 export * from "./integration-connections-collection.js";
 export * from "./files-collection.js";
+export * from "./catalog-collections.js";

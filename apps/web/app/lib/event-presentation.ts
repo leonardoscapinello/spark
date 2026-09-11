@@ -39,6 +39,13 @@ const TITLES: Record<DomainEventType, string> = {
   "file.upload_requested": "Envio de arquivo iniciado",
   "file.upload_completed": "Arquivo enviado",
   "file.deleted": "Arquivo excluído",
+  "product.created": "Produto criado",
+  "product.updated": "Produto atualizado",
+  "product.archived": "Produto arquivado",
+  "product.restored": "Produto restaurado",
+  "product.variant_created": "Variação de produto criada",
+  "discount_rule.created": "Regra de desconto criada",
+  "discount_rule.updated": "Regra de desconto atualizada",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

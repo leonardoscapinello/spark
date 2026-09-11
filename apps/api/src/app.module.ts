@@ -12,6 +12,7 @@ import { InboxModule } from "./modules/inbox/inbox.module.js";
 import { AutomationsModule } from "./modules/automations/automations.module.js";
 import { IntegrationsModule } from "./modules/integrations/integrations.module.js";
 import { FilesModule } from "./modules/files/files.module.js";
+import { CatalogModule } from "./modules/catalog/catalog.module.js";
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { FilesModule } from "./modules/files/files.module.js";
     AutomationsModule,
     IntegrationsModule,
     FilesModule,
+    CatalogModule,
   ],
 })
 export class AppModule {}

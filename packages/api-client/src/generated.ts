@@ -74,6 +74,8 @@ export const CurrentUserDtoCapabilitiesItem = {
   'integrations:manage': 'integrations:manage',
   'files:read': 'files:read',
   'files:write': 'files:write',
+  'catalog:read': 'catalog:read',
+  'catalog:write': 'catalog:write',
 } as const;
 
 export interface CurrentUserDto {
@@ -126,6 +128,8 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'integrations:manage': 'integrations:manage',
   'files:read': 'files:read',
   'files:write': 'files:write',
+  'catalog:read': 'catalog:read',
+  'catalog:write': 'catalog:write',
 } as const;
 
 export interface PermissionGroupDto {
@@ -171,6 +175,8 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'integrations:manage': 'integrations:manage',
   'files:read': 'files:read',
   'files:write': 'files:write',
+  'catalog:read': 'catalog:read',
+  'catalog:write': 'catalog:write',
 } as const;
 
 export interface CreatePermissionGroupDto {
@@ -210,6 +216,8 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'integrations:manage': 'integrations:manage',
   'files:read': 'files:read',
   'files:write': 'files:write',
+  'catalog:read': 'catalog:read',
+  'catalog:write': 'catalog:write',
 } as const;
 
 export interface UpdatePermissionGroupDto {
@@ -2538,6 +2546,337 @@ export interface FileWriteResponseDto {
 export interface FileDownloadResponseDto {
   downloadUrl: string;
   expiresAt: string;
+}
+
+export type CreateProductDtoCurrency = typeof CreateProductDtoCurrency[keyof typeof CreateProductDtoCurrency];
+
+
+export const CreateProductDtoCurrency = {
+  BRL: 'BRL',
+  USD: 'USD',
+} as const;
+
+export interface CreateProductDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  sku: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  price: number;
+  currency?: CreateProductDtoCurrency;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  unit?: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  stock?: number | null;
+  active?: boolean;
+  tags?: string[];
+}
+
+export type ProductWriteResponseDtoProductCurrency = typeof ProductWriteResponseDtoProductCurrency[keyof typeof ProductWriteResponseDtoProductCurrency];
+
+
+export const ProductWriteResponseDtoProductCurrency = {
+  BRL: 'BRL',
+  USD: 'USD',
+} as const;
+
+export type ProductWriteResponseDtoProduct = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  sku: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  description: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  price: number;
+  currency: ProductWriteResponseDtoProductCurrency;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  unit: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  stock: number | null;
+  active: boolean;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export interface ProductWriteResponseDto {
+  product: ProductWriteResponseDtoProduct;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdateProductDtoCurrency = typeof UpdateProductDtoCurrency[keyof typeof UpdateProductDtoCurrency];
+
+
+export const UpdateProductDtoCurrency = {
+  BRL: 'BRL',
+  USD: 'USD',
+} as const;
+
+export interface UpdateProductDto {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  sku?: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name?: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  price?: number;
+  currency?: UpdateProductDtoCurrency;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  unit?: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  stock?: number | null;
+  active?: boolean;
+  tags?: string[];
+}
+
+export interface CreateProductVariantDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  productId: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  sku: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  priceAdjustment?: number;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  stock?: number | null;
+  active?: boolean;
+}
+
+export type ProductVariantWriteResponseDtoVariant = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  productId: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  sku: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  priceAdjustment: number;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  stock: number | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface ProductVariantWriteResponseDto {
+  variant: ProductVariantWriteResponseDtoVariant;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type CreateDiscountRuleDtoType = typeof CreateDiscountRuleDtoType[keyof typeof CreateDiscountRuleDtoType];
+
+
+export const CreateDiscountRuleDtoType = {
+  percentage: 'percentage',
+  fixed_amount: 'fixed_amount',
+} as const;
+
+export interface CreateDiscountRuleDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  type: CreateDiscountRuleDtoType;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  value: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  minimumSubtotal?: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  active?: boolean;
+}
+
+export type DiscountRuleWriteResponseDtoDiscountRuleType = typeof DiscountRuleWriteResponseDtoDiscountRuleType[keyof typeof DiscountRuleWriteResponseDtoDiscountRuleType];
+
+
+export const DiscountRuleWriteResponseDtoDiscountRuleType = {
+  percentage: 'percentage',
+  fixed_amount: 'fixed_amount',
+} as const;
+
+export type DiscountRuleWriteResponseDtoDiscountRule = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  type: DiscountRuleWriteResponseDtoDiscountRuleType;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  value: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  minimumSubtotal: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface DiscountRuleWriteResponseDto {
+  discountRule: DiscountRuleWriteResponseDtoDiscountRule;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdateDiscountRuleDtoType = typeof UpdateDiscountRuleDtoType[keyof typeof UpdateDiscountRuleDtoType];
+
+
+export const UpdateDiscountRuleDtoType = {
+  percentage: 'percentage',
+  fixed_amount: 'fixed_amount',
+} as const;
+
+export interface UpdateDiscountRuleDto {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name?: string;
+  type?: UpdateDiscountRuleDtoType;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  value?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  minimumSubtotal?: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  active?: boolean;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -5642,4 +5981,436 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getFilesControllerRemoveMutationOptions(options), queryClient);
+    }
+
+export const catalogControllerCreateProduct = (
+    createProductDto: CreateProductDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ProductWriteResponseDto>(
+      {url: `/v1/catalog/products`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createProductDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCatalogControllerCreateProductMutationKey = () => ['catalogControllerCreateProduct'] as const;
+
+export const getCatalogControllerCreateProductMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateProduct>>, TError,CatalogControllerCreateProductMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateProduct>>, TError,CatalogControllerCreateProductMutationVariables, TContext> => {
+
+const mutationKey = getCatalogControllerCreateProductMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof catalogControllerCreateProduct>>, CatalogControllerCreateProductMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  catalogControllerCreateProduct(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CatalogControllerCreateProductMutationResult = NonNullable<Awaited<ReturnType<typeof catalogControllerCreateProduct>>>
+    export type CatalogControllerCreateProductMutationBody = CreateProductDto
+    export type CatalogControllerCreateProductMutationError = unknown
+    export type CatalogControllerCreateProductMutationVariables = {data: CreateProductDto}
+
+    export const useCatalogControllerCreateProduct = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateProduct>>, TError,CatalogControllerCreateProductMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof catalogControllerCreateProduct>>,
+        TError,
+        CatalogControllerCreateProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCatalogControllerCreateProductMutationOptions(options), queryClient);
+    }
+
+export const catalogControllerUpdateProduct = (
+    id: string,
+    updateProductDto: UpdateProductDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ProductWriteResponseDto>(
+      {url: `/v1/catalog/products/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateProductDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCatalogControllerUpdateProductMutationKey = () => ['catalogControllerUpdateProduct'] as const;
+
+export const getCatalogControllerUpdateProductMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerUpdateProduct>>, TError,CatalogControllerUpdateProductMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof catalogControllerUpdateProduct>>, TError,CatalogControllerUpdateProductMutationVariables, TContext> => {
+
+const mutationKey = getCatalogControllerUpdateProductMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof catalogControllerUpdateProduct>>, CatalogControllerUpdateProductMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  catalogControllerUpdateProduct(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CatalogControllerUpdateProductMutationResult = NonNullable<Awaited<ReturnType<typeof catalogControllerUpdateProduct>>>
+    export type CatalogControllerUpdateProductMutationBody = UpdateProductDto
+    export type CatalogControllerUpdateProductMutationError = unknown
+    export type CatalogControllerUpdateProductMutationVariables = {id: string;data: UpdateProductDto}
+
+    export const useCatalogControllerUpdateProduct = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerUpdateProduct>>, TError,CatalogControllerUpdateProductMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof catalogControllerUpdateProduct>>,
+        TError,
+        CatalogControllerUpdateProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCatalogControllerUpdateProductMutationOptions(options), queryClient);
+    }
+
+export const catalogControllerArchiveProduct = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ProductWriteResponseDto>(
+      {url: `/v1/catalog/products/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCatalogControllerArchiveProductMutationKey = () => ['catalogControllerArchiveProduct'] as const;
+
+export const getCatalogControllerArchiveProductMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerArchiveProduct>>, TError,CatalogControllerArchiveProductMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof catalogControllerArchiveProduct>>, TError,CatalogControllerArchiveProductMutationVariables, TContext> => {
+
+const mutationKey = getCatalogControllerArchiveProductMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof catalogControllerArchiveProduct>>, CatalogControllerArchiveProductMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  catalogControllerArchiveProduct(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CatalogControllerArchiveProductMutationResult = NonNullable<Awaited<ReturnType<typeof catalogControllerArchiveProduct>>>
+
+    export type CatalogControllerArchiveProductMutationError = unknown
+    export type CatalogControllerArchiveProductMutationVariables = {id: string}
+
+    export const useCatalogControllerArchiveProduct = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerArchiveProduct>>, TError,CatalogControllerArchiveProductMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof catalogControllerArchiveProduct>>,
+        TError,
+        CatalogControllerArchiveProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCatalogControllerArchiveProductMutationOptions(options), queryClient);
+    }
+
+export const catalogControllerRestoreProduct = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ProductWriteResponseDto>(
+      {url: `/v1/catalog/products/${id}/restore`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCatalogControllerRestoreProductMutationKey = () => ['catalogControllerRestoreProduct'] as const;
+
+export const getCatalogControllerRestoreProductMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerRestoreProduct>>, TError,CatalogControllerRestoreProductMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof catalogControllerRestoreProduct>>, TError,CatalogControllerRestoreProductMutationVariables, TContext> => {
+
+const mutationKey = getCatalogControllerRestoreProductMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof catalogControllerRestoreProduct>>, CatalogControllerRestoreProductMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  catalogControllerRestoreProduct(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CatalogControllerRestoreProductMutationResult = NonNullable<Awaited<ReturnType<typeof catalogControllerRestoreProduct>>>
+
+    export type CatalogControllerRestoreProductMutationError = unknown
+    export type CatalogControllerRestoreProductMutationVariables = {id: string}
+
+    export const useCatalogControllerRestoreProduct = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerRestoreProduct>>, TError,CatalogControllerRestoreProductMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof catalogControllerRestoreProduct>>,
+        TError,
+        CatalogControllerRestoreProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCatalogControllerRestoreProductMutationOptions(options), queryClient);
+    }
+
+export const catalogControllerCreateVariant = (
+    createProductVariantDto: CreateProductVariantDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ProductVariantWriteResponseDto>(
+      {url: `/v1/catalog/variants`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createProductVariantDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCatalogControllerCreateVariantMutationKey = () => ['catalogControllerCreateVariant'] as const;
+
+export const getCatalogControllerCreateVariantMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateVariant>>, TError,CatalogControllerCreateVariantMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateVariant>>, TError,CatalogControllerCreateVariantMutationVariables, TContext> => {
+
+const mutationKey = getCatalogControllerCreateVariantMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof catalogControllerCreateVariant>>, CatalogControllerCreateVariantMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  catalogControllerCreateVariant(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CatalogControllerCreateVariantMutationResult = NonNullable<Awaited<ReturnType<typeof catalogControllerCreateVariant>>>
+    export type CatalogControllerCreateVariantMutationBody = CreateProductVariantDto
+    export type CatalogControllerCreateVariantMutationError = unknown
+    export type CatalogControllerCreateVariantMutationVariables = {data: CreateProductVariantDto}
+
+    export const useCatalogControllerCreateVariant = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateVariant>>, TError,CatalogControllerCreateVariantMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof catalogControllerCreateVariant>>,
+        TError,
+        CatalogControllerCreateVariantMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCatalogControllerCreateVariantMutationOptions(options), queryClient);
+    }
+
+export const catalogControllerCreateDiscount = (
+    createDiscountRuleDto: CreateDiscountRuleDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DiscountRuleWriteResponseDto>(
+      {url: `/v1/catalog/discount-rules`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createDiscountRuleDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCatalogControllerCreateDiscountMutationKey = () => ['catalogControllerCreateDiscount'] as const;
+
+export const getCatalogControllerCreateDiscountMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateDiscount>>, TError,CatalogControllerCreateDiscountMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateDiscount>>, TError,CatalogControllerCreateDiscountMutationVariables, TContext> => {
+
+const mutationKey = getCatalogControllerCreateDiscountMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof catalogControllerCreateDiscount>>, CatalogControllerCreateDiscountMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  catalogControllerCreateDiscount(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CatalogControllerCreateDiscountMutationResult = NonNullable<Awaited<ReturnType<typeof catalogControllerCreateDiscount>>>
+    export type CatalogControllerCreateDiscountMutationBody = CreateDiscountRuleDto
+    export type CatalogControllerCreateDiscountMutationError = unknown
+    export type CatalogControllerCreateDiscountMutationVariables = {data: CreateDiscountRuleDto}
+
+    export const useCatalogControllerCreateDiscount = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerCreateDiscount>>, TError,CatalogControllerCreateDiscountMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof catalogControllerCreateDiscount>>,
+        TError,
+        CatalogControllerCreateDiscountMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCatalogControllerCreateDiscountMutationOptions(options), queryClient);
+    }
+
+export const catalogControllerUpdateDiscount = (
+    id: string,
+    updateDiscountRuleDto: UpdateDiscountRuleDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DiscountRuleWriteResponseDto>(
+      {url: `/v1/catalog/discount-rules/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDiscountRuleDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCatalogControllerUpdateDiscountMutationKey = () => ['catalogControllerUpdateDiscount'] as const;
+
+export const getCatalogControllerUpdateDiscountMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerUpdateDiscount>>, TError,CatalogControllerUpdateDiscountMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof catalogControllerUpdateDiscount>>, TError,CatalogControllerUpdateDiscountMutationVariables, TContext> => {
+
+const mutationKey = getCatalogControllerUpdateDiscountMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof catalogControllerUpdateDiscount>>, CatalogControllerUpdateDiscountMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  catalogControllerUpdateDiscount(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CatalogControllerUpdateDiscountMutationResult = NonNullable<Awaited<ReturnType<typeof catalogControllerUpdateDiscount>>>
+    export type CatalogControllerUpdateDiscountMutationBody = UpdateDiscountRuleDto
+    export type CatalogControllerUpdateDiscountMutationError = unknown
+    export type CatalogControllerUpdateDiscountMutationVariables = {id: string;data: UpdateDiscountRuleDto}
+
+    export const useCatalogControllerUpdateDiscount = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof catalogControllerUpdateDiscount>>, TError,CatalogControllerUpdateDiscountMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof catalogControllerUpdateDiscount>>,
+        TError,
+        CatalogControllerUpdateDiscountMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCatalogControllerUpdateDiscountMutationOptions(options), queryClient);
     }

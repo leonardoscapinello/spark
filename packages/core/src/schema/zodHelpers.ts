@@ -47,6 +47,9 @@ import {
   automationJobId as toAutomationJobId,
   integrationConnectionId as toIntegrationConnectionId,
   fileId as toFileId,
+  productId as toProductId,
+  productVariantId as toProductVariantId,
+  discountRuleId as toDiscountRuleId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -70,6 +73,9 @@ import {
   type AutomationJobId,
   type IntegrationConnectionId,
   type FileId,
+  type ProductId,
+  type ProductVariantId,
+  type DiscountRuleId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -111,6 +117,9 @@ export const zAutomationTimerId = bridged<AutomationTimerId>(toAutomationTimerId
 export const zAutomationJobId = bridged<AutomationJobId>(toAutomationJobId.from);
 export const zIntegrationConnectionId = bridged<IntegrationConnectionId>(toIntegrationConnectionId.from);
 export const zFileId = bridged<FileId>(toFileId.from);
+export const zProductId = bridged<ProductId>(toProductId.from);
+export const zProductVariantId = bridged<ProductVariantId>(toProductVariantId.from);
+export const zDiscountRuleId = bridged<DiscountRuleId>(toDiscountRuleId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

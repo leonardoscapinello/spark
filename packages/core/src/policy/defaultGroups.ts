@@ -36,6 +36,8 @@ export const DEFAULT_GROUPS: ReadonlyArray<{ name: string; capabilities: readonl
       "integrations:read",
       "files:read",
       "files:write",
+      "catalog:read",
+      "catalog:write",
     ],
   },
   {
@@ -57,7 +59,8 @@ export const DEFAULT_GROUPS: ReadonlyArray<{ name: string; capabilities: readonl
       "integrations:read",
       "files:read",
       "files:write",
+      "catalog:read",
     ],
   },
-  { name: "Visualizador", capabilities: ["contacts:read", "companies:read", "deals:read", "activities:read", "inbox:read", "automations:read", "integrations:read", "files:read"] },
+  { name: "Visualizador", capabilities: ["contacts:read", "companies:read", "deals:read", "activities:read", "inbox:read", "automations:read", "integrations:read", "files:read", "catalog:read"] },
 ];

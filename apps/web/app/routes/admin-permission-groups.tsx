@@ -35,6 +35,8 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "integrations:manage": "Configurar integrações",
   "files:read": "Ver arquivos",
   "files:write": "Enviar e excluir arquivos",
+  "catalog:read": "Ver catálogo",
+  "catalog:write": "Gerenciar produtos e descontos",
 };
 
 export async function clientLoader() {
