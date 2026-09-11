@@ -42,8 +42,9 @@ Cada arquivo aqui registra **uma decisão**, o contexto em que foi tomada, as al
 | [0028](0028-armazenamento-s3.md) | Armazenamento: um adaptador S3, provedor trocável | Parcialmente substituído por 0032 |
 | [0029](0029-paineis-e-grupos-de-permissao.md) | Dois painéis, um app; permissão por grupo | Aceito |
 | [0030](0030-id-gerado-no-cliente.md) | ID gerado no cliente para escrita otimista | Aceito |
-| [0031](0031-identidade-visual-colorsoft.md) | Identidade visual COLORsoft substitui a paleta Luna; vidro ganha camada de conteúdo | Aceito |
+| [0031](0031-identidade-visual-colorsoft.md) | Identidade visual COLORsoft substitui a paleta Luna; vidro ganha camada de conteúdo | Parcialmente substituído por 0033 |
 | [0032](0032-provedores-substituiveis.md) | Contratos próprios, troca de destino por configuração e coexistência de fornecedores | Aceito; implementação pendente |
+| [0033](0033-interface-fiel-intercom.md) | Interface de produto fiel ao Intercom; precedência ManyChat na automação | Aceito |
 
 ## Leitura obrigatória antes do primeiro código
 

@@ -17,6 +17,7 @@ const BASE_SOURCES = [
   "tokens/effect.json",
   "tokens/typography.json",
   "tokens/motion.json",
+  "tokens/ui.json",
 ];
 
 async function buildTheme(nome, semanticFile) {
@@ -139,7 +140,15 @@ ${toCssVars(darkOnly)}
     }
   }
 
-  const fontFace = buildFontFaceCss();
+  await fs.mkdir("dist/fonts/inter", { recursive: true });
+  await fs.copyFile("node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2", "dist/fonts/inter/inter-latin-wght-normal.woff2");
+  const fontFace = buildFontFaceCss() + `@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter/inter-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}\n`;
   await fs.writeFile("dist/css/tokens.css", fontFace + css);
 
   const nativeTheme = `// Gerado por packages/tokens/build.mjs — NÃO editar à mão.

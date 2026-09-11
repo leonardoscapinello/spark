@@ -1,0 +1,11 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Form } from "./Form.js";
+import { Field } from "../Field/Field.js";
+import { Label } from "../Label/Label.js";
+import { Input } from "../Input/Input.js";
+import { ErrorText } from "../ErrorText/ErrorText.js";
+import { Button } from "../Button/Button.js";
+const meta: Meta<typeof Form> = { title: "Componentes/Form", component: Form };
+export default meta;
+type Story = StoryObj<typeof Form>;
+export const Default: Story = { render: () => (<Form onSubmit={e => e.preventDefault()}><Field><Label>Nome</Label><Input required /><ErrorText match="valueMissing">Informe um nome.</ErrorText></Field><Button type="submit">Salvar</Button></Form>) };

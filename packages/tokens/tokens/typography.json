@@ -1,35 +1,112 @@
 {
-  "$description": "Tipografia oficial da marca — FH Duo Display (títulos) e FH Duo (interface, corpo, formulário, dado). Ativos proprietários, self-hosted em packages/tokens/fonts/. Ver packages/tokens/README.md.",
+  "$description": "Interface Intercom: Inter self-hosted; ADR-0033.",
   "typography": {
     "fontFamily": {
-      "display": { "$type": "fontFamily", "$value": ["FH Duo Display", "FH Duo", "ui-sans-serif", "system-ui", "sans-serif"] },
-      "body":    { "$type": "fontFamily", "$value": ["FH Duo", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"] },
-      "mono":    { "$type": "fontFamily", "$value": ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"] }
+      "display": {
+        "$type": "fontFamily",
+        "$value": [
+          "Inter",
+          "system-ui",
+          "sans-serif"
+        ]
+      },
+      "body": {
+        "$type": "fontFamily",
+        "$value": [
+          "Inter",
+          "system-ui",
+          "sans-serif"
+        ]
+      },
+      "mono": {
+        "$type": "fontFamily",
+        "$value": [
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "monospace"
+        ]
+      }
     },
     "size": {
-      "xs":   { "$type": "dimension", "$value": "12px" },
-      "sm":   { "$type": "dimension", "$value": "14px" },
-      "md":   { "$type": "dimension", "$value": "16px" },
-      "lg":   { "$type": "dimension", "$value": "19px" },
-      "xl":   { "$type": "dimension", "$value": "24px" },
-      "2xl":  { "$type": "dimension", "$value": "32px" },
-      "3xl":  { "$type": "dimension", "$value": "40px" }
+      "xs": {
+        "$type": "dimension",
+        "$value": "12px"
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "14px"
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "16px"
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "19px"
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "24px"
+      },
+      "2xl": {
+        "$type": "dimension",
+        "$value": "32px"
+      },
+      "3xl": {
+        "$type": "dimension",
+        "$value": "40px"
+      },
+      "compact": {
+        "$type": "dimension",
+        "$value": "13px"
+      }
     },
     "weight": {
-      "light":    { "$type": "fontWeight", "$value": 300 },
-      "regular":  { "$type": "fontWeight", "$value": 400 },
-      "medium":   { "$type": "fontWeight", "$value": 500 },
-      "semibold": { "$type": "fontWeight", "$value": 600 },
-      "bold":     { "$type": "fontWeight", "$value": 700 },
-      "black":    { "$type": "fontWeight", "$value": 900 }
+      "light": {
+        "$type": "fontWeight",
+        "$value": 300
+      },
+      "regular": {
+        "$type": "fontWeight",
+        "$value": 400
+      },
+      "medium": {
+        "$type": "fontWeight",
+        "$value": 500
+      },
+      "semibold": {
+        "$type": "fontWeight",
+        "$value": 600
+      },
+      "bold": {
+        "$type": "fontWeight",
+        "$value": 700
+      },
+      "black": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
     },
     "lineHeight": {
-      "tight": { "$type": "number", "$value": 1.15 },
-      "body":  { "$type": "number", "$value": 1.55 }
+      "tight": {
+        "$type": "number",
+        "$value": 1.15
+      },
+      "body": {
+        "$type": "number",
+        "$value": 1.55
+      }
     },
     "tracking": {
-      "tight": { "$type": "dimension", "$value": "-0.01em" },
-      "wide":  { "$type": "dimension", "$value": "0.08em" }
+      "tight": {
+        "$type": "dimension",
+        "$value": "-0.01em"
+      },
+      "wide": {
+        "$type": "dimension",
+        "$value": "0.08em"
+      }
     }
   }
 }

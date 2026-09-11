@@ -33,7 +33,7 @@ describe("cascata de tema em três estados (ADR-0025)", () => {
 
   it("todo token que aparece no claro também tem override coerente quando diverge no escuro", () => {
     expect(css).toMatch(/--color-ground: #0a1526/); // fundo escuro dentro do bloco dark
-    expect(css).toMatch(/--color-ground: #f7f9fc/); // fundo claro dentro do :root
+    expect(css).toMatch(/--color-ground: #eff0eb/); // fundo claro dentro do :root
   });
 
   it("gera o tema nativo com light e dark", () => {
@@ -45,7 +45,7 @@ describe("cascata de tema em três estados (ADR-0025)", () => {
 describe("tipografia da marca — FH Duo (ver assets/brand/README.md do landingsuite)", () => {
   it("declara @font-face para as duas famílias, nos seis pesos, normal e itálico", () => {
     const total = (css.match(/\@font-face/g) ?? []).length;
-    expect(total).toBe(24); // 2 famílias × 6 pesos × 2 estilos
+    expect(total).toBe(25); // FH Duo preservada + Inter variável
   });
 
   it("aponta pros arquivos copiados em dist/fonts, não pro landingsuite", () => {
@@ -54,8 +54,8 @@ describe("tipografia da marca — FH Duo (ver assets/brand/README.md do landings
     expect(css).not.toMatch(/landingsuite/);
   });
 
-  it("FH Duo Display é a família de título; FH Duo é a de corpo", () => {
-    expect(css).toMatch(/--typography-fontFamily-display: .FH Duo Display./);
-    expect(css).toMatch(/--typography-fontFamily-body: .FH Duo.(?!\s*Display)/);
+  it("Inter é a família de interface e título (ADR-0033)", () => {
+    expect(css).toMatch(/--typography-fontFamily-display: Inter/);
+    expect(css).toMatch(/--typography-fontFamily-body: Inter/);
   });
 });

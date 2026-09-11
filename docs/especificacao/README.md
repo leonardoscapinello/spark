@@ -11,6 +11,7 @@ Data: 11/09/2026. Status: proposta de fechamento para implementação, baseada n
 | Este contrato | Comportamento que o Spark precisa entregar e critérios de aceitação |
 | [Modelo de dados](modelo-de-dados.md) | Entidades, relações, invariantes e lacunas do schema atual |
 | [Reaproveitamento e infraestrutura](reuso-e-infraestrutura.md) | Componentes e regras únicos; fornecedores coexistentes, armazenamento configurável e critérios de entrega |
+| [Componentes Intercom](componentes-intercom.md) | Catálogo implementado, medidas e pendências de paridade visual |
 | `packages/core` | Tipos, validações, regras e permissões executáveis |
 | `packages/db` | Schema físico e migrations versionadas |
 
@@ -19,7 +20,7 @@ Especificação não substitui contrato executável. Ao implementar uma unidade,
 ## Direção de produto já definida
 
 - CRM segue a organização e os fluxos do Pipedrive.
-- Atendimento e componentes gerais seguem o Intercom, conciliados com os tokens e ADR visual vigente do Spark.
+- Atendimento e componentes gerais seguem o Intercom, com precedência visual definida no ADR-0033.
 - Automação segue o ManyChat também na interface: canvas, cards, cores semânticas, painéis e múltiplos gatilhos.
 - Contato, negócio, conversa e execução pertencem ao mesmo produto e compartilham identidade e histórico.
 - Conexão Google deve contemplar Gmail e Google Docs com permissões por capacidade; e-mail genérico deve contemplar SMTP de saída e um mecanismo explícito de entrada.

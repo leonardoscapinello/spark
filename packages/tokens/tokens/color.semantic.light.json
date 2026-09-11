@@ -2,47 +2,47 @@
   "color": {
     "ground": {
       "$type": "color",
-      "$value": "{color.neutral.50}"
+      "$value": "#eff0eb"
     },
     "surface": {
       "$type": "color",
-      "$value": "{color.white}"
+      "$value": "#ffffff"
     },
     "surface2": {
       "$type": "color",
-      "$value": "{color.neutral.100}"
+      "$value": "#fbfbf9"
     },
     "ink": {
       "$type": "color",
-      "$value": "{color.neutral.900}"
+      "$value": "#1a1a1a"
     },
     "inkMuted": {
       "$type": "color",
-      "$value": "{color.neutral.700}"
+      "$value": "#646462"
     },
     "inkFaint": {
       "$type": "color",
-      "$value": "{color.neutral.600}"
+      "$value": "#81817e"
     },
     "line": {
       "$type": "color",
-      "$value": "{color.neutral.200}"
+      "$value": "#e9eae6"
     },
     "lineStrong": {
       "$type": "color",
-      "$value": "{color.neutral.300}"
+      "$value": "#c7c8c4"
     },
     "accent": {
       "$type": "color",
-      "$value": "{color.blue.600}"
+      "$value": "#222222"
     },
     "accentStrong": {
       "$type": "color",
-      "$value": "{color.blue.700}"
+      "$value": "#333333"
     },
     "accentWash": {
       "$type": "color",
-      "$value": "#EAF0FF"
+      "$value": "#f8f8f7"
     },
     "statusSuccess": {
       "$type": "color",
@@ -58,7 +58,7 @@
     },
     "focusRing": {
       "$type": "color",
-      "$value": "{color.blue.300}"
+      "$value": "#165fc6"
     },
     "glassBg": {
       "$type": "color",

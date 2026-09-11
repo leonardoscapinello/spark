@@ -1,0 +1,129 @@
+{
+  "$description": "ADR-0033: medidas Intercom e extens\u00f5es expl\u00edcitas em docs/especificacao/componentes-intercom.md",
+  "ui": {
+    "controlSmall": {
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    "controlMedium": {
+      "$type": "dimension",
+      "$value": "32px"
+    },
+    "controlLarge": {
+      "$type": "dimension",
+      "$value": "40px"
+    },
+    "fieldHeight": {
+      "$type": "dimension",
+      "$value": "40px"
+    },
+    "fieldRadius": {
+      "$type": "dimension",
+      "$value": "7px"
+    },
+    "icon": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "railWidth": {
+      "$type": "dimension",
+      "$value": "44px"
+    },
+    "sidebarWidth": {
+      "$type": "dimension",
+      "$value": "236px"
+    },
+    "tabHeight": {
+      "$type": "dimension",
+      "$value": "42px"
+    },
+    "tabLine": {
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    "bodyLine": {
+      "$type": "dimension",
+      "$value": "21px"
+    },
+    "buttonLine": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "hairline": {
+      "$type": "dimension",
+      "$value": "1px"
+    },
+    "focusWidth": {
+      "$type": "dimension",
+      "$value": "2px"
+    },
+    "focusOffset": {
+      "$type": "dimension",
+      "$value": "2px"
+    },
+    "tabPadding": {
+      "$type": "dimension",
+      "$value": "10px"
+    },
+    "previewHeight": {
+      "$type": "dimension",
+      "$value": "760px"
+    },
+    "previewWidth": {
+      "$type": "dimension",
+      "$value": "1120px"
+    },
+    "previewColumn": {
+      "$type": "dimension",
+      "$value": "420px"
+    },
+    "touchTarget": {
+      "$type": "dimension",
+      "$value": "44px"
+    },
+    "buttonBg": {
+      "$type": "color",
+      "$value": "#222222"
+    },
+    "buttonInk": {
+      "$type": "color",
+      "$value": "#fafaf7"
+    },
+    "buttonHover": {
+      "$type": "color",
+      "$value": "#333333"
+    },
+    "subtle": {
+      "$type": "color",
+      "$value": "#f8f8f7"
+    },
+    "selected": {
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    "disabledInk": {
+      "$type": "color",
+      "$value": "#81817e"
+    },
+    "tabIndicator": {
+      "$type": "color",
+      "$value": "#d87936"
+    },
+    "panelShadow": {
+      "$type": "string",
+      "$value": "0px 1px 4px rgba(20,20,20,0.15)"
+    },
+    "selectionShadow": {
+      "$type": "string",
+      "$value": "0px 0px 0px 1px #e9eae6, 0px 1px 4px rgba(20,20,20,0.15)"
+    },
+    "spinDuration": {
+      "$type": "duration",
+      "$value": "600ms"
+    },
+    "spinReducedDuration": {
+      "$type": "duration",
+      "$value": "1200ms"
+    }
+  }
+}
