@@ -1,0 +1,10 @@
+import { useState } from "react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { InlineEdit } from "./InlineEdit.js";
+const meta: Meta<typeof InlineEdit> = {title:"Edição/InlineEdit",component:InlineEdit,args:{label:"Nome",value:"Maria",onSave:()=>{}}};
+export default meta;
+type Story = StoryObj<typeof InlineEdit>;
+export const Texto: Story = {render:function Example(){const [value,setValue]=useState("Maria");return <InlineEdit label="Nome" value={value} onSave={setValue} />;}};
+export const Titular: Story = {render:function Example(){const [value,setValue]=useState("");return <InlineEdit label="Titular" value={value} onSave={setValue} options={[{value:"",label:"Não atribuído"},{value:"maria",label:"Maria"},{value:"joao",label:"João"}]} />;}};
+export const Falha: Story = {args:{onSave:()=>Promise.reject(new Error("Falha simulada"))}};
+export const Bloqueado: Story = {args:{disabled:true}};

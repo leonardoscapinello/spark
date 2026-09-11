@@ -11,6 +11,7 @@ import { Label } from "../Label/Label.js";
 import { Input } from "../Input/Input.js";
 import { PasswordInput } from "../PasswordInput/PasswordInput.js";
 import { ErrorText } from "../ErrorText/ErrorText.js";
+import { InlineEdit } from "../InlineEdit/InlineEdit.js";
 import { ExtendedCatalog } from "./ExtendedCatalog.js";
 import styles from "./Catalog.module.css";
 
@@ -27,6 +28,8 @@ function FormExample() {
   </Form>;
 }
 function Catalog() {
+  const [owner, setOwner] = useState("");
+  const [team, setTeam] = useState("Atendimento");
   const [selection, setSelection] = useState("Todos");
   return <div className={styles.page} data-theme="light">
     <NavigationRail>{(["inbox", "user", "mail", "search"] as const).map((name, index) => <Button key={name} iconOnly variant={index === 0 ? "raised" : "ghost"} shape="rounded" icon={<Icon name={name} />} aria-label={["Inbox", "Contatos", "E-mail", "Pesquisar"][index]} onClick={() => setSelection(["Todos", "Contatos", "E-mail", "Pesquisar"][index] ?? "Todos")} />)}</NavigationRail>
@@ -48,7 +51,7 @@ function Catalog() {
           <div className={styles.row}><Button disabled>Salvar</Button><Button loading>Salvando</Button></div>
         </div></section>
         <section className={styles.card}><h2>Formulário</h2><FormExample /></section>
-        <section className={styles.surface}><Tabs label="Detalhes do contato" items={[{value:"details",label:"Detalhes",content:<Accordion defaultValue={["attributes"]} items={[{value:"attributes",title:"Atributos de conversa",icon:<Icon name="inbox" />,content:<dl className={styles.attributes}><dt>Titular</dt><dd>Não atribuído</dd><dt>Inbox de equipe</dt><dd>Atendimento</dd></dl>},{value:"user",title:"Dados do usuário",icon:<Icon name="user" />,content:<p>Nome, e-mail e identidades do contato.</p>},{value:"notes",title:"Notas do usuário",content:<p>As notas internas ficam nesta seção.</p>}]} />},{value:"copilot",label:"Copiloto",content:<p>O conteúdo muda sem sair do painel.</p>}]} /></section>
+        <section className={styles.surface}><Tabs label="Detalhes do contato" items={[{value:"details",label:"Detalhes",content:<Accordion defaultValue={["attributes"]} items={[{value:"attributes",title:"Atributos de conversa",icon:<Icon name="inbox" />,content:<dl className={styles.attributes}><dt>Titular</dt><dd><InlineEdit label="Titular" value={owner} onSave={setOwner} options={[{value:"",label:"Não atribuído"},{value:"maria",label:"Maria"},{value:"joao",label:"João"}]} /></dd><dt>Inbox de equipe</dt><dd><InlineEdit label="Inbox de equipe" value={team} onSave={setTeam} /></dd></dl>},{value:"user",title:"Dados do usuário",icon:<Icon name="user" />,content:<p>Nome, e-mail e identidades do contato.</p>},{value:"notes",title:"Notas do usuário",content:<p>As notas internas ficam nesta seção.</p>}]} />},{value:"copilot",label:"Copiloto",content:<p>O conteúdo muda sem sair do painel.</p>}]} /></section>
         <section className={styles.card}><h2>Estados dos campos</h2><div className={styles.rows}><Field invalid><Label>E-mail</Label><Input defaultValue="nome@" /><ErrorText>Informe um e-mail válido.</ErrorText></Field><Field disabled><Label>Desabilitado</Label><Input defaultValue="Não editável" /></Field><Field><Label>Somente leitura</Label><Input readOnly defaultValue="Atendimento" /></Field></div></section>
       </div>
     </main>

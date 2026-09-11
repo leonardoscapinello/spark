@@ -1,0 +1,7 @@
+.value { font: inherit; color: var(--color-accent); line-height: var(--ui-tabLine); text-align: start; background: transparent; border: 0; border-radius: var(--radius-sm); padding: var(--space-1); cursor: pointer; overflow-wrap: anywhere; }
+.value:hover:not(:disabled) { background: var(--color-accentWash); text-decoration: underline; }
+.value:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+.value:disabled { color: var(--ui-disabledInk); cursor: default; }
+.editor { min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.error { margin: 0; font-size: var(--typography-size-sm); color: var(--color-statusDanger); }
