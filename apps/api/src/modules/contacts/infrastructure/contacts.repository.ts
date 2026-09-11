@@ -37,6 +37,9 @@ export class ContactsRepository {
           name: input.name,
           email: input.email ?? null,
           phone: input.phone ?? null,
+          leadStatus: input.leadStatus ?? "new",
+          source: input.source ?? null,
+          ownerId: input.ownerId ?? null,
           score: input.score ?? 0,
           customFields: input.customFields ?? {},
           tags: input.tags ?? [],
@@ -65,6 +68,9 @@ export class ContactsRepository {
           name: input.name,
           email: input.email,
           phone: input.phone,
+          leadStatus: input.leadStatus,
+          source: input.source,
+          ownerId: input.ownerId,
           score: input.score,
           customFields: input.customFields,
           tags: input.tags,
@@ -86,6 +92,9 @@ function toContact(row: {
   name: string;
   email: string | null;
   phone: string | null;
+  leadStatus: string;
+  source: string | null;
+  ownerId: string | null;
   score: number;
   customFields: unknown;
   tags: unknown;
@@ -99,6 +108,9 @@ function toContact(row: {
     name: row.name,
     email: row.email,
     phone: row.phone,
+    leadStatus: row.leadStatus,
+    source: row.source,
+    ownerId: row.ownerId,
     score: row.score,
     customFields: (row.customFields ?? {}) as Record<string, unknown>,
     tags: (row.tags ?? []) as string[],

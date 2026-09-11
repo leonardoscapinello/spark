@@ -16,11 +16,14 @@
   font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold);
 }
 .secondary, .muted { margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.score {
-  display: inline-flex; align-items: center; justify-content: center; min-width: var(--space-8);
+.status {
+  display: inline-flex; align-items: center; justify-content: center;
   padding: var(--space-1) var(--space-2); border-radius: var(--radius-full);
-  background: var(--color-surface2); font-variant-numeric: tabular-nums; font-weight: var(--typography-weight-medium);
+  background: var(--color-surface2); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium);
 }
+.status[data-status="qualified"], .status[data-status="customer"] { color: var(--color-statusSuccess); }
+.status[data-status="unqualified"] { color: var(--color-statusDanger); }
+.status[data-status="nurturing"] { color: var(--color-statusWarning); }
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
 @media (max-width: 640px) {
   .page { padding: var(--space-4); }

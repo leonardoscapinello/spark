@@ -6,18 +6,21 @@ import {
   formatPhone,
   email as buildEmail,
   phone as buildPhone,
+  userId as userIdFactory,
   type ActivityType,
+  type LeadStatus,
 } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { Button, DateTimePicker, ErrorText, Field, Input, Label, notify } from "@spark/ui-web";
+import { Button, DateTimePicker, ErrorText, Field, Input, Label, Select, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
+import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
 import styles from "./contact-detail.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload()]);
+  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload(), getUsersCollection().preload()]);
   return null;
 }
 
@@ -28,6 +31,23 @@ const TYPES: { value: ActivityType; label: string }[] = [
   { value: "email", label: "E-mail" },
 ];
 
+const LEAD_STATUS_OPTIONS: { value: LeadStatus; label: string }[] = [
+  { value: "new", label: "Novo" },
+  { value: "qualified", label: "Qualificado" },
+  { value: "nurturing", label: "Em nutrição" },
+  { value: "customer", label: "Cliente" },
+  { value: "unqualified", label: "Desqualificado" },
+];
+
+const SOURCE_OPTIONS = [
+  { value: "instagram", label: "Instagram" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "website", label: "Site" },
+  { value: "referral", label: "Indicação" },
+  { value: "manual", label: "Cadastro manual" },
+  { value: "other", label: "Outra origem" },
+];
+
 function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
 }
@@ -35,10 +55,12 @@ function formatDateTime(iso: string): string {
 export default function ContactDetail({ params }: Route.ComponentProps) {
   const collection = getContactsCollection();
   const activitiesCollection = getActivitiesCollection();
+  const usersCollection = getUsersCollection();
   const [selectedType, setSelectedType] = useState<ActivityType>("task");
   const [activityTitle, setActivityTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [activityPending, setActivityPending] = useState(false);
+  const [contactFieldPending, setContactFieldPending] = useState<string | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [nameEdit, setNameEdit] = useState("");
@@ -62,6 +84,28 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         .where(({ activities: a }) => eq(a.contactId, params.contactId))
         .orderBy(({ activities: a }) => a.scheduledAt, "asc"),
   });
+
+  const { data: users } = useLiveQuery({
+    query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc"),
+  });
+
+  async function updateLifecycle(field: "leadStatus" | "source" | "ownerId", value: string | null) {
+    if (!data || contactFieldPending) return;
+    setContactFieldPending(field);
+    try {
+      const transaction = collection.update(data.id, (draft) => {
+        if (field === "leadStatus") draft.leadStatus = value as LeadStatus;
+        if (field === "source") draft.source = value;
+        if (field === "ownerId") draft.ownerId = value ? userIdFactory.from(value) : null;
+      });
+      await transaction.isPersisted.promise;
+      notify({ title: "Lead atualizado", tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível atualizar o lead", tone: "error" });
+    } finally {
+      setContactFieldPending(null);
+    }
+  }
 
   async function addActivity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -227,6 +271,21 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
           </Button>
         </div>
       )}
+
+      <div className={styles.campos}>
+        <div className={styles.campo}>
+          <span className={styles.rotulo}>Etapa do relacionamento</span>
+          <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} disabled={contactFieldPending !== null} onValueChange={(value) => { if (value) void updateLifecycle("leadStatus", value); }} />
+        </div>
+        <div className={styles.campo}>
+          <span className={styles.rotulo}>Origem</span>
+          <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={SOURCE_OPTIONS} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("source", value)} />
+        </div>
+        <div className={styles.campo}>
+          <span className={styles.rotulo}>Responsável</span>
+          <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("ownerId", value)} />
+        </div>
+      </div>
 
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Atividades</h2>

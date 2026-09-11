@@ -20,6 +20,7 @@ export const SHAPE_TABLES: Readonly<Record<string, ShapeTableConfig>> = {
   stages: { column: "org_id" },
   deals: { column: "org_id" },
   activities: { column: "org_id" },
+  users: { column: "org_id" },
 };
 
 export function isSyncableTable(table: string): table is keyof typeof SHAPE_TABLES {

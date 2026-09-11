@@ -41,24 +41,10 @@ export interface UserDto {
   email: string;
   /** @nullable */
   avatarUrl: string | null;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   createdAt: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   updatedAt: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   invitedAt: string | null;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   activatedAt: string | null;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   deactivatedAt: string | null;
 }
 
@@ -95,24 +81,10 @@ export interface CurrentUserDto {
   email: string;
   /** @nullable */
   avatarUrl: string | null;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   createdAt: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   updatedAt: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   invitedAt: string | null;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   activatedAt: string | null;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   deactivatedAt: string | null;
   capabilities: CurrentUserDtoCapabilitiesItem[];
 }
@@ -226,24 +198,10 @@ export interface AdminUserDto {
   email: string;
   /** @nullable */
   avatarUrl: string | null;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   createdAt: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
   updatedAt: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   invitedAt: string | null;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   activatedAt: string | null;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
   deactivatedAt: string | null;
   /** @items.minLength 1 */
   groupIds: string[];
@@ -314,6 +272,17 @@ export interface AdminAuditLogDto {
   targetLabel: string;
 }
 
+export type CreateContactDtoLeadStatus = typeof CreateContactDtoLeadStatus[keyof typeof CreateContactDtoLeadStatus];
+
+
+export const CreateContactDtoLeadStatus = {
+  new: 'new',
+  qualified: 'qualified',
+  nurturing: 'nurturing',
+  customer: 'customer',
+  unqualified: 'unqualified',
+} as const;
+
 export type CreateContactDtoCustomFields = {[key: string]: unknown};
 
 export interface CreateContactDto {
@@ -334,6 +303,18 @@ export interface CreateContactDto {
      * @nullable
      */
   phone?: string | null;
+  leadStatus?: CreateContactDtoLeadStatus;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @nullable
+     */
+  source?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
   /**
      * @minimum 0
      * @maximum 100
@@ -342,6 +323,17 @@ export interface CreateContactDto {
   customFields?: CreateContactDtoCustomFields;
   tags?: string[];
 }
+
+export type CreateContactResponseDtoContactLeadStatus = typeof CreateContactResponseDtoContactLeadStatus[keyof typeof CreateContactResponseDtoContactLeadStatus];
+
+
+export const CreateContactResponseDtoContactLeadStatus = {
+  new: 'new',
+  qualified: 'qualified',
+  nurturing: 'nurturing',
+  customer: 'customer',
+  unqualified: 'unqualified',
+} as const;
 
 export type CreateContactResponseDtoContactCustomFields = {[key: string]: unknown};
 
@@ -365,6 +357,18 @@ export type CreateContactResponseDtoContact = {
      * @nullable
      */
   phone: string | null;
+  leadStatus?: CreateContactResponseDtoContactLeadStatus;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @nullable
+     */
+  source?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
   /**
      * @minimum 0
      * @maximum 100
@@ -386,6 +390,17 @@ export interface CreateContactResponseDto {
   txid: number;
 }
 
+export type UpdateContactDtoLeadStatus = typeof UpdateContactDtoLeadStatus[keyof typeof UpdateContactDtoLeadStatus];
+
+
+export const UpdateContactDtoLeadStatus = {
+  new: 'new',
+  qualified: 'qualified',
+  nurturing: 'nurturing',
+  customer: 'customer',
+  unqualified: 'unqualified',
+} as const;
+
 export type UpdateContactDtoCustomFields = {[key: string]: unknown};
 
 export interface UpdateContactDto {
@@ -404,6 +419,18 @@ export interface UpdateContactDto {
      * @nullable
      */
   phone?: string | null;
+  leadStatus?: UpdateContactDtoLeadStatus;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @nullable
+     */
+  source?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
   /**
      * @minimum 0
      * @maximum 100
@@ -412,6 +439,17 @@ export interface UpdateContactDto {
   customFields?: UpdateContactDtoCustomFields;
   tags?: string[];
 }
+
+export type UpdateContactResponseDtoContactLeadStatus = typeof UpdateContactResponseDtoContactLeadStatus[keyof typeof UpdateContactResponseDtoContactLeadStatus];
+
+
+export const UpdateContactResponseDtoContactLeadStatus = {
+  new: 'new',
+  qualified: 'qualified',
+  nurturing: 'nurturing',
+  customer: 'customer',
+  unqualified: 'unqualified',
+} as const;
 
 export type UpdateContactResponseDtoContactCustomFields = {[key: string]: unknown};
 
@@ -435,6 +473,18 @@ export type UpdateContactResponseDtoContact = {
      * @nullable
      */
   phone: string | null;
+  leadStatus?: UpdateContactResponseDtoContactLeadStatus;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @nullable
+     */
+  source?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
   /**
      * @minimum 0
      * @maximum 100

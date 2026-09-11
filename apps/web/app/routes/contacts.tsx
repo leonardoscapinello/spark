@@ -6,19 +6,22 @@ import { contactMatches, email as buildEmail, phone as buildPhone, formatPhone, 
 import { ActionModal, Button, DataTable, ErrorText, Field, Icon, Input, Label, PageHeader, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
+import { getUsersCollection } from "../lib/users-collection.client";
 import styles from "./contacts.module.css";
 
 export async function clientLoader() {
-  await getContactsCollection().preload();
+  await Promise.all([getContactsCollection().preload(), getUsersCollection().preload()]);
   return null;
 }
 
 export default function Contacts() {
   const navigate = useNavigate();
   const collection = getContactsCollection();
+  const usersCollection = getUsersCollection();
   const { data: contacts, isLoading } = useLiveQuery({
     query: (q) => q.from({ contacts: collection }).orderBy(({ contacts: c }) => c.createdAt, "desc"),
   });
+  const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }) });
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,7 +31,9 @@ export default function Contacts() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const filteredContacts = contacts.filter((contact) => contactMatches(contact, search));
-  const columns = useMemo<TableColumn<Contact>[]>(() => [
+  const columns = useMemo<TableColumn<Contact>[]>(() => {
+    const userNames = new Map(users.map((user) => [user.id, user.name]));
+    return [
     {
       id: "name",
       label: "Contato",
@@ -42,19 +47,19 @@ export default function Contacts() {
       sortValue: (contact) => contact.phone ?? "",
     },
     {
-      id: "score",
-      label: "Pontuação",
-      cell: (contact) => <span className={styles.score}>{contact.score}</span>,
-      sortValue: (contact) => contact.score,
-      align: "end",
+      id: "status",
+      label: "Etapa",
+      cell: (contact) => <span className={styles.status} data-status={contact.leadStatus}>{leadStatusLabel(contact.leadStatus)}</span>,
+      sortValue: (contact) => leadStatusLabel(contact.leadStatus),
     },
     {
-      id: "created",
-      label: "Criado em",
-      cell: (contact) => formatDate(contact.createdAt),
-      sortValue: (contact) => contact.createdAt,
+      id: "owner",
+      label: "Responsável",
+      cell: (contact) => contact.ownerId ? userNames.get(contact.ownerId) ?? "Usuário indisponível" : <span className={styles.muted}>Não atribuído</span>,
+      sortValue: (contact) => contact.ownerId ? userNames.get(contact.ownerId) ?? "" : "",
     },
-  ], []);
+  ];
+  }, [users]);
 
   function resetForm() {
     setName(""); setEmail(""); setPhone("");
@@ -118,6 +123,6 @@ function initials(name: string): string {
   return name.split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase("pt-BR");
 }
 
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(value));
+function leadStatusLabel(status: Contact["leadStatus"]): string {
+  return { new: "Novo", qualified: "Qualificado", nurturing: "Em nutrição", customer: "Cliente", unqualified: "Desqualificado" }[status];
 }

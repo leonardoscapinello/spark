@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zOrgId, zPermissionGroupId, zUserId, zEmail } from "./zodHelpers.js";
+import { zOrgId, zPermissionGroupId, zUserId, zEmail, zServerTimestamp } from "./zodHelpers.js";
 import { CAPABILITIES } from "../policy/capability.js";
 
 /**
@@ -17,11 +17,11 @@ export const UserSchema = z.object({
   name: z.string().min(1, { error: "Name is required" }).max(200),
   email: zEmail,
   avatarUrl: z.url().nullable(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-  invitedAt: z.iso.datetime().nullable(),
-  activatedAt: z.iso.datetime().nullable(),
-  deactivatedAt: z.iso.datetime().nullable(),
+  createdAt: zServerTimestamp,
+  updatedAt: zServerTimestamp,
+  invitedAt: zServerTimestamp.nullable(),
+  activatedAt: zServerTimestamp.nullable(),
+  deactivatedAt: zServerTimestamp.nullable(),
 });
 
 export type User = z.infer<typeof UserSchema>;

@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { zOrgId, zContactId, zEmail, zPhone, zServerTimestamp } from "./zodHelpers.js";
+import { zOrgId, zContactId, zEmail, zPhone, zServerTimestamp, zUserId } from "./zodHelpers.js";
+
+export const LEAD_STATUSES = ["new", "qualified", "nurturing", "customer", "unqualified"] as const;
+export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
 /**
  * Contact — the product's center. `identities` (outside this file, in
@@ -22,6 +25,9 @@ export const ContactSchema = z.object({
   name: z.string().min(1, { error: "Name is required" }).max(200),
   email: zEmail.nullable(),
   phone: zPhone.nullable(),
+  leadStatus: z.enum(LEAD_STATUSES).default("new"),
+  source: z.string().trim().min(1).max(100).nullable().default(null),
+  ownerId: zUserId.nullable().default(null),
   score: z.number().int().min(0).max(100).default(0),
   customFields: z.record(z.string(), z.unknown()).default({}),
   tags: z.array(z.string()).default([]),
@@ -47,7 +53,7 @@ export const CreateContactInputSchema = ContactSchema.omit({
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
-}).partial({ email: true, phone: true, score: true, customFields: true, tags: true });
+}).partial({ email: true, phone: true, leadStatus: true, source: true, ownerId: true, score: true, customFields: true, tags: true });
 export type CreateContactInput = z.infer<typeof CreateContactInputSchema>;
 
 export const UpdateContactInputSchema = CreateContactInputSchema.omit({ id: true }).partial();

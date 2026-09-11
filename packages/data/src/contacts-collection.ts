@@ -37,6 +37,9 @@ export function optimisticContact(input: Omit<CreateContactInput, "id">, orgId: 
     name: input.name,
     email: input.email ?? null,
     phone: input.phone ?? null,
+    leadStatus: input.leadStatus ?? "new",
+    source: input.source ?? null,
+    ownerId: input.ownerId ?? null,
     score: input.score ?? 0,
     customFields: input.customFields ?? {},
     tags: input.tags ?? [],
@@ -91,6 +94,9 @@ export function createContactsCollection() {
           name: contact.name,
           email: contact.email,
           phone: contact.phone,
+          leadStatus: contact.leadStatus,
+          source: contact.source,
+          ownerId: contact.ownerId,
           score: contact.score,
           customFields: contact.customFields,
           tags: contact.tags,
@@ -106,11 +112,11 @@ export function createContactsCollection() {
         if (!mutation) throw new Error("onUpdate called with no pending mutation.");
 
         const changedFields = Object.keys(mutation.changes);
-        const allowedFields = new Set(["name", "email", "phone"]);
+        const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId"]);
         const isAllowed = changedFields.length > 0 && changedFields.every((field) => allowedFields.has(field));
         if (!isAllowed) {
           throw new Error(
-            `Only name, email, or phone can be edited today — changed field(s): ${changedFields.join(", ")}.`,
+            `Unsupported contact field(s): ${changedFields.join(", ")}.`,
           );
         }
 
@@ -118,6 +124,9 @@ export function createContactsCollection() {
           ...("name" in mutation.changes ? { name: mutation.modified.name } : {}),
           ...("email" in mutation.changes ? { email: mutation.modified.email } : {}),
           ...("phone" in mutation.changes ? { phone: mutation.modified.phone } : {}),
+          ...("leadStatus" in mutation.changes ? { leadStatus: mutation.modified.leadStatus } : {}),
+          ...("source" in mutation.changes ? { source: mutation.modified.source } : {}),
+          ...("ownerId" in mutation.changes ? { ownerId: mutation.modified.ownerId } : {}),
         });
 
         return { txid: response.txid };
