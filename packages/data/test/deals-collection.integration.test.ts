@@ -99,7 +99,14 @@ beforeAll(async () => {
 
   apiProcess = spawn("node", ["--loader", "ts-node/esm", "src/main.ts"], {
     cwd: new URL("../../../apps/api", import.meta.url).pathname,
-    env: { ...process.env, PORT: String(PORT), DATABASE_URL, SUPABASE_JWT_SECRET: JWT_SECRET, NODE_ENV: "test" },
+    env: {
+      ...process.env,
+      PORT: String(PORT),
+      DATABASE_URL,
+      SUPABASE_JWT_SECRET: JWT_SECRET,
+      NODE_ENV: "test",
+      TS_NODE_TRANSPILE_ONLY: "true",
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
   await waitForApiReady(apiProcess);

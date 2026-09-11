@@ -12,7 +12,8 @@
     "dev": "node --loader ts-node/esm --watch src/main.ts",
     "test": "vitest run",
     "start": "node --loader ts-node/esm src/main.ts",
-    "emit:openapi": "node --loader ts-node/esm scripts/emit-openapi.mts"
+    "emit:openapi": "node --loader ts-node/esm scripts/emit-openapi.mts",
+    "identity:bootstrap-owner": "tsx scripts/bootstrap-owner.mts"
   },
   "devDependencies": {
     "@nestjs/testing": "^11.2.3",

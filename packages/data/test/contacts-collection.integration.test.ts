@@ -97,6 +97,7 @@ beforeAll(async () => {
       DATABASE_URL,
       SUPABASE_JWT_SECRET: JWT_SECRET,
       NODE_ENV: "test",
+      TS_NODE_TRANSPILE_ONLY: "true",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
