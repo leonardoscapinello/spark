@@ -184,6 +184,10 @@
     "disabledOpacity": {
       "$type": "number",
       "$value": 0.5
+    },
+    "popoverWidth": {
+      "$type": "dimension",
+      "$value": "320px"
     }
   }
 }

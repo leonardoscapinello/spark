@@ -26,6 +26,14 @@ export function MenuSubmenu({ label, children }: { label: string; children: Reac
 export function DropdownButton({ children, trigger, ...props }: Omit<ComponentProps<typeof BaseMenu.Root>, "children"> & { trigger: ReactElement; children: ReactNode }) {
   return <Menu {...props}><MenuTrigger render={trigger} /><MenuContent>{children}</MenuContent></Menu>;
 }
-export function SplitButton({ children, menu, menuLabel = "Mais opções", ...props }: ButtonProps & { menu: ReactNode; menuLabel?: string }) {
-  return <div className={styles.root}><Button {...props}>{children}</Button><DropdownButton trigger={<Button variant={props.variant ?? "primary"} disabled={props.disabled || props.loading} size={props.size ?? "md"} iconOnly aria-label={menuLabel} icon={<Icon name="chevron" />} />}>{menu}</DropdownButton></div>;
+/** Standard dropdown trigger: text, optional leading icon and optional chevron.
+ * The existing Button owns appearance; Menu owns focus, keyboard and dismissal. */
+export function MenuButton({ menu, indicator = true, children, ...props }: Omit<ButtonProps, "trailingIcon"> & { menu: ReactNode; indicator?: boolean }) {
+  return <DropdownButton trigger={<Button {...props} trailingIcon={indicator ? <Icon name="chevron" /> : undefined}>{children}</Button>}>{menu}</DropdownButton>;
+}
+export function SplitButton({ children, menu, menuLabel = "Mais opções", shape = "pill", ...props }: ButtonProps & { menu: ReactNode; menuLabel?: string }) {
+  return <div className={styles.root} role="group" aria-label={menuLabel}>
+    <Button {...props} shape={shape} data-split-part="action">{children}</Button>
+    <DropdownButton trigger={<Button type="button" data-split-part="menu" shape={shape} variant={props.variant ?? "primary"} disabled={props.disabled || props.loading} size={props.size ?? "md"} iconOnly aria-label={menuLabel} icon={<Icon name="chevron" />} />}>{menu}</DropdownButton>
+  </div>;
 }

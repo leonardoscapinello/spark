@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../Button/Button.js";
 import { Icon } from "../Icon/Icon.js";
-import { DropdownButton, MenuItem, MenuSeparator, MenuGroup, MenuSubmenu, MenuCheckboxItem, SplitButton } from "../Menu/Menu.js";
+import { DropdownButton, MenuButton, MenuItem, MenuSeparator, MenuGroup, MenuSubmenu, MenuCheckboxItem, SplitButton } from "../Menu/Menu.js";
 import { Select } from "../Select/Select.js";
 import { SearchSelect } from "../SearchSelect/SearchSelect.js";
 import { Popover, PopoverTrigger, PopoverContent, PopoverClose } from "../Popover/Popover.js";
@@ -32,6 +32,10 @@ export function ExtendedCatalog() {
         <MenuSeparator /><MenuCheckboxItem checked={timestamps} onCheckedChange={setTimestamps}>Exibir carimbos de data e hora</MenuCheckboxItem><MenuSeparator /><MenuItem disabled>Recurso indisponível</MenuItem><MenuItem danger onClick={()=>setLastAction("Arquivar selecionado")}>Arquivar</MenuItem>
       </DropdownButton>
       <SplitButton onClick={()=>setLastAction("Enviar selecionado")} menuLabel="Opções de envio" menu={<><MenuItem onClick={()=>setLastAction("Enviar e fechar selecionado")}>Enviar e fechar</MenuItem><MenuItem onClick={()=>setLastAction("Agendar envio selecionado")}>Agendar envio</MenuItem></>}>Enviar</SplitButton>
+    </div><div className={styles.row}>
+      <MenuButton variant="ghost" indicator={false} menu={<><MenuItem onClick={()=>setLastAction("Detalhes selecionado")}>Detalhes</MenuItem><MenuSeparator /><MenuItem onClick={()=>setLastAction("Histórico selecionado")}>Histórico</MenuItem></>}>Só texto</MenuButton>
+      <MenuButton variant="secondary" icon={<Icon name="user" />} menu={<><MenuItem icon={<Icon name="user" />} onClick={()=>setLastAction("Atribuir selecionado")}>Atribuir</MenuItem><MenuSeparator /><MenuItem icon={<Icon name="inbox" />} onClick={()=>setLastAction("Mover selecionado")}>Mover para inbox</MenuItem></>}>Texto com ícone</MenuButton>
+      <SplitButton shape="rounded" variant="secondary" menuLabel="Opções de salvar" onClick={()=>setLastAction("Salvar selecionado")} menu={<MenuItem onClick={()=>setLastAction("Salvar como selecionado")}>Salvar como...</MenuItem>}>Salvar</SplitButton>
     </div><p role="status" className={styles.note}>{lastAction}</p></div></section>
     <section className={styles.card}><h2>Seletores e busca de opções</h2><div className={styles.rows}>
       <Field><Label>Equipe responsável</Label><Select label="Equipe responsável" options={teams} value={team} onValueChange={setTeam} name="team" /></Field>

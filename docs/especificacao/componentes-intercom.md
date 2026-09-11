@@ -44,3 +44,11 @@ Medição adicional no menu «Mais opções» do Intercom: raio externo 12 px, p
 Abas têm indicador animado por clip-path; acordeões animam altura medida pelo primitivo e opacidade. Menus/popovers/modal usam transições de entrada/saída interrompíveis, com origem no gatilho quando ancorados. Movimento reduzido remove deslocamento e conserva feedback. Switch tem deslocamento do thumb. Não se aplica atraso artificial a ações.
 
 Ainda há trabalho de paridade: ícones exatos, hover/foco medidos sistematicamente, tabela com seleção/resize/reordenação, calendário próprio, editor rico, uploader, toast, estados de rede, mobile e tema escuro. Esses itens não são declarados entregues pela ampliação do catálogo.
+
+## Correção de geometria — dropdown e popover
+
+`SplitButton` identifica seus dois segmentos explicitamente. Não usa `:first-child`/`:last-child`, pois os guards de foco inseridos pelo Base UI mudam a posição do gatilho na árvore enquanto o menu está aberto. Verificação no navegador: segmento de menu com 32 × 32 px e raio `0 9999px 9999px 0` tanto fechado quanto aberto. A forma retangular também é transmitida aos dois segmentos.
+
+`MenuButton` compõe o mesmo Button com menu: texto sem indicador, texto com ícone e indicador, variantes e tamanhos existentes. Catálogo e histórias incluem as formas e o split em carregamento. Separadores pertencem ao conteúdo do menu; não dependem de texto ou ícones fictícios.
+
+Popover de formulário tem título e corpo próprios, largura de 320 px limitada ao espaço disponível e padding de 20 px. Medição do exemplo de filtro: 21 px da borda externa até o conteúdo em ambos os lados (20 px internos + borda de 1 px). Estes valores corrigem a composição reportada pelo usuário; não constituem nova prova de paridade completa com o Intercom.
