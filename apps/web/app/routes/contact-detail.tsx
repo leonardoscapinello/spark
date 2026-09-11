@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { contactId as contactIdFactory, type ActivityType } from "@spark/core";
+import { contactId as contactIdFactory, formatTelefone, type ActivityType } from "@spark/core";
 import { atividadeOtimista } from "@spark/data";
 import { Button, Field, Input, Label } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
@@ -103,7 +103,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Telefone</span>
-          <span className={styles.valor}>{data.telefone ?? "—"}</span>
+          <span className={styles.valor}>{data.telefone ? formatTelefone(data.telefone) : "—"}</span>
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Pontuação</span>

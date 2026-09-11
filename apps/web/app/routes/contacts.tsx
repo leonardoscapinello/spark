@@ -2,8 +2,13 @@ import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { contatoOtimista } from "@spark/data";
-import { contatoCorresponde } from "@spark/core";
-import { Button, Field, Input, Label } from "@spark/ui-web";
+import {
+  contatoCorresponde,
+  email as construirEmail,
+  telefone as construirTelefone,
+  formatTelefone,
+} from "@spark/core";
+import { Button, ErrorText, Field, Input, Label } from "@spark/ui-web";
 import { obterSessao } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import styles from "./contacts.module.css";
@@ -26,6 +31,10 @@ export default function Contacts() {
   });
 
   const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [erroEmail, setErroEmail] = useState<string | null>(null);
+  const [erroTelefone, setErroTelefone] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const contatosFiltrados = contatos.filter((contato) => contatoCorresponde(contato, busca));
 
@@ -37,8 +46,31 @@ export default function Contacts() {
     const sessao = obterSessao();
     if (!sessao) return;
 
-    collection.insert(contatoOtimista({ nome: nomeLimpo }, sessao.orgId));
+    setErroEmail(null);
+    setErroTelefone(null);
+
+    let emailValido = null;
+    try {
+      emailValido = email.trim() ? construirEmail(email) : null;
+    } catch {
+      setErroEmail("E-mail inválido.");
+      return;
+    }
+
+    let telefoneValido = null;
+    try {
+      telefoneValido = telefone.trim() ? construirTelefone(telefone) : null;
+    } catch {
+      setErroTelefone("Telefone inválido — use DDD + número.");
+      return;
+    }
+
+    collection.insert(
+      contatoOtimista({ nome: nomeLimpo, email: emailValido, telefone: telefoneValido }, sessao.orgId),
+    );
     setNome("");
+    setEmail("");
+    setTelefone("");
   }
 
   return (
@@ -53,6 +85,30 @@ export default function Contacts() {
             onChange={(evento) => setNome(evento.target.value)}
             placeholder="Nome do contato"
           />
+        </Field>
+        <Field invalid={!!erroEmail}>
+          <Label>E-mail</Label>
+          <Input
+            value={email}
+            onChange={(evento) => {
+              setEmail(evento.target.value);
+              setErroEmail(null);
+            }}
+            placeholder="opcional"
+          />
+          <ErrorText>{erroEmail}</ErrorText>
+        </Field>
+        <Field invalid={!!erroTelefone}>
+          <Label>Telefone</Label>
+          <Input
+            value={telefone}
+            onChange={(evento) => {
+              setTelefone(evento.target.value);
+              setErroTelefone(null);
+            }}
+            placeholder="opcional"
+          />
+          <ErrorText>{erroTelefone}</ErrorText>
         </Field>
         <Button type="submit" disabled={!nome.trim()}>
           Adicionar
@@ -80,7 +136,9 @@ export default function Contacts() {
               <Link to={`/contacts/${contato.id}`} className={styles.item}>
                 <div className={styles.itemNome}>{contato.nome}</div>
                 {(contato.email ?? contato.telefone) && (
-                  <div className={styles.itemDetalhe}>{contato.email ?? contato.telefone}</div>
+                  <div className={styles.itemDetalhe}>
+                    {contato.email ?? (contato.telefone ? formatTelefone(contato.telefone) : "")}
+                  </div>
                 )}
               </Link>
             </li>
