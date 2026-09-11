@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { contactId, conversationId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
+import { contactId, conversationId, messageId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
+import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
 import { ActionModal, Badge, Button, Field, Icon, Label, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
@@ -47,6 +48,7 @@ export default function Inbox() {
   const [newSubject, setNewSubject] = useState("");
   const [newChannel, setNewChannel] = useState<ConversationChannel>("manual");
   const [note, setNote] = useState("");
+  const [composerMode, setComposerMode] = useState<"reply" | "note">("note");
   const [saving, setSaving] = useState(false);
   const contactNames = useMemo(() => new Map(contacts.map((item) => [item.id, item.name])), [contacts]);
   const userNames = useMemo(() => new Map(users.map((item) => [item.id, item.name])), [users]);
@@ -57,6 +59,7 @@ export default function Inbox() {
   useEffect(() => {
     if (selected && selected.id !== selectedId) setSelectedId(selected.id);
   }, [selected, selectedId]);
+  useEffect(() => { if (selected && selected.channel !== "email" && selected.channel !== "instagram" && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
 
   async function createConversation() {
     if (!session || !newContact || !newSubject.trim()) throw new Error("MISSING_FIELDS");
@@ -85,19 +88,18 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
-  async function addNote(event: FormEvent<HTMLFormElement>) {
+  async function submitMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const body = note.trim();
     if (!session || !selected || !body || saving) return;
     setSaving(true);
     try {
-      const message = optimisticInternalNote({ conversationId: conversationId.from(selected.id), contactId: selected.contactId, authorUserId: userId.from(session.userId), body }, session.orgId);
-      const transaction = messagesCollection.insert(message);
-      await transaction.isPersisted.promise;
+      if (composerMode === "reply") await inboxControllerSend(selected.id, { id: messageId.create(), body });
+      else { const message = optimisticInternalNote({ conversationId: conversationId.from(selected.id), contactId: selected.contactId, authorUserId: userId.from(session.userId), body }, session.orgId); const transaction = messagesCollection.insert(message); await transaction.isPersisted.promise; }
       setNote("");
-      notify({ title: "Nota adicionada", tone: "success" });
+      notify({ title: composerMode === "reply" ? "Mensagem enviada" : "Nota adicionada", tone: "success" });
     } catch {
-      notify({ title: "Não foi possível adicionar a nota", tone: "error" });
+      notify({ title: composerMode === "reply" ? "Não foi possível enviar a mensagem" : "Não foi possível adicionar a nota", tone: "error" });
     } finally { setSaving(false); }
   }
 
@@ -144,10 +146,10 @@ export default function Inbox() {
               <small>{message.direction === "internal" ? "Nota interna" : message.status}</small>
             </article>)}
           </div>
-          {canWrite && <form className={styles.composer} onSubmit={addNote}>
-            <div className={styles.composerMode}><Badge tone="warning">Nota interna</Badge><span>Visível somente para a equipe</span></div>
-            <Textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Adicione contexto, orientação ou acompanhamento…" rows={3} />
-            <div className={styles.composerFooter}><span>{note.length}/20.000</span><Button type="submit" loading={saving} disabled={!note.trim()}>Adicionar nota</Button></div>
+          {canWrite && <form className={styles.composer} onSubmit={submitMessage}>
+            <div className={styles.composerMode}><div className={styles.modeButtons}>{(selected.channel === "email" || selected.channel === "instagram") && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
+            <Textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />
+            <div className={styles.composerFooter}><span>{note.length}/20.000</span><Button type="submit" loading={saving} disabled={!note.trim()}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button></div>
           </form>}
         </> : <div className={styles.threadEmpty}><Icon name="message" /><strong>Selecione uma conversa</strong><span>O histórico completo aparecerá aqui.</span></div>}
       </section>

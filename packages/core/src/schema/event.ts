@@ -7,6 +7,7 @@ export const DOMAIN_EVENT_TYPES = [
   "deal.created", "deal.updated", "deal.stage_changed", "deal.won", "deal.lost",
   "activity.created", "activity.completed", "activity.reopened",
   "conversation.created", "conversation.updated", "conversation.closed", "conversation.reopened", "message.note_added",
+  "message.queued", "message.sent", "message.failed",
   "automation.created", "automation.draft_updated", "automation.published", "automation.paused", "automation.activated",
   "automation.run_started", "automation.run_completed", "automation.run_failed",
   "integration.configured", "integration.checked", "integration.disabled", "integration.enabled",

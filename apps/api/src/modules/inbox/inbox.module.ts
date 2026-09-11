@@ -9,10 +9,14 @@ import { CreateConversationUseCase } from "./application/create-conversation.use
 import { UpdateConversationUseCase } from "./application/update-conversation.usecase.js";
 import { InboxRepository } from "./infrastructure/inbox.repository.js";
 import { InboxController } from "./presentation/inbox.controller.js";
+import { IntegrationsModule } from "../integrations/integrations.module.js";
+import { SendMessageUseCase } from "./application/send-message.usecase.js";
+import { ChannelSender } from "./infrastructure/channel-sender.service.js";
+import { OutboundMessagesRepository } from "./infrastructure/outbound-messages.repository.js";
 
 @Module({
-  imports: [EventsModule],
+  imports: [EventsModule, IntegrationsModule],
   controllers: [InboxController],
-  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, InboxRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

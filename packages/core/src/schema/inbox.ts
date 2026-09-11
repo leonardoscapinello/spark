@@ -58,6 +58,8 @@ export type UpdateConversationInput = z.infer<typeof UpdateConversationInputSche
 
 export const AddInternalNoteInputSchema = MessageSchema.pick({ id: true, body: true });
 export type AddInternalNoteInput = z.infer<typeof AddInternalNoteInputSchema>;
+export const SendMessageInputSchema = MessageSchema.pick({ id: true, body: true });
+export type SendMessageInput = z.infer<typeof SendMessageInputSchema>;
 
 export const ConversationWriteResponseSchema = z.object({ conversation: ConversationSchema, txid: z.number().int() });
 export const MessageWriteResponseSchema = z.object({ message: MessageSchema, conversation: ConversationSchema, txid: z.number().int() });
