@@ -34,6 +34,8 @@ export type FileId = Id<"File">;
 export type ProductId = Id<"Product">;
 export type ProductVariantId = Id<"ProductVariant">;
 export type DiscountRuleId = Id<"DiscountRule">;
+export type LeadFormId = Id<"LeadForm">;
+export type FormSubmissionId = Id<"FormSubmission">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -82,3 +84,5 @@ export const fileId = makeIdFactory("File");
 export const productId = makeIdFactory("Product");
 export const productVariantId = makeIdFactory("ProductVariant");
 export const discountRuleId = makeIdFactory("DiscountRule");
+export const leadFormId = makeIdFactory("LeadForm");
+export const formSubmissionId = makeIdFactory("FormSubmission");

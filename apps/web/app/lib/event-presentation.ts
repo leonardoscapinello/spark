@@ -49,6 +49,11 @@ const TITLES: Record<DomainEventType, string> = {
   "product.variant_created": "Variação de produto criada",
   "discount_rule.created": "Regra de desconto criada",
   "discount_rule.updated": "Regra de desconto atualizada",
+  "form.created": "Formulário criado",
+  "form.updated": "Formulário atualizado",
+  "form.published": "Formulário publicado",
+  "form.unpublished": "Formulário retirado do ar",
+  "form.submitted": "Formulário respondido",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

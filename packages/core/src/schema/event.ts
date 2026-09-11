@@ -13,6 +13,7 @@ export const DOMAIN_EVENT_TYPES = [
   "integration.configured", "integration.checked", "integration.disabled", "integration.enabled",
   "file.upload_requested", "file.upload_completed", "file.deleted",
   "product.created", "product.updated", "product.archived", "product.restored", "product.variant_created", "discount_rule.created", "discount_rule.updated",
+  "form.created", "form.updated", "form.published", "form.unpublished", "form.submitted",
 ] as const;
 export const DomainEventTypeSchema = z.enum(DOMAIN_EVENT_TYPES);
 export type DomainEventType = z.infer<typeof DomainEventTypeSchema>;

@@ -13,3 +13,4 @@ export * from "./import/index.js";
 export * from "./analytics/index.js";
 export * from "./automation/index.js";
 export * from "./catalog/index.js";
+export * from "./forms/index.js";

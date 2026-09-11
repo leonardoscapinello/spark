@@ -50,6 +50,8 @@ import {
   productId as toProductId,
   productVariantId as toProductVariantId,
   discountRuleId as toDiscountRuleId,
+  leadFormId as toLeadFormId,
+  formSubmissionId as toFormSubmissionId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -76,6 +78,8 @@ import {
   type ProductId,
   type ProductVariantId,
   type DiscountRuleId,
+  type LeadFormId,
+  type FormSubmissionId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -120,6 +124,8 @@ export const zFileId = bridged<FileId>(toFileId.from);
 export const zProductId = bridged<ProductId>(toProductId.from);
 export const zProductVariantId = bridged<ProductVariantId>(toProductVariantId.from);
 export const zDiscountRuleId = bridged<DiscountRuleId>(toDiscountRuleId.from);
+export const zLeadFormId = bridged<LeadFormId>(toLeadFormId.from);
+export const zFormSubmissionId = bridged<FormSubmissionId>(toFormSubmissionId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

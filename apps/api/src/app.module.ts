@@ -13,6 +13,7 @@ import { AutomationsModule } from "./modules/automations/automations.module.js";
 import { IntegrationsModule } from "./modules/integrations/integrations.module.js";
 import { FilesModule } from "./modules/files/files.module.js";
 import { CatalogModule } from "./modules/catalog/catalog.module.js";
+import { FormsModule } from "./modules/forms/forms.module.js";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { CatalogModule } from "./modules/catalog/catalog.module.js";
     IntegrationsModule,
     FilesModule,
     CatalogModule,
+    FormsModule,
   ],
 })
 export class AppModule {}

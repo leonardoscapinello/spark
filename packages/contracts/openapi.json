@@ -2166,6 +2166,202 @@
           "catalog"
         ]
       }
+    },
+    "/v1/forms": {
+      "post": {
+        "operationId": "FormsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLeadFormDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadFormWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/v1/forms/{id}": {
+      "patch": {
+        "operationId": "FormsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLeadFormDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadFormWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/v1/forms/{id}/status": {
+      "patch": {
+        "operationId": "FormsController_status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLeadFormStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadFormWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/v1/public/forms/{publicKey}": {
+      "get": {
+        "operationId": "PublicFormsController_get",
+        "parameters": [
+          {
+            "name": "publicKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicLeadFormDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public-forms"
+        ]
+      }
+    },
+    "/v1/public/forms/{publicKey}/submissions": {
+      "post": {
+        "operationId": "PublicFormsController_submit",
+        "parameters": [
+          {
+            "name": "publicKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitLeadFormDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitLeadFormResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public-forms"
+        ]
+      }
     }
   },
   "info": {
@@ -2424,7 +2620,9 @@
                 "files:read",
                 "files:write",
                 "catalog:read",
-                "catalog:write"
+                "catalog:write",
+                "forms:read",
+                "forms:write"
               ]
             }
           }
@@ -2488,7 +2686,9 @@
                 "files:read",
                 "files:write",
                 "catalog:read",
-                "catalog:write"
+                "catalog:write",
+                "forms:read",
+                "forms:write"
               ]
             }
           },
@@ -2552,7 +2752,9 @@
                 "files:read",
                 "files:write",
                 "catalog:read",
-                "catalog:write"
+                "catalog:write",
+                "forms:read",
+                "forms:write"
               ]
             }
           }
@@ -2599,7 +2801,9 @@
                 "files:read",
                 "files:write",
                 "catalog:read",
-                "catalog:write"
+                "catalog:write",
+                "forms:read",
+                "forms:write"
               ]
             }
           }
@@ -7760,6 +7964,521 @@
             "type": "boolean"
           }
         }
+      },
+      "CreateLeadFormDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "fields": {
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "email",
+                    "phone",
+                    "textarea",
+                    "select",
+                    "checkbox"
+                  ]
+                },
+                "mapping": {
+                  "type": "string",
+                  "enum": [
+                    "name",
+                    "email",
+                    "phone",
+                    "company",
+                    "none"
+                  ]
+                },
+                "required": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "options": {
+                  "default": [],
+                  "maxItems": 50,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "type",
+                "mapping"
+              ]
+            }
+          },
+          "submitLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "successMessage": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "title"
+        ]
+      },
+      "LeadFormWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "form": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 1000,
+                "nullable": true
+              },
+              "publicKey": {
+                "type": "string",
+                "minLength": 20,
+                "maxLength": 100
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "published",
+                  "archived"
+                ]
+              },
+              "fields": {
+                "minItems": 1,
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 120
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "email",
+                        "phone",
+                        "textarea",
+                        "select",
+                        "checkbox"
+                      ]
+                    },
+                    "mapping": {
+                      "type": "string",
+                      "enum": [
+                        "name",
+                        "email",
+                        "phone",
+                        "company",
+                        "none"
+                      ]
+                    },
+                    "required": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "options": {
+                      "default": [],
+                      "maxItems": 50,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "type",
+                    "mapping"
+                  ]
+                }
+              },
+              "submitLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              },
+              "successMessage": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "name",
+              "title",
+              "description",
+              "publicKey",
+              "status",
+              "fields",
+              "submitLabel",
+              "successMessage",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "form",
+          "txid"
+        ]
+      },
+      "UpdateLeadFormDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "fields": {
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "email",
+                    "phone",
+                    "textarea",
+                    "select",
+                    "checkbox"
+                  ]
+                },
+                "mapping": {
+                  "type": "string",
+                  "enum": [
+                    "name",
+                    "email",
+                    "phone",
+                    "company",
+                    "none"
+                  ]
+                },
+                "required": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "options": {
+                  "default": [],
+                  "maxItems": 50,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "type",
+                "mapping"
+              ]
+            }
+          },
+          "submitLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "successMessage": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "UpdateLeadFormStatusDto": {
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "published"
+        ]
+      },
+      "PublicLeadFormDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "fields": {
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "email",
+                    "phone",
+                    "textarea",
+                    "select",
+                    "checkbox"
+                  ]
+                },
+                "mapping": {
+                  "type": "string",
+                  "enum": [
+                    "name",
+                    "email",
+                    "phone",
+                    "company",
+                    "none"
+                  ]
+                },
+                "required": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "options": {
+                  "default": [],
+                  "maxItems": 50,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "type",
+                "mapping"
+              ]
+            }
+          },
+          "submitLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "successMessage": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "publicKey": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "fields",
+          "submitLabel",
+          "successMessage",
+          "publicKey"
+        ]
+      },
+      "SubmitLeadFormDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 5000
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          },
+          "website": {
+            "type": "string",
+            "maxLength": 0
+          }
+        },
+        "required": [
+          "id",
+          "values"
+        ]
+      },
+      "SubmitLeadFormResponseDto": {
+        "type": "object",
+        "properties": {
+          "successMessage": {
+            "type": "string"
+          },
+          "contactId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          }
+        },
+        "required": [
+          "successMessage",
+          "contactId"
+        ]
       }
     }
   }

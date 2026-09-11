@@ -1,0 +1,5 @@
+import type { LeadFormField } from "../schema/leadForm.js";
+export function validateLeadFormValues(fields: readonly LeadFormField[], values: Record<string, string | boolean>): void {
+  for (const field of fields) { const value = values[field.id]; if (field.required && (value === undefined || value === "" || value === false)) throw new Error(`${field.label} é obrigatório.`); if (typeof value === "string" && value.length > 5_000) throw new Error(`${field.label} excede o limite permitido.`); if (field.type === "select" && typeof value === "string" && value && !field.options.includes(value)) throw new Error(`${field.label} possui uma opção inválida.`); }
+}
+export function mappedLeadValue(fields: readonly LeadFormField[], values: Record<string, string | boolean>, mapping: LeadFormField["mapping"]): string | null { const field = fields.find((item) => item.mapping === mapping); const value = field ? values[field.id] : null; return typeof value === "string" && value.trim() ? value.trim() : null; }

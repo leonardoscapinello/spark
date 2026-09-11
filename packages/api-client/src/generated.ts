@@ -76,6 +76,8 @@ export const CurrentUserDtoCapabilitiesItem = {
   'files:write': 'files:write',
   'catalog:read': 'catalog:read',
   'catalog:write': 'catalog:write',
+  'forms:read': 'forms:read',
+  'forms:write': 'forms:write',
 } as const;
 
 export interface CurrentUserDto {
@@ -130,6 +132,8 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'files:write': 'files:write',
   'catalog:read': 'catalog:read',
   'catalog:write': 'catalog:write',
+  'forms:read': 'forms:read',
+  'forms:write': 'forms:write',
 } as const;
 
 export interface PermissionGroupDto {
@@ -177,6 +181,8 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'files:write': 'files:write',
   'catalog:read': 'catalog:read',
   'catalog:write': 'catalog:write',
+  'forms:read': 'forms:read',
+  'forms:write': 'forms:write',
 } as const;
 
 export interface CreatePermissionGroupDto {
@@ -218,6 +224,8 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'files:write': 'files:write',
   'catalog:read': 'catalog:read',
   'catalog:write': 'catalog:write',
+  'forms:read': 'forms:read',
+  'forms:write': 'forms:write',
 } as const;
 
 export interface UpdatePermissionGroupDto {
@@ -2887,6 +2895,373 @@ export interface UpdateDiscountRuleDto {
   startsAt?: string | null;
   endsAt?: string | null;
   active?: boolean;
+}
+
+export type CreateLeadFormDtoFieldsItemType = typeof CreateLeadFormDtoFieldsItemType[keyof typeof CreateLeadFormDtoFieldsItemType];
+
+
+export const CreateLeadFormDtoFieldsItemType = {
+  text: 'text',
+  email: 'email',
+  phone: 'phone',
+  textarea: 'textarea',
+  select: 'select',
+  checkbox: 'checkbox',
+} as const;
+
+export type CreateLeadFormDtoFieldsItemMapping = typeof CreateLeadFormDtoFieldsItemMapping[keyof typeof CreateLeadFormDtoFieldsItemMapping];
+
+
+export const CreateLeadFormDtoFieldsItemMapping = {
+  name: 'name',
+  email: 'email',
+  phone: 'phone',
+  company: 'company',
+  none: 'none',
+} as const;
+
+export type CreateLeadFormDtoFieldsItem = {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  type: CreateLeadFormDtoFieldsItemType;
+  mapping: CreateLeadFormDtoFieldsItemMapping;
+  required?: boolean;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  options?: string[];
+};
+
+export interface CreateLeadFormDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * @minItems 1
+     * @maxItems 100
+     */
+  fields?: CreateLeadFormDtoFieldsItem[];
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  submitLabel?: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  successMessage?: string;
+}
+
+export type LeadFormWriteResponseDtoFormStatus = typeof LeadFormWriteResponseDtoFormStatus[keyof typeof LeadFormWriteResponseDtoFormStatus];
+
+
+export const LeadFormWriteResponseDtoFormStatus = {
+  draft: 'draft',
+  published: 'published',
+  archived: 'archived',
+} as const;
+
+export type LeadFormWriteResponseDtoFormFieldsItemType = typeof LeadFormWriteResponseDtoFormFieldsItemType[keyof typeof LeadFormWriteResponseDtoFormFieldsItemType];
+
+
+export const LeadFormWriteResponseDtoFormFieldsItemType = {
+  text: 'text',
+  email: 'email',
+  phone: 'phone',
+  textarea: 'textarea',
+  select: 'select',
+  checkbox: 'checkbox',
+} as const;
+
+export type LeadFormWriteResponseDtoFormFieldsItemMapping = typeof LeadFormWriteResponseDtoFormFieldsItemMapping[keyof typeof LeadFormWriteResponseDtoFormFieldsItemMapping];
+
+
+export const LeadFormWriteResponseDtoFormFieldsItemMapping = {
+  name: 'name',
+  email: 'email',
+  phone: 'phone',
+  company: 'company',
+  none: 'none',
+} as const;
+
+export type LeadFormWriteResponseDtoFormFieldsItem = {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  type: LeadFormWriteResponseDtoFormFieldsItemType;
+  mapping: LeadFormWriteResponseDtoFormFieldsItemMapping;
+  required?: boolean;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  options?: string[];
+};
+
+export type LeadFormWriteResponseDtoForm = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  description: string | null;
+  /**
+     * @minLength 20
+     * @maxLength 100
+     */
+  publicKey: string;
+  status: LeadFormWriteResponseDtoFormStatus;
+  /**
+     * @minItems 1
+     * @maxItems 100
+     */
+  fields: LeadFormWriteResponseDtoFormFieldsItem[];
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  submitLabel: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  successMessage: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface LeadFormWriteResponseDto {
+  form: LeadFormWriteResponseDtoForm;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdateLeadFormDtoFieldsItemType = typeof UpdateLeadFormDtoFieldsItemType[keyof typeof UpdateLeadFormDtoFieldsItemType];
+
+
+export const UpdateLeadFormDtoFieldsItemType = {
+  text: 'text',
+  email: 'email',
+  phone: 'phone',
+  textarea: 'textarea',
+  select: 'select',
+  checkbox: 'checkbox',
+} as const;
+
+export type UpdateLeadFormDtoFieldsItemMapping = typeof UpdateLeadFormDtoFieldsItemMapping[keyof typeof UpdateLeadFormDtoFieldsItemMapping];
+
+
+export const UpdateLeadFormDtoFieldsItemMapping = {
+  name: 'name',
+  email: 'email',
+  phone: 'phone',
+  company: 'company',
+  none: 'none',
+} as const;
+
+export type UpdateLeadFormDtoFieldsItem = {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  type: UpdateLeadFormDtoFieldsItemType;
+  mapping: UpdateLeadFormDtoFieldsItemMapping;
+  required?: boolean;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  options?: string[];
+};
+
+export interface UpdateLeadFormDto {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name?: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title?: string;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * @minItems 1
+     * @maxItems 100
+     */
+  fields?: UpdateLeadFormDtoFieldsItem[];
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  submitLabel?: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  successMessage?: string;
+}
+
+export interface UpdateLeadFormStatusDto {
+  published: boolean;
+}
+
+export type PublicLeadFormDtoFieldsItemType = typeof PublicLeadFormDtoFieldsItemType[keyof typeof PublicLeadFormDtoFieldsItemType];
+
+
+export const PublicLeadFormDtoFieldsItemType = {
+  text: 'text',
+  email: 'email',
+  phone: 'phone',
+  textarea: 'textarea',
+  select: 'select',
+  checkbox: 'checkbox',
+} as const;
+
+export type PublicLeadFormDtoFieldsItemMapping = typeof PublicLeadFormDtoFieldsItemMapping[keyof typeof PublicLeadFormDtoFieldsItemMapping];
+
+
+export const PublicLeadFormDtoFieldsItemMapping = {
+  name: 'name',
+  email: 'email',
+  phone: 'phone',
+  company: 'company',
+  none: 'none',
+} as const;
+
+export type PublicLeadFormDtoFieldsItem = {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  type: PublicLeadFormDtoFieldsItemType;
+  mapping: PublicLeadFormDtoFieldsItemMapping;
+  required?: boolean;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  options?: string[];
+};
+
+export interface PublicLeadFormDto {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  description: string | null;
+  /**
+     * @minItems 1
+     * @maxItems 100
+     */
+  fields: PublicLeadFormDtoFieldsItem[];
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  submitLabel: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  successMessage: string;
+  /**
+     * @minLength 20
+     * @maxLength 100
+     */
+  publicKey: string;
+}
+
+export type SubmitLeadFormDtoValues = {[key: string]: string | boolean};
+
+export interface SubmitLeadFormDto {
+  /** @minLength 1 */
+  id: string;
+  values: SubmitLeadFormDtoValues;
+  /** @maxLength 0 */
+  website?: string;
+}
+
+export interface SubmitLeadFormResponseDto {
+  successMessage: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -6486,4 +6861,342 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getCatalogControllerUpdateDiscountMutationOptions(options), queryClient);
+    }
+
+export const formsControllerCreate = (
+    createLeadFormDto: CreateLeadFormDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<LeadFormWriteResponseDto>(
+      {url: `/v1/forms`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createLeadFormDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFormsControllerCreateMutationKey = () => ['formsControllerCreate'] as const;
+
+export const getFormsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsControllerCreate>>, TError,FormsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof formsControllerCreate>>, TError,FormsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getFormsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof formsControllerCreate>>, FormsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  formsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FormsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof formsControllerCreate>>>
+    export type FormsControllerCreateMutationBody = CreateLeadFormDto
+    export type FormsControllerCreateMutationError = unknown
+    export type FormsControllerCreateMutationVariables = {data: CreateLeadFormDto}
+
+    export const useFormsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsControllerCreate>>, TError,FormsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof formsControllerCreate>>,
+        TError,
+        FormsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFormsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const formsControllerUpdate = (
+    id: string,
+    updateLeadFormDto: UpdateLeadFormDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<LeadFormWriteResponseDto>(
+      {url: `/v1/forms/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateLeadFormDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFormsControllerUpdateMutationKey = () => ['formsControllerUpdate'] as const;
+
+export const getFormsControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsControllerUpdate>>, TError,FormsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof formsControllerUpdate>>, TError,FormsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getFormsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof formsControllerUpdate>>, FormsControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  formsControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FormsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof formsControllerUpdate>>>
+    export type FormsControllerUpdateMutationBody = UpdateLeadFormDto
+    export type FormsControllerUpdateMutationError = unknown
+    export type FormsControllerUpdateMutationVariables = {id: string;data: UpdateLeadFormDto}
+
+    export const useFormsControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsControllerUpdate>>, TError,FormsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof formsControllerUpdate>>,
+        TError,
+        FormsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFormsControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const formsControllerStatus = (
+    id: string,
+    updateLeadFormStatusDto: UpdateLeadFormStatusDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<LeadFormWriteResponseDto>(
+      {url: `/v1/forms/${id}/status`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateLeadFormStatusDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFormsControllerStatusMutationKey = () => ['formsControllerStatus'] as const;
+
+export const getFormsControllerStatusMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsControllerStatus>>, TError,FormsControllerStatusMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof formsControllerStatus>>, TError,FormsControllerStatusMutationVariables, TContext> => {
+
+const mutationKey = getFormsControllerStatusMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof formsControllerStatus>>, FormsControllerStatusMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  formsControllerStatus(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FormsControllerStatusMutationResult = NonNullable<Awaited<ReturnType<typeof formsControllerStatus>>>
+    export type FormsControllerStatusMutationBody = UpdateLeadFormStatusDto
+    export type FormsControllerStatusMutationError = unknown
+    export type FormsControllerStatusMutationVariables = {id: string;data: UpdateLeadFormStatusDto}
+
+    export const useFormsControllerStatus = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsControllerStatus>>, TError,FormsControllerStatusMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof formsControllerStatus>>,
+        TError,
+        FormsControllerStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFormsControllerStatusMutationOptions(options), queryClient);
+    }
+
+export const publicFormsControllerGet = (
+    publicKey: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<PublicLeadFormDto>(
+      {url: `/v1/public/forms/${publicKey}`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPublicFormsControllerGetQueryKey = (publicKey: string,) => {
+    return [
+    `/v1/public/forms/${publicKey}`
+    ] as const;
+    }
+
+
+export const getPublicFormsControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof publicFormsControllerGet>>, TError = unknown>(publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicFormsControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPublicFormsControllerGetQueryKey(publicKey);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof publicFormsControllerGet>>> = ({ signal }) => publicFormsControllerGet(publicKey, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: publicKey !== null && publicKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof publicFormsControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PublicFormsControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof publicFormsControllerGet>>>
+export type PublicFormsControllerGetQueryError = unknown
+
+
+export function usePublicFormsControllerGet<TData = Awaited<ReturnType<typeof publicFormsControllerGet>>, TError = unknown>(
+ publicKey: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicFormsControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicFormsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof publicFormsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicFormsControllerGet<TData = Awaited<ReturnType<typeof publicFormsControllerGet>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicFormsControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicFormsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof publicFormsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicFormsControllerGet<TData = Awaited<ReturnType<typeof publicFormsControllerGet>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicFormsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function usePublicFormsControllerGet<TData = Awaited<ReturnType<typeof publicFormsControllerGet>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicFormsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPublicFormsControllerGetQueryOptions(publicKey,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const publicFormsControllerSubmit = (
+    publicKey: string,
+    submitLeadFormDto: SubmitLeadFormDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<SubmitLeadFormResponseDto>(
+      {url: `/v1/public/forms/${publicKey}/submissions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: submitLeadFormDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPublicFormsControllerSubmitMutationKey = () => ['publicFormsControllerSubmit'] as const;
+
+export const getPublicFormsControllerSubmitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicFormsControllerSubmit>>, TError,PublicFormsControllerSubmitMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof publicFormsControllerSubmit>>, TError,PublicFormsControllerSubmitMutationVariables, TContext> => {
+
+const mutationKey = getPublicFormsControllerSubmitMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publicFormsControllerSubmit>>, PublicFormsControllerSubmitMutationVariables> = (props) => {
+          const {publicKey,data} = props ?? {};
+
+          return  publicFormsControllerSubmit(publicKey,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublicFormsControllerSubmitMutationResult = NonNullable<Awaited<ReturnType<typeof publicFormsControllerSubmit>>>
+    export type PublicFormsControllerSubmitMutationBody = SubmitLeadFormDto
+    export type PublicFormsControllerSubmitMutationError = unknown
+    export type PublicFormsControllerSubmitMutationVariables = {publicKey: string;data: SubmitLeadFormDto}
+
+    export const usePublicFormsControllerSubmit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicFormsControllerSubmit>>, TError,PublicFormsControllerSubmitMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publicFormsControllerSubmit>>,
+        TError,
+        PublicFormsControllerSubmitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublicFormsControllerSubmitMutationOptions(options), queryClient);
     }

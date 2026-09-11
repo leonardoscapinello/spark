@@ -1,0 +1,4 @@
+.page { position: relative; min-height: 100vh; box-sizing: border-box; display: grid; place-items: center; align-content: center; gap: var(--space-8); padding: var(--space-8); background: var(--color-surface2); color: var(--color-ink); font-family: var(--typography-fontFamily-body); }
+.brand img { display: block; width: min(calc(var(--space-16) * 2.5), 45vw); height: auto; }
+.honeypot { position: fixed; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+@media (max-width: 640px) { .page { align-content: start; padding: var(--space-6) var(--space-4); } }

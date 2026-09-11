@@ -16,3 +16,4 @@ export * from "./automation.js";
 export * from "./integration.js";
 export * from "./file.js";
 export * from "./catalog.js";
+export * from "./leadForm.js";

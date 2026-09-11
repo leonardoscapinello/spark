@@ -1,6 +1,7 @@
 import { type RouteConfig, index, layout, route } from "@react-router/dev/routes";
 
 export default [
+  route("f/:publicKey", "routes/public-form.tsx"),
   layout("routes/auth-layout.tsx", [
     route("login", "routes/login.tsx"),
     route("forgot-password", "routes/forgot-password.tsx"),
@@ -15,6 +16,8 @@ export default [
     route("integrations", "routes/integrations.tsx"),
     route("files", "routes/files.tsx"),
     route("catalog", "routes/catalog.tsx"),
+    route("forms", "routes/forms.tsx"),
+    route("forms/:formId", "routes/form-builder.tsx"),
     route("contacts/import", "routes/contact-import.tsx"),
     route("contacts/:contactId", "routes/contact-detail.tsx"),
     route("companies", "routes/companies.tsx"),

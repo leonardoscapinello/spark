@@ -1,0 +1,8 @@
+.root { display: grid; gap: var(--space-6); width: 100%; max-width: var(--ui-modalWidth); padding: var(--space-6); box-sizing: border-box; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
+.root header { display: grid; gap: var(--space-2); }
+.root h1 { margin: 0; color: var(--color-ink); font-size: var(--typography-size-xl); letter-spacing: var(--typography-tracking-tight); }
+.root p { margin: 0; color: var(--color-inkMuted); line-height: var(--typography-lineHeight-body); }
+.fields { display: grid; gap: var(--space-4); }
+.success { display: grid; place-items: center; gap: var(--space-2); min-height: calc(var(--space-16) * 3); padding: var(--space-8); border-radius: var(--radius-lg); background: var(--color-surface); color: var(--color-ink); text-align: center; box-shadow: var(--ui-panelShadow); }
+.success strong { color: var(--color-statusSuccess); font-size: var(--typography-size-lg); }
+.success p { margin: 0; color: var(--color-inkMuted); }

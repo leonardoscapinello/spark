@@ -1,0 +1,4 @@
+import { Injectable } from "@nestjs/common";
+import type { CreateLeadFormInput, LeadFormId, OrgId, SubmitLeadFormInput, UpdateLeadFormInput } from "@spark/core";
+import { FormsRepository } from "../infrastructure/forms.repository.js";
+@Injectable() export class FormsService { constructor(private readonly forms: FormsRepository) {} create(orgId: OrgId, input: CreateLeadFormInput) { return this.forms.create(orgId, input); } update(orgId: OrgId, id: LeadFormId, input: UpdateLeadFormInput) { return this.forms.update(orgId, id, input); } publish(orgId: OrgId, id: LeadFormId, published: boolean) { return this.forms.setPublished(orgId, id, published); } publicForm(key: string) { return this.forms.publicForm(key); } submit(key: string, input: SubmitLeadFormInput) { return this.forms.submit(key, input); } }

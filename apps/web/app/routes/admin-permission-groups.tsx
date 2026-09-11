@@ -37,6 +37,8 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "files:write": "Enviar e excluir arquivos",
   "catalog:read": "Ver catálogo",
   "catalog:write": "Gerenciar produtos e descontos",
+  "forms:read": "Ver formulários e respostas",
+  "forms:write": "Criar e publicar formulários",
 };
 
 export async function clientLoader() {

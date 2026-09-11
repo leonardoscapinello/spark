@@ -29,6 +29,8 @@ export const CAPABILITIES = [
   "files:write",
   "catalog:read",
   "catalog:write",
+  "forms:read",
+  "forms:write",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

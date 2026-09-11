@@ -22,6 +22,8 @@ export const SYNC_RESOURCES = [
   "products",
   "product_variants",
   "discount_rules",
+  "lead_forms",
+  "form_submissions",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
@@ -44,10 +46,12 @@ const READ_REQUIREMENTS: Record<Exclude<SyncResource, "organizations" | "events"
   products: ["catalog:read"],
   product_variants: ["catalog:read"],
   discount_rules: ["catalog:read"],
+  lead_forms: ["forms:read"],
+  form_submissions: ["forms:read"],
 };
 
 const DIRECTORY_READERS: readonly Capability[] = [
-  "contacts:read", "companies:read", "deals:read", "activities:read", "inbox:read", "integrations:read", "files:read", "catalog:read", "users:manage",
+  "contacts:read", "companies:read", "deals:read", "activities:read", "inbox:read", "integrations:read", "files:read", "catalog:read", "forms:read", "users:manage",
 ];
 
 export function canReadSyncResource(capabilities: readonly Capability[], resource: SyncResource): boolean {
@@ -69,5 +73,6 @@ export function readableEventPrefixes(capabilities: readonly Capability[]): stri
   if (capabilities.includes("integrations:read")) prefixes.push("integration");
   if (capabilities.includes("files:read")) prefixes.push("file");
   if (capabilities.includes("catalog:read")) prefixes.push("product", "discount_rule");
+  if (capabilities.includes("forms:read")) prefixes.push("form");
   return prefixes;
 }

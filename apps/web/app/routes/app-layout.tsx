@@ -83,6 +83,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {session.capabilities.includes("catalog:read") && (
             <Link to="/catalog" className={styles.navItem}>Catálogo</Link>
           )}
+          {session.capabilities.includes("forms:read") && (
+            <Link to="/forms" className={styles.navItem}>Formulários</Link>
+          )}
           <Link to="/security" className={styles.navItem}>Segurança</Link>
         </nav>
         <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}>
