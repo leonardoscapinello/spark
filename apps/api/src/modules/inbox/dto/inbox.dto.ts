@@ -1,5 +1,5 @@
 import { createZodDto } from "nestjs-zod";
-import { AddInternalNoteInputSchema, ConversationSchema, ConversationWriteResponseSchema, CreateConversationInputSchema, MessageSchema, MessageWriteResponseSchema, SendMessageInputSchema, UpdateConversationInputSchema } from "@spark/core";
+import { AddInternalNoteInputSchema, ArchiveCannedReplyInputSchema, CannedReplyWriteResponseSchema, ConversationSchema, ConversationWriteResponseSchema, CreateCannedReplyInputSchema, CreateConversationInputSchema, MessageSchema, MessageWriteResponseSchema, SendMessageInputSchema, UpdateCannedReplyInputSchema, UpdateConversationInputSchema } from "@spark/core";
 
 export class ConversationDto extends createZodDto(ConversationSchema) {}
 export class MessageDto extends createZodDto(MessageSchema) {}
@@ -9,3 +9,7 @@ export class AddInternalNoteDto extends createZodDto(AddInternalNoteInputSchema)
 export class SendMessageDto extends createZodDto(SendMessageInputSchema) {}
 export class ConversationWriteResponseDto extends createZodDto(ConversationWriteResponseSchema) {}
 export class MessageWriteResponseDto extends createZodDto(MessageWriteResponseSchema) {}
+export class CreateCannedReplyDto extends createZodDto(CreateCannedReplyInputSchema) {}
+export class UpdateCannedReplyDto extends createZodDto(UpdateCannedReplyInputSchema) {}
+export class ArchiveCannedReplyDto extends createZodDto(ArchiveCannedReplyInputSchema) {}
+export class CannedReplyWriteResponseDto extends createZodDto(CannedReplyWriteResponseSchema) {}

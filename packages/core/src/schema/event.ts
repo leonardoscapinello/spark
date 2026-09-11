@@ -74,6 +74,9 @@ export const DOMAIN_EVENT_TYPES = [
   "page.created",
   "page.updated",
   "page.published",
+  "canned_reply.created",
+  "canned_reply.updated",
+  "canned_reply.archived",
 ] as const;
 export const DomainEventTypeSchema = z.enum(DOMAIN_EVENT_TYPES);
 export type DomainEventType = z.infer<typeof DomainEventTypeSchema>;

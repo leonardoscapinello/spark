@@ -13,10 +13,11 @@ import { IntegrationsModule } from "../integrations/integrations.module.js";
 import { SendMessageUseCase } from "./application/send-message.usecase.js";
 import { ChannelSender } from "./infrastructure/channel-sender.service.js";
 import { OutboundMessagesRepository } from "./infrastructure/outbound-messages.repository.js";
+import { CannedRepliesRepository } from "./infrastructure/canned-replies.repository.js";
 
 @Module({
   imports: [EventsModule, IntegrationsModule],
   controllers: [InboxController],
-  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

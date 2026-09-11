@@ -36,6 +36,7 @@
 .composer { padding: var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); display: flex; flex-direction: column; gap: var(--space-2); }
 .composerMode,.composerFooter { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .modeButtons { display: flex; align-items: center; gap: var(--space-1); }
+.replyTools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }
 .details { border-left: var(--ui-hairline) solid var(--color-line); padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-5); overflow-y: auto; }
 .contactCard { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding-bottom: var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .contactCard span:last-child { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }

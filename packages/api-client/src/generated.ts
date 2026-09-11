@@ -2047,6 +2047,99 @@ export interface SendMessageDto {
   body: string;
 }
 
+export interface CreateCannedReplyDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  shortcut: string;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  body: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  teamId: string | null;
+}
+
+export type CannedReplyWriteResponseDtoReply = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  shortcut: string;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  body: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  teamId: string | null;
+  /** @minLength 1 */
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+};
+
+export interface CannedReplyWriteResponseDto {
+  reply: CannedReplyWriteResponseDtoReply;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface UpdateCannedReplyDto {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  title?: string;
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  shortcut?: string;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  body?: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  teamId?: string | null;
+}
+
+export interface ArchiveCannedReplyDto {
+  archived: boolean;
+}
+
 export interface CreateAutomationDto {
   /** @minLength 1 */
   id: string;
@@ -6612,6 +6705,194 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getInboxControllerSendMutationOptions(options), queryClient);
+    }
+
+export const inboxControllerCreateCannedReply = (
+    createCannedReplyDto: CreateCannedReplyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CannedReplyWriteResponseDto>(
+      {url: `/v1/inbox/conversations/canned-replies`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCannedReplyDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getInboxControllerCreateCannedReplyMutationKey = () => ['inboxControllerCreateCannedReply'] as const;
+
+export const getInboxControllerCreateCannedReplyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerCreateCannedReply>>, TError,InboxControllerCreateCannedReplyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof inboxControllerCreateCannedReply>>, TError,InboxControllerCreateCannedReplyMutationVariables, TContext> => {
+
+const mutationKey = getInboxControllerCreateCannedReplyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inboxControllerCreateCannedReply>>, InboxControllerCreateCannedReplyMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  inboxControllerCreateCannedReply(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InboxControllerCreateCannedReplyMutationResult = NonNullable<Awaited<ReturnType<typeof inboxControllerCreateCannedReply>>>
+    export type InboxControllerCreateCannedReplyMutationBody = CreateCannedReplyDto
+    export type InboxControllerCreateCannedReplyMutationError = unknown
+    export type InboxControllerCreateCannedReplyMutationVariables = {data: CreateCannedReplyDto}
+
+    export const useInboxControllerCreateCannedReply = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerCreateCannedReply>>, TError,InboxControllerCreateCannedReplyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inboxControllerCreateCannedReply>>,
+        TError,
+        InboxControllerCreateCannedReplyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInboxControllerCreateCannedReplyMutationOptions(options), queryClient);
+    }
+
+export const inboxControllerUpdateCannedReply = (
+    replyId: string,
+    updateCannedReplyDto: UpdateCannedReplyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CannedReplyWriteResponseDto>(
+      {url: `/v1/inbox/conversations/canned-replies/${replyId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateCannedReplyDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getInboxControllerUpdateCannedReplyMutationKey = () => ['inboxControllerUpdateCannedReply'] as const;
+
+export const getInboxControllerUpdateCannedReplyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerUpdateCannedReply>>, TError,InboxControllerUpdateCannedReplyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof inboxControllerUpdateCannedReply>>, TError,InboxControllerUpdateCannedReplyMutationVariables, TContext> => {
+
+const mutationKey = getInboxControllerUpdateCannedReplyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inboxControllerUpdateCannedReply>>, InboxControllerUpdateCannedReplyMutationVariables> = (props) => {
+          const {replyId,data} = props ?? {};
+
+          return  inboxControllerUpdateCannedReply(replyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InboxControllerUpdateCannedReplyMutationResult = NonNullable<Awaited<ReturnType<typeof inboxControllerUpdateCannedReply>>>
+    export type InboxControllerUpdateCannedReplyMutationBody = UpdateCannedReplyDto
+    export type InboxControllerUpdateCannedReplyMutationError = unknown
+    export type InboxControllerUpdateCannedReplyMutationVariables = {replyId: string;data: UpdateCannedReplyDto}
+
+    export const useInboxControllerUpdateCannedReply = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerUpdateCannedReply>>, TError,InboxControllerUpdateCannedReplyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inboxControllerUpdateCannedReply>>,
+        TError,
+        InboxControllerUpdateCannedReplyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInboxControllerUpdateCannedReplyMutationOptions(options), queryClient);
+    }
+
+export const inboxControllerArchiveCannedReply = (
+    replyId: string,
+    archiveCannedReplyDto: ArchiveCannedReplyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CannedReplyWriteResponseDto>(
+      {url: `/v1/inbox/conversations/canned-replies/${replyId}/archive`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: archiveCannedReplyDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getInboxControllerArchiveCannedReplyMutationKey = () => ['inboxControllerArchiveCannedReply'] as const;
+
+export const getInboxControllerArchiveCannedReplyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerArchiveCannedReply>>, TError,InboxControllerArchiveCannedReplyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof inboxControllerArchiveCannedReply>>, TError,InboxControllerArchiveCannedReplyMutationVariables, TContext> => {
+
+const mutationKey = getInboxControllerArchiveCannedReplyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inboxControllerArchiveCannedReply>>, InboxControllerArchiveCannedReplyMutationVariables> = (props) => {
+          const {replyId,data} = props ?? {};
+
+          return  inboxControllerArchiveCannedReply(replyId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InboxControllerArchiveCannedReplyMutationResult = NonNullable<Awaited<ReturnType<typeof inboxControllerArchiveCannedReply>>>
+    export type InboxControllerArchiveCannedReplyMutationBody = ArchiveCannedReplyDto
+    export type InboxControllerArchiveCannedReplyMutationError = unknown
+    export type InboxControllerArchiveCannedReplyMutationVariables = {replyId: string;data: ArchiveCannedReplyDto}
+
+    export const useInboxControllerArchiveCannedReply = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerArchiveCannedReply>>, TError,InboxControllerArchiveCannedReplyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inboxControllerArchiveCannedReply>>,
+        TError,
+        InboxControllerArchiveCannedReplyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInboxControllerArchiveCannedReplyMutationOptions(options), queryClient);
     }
 
 export const automationsControllerCreate = (

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zContactId, zConversationId, zMessageId, zOrgId, zServerTimestamp, zTeamId, zUserId } from "./zodHelpers.js";
+import { zCannedReplyId, zContactId, zConversationId, zMessageId, zOrgId, zServerTimestamp, zTeamId, zUserId } from "./zodHelpers.js";
 
 export const CONVERSATION_CHANNELS = ["manual", "email", "instagram", "whatsapp", "messenger"] as const;
 export const CONVERSATION_STATUSES = ["open", "snoozed", "closed"] as const;
@@ -65,3 +65,23 @@ export const ConversationWriteResponseSchema = z.object({ conversation: Conversa
 export const MessageWriteResponseSchema = z.object({ message: MessageSchema, conversation: ConversationSchema, txid: z.number().int() });
 export type ConversationWriteResponse = z.infer<typeof ConversationWriteResponseSchema>;
 export type MessageWriteResponse = z.infer<typeof MessageWriteResponseSchema>;
+
+export const CannedReplySchema = z.object({
+  id: zCannedReplyId,
+  orgId: zOrgId,
+  title: z.string().trim().min(1).max(120),
+  shortcut: z.string().trim().min(1).max(50),
+  body: z.string().trim().min(1).max(20_000),
+  teamId: zTeamId.nullable(),
+  createdBy: zUserId,
+  createdAt: zServerTimestamp,
+  updatedAt: zServerTimestamp,
+  archivedAt: zServerTimestamp.nullable(),
+});
+export type CannedReply = z.infer<typeof CannedReplySchema>;
+export const CreateCannedReplyInputSchema = CannedReplySchema.pick({ id: true, title: true, shortcut: true, body: true, teamId: true });
+export type CreateCannedReplyInput = z.infer<typeof CreateCannedReplyInputSchema>;
+export const UpdateCannedReplyInputSchema = CreateCannedReplyInputSchema.omit({ id: true }).partial().refine((value) => Object.keys(value).length > 0, { error: "At least one field is required" });
+export type UpdateCannedReplyInput = z.infer<typeof UpdateCannedReplyInputSchema>;
+export const ArchiveCannedReplyInputSchema = z.object({ archived: z.boolean() });
+export const CannedReplyWriteResponseSchema = z.object({ reply: CannedReplySchema, txid: z.number().int() });

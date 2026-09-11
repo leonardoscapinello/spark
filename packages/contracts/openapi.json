@@ -1580,6 +1580,132 @@
         ]
       }
     },
+    "/v1/inbox/conversations/canned-replies": {
+      "post": {
+        "operationId": "InboxController_createCannedReply",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCannedReplyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CannedReplyWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
+    "/v1/inbox/conversations/canned-replies/{replyId}": {
+      "patch": {
+        "operationId": "InboxController_updateCannedReply",
+        "parameters": [
+          {
+            "name": "replyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCannedReplyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CannedReplyWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
+    "/v1/inbox/conversations/canned-replies/{replyId}/archive": {
+      "patch": {
+        "operationId": "InboxController_archiveCannedReply",
+        "parameters": [
+          {
+            "name": "replyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveCannedReplyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CannedReplyWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
     "/v1/automations": {
       "post": {
         "operationId": "AutomationsController_create",
@@ -6774,6 +6900,181 @@
         "required": [
           "id",
           "body"
+        ]
+      },
+      "CreateCannedReplyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "shortcut": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "teamId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "shortcut",
+          "body",
+          "teamId"
+        ]
+      },
+      "CannedReplyWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "reply": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "shortcut": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "teamId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "createdBy": {
+                "type": "string",
+                "minLength": 1
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "archivedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "title",
+              "shortcut",
+              "body",
+              "teamId",
+              "createdBy",
+              "createdAt",
+              "updatedAt",
+              "archivedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "reply",
+          "txid"
+        ]
+      },
+      "UpdateCannedReplyDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "shortcut": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "teamId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          }
+        }
+      },
+      "ArchiveCannedReplyDto": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "archived"
         ]
       },
       "CreateAutomationDto": {

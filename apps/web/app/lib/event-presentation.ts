@@ -67,6 +67,9 @@ const TITLES: Record<DomainEventType, string> = {
   "page.created": "Página criada",
   "page.updated": "Página atualizada",
   "page.published": "Página publicada",
+  "canned_reply.created": "Resposta pronta criada",
+  "canned_reply.updated": "Resposta pronta atualizada",
+  "canned_reply.archived": "Resposta pronta arquivada",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

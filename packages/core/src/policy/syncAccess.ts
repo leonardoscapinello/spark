@@ -32,6 +32,7 @@ export const SYNC_RESOURCES = [
   "custom_field_definitions",
   "pages",
   "page_versions",
+  "canned_replies",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
@@ -67,6 +68,7 @@ const READ_REQUIREMENTS: Record<
   custom_field_definitions: ["contacts:read", "companies:read", "deals:read"],
   pages: ["pages:read"],
   page_versions: ["pages:read"],
+  canned_replies: ["inbox:read"],
 };
 
 const DIRECTORY_READERS: readonly Capability[] = [
@@ -104,7 +106,7 @@ export function readableEventPrefixes(capabilities: readonly Capability[]): stri
   if (capabilities.includes("companies:read")) prefixes.push("company");
   if (capabilities.includes("deals:read")) prefixes.push("deal");
   if (capabilities.includes("activities:read")) prefixes.push("activity");
-  if (capabilities.includes("inbox:read")) prefixes.push("conversation", "message");
+  if (capabilities.includes("inbox:read")) prefixes.push("conversation", "message", "canned_reply");
   if (capabilities.includes("automations:read")) prefixes.push("automation");
   if (capabilities.includes("integrations:read")) prefixes.push("integration");
   if (capabilities.includes("files:read")) prefixes.push("file");

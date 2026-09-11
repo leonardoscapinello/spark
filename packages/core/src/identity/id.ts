@@ -45,6 +45,7 @@ export type EmailSuppressionId = Id<"EmailSuppression">;
 export type CustomFieldDefinitionId = Id<"CustomFieldDefinition">;
 export type PageId = Id<"Page">;
 export type PageVersionId = Id<"PageVersion">;
+export type CannedReplyId = Id<"CannedReply">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -104,3 +105,4 @@ export const emailSuppressionId = makeIdFactory("EmailSuppression");
 export const customFieldDefinitionId = makeIdFactory("CustomFieldDefinition");
 export const pageId = makeIdFactory("Page");
 export const pageVersionId = makeIdFactory("PageVersion");
+export const cannedReplyId = makeIdFactory("CannedReply");
