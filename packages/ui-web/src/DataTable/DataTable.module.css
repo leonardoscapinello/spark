@@ -1,0 +1,13 @@
+.root { min-width: 0; width: 100%; font-family: var(--typography-fontFamily-body); color: var(--color-ink); font-size: var(--typography-size-sm); }
+.scroll { max-width: 100%; overflow-x: auto; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); overscroll-behavior-inline: contain; }
+.scroll:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+.table { border-collapse: collapse; width: 100%; min-width: var(--ui-modalWidth); text-align: start; }
+.table caption { text-align: start; padding: var(--space-4); font-weight: var(--typography-weight-semibold); }
+.table th,.table td { padding: var(--space-3) var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); text-align: start; overflow-wrap: anywhere; max-width: var(--ui-popoverWidth); }
+.table th { background: var(--ui-subtle); font-weight: var(--typography-weight-semibold); }
+.table [data-align="end"] { text-align: end; font-variant-numeric: tabular-nums; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: var(--ui-subtle); }
+.actions { white-space: nowrap; }
+.empty { color: var(--color-inkMuted); text-align: center; }
+.hint { font-size: var(--typography-size-compact); color: var(--color-inkMuted); margin: var(--space-2) 0 0; }

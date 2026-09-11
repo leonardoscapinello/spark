@@ -1,2 +1,5 @@
-.root { min-width: 0; max-width: var(--ui-menuWidth); background: var(--ui-buttonBg); color: var(--ui-buttonInk); padding: var(--space-1) var(--space-2); border: 0; font-size: var(--typography-size-compact); border-radius: var(--radius-sm); }
+.root { min-width: 0; max-width: var(--ui-popoverWidth); padding: var(--space-3) var(--space-4); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); background: var(--ui-helpBg); color: var(--ui-buttonInk); border: 0; border-radius: var(--radius-sm); }
 .root[data-instant] { transition: none; }
+
+@media (prefers-reduced-transparency: reduce) { .root { background: var(--ui-helpSolid); } }
+@media (forced-colors: active) { .root { background: Canvas; color: CanvasText; } }

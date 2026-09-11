@@ -1,0 +1,10 @@
+import { useState } from "react";
+import { DataTable, type TableColumn } from "../DataTable/DataTable.js";
+import { Input } from "../Input/Input.js";
+import { Button } from "../Button/Button.js";
+import { MenuButton, MenuItem } from "../Menu/Menu.js";
+import s from "./Catalog.module.css";
+type Row={id:string;name:string;email:string;team:string};
+const initial:Row[]=[{id:"1",name:"Maria",email:"maria@exemplo.com",team:"Atendimento"},{id:"2",name:"João",email:"joao@exemplo.com",team:"Vendas"},{id:"3",name:"Ana",email:"ana@exemplo.com",team:"Sucesso do cliente"}];
+const columns:TableColumn<Row>[]=[{id:"name",label:"Nome",cell:r=>r.name,sortValue:r=>r.name},{id:"email",label:"E-mail",cell:r=>r.email},{id:"team",label:"Equipe",cell:r=>r.team,sortValue:r=>r.team}];
+export function TableExamples(){const [rows,setRows]=useState(initial);const [query,setQuery]=useState("");const [message,setMessage]=useState("");return <section id="catalog-tables" className={s.card}><h2>Tabelas responsivas</h2><div className={s.rows}><DataTable label="Tabela simples" rows={initial} columns={columns} rowKey={r=>r.id}/><Input aria-label="Pesquisar na tabela" placeholder="Pesquisar nome ou e-mail" value={query} onChange={e=>setQuery(e.target.value)}/><DataTable label="Tabela com ações" rows={rows.filter(row=>`${row.name} ${row.email}`.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")))} columns={columns} rowKey={r=>r.id} actions={row=><MenuButton size="sm" variant="ghost" aria-label={`Ações de ${row.name}`} menu={<><MenuItem onClick={()=>setMessage(`Selecionado: ${row.name}`)}>Ver detalhes</MenuItem><MenuItem onClick={()=>{setRows(previous=>previous.filter(item=>item.id!==row.id));setMessage(`${row.name} removido desta demonstração.`);}}>Remover da lista</MenuItem></>}>Ações</MenuButton>}/><p role="status">{message}</p><Button variant="secondary" onClick={()=>{setRows(initial);setQuery("");setMessage("");}}>Restaurar exemplo</Button><DataTable label="Tabela vazia" rows={[]} columns={columns} rowKey={r=>r.id}/></div></section>;}

@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import styles from "./Glass.module.css";
 
-export type GlassTier = "subtle" | "panel" | "modal";
+export type GlassTier = "subtle" | "panel" | "modal" | "help";
 
 /**
  * The only primitive authorized to use backdrop-filter (docs/adr/0025,

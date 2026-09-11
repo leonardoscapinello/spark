@@ -20,6 +20,7 @@ import { AdornedFields } from "./AdornedFields.js";
 import { FieldLayouts } from "./FieldLayouts.js";
 import { DateProgressExamples } from "./DateProgressExamples.js";
 import { ChangeExamples } from "./ChangeExamples.js";
+import { TableExamples } from "./TableExamples.js";
 import { ExtendedCatalog } from "./ExtendedCatalog.js";
 import styles from "./Catalog.module.css";
 
@@ -49,8 +50,9 @@ function Catalog() {
     <main className={styles.main}>
       <header className={styles.header}><div><h1>Componentes</h1><p>Biblioteca compartilhada · referência Intercom</p></div><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => setSelection("Nova visualização")}>Criar novo</Button></header>
       <div className={styles.selection} role="status">{selection}</div>
+      <nav className={styles.shortcuts} aria-label="Atalhos do catálogo">{[{id:"catalog-dates",label:"Calendário e relógio"},{id:"catalog-change",label:"Calculadora de troco"},{id:"catalog-tables",label:"Tabelas"}].map(item=><Button key={item.id} variant="secondary" onClick={()=>document.getElementById(item.id)?.scrollIntoView({block:"start"})}>{item.label}</Button>)}</nav>
       <div className={styles.grid}>
-        <DateProgressExamples /><ChangeExamples /><FieldLayouts /><AdornedFields /><FieldExamples /><OverlayExamples /><PanelExamples /><ExtendedCatalog />
+        <DateProgressExamples /><ChangeExamples /><TableExamples /><FieldLayouts /><AdornedFields /><FieldExamples /><OverlayExamples /><PanelExamples /><ExtendedCatalog />
         <section className={styles.card}><h2>Botões</h2><div className={styles.rows}>
           <div className={styles.row}><Button>Salvar</Button><Button variant="secondary">Cancelar</Button><Button variant="ghost">Ver tudo</Button><Button variant="raised">Adicionar</Button></div>
           <div className={styles.row}><Button size="sm">Pequeno</Button><Button>Médio</Button><Button size="lg">Grande</Button><Button shape="rounded">Retangular</Button></div>

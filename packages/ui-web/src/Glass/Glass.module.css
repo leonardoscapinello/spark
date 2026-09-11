@@ -72,3 +72,8 @@
     background: var(--color-surface);
   }
 }
+
+.help { background: var(--ui-helpBg); color: var(--ui-buttonInk); border: 0; border-radius: var(--radius-sm); box-shadow: var(--ui-popupShadow); backdrop-filter: blur(var(--effect-glass-subtle-blur)); -webkit-backdrop-filter: blur(var(--effect-glass-subtle-blur)); }
+@media (prefers-reduced-transparency: reduce) { .help { background: var(--ui-helpSolid); backdrop-filter: none; -webkit-backdrop-filter: none; } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .help { background: var(--ui-helpSolid); } }
+@media (forced-colors: active) { .help { background: Canvas; color: CanvasText; border: var(--ui-hairline) solid CanvasText; backdrop-filter: none; -webkit-backdrop-filter: none; } }

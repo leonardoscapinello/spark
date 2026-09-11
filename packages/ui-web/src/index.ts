@@ -44,3 +44,5 @@ export { DatePicker, TimePicker, DateTimePicker, type DateTimePickerProps, type 
 export { ProgressComparison, type ProgressMeasure } from "./ProgressComparison/ProgressComparison.js";
 
 export { ChangeCalculator, type ChangeCalculatorProps } from "./ChangeCalculator/ChangeCalculator.js";
+
+export { DataTable, type DataTableProps, type TableColumn } from "./DataTable/DataTable.js";
