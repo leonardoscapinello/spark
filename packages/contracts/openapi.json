@@ -1382,6 +1382,177 @@
           "inbox"
         ]
       }
+    },
+    "/v1/automations": {
+      "post": {
+        "operationId": "AutomationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAutomationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "automations"
+        ]
+      }
+    },
+    "/v1/automations/{id}/draft": {
+      "patch": {
+        "operationId": "AutomationsController_draft",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAutomationDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "automations"
+        ]
+      }
+    },
+    "/v1/automations/{id}/status": {
+      "patch": {
+        "operationId": "AutomationsController_status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAutomationStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "automations"
+        ]
+      }
+    },
+    "/v1/automations/{id}/publish": {
+      "post": {
+        "operationId": "AutomationsController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishAutomationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationPublishResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "automations"
+        ]
+      }
     }
   },
   "info": {
@@ -1631,7 +1802,10 @@
                 "activities:read",
                 "activities:write",
                 "inbox:read",
-                "inbox:write"
+                "inbox:write",
+                "automations:read",
+                "automations:write",
+                "automations:publish"
               ]
             }
           }
@@ -1686,7 +1860,10 @@
                 "activities:read",
                 "activities:write",
                 "inbox:read",
-                "inbox:write"
+                "inbox:write",
+                "automations:read",
+                "automations:write",
+                "automations:publish"
               ]
             }
           },
@@ -1741,7 +1918,10 @@
                 "activities:read",
                 "activities:write",
                 "inbox:read",
-                "inbox:write"
+                "inbox:write",
+                "automations:read",
+                "automations:write",
+                "automations:publish"
               ]
             }
           }
@@ -1779,7 +1959,10 @@
                 "activities:read",
                 "activities:write",
                 "inbox:read",
-                "inbox:write"
+                "inbox:write",
+                "automations:read",
+                "automations:write",
+                "automations:publish"
               ]
             }
           }
@@ -4941,6 +5124,724 @@
         "required": [
           "message",
           "conversation",
+          "txid"
+        ]
+      },
+      "CreateAutomationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "AutomationWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "automation": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active",
+                  "paused"
+                ]
+              },
+              "draftGraph": {
+                "type": "object",
+                "properties": {
+                  "nodes": {
+                    "default": [],
+                    "maxItems": 500,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "trigger",
+                            "action",
+                            "condition",
+                            "wait"
+                          ]
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "description": {
+                              "default": "",
+                              "type": "string",
+                              "maxLength": 500
+                            },
+                            "config": {
+                              "default": {},
+                              "type": "object",
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "label"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "position",
+                        "data"
+                      ]
+                    }
+                  },
+                  "edges": {
+                    "default": [],
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "source": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "target": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "label": {
+                          "type": "string",
+                          "maxLength": 80
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "source",
+                        "target"
+                      ]
+                    }
+                  }
+                }
+              },
+              "currentPublishedVersionId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "publishedVersion": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991,
+                "nullable": true
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "name",
+              "status",
+              "draftGraph",
+              "currentPublishedVersionId",
+              "publishedVersion",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "automation",
+          "txid"
+        ]
+      },
+      "UpdateAutomationDraftDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "draftGraph": {
+            "type": "object",
+            "properties": {
+              "nodes": {
+                "default": [],
+                "maxItems": 500,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "trigger",
+                        "action",
+                        "condition",
+                        "wait"
+                      ]
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "description": {
+                          "default": "",
+                          "type": "string",
+                          "maxLength": 500
+                        },
+                        "config": {
+                          "default": {},
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "label"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "position",
+                    "data"
+                  ]
+                }
+              },
+              "edges": {
+                "default": [],
+                "maxItems": 1000,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "target": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "label": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "source",
+                    "target"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "name",
+          "draftGraph"
+        ]
+      },
+      "UpdateAutomationStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "PublishAutomationDto": {
+        "type": "object",
+        "properties": {
+          "expectedUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ]
+          }
+        }
+      },
+      "AutomationPublishResponseDto": {
+        "type": "object",
+        "properties": {
+          "automation": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active",
+                  "paused"
+                ]
+              },
+              "draftGraph": {
+                "type": "object",
+                "properties": {
+                  "nodes": {
+                    "default": [],
+                    "maxItems": 500,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "trigger",
+                            "action",
+                            "condition",
+                            "wait"
+                          ]
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "description": {
+                              "default": "",
+                              "type": "string",
+                              "maxLength": 500
+                            },
+                            "config": {
+                              "default": {},
+                              "type": "object",
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "label"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "position",
+                        "data"
+                      ]
+                    }
+                  },
+                  "edges": {
+                    "default": [],
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "source": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "target": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "label": {
+                          "type": "string",
+                          "maxLength": 80
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "source",
+                        "target"
+                      ]
+                    }
+                  }
+                }
+              },
+              "currentPublishedVersionId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "publishedVersion": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991,
+                "nullable": true
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "name",
+              "status",
+              "draftGraph",
+              "currentPublishedVersionId",
+              "publishedVersion",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "version": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "automationId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "graph": {
+                "type": "object",
+                "properties": {
+                  "nodes": {
+                    "default": [],
+                    "maxItems": 500,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "trigger",
+                            "action",
+                            "condition",
+                            "wait"
+                          ]
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "description": {
+                              "default": "",
+                              "type": "string",
+                              "maxLength": 500
+                            },
+                            "config": {
+                              "default": {},
+                              "type": "object",
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "label"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "position",
+                        "data"
+                      ]
+                    }
+                  },
+                  "edges": {
+                    "default": [],
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "source": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "target": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "label": {
+                          "type": "string",
+                          "maxLength": 80
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "source",
+                        "target"
+                      ]
+                    }
+                  }
+                }
+              },
+              "publishedBy": {
+                "type": "string",
+                "minLength": 1
+              },
+              "publishedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "automationId",
+              "version",
+              "graph",
+              "publishedBy",
+              "publishedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "automation",
+          "version",
           "txid"
         ]
       }

@@ -30,6 +30,9 @@ export const DEFAULT_GROUPS: ReadonlyArray<{ name: string; capabilities: readonl
       "activities:write",
       "inbox:read",
       "inbox:write",
+      "automations:read",
+      "automations:write",
+      "automations:publish",
     ],
   },
   {
@@ -46,7 +49,9 @@ export const DEFAULT_GROUPS: ReadonlyArray<{ name: string; capabilities: readonl
       "activities:write",
       "inbox:read",
       "inbox:write",
+      "automations:read",
+      "automations:write",
     ],
   },
-  { name: "Visualizador", capabilities: ["contacts:read", "companies:read", "deals:read", "activities:read", "inbox:read"] },
+  { name: "Visualizador", capabilities: ["contacts:read", "companies:read", "deals:read", "activities:read", "inbox:read", "automations:read"] },
 ];

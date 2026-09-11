@@ -67,6 +67,9 @@ export const CurrentUserDtoCapabilitiesItem = {
   'activities:write': 'activities:write',
   'inbox:read': 'inbox:read',
   'inbox:write': 'inbox:write',
+  'automations:read': 'automations:read',
+  'automations:write': 'automations:write',
+  'automations:publish': 'automations:publish',
 } as const;
 
 export interface CurrentUserDto {
@@ -112,6 +115,9 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'activities:write': 'activities:write',
   'inbox:read': 'inbox:read',
   'inbox:write': 'inbox:write',
+  'automations:read': 'automations:read',
+  'automations:write': 'automations:write',
+  'automations:publish': 'automations:publish',
 } as const;
 
 export interface PermissionGroupDto {
@@ -150,6 +156,9 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'activities:write': 'activities:write',
   'inbox:read': 'inbox:read',
   'inbox:write': 'inbox:write',
+  'automations:read': 'automations:read',
+  'automations:write': 'automations:write',
+  'automations:publish': 'automations:publish',
 } as const;
 
 export interface CreatePermissionGroupDto {
@@ -182,6 +191,9 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'activities:write': 'activities:write',
   'inbox:read': 'inbox:read',
   'inbox:write': 'inbox:write',
+  'automations:read': 'automations:read',
+  'automations:write': 'automations:write',
+  'automations:publish': 'automations:publish',
 } as const;
 
 export interface UpdatePermissionGroupDto {
@@ -1807,6 +1819,414 @@ export type MessageWriteResponseDtoConversation = {
 export interface MessageWriteResponseDto {
   message: MessageWriteResponseDtoMessage;
   conversation: MessageWriteResponseDtoConversation;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface CreateAutomationDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+}
+
+export type AutomationWriteResponseDtoAutomationStatus = typeof AutomationWriteResponseDtoAutomationStatus[keyof typeof AutomationWriteResponseDtoAutomationStatus];
+
+
+export const AutomationWriteResponseDtoAutomationStatus = {
+  draft: 'draft',
+  active: 'active',
+  paused: 'paused',
+} as const;
+
+export type AutomationWriteResponseDtoAutomationDraftGraphNodesItemType = typeof AutomationWriteResponseDtoAutomationDraftGraphNodesItemType[keyof typeof AutomationWriteResponseDtoAutomationDraftGraphNodesItemType];
+
+
+export const AutomationWriteResponseDtoAutomationDraftGraphNodesItemType = {
+  trigger: 'trigger',
+  action: 'action',
+  condition: 'condition',
+  wait: 'wait',
+} as const;
+
+export type AutomationWriteResponseDtoAutomationDraftGraphNodesItemPosition = {
+  x: number;
+  y: number;
+};
+
+export type AutomationWriteResponseDtoAutomationDraftGraphNodesItemDataConfig = {[key: string]: unknown};
+
+export type AutomationWriteResponseDtoAutomationDraftGraphNodesItemData = {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  /** @maxLength 500 */
+  description?: string;
+  config?: AutomationWriteResponseDtoAutomationDraftGraphNodesItemDataConfig;
+};
+
+export type AutomationWriteResponseDtoAutomationDraftGraphNodesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  type: AutomationWriteResponseDtoAutomationDraftGraphNodesItemType;
+  position: AutomationWriteResponseDtoAutomationDraftGraphNodesItemPosition;
+  data: AutomationWriteResponseDtoAutomationDraftGraphNodesItemData;
+};
+
+export type AutomationWriteResponseDtoAutomationDraftGraphEdgesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  source: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  target: string;
+  /** @maxLength 80 */
+  label?: string;
+};
+
+export type AutomationWriteResponseDtoAutomationDraftGraph = {
+  /** @maxItems 500 */
+  nodes?: AutomationWriteResponseDtoAutomationDraftGraphNodesItem[];
+  /** @maxItems 1000 */
+  edges?: AutomationWriteResponseDtoAutomationDraftGraphEdgesItem[];
+};
+
+export type AutomationWriteResponseDtoAutomation = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  status: AutomationWriteResponseDtoAutomationStatus;
+  draftGraph: AutomationWriteResponseDtoAutomationDraftGraph;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  currentPublishedVersionId: string | null;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  publishedVersion: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface AutomationWriteResponseDto {
+  automation: AutomationWriteResponseDtoAutomation;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdateAutomationDraftDtoDraftGraphNodesItemType = typeof UpdateAutomationDraftDtoDraftGraphNodesItemType[keyof typeof UpdateAutomationDraftDtoDraftGraphNodesItemType];
+
+
+export const UpdateAutomationDraftDtoDraftGraphNodesItemType = {
+  trigger: 'trigger',
+  action: 'action',
+  condition: 'condition',
+  wait: 'wait',
+} as const;
+
+export type UpdateAutomationDraftDtoDraftGraphNodesItemPosition = {
+  x: number;
+  y: number;
+};
+
+export type UpdateAutomationDraftDtoDraftGraphNodesItemDataConfig = {[key: string]: unknown};
+
+export type UpdateAutomationDraftDtoDraftGraphNodesItemData = {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  /** @maxLength 500 */
+  description?: string;
+  config?: UpdateAutomationDraftDtoDraftGraphNodesItemDataConfig;
+};
+
+export type UpdateAutomationDraftDtoDraftGraphNodesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  type: UpdateAutomationDraftDtoDraftGraphNodesItemType;
+  position: UpdateAutomationDraftDtoDraftGraphNodesItemPosition;
+  data: UpdateAutomationDraftDtoDraftGraphNodesItemData;
+};
+
+export type UpdateAutomationDraftDtoDraftGraphEdgesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  source: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  target: string;
+  /** @maxLength 80 */
+  label?: string;
+};
+
+export type UpdateAutomationDraftDtoDraftGraph = {
+  /** @maxItems 500 */
+  nodes?: UpdateAutomationDraftDtoDraftGraphNodesItem[];
+  /** @maxItems 1000 */
+  edges?: UpdateAutomationDraftDtoDraftGraphEdgesItem[];
+};
+
+export interface UpdateAutomationDraftDto {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  draftGraph: UpdateAutomationDraftDtoDraftGraph;
+}
+
+export type UpdateAutomationStatusDtoStatus = typeof UpdateAutomationStatusDtoStatus[keyof typeof UpdateAutomationStatusDtoStatus];
+
+
+export const UpdateAutomationStatusDtoStatus = {
+  active: 'active',
+  paused: 'paused',
+} as const;
+
+export interface UpdateAutomationStatusDto {
+  status: UpdateAutomationStatusDtoStatus;
+}
+
+export interface PublishAutomationDto {
+  expectedUpdatedAt?: string;
+}
+
+export type AutomationPublishResponseDtoAutomationStatus = typeof AutomationPublishResponseDtoAutomationStatus[keyof typeof AutomationPublishResponseDtoAutomationStatus];
+
+
+export const AutomationPublishResponseDtoAutomationStatus = {
+  draft: 'draft',
+  active: 'active',
+  paused: 'paused',
+} as const;
+
+export type AutomationPublishResponseDtoAutomationDraftGraphNodesItemType = typeof AutomationPublishResponseDtoAutomationDraftGraphNodesItemType[keyof typeof AutomationPublishResponseDtoAutomationDraftGraphNodesItemType];
+
+
+export const AutomationPublishResponseDtoAutomationDraftGraphNodesItemType = {
+  trigger: 'trigger',
+  action: 'action',
+  condition: 'condition',
+  wait: 'wait',
+} as const;
+
+export type AutomationPublishResponseDtoAutomationDraftGraphNodesItemPosition = {
+  x: number;
+  y: number;
+};
+
+export type AutomationPublishResponseDtoAutomationDraftGraphNodesItemDataConfig = {[key: string]: unknown};
+
+export type AutomationPublishResponseDtoAutomationDraftGraphNodesItemData = {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  /** @maxLength 500 */
+  description?: string;
+  config?: AutomationPublishResponseDtoAutomationDraftGraphNodesItemDataConfig;
+};
+
+export type AutomationPublishResponseDtoAutomationDraftGraphNodesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  type: AutomationPublishResponseDtoAutomationDraftGraphNodesItemType;
+  position: AutomationPublishResponseDtoAutomationDraftGraphNodesItemPosition;
+  data: AutomationPublishResponseDtoAutomationDraftGraphNodesItemData;
+};
+
+export type AutomationPublishResponseDtoAutomationDraftGraphEdgesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  source: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  target: string;
+  /** @maxLength 80 */
+  label?: string;
+};
+
+export type AutomationPublishResponseDtoAutomationDraftGraph = {
+  /** @maxItems 500 */
+  nodes?: AutomationPublishResponseDtoAutomationDraftGraphNodesItem[];
+  /** @maxItems 1000 */
+  edges?: AutomationPublishResponseDtoAutomationDraftGraphEdgesItem[];
+};
+
+export type AutomationPublishResponseDtoAutomation = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  status: AutomationPublishResponseDtoAutomationStatus;
+  draftGraph: AutomationPublishResponseDtoAutomationDraftGraph;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  currentPublishedVersionId: string | null;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  publishedVersion: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AutomationPublishResponseDtoVersionGraphNodesItemType = typeof AutomationPublishResponseDtoVersionGraphNodesItemType[keyof typeof AutomationPublishResponseDtoVersionGraphNodesItemType];
+
+
+export const AutomationPublishResponseDtoVersionGraphNodesItemType = {
+  trigger: 'trigger',
+  action: 'action',
+  condition: 'condition',
+  wait: 'wait',
+} as const;
+
+export type AutomationPublishResponseDtoVersionGraphNodesItemPosition = {
+  x: number;
+  y: number;
+};
+
+export type AutomationPublishResponseDtoVersionGraphNodesItemDataConfig = {[key: string]: unknown};
+
+export type AutomationPublishResponseDtoVersionGraphNodesItemData = {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  /** @maxLength 500 */
+  description?: string;
+  config?: AutomationPublishResponseDtoVersionGraphNodesItemDataConfig;
+};
+
+export type AutomationPublishResponseDtoVersionGraphNodesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  type: AutomationPublishResponseDtoVersionGraphNodesItemType;
+  position: AutomationPublishResponseDtoVersionGraphNodesItemPosition;
+  data: AutomationPublishResponseDtoVersionGraphNodesItemData;
+};
+
+export type AutomationPublishResponseDtoVersionGraphEdgesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  source: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  target: string;
+  /** @maxLength 80 */
+  label?: string;
+};
+
+export type AutomationPublishResponseDtoVersionGraph = {
+  /** @maxItems 500 */
+  nodes?: AutomationPublishResponseDtoVersionGraphNodesItem[];
+  /** @maxItems 1000 */
+  edges?: AutomationPublishResponseDtoVersionGraphEdgesItem[];
+};
+
+export type AutomationPublishResponseDtoVersion = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  automationId: string;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     */
+  version: number;
+  graph: AutomationPublishResponseDtoVersionGraph;
+  /** @minLength 1 */
+  publishedBy: string;
+  publishedAt: string;
+};
+
+export interface AutomationPublishResponseDto {
+  automation: AutomationPublishResponseDtoAutomation;
+  version: AutomationPublishResponseDtoVersion;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
@@ -4148,4 +4568,255 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getInboxControllerNoteMutationOptions(options), queryClient);
+    }
+
+export const automationsControllerCreate = (
+    createAutomationDto: CreateAutomationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AutomationWriteResponseDto>(
+      {url: `/v1/automations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createAutomationDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getAutomationsControllerCreateMutationKey = () => ['automationsControllerCreate'] as const;
+
+export const getAutomationsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerCreate>>, TError,AutomationsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof automationsControllerCreate>>, TError,AutomationsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getAutomationsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof automationsControllerCreate>>, AutomationsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  automationsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AutomationsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof automationsControllerCreate>>>
+    export type AutomationsControllerCreateMutationBody = CreateAutomationDto
+    export type AutomationsControllerCreateMutationError = unknown
+    export type AutomationsControllerCreateMutationVariables = {data: CreateAutomationDto}
+
+    export const useAutomationsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerCreate>>, TError,AutomationsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof automationsControllerCreate>>,
+        TError,
+        AutomationsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAutomationsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const automationsControllerDraft = (
+    id: string,
+    updateAutomationDraftDto: UpdateAutomationDraftDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AutomationWriteResponseDto>(
+      {url: `/v1/automations/${id}/draft`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateAutomationDraftDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getAutomationsControllerDraftMutationKey = () => ['automationsControllerDraft'] as const;
+
+export const getAutomationsControllerDraftMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerDraft>>, TError,AutomationsControllerDraftMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof automationsControllerDraft>>, TError,AutomationsControllerDraftMutationVariables, TContext> => {
+
+const mutationKey = getAutomationsControllerDraftMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof automationsControllerDraft>>, AutomationsControllerDraftMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  automationsControllerDraft(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AutomationsControllerDraftMutationResult = NonNullable<Awaited<ReturnType<typeof automationsControllerDraft>>>
+    export type AutomationsControllerDraftMutationBody = UpdateAutomationDraftDto
+    export type AutomationsControllerDraftMutationError = unknown
+    export type AutomationsControllerDraftMutationVariables = {id: string;data: UpdateAutomationDraftDto}
+
+    export const useAutomationsControllerDraft = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerDraft>>, TError,AutomationsControllerDraftMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof automationsControllerDraft>>,
+        TError,
+        AutomationsControllerDraftMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAutomationsControllerDraftMutationOptions(options), queryClient);
+    }
+
+export const automationsControllerStatus = (
+    id: string,
+    updateAutomationStatusDto: UpdateAutomationStatusDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AutomationWriteResponseDto>(
+      {url: `/v1/automations/${id}/status`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateAutomationStatusDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getAutomationsControllerStatusMutationKey = () => ['automationsControllerStatus'] as const;
+
+export const getAutomationsControllerStatusMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerStatus>>, TError,AutomationsControllerStatusMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof automationsControllerStatus>>, TError,AutomationsControllerStatusMutationVariables, TContext> => {
+
+const mutationKey = getAutomationsControllerStatusMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof automationsControllerStatus>>, AutomationsControllerStatusMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  automationsControllerStatus(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AutomationsControllerStatusMutationResult = NonNullable<Awaited<ReturnType<typeof automationsControllerStatus>>>
+    export type AutomationsControllerStatusMutationBody = UpdateAutomationStatusDto
+    export type AutomationsControllerStatusMutationError = unknown
+    export type AutomationsControllerStatusMutationVariables = {id: string;data: UpdateAutomationStatusDto}
+
+    export const useAutomationsControllerStatus = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerStatus>>, TError,AutomationsControllerStatusMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof automationsControllerStatus>>,
+        TError,
+        AutomationsControllerStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAutomationsControllerStatusMutationOptions(options), queryClient);
+    }
+
+export const automationsControllerPublish = (
+    id: string,
+    publishAutomationDto: PublishAutomationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AutomationPublishResponseDto>(
+      {url: `/v1/automations/${id}/publish`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: publishAutomationDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getAutomationsControllerPublishMutationKey = () => ['automationsControllerPublish'] as const;
+
+export const getAutomationsControllerPublishMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerPublish>>, TError,AutomationsControllerPublishMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof automationsControllerPublish>>, TError,AutomationsControllerPublishMutationVariables, TContext> => {
+
+const mutationKey = getAutomationsControllerPublishMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof automationsControllerPublish>>, AutomationsControllerPublishMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  automationsControllerPublish(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AutomationsControllerPublishMutationResult = NonNullable<Awaited<ReturnType<typeof automationsControllerPublish>>>
+    export type AutomationsControllerPublishMutationBody = PublishAutomationDto
+    export type AutomationsControllerPublishMutationError = unknown
+    export type AutomationsControllerPublishMutationVariables = {id: string;data: PublishAutomationDto}
+
+    export const useAutomationsControllerPublish = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerPublish>>, TError,AutomationsControllerPublishMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof automationsControllerPublish>>,
+        TError,
+        AutomationsControllerPublishMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAutomationsControllerPublishMutationOptions(options), queryClient);
     }

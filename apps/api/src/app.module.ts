@@ -9,6 +9,7 @@ import { ActivitiesModule } from "./modules/activities/activities.module.js";
 import { CompaniesModule } from "./modules/companies/companies.module.js";
 import { EventsModule } from "./modules/events/events.module.js";
 import { InboxModule } from "./modules/inbox/inbox.module.js";
+import { AutomationsModule } from "./modules/automations/automations.module.js";
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { InboxModule } from "./modules/inbox/inbox.module.js";
     CompaniesModule,
     EventsModule,
     InboxModule,
+    AutomationsModule,
   ],
 })
 export class AppModule {}

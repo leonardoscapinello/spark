@@ -10,3 +10,5 @@ export * from "./activities-collection.js";
 export * from "./users-collection.js";
 export * from "./conversations-collection.js";
 export * from "./messages-collection.js";
+export * from "./automations-collection.js";
+export * from "./automation-versions-collection.js";

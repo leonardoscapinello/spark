@@ -39,6 +39,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {session.capabilities.includes("inbox:read") && (
             <Link to="/inbox" className={styles.navItem}>Inbox</Link>
           )}
+          {session.capabilities.includes("automations:read") && (
+            <Link to="/automations" className={styles.navItem}>Automações</Link>
+          )}
           {session.capabilities.includes("contacts:read") && (
             <Link to="/" className={styles.navItem}>Contatos</Link>
           )}

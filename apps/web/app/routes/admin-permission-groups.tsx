@@ -28,6 +28,9 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "activities:write": "Criar e concluir atividades",
   "inbox:read": "Ver conversas do Inbox",
   "inbox:write": "Criar, atribuir e responder conversas",
+  "automations:read": "Ver automações",
+  "automations:write": "Criar e editar automações",
+  "automations:publish": "Publicar automações",
 };
 
 export async function clientLoader() {

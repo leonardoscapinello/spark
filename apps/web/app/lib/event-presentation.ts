@@ -24,6 +24,11 @@ const TITLES: Record<DomainEventType, string> = {
   "conversation.closed": "Conversa fechada",
   "conversation.reopened": "Conversa reaberta",
   "message.note_added": "Nota interna adicionada",
+  "automation.created": "Automação criada",
+  "automation.draft_updated": "Rascunho da automação atualizado",
+  "automation.published": "Automação publicada",
+  "automation.paused": "Automação pausada",
+  "automation.activated": "Automação ativada",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

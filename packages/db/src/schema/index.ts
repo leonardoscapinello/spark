@@ -15,3 +15,5 @@ export * from "./teams.js";
 export * from "./team-members.js";
 export * from "./conversations.js";
 export * from "./messages.js";
+export * from "./automations.js";
+export * from "./automation-versions.js";

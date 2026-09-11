@@ -11,3 +11,4 @@ export * from "./policy/index.js";
 export * from "./search/index.js";
 export * from "./import/index.js";
 export * from "./analytics/index.js";
+export * from "./automation/index.js";

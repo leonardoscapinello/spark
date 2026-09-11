@@ -39,6 +39,8 @@ import {
   teamId as toTeamId,
   conversationId as toConversationId,
   messageId as toMessageId,
+  automationId as toAutomationId,
+  automationVersionId as toAutomationVersionId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -54,6 +56,8 @@ import {
   type TeamId,
   type ConversationId,
   type MessageId,
+  type AutomationId,
+  type AutomationVersionId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -87,6 +91,8 @@ export const zIdentityId = bridged<IdentityId>(toIdentityId.from);
 export const zTeamId = bridged<TeamId>(toTeamId.from);
 export const zConversationId = bridged<ConversationId>(toConversationId.from);
 export const zMessageId = bridged<MessageId>(toMessageId.from);
+export const zAutomationId = bridged<AutomationId>(toAutomationId.from);
+export const zAutomationVersionId = bridged<AutomationVersionId>(toAutomationVersionId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

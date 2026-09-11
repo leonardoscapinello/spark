@@ -13,6 +13,8 @@ export const SYNC_RESOURCES = [
   "users",
   "conversations",
   "messages",
+  "automations",
+  "automation_versions",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
@@ -26,6 +28,8 @@ const READ_REQUIREMENTS: Record<Exclude<SyncResource, "organizations" | "events"
   activities: ["activities:read"],
   conversations: ["inbox:read"],
   messages: ["inbox:read"],
+  automations: ["automations:read"],
+  automation_versions: ["automations:read"],
 };
 
 const DIRECTORY_READERS: readonly Capability[] = [
@@ -47,5 +51,6 @@ export function readableEventPrefixes(capabilities: readonly Capability[]): stri
   if (capabilities.includes("deals:read")) prefixes.push("deal");
   if (capabilities.includes("activities:read")) prefixes.push("activity");
   if (capabilities.includes("inbox:read")) prefixes.push("conversation", "message");
+  if (capabilities.includes("automations:read")) prefixes.push("automation");
   return prefixes;
 }

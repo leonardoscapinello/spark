@@ -20,6 +20,9 @@ export const CAPABILITIES = [
   "activities:write",
   "inbox:read",
   "inbox:write",
+  "automations:read",
+  "automations:write",
+  "automations:publish",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
