@@ -78,6 +78,8 @@ export const CurrentUserDtoCapabilitiesItem = {
   'catalog:write': 'catalog:write',
   'forms:read': 'forms:read',
   'forms:write': 'forms:write',
+  'social:read': 'social:read',
+  'social:write': 'social:write',
 } as const;
 
 export interface CurrentUserDto {
@@ -134,6 +136,8 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'catalog:write': 'catalog:write',
   'forms:read': 'forms:read',
   'forms:write': 'forms:write',
+  'social:read': 'social:read',
+  'social:write': 'social:write',
 } as const;
 
 export interface PermissionGroupDto {
@@ -183,6 +187,8 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'catalog:write': 'catalog:write',
   'forms:read': 'forms:read',
   'forms:write': 'forms:write',
+  'social:read': 'social:read',
+  'social:write': 'social:write',
 } as const;
 
 export interface CreatePermissionGroupDto {
@@ -226,6 +232,8 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'catalog:write': 'catalog:write',
   'forms:read': 'forms:read',
   'forms:write': 'forms:write',
+  'social:read': 'social:read',
+  'social:write': 'social:write',
 } as const;
 
 export interface UpdatePermissionGroupDto {
@@ -3324,6 +3332,138 @@ export interface SubmitLeadFormResponseDto {
      * @nullable
      */
   contactId: string | null;
+}
+
+export type SyncSocialChannelsResponseDtoChannelsItemService = typeof SyncSocialChannelsResponseDtoChannelsItemService[keyof typeof SyncSocialChannelsResponseDtoChannelsItemService];
+
+
+export const SyncSocialChannelsResponseDtoChannelsItemService = {
+  instagram: 'instagram',
+  facebook: 'facebook',
+  threads: 'threads',
+  linkedin: 'linkedin',
+  twitter: 'twitter',
+  pinterest: 'pinterest',
+  tiktok: 'tiktok',
+  youtube: 'youtube',
+  mastodon: 'mastodon',
+  bluesky: 'bluesky',
+  googlebusiness: 'googlebusiness',
+} as const;
+
+export type SyncSocialChannelsResponseDtoChannelsItem = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  connectionId: string;
+  /** @minLength 1 */
+  externalId: string;
+  service: SyncSocialChannelsResponseDtoChannelsItemService;
+  /** @minLength 1 */
+  name: string;
+  /** @nullable */
+  avatarUrl: string | null;
+  active: boolean;
+  syncedAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface SyncSocialChannelsResponseDto {
+  channels: SyncSocialChannelsResponseDtoChannelsItem[];
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type CreateSocialPostDtoPublishMode = typeof CreateSocialPostDtoPublishMode[keyof typeof CreateSocialPostDtoPublishMode];
+
+
+export const CreateSocialPostDtoPublishMode = {
+  draft: 'draft',
+  queue: 'queue',
+  now: 'now',
+  schedule: 'schedule',
+} as const;
+
+export interface CreateSocialPostDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  channelId: string;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  text: string;
+  publishMode: CreateSocialPostDtoPublishMode;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  scheduledAt?: string | null;
+}
+
+export type SocialPostWriteResponseDtoPostStatus = typeof SocialPostWriteResponseDtoPostStatus[keyof typeof SocialPostWriteResponseDtoPostStatus];
+
+
+export const SocialPostWriteResponseDtoPostStatus = {
+  draft: 'draft',
+  scheduled: 'scheduled',
+  publishing: 'publishing',
+  published: 'published',
+  failed: 'failed',
+  cancelled: 'cancelled',
+} as const;
+
+export type SocialPostWriteResponseDtoPostPublishMode = typeof SocialPostWriteResponseDtoPostPublishMode[keyof typeof SocialPostWriteResponseDtoPostPublishMode];
+
+
+export const SocialPostWriteResponseDtoPostPublishMode = {
+  draft: 'draft',
+  queue: 'queue',
+  now: 'now',
+  schedule: 'schedule',
+} as const;
+
+export type SocialPostWriteResponseDtoPost = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  channelId: string;
+  /** @minLength 1 */
+  connectionId: string;
+  /** @minLength 1 */
+  createdBy: string;
+  /** @maxLength 10000 */
+  text: string;
+  status: SocialPostWriteResponseDtoPostStatus;
+  publishMode: SocialPostWriteResponseDtoPostPublishMode;
+  scheduledAt: string | null;
+  publishedAt: string | null;
+  /** @nullable */
+  externalId: string | null;
+  /** @nullable */
+  providerStatus: string | null;
+  /** @nullable */
+  error: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface SocialPostWriteResponseDto {
+  post: SocialPostWriteResponseDtoPost;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -7323,4 +7463,126 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPublicFormsControllerSubmitMutationOptions(options), queryClient);
+    }
+
+export const socialControllerSyncChannels = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<SyncSocialChannelsResponseDto>(
+      {url: `/v1/social/channels/sync`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getSocialControllerSyncChannelsMutationKey = () => ['socialControllerSyncChannels'] as const;
+
+export const getSocialControllerSyncChannelsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof socialControllerSyncChannels>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof socialControllerSyncChannels>>, TError,void, TContext> => {
+
+const mutationKey = getSocialControllerSyncChannelsMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof socialControllerSyncChannels>>, void> = () => {
+
+
+          return  socialControllerSyncChannels()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SocialControllerSyncChannelsMutationResult = NonNullable<Awaited<ReturnType<typeof socialControllerSyncChannels>>>
+
+    export type SocialControllerSyncChannelsMutationError = unknown
+
+
+    export const useSocialControllerSyncChannels = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof socialControllerSyncChannels>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof socialControllerSyncChannels>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getSocialControllerSyncChannelsMutationOptions(options), queryClient);
+    }
+
+export const socialControllerCreatePost = (
+    createSocialPostDto: CreateSocialPostDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<SocialPostWriteResponseDto>(
+      {url: `/v1/social/posts`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSocialPostDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getSocialControllerCreatePostMutationKey = () => ['socialControllerCreatePost'] as const;
+
+export const getSocialControllerCreatePostMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof socialControllerCreatePost>>, TError,SocialControllerCreatePostMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof socialControllerCreatePost>>, TError,SocialControllerCreatePostMutationVariables, TContext> => {
+
+const mutationKey = getSocialControllerCreatePostMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof socialControllerCreatePost>>, SocialControllerCreatePostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  socialControllerCreatePost(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SocialControllerCreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof socialControllerCreatePost>>>
+    export type SocialControllerCreatePostMutationBody = CreateSocialPostDto
+    export type SocialControllerCreatePostMutationError = unknown
+    export type SocialControllerCreatePostMutationVariables = {data: CreateSocialPostDto}
+
+    export const useSocialControllerCreatePost = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof socialControllerCreatePost>>, TError,SocialControllerCreatePostMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof socialControllerCreatePost>>,
+        TError,
+        SocialControllerCreatePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSocialControllerCreatePostMutationOptions(options), queryClient);
     }

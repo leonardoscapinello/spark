@@ -1,5 +1,5 @@
 import { BadGatewayException, Injectable, ServiceUnavailableException } from "@nestjs/common";
-import { and, desc, eq, gt } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import {
   EMAIL_VERIFICATION_STATUSES,
   EmailVerificationResultSchema,
@@ -11,15 +11,8 @@ import {
   type OrgId,
   type VerifyEmailResponse,
 } from "@spark/core";
-import {
-  createDbClient,
-  emailVerifications,
-  integrationConnections,
-  integrationSecrets,
-  withOrgContext,
-  type SparkDb,
-} from "@spark/db";
-import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
+import { createDbClient, emailVerifications, withOrgContext, type SparkDb } from "@spark/db";
+import { IntegrationRuntimeResolver } from "../../integrations/application/integration-runtime-resolver.service.js";
 
 const CACHE_DURATION_MS = 90 * 24 * 60 * 60 * 1_000;
 
@@ -27,7 +20,7 @@ const CACHE_DURATION_MS = 90 * 24 * 60 * 60 * 1_000;
 export class EmailVerificationService {
   private readonly db: SparkDb;
 
-  constructor(private readonly vault: SecretVault) {
+  constructor(private readonly integrations: IntegrationRuntimeResolver) {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
@@ -49,33 +42,8 @@ export class EmailVerificationService {
     });
     if (cached) return responseFor(toResult(cached), true);
 
-    const provider = await withOrgContext(this.db, orgId, async (tx) => {
-      const [connection] = await tx
-        .select()
-        .from(integrationConnections)
-        .where(
-          and(
-            eq(integrationConnections.orgId, orgId),
-            eq(integrationConnections.provider, "reoon"),
-            eq(integrationConnections.status, "connected"),
-          ),
-        )
-        .orderBy(desc(integrationConnections.updatedAt))
-        .limit(1);
-      if (!connection) return null;
-      const [secret] = await tx
-        .select()
-        .from(integrationSecrets)
-        .where(
-          and(
-            eq(integrationSecrets.orgId, orgId),
-            eq(integrationSecrets.connectionId, connection.id),
-          ),
-        )
-        .limit(1);
-      return secret ? { connection, secrets: this.vault.decrypt(secret) } : null;
-    });
-    if (!provider?.secrets.apiKey) {
+    const provider = await this.integrations.resolve(orgId, "reoon");
+    if (!provider.secrets.apiKey) {
       throw new ServiceUnavailableException(
         "Configure e teste o Reoon em Integrações antes de validar e-mails.",
       );
@@ -104,7 +72,7 @@ export class EmailVerificationService {
           orgId,
           ...result,
           rawResult: raw as Record<string, unknown>,
-          providerConnectionId: provider.connection.id,
+          providerConnectionId: provider.connectionId,
           checkedAt,
           expiresAt,
           updatedAt: checkedAt,
@@ -128,7 +96,7 @@ export class EmailVerificationService {
             mxAcceptsMail: result.mxAcceptsMail,
             mxRecords: result.mxRecords,
             rawResult: raw as Record<string, unknown>,
-            providerConnectionId: provider.connection.id,
+            providerConnectionId: provider.connectionId,
             checkedAt,
             expiresAt,
             updatedAt: checkedAt,

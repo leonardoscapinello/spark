@@ -31,6 +31,8 @@ export const CAPABILITIES = [
   "catalog:write",
   "forms:read",
   "forms:write",
+  "social:read",
+  "social:write",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

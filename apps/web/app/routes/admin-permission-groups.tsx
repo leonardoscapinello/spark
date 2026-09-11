@@ -7,8 +7,21 @@ import {
   permissionGroupsControllerUpdate,
   type PermissionGroupDto,
 } from "@spark/api-client";
-import { CAPABILITIES, permissionGroupId as permissionGroupIdFactory, type Capability } from "@spark/core";
-import { ActionModal, Button, Card, Checkbox, Field, Input, Label, PageHeader } from "@spark/ui-web";
+import {
+  CAPABILITIES,
+  permissionGroupId as permissionGroupIdFactory,
+  type Capability,
+} from "@spark/core";
+import {
+  ActionModal,
+  Button,
+  Card,
+  Checkbox,
+  Field,
+  Input,
+  Label,
+  PageHeader,
+} from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-permission-groups.module.css";
 
@@ -39,6 +52,8 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "catalog:write": "Gerenciar produtos e descontos",
   "forms:read": "Ver formulários e respostas",
   "forms:write": "Criar e publicar formulários",
+  "social:read": "Ver calendário e publicações sociais",
+  "social:write": "Criar e agendar publicações sociais",
 };
 
 export async function clientLoader() {
@@ -72,9 +87,9 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
   }
 
   function toggleCapability(capability: Capability, checked: boolean) {
-    setCapabilities((current) => checked
-      ? [...current, capability]
-      : current.filter((item) => item !== capability));
+    setCapabilities((current) =>
+      checked ? [...current, capability] : current.filter((item) => item !== capability),
+    );
   }
 
   async function save() {
@@ -86,7 +101,7 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
         name: normalizedName,
         capabilities,
       });
-      setGroups((current) => current.map((group) => group.id === updated.id ? updated : group));
+      setGroups((current) => current.map((group) => (group.id === updated.id ? updated : group)));
       setFeedback(`Grupo ${updated.name} atualizado.`);
       return;
     }
@@ -109,7 +124,11 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
         actions={<Button onClick={openCreate}>Novo grupo</Button>}
       />
 
-      {feedback && <p className={styles.feedback} role="status">{feedback}</p>}
+      {feedback && (
+        <p className={styles.feedback} role="status">
+          {feedback}
+        </p>
+      )}
 
       <div className={styles.grid} aria-label="Grupos de permissão">
         {groups.map((group) => (
@@ -117,7 +136,11 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
             key={group.id}
             title={group.name}
             description={`${group.capabilities.length} permissões`}
-            actions={<Button variant="secondary" size="sm" onClick={() => openEdit(group)}>Editar</Button>}
+            actions={
+              <Button variant="secondary" size="sm" onClick={() => openEdit(group)}>
+                Editar
+              </Button>
+            }
           >
             <ul className={styles.capabilityList}>
               {group.capabilities.map((capability) => (
@@ -139,10 +162,16 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
         <div className={styles.modalFields}>
           <Field>
             <Label>Nome do grupo</Label>
-            <Input value={name} onChange={(event) => setName(event.target.value)} autoComplete="off" />
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              autoComplete="off"
+            />
           </Field>
           <div className={styles.capabilityPicker} role="group" aria-labelledby={capabilityLabelId}>
-            <p id={capabilityLabelId} className={styles.capabilityLegend}>Permissões</p>
+            <p id={capabilityLabelId} className={styles.capabilityLegend}>
+              Permissões
+            </p>
             {CAPABILITIES.map((capability) => (
               <Checkbox
                 key={capability}

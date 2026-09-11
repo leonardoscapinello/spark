@@ -18,3 +18,4 @@ export * from "./integration-connections-collection.js";
 export * from "./files-collection.js";
 export * from "./catalog-collections.js";
 export * from "./forms-collections.js";
+export * from "./social-collections.js";

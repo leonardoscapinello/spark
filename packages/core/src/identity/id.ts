@@ -36,6 +36,8 @@ export type ProductVariantId = Id<"ProductVariant">;
 export type DiscountRuleId = Id<"DiscountRule">;
 export type LeadFormId = Id<"LeadForm">;
 export type FormSubmissionId = Id<"FormSubmission">;
+export type SocialChannelId = Id<"SocialChannel">;
+export type SocialPostId = Id<"SocialPost">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -86,3 +88,5 @@ export const productVariantId = makeIdFactory("ProductVariant");
 export const discountRuleId = makeIdFactory("DiscountRule");
 export const leadFormId = makeIdFactory("LeadForm");
 export const formSubmissionId = makeIdFactory("FormSubmission");
+export const socialChannelId = makeIdFactory("SocialChannel");
+export const socialPostId = makeIdFactory("SocialPost");

@@ -18,6 +18,7 @@ export default [
     route("catalog", "routes/catalog.tsx"),
     route("forms", "routes/forms.tsx"),
     route("forms/:formId", "routes/form-builder.tsx"),
+    route("social", "routes/social.tsx"),
     route("contacts/import", "routes/contact-import.tsx"),
     route("contacts/:contactId", "routes/contact-detail.tsx"),
     route("companies", "routes/companies.tsx"),

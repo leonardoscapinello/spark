@@ -54,6 +54,11 @@ const TITLES: Record<DomainEventType, string> = {
   "form.published": "Formulário publicado",
   "form.unpublished": "Formulário retirado do ar",
   "form.submitted": "Formulário respondido",
+  "social.channels_synced": "Canais sociais sincronizados",
+  "social.post_created": "Publicação social criada",
+  "social.post_scheduled": "Publicação social agendada",
+  "social.post_published": "Publicação social publicada",
+  "social.post_failed": "Falha na publicação social",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {
@@ -64,8 +69,15 @@ export function toTimelineItem(event: Event): TimelineItem {
     id: event.id,
     title: TITLES[event.type],
     timestamp: event.occurredAt,
-    ...((reason || title || name) ? { description: reason ?? title ?? name } : {}),
-    tone: event.type === "deal.won" || event.type === "activity.completed" ? "positive" : event.type === "deal.lost" ? "negative" : event.type.endsWith("created") ? "accent" : "neutral",
+    ...(reason || title || name ? { description: reason ?? title ?? name } : {}),
+    tone:
+      event.type === "deal.won" || event.type === "activity.completed"
+        ? "positive"
+        : event.type === "deal.lost"
+          ? "negative"
+          : event.type.endsWith("created")
+            ? "accent"
+            : "neutral",
   };
 }
 

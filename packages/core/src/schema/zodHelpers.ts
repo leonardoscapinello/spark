@@ -52,6 +52,8 @@ import {
   discountRuleId as toDiscountRuleId,
   leadFormId as toLeadFormId,
   formSubmissionId as toFormSubmissionId,
+  socialChannelId as toSocialChannelId,
+  socialPostId as toSocialPostId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -80,17 +82,25 @@ import {
   type DiscountRuleId,
   type LeadFormId,
   type FormSubmissionId,
+  type SocialChannelId,
+  type SocialPostId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
-  return z.string().min(1, { error: "cannot be empty" }).transform((value, ctx) => {
-    try {
-      return build(value);
-    } catch (error) {
-      ctx.addIssue({ code: "custom", message: error instanceof Error ? error.message : "invalid" });
-      return z.NEVER;
-    }
-  });
+  return z
+    .string()
+    .min(1, { error: "cannot be empty" })
+    .transform((value, ctx) => {
+      try {
+        return build(value);
+      } catch (error) {
+        ctx.addIssue({
+          code: "custom",
+          message: error instanceof Error ? error.message : "invalid",
+        });
+        return z.NEVER;
+      }
+    });
 }
 
 export const zEmail = bridged<Email>(toEmail);
@@ -119,13 +129,17 @@ export const zAutomationRunId = bridged<AutomationRunId>(toAutomationRunId.from)
 export const zAutomationStepId = bridged<AutomationStepId>(toAutomationStepId.from);
 export const zAutomationTimerId = bridged<AutomationTimerId>(toAutomationTimerId.from);
 export const zAutomationJobId = bridged<AutomationJobId>(toAutomationJobId.from);
-export const zIntegrationConnectionId = bridged<IntegrationConnectionId>(toIntegrationConnectionId.from);
+export const zIntegrationConnectionId = bridged<IntegrationConnectionId>(
+  toIntegrationConnectionId.from,
+);
 export const zFileId = bridged<FileId>(toFileId.from);
 export const zProductId = bridged<ProductId>(toProductId.from);
 export const zProductVariantId = bridged<ProductVariantId>(toProductVariantId.from);
 export const zDiscountRuleId = bridged<DiscountRuleId>(toDiscountRuleId.from);
 export const zLeadFormId = bridged<LeadFormId>(toLeadFormId.from);
 export const zFormSubmissionId = bridged<FormSubmissionId>(toFormSubmissionId.from);
+export const zSocialChannelId = bridged<SocialChannelId>(toSocialChannelId.from);
+export const zSocialPostId = bridged<SocialPostId>(toSocialPostId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on
@@ -139,14 +153,17 @@ export const zFormSubmissionId = bridged<FormSubmissionId>(toFormSubmissionId.fr
  * packages/data/src/deals-collection.ts, which never goes through
  * createZodDto — same reason `syncedAmount` already exists there for reads.
  */
-export const zMoney = z.number().int().transform((value, ctx) => {
-  try {
-    return toMoney(value);
-  } catch (error) {
-    ctx.addIssue({ code: "custom", message: error instanceof Error ? error.message : "invalid" });
-    return z.NEVER;
-  }
-});
+export const zMoney = z
+  .number()
+  .int()
+  .transform((value, ctx) => {
+    try {
+      return toMoney(value);
+    } catch (error) {
+      ctx.addIssue({ code: "custom", message: error instanceof Error ? error.message : "invalid" });
+      return z.NEVER;
+    }
+  });
 
 /**
  * Server-generated timestamp (createdAt/updatedAt/etc. — never a field a

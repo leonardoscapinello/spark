@@ -24,10 +24,15 @@ export const SYNC_RESOURCES = [
   "discount_rules",
   "lead_forms",
   "form_submissions",
+  "social_channels",
+  "social_posts",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
-const READ_REQUIREMENTS: Record<Exclude<SyncResource, "organizations" | "events" | "users">, readonly Capability[]> = {
+const READ_REQUIREMENTS: Record<
+  Exclude<SyncResource, "organizations" | "events" | "users">,
+  readonly Capability[]
+> = {
   contacts: ["contacts:read"],
   identities: ["contacts:read"],
   companies: ["companies:read"],
@@ -48,16 +53,32 @@ const READ_REQUIREMENTS: Record<Exclude<SyncResource, "organizations" | "events"
   discount_rules: ["catalog:read"],
   lead_forms: ["forms:read"],
   form_submissions: ["forms:read"],
+  social_channels: ["social:read"],
+  social_posts: ["social:read"],
 };
 
 const DIRECTORY_READERS: readonly Capability[] = [
-  "contacts:read", "companies:read", "deals:read", "activities:read", "inbox:read", "integrations:read", "files:read", "catalog:read", "forms:read", "users:manage",
+  "contacts:read",
+  "companies:read",
+  "deals:read",
+  "activities:read",
+  "inbox:read",
+  "integrations:read",
+  "files:read",
+  "catalog:read",
+  "forms:read",
+  "social:read",
+  "users:manage",
 ];
 
-export function canReadSyncResource(capabilities: readonly Capability[], resource: SyncResource): boolean {
+export function canReadSyncResource(
+  capabilities: readonly Capability[],
+  resource: SyncResource,
+): boolean {
   if (resource === "organizations") return true;
   if (resource === "events") return readableEventPrefixes(capabilities).length > 0;
-  if (resource === "users") return DIRECTORY_READERS.some((capability) => capabilities.includes(capability));
+  if (resource === "users")
+    return DIRECTORY_READERS.some((capability) => capabilities.includes(capability));
   return READ_REQUIREMENTS[resource].some((capability) => capabilities.includes(capability));
 }
 
@@ -74,5 +95,6 @@ export function readableEventPrefixes(capabilities: readonly Capability[]): stri
   if (capabilities.includes("files:read")) prefixes.push("file");
   if (capabilities.includes("catalog:read")) prefixes.push("product", "discount_rule");
   if (capabilities.includes("forms:read")) prefixes.push("form");
+  if (capabilities.includes("social:read")) prefixes.push("social");
   return prefixes;
 }

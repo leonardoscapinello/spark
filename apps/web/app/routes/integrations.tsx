@@ -1,73 +1,523 @@
 import { useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
-import { integrationsControllerCheck, integrationsControllerStatus, integrationsControllerUpsert } from "@spark/api-client";
-import { integrationConnectionId, type IntegrationConnection, type IntegrationProvider } from "@spark/core";
-import { ActionModal, Badge, Button, Card, Field, Input, Label, PageHeader, Switch, notify } from "@spark/ui-web";
+import {
+  integrationsControllerCheck,
+  integrationsControllerStatus,
+  integrationsControllerUpsert,
+} from "@spark/api-client";
+import {
+  integrationConnectionId,
+  type IntegrationConnection,
+  type IntegrationProvider,
+} from "@spark/core";
+import {
+  ActionModal,
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  Label,
+  PageHeader,
+  Switch,
+  notify,
+} from "@spark/ui-web";
 import { getIntegrationConnectionsCollection } from "../lib/integration-connections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./integrations.module.css";
 
-interface ProviderDefinition { provider: IntegrationProvider; name: string; description: string; category: string }
+interface ProviderDefinition {
+  provider: IntegrationProvider;
+  name: string;
+  description: string;
+  category: string;
+}
 const PROVIDERS: ProviderDefinition[] = [
-  { provider: "google_workspace", name: "Google Workspace", description: "Gmail, caixa de entrada e documentos com identidade Google.", category: "Comunicação" },
-  { provider: "smtp", name: "E-mail SMTP", description: "Servidor próprio para envio autenticado de mensagens.", category: "Comunicação" },
-  { provider: "instagram", name: "Instagram", description: "Direct, comentários, menções, stories e gatilhos da Meta.", category: "Canais" },
-  { provider: "buffer", name: "Buffer", description: "Publicação social, calendário, engajamento e métricas.", category: "Social" },
-  { provider: "s3", name: "Armazenamento S3", description: "Bucket compatível com AWS, R2 ou Supabase Storage.", category: "Infraestrutura" },
-  { provider: "reoon", name: "Reoon Email Verifier", description: "Validação de e-mail com cache operacional de três meses.", category: "Dados" },
+  {
+    provider: "google_workspace",
+    name: "Google Workspace",
+    description: "Gmail, caixa de entrada e documentos com identidade Google.",
+    category: "Comunicação",
+  },
+  {
+    provider: "smtp",
+    name: "E-mail SMTP",
+    description: "Servidor próprio para envio autenticado de mensagens.",
+    category: "Comunicação",
+  },
+  {
+    provider: "instagram",
+    name: "Instagram",
+    description: "Direct, comentários, menções, stories e gatilhos da Meta.",
+    category: "Canais",
+  },
+  {
+    provider: "buffer",
+    name: "Buffer",
+    description: "Publicação social, calendário, engajamento e métricas.",
+    category: "Social",
+  },
+  {
+    provider: "s3",
+    name: "Armazenamento S3",
+    description: "Bucket compatível com AWS, R2 ou Supabase Storage.",
+    category: "Infraestrutura",
+  },
+  {
+    provider: "reoon",
+    name: "Reoon Email Verifier",
+    description: "Validação de e-mail com cache operacional de três meses.",
+    category: "Dados",
+  },
 ];
 
-export async function clientLoader() { await requireCapability("integrations:read"); await getIntegrationConnectionsCollection().preload(); return null; }
+export async function clientLoader() {
+  await requireCapability("integrations:read");
+  await getIntegrationConnectionsCollection().preload();
+  return null;
+}
 
 export default function Integrations() {
-  const session = getSession(); const canManage = session?.capabilities.includes("integrations:manage") ?? false;
-  const { data: connections } = useLiveQuery({ query: (q) => q.from({ connections: getIntegrationConnectionsCollection() }).orderBy(({ connections: item }) => item.updatedAt, "desc") });
-  const [editing, setEditing] = useState<ProviderDefinition | null>(null); const [editingId, setEditingId] = useState<string | null>(null);
-  const [config, setConfig] = useState<Record<string, string | number | boolean>>({}); const [credentials, setCredentials] = useState<Record<string, string>>({}); const [checkingId, setCheckingId] = useState<string | null>(null);
+  const session = getSession();
+  const canManage = session?.capabilities.includes("integrations:manage") ?? false;
+  const { data: connections } = useLiveQuery({
+    query: (q) =>
+      q
+        .from({ connections: getIntegrationConnectionsCollection() })
+        .orderBy(({ connections: item }) => item.updatedAt, "desc"),
+  });
+  const [editing, setEditing] = useState<ProviderDefinition | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [config, setConfig] = useState<Record<string, string | number | boolean>>({});
+  const [credentials, setCredentials] = useState<Record<string, string>>({});
+  const [checkingId, setCheckingId] = useState<string | null>(null);
 
   function open(definition: ProviderDefinition, connection?: IntegrationConnection) {
-    setEditing(definition); setEditingId(connection?.id ?? null); setConfig(connection?.config as Record<string, string | number | boolean> ?? defaults(definition.provider)); setCredentials({});
+    setEditing(definition);
+    setEditingId(connection?.id ?? null);
+    setConfig(
+      (connection?.config as Record<string, string | number | boolean>) ??
+        defaults(definition.provider),
+    );
+    setCredentials({});
   }
   async function save() {
     if (!editing) return;
-    const cleanedCredentials = Object.fromEntries(Object.entries(credentials).filter(([, value]) => value.trim()));
-    const response = await integrationsControllerUpsert({ id: editingId ?? integrationConnectionId.create(), provider: editing.provider, name: editing.name, config, ...(Object.keys(cleanedCredentials).length ? { credentials: cleanedCredentials } : {}) });
-    notify({ title: `${response.connection.name} configurado`, description: "As credenciais foram criptografadas e não são sincronizadas com o navegador.", tone: "success" });
+    const cleanedCredentials = Object.fromEntries(
+      Object.entries(credentials).filter(([, value]) => value.trim()),
+    );
+    const response = await integrationsControllerUpsert({
+      id: editingId ?? integrationConnectionId.create(),
+      provider: editing.provider,
+      name: editing.name,
+      config,
+      ...(Object.keys(cleanedCredentials).length ? { credentials: cleanedCredentials } : {}),
+    });
+    notify({
+      title: `${response.connection.name} configurado`,
+      description: "As credenciais foram criptografadas e não são sincronizadas com o navegador.",
+      tone: "success",
+    });
   }
   async function check(connection: IntegrationConnection) {
     setCheckingId(connection.id);
-    try { const response = await integrationsControllerCheck(connection.id); notify({ title: response.connection.status === "connected" ? "Conexão confirmada" : "Falha na conexão", description: response.connection.lastError ?? "O provedor respondeu corretamente.", tone: response.connection.status === "connected" ? "success" : "error" }); }
-    finally { setCheckingId(null); }
+    try {
+      const response = await integrationsControllerCheck(connection.id);
+      notify({
+        title:
+          response.connection.status === "connected" ? "Conexão confirmada" : "Falha na conexão",
+        description: response.connection.lastError ?? "O provedor respondeu corretamente.",
+        tone: response.connection.status === "connected" ? "success" : "error",
+      });
+    } finally {
+      setCheckingId(null);
+    }
   }
-  async function toggle(connection: IntegrationConnection) { await integrationsControllerStatus(connection.id, { disabled: connection.status !== "disabled" }); notify({ title: connection.status === "disabled" ? "Integração habilitada" : "Integração desabilitada", tone: "success" }); }
+  async function toggle(connection: IntegrationConnection) {
+    await integrationsControllerStatus(connection.id, {
+      disabled: connection.status !== "disabled",
+    });
+    notify({
+      title: connection.status === "disabled" ? "Integração habilitada" : "Integração desabilitada",
+      tone: "success",
+    });
+  }
 
-  return <div className={styles.page}>
-    <PageHeader eyebrow="Configurações" title="Integrações" description="Conecte provedores atrás de contratos estáveis. Trocar o fornecedor preserva o restante do sistema." />
-    <section className={styles.security}><div><strong>Credenciais protegidas</strong><span>Segredos usam AES-256-GCM no servidor e nunca entram no Electric, no estado local ou nas respostas da API.</span></div><Badge tone="success">Cofre ativo</Badge></section>
-    <section className={styles.grid}>{PROVIDERS.map((definition) => {
-      const connection = connections.find((item) => item.provider === definition.provider);
-      return <div key={definition.provider} className={styles.providerCard}><Card title={definition.name} description={definition.description}>
-        <div className={styles.providerMeta}><span>{definition.category}</span><Badge tone={connection?.status === "connected" ? "success" : connection?.status === "error" ? "danger" : connection?.status === "disabled" ? "warning" : "neutral"}>{statusLabel(connection?.status)}</Badge></div>
-        {connection && <div className={styles.connectionInfo}><span>{connection.credentialsConfigured ? `Credencial ${connection.credentialHint ?? "configurada"}` : "Credencial pendente"}</span><span>{connection.lastCheckedAt ? `Verificada em ${formatDate(connection.lastCheckedAt)}` : "Ainda não verificada"}</span>{connection.lastError && <small>{connection.lastError}</small>}</div>}
-        {canManage && <div className={styles.actions}><Button variant="secondary" onClick={() => open(definition, connection)}>{connection ? "Configurar" : "Conectar"}</Button>{connection?.credentialsConfigured && connection.status !== "disabled" && <Button loading={checkingId === connection.id} onClick={() => void check(connection)}>Testar conexão</Button>}{connection && <Button variant="ghost" onClick={() => void toggle(connection)}>{connection.status === "disabled" ? "Habilitar" : "Desabilitar"}</Button>}</div>}
-      </Card></div>;
-    })}</section>
-    <ActionModal open={Boolean(editing)} onOpenChange={(open) => { if (!open) setEditing(null); }} title={editing ? `Configurar ${editing.name}` : "Configurar integração"} confirmLabel="Salvar configuração" errorText="Preencha os dados obrigatórios do provedor." onConfirm={save}>{editing && <IntegrationFields provider={editing.provider} config={config} credentials={credentials} setConfig={setConfig} setCredentials={setCredentials} hasExistingCredentials={Boolean(editingId)} />}</ActionModal>
-  </div>;
+  return (
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Configurações"
+        title="Integrações"
+        description="Conecte provedores atrás de contratos estáveis. Trocar o fornecedor preserva o restante do sistema."
+      />
+      <section className={styles.security}>
+        <div>
+          <strong>Credenciais protegidas</strong>
+          <span>
+            Segredos usam AES-256-GCM no servidor e nunca entram no Electric, no estado local ou nas
+            respostas da API.
+          </span>
+        </div>
+        <Badge tone="success">Cofre ativo</Badge>
+      </section>
+      <section className={styles.grid}>
+        {PROVIDERS.map((definition) => {
+          const connection = connections.find((item) => item.provider === definition.provider);
+          return (
+            <div key={definition.provider} className={styles.providerCard}>
+              <Card title={definition.name} description={definition.description}>
+                <div className={styles.providerMeta}>
+                  <span>{definition.category}</span>
+                  <Badge
+                    tone={
+                      connection?.status === "connected"
+                        ? "success"
+                        : connection?.status === "error"
+                          ? "danger"
+                          : connection?.status === "disabled"
+                            ? "warning"
+                            : "neutral"
+                    }
+                  >
+                    {statusLabel(connection?.status)}
+                  </Badge>
+                </div>
+                {connection && (
+                  <div className={styles.connectionInfo}>
+                    <span>
+                      {connection.credentialsConfigured
+                        ? `Credencial ${connection.credentialHint ?? "configurada"}`
+                        : "Credencial pendente"}
+                    </span>
+                    <span>
+                      {connection.lastCheckedAt
+                        ? `Verificada em ${formatDate(connection.lastCheckedAt)}`
+                        : "Ainda não verificada"}
+                    </span>
+                    {connection.lastError && <small>{connection.lastError}</small>}
+                  </div>
+                )}
+                {canManage && (
+                  <div className={styles.actions}>
+                    <Button variant="secondary" onClick={() => open(definition, connection)}>
+                      {connection ? "Configurar" : "Conectar"}
+                    </Button>
+                    {connection?.credentialsConfigured && connection.status !== "disabled" && (
+                      <Button
+                        loading={checkingId === connection.id}
+                        onClick={() => void check(connection)}
+                      >
+                        Testar conexão
+                      </Button>
+                    )}
+                    {connection && (
+                      <Button variant="ghost" onClick={() => void toggle(connection)}>
+                        {connection.status === "disabled" ? "Habilitar" : "Desabilitar"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </div>
+          );
+        })}
+      </section>
+      <ActionModal
+        open={Boolean(editing)}
+        onOpenChange={(open) => {
+          if (!open) setEditing(null);
+        }}
+        title={editing ? `Configurar ${editing.name}` : "Configurar integração"}
+        confirmLabel="Salvar configuração"
+        errorText="Preencha os dados obrigatórios do provedor."
+        onConfirm={save}
+      >
+        {editing && (
+          <IntegrationFields
+            provider={editing.provider}
+            config={config}
+            credentials={credentials}
+            setConfig={setConfig}
+            setCredentials={setCredentials}
+            hasExistingCredentials={Boolean(editingId)}
+          />
+        )}
+      </ActionModal>
+    </div>
+  );
 }
 
-function IntegrationFields({ provider, config, credentials, setConfig, setCredentials, hasExistingCredentials }: { provider: IntegrationProvider; config: Record<string, string | number | boolean>; credentials: Record<string, string>; setConfig: (value: Record<string, string | number | boolean>) => void; setCredentials: (value: Record<string, string>) => void; hasExistingCredentials: boolean }) {
-  const publicField = (key: string, value: string | number | boolean) => setConfig({ ...config, [key]: value }); const secretField = (key: string, value: string) => setCredentials({ ...credentials, [key]: value });
-  if (provider === "smtp") return <div className={styles.fields}><Field><Label>Servidor SMTP</Label><Input value={text(config.host)} placeholder="smtp.exemplo.com" onChange={(event) => publicField("host", event.target.value)} /></Field><div className={styles.columns}><Field><Label>Porta</Label><Input type="number" value={number(config.port, 587)} onChange={(event) => publicField("port", Number(event.target.value))} /></Field><Switch checked={config.secure === true} onCheckedChange={(checked) => publicField("secure", checked)}>TLS direto</Switch></div><div className={styles.columns}><Field><Label>Nome do remetente</Label><Input value={text(config.fromName)} placeholder="Sua empresa" onChange={(event) => publicField("fromName", event.target.value)} /></Field><Field><Label>E-mail do remetente</Label><Input type="email" value={text(config.fromEmail)} placeholder="atendimento@dominio.com" onChange={(event) => publicField("fromEmail", event.target.value)} /></Field></div><Field><Label>Usuário</Label><Input value={credentials.username ?? ""} placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "usuario@dominio.com"} onChange={(event) => secretField("username", event.target.value)} /></Field><Field><Label>Senha</Label><Input type="password" value={credentials.password ?? ""} placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Senha do SMTP"} onChange={(event) => secretField("password", event.target.value)} /></Field></div>;
-  if (provider === "s3") return <div className={styles.fields}><Field><Label>Endpoint</Label><Input value={text(config.endpoint)} placeholder="https://s3.amazonaws.com" onChange={(event) => publicField("endpoint", event.target.value)} /></Field><div className={styles.columns}><Field><Label>Região</Label><Input value={text(config.region) || "auto"} onChange={(event) => publicField("region", event.target.value)} /></Field><Field><Label>Bucket</Label><Input value={text(config.bucket)} onChange={(event) => publicField("bucket", event.target.value)} /></Field></div><Switch checked={config.forcePathStyle === true} onCheckedChange={(checked) => publicField("forcePathStyle", checked)}>Usar path-style</Switch><Field><Label>Access key</Label><Input type="password" value={credentials.accessKeyId ?? ""} placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Access key ID"} onChange={(event) => secretField("accessKeyId", event.target.value)} /></Field><Field><Label>Secret key</Label><Input type="password" value={credentials.secretAccessKey ?? ""} placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Secret access key"} onChange={(event) => secretField("secretAccessKey", event.target.value)} /></Field></div>;
-  if (provider === "reoon") return <div className={styles.fields}><Field><Label>E-mail para teste</Label><Input type="email" value={text(config.testEmail)} placeholder="voce@dominio.com" onChange={(event) => publicField("testEmail", event.target.value)} /></Field><SecretToken name="Chave da API" field="apiKey" value={credentials.apiKey ?? ""} existing={hasExistingCredentials} onChange={secretField} /></div>;
-  if (provider === "instagram") return <div className={styles.fields}><div className={styles.columns}><Field><Label>Versão da Graph API</Label><Input value={text(config.apiVersion) || "v23.0"} onChange={(event) => publicField("apiVersion", event.target.value)} /></Field><Field><Label>ID da conta</Label><Input value={text(config.accountId)} onChange={(event) => publicField("accountId", event.target.value)} /></Field></div><SecretToken name="Token de acesso" field="accessToken" value={credentials.accessToken ?? ""} existing={hasExistingCredentials} onChange={secretField} /></div>;
-  if (provider === "buffer") return <div className={styles.fields}><Field><Label>Endpoint da API</Label><Input value={text(config.apiBaseUrl) || "https://api.bufferapp.com/1/user.json"} onChange={(event) => publicField("apiBaseUrl", event.target.value)} /></Field><SecretToken name="Token de acesso" field="accessToken" value={credentials.accessToken ?? ""} existing={hasExistingCredentials} onChange={secretField} /></div>;
-  return <div className={styles.fields}><Field><Label>E-mail do remetente</Label><Input type="email" value={text(config.fromEmail)} placeholder="atendimento@dominio.com" onChange={(event) => publicField("fromEmail", event.target.value)} /></Field><SecretToken name="Token OAuth do Google" field="accessToken" value={credentials.accessToken ?? ""} existing={hasExistingCredentials} onChange={secretField} /></div>;
+function IntegrationFields({
+  provider,
+  config,
+  credentials,
+  setConfig,
+  setCredentials,
+  hasExistingCredentials,
+}: {
+  provider: IntegrationProvider;
+  config: Record<string, string | number | boolean>;
+  credentials: Record<string, string>;
+  setConfig: (value: Record<string, string | number | boolean>) => void;
+  setCredentials: (value: Record<string, string>) => void;
+  hasExistingCredentials: boolean;
+}) {
+  const publicField = (key: string, value: string | number | boolean) =>
+    setConfig({ ...config, [key]: value });
+  const secretField = (key: string, value: string) =>
+    setCredentials({ ...credentials, [key]: value });
+  if (provider === "smtp")
+    return (
+      <div className={styles.fields}>
+        <Field>
+          <Label>Servidor SMTP</Label>
+          <Input
+            value={text(config.host)}
+            placeholder="smtp.exemplo.com"
+            onChange={(event) => publicField("host", event.target.value)}
+          />
+        </Field>
+        <div className={styles.columns}>
+          <Field>
+            <Label>Porta</Label>
+            <Input
+              type="number"
+              value={number(config.port, 587)}
+              onChange={(event) => publicField("port", Number(event.target.value))}
+            />
+          </Field>
+          <Switch
+            checked={config.secure === true}
+            onCheckedChange={(checked) => publicField("secure", checked)}
+          >
+            TLS direto
+          </Switch>
+        </div>
+        <div className={styles.columns}>
+          <Field>
+            <Label>Nome do remetente</Label>
+            <Input
+              value={text(config.fromName)}
+              placeholder="Sua empresa"
+              onChange={(event) => publicField("fromName", event.target.value)}
+            />
+          </Field>
+          <Field>
+            <Label>E-mail do remetente</Label>
+            <Input
+              type="email"
+              value={text(config.fromEmail)}
+              placeholder="atendimento@dominio.com"
+              onChange={(event) => publicField("fromEmail", event.target.value)}
+            />
+          </Field>
+        </div>
+        <Field>
+          <Label>Usuário</Label>
+          <Input
+            value={credentials.username ?? ""}
+            placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "usuario@dominio.com"}
+            onChange={(event) => secretField("username", event.target.value)}
+          />
+        </Field>
+        <Field>
+          <Label>Senha</Label>
+          <Input
+            type="password"
+            value={credentials.password ?? ""}
+            placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Senha do SMTP"}
+            onChange={(event) => secretField("password", event.target.value)}
+          />
+        </Field>
+      </div>
+    );
+  if (provider === "s3")
+    return (
+      <div className={styles.fields}>
+        <Field>
+          <Label>Endpoint</Label>
+          <Input
+            value={text(config.endpoint)}
+            placeholder="https://s3.amazonaws.com"
+            onChange={(event) => publicField("endpoint", event.target.value)}
+          />
+        </Field>
+        <div className={styles.columns}>
+          <Field>
+            <Label>Região</Label>
+            <Input
+              value={text(config.region) || "auto"}
+              onChange={(event) => publicField("region", event.target.value)}
+            />
+          </Field>
+          <Field>
+            <Label>Bucket</Label>
+            <Input
+              value={text(config.bucket)}
+              onChange={(event) => publicField("bucket", event.target.value)}
+            />
+          </Field>
+        </div>
+        <Switch
+          checked={config.forcePathStyle === true}
+          onCheckedChange={(checked) => publicField("forcePathStyle", checked)}
+        >
+          Usar path-style
+        </Switch>
+        <Field>
+          <Label>Access key</Label>
+          <Input
+            type="password"
+            value={credentials.accessKeyId ?? ""}
+            placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Access key ID"}
+            onChange={(event) => secretField("accessKeyId", event.target.value)}
+          />
+        </Field>
+        <Field>
+          <Label>Secret key</Label>
+          <Input
+            type="password"
+            value={credentials.secretAccessKey ?? ""}
+            placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Secret access key"}
+            onChange={(event) => secretField("secretAccessKey", event.target.value)}
+          />
+        </Field>
+      </div>
+    );
+  if (provider === "reoon")
+    return (
+      <div className={styles.fields}>
+        <Field>
+          <Label>E-mail para teste</Label>
+          <Input
+            type="email"
+            value={text(config.testEmail)}
+            placeholder="voce@dominio.com"
+            onChange={(event) => publicField("testEmail", event.target.value)}
+          />
+        </Field>
+        <SecretToken
+          name="Chave da API"
+          field="apiKey"
+          value={credentials.apiKey ?? ""}
+          existing={hasExistingCredentials}
+          onChange={secretField}
+        />
+      </div>
+    );
+  if (provider === "instagram")
+    return (
+      <div className={styles.fields}>
+        <div className={styles.columns}>
+          <Field>
+            <Label>Versão da Graph API</Label>
+            <Input
+              value={text(config.apiVersion) || "v23.0"}
+              onChange={(event) => publicField("apiVersion", event.target.value)}
+            />
+          </Field>
+          <Field>
+            <Label>ID da conta</Label>
+            <Input
+              value={text(config.accountId)}
+              onChange={(event) => publicField("accountId", event.target.value)}
+            />
+          </Field>
+        </div>
+        <SecretToken
+          name="Token de acesso"
+          field="accessToken"
+          value={credentials.accessToken ?? ""}
+          existing={hasExistingCredentials}
+          onChange={secretField}
+        />
+      </div>
+    );
+  if (provider === "buffer")
+    return (
+      <div className={styles.fields}>
+        <Field>
+          <Label>ID da organização no Buffer</Label>
+          <Input
+            value={text(config.organizationId)}
+            placeholder="Opcional: o Spark descobre automaticamente"
+            onChange={(event) => publicField("organizationId", event.target.value)}
+          />
+        </Field>
+        <SecretToken
+          name="Chave da API"
+          field="accessToken"
+          value={credentials.accessToken ?? ""}
+          existing={hasExistingCredentials}
+          onChange={secretField}
+        />
+      </div>
+    );
+  return (
+    <div className={styles.fields}>
+      <Field>
+        <Label>E-mail do remetente</Label>
+        <Input
+          type="email"
+          value={text(config.fromEmail)}
+          placeholder="atendimento@dominio.com"
+          onChange={(event) => publicField("fromEmail", event.target.value)}
+        />
+      </Field>
+      <SecretToken
+        name="Token OAuth do Google"
+        field="accessToken"
+        value={credentials.accessToken ?? ""}
+        existing={hasExistingCredentials}
+        onChange={secretField}
+      />
+    </div>
+  );
 }
-function SecretToken({ name, field, value, existing, onChange }: { name: string; field: string; value: string; existing: boolean; onChange: (field: string, value: string) => void }) { return <Field><Label>{name}</Label><Input type="password" value={value} placeholder={existing ? "Deixe vazio para manter" : "Cole a credencial"} onChange={(event) => onChange(field, event.target.value)} /></Field>; }
-function defaults(provider: IntegrationProvider): Record<string, string | number | boolean> { if (provider === "smtp") return { port: 587, secure: false }; if (provider === "s3") return { region: "auto", forcePathStyle: true }; if (provider === "instagram") return { apiVersion: "v23.0" }; if (provider === "buffer") return { apiBaseUrl: "https://api.bufferapp.com/1/user.json" }; return {}; }
-function text(value: unknown): string { return typeof value === "string" ? value : ""; } function number(value: unknown, fallback: number): number { return typeof value === "number" ? value : fallback; }
-function statusLabel(status?: IntegrationConnection["status"]): string { if (!status || status === "not_configured") return "Não configurada"; return ({ connected: "Conectada", error: "Com erro", disabled: "Desabilitada" })[status]; }
-function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function SecretToken({
+  name,
+  field,
+  value,
+  existing,
+  onChange,
+}: {
+  name: string;
+  field: string;
+  value: string;
+  existing: boolean;
+  onChange: (field: string, value: string) => void;
+}) {
+  return (
+    <Field>
+      <Label>{name}</Label>
+      <Input
+        type="password"
+        value={value}
+        placeholder={existing ? "Deixe vazio para manter" : "Cole a credencial"}
+        onChange={(event) => onChange(field, event.target.value)}
+      />
+    </Field>
+  );
+}
+function defaults(provider: IntegrationProvider): Record<string, string | number | boolean> {
+  if (provider === "smtp") return { port: 587, secure: false };
+  if (provider === "s3") return { region: "auto", forcePathStyle: true };
+  if (provider === "instagram") return { apiVersion: "v23.0" };
+  return {};
+}
+function text(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+function number(value: unknown, fallback: number): number {
+  return typeof value === "number" ? value : fallback;
+}
+function statusLabel(status?: IntegrationConnection["status"]): string {
+  if (!status || status === "not_configured") return "Não configurada";
+  return { connected: "Conectada", error: "Com erro", disabled: "Desabilitada" }[status];
+}
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
+    new Date(value),
+  );
+}
