@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import styles from "./Icon.module.css";
 const paths = {
+  up: "m5 9.5 3-3 3 3",
   minus: "M3 8h10",
   check: "m3 8 3 3 7-7",
   close: "m4 4 8 8M12 4l-8 8",

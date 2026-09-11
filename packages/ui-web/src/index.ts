@@ -46,3 +46,5 @@ export { ProgressComparison, type ProgressMeasure } from "./ProgressComparison/P
 export { ChangeCalculator, type ChangeCalculatorProps } from "./ChangeCalculator/ChangeCalculator.js";
 
 export { DataTable, type DataTableProps, type TableColumn } from "./DataTable/DataTable.js";
+
+export { TableActions, TableIconAction, type TableIconActionProps } from "./DataTable/TableActions.js";

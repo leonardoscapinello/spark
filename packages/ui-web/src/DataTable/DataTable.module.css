@@ -11,3 +11,6 @@
 .actions { white-space: nowrap; }
 .empty { color: var(--color-inkMuted); text-align: center; }
 .hint { font-size: var(--typography-size-compact); color: var(--color-inkMuted); margin: var(--space-2) 0 0; }
+
+.actionGroup { display: flex; align-items: center; gap: var(--space-1); }
+.actionGroup > * { flex-shrink: 0; }
