@@ -165,8 +165,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui-web
       '@tanstack/react-db':
-        specifier: 0.3.7
-        version: 0.3.7(react@19.3.0)(typescript@5.9.3)
+        specifier: 0.3.8
+        version: 0.3.8(react@19.3.0)(typescript@5.9.3)
       react:
         specifier: ^19.3.0
         version: 19.3.0
@@ -285,11 +285,11 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@tanstack/electric-db-collection':
-        specifier: 0.4.7
-        version: 0.4.7(typescript@5.9.3)
+        specifier: 0.4.8
+        version: 0.4.8(typescript@5.9.3)
       '@tanstack/react-db':
-        specifier: 0.3.7
-        version: 0.3.7(react@19.3.0)(typescript@5.9.3)
+        specifier: 0.3.8
+        version: 0.3.8(react@19.3.0)(typescript@5.9.3)
       zod:
         specifier: ^4.6.1
         version: 4.6.1
@@ -3284,18 +3284,18 @@ packages:
       typescript:
         optional: true
 
-  '@tanstack/db-ivm@0.1.19':
-    resolution: {integrity: sha512-3VGvgNXAPSVqny/pL8Y6n/txnaZzV49WmgSQ9N5eyCQNgMtuOEOJHKDatqqCy3gDxVu6pkhSHDKxcNFOtxMouw==}
+  '@tanstack/db-ivm@0.1.20':
+    resolution: {integrity: sha512-Rpol77pI6JgVO4CtuKXZ/SQAzK4+BuiTSebRsIBo5qiiswtHKrvmiLNfbMXSHpXUF2xJkohFrJq9ndsMP1jAuA==}
     peerDependencies:
       typescript: '>=4.7'
 
-  '@tanstack/db@0.8.7':
-    resolution: {integrity: sha512-NIocfK737qPvkE1Ot2iM5PXN6CSBZY5cw1ovAwo0RvQDc/iinyr3x7v+kavoiWxClbkul98J/wRzr0KLanMxOA==}
+  '@tanstack/db@0.9.0':
+    resolution: {integrity: sha512-wV8ln5zqTSM0Cn9eu+ePHExvzCa3A3cS+kxgRGryeBjDbMuLHrcTU1uGE8/6Etp+60LSfJFbhlojOZgj/kH/eQ==}
     peerDependencies:
       typescript: '>=4.7'
 
-  '@tanstack/electric-db-collection@0.4.7':
-    resolution: {integrity: sha512-FXmHGe0ZsU/pp1UsEU7HMVd9hm9oQWzxnLamZ2b4av1DIxyIJY51Oof2xtSlBa2V/alEHASSS10gYmXN3ENbdA==}
+  '@tanstack/electric-db-collection@0.4.8':
+    resolution: {integrity: sha512-or8yxjM2ofveigtjubgiOgAaDewLZd/4WI44BYPNpCzoazAH/JnUwxyJlqPNwzVZImI/8wRHQzd/7Ty7oEYPiw==}
 
   '@tanstack/pacer-lite@0.2.2':
     resolution: {integrity: sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw==}
@@ -3304,8 +3304,8 @@ packages:
   '@tanstack/query-core@5.102.8':
     resolution: {integrity: sha512-ZNjkJ33CqvPNec/6lZBnHqLc3EVGPZ9ySLhYahU9TcuRFdmwXewuj0c4hwSWcGHqEUwcSrKeZ+oGcvPBqXcQcg==}
 
-  '@tanstack/react-db@0.3.7':
-    resolution: {integrity: sha512-u0AmiKNyyZoYcTVWEFJ5NG+6mQ6mFKzxwQNeljW8mLPzM7vIBZMVfD5QxUDg7j/54ggsVNkp+MIFisaWEXxVug==}
+  '@tanstack/react-db@0.3.8':
+    resolution: {integrity: sha512-RzsjljPjICaBeBZ9OvnIqXK4JN1f7JC75Nokl9bc0mhTh3VURwDqIoUHI06PGTBnJ0Bx2NPrW2fPXbx9JwZOwQ==}
     peerDependencies:
       react: '>=16.8.0'
 
@@ -10598,24 +10598,24 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tanstack/db-ivm@0.1.19(typescript@5.9.3)':
+  '@tanstack/db-ivm@0.1.20(typescript@5.9.3)':
     dependencies:
       fractional-indexing: 3.4.0
       sorted-btree: 1.8.1
       typescript: 5.9.3
 
-  '@tanstack/db@0.8.7(typescript@5.9.3)':
+  '@tanstack/db@0.9.0(typescript@5.9.3)':
     dependencies:
       '@standard-schema/spec': 1.1.0
-      '@tanstack/db-ivm': 0.1.19(typescript@5.9.3)
+      '@tanstack/db-ivm': 0.1.20(typescript@5.9.3)
       '@tanstack/pacer-lite': 0.2.2
       typescript: 5.9.3
 
-  '@tanstack/electric-db-collection@0.4.7(typescript@5.9.3)':
+  '@tanstack/electric-db-collection@0.4.8(typescript@5.9.3)':
     dependencies:
       '@electric-sql/client': 1.5.28
       '@standard-schema/spec': 1.1.0
-      '@tanstack/db': 0.8.7(typescript@5.9.3)
+      '@tanstack/db': 0.9.0(typescript@5.9.3)
       '@tanstack/store': 0.9.3
       debug: 4.4.3
     transitivePeerDependencies:
@@ -10626,9 +10626,9 @@ snapshots:
 
   '@tanstack/query-core@5.102.8': {}
 
-  '@tanstack/react-db@0.3.7(react@19.3.0)(typescript@5.9.3)':
+  '@tanstack/react-db@0.3.8(react@19.3.0)(typescript@5.9.3)':
     dependencies:
-      '@tanstack/db': 0.8.7(typescript@5.9.3)
+      '@tanstack/db': 0.9.0(typescript@5.9.3)
       react: 19.3.0
       use-sync-external-store: 1.7.0(react@19.3.0)
     transitivePeerDependencies:

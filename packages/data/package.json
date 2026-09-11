@@ -20,8 +20,8 @@
     "@types/node": "^24.0.0"
   },
   "dependencies": {
-    "@tanstack/react-db": "0.3.7",
-    "@tanstack/electric-db-collection": "0.4.7",
+    "@tanstack/react-db": "0.3.8",
+    "@tanstack/electric-db-collection": "0.4.8",
     "@electric-sql/client": "1.5.28",
     "@spark/core": "workspace:*",
     "@spark/api-client": "workspace:*",
