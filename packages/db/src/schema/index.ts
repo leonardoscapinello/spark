@@ -11,3 +11,5 @@ export * from "./stages.js";
 export * from "./deals.js";
 export * from "./activities.js";
 export * from "./audit-logs.js";
+export * from "./teams.js";
+export * from "./team-members.js";

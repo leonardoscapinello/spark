@@ -20,6 +20,7 @@ export type ActivityId = Id<"Activity">;
 export type AuditLogId = Id<"AuditLog">;
 export type EventId = Id<"Event">;
 export type IdentityId = Id<"Identity">;
+export type TeamId = Id<"Team">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -54,3 +55,4 @@ export const activityId = makeIdFactory("Activity");
 export const auditLogId = makeIdFactory("AuditLog");
 export const eventId = makeIdFactory("Event");
 export const identityId = makeIdFactory("Identity");
+export const teamId = makeIdFactory("Team");

@@ -13,6 +13,11 @@ const ACTION_LABELS: Record<AdminAuditLogDto["action"], string> = {
   "user.owner_bootstrapped": "Configurou proprietário",
   "user.access_updated": "Alterou acesso",
   "user.permission_group_replaced": "Trocou grupo do usuário",
+  "team.created": "Criou time",
+  "team.updated": "Alterou time",
+  "team.members_replaced": "Alterou membros do time",
+  "team.archived": "Arquivou time",
+  "team.restored": "Restaurou time",
 };
 
 export async function clientLoader() {
@@ -41,7 +46,7 @@ export default function AdminAuditLog({ loaderData }: Route.ComponentProps) {
       <PageHeader
         eyebrow="Administração"
         title="Auditoria"
-        description="Acompanhe alterações de acesso, usuários e grupos de permissão."
+        description="Acompanhe alterações de acesso, usuários, times e grupos de permissão."
       />
       <DataTable
         label="Histórico de auditoria"

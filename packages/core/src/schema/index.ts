@@ -10,3 +10,4 @@ export * from "./stage.js";
 export * from "./deal.js";
 export * from "./activity.js";
 export * from "./auditLog.js";
+export * from "./team.js";

@@ -16,6 +16,7 @@ export default [
     route("activities", "routes/activities.tsx"),
     route("security", "routes/security.tsx"),
     route("admin/users", "routes/admin-users.tsx"),
+    route("admin/teams", "routes/admin-teams.tsx"),
     route("admin/permission-groups", "routes/admin-permission-groups.tsx"),
     route("admin/audit-log", "routes/admin-audit-log.tsx"),
   ]),

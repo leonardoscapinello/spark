@@ -238,6 +238,67 @@ export interface ReplaceUserPermissionGroupDto {
   groupId: string;
 }
 
+export interface TeamDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description: string | null;
+  /** @items.minLength 1 */
+  memberIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+}
+
+export interface CreateTeamDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description?: string | null;
+  /** @items.minLength 1 */
+  memberIds?: string[];
+}
+
+export interface UpdateTeamDto {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description: string | null;
+}
+
+export interface ReplaceTeamMembersDto {
+  /** @items.minLength 1 */
+  memberIds: string[];
+}
+
+export interface SetTeamArchivedDto {
+  archived: boolean;
+}
+
 export type AdminAuditLogDtoAction = typeof AdminAuditLogDtoAction[keyof typeof AdminAuditLogDtoAction];
 
 
@@ -249,6 +310,11 @@ export const AdminAuditLogDtoAction = {
   userowner_bootstrapped: 'user.owner_bootstrapped',
   useraccess_updated: 'user.access_updated',
   userpermission_group_replaced: 'user.permission_group_replaced',
+  teamcreated: 'team.created',
+  teamupdated: 'team.updated',
+  teammembers_replaced: 'team.members_replaced',
+  teamarchived: 'team.archived',
+  teamrestored: 'team.restored',
 } as const;
 
 export type AdminAuditLogDtoTargetType = typeof AdminAuditLogDtoTargetType[keyof typeof AdminAuditLogDtoTargetType];
@@ -257,6 +323,7 @@ export type AdminAuditLogDtoTargetType = typeof AdminAuditLogDtoTargetType[keyof
 export const AdminAuditLogDtoTargetType = {
   permission_group: 'permission_group',
   user: 'user',
+  team: 'team',
 } as const;
 
 export type AdminAuditLogDtoData = {[key: string]: unknown};
@@ -2088,6 +2155,344 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getUsersControllerPermissionGroupMutationOptions(options), queryClient);
+    }
+
+export const teamsControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<TeamDto[]>(
+      {url: `/v1/admin/teams`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getTeamsControllerListQueryKey = () => {
+    return [
+    `/v1/admin/teams`
+    ] as const;
+    }
+
+
+export const getTeamsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof teamsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTeamsControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof teamsControllerList>>> = ({ signal }) => teamsControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof teamsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TeamsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof teamsControllerList>>>
+export type TeamsControllerListQueryError = unknown
+
+
+export function useTeamsControllerList<TData = Awaited<ReturnType<typeof teamsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof teamsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamsControllerList<TData = Awaited<ReturnType<typeof teamsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof teamsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamsControllerList<TData = Awaited<ReturnType<typeof teamsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTeamsControllerList<TData = Awaited<ReturnType<typeof teamsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTeamsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const teamsControllerCreate = (
+    createTeamDto: CreateTeamDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<TeamDto>(
+      {url: `/v1/admin/teams`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTeamDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getTeamsControllerCreateMutationKey = () => ['teamsControllerCreate'] as const;
+
+export const getTeamsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerCreate>>, TError,TeamsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamsControllerCreate>>, TError,TeamsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getTeamsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamsControllerCreate>>, TeamsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  teamsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof teamsControllerCreate>>>
+    export type TeamsControllerCreateMutationBody = CreateTeamDto
+    export type TeamsControllerCreateMutationError = unknown
+    export type TeamsControllerCreateMutationVariables = {data: CreateTeamDto}
+
+    export const useTeamsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerCreate>>, TError,TeamsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamsControllerCreate>>,
+        TError,
+        TeamsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTeamsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const teamsControllerUpdate = (
+    id: string,
+    updateTeamDto: UpdateTeamDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<TeamDto>(
+      {url: `/v1/admin/teams/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTeamDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getTeamsControllerUpdateMutationKey = () => ['teamsControllerUpdate'] as const;
+
+export const getTeamsControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerUpdate>>, TError,TeamsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamsControllerUpdate>>, TError,TeamsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getTeamsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamsControllerUpdate>>, TeamsControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  teamsControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof teamsControllerUpdate>>>
+    export type TeamsControllerUpdateMutationBody = UpdateTeamDto
+    export type TeamsControllerUpdateMutationError = unknown
+    export type TeamsControllerUpdateMutationVariables = {id: string;data: UpdateTeamDto}
+
+    export const useTeamsControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerUpdate>>, TError,TeamsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamsControllerUpdate>>,
+        TError,
+        TeamsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTeamsControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const teamsControllerMembers = (
+    id: string,
+    replaceTeamMembersDto: ReplaceTeamMembersDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<TeamDto>(
+      {url: `/v1/admin/teams/${id}/members`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: replaceTeamMembersDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getTeamsControllerMembersMutationKey = () => ['teamsControllerMembers'] as const;
+
+export const getTeamsControllerMembersMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerMembers>>, TError,TeamsControllerMembersMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamsControllerMembers>>, TError,TeamsControllerMembersMutationVariables, TContext> => {
+
+const mutationKey = getTeamsControllerMembersMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamsControllerMembers>>, TeamsControllerMembersMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  teamsControllerMembers(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamsControllerMembersMutationResult = NonNullable<Awaited<ReturnType<typeof teamsControllerMembers>>>
+    export type TeamsControllerMembersMutationBody = ReplaceTeamMembersDto
+    export type TeamsControllerMembersMutationError = unknown
+    export type TeamsControllerMembersMutationVariables = {id: string;data: ReplaceTeamMembersDto}
+
+    export const useTeamsControllerMembers = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerMembers>>, TError,TeamsControllerMembersMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamsControllerMembers>>,
+        TError,
+        TeamsControllerMembersMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTeamsControllerMembersMutationOptions(options), queryClient);
+    }
+
+export const teamsControllerArchive = (
+    id: string,
+    setTeamArchivedDto: SetTeamArchivedDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<TeamDto>(
+      {url: `/v1/admin/teams/${id}/archive`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setTeamArchivedDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getTeamsControllerArchiveMutationKey = () => ['teamsControllerArchive'] as const;
+
+export const getTeamsControllerArchiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerArchive>>, TError,TeamsControllerArchiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamsControllerArchive>>, TError,TeamsControllerArchiveMutationVariables, TContext> => {
+
+const mutationKey = getTeamsControllerArchiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamsControllerArchive>>, TeamsControllerArchiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  teamsControllerArchive(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamsControllerArchiveMutationResult = NonNullable<Awaited<ReturnType<typeof teamsControllerArchive>>>
+    export type TeamsControllerArchiveMutationBody = SetTeamArchivedDto
+    export type TeamsControllerArchiveMutationError = unknown
+    export type TeamsControllerArchiveMutationVariables = {id: string;data: SetTeamArchivedDto}
+
+    export const useTeamsControllerArchive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerArchive>>, TError,TeamsControllerArchiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamsControllerArchive>>,
+        TError,
+        TeamsControllerArchiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTeamsControllerArchiveMutationOptions(options), queryClient);
     }
 
 export const auditLogsControllerList = (

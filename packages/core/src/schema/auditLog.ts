@@ -11,6 +11,11 @@ export const AuditActionSchema = z.enum([
   "user.owner_bootstrapped",
   "user.access_updated",
   "user.permission_group_replaced",
+  "team.created",
+  "team.updated",
+  "team.members_replaced",
+  "team.archived",
+  "team.restored",
 ]);
 
 export const AuditLogSchema = z.object({
@@ -18,7 +23,7 @@ export const AuditLogSchema = z.object({
   orgId: zOrgId,
   actorUserId: zUserId,
   action: AuditActionSchema,
-  targetType: z.enum(["permission_group", "user"]),
+  targetType: z.enum(["permission_group", "user", "team"]),
   targetId: z.string().uuid(),
   data: z.record(z.string(), z.unknown()).default({}),
   createdAt: zServerTimestamp,

@@ -1,5 +1,5 @@
 import { createZodDto } from "nestjs-zod";
-import { AdminAuditLogSchema, AdminUserSchema, AssignUserToPermissionGroupInputSchema, CreatePermissionGroupInputSchema, CurrentUserSchema, InviteUserInputSchema, PermissionGroupSchema, ReplaceUserPermissionGroupInputSchema, UpdatePermissionGroupInputSchema, UpdateUserAccessInputSchema, UserSchema } from "@spark/core";
+import { AdminAuditLogSchema, AdminUserSchema, AssignUserToPermissionGroupInputSchema, CreatePermissionGroupInputSchema, CreateTeamInputSchema, CurrentUserSchema, InviteUserInputSchema, PermissionGroupSchema, ReplaceTeamMembersInputSchema, ReplaceUserPermissionGroupInputSchema, SetTeamArchivedInputSchema, TeamSchema, UpdatePermissionGroupInputSchema, UpdateTeamInputSchema, UpdateUserAccessInputSchema, UserSchema } from "@spark/core";
 
 /**
  * DTO generated from packages/core's Zod schema — no field hand-written
@@ -18,3 +18,8 @@ export class AssignUserToPermissionGroupDto extends createZodDto(AssignUserToPer
 export class UpdateUserAccessDto extends createZodDto(UpdateUserAccessInputSchema) {}
 export class ReplaceUserPermissionGroupDto extends createZodDto(ReplaceUserPermissionGroupInputSchema) {}
 export class AdminAuditLogDto extends createZodDto(AdminAuditLogSchema) {}
+export class TeamDto extends createZodDto(TeamSchema) {}
+export class CreateTeamDto extends createZodDto(CreateTeamInputSchema) {}
+export class UpdateTeamDto extends createZodDto(UpdateTeamInputSchema) {}
+export class ReplaceTeamMembersDto extends createZodDto(ReplaceTeamMembersInputSchema) {}
+export class SetTeamArchivedDto extends createZodDto(SetTeamArchivedInputSchema) {}

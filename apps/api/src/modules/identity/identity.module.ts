@@ -13,6 +13,8 @@ import { SupabaseIdentityAdminGateway } from "./infrastructure/supabase-identity
 import { UpdateUserAccessUseCase } from "./application/update-user-access.usecase.js";
 import { AuditLogsController } from "./presentation/audit-logs.controller.js";
 import { AuditLogsRepository } from "./infrastructure/audit-logs.repository.js";
+import { TeamsController } from "./presentation/teams.controller.js";
+import { TeamsRepository } from "./infrastructure/teams.repository.js";
 
 // ConfigModule is deliberately NOT imported here — it's already global via
 // ConfigModule.forRoot({ isGlobal: true }) in AppModule. Reimporting the
@@ -20,7 +22,7 @@ import { AuditLogsRepository } from "./infrastructure/audit-logs.repository.js";
 // inside SupabaseJwtGuard (docs/adr/0003 — a single module, no duplicating
 // infrastructure config per domain module).
 @Module({
-  controllers: [MeController, PermissionGroupsController, UsersController, AuditLogsController],
+  controllers: [MeController, PermissionGroupsController, UsersController, TeamsController, AuditLogsController],
   providers: [
     GetCurrentUserUseCase,
     InviteUserUseCase,
@@ -28,6 +30,7 @@ import { AuditLogsRepository } from "./infrastructure/audit-logs.repository.js";
     AuditLogsRepository,
     UsersRepository,
     PermissionGroupsRepository,
+    TeamsRepository,
     SupabaseJwtGuard,
     CapabilityGuard,
     SupabaseIdentityAdminGateway,
