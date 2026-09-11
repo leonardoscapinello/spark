@@ -40,3 +40,11 @@
 @media (prefers-reduced-motion: reduce) {
   .root { transition: none; }
 }
+
+.adorned { display: flex; align-items: center; min-width: 0; gap: var(--space-2); padding-inline: var(--space-3); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); }
+.adorned > input { flex: 1; min-width: 0; border: 0; padding-inline: 0; background: transparent; }
+.adorned > input[data-focused] { outline: none; }
+.adorned:focus-within { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-hairline); border-color: var(--color-focusRing); }
+.adorned:has([data-invalid]) { border-color: var(--color-statusDanger); }
+.adorned[data-disabled] { background: var(--color-surface2); }
+.adornment { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); color: var(--color-inkMuted); }

@@ -260,6 +260,10 @@
     "toastWidth": {
       "$type": "dimension",
       "$value": "360px"
+    },
+    "clockSize": {
+      "$type": "dimension",
+      "$value": "120px"
     }
   }
 }

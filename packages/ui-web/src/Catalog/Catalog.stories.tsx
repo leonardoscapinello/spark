@@ -14,6 +14,11 @@ import { ErrorText } from "../ErrorText/ErrorText.js";
 import { InlineEdit } from "../InlineEdit/InlineEdit.js";
 import { Toaster } from "../Notification/Toast.js";
 import { OverlayExamples } from "./OverlayExamples.js";
+import { FieldExamples } from "./FieldExamples.js";
+import { PanelExamples } from "./PanelExamples.js";
+import { AdornedFields } from "./AdornedFields.js";
+import { FieldLayouts } from "./FieldLayouts.js";
+import { DateProgressExamples } from "./DateProgressExamples.js";
 import { ExtendedCatalog } from "./ExtendedCatalog.js";
 import styles from "./Catalog.module.css";
 
@@ -45,7 +50,7 @@ function Catalog() {
       <div className={styles.selection} role="status">{selection}</div>
       <div className={styles.dashboard}><Suspense fallback={<p>Carregando gráficos…</p>}><DashboardExamples /></Suspense></div>
       <div className={styles.grid}>
-        <OverlayExamples /><ExtendedCatalog />
+        <DateProgressExamples /><FieldLayouts /><AdornedFields /><FieldExamples /><OverlayExamples /><PanelExamples /><ExtendedCatalog />
         <section className={styles.card}><h2>Botões</h2><div className={styles.rows}>
           <div className={styles.row}><Button>Salvar</Button><Button variant="secondary">Cancelar</Button><Button variant="ghost">Ver tudo</Button><Button variant="raised">Adicionar</Button></div>
           <div className={styles.row}><Button size="sm">Pequeno</Button><Button>Médio</Button><Button size="lg">Grande</Button><Button shape="rounded">Retangular</Button></div>

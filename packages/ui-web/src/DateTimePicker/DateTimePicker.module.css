@@ -1,0 +1,26 @@
+.trigger { width: 100%; justify-content: space-between; min-height: var(--ui-fieldHeight); }
+.layout { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-5); }
+.calendar { flex: 1 1 var(--ui-popoverWidth); min-width: min(100%, var(--ui-popoverWidth)); width: 100%; font-family: var(--typography-fontFamily-body); }
+.months,.month { width: 100%; }
+.month { position: relative; }
+.caption { min-height: var(--ui-controlLarge); display: flex; align-items: center; font-weight: var(--typography-weight-semibold); }
+.nav { display: flex; justify-content: flex-end; gap: var(--space-2); }
+.navButton { border: 0; background: var(--ui-subtle); border-radius: var(--radius-sm); width: var(--ui-controlMedium); height: var(--ui-controlMedium); display: grid; place-items: center; cursor: pointer; }
+.chevron { width: var(--ui-icon); height: var(--ui-icon); fill: var(--color-ink); }
+.grid { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.weekday { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); padding-block: var(--space-2); }
+.day { text-align: center; padding: 0; }
+.dayButton { width: 100%; min-height: var(--ui-touchTarget); border: 0; border-radius: var(--radius-sm); background: transparent; font: inherit; color: var(--color-ink); cursor: pointer; }
+.dayButton:hover { background: var(--color-accentWash); }
+.selected .dayButton { background: var(--color-accent); color: var(--ui-buttonInk); }
+.today .dayButton { font-weight: var(--typography-weight-bold); text-decoration: underline; }
+.outside:not(.selected) .dayButton { color: var(--color-inkFaint); }
+:is(.dayButton,.navButton):focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
+.time { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); max-width: 100%; }
+.clock { width: var(--ui-clockSize); max-width: 100%; height: auto; }
+.face { fill: var(--ui-subtle); stroke: var(--color-lineStrong); stroke-width: var(--ui-chartStroke); }
+.tick { stroke: var(--color-inkMuted); stroke-width: var(--ui-chartStroke); }
+.hand { stroke: var(--color-accent); stroke-width: var(--ui-chartStroke); stroke-linecap: round; }
+.center { fill: var(--color-accent); }
+.timeFields { display: flex; align-items: center; gap: var(--space-2); }
+.hint { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }

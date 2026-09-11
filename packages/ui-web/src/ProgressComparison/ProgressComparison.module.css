@@ -1,0 +1,12 @@
+.root,.bars { display: flex; flex-direction: column; gap: var(--space-3); }
+.row { display: flex; flex-direction: column; gap: var(--space-1); }
+.track { height: var(--space-3); background: var(--ui-subtle); border-radius: var(--radius-full); overflow: hidden; }
+.fill { width: var(--measure-width); height: 100%; background: var(--measure-color); border-radius: inherit; }
+.bars[data-variant="overlay"] { display: grid; }
+.bars[data-variant="overlay"] .row { grid-area: 1 / 1; }
+.bars[data-variant="overlay"] .track { height: var(--space-6); background: transparent; }
+.bars[data-variant="overlay"] .fill { height: max(var(--space-1), calc(100% - var(--measure-index) * var(--space-2))); margin-block: calc(var(--measure-index) * var(--space-1)); }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.legend li { display: flex; align-items: center; gap: var(--space-2); }
+.legend strong { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+.swatch { width: var(--space-2); height: var(--space-2); border-radius: var(--radius-full); }
