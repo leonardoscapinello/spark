@@ -11,6 +11,7 @@ import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
 import { EventsModule } from "../events/events.module.js";
 import { AddContactIdentityUseCase } from "./application/add-contact-identity.usecase.js";
 import { IdentitiesRepository } from "./infrastructure/identities.repository.js";
+import { ImportContactsUseCase } from "./application/import-contacts.usecase.js";
 
 @Module({
   imports: [EventsModule],
@@ -20,6 +21,7 @@ import { IdentitiesRepository } from "./infrastructure/identities.repository.js"
     UpdateContactUseCase,
     ArchiveContactUseCase,
     AddContactIdentityUseCase,
+    ImportContactsUseCase,
     ContactsRepository,
     IdentitiesRepository,
     GetCurrentUserUseCase,

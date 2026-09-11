@@ -25,4 +25,17 @@ export class DomainEventWriter {
       data: input.data ?? {},
     });
   }
+
+  async appendMany(tx: SparkDb, inputs: AppendDomainEventInput[]): Promise<void> {
+    if (!inputs.length) return;
+    await tx.insert(events).values(inputs.map((input) => ({
+      id: eventId.create(),
+      orgId: input.orgId,
+      contactId: input.contactId ?? null,
+      dealId: input.dealId ?? null,
+      companyId: input.companyId ?? null,
+      type: input.type,
+      data: input.data ?? {},
+    })));
+  }
 }

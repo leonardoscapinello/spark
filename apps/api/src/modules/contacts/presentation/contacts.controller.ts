@@ -15,6 +15,8 @@ import { ArchiveContactUseCase } from "../application/archive-contact.usecase.js
 import { AddContactIdentityUseCase } from "../application/add-contact-identity.usecase.js";
 import { CreateContactDto, CreateContactResponseDto, UpdateContactArchiveDto, UpdateContactDto, UpdateContactResponseDto } from "../dto/contact.dto.js";
 import { AddContactIdentityDto, CreateIdentityResponseDto } from "../dto/identity.dto.js";
+import { ImportContactsDto, ImportContactsResponseDto } from "../dto/contact.dto.js";
+import { ImportContactsUseCase } from "../application/import-contacts.usecase.js";
 
 @ApiTags("contacts")
 @Controller("v1/contacts")
@@ -25,7 +27,21 @@ export class ContactsController {
     private readonly updateContact: UpdateContactUseCase,
     private readonly archiveContact: ArchiveContactUseCase,
     private readonly addContactIdentity: AddContactIdentityUseCase,
+    private readonly importContacts: ImportContactsUseCase,
   ) {}
+
+  @Post("import")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("contacts:write")
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: ImportContactsResponseDto })
+  async importCsv(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Body() body: ImportContactsDto,
+  ): Promise<ImportContactsResponseDto> {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    return this.importContacts.execute(user.orgId, body) as Promise<ImportContactsResponseDto>;
+  }
 
   @Post(":id/identities")
   @UseGuards(SupabaseJwtGuard, CapabilityGuard)

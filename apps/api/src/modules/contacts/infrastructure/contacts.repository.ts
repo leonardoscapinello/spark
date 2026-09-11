@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, contacts, type SparkDb } from "@spark/db";
-import type { Contact, CreateContactInput, UpdateContactInput, OrgId, ContactId } from "@spark/core";
+import type { Contact, CreateContactInput, ImportContactsInput, ImportContactsResponse, UpdateContactInput, OrgId, ContactId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 /**
@@ -99,6 +99,50 @@ export class ContactsRepository {
       const contact = toContact(row);
       await this.eventWriter.append(tx, { orgId, contactId: contact.id, companyId: contact.companyId, type: archived ? "contact.archived" : "contact.restored" });
       return { contact, txid: Number(txidRow.txid) };
+    });
+  }
+
+  async import(orgId: OrgId, input: ImportContactsInput): Promise<ImportContactsResponse> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
+      const txid = Number(txidRows[0]?.txid);
+      if (!Number.isInteger(txid)) throw new Error("Could not obtain the transaction's txid.");
+
+      const emailValues = input.contacts.flatMap((contact) => contact.email ? [contact.email] : []);
+      const phoneValues = input.contacts.flatMap((contact) => contact.phone ? [contact.phone] : []);
+      const existingEmails = emailValues.length
+        ? await tx.select({ value: contacts.email }).from(contacts).where(and(eq(contacts.orgId, orgId), inArray(contacts.email, emailValues)))
+        : [];
+      const existingPhones = phoneValues.length
+        ? await tx.select({ value: contacts.phone }).from(contacts).where(and(eq(contacts.orgId, orgId), inArray(contacts.phone, phoneValues)))
+        : [];
+      const seenEmails = new Set(existingEmails.flatMap((item) => item.value ? [item.value] : []));
+      const seenPhones = new Set(existingPhones.flatMap((item) => item.value ? [item.value] : []));
+      const accepted = input.contacts.filter((contact) => {
+        if ((contact.email && seenEmails.has(contact.email)) || (contact.phone && seenPhones.has(contact.phone))) return false;
+        if (contact.email) seenEmails.add(contact.email);
+        if (contact.phone) seenPhones.add(contact.phone);
+        return true;
+      });
+
+      if (accepted.length) {
+        await tx.insert(contacts).values(accepted.map((contact) => ({
+          id: contact.id,
+          orgId,
+          name: contact.name,
+          email: contact.email ?? null,
+          phone: contact.phone ?? null,
+          source: contact.source ?? "csv",
+          tags: contact.tags ?? [],
+        })));
+        await this.eventWriter.appendMany(tx, accepted.map((contact) => ({
+          orgId,
+          contactId: contact.id,
+          type: "contact.created" as const,
+          data: { name: contact.name, source: contact.source ?? "csv", imported: true },
+        })));
+      }
+      return { imported: accepted.length, skipped: input.contacts.length - accepted.length, txid };
     });
   }
 }

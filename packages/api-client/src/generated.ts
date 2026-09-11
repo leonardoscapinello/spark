@@ -347,6 +347,59 @@ export interface AdminAuditLogDto {
   targetLabel: string;
 }
 
+export type ImportContactsDtoContactsItem = {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  phone?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @nullable
+     */
+  source?: string | null;
+  tags?: string[];
+};
+
+export interface ImportContactsDto {
+  /**
+     * @minItems 1
+     * @maxItems 2000
+     */
+  contacts: ImportContactsDtoContactsItem[];
+}
+
+export interface ImportContactsResponseDto {
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  imported: number;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  skipped: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type AddContactIdentityDtoChannel = typeof AddContactIdentityDtoChannel[keyof typeof AddContactIdentityDtoChannel];
 
 
@@ -2581,6 +2634,68 @@ export function useAuditLogsControllerList<TData = Awaited<ReturnType<typeof aud
 
 
 
+
+export const contactsControllerImportCsv = (
+    importContactsDto: ImportContactsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ImportContactsResponseDto>(
+      {url: `/v1/contacts/import`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: importContactsDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getContactsControllerImportCsvMutationKey = () => ['contactsControllerImportCsv'] as const;
+
+export const getContactsControllerImportCsvMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerImportCsv>>, TError,ContactsControllerImportCsvMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof contactsControllerImportCsv>>, TError,ContactsControllerImportCsvMutationVariables, TContext> => {
+
+const mutationKey = getContactsControllerImportCsvMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof contactsControllerImportCsv>>, ContactsControllerImportCsvMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  contactsControllerImportCsv(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ContactsControllerImportCsvMutationResult = NonNullable<Awaited<ReturnType<typeof contactsControllerImportCsv>>>
+    export type ContactsControllerImportCsvMutationBody = ImportContactsDto
+    export type ContactsControllerImportCsvMutationError = unknown
+    export type ContactsControllerImportCsvMutationVariables = {data: ImportContactsDto}
+
+    export const useContactsControllerImportCsv = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerImportCsv>>, TError,ContactsControllerImportCsvMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof contactsControllerImportCsv>>,
+        TError,
+        ContactsControllerImportCsvMutationVariables,
+        TContext
+      > => {
+      return useMutation(getContactsControllerImportCsvMutationOptions(options), queryClient);
+    }
 
 export const contactsControllerAddIdentity = (
     id: string,

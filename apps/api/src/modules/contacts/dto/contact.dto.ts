@@ -6,6 +6,8 @@ import {
   UpdateContactInputSchema,
   UpdateContactArchiveInputSchema,
   UpdateContactResponseSchema,
+  ImportContactsInputSchema,
+  ImportContactsResponseSchema,
 } from "@spark/core";
 
 /** No field hand-written — born from core's Zod schema (ADR-0004, ADR-0019). */
@@ -15,3 +17,5 @@ export class CreateContactResponseDto extends createZodDto(CreateContactResponse
 export class UpdateContactDto extends createZodDto(UpdateContactInputSchema) {}
 export class UpdateContactArchiveDto extends createZodDto(UpdateContactArchiveInputSchema) {}
 export class UpdateContactResponseDto extends createZodDto(UpdateContactResponseSchema) {}
+export class ImportContactsDto extends createZodDto(ImportContactsInputSchema) {}
+export class ImportContactsResponseDto extends createZodDto(ImportContactsResponseSchema) {}

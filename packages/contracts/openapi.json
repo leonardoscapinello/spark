@@ -555,6 +555,42 @@
         ]
       }
     },
+    "/v1/contacts/import": {
+      "post": {
+        "operationId": "ContactsController_importCsv",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportContactsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportContactsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "contacts"
+        ]
+      }
+    },
     "/v1/contacts/{id}/identities": {
       "post": {
         "operationId": "ContactsController_addIdentity",
@@ -2036,6 +2072,86 @@
           "createdAt",
           "actorName",
           "targetLabel"
+        ]
+      },
+      "ImportContactsDto": {
+        "type": "object",
+        "properties": {
+          "contacts": {
+            "minItems": 1,
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "email": {
+                  "type": "string",
+                  "minLength": 1,
+                  "nullable": true
+                },
+                "phone": {
+                  "type": "string",
+                  "minLength": 1,
+                  "nullable": true
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100,
+                  "default": null,
+                  "nullable": true
+                },
+                "tags": {
+                  "default": [],
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "contacts"
+        ]
+      },
+      "ImportContactsResponseDto": {
+        "type": "object",
+        "properties": {
+          "imported": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "skipped": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "imported",
+          "skipped",
+          "txid"
         ]
       },
       "AddContactIdentityDto": {

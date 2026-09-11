@@ -77,3 +77,23 @@ export const UpdateContactResponseSchema = z.object({
   txid: z.number().int(),
 });
 export type UpdateContactResponse = z.infer<typeof UpdateContactResponseSchema>;
+
+export const ImportContactItemSchema = CreateContactInputSchema.pick({
+  id: true,
+  name: true,
+  email: true,
+  phone: true,
+  source: true,
+  tags: true,
+});
+export type ImportContactItem = z.infer<typeof ImportContactItemSchema>;
+
+export const ImportContactsInputSchema = z.object({ contacts: z.array(ImportContactItemSchema).min(1).max(2000) });
+export type ImportContactsInput = z.infer<typeof ImportContactsInputSchema>;
+
+export const ImportContactsResponseSchema = z.object({
+  imported: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  txid: z.number().int(),
+});
+export type ImportContactsResponse = z.infer<typeof ImportContactsResponseSchema>;
