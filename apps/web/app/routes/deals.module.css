@@ -63,8 +63,16 @@
 }
 
 .colunaNome {
+  height: auto;
+  padding: 2px var(--space-1);
+  margin: -2px calc(var(--space-1) * -1);
   font-weight: var(--typography-weight-medium);
   font-size: var(--typography-size-sm);
+}
+
+.formRenomear {
+  flex: 1;
+  min-width: 0;
 }
 
 .colunaTotal {

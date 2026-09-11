@@ -6,7 +6,7 @@ import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { StageSchema, stageId, type Stage, type CreateStageInput, type OrgId } from "@spark/core";
-import { stagesControllerCreate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { stagesControllerCreate, stagesControllerRename, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
 export function estagioOtimista(entrada: Omit<CreateStageInput, "id">, orgId: OrgId): Stage {
   const agora = new Date().toISOString();
@@ -54,6 +54,20 @@ export function createStagesCollection() {
           probabilidade: estagio.probabilidade,
         });
 
+        return { txid: resposta.txid };
+      },
+      onUpdate: async ({ transaction }) => {
+        const mutacao = transaction.mutations[0];
+        if (!mutacao) throw new Error("onUpdate chamado sem mutação pendente.");
+
+        const camposAlterados = Object.keys(mutacao.changes);
+        if (camposAlterados.length !== 1 || camposAlterados[0] !== "nome") {
+          throw new Error(
+            `Só é possível renomear estágio hoje — campo(s) alterado(s): ${camposAlterados.join(", ")}.`,
+          );
+        }
+
+        const resposta = await stagesControllerRename(mutacao.original.id, { nome: mutacao.modified.nome });
         return { txid: resposta.txid };
       },
     }),

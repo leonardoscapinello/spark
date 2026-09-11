@@ -51,6 +51,7 @@ export default function Deals() {
 
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [colunaAlvo, setColunaAlvo] = useState<string | null>(null);
+  const [estagioRenomeando, setEstagioRenomeando] = useState<string | null>(null);
 
   const pipelinePrincipal = pipelines.find((p) => p.padrao) ?? pipelines[0];
   const estagios = pipelinePrincipal ? todosEstagios.filter((e) => e.pipelineId === pipelinePrincipal.id) : [];
@@ -105,6 +106,16 @@ export default function Deals() {
     evento.currentTarget.reset();
   }
 
+  function salvarNomeEstagio(id: string, nomeNovo: string) {
+    const nomeLimpo = nomeNovo.trim();
+    if (nomeLimpo) {
+      stagesCollection.update(id, (draft) => {
+        draft.nome = nomeLimpo;
+      });
+    }
+    setEstagioRenomeando(null);
+  }
+
   if (!carregandoPipelines && !pipelinePrincipal) {
     return (
       <div className={styles.pagina}>
@@ -142,7 +153,37 @@ export default function Deals() {
               }}
             >
               <div className={styles.colunaCabecalho}>
-                <span className={styles.colunaNome}>{estagio.nome}</span>
+                {estagioRenomeando === estagio.id ? (
+                  <form
+                    className={styles.formRenomear}
+                    onSubmit={(evento) => {
+                      evento.preventDefault();
+                      const dados = new FormData(evento.currentTarget);
+                      salvarNomeEstagio(estagio.id, String(dados.get("nome") ?? ""));
+                    }}
+                  >
+                    <Input
+                      name="nome"
+                      size="sm"
+                      defaultValue={estagio.nome}
+                      autoFocus
+                      onBlur={(evento) => salvarNomeEstagio(estagio.id, evento.currentTarget.value)}
+                      onKeyDown={(evento) => {
+                        if (evento.key === "Escape") setEstagioRenomeando(null);
+                      }}
+                    />
+                  </form>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={styles.colunaNome}
+                    onClick={() => setEstagioRenomeando(estagio.id)}
+                  >
+                    {estagio.nome}
+                  </Button>
+                )}
                 <span className={styles.colunaTotal}>
                   {negociosDoEstagio.length} · {formatBRL(total)}
                 </span>

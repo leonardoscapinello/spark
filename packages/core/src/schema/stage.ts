@@ -1,10 +1,19 @@
 import { z } from "zod";
-import { zOrgId, zPipelineId, zStageId } from "./zodHelpers.js";
+import { zOrgId, zPipelineId, zStageId, zTimestampServidor } from "./zodHelpers.js";
 
 /**
  * Estágio — uma coluna do funil (pipeline.ts). `ordem` é a posição visual
  * no board; quem decide a posição é sempre este campo, nunca a ordem de
  * inserção no banco.
+ *
+ * Carimbos de tempo usam `zTimestampServidor`, não `z.iso.datetime()`
+ * direto: `collection.update()` da TanStack DB revalida o registro
+ * MESCLADO (estado atual da linha + patch) contra este schema a cada
+ * chamada, e o "estado atual" de uma linha sincronizada nunca é ISO
+ * estrito (Electric nunca transforma) — mesmo bug e mesmo fix já feitos
+ * em DealSchema, achado de novo aqui ao ligar o primeiro `onUpdate` de
+ * Stage (renomear): sem isto, QUALQUER update de estágio sincronizado
+ * quebra, não só renomear.
  */
 export const StageSchema = z.object({
   id: zStageId,
@@ -15,9 +24,9 @@ export const StageSchema = z.object({
   /** probabilidade de fechamento associada a este estágio, 0–100 — usada
    * pra previsão de receita ponderada (paridade com Pipedrive). */
   probabilidade: z.number().int().min(0).max(100).default(0),
-  criadoEm: z.iso.datetime(),
-  atualizadoEm: z.iso.datetime(),
-  arquivadoEm: z.iso.datetime().nullable(),
+  criadoEm: zTimestampServidor,
+  atualizadoEm: zTimestampServidor,
+  arquivadoEm: zTimestampServidor.nullable(),
 });
 
 export type Stage = z.infer<typeof StageSchema>;
