@@ -555,6 +555,158 @@
         ]
       }
     },
+    "/v1/email-verifications": {
+      "post": {
+        "operationId": "EmailVerificationsController_verify",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyEmailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "email-verifications"
+        ]
+      }
+    },
+    "/v1/integrations": {
+      "post": {
+        "operationId": "IntegrationsController_upsert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/integrations/{id}/check": {
+      "post": {
+        "operationId": "IntegrationsController_check",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/integrations/{id}/status": {
+      "patch": {
+        "operationId": "IntegrationsController_status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIntegrationStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
     "/v1/contacts/import": {
       "post": {
         "operationId": "ContactsController_importCsv",
@@ -1425,122 +1577,6 @@
         ],
         "tags": [
           "inbox"
-        ]
-      }
-    },
-    "/v1/integrations": {
-      "post": {
-        "operationId": "IntegrationsController_upsert",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertIntegrationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntegrationWriteResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "integrations"
-        ]
-      }
-    },
-    "/v1/integrations/{id}/check": {
-      "post": {
-        "operationId": "IntegrationsController_check",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntegrationWriteResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "integrations"
-        ]
-      }
-    },
-    "/v1/integrations/{id}/status": {
-      "patch": {
-        "operationId": "IntegrationsController_status",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateIntegrationStatusDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IntegrationWriteResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "integrations"
         ]
       }
     },
@@ -3230,6 +3266,336 @@
           "createdAt",
           "actorName",
           "targetLabel"
+        ]
+      },
+      "VerifyEmailDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "VerifyEmailResponseDto": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "safe",
+                  "invalid",
+                  "disabled",
+                  "disposable",
+                  "inbox_full",
+                  "catch_all",
+                  "role_account",
+                  "spamtrap",
+                  "unknown"
+                ]
+              },
+              "overallScore": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "nullable": true
+              },
+              "isSafeToSend": {
+                "type": "boolean"
+              },
+              "isValidSyntax": {
+                "type": "boolean"
+              },
+              "isDisposable": {
+                "type": "boolean"
+              },
+              "isRoleAccount": {
+                "type": "boolean"
+              },
+              "canConnectSmtp": {
+                "type": "boolean"
+              },
+              "hasInboxFull": {
+                "type": "boolean"
+              },
+              "isCatchAll": {
+                "type": "boolean"
+              },
+              "isDeliverable": {
+                "type": "boolean"
+              },
+              "isDisabled": {
+                "type": "boolean"
+              },
+              "isSpamtrap": {
+                "type": "boolean"
+              },
+              "isFreeEmail": {
+                "type": "boolean"
+              },
+              "mxAcceptsMail": {
+                "type": "boolean"
+              },
+              "mxRecords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "verificationMode": {
+                "type": "string",
+                "enum": [
+                  "power"
+                ]
+              },
+              "checkedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "expiresAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "email",
+              "status",
+              "overallScore",
+              "isSafeToSend",
+              "isValidSyntax",
+              "isDisposable",
+              "isRoleAccount",
+              "canConnectSmtp",
+              "hasInboxFull",
+              "isCatchAll",
+              "isDeliverable",
+              "isDisabled",
+              "isSpamtrap",
+              "isFreeEmail",
+              "mxAcceptsMail",
+              "mxRecords",
+              "verificationMode",
+              "checkedAt",
+              "expiresAt"
+            ]
+          },
+          "cacheHit": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result",
+          "cacheHit",
+          "accepted",
+          "message"
+        ]
+      },
+      "UpsertIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "smtp",
+              "google_workspace",
+              "instagram",
+              "buffer",
+              "s3",
+              "reoon"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "config": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "credentials": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "name",
+          "config"
+        ]
+      },
+      "IntegrationWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "smtp",
+                  "google_workspace",
+                  "instagram",
+                  "buffer",
+                  "s3",
+                  "reoon"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_configured",
+                  "connected",
+                  "error",
+                  "disabled"
+                ]
+              },
+              "config": {
+                "type": "object",
+                "additionalProperties": {}
+              },
+              "credentialsConfigured": {
+                "type": "boolean"
+              },
+              "credentialHint": {
+                "type": "string",
+                "nullable": true
+              },
+              "lastCheckedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              },
+              "lastError": {
+                "type": "string",
+                "nullable": true
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "provider",
+              "name",
+              "status",
+              "config",
+              "credentialsConfigured",
+              "credentialHint",
+              "lastCheckedAt",
+              "lastError",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "connection",
+          "txid"
+        ]
+      },
+      "UpdateIntegrationStatusDto": {
+        "type": "object",
+        "properties": {
+          "disabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "disabled"
         ]
       },
       "ImportContactsDto": {
@@ -5984,180 +6350,6 @@
         "required": [
           "id",
           "body"
-        ]
-      },
-      "UpsertIntegrationDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "provider": {
-            "type": "string",
-            "enum": [
-              "smtp",
-              "google_workspace",
-              "instagram",
-              "buffer",
-              "s3",
-              "reoon"
-            ]
-          },
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 160
-          },
-          "config": {
-            "type": "object",
-            "additionalProperties": {}
-          },
-          "credentials": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string",
-              "minLength": 1
-            }
-          }
-        },
-        "required": [
-          "id",
-          "provider",
-          "name",
-          "config"
-        ]
-      },
-      "IntegrationWriteResponseDto": {
-        "type": "object",
-        "properties": {
-          "connection": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "orgId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "provider": {
-                "type": "string",
-                "enum": [
-                  "smtp",
-                  "google_workspace",
-                  "instagram",
-                  "buffer",
-                  "s3",
-                  "reoon"
-                ]
-              },
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 160
-              },
-              "status": {
-                "type": "string",
-                "enum": [
-                  "not_configured",
-                  "connected",
-                  "error",
-                  "disabled"
-                ]
-              },
-              "config": {
-                "type": "object",
-                "additionalProperties": {}
-              },
-              "credentialsConfigured": {
-                "type": "boolean"
-              },
-              "credentialHint": {
-                "type": "string",
-                "nullable": true
-              },
-              "lastCheckedAt": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                  },
-                  {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                ],
-                "nullable": true
-              },
-              "lastError": {
-                "type": "string",
-                "nullable": true
-              },
-              "createdAt": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                  },
-                  {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                ]
-              },
-              "updatedAt": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                  },
-                  {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                ]
-              }
-            },
-            "required": [
-              "id",
-              "orgId",
-              "provider",
-              "name",
-              "status",
-              "config",
-              "credentialsConfigured",
-              "credentialHint",
-              "lastCheckedAt",
-              "lastError",
-              "createdAt",
-              "updatedAt"
-            ]
-          },
-          "txid": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "connection",
-          "txid"
-        ]
-      },
-      "UpdateIntegrationStatusDto": {
-        "type": "object",
-        "properties": {
-          "disabled": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "disabled"
         ]
       },
       "CreateAutomationDto": {

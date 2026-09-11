@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
-import { permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto } from "@spark/api-client";
+import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Button, DataTable, Field, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, DataTable, Field, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -24,6 +24,8 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailCheck, setEmailCheck] = useState<{ accepted: boolean; message: string; cacheHit: boolean } | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [groupId, setGroupId] = useState(loaderData.groups[0]?.id ?? "");
   const [lastInvited, setLastInvited] = useState<string | null>(null);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
@@ -45,11 +47,14 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   function resetForm() {
     setName("");
     setEmail("");
+    setEmailCheck(null);
     setGroupId(loaderData.groups[0]?.id ?? "");
   }
 
   async function invite() {
     if (!name.trim() || !email.trim() || !groupId) throw new Error("MISSING_FIELDS");
+    const verified = await verifyEmail();
+    if (!verified?.accepted) throw new Error("EMAIL_NOT_VERIFIED");
     const invited = await usersControllerInvite({
       id: userIdFactory.create(),
       name: name.trim(),
@@ -59,6 +64,23 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
     setUsers((current) => [invited, ...current]);
     setLastInvited(invited.email);
     resetForm();
+  }
+
+  async function verifyEmail() {
+    if (!email.trim()) return null;
+    setCheckingEmail(true);
+    try {
+      const response = await emailVerificationsControllerVerify({ email: email.trim() });
+      const result = { accepted: response.accepted, message: response.message, cacheHit: response.cacheHit };
+      setEmailCheck(result);
+      return result;
+    } catch {
+      const result = { accepted: false, message: "Não foi possível verificar este e-mail agora.", cacheHit: false };
+      setEmailCheck(result);
+      return result;
+    } finally {
+      setCheckingEmail(false);
+    }
   }
 
   async function replaceGroup(user: AdminUserDto, nextGroupId: string) {
@@ -135,7 +157,24 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
           </Field>
           <Field>
             <Label>E-mail</Label>
-            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="off" />
+            <div className={styles.emailControl}>
+              <Input
+                type="email"
+                value={email}
+                onChange={(event) => { setEmail(event.target.value); setEmailCheck(null); }}
+                onBlur={() => { if (email.trim()) void verifyEmail(); }}
+                autoComplete="off"
+              />
+              <Button type="button" variant="secondary" loading={checkingEmail} onClick={() => void verifyEmail()}>
+                Verificar
+              </Button>
+            </div>
+            {emailCheck && (
+              <div className={styles.emailCheck}>
+                <Badge tone={emailCheck.accepted ? "success" : "danger"}>{emailCheck.accepted ? "Verificado" : "Não confirmado"}</Badge>
+                <span>{emailCheck.message}{emailCheck.cacheHit ? " Resultado salvo." : ""}</span>
+              </div>
+            )}
           </Field>
           <Field>
             <Label>Grupo de permissão</Label>

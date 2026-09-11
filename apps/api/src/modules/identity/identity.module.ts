@@ -15,6 +15,7 @@ import { AuditLogsController } from "./presentation/audit-logs.controller.js";
 import { AuditLogsRepository } from "./infrastructure/audit-logs.repository.js";
 import { TeamsController } from "./presentation/teams.controller.js";
 import { TeamsRepository } from "./infrastructure/teams.repository.js";
+import { EmailVerificationModule } from "../email-verification/email-verification.module.js";
 
 // ConfigModule is deliberately NOT imported here — it's already global via
 // ConfigModule.forRoot({ isGlobal: true }) in AppModule. Reimporting the
@@ -22,7 +23,14 @@ import { TeamsRepository } from "./infrastructure/teams.repository.js";
 // inside SupabaseJwtGuard (docs/adr/0003 — a single module, no duplicating
 // infrastructure config per domain module).
 @Module({
-  controllers: [MeController, PermissionGroupsController, UsersController, TeamsController, AuditLogsController],
+  imports: [EmailVerificationModule],
+  controllers: [
+    MeController,
+    PermissionGroupsController,
+    UsersController,
+    TeamsController,
+    AuditLogsController,
+  ],
   providers: [
     GetCurrentUserUseCase,
     InviteUserUseCase,

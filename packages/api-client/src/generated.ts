@@ -399,6 +399,157 @@ export interface AdminAuditLogDto {
   targetLabel: string;
 }
 
+export interface VerifyEmailDto {
+  /** @minLength 1 */
+  email: string;
+}
+
+export type VerifyEmailResponseDtoResultStatus = typeof VerifyEmailResponseDtoResultStatus[keyof typeof VerifyEmailResponseDtoResultStatus];
+
+
+export const VerifyEmailResponseDtoResultStatus = {
+  safe: 'safe',
+  invalid: 'invalid',
+  disabled: 'disabled',
+  disposable: 'disposable',
+  inbox_full: 'inbox_full',
+  catch_all: 'catch_all',
+  role_account: 'role_account',
+  spamtrap: 'spamtrap',
+  unknown: 'unknown',
+} as const;
+
+export type VerifyEmailResponseDtoResultVerificationMode = typeof VerifyEmailResponseDtoResultVerificationMode[keyof typeof VerifyEmailResponseDtoResultVerificationMode];
+
+
+export const VerifyEmailResponseDtoResultVerificationMode = {
+  power: 'power',
+} as const;
+
+export type VerifyEmailResponseDtoResult = {
+  /** @minLength 1 */
+  email: string;
+  status: VerifyEmailResponseDtoResultStatus;
+  /**
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  overallScore: number | null;
+  isSafeToSend: boolean;
+  isValidSyntax: boolean;
+  isDisposable: boolean;
+  isRoleAccount: boolean;
+  canConnectSmtp: boolean;
+  hasInboxFull: boolean;
+  isCatchAll: boolean;
+  isDeliverable: boolean;
+  isDisabled: boolean;
+  isSpamtrap: boolean;
+  isFreeEmail: boolean;
+  mxAcceptsMail: boolean;
+  mxRecords: string[];
+  verificationMode: VerifyEmailResponseDtoResultVerificationMode;
+  checkedAt: string;
+  expiresAt: string;
+};
+
+export interface VerifyEmailResponseDto {
+  result: VerifyEmailResponseDtoResult;
+  cacheHit: boolean;
+  accepted: boolean;
+  message: string;
+}
+
+export type UpsertIntegrationDtoProvider = typeof UpsertIntegrationDtoProvider[keyof typeof UpsertIntegrationDtoProvider];
+
+
+export const UpsertIntegrationDtoProvider = {
+  smtp: 'smtp',
+  google_workspace: 'google_workspace',
+  instagram: 'instagram',
+  buffer: 'buffer',
+  s3: 's3',
+  reoon: 'reoon',
+} as const;
+
+export type UpsertIntegrationDtoConfig = {[key: string]: unknown};
+
+export type UpsertIntegrationDtoCredentials = {[key: string]: string};
+
+export interface UpsertIntegrationDto {
+  /** @minLength 1 */
+  id: string;
+  provider: UpsertIntegrationDtoProvider;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  config: UpsertIntegrationDtoConfig;
+  credentials?: UpsertIntegrationDtoCredentials;
+}
+
+export type IntegrationWriteResponseDtoConnectionProvider = typeof IntegrationWriteResponseDtoConnectionProvider[keyof typeof IntegrationWriteResponseDtoConnectionProvider];
+
+
+export const IntegrationWriteResponseDtoConnectionProvider = {
+  smtp: 'smtp',
+  google_workspace: 'google_workspace',
+  instagram: 'instagram',
+  buffer: 'buffer',
+  s3: 's3',
+  reoon: 'reoon',
+} as const;
+
+export type IntegrationWriteResponseDtoConnectionStatus = typeof IntegrationWriteResponseDtoConnectionStatus[keyof typeof IntegrationWriteResponseDtoConnectionStatus];
+
+
+export const IntegrationWriteResponseDtoConnectionStatus = {
+  not_configured: 'not_configured',
+  connected: 'connected',
+  error: 'error',
+  disabled: 'disabled',
+} as const;
+
+export type IntegrationWriteResponseDtoConnectionConfig = {[key: string]: unknown};
+
+export type IntegrationWriteResponseDtoConnection = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  provider: IntegrationWriteResponseDtoConnectionProvider;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  status: IntegrationWriteResponseDtoConnectionStatus;
+  config: IntegrationWriteResponseDtoConnectionConfig;
+  credentialsConfigured: boolean;
+  /** @nullable */
+  credentialHint: string | null;
+  lastCheckedAt: string | null;
+  /** @nullable */
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface IntegrationWriteResponseDto {
+  connection: IntegrationWriteResponseDtoConnection;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface UpdateIntegrationStatusDto {
+  disabled: boolean;
+}
+
 export type ImportContactsDtoContactsItem = {
   /** @minLength 1 */
   id: string;
@@ -1866,95 +2017,6 @@ export interface SendMessageDto {
      * @maxLength 20000
      */
   body: string;
-}
-
-export type UpsertIntegrationDtoProvider = typeof UpsertIntegrationDtoProvider[keyof typeof UpsertIntegrationDtoProvider];
-
-
-export const UpsertIntegrationDtoProvider = {
-  smtp: 'smtp',
-  google_workspace: 'google_workspace',
-  instagram: 'instagram',
-  buffer: 'buffer',
-  s3: 's3',
-  reoon: 'reoon',
-} as const;
-
-export type UpsertIntegrationDtoConfig = {[key: string]: unknown};
-
-export type UpsertIntegrationDtoCredentials = {[key: string]: string};
-
-export interface UpsertIntegrationDto {
-  /** @minLength 1 */
-  id: string;
-  provider: UpsertIntegrationDtoProvider;
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  name: string;
-  config: UpsertIntegrationDtoConfig;
-  credentials?: UpsertIntegrationDtoCredentials;
-}
-
-export type IntegrationWriteResponseDtoConnectionProvider = typeof IntegrationWriteResponseDtoConnectionProvider[keyof typeof IntegrationWriteResponseDtoConnectionProvider];
-
-
-export const IntegrationWriteResponseDtoConnectionProvider = {
-  smtp: 'smtp',
-  google_workspace: 'google_workspace',
-  instagram: 'instagram',
-  buffer: 'buffer',
-  s3: 's3',
-  reoon: 'reoon',
-} as const;
-
-export type IntegrationWriteResponseDtoConnectionStatus = typeof IntegrationWriteResponseDtoConnectionStatus[keyof typeof IntegrationWriteResponseDtoConnectionStatus];
-
-
-export const IntegrationWriteResponseDtoConnectionStatus = {
-  not_configured: 'not_configured',
-  connected: 'connected',
-  error: 'error',
-  disabled: 'disabled',
-} as const;
-
-export type IntegrationWriteResponseDtoConnectionConfig = {[key: string]: unknown};
-
-export type IntegrationWriteResponseDtoConnection = {
-  /** @minLength 1 */
-  id: string;
-  /** @minLength 1 */
-  orgId: string;
-  provider: IntegrationWriteResponseDtoConnectionProvider;
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  name: string;
-  status: IntegrationWriteResponseDtoConnectionStatus;
-  config: IntegrationWriteResponseDtoConnectionConfig;
-  credentialsConfigured: boolean;
-  /** @nullable */
-  credentialHint: string | null;
-  lastCheckedAt: string | null;
-  /** @nullable */
-  lastError: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export interface IntegrationWriteResponseDto {
-  connection: IntegrationWriteResponseDtoConnection;
-  /**
-     * @minimum -9007199254740991
-     * @maximum 9007199254740991
-     */
-  txid: number;
-}
-
-export interface UpdateIntegrationStatusDto {
-  disabled: boolean;
 }
 
 export interface CreateAutomationDto {
@@ -4348,6 +4410,253 @@ export function useAuditLogsControllerList<TData = Awaited<ReturnType<typeof aud
 
 
 
+export const emailVerificationsControllerVerify = (
+    verifyEmailDto: VerifyEmailDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<VerifyEmailResponseDto>(
+      {url: `/v1/email-verifications`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: verifyEmailDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getEmailVerificationsControllerVerifyMutationKey = () => ['emailVerificationsControllerVerify'] as const;
+
+export const getEmailVerificationsControllerVerifyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailVerificationsControllerVerify>>, TError,EmailVerificationsControllerVerifyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof emailVerificationsControllerVerify>>, TError,EmailVerificationsControllerVerifyMutationVariables, TContext> => {
+
+const mutationKey = getEmailVerificationsControllerVerifyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof emailVerificationsControllerVerify>>, EmailVerificationsControllerVerifyMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  emailVerificationsControllerVerify(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EmailVerificationsControllerVerifyMutationResult = NonNullable<Awaited<ReturnType<typeof emailVerificationsControllerVerify>>>
+    export type EmailVerificationsControllerVerifyMutationBody = VerifyEmailDto
+    export type EmailVerificationsControllerVerifyMutationError = unknown
+    export type EmailVerificationsControllerVerifyMutationVariables = {data: VerifyEmailDto}
+
+    export const useEmailVerificationsControllerVerify = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailVerificationsControllerVerify>>, TError,EmailVerificationsControllerVerifyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof emailVerificationsControllerVerify>>,
+        TError,
+        EmailVerificationsControllerVerifyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getEmailVerificationsControllerVerifyMutationOptions(options), queryClient);
+    }
+
+export const integrationsControllerUpsert = (
+    upsertIntegrationDto: UpsertIntegrationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<IntegrationWriteResponseDto>(
+      {url: `/v1/integrations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertIntegrationDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getIntegrationsControllerUpsertMutationKey = () => ['integrationsControllerUpsert'] as const;
+
+export const getIntegrationsControllerUpsertMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpsert>>, TError,IntegrationsControllerUpsertMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpsert>>, TError,IntegrationsControllerUpsertMutationVariables, TContext> => {
+
+const mutationKey = getIntegrationsControllerUpsertMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerUpsert>>, IntegrationsControllerUpsertMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  integrationsControllerUpsert(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerUpsertMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerUpsert>>>
+    export type IntegrationsControllerUpsertMutationBody = UpsertIntegrationDto
+    export type IntegrationsControllerUpsertMutationError = unknown
+    export type IntegrationsControllerUpsertMutationVariables = {data: UpsertIntegrationDto}
+
+    export const useIntegrationsControllerUpsert = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpsert>>, TError,IntegrationsControllerUpsertMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerUpsert>>,
+        TError,
+        IntegrationsControllerUpsertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getIntegrationsControllerUpsertMutationOptions(options), queryClient);
+    }
+
+export const integrationsControllerCheck = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<IntegrationWriteResponseDto>(
+      {url: `/v1/integrations/${id}/check`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getIntegrationsControllerCheckMutationKey = () => ['integrationsControllerCheck'] as const;
+
+export const getIntegrationsControllerCheckMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCheck>>, TError,IntegrationsControllerCheckMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCheck>>, TError,IntegrationsControllerCheckMutationVariables, TContext> => {
+
+const mutationKey = getIntegrationsControllerCheckMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerCheck>>, IntegrationsControllerCheckMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  integrationsControllerCheck(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerCheckMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerCheck>>>
+
+    export type IntegrationsControllerCheckMutationError = unknown
+    export type IntegrationsControllerCheckMutationVariables = {id: string}
+
+    export const useIntegrationsControllerCheck = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCheck>>, TError,IntegrationsControllerCheckMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerCheck>>,
+        TError,
+        IntegrationsControllerCheckMutationVariables,
+        TContext
+      > => {
+      return useMutation(getIntegrationsControllerCheckMutationOptions(options), queryClient);
+    }
+
+export const integrationsControllerStatus = (
+    id: string,
+    updateIntegrationStatusDto: UpdateIntegrationStatusDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<IntegrationWriteResponseDto>(
+      {url: `/v1/integrations/${id}/status`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateIntegrationStatusDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getIntegrationsControllerStatusMutationKey = () => ['integrationsControllerStatus'] as const;
+
+export const getIntegrationsControllerStatusMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerStatus>>, TError,IntegrationsControllerStatusMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerStatus>>, TError,IntegrationsControllerStatusMutationVariables, TContext> => {
+
+const mutationKey = getIntegrationsControllerStatusMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerStatus>>, IntegrationsControllerStatusMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  integrationsControllerStatus(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IntegrationsControllerStatusMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerStatus>>>
+    export type IntegrationsControllerStatusMutationBody = UpdateIntegrationStatusDto
+    export type IntegrationsControllerStatusMutationError = unknown
+    export type IntegrationsControllerStatusMutationVariables = {id: string;data: UpdateIntegrationStatusDto}
+
+    export const useIntegrationsControllerStatus = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerStatus>>, TError,IntegrationsControllerStatusMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof integrationsControllerStatus>>,
+        TError,
+        IntegrationsControllerStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getIntegrationsControllerStatusMutationOptions(options), queryClient);
+    }
+
 export const contactsControllerImportCsv = (
     importContactsDto: ImportContactsDto,
  signal?: AbortSignal
@@ -5661,191 +5970,6 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getInboxControllerSendMutationOptions(options), queryClient);
-    }
-
-export const integrationsControllerUpsert = (
-    upsertIntegrationDto: UpsertIntegrationDto,
- signal?: AbortSignal
-) => {
-
-
-      return sparkHttpClient<IntegrationWriteResponseDto>(
-      {url: `/v1/integrations`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: upsertIntegrationDto, ...(signal ? { signal }: {})
-    },
-      );
-    }
-
-
-
-
-export const getIntegrationsControllerUpsertMutationKey = () => ['integrationsControllerUpsert'] as const;
-
-export const getIntegrationsControllerUpsertMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpsert>>, TError,IntegrationsControllerUpsertMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpsert>>, TError,IntegrationsControllerUpsertMutationVariables, TContext> => {
-
-const mutationKey = getIntegrationsControllerUpsertMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerUpsert>>, IntegrationsControllerUpsertMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  integrationsControllerUpsert(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerUpsertMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerUpsert>>>
-    export type IntegrationsControllerUpsertMutationBody = UpsertIntegrationDto
-    export type IntegrationsControllerUpsertMutationError = unknown
-    export type IntegrationsControllerUpsertMutationVariables = {data: UpsertIntegrationDto}
-
-    export const useIntegrationsControllerUpsert = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerUpsert>>, TError,IntegrationsControllerUpsertMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerUpsert>>,
-        TError,
-        IntegrationsControllerUpsertMutationVariables,
-        TContext
-      > => {
-      return useMutation(getIntegrationsControllerUpsertMutationOptions(options), queryClient);
-    }
-
-export const integrationsControllerCheck = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return sparkHttpClient<IntegrationWriteResponseDto>(
-      {url: `/v1/integrations/${id}/check`, method: 'POST', ...(signal ? { signal }: {})
-    },
-      );
-    }
-
-
-
-
-export const getIntegrationsControllerCheckMutationKey = () => ['integrationsControllerCheck'] as const;
-
-export const getIntegrationsControllerCheckMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCheck>>, TError,IntegrationsControllerCheckMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCheck>>, TError,IntegrationsControllerCheckMutationVariables, TContext> => {
-
-const mutationKey = getIntegrationsControllerCheckMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerCheck>>, IntegrationsControllerCheckMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  integrationsControllerCheck(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerCheckMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerCheck>>>
-
-    export type IntegrationsControllerCheckMutationError = unknown
-    export type IntegrationsControllerCheckMutationVariables = {id: string}
-
-    export const useIntegrationsControllerCheck = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerCheck>>, TError,IntegrationsControllerCheckMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerCheck>>,
-        TError,
-        IntegrationsControllerCheckMutationVariables,
-        TContext
-      > => {
-      return useMutation(getIntegrationsControllerCheckMutationOptions(options), queryClient);
-    }
-
-export const integrationsControllerStatus = (
-    id: string,
-    updateIntegrationStatusDto: UpdateIntegrationStatusDto,
- signal?: AbortSignal
-) => {
-
-
-      return sparkHttpClient<IntegrationWriteResponseDto>(
-      {url: `/v1/integrations/${id}/status`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateIntegrationStatusDto, ...(signal ? { signal }: {})
-    },
-      );
-    }
-
-
-
-
-export const getIntegrationsControllerStatusMutationKey = () => ['integrationsControllerStatus'] as const;
-
-export const getIntegrationsControllerStatusMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerStatus>>, TError,IntegrationsControllerStatusMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerStatus>>, TError,IntegrationsControllerStatusMutationVariables, TContext> => {
-
-const mutationKey = getIntegrationsControllerStatusMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationsControllerStatus>>, IntegrationsControllerStatusMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  integrationsControllerStatus(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationsControllerStatusMutationResult = NonNullable<Awaited<ReturnType<typeof integrationsControllerStatus>>>
-    export type IntegrationsControllerStatusMutationBody = UpdateIntegrationStatusDto
-    export type IntegrationsControllerStatusMutationError = unknown
-    export type IntegrationsControllerStatusMutationVariables = {id: string;data: UpdateIntegrationStatusDto}
-
-    export const useIntegrationsControllerStatus = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationsControllerStatus>>, TError,IntegrationsControllerStatusMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof integrationsControllerStatus>>,
-        TError,
-        IntegrationsControllerStatusMutationVariables,
-        TContext
-      > => {
-      return useMutation(getIntegrationsControllerStatusMutationOptions(options), queryClient);
     }
 
 export const automationsControllerCreate = (

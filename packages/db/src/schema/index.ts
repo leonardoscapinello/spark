@@ -22,3 +22,4 @@ export * from "./integrations.js";
 export * from "./files.js";
 export * from "./catalog.js";
 export * from "./lead-forms.js";
+export * from "./email-verifications.js";

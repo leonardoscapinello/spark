@@ -14,6 +14,7 @@ import { IntegrationsModule } from "./modules/integrations/integrations.module.j
 import { FilesModule } from "./modules/files/files.module.js";
 import { CatalogModule } from "./modules/catalog/catalog.module.js";
 import { FormsModule } from "./modules/forms/forms.module.js";
+import { EmailVerificationModule } from "./modules/email-verification/email-verification.module.js";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { FormsModule } from "./modules/forms/forms.module.js";
     FilesModule,
     CatalogModule,
     FormsModule,
+    EmailVerificationModule,
   ],
 })
 export class AppModule {}
