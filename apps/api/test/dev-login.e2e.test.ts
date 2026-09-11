@@ -7,6 +7,7 @@ import { Test } from "@nestjs/testing";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
 import { ZodValidationPipe } from "nestjs-zod";
 import postgres from "postgres";
+import { orgId as orgIdFactory, userId as userIdFactory } from "@spark/core";
 import { AppModule } from "../src/app.module.js";
 
 const DATABASE_URL =
@@ -67,5 +68,46 @@ describe("POST /v1/dev/login — provisiona organização com grupos padrão (do
 
     const grupos = await admin`SELECT id FROM permission_groups WHERE org_id = ${orgIdCriado}`;
     expect(grupos).toHaveLength(5);
+  });
+
+  it("conta anterior ao ADR-0029 (organização sem grupo nenhum): login cura sozinho, sem duplicar se logar de novo", async () => {
+    const emailAntigo = `dev-login-conta-antiga-${crypto.randomUUID()}@empresa.com`;
+    const orgAntiga = orgIdFactory.novo();
+    const userAntigo = userIdFactory.novo();
+    const supabaseUserId = crypto.randomUUID();
+
+    // simula exatamente o estado de uma conta criada antes de
+    // semearGruposPadrao existir: organização e usuário, zero grupo.
+    await admin`INSERT INTO organizations (id, nome, slug) VALUES (${orgAntiga}, 'Org antiga', ${"org-antiga-" + orgAntiga})`;
+    await admin`INSERT INTO users (id, org_id, supabase_user_id, nome, email) VALUES
+      (${userAntigo}, ${orgAntiga}, ${supabaseUserId}, 'Conta Antiga', ${emailAntigo})`;
+
+    const res = await app.inject({ method: "POST", url: "/v1/dev/login", payload: { email: emailAntigo } });
+    expect(res.statusCode).toBe(201);
+    expect(res.json().orgId).toBe(orgAntiga);
+
+    const grupos = await admin`SELECT nome FROM permission_groups WHERE org_id = ${orgAntiga} ORDER BY nome`;
+    expect(grupos.map((g) => g.nome)).toEqual(
+      ["Administrador", "Agente", "Gerente", "Proprietário", "Visualizador"],
+    );
+
+    const atribuicao = await admin`
+      SELECT pg.nome FROM user_permission_groups upg
+      JOIN permission_groups pg ON pg.id = upg.group_id
+      WHERE upg.user_id = ${userAntigo}
+    `;
+    expect(atribuicao).toHaveLength(1);
+    expect(atribuicao[0]?.nome).toBe("Proprietário");
+
+    // logar de novo não pode duplicar os cinco grupos.
+    const resSegundoLogin = await app.inject({ method: "POST", url: "/v1/dev/login", payload: { email: emailAntigo } });
+    expect(resSegundoLogin.statusCode).toBe(201);
+    const gruposDepois = await admin`SELECT id FROM permission_groups WHERE org_id = ${orgAntiga}`;
+    expect(gruposDepois).toHaveLength(5);
+
+    await admin`DELETE FROM user_permission_groups WHERE org_id = ${orgAntiga}`;
+    await admin`DELETE FROM permission_groups WHERE org_id = ${orgAntiga}`;
+    await admin`DELETE FROM users WHERE org_id = ${orgAntiga}`;
+    await admin`DELETE FROM organizations WHERE id = ${orgAntiga}`;
   });
 });

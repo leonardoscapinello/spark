@@ -41,6 +41,19 @@ export class DevLoginController {
     const [existente] = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
 
     if (existente) {
+      // organização criada antes do ADR-0029 existir nunca ganhou grupo
+      // nenhum — sem isto, essa conta fica negada em tudo pra sempre,
+      // porque login de usuário existente nunca passava por aqui antes
+      // (achado testando login de uma conta de dev antiga de verdade).
+      const orgIdExistente = orgIdFactory.de(existente.orgId);
+      if (!(await this.permissionGroups.orgTemGrupos(orgIdExistente))) {
+        const grupos = await this.permissionGroups.semearGruposPadrao(orgIdExistente);
+        const proprietario = grupos.find((g) => g.nome === "Proprietário");
+        if (proprietario) {
+          await this.permissionGroups.atribuirGrupo(userIdFactory.de(existente.id), proprietario.id);
+        }
+      }
+
       const token = await assinarToken(existente.supabaseUserId, this.config);
       return { token, orgId: existente.orgId, userId: existente.id };
     }

@@ -17,6 +17,20 @@ export class PermissionGroupsRepository {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
+  /**
+   * Organização criada antes do ADR-0029 existir nunca ganhou os cinco
+   * grupos padrão — achado testando login de uma conta de dev antiga: sem
+   * grupo nenhum, `temCapacidade` nega tudo, pra sempre, sem forma de se
+   * curar sozinha. `dev-login.controller.ts` chama isto no caminho de
+   * usuário EXISTENTE antes de decidir se semeia — sem esta checagem,
+   * `semearGruposPadrao` (um INSERT sem verificação) duplicaria os cinco
+   * grupos a cada novo login.
+   */
+  async orgTemGrupos(orgId: OrgId): Promise<boolean> {
+    const [linha] = await this.db.select({ id: permissionGroups.id }).from(permissionGroups).where(eq(permissionGroups.orgId, orgId)).limit(1);
+    return !!linha;
+  }
+
   /** Chamado uma vez, na criação da organização (docs/adr/0029). */
   async semearGruposPadrao(orgId: OrgId): Promise<PermissionGroup[]> {
     const linhas = await this.db
