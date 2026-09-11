@@ -38,6 +38,10 @@ export type LeadFormId = Id<"LeadForm">;
 export type FormSubmissionId = Id<"FormSubmission">;
 export type SocialChannelId = Id<"SocialChannel">;
 export type SocialPostId = Id<"SocialPost">;
+export type AudienceId = Id<"Audience">;
+export type CampaignId = Id<"Campaign">;
+export type CampaignRecipientId = Id<"CampaignRecipient">;
+export type EmailSuppressionId = Id<"EmailSuppression">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -90,3 +94,7 @@ export const leadFormId = makeIdFactory("LeadForm");
 export const formSubmissionId = makeIdFactory("FormSubmission");
 export const socialChannelId = makeIdFactory("SocialChannel");
 export const socialPostId = makeIdFactory("SocialPost");
+export const audienceId = makeIdFactory("Audience");
+export const campaignId = makeIdFactory("Campaign");
+export const campaignRecipientId = makeIdFactory("CampaignRecipient");
+export const emailSuppressionId = makeIdFactory("EmailSuppression");

@@ -16,6 +16,7 @@ import { CatalogModule } from "./modules/catalog/catalog.module.js";
 import { FormsModule } from "./modules/forms/forms.module.js";
 import { EmailVerificationModule } from "./modules/email-verification/email-verification.module.js";
 import { SocialModule } from "./modules/social/social.module.js";
+import { CampaignsModule } from "./modules/campaigns/campaigns.module.js";
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { SocialModule } from "./modules/social/social.module.js";
     FormsModule,
     EmailVerificationModule,
     SocialModule,
+    CampaignsModule,
   ],
 })
 export class AppModule {}

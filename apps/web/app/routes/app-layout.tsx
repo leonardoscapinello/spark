@@ -89,6 +89,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {session.capabilities.includes("social:read") && (
             <Link to="/social" className={styles.navItem}>Social</Link>
           )}
+          {session.capabilities.includes("campaigns:read") && (
+            <Link to="/campaigns" className={styles.navItem}>Campanhas</Link>
+          )}
           <Link to="/security" className={styles.navItem}>Segurança</Link>
         </nav>
         <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}>

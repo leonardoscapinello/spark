@@ -19,6 +19,7 @@ export default [
     route("forms", "routes/forms.tsx"),
     route("forms/:formId", "routes/form-builder.tsx"),
     route("social", "routes/social.tsx"),
+    route("campaigns", "routes/campaigns.tsx"),
     route("contacts/import", "routes/contact-import.tsx"),
     route("contacts/:contactId", "routes/contact-detail.tsx"),
     route("companies", "routes/companies.tsx"),

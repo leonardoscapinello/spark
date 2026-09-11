@@ -59,6 +59,9 @@ const TITLES: Record<DomainEventType, string> = {
   "social.post_scheduled": "Publicação social agendada",
   "social.post_published": "Publicação social publicada",
   "social.post_failed": "Falha na publicação social",
+  "audience.created": "Público de campanha criado",
+  "campaign.created": "Campanha criada",
+  "campaign.sent": "Campanha enviada",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

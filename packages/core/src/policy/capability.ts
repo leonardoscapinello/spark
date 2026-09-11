@@ -33,6 +33,8 @@ export const CAPABILITIES = [
   "forms:write",
   "social:read",
   "social:write",
+  "campaigns:read",
+  "campaigns:write",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

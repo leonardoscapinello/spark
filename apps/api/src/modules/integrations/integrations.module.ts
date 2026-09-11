@@ -12,6 +12,7 @@ import { IntegrationProviderRegistry } from "./infrastructure/provider-registry.
 import { SecretVault } from "./infrastructure/secret-vault.service.js";
 import { IntegrationsController } from "./presentation/integrations.controller.js";
 import { IntegrationRuntimeResolver } from "./application/integration-runtime-resolver.service.js";
+import { EmailDeliveryService } from "./application/email-delivery.service.js";
 @Module({
   imports: [EventsModule],
   controllers: [IntegrationsController],
@@ -23,12 +24,13 @@ import { IntegrationRuntimeResolver } from "./application/integration-runtime-re
     IntegrationProviderRegistry,
     SecretVault,
     IntegrationRuntimeResolver,
+    EmailDeliveryService,
     GetCurrentUserUseCase,
     UsersRepository,
     PermissionGroupsRepository,
     SupabaseJwtGuard,
     CapabilityGuard,
   ],
-  exports: [SecretVault, IntegrationRuntimeResolver],
+  exports: [SecretVault, IntegrationRuntimeResolver, EmailDeliveryService],
 })
 export class IntegrationsModule {}

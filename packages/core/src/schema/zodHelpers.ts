@@ -54,6 +54,8 @@ import {
   formSubmissionId as toFormSubmissionId,
   socialChannelId as toSocialChannelId,
   socialPostId as toSocialPostId,
+  audienceId as toAudienceId,
+  campaignId as toCampaignId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -84,6 +86,8 @@ import {
   type FormSubmissionId,
   type SocialChannelId,
   type SocialPostId,
+  type AudienceId,
+  type CampaignId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -140,6 +144,8 @@ export const zLeadFormId = bridged<LeadFormId>(toLeadFormId.from);
 export const zFormSubmissionId = bridged<FormSubmissionId>(toFormSubmissionId.from);
 export const zSocialChannelId = bridged<SocialChannelId>(toSocialChannelId.from);
 export const zSocialPostId = bridged<SocialPostId>(toSocialPostId.from);
+export const zAudienceId = bridged<AudienceId>(toAudienceId.from);
+export const zCampaignId = bridged<CampaignId>(toCampaignId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

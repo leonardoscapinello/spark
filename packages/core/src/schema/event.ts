@@ -66,6 +66,9 @@ export const DOMAIN_EVENT_TYPES = [
   "social.post_scheduled",
   "social.post_published",
   "social.post_failed",
+  "audience.created",
+  "campaign.created",
+  "campaign.sent",
 ] as const;
 export const DomainEventTypeSchema = z.enum(DOMAIN_EVENT_TYPES);
 export type DomainEventType = z.infer<typeof DomainEventTypeSchema>;

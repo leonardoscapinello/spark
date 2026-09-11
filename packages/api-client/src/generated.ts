@@ -80,6 +80,8 @@ export const CurrentUserDtoCapabilitiesItem = {
   'forms:write': 'forms:write',
   'social:read': 'social:read',
   'social:write': 'social:write',
+  'campaigns:read': 'campaigns:read',
+  'campaigns:write': 'campaigns:write',
 } as const;
 
 export interface CurrentUserDto {
@@ -138,6 +140,8 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'forms:write': 'forms:write',
   'social:read': 'social:read',
   'social:write': 'social:write',
+  'campaigns:read': 'campaigns:read',
+  'campaigns:write': 'campaigns:write',
 } as const;
 
 export interface PermissionGroupDto {
@@ -189,6 +193,8 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'forms:write': 'forms:write',
   'social:read': 'social:read',
   'social:write': 'social:write',
+  'campaigns:read': 'campaigns:read',
+  'campaigns:write': 'campaigns:write',
 } as const;
 
 export interface CreatePermissionGroupDto {
@@ -234,6 +240,8 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'forms:write': 'forms:write',
   'social:read': 'social:read',
   'social:write': 'social:write',
+  'campaigns:read': 'campaigns:read',
+  'campaigns:write': 'campaigns:write',
 } as const;
 
 export interface UpdatePermissionGroupDto {
@@ -3459,6 +3467,174 @@ export type SocialPostWriteResponseDtoPost = {
 
 export interface SocialPostWriteResponseDto {
   post: SocialPostWriteResponseDtoPost;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type CreateAudienceDtoFilterOperator = typeof CreateAudienceDtoFilterOperator[keyof typeof CreateAudienceDtoFilterOperator];
+
+
+export const CreateAudienceDtoFilterOperator = {
+  all: 'all',
+  any: 'any',
+} as const;
+
+export type CreateAudienceDtoFilter = {
+  operator?: CreateAudienceDtoFilterOperator;
+  /** @items.minLength 1 */
+  leadStatuses?: string[];
+  /** @items.minLength 1 */
+  tags?: string[];
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  minimumScore?: number | null;
+};
+
+export interface CreateAudienceDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description?: string | null;
+  filter: CreateAudienceDtoFilter;
+}
+
+export type AudienceWriteResponseDtoAudienceFilterOperator = typeof AudienceWriteResponseDtoAudienceFilterOperator[keyof typeof AudienceWriteResponseDtoAudienceFilterOperator];
+
+
+export const AudienceWriteResponseDtoAudienceFilterOperator = {
+  all: 'all',
+  any: 'any',
+} as const;
+
+export type AudienceWriteResponseDtoAudienceFilter = {
+  operator?: AudienceWriteResponseDtoAudienceFilterOperator;
+  /** @items.minLength 1 */
+  leadStatuses?: string[];
+  /** @items.minLength 1 */
+  tags?: string[];
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  minimumScore?: number | null;
+};
+
+export type AudienceWriteResponseDtoAudience = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  name: string;
+  /** @nullable */
+  description: string | null;
+  filter: AudienceWriteResponseDtoAudienceFilter;
+  /** @minLength 1 */
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface AudienceWriteResponseDto {
+  audience: AudienceWriteResponseDtoAudience;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface CreateCampaignDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  audienceId: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  subject: string;
+  /**
+     * @minLength 1
+     * @maxLength 100000
+     */
+  body: string;
+}
+
+export type CampaignWriteResponseDtoCampaignStatus = typeof CampaignWriteResponseDtoCampaignStatus[keyof typeof CampaignWriteResponseDtoCampaignStatus];
+
+
+export const CampaignWriteResponseDtoCampaignStatus = {
+  draft: 'draft',
+  sending: 'sending',
+  sent: 'sent',
+  partial: 'partial',
+  failed: 'failed',
+} as const;
+
+export type CampaignWriteResponseDtoCampaign = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  audienceId: string;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  subject: string;
+  /** @minLength 1 */
+  body: string;
+  status: CampaignWriteResponseDtoCampaignStatus;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  recipientCount: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  sentCount: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  failedCount: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  suppressedCount: number;
+  /** @minLength 1 */
+  createdBy: string;
+  sentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface CampaignWriteResponseDto {
+  campaign: CampaignWriteResponseDtoCampaign;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
@@ -7585,4 +7761,188 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getSocialControllerCreatePostMutationOptions(options), queryClient);
+    }
+
+export const campaignsControllerCreateAudience = (
+    createAudienceDto: CreateAudienceDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AudienceWriteResponseDto>(
+      {url: `/v1/campaigns/audiences`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createAudienceDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCampaignsControllerCreateAudienceMutationKey = () => ['campaignsControllerCreateAudience'] as const;
+
+export const getCampaignsControllerCreateAudienceMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerCreateAudience>>, TError,CampaignsControllerCreateAudienceMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerCreateAudience>>, TError,CampaignsControllerCreateAudienceMutationVariables, TContext> => {
+
+const mutationKey = getCampaignsControllerCreateAudienceMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsControllerCreateAudience>>, CampaignsControllerCreateAudienceMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  campaignsControllerCreateAudience(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CampaignsControllerCreateAudienceMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsControllerCreateAudience>>>
+    export type CampaignsControllerCreateAudienceMutationBody = CreateAudienceDto
+    export type CampaignsControllerCreateAudienceMutationError = unknown
+    export type CampaignsControllerCreateAudienceMutationVariables = {data: CreateAudienceDto}
+
+    export const useCampaignsControllerCreateAudience = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerCreateAudience>>, TError,CampaignsControllerCreateAudienceMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof campaignsControllerCreateAudience>>,
+        TError,
+        CampaignsControllerCreateAudienceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCampaignsControllerCreateAudienceMutationOptions(options), queryClient);
+    }
+
+export const campaignsControllerCreateCampaign = (
+    createCampaignDto: CreateCampaignDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CampaignWriteResponseDto>(
+      {url: `/v1/campaigns`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCampaignDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCampaignsControllerCreateCampaignMutationKey = () => ['campaignsControllerCreateCampaign'] as const;
+
+export const getCampaignsControllerCreateCampaignMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerCreateCampaign>>, TError,CampaignsControllerCreateCampaignMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerCreateCampaign>>, TError,CampaignsControllerCreateCampaignMutationVariables, TContext> => {
+
+const mutationKey = getCampaignsControllerCreateCampaignMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsControllerCreateCampaign>>, CampaignsControllerCreateCampaignMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  campaignsControllerCreateCampaign(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CampaignsControllerCreateCampaignMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsControllerCreateCampaign>>>
+    export type CampaignsControllerCreateCampaignMutationBody = CreateCampaignDto
+    export type CampaignsControllerCreateCampaignMutationError = unknown
+    export type CampaignsControllerCreateCampaignMutationVariables = {data: CreateCampaignDto}
+
+    export const useCampaignsControllerCreateCampaign = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerCreateCampaign>>, TError,CampaignsControllerCreateCampaignMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof campaignsControllerCreateCampaign>>,
+        TError,
+        CampaignsControllerCreateCampaignMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCampaignsControllerCreateCampaignMutationOptions(options), queryClient);
+    }
+
+export const campaignsControllerSend = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CampaignWriteResponseDto>(
+      {url: `/v1/campaigns/${id}/send`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCampaignsControllerSendMutationKey = () => ['campaignsControllerSend'] as const;
+
+export const getCampaignsControllerSendMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerSend>>, TError,CampaignsControllerSendMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerSend>>, TError,CampaignsControllerSendMutationVariables, TContext> => {
+
+const mutationKey = getCampaignsControllerSendMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsControllerSend>>, CampaignsControllerSendMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  campaignsControllerSend(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CampaignsControllerSendMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsControllerSend>>>
+
+    export type CampaignsControllerSendMutationError = unknown
+    export type CampaignsControllerSendMutationVariables = {id: string}
+
+    export const useCampaignsControllerSend = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerSend>>, TError,CampaignsControllerSendMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof campaignsControllerSend>>,
+        TError,
+        CampaignsControllerSendMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCampaignsControllerSendMutationOptions(options), queryClient);
     }

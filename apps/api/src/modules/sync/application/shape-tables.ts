@@ -41,6 +41,9 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   form_submissions: { column: "org_id" },
   social_channels: { column: "org_id" },
   social_posts: { column: "org_id" },
+  audiences: { column: "org_id" },
+  campaigns: { column: "org_id" },
+  campaign_recipients: { column: "org_id" },
 };
 
 export function isSyncableTable(table: string): table is SyncResource {

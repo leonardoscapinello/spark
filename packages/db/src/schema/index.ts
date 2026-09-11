@@ -24,3 +24,4 @@ export * from "./catalog.js";
 export * from "./lead-forms.js";
 export * from "./email-verifications.js";
 export * from "./social.js";
+export * from "./campaigns.js";
