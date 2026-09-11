@@ -26,7 +26,7 @@ const supabaseSecretKey = requiredEnvironment("SUPABASE_SECRET_KEY");
 const webOrigin = requiredEnvironment("WEB_ORIGIN");
 
 const db = createDbClient(databaseUrl);
-const parsedUserId = userId.parse(localUserId);
+const parsedUserId = userId.from(localUserId);
 const [localUser] = await db.select().from(users).where(eq(users.id, parsedUserId)).limit(1);
 
 if (!localUser) {
@@ -124,6 +124,7 @@ try {
 console.log(delivery === "invitation"
   ? "Proprietário vinculado. O convite foi enviado pelo Supabase."
   : "Proprietário vinculado. A recuperação de acesso foi enviada pelo Supabase.");
+process.exit(0);
 
 async function findIdentityByEmail(targetEmail: string) {
   for (let page = 1; ; page += 1) {
