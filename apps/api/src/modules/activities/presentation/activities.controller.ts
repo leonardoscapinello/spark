@@ -30,8 +30,8 @@ export class ActivitiesController {
     @CurrentSupabaseUser() claims: SupabaseJwtClaims,
     @Body() body: CreateActivityDto,
   ): Promise<CreateActivityResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
-    const { activity, txid } = await this.createActivity.execute(usuario.orgId, body);
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const { activity, txid } = await this.createActivity.execute(user.orgId, body);
     return { activity, txid } as CreateActivityResponseDto;
   }
 
@@ -45,11 +45,11 @@ export class ActivitiesController {
     @Param("id") id: string,
     @Body() body: CompleteActivityDto,
   ): Promise<CompleteActivityResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
+    const user = await this.getCurrentUser.execute(claims.sub);
     const { activity, txid } = await this.completeActivity.execute(
-      usuario.orgId,
-      activityIdFactory.de(id),
-      body.concluida,
+      user.orgId,
+      activityIdFactory.from(id),
+      body.completed,
     );
     return { activity, txid } as CompleteActivityResponseDto;
   }

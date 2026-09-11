@@ -13,79 +13,79 @@ export class ActivitiesRepository {
 
   async create(orgId: OrgId, input: CreateActivityInput): Promise<{ activity: Activity; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
-      const txid = await capturarTxid(tx);
+      const txid = await captureTxid(tx);
 
-      const [linha] = await tx
+      const [row] = await tx
         .insert(activities)
         .values({
           id: input.id,
           orgId,
           contactId: input.contactId ?? null,
           dealId: input.dealId ?? null,
-          tipo: input.tipo,
-          titulo: input.titulo,
-          notas: input.notas ?? null,
-          dataHora: new Date(input.dataHora),
+          type: input.type,
+          title: input.title,
+          notes: input.notes ?? null,
+          scheduledAt: new Date(input.scheduledAt),
         })
         .returning();
 
-      if (!linha) throw new Error("Insert de atividade não retornou linha.");
+      if (!row) throw new Error("Activity insert returned no row.");
 
-      return { activity: paraActivity(linha), txid };
+      return { activity: toActivity(row), txid };
     });
   }
 
-  /** Concluir ou reabrir — mesma rota nos dois sentidos (docs/core/schema/activity.ts). */
-  async completar(orgId: OrgId, id: ActivityId, concluida: boolean): Promise<{ activity: Activity; txid: number }> {
+  /** Complete or reopen — the same route both ways (docs/core/schema/activity.ts). */
+  async complete(orgId: OrgId, id: ActivityId, completed: boolean): Promise<{ activity: Activity; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
-      const txid = await capturarTxid(tx);
+      const txid = await captureTxid(tx);
 
-      const [linha] = await tx
+      const [row] = await tx
         .update(activities)
-        .set({ concluida, concluidaEm: concluida ? new Date() : null, atualizadoEm: new Date() })
+        .set({ completed, completedAt: completed ? new Date() : null, updatedAt: new Date() })
         .where(eq(activities.id, id))
         .returning();
 
-      if (!linha) throw new NotFoundException(`Atividade ${id} não encontrada.`);
+      if (!row) throw new NotFoundException(`Activity ${id} not found.`);
 
-      return { activity: paraActivity(linha), txid };
+      return { activity: toActivity(row), txid };
     });
   }
 }
 
-async function capturarTxid(tx: SparkDb): Promise<number> {
+async function captureTxid(tx: SparkDb): Promise<number> {
   const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
   const txidRow = txidRows[0];
-  if (!txidRow) throw new Error("Não foi possível obter o txid da transação.");
+  if (!txidRow) throw new Error("Could not obtain the transaction's txid.");
   return Number(txidRow.txid);
 }
 
-function paraActivity(linha: {
+function toActivity(row: {
   id: string;
   orgId: string;
   contactId: string | null;
   dealId: string | null;
-  tipo: string;
-  titulo: string;
-  notas: string | null;
-  dataHora: Date;
-  concluida: boolean;
-  concluidaEm: Date | null;
-  criadoEm: Date;
-  atualizadoEm: Date;
+  type: string;
+  title: string;
+  notes: string | null;
+  scheduledAt: Date;
+  completed: boolean;
+  completedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }): Activity {
   return {
-    id: linha.id,
-    orgId: linha.orgId,
-    contactId: linha.contactId,
-    dealId: linha.dealId,
-    tipo: linha.tipo,
-    titulo: linha.titulo,
-    notas: linha.notas,
-    dataHora: linha.dataHora.toISOString(),
-    concluida: linha.concluida,
-    concluidaEm: linha.concluidaEm?.toISOString() ?? null,
-    criadoEm: linha.criadoEm.toISOString(),
-    atualizadoEm: linha.atualizadoEm.toISOString(),
+    id: row.id,
+    orgId: row.orgId,
+    contactId: row.contactId,
+    dealId: row.dealId,
+    type: row.type,
+    title: row.title,
+    notes: row.notes,
+    scheduledAt: row.scheduledAt.toISOString(),
+    completed: row.completed,
+    completedAt: row.completedAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   } as Activity;
 }

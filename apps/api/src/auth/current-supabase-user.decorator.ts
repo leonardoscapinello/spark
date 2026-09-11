@@ -4,14 +4,15 @@ import type { FastifyRequest } from "fastify";
 import type { SupabaseJwtClaims } from "./supabase-jwt.schema.js";
 
 /**
- * Uso: `me(@CurrentSupabaseUser() claims: SupabaseJwtClaims)`. Só existe em
- * rota protegida por SupabaseJwtGuard — ele que popula `request.supabaseUser`.
+ * Usage: `me(@CurrentSupabaseUser() claims: SupabaseJwtClaims)`. Only
+ * exists on a route protected by SupabaseJwtGuard — it's what populates
+ * `request.supabaseUser`.
  */
 export const CurrentSupabaseUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): SupabaseJwtClaims => {
     const request = ctx.switchToHttp().getRequest<FastifyRequest>();
     if (!request.supabaseUser) {
-      throw new Error("CurrentSupabaseUser usado fora de uma rota com SupabaseJwtGuard");
+      throw new Error("CurrentSupabaseUser used outside a route with SupabaseJwtGuard");
     }
     return request.supabaseUser;
   },

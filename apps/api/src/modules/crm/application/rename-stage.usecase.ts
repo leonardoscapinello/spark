@@ -6,7 +6,7 @@ import { StagesRepository } from "../infrastructure/stages.repository.js";
 export class RenameStageUseCase {
   constructor(private readonly stagesRepository: StagesRepository) {}
 
-  async execute(orgId: OrgId, id: StageId, nome: string): Promise<{ stage: Stage; txid: number }> {
-    return this.stagesRepository.renomear(orgId, id, nome);
+  async execute(orgId: OrgId, id: StageId, name: string): Promise<{ stage: Stage; txid: number }> {
+    return this.stagesRepository.rename(orgId, id, name);
   }
 }

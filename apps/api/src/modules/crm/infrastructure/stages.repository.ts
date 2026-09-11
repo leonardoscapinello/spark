@@ -15,67 +15,67 @@ export class StagesRepository {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
       const txidRow = txidRows[0];
-      if (!txidRow) throw new Error("Não foi possível obter o txid da transação.");
+      if (!txidRow) throw new Error("Could not obtain the transaction's txid.");
       const { txid } = txidRow;
 
-      const [linha] = await tx
+      const [row] = await tx
         .insert(stages)
         .values({
           id: input.id,
           orgId,
           pipelineId: input.pipelineId,
-          nome: input.nome,
-          ordem: input.ordem,
-          probabilidade: input.probabilidade ?? 0,
+          name: input.name,
+          sortOrder: input.sortOrder,
+          probability: input.probability ?? 0,
         })
         .returning();
 
-      if (!linha) throw new Error("Insert de estágio não retornou linha.");
+      if (!row) throw new Error("Stage insert returned no row.");
 
-      return { stage: paraStage(linha), txid: Number(txid) };
+      return { stage: toStage(row), txid: Number(txid) };
     });
   }
 
-  async renomear(orgId: OrgId, id: StageId, nome: string): Promise<{ stage: Stage; txid: number }> {
+  async rename(orgId: OrgId, id: StageId, name: string): Promise<{ stage: Stage; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
       const txidRow = txidRows[0];
-      if (!txidRow) throw new Error("Não foi possível obter o txid da transação.");
+      if (!txidRow) throw new Error("Could not obtain the transaction's txid.");
       const { txid } = txidRow;
 
-      const [linha] = await tx
+      const [row] = await tx
         .update(stages)
-        .set({ nome, atualizadoEm: new Date() })
+        .set({ name, updatedAt: new Date() })
         .where(eq(stages.id, id))
         .returning();
 
-      if (!linha) throw new NotFoundException(`Estágio ${id} não encontrado.`);
+      if (!row) throw new NotFoundException(`Stage ${id} not found.`);
 
-      return { stage: paraStage(linha), txid: Number(txid) };
+      return { stage: toStage(row), txid: Number(txid) };
     });
   }
 }
 
-function paraStage(linha: {
+function toStage(row: {
   id: string;
   orgId: string;
   pipelineId: string;
-  nome: string;
-  ordem: number;
-  probabilidade: number;
-  criadoEm: Date;
-  atualizadoEm: Date;
-  arquivadoEm: Date | null;
+  name: string;
+  sortOrder: number;
+  probability: number;
+  createdAt: Date;
+  updatedAt: Date;
+  archivedAt: Date | null;
 }): Stage {
   return {
-    id: linha.id,
-    orgId: linha.orgId,
-    pipelineId: linha.pipelineId,
-    nome: linha.nome,
-    ordem: linha.ordem,
-    probabilidade: linha.probabilidade,
-    criadoEm: linha.criadoEm.toISOString(),
-    atualizadoEm: linha.atualizadoEm.toISOString(),
-    arquivadoEm: linha.arquivadoEm?.toISOString() ?? null,
+    id: row.id,
+    orgId: row.orgId,
+    pipelineId: row.pipelineId,
+    name: row.name,
+    sortOrder: row.sortOrder,
+    probability: row.probability,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    archivedAt: row.archivedAt?.toISOString() ?? null,
   } as Stage;
 }

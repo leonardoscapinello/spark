@@ -1,7 +1,7 @@
 /**
- * Fluxo de CRM ponta a ponta (roadmap.md, Fase 1): criar pipeline, criar
- * estágio, criar negócio, mover negócio — cada rota exigindo a capacidade
- * certa (docs/adr/0029), nunca só "autenticado".
+ * End-to-end CRM flow (roadmap.md, Fase 1): create pipeline, create
+ * stage, create deal, move deal — each route requiring the right
+ * capability (docs/adr/0029), never just "authenticated".
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Test } from "@nestjs/testing";
@@ -19,50 +19,50 @@ import {
 } from "@spark/core";
 import { AppModule } from "../src/app.module.js";
 
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-nao-usar-em-producao";
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 
 const admin = postgres(DATABASE_URL, { prepare: false });
 
-const org = orgIdFactory.novo();
-const gerente = userIdFactory.novo();
-const supabaseIdGerente = crypto.randomUUID();
-const agente = userIdFactory.novo();
-const supabaseIdAgente = crypto.randomUUID();
-const visualizador = userIdFactory.novo();
-const supabaseIdVisualizador = crypto.randomUUID();
+const org = orgIdFactory.create();
+const manager = userIdFactory.create();
+const supabaseIdManager = crypto.randomUUID();
+const agent = userIdFactory.create();
+const supabaseIdAgent = crypto.randomUUID();
+const viewer = userIdFactory.create();
+const supabaseIdViewer = crypto.randomUUID();
 
-async function assinarJwt(sub: string) {
-  const chave = new TextEncoder().encode(JWT_SECRET);
+async function signJwt(sub: string) {
+  const key = new TextEncoder().encode(JWT_SECRET);
   return new SignJWT({ role: "authenticated" })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(sub)
     .setIssuedAt()
     .setExpirationTime("1h")
-    .sign(chave);
+    .sign(key);
 }
 
 let app: NestFastifyApplication;
 
 beforeAll(async () => {
-  await admin`INSERT INTO organizations (id, nome, slug) VALUES (${org}, 'Org CRM', ${"org-crm-" + org})`;
-  await admin`INSERT INTO users (id, org_id, supabase_user_id, nome, email) VALUES
-    (${gerente}, ${org}, ${supabaseIdGerente}, 'Gerente', 'gerente@empresa.com'),
-    (${agente}, ${org}, ${supabaseIdAgente}, 'Agente', 'agente@empresa.com'),
-    (${visualizador}, ${org}, ${supabaseIdVisualizador}, 'Visualizador', 'visualizador@empresa.com')`;
+  await admin`INSERT INTO organizations (id, name, slug) VALUES (${org}, 'CRM Org', ${"crm-org-" + org})`;
+  await admin`INSERT INTO users (id, org_id, supabase_user_id, name, email) VALUES
+    (${manager}, ${org}, ${supabaseIdManager}, 'Manager', 'manager@company.com'),
+    (${agent}, ${org}, ${supabaseIdAgent}, 'Agent', 'agent@company.com'),
+    (${viewer}, ${org}, ${supabaseIdViewer}, 'Viewer', 'viewer@company.com')`;
 
-  const grupoGerente = permissionGroupIdFactory.novo();
-  const grupoAgente = permissionGroupIdFactory.novo();
-  const grupoVisualizador = permissionGroupIdFactory.novo();
-  await admin`INSERT INTO permission_groups (id, org_id, nome, capacidades) VALUES
-    (${grupoGerente}, ${org}, 'Gerente', ${JSON.stringify(["pipelines:manage", "deals:read", "deals:write", "deals:move"])}::jsonb),
-    (${grupoAgente}, ${org}, 'Agente', ${JSON.stringify(["deals:read", "deals:write", "deals:move"])}::jsonb),
-    (${grupoVisualizador}, ${org}, 'Visualizador', ${JSON.stringify(["deals:read"])}::jsonb)`;
+  const managerGroup = permissionGroupIdFactory.create();
+  const agentGroup = permissionGroupIdFactory.create();
+  const viewerGroup = permissionGroupIdFactory.create();
+  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
+    (${managerGroup}, ${org}, 'Gerente', ${JSON.stringify(["pipelines:manage", "deals:read", "deals:write", "deals:move"])}::jsonb),
+    (${agentGroup}, ${org}, 'Agente', ${JSON.stringify(["deals:read", "deals:write", "deals:move"])}::jsonb),
+    (${viewerGroup}, ${org}, 'Visualizador', ${JSON.stringify(["deals:read"])}::jsonb)`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
-    (${org}, ${gerente}, ${grupoGerente}),
-    (${org}, ${agente}, ${grupoAgente}),
-    (${org}, ${visualizador}, ${grupoVisualizador})`;
+    (${org}, ${manager}, ${managerGroup}),
+    (${org}, ${agent}, ${agentGroup}),
+    (${org}, ${viewer}, ${viewerGroup})`;
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
@@ -83,189 +83,189 @@ afterAll(async () => {
   await admin.end();
 });
 
-describe("CRM ponta a ponta — pipeline → estágio → negócio → mover (docs/adr/0029)", () => {
-  it("Agente (sem pipelines:manage) não cria pipeline: 403", async () => {
-    const token = await assinarJwt(supabaseIdAgente);
+describe("End-to-end CRM — pipeline → stage → deal → move (docs/adr/0029)", () => {
+  it("Agent (no pipelines:manage) can't create a pipeline: 403", async () => {
+    const token = await signJwt(supabaseIdAgent);
     const res = await app.inject({
       method: "POST",
       url: "/v1/pipelines",
       headers: { authorization: `Bearer ${token}` },
-      payload: { id: pipelineIdFactory.novo(), nome: "Funil Negado" },
+      payload: { id: pipelineIdFactory.create(), name: "Denied Funnel" },
     });
     expect(res.statusCode).toBe(403);
   });
 
-  it("Gerente cria pipeline, estágio, negócio, e move o negócio de estágio", async () => {
-    const tokenGerente = await assinarJwt(supabaseIdGerente);
+  it("Manager creates a pipeline, a stage, a deal, and moves the deal between stages", async () => {
+    const managerToken = await signJwt(supabaseIdManager);
 
-    const resPipeline = await app.inject({
+    const pipelineRes = await app.inject({
       method: "POST",
       url: "/v1/pipelines",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: pipelineIdFactory.novo(), nome: "Funil de Vendas" },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: pipelineIdFactory.create(), name: "Sales Funnel" },
     });
-    expect(resPipeline.statusCode).toBe(201);
-    const pipelineId = resPipeline.json().pipeline.id;
+    expect(pipelineRes.statusCode).toBe(201);
+    const pipelineId = pipelineRes.json().pipeline.id;
 
-    const stageAId = stageIdFactory.novo();
-    const stageBId = stageIdFactory.novo();
-    const resStageA = await app.inject({
+    const stageAId = stageIdFactory.create();
+    const stageBId = stageIdFactory.create();
+    const stageARes = await app.inject({
       method: "POST",
       url: "/v1/stages",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: stageAId, pipelineId, nome: "Qualificação", ordem: 0 },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: stageAId, pipelineId, name: "Qualification", sortOrder: 0 },
     });
-    expect(resStageA.statusCode).toBe(201);
+    expect(stageARes.statusCode).toBe(201);
 
-    const resStageB = await app.inject({
+    const stageBRes = await app.inject({
       method: "POST",
       url: "/v1/stages",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: stageBId, pipelineId, nome: "Negociação", ordem: 1 },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: stageBId, pipelineId, name: "Negotiation", sortOrder: 1 },
     });
-    expect(resStageB.statusCode).toBe(201);
+    expect(stageBRes.statusCode).toBe(201);
 
-    const dealIdCriado = dealIdFactory.novo();
-    const resDeal = await app.inject({
+    const createdDealId = dealIdFactory.create();
+    const dealRes = await app.inject({
       method: "POST",
       url: "/v1/deals",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: dealIdCriado, pipelineId, stageId: stageAId, nome: "Negócio Teste", valor: 150000 },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: createdDealId, pipelineId, stageId: stageAId, name: "Test Deal", amount: 150000 },
     });
-    expect(resDeal.statusCode).toBe(201);
-    const corpoDeal = resDeal.json();
-    // a prova do bug real corrigido: Money é objeto opaco por Symbol —
-    // se a resposta não convertesse de volta, "valor" viraria {} no JSON.
-    expect(corpoDeal.deal.valor).toBe(150000);
-    expect(corpoDeal.deal.stageId).toBe(stageAId);
-    expect(typeof corpoDeal.txid).toBe("number");
+    expect(dealRes.statusCode).toBe(201);
+    const dealBody = dealRes.json();
+    // proof of the real bug fixed: Money is a Symbol-keyed opaque object —
+    // if the response didn't convert it back, "amount" would turn into {} in the JSON.
+    expect(dealBody.deal.amount).toBe(150000);
+    expect(dealBody.deal.stageId).toBe(stageAId);
+    expect(typeof dealBody.txid).toBe("number");
 
-    const resMove = await app.inject({
+    const moveRes = await app.inject({
       method: "PATCH",
-      url: `/v1/deals/${dealIdCriado}/move`,
-      headers: { authorization: `Bearer ${tokenGerente}` },
+      url: `/v1/deals/${createdDealId}/move`,
+      headers: { authorization: `Bearer ${managerToken}` },
       payload: { stageId: stageBId },
     });
-    expect(resMove.statusCode).toBe(200);
-    expect(resMove.json().deal.stageId).toBe(stageBId);
-    expect(resMove.json().deal.valor).toBe(150000);
+    expect(moveRes.statusCode).toBe(200);
+    expect(moveRes.json().deal.stageId).toBe(stageBId);
+    expect(moveRes.json().deal.amount).toBe(150000);
 
-    const resRenomear = await app.inject({
+    const renameRes = await app.inject({
       method: "PATCH",
       url: `/v1/stages/${stageAId}/rename`,
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { nome: "Qualificação Renomeada" },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { name: "Qualification Renamed" },
     });
-    expect(resRenomear.statusCode).toBe(200);
-    expect(resRenomear.json().stage.nome).toBe("Qualificação Renomeada");
+    expect(renameRes.statusCode).toBe(200);
+    expect(renameRes.json().stage.name).toBe("Qualification Renamed");
 
-    const resAgenteRenomear = await app.inject({
+    const agentRenameRes = await app.inject({
       method: "PATCH",
       url: `/v1/stages/${stageBId}/rename`,
-      headers: { authorization: `Bearer ${await assinarJwt(supabaseIdAgente)}` },
-      payload: { nome: "Não deveria valer" },
+      headers: { authorization: `Bearer ${await signJwt(supabaseIdAgent)}` },
+      payload: { name: "Should not apply" },
     });
-    expect(resAgenteRenomear.statusCode).toBe(403);
+    expect(agentRenameRes.statusCode).toBe(403);
   });
 
-  it("Gerente fecha negócio como ganho, e outro como perdido com motivo", async () => {
-    const tokenGerente = await assinarJwt(supabaseIdGerente);
+  it("Manager closes one deal as won, and another as lost with a reason", async () => {
+    const managerToken = await signJwt(supabaseIdManager);
 
-    const resPipeline = await app.inject({
+    const pipelineRes = await app.inject({
       method: "POST",
       url: "/v1/pipelines",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: pipelineIdFactory.novo(), nome: "Funil de Fechamento" },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: pipelineIdFactory.create(), name: "Closing Funnel" },
     });
-    const pipelineId = resPipeline.json().pipeline.id;
+    const pipelineId = pipelineRes.json().pipeline.id;
 
-    const stageId = stageIdFactory.novo();
+    const stageId = stageIdFactory.create();
     await app.inject({
       method: "POST",
       url: "/v1/stages",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: stageId, pipelineId, nome: "Negociação", ordem: 0 },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: stageId, pipelineId, name: "Negotiation", sortOrder: 0 },
     });
 
-    async function criarNegocio(nome: string) {
-      const id = dealIdFactory.novo();
+    async function createDeal(name: string) {
+      const id = dealIdFactory.create();
       await app.inject({
         method: "POST",
         url: "/v1/deals",
-        headers: { authorization: `Bearer ${tokenGerente}` },
-        payload: { id, pipelineId, stageId, nome, valor: 100000 },
+        headers: { authorization: `Bearer ${managerToken}` },
+        payload: { id, pipelineId, stageId, name, amount: 100000 },
       });
       return id;
     }
 
-    const negocioGanho = await criarNegocio("Negócio Ganho");
-    const resGanho = await app.inject({
+    const wonDeal = await createDeal("Won Deal");
+    const wonRes = await app.inject({
       method: "PATCH",
-      url: `/v1/deals/${negocioGanho}/close`,
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { status: "ganho" },
+      url: `/v1/deals/${wonDeal}/close`,
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { status: "won" },
     });
-    expect(resGanho.statusCode).toBe(200);
-    expect(resGanho.json().deal.status).toBe("ganho");
-    expect(resGanho.json().deal.motivoPerda).toBeNull();
+    expect(wonRes.statusCode).toBe(200);
+    expect(wonRes.json().deal.status).toBe("won");
+    expect(wonRes.json().deal.lossReason).toBeNull();
 
-    const negocioPerdido = await criarNegocio("Negócio Perdido");
-    const resPerdido = await app.inject({
+    const lostDeal = await createDeal("Lost Deal");
+    const lostRes = await app.inject({
       method: "PATCH",
-      url: `/v1/deals/${negocioPerdido}/close`,
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { status: "perdido", motivoPerda: "Preço acima do orçamento do cliente" },
+      url: `/v1/deals/${lostDeal}/close`,
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { status: "lost", lossReason: "Price above the customer's budget" },
     });
-    expect(resPerdido.statusCode).toBe(200);
-    expect(resPerdido.json().deal.status).toBe("perdido");
-    expect(resPerdido.json().deal.motivoPerda).toBe("Preço acima do orçamento do cliente");
+    expect(lostRes.statusCode).toBe(200);
+    expect(lostRes.json().deal.status).toBe("lost");
+    expect(lostRes.json().deal.lossReason).toBe("Price above the customer's budget");
 
-    // "aberto" não é um status de fechamento válido — só ganho/perdido
-    // existem na união discriminada de CloseDealInputSchema.
-    const negocioInvalido = await criarNegocio("Negócio Status Inválido");
-    const resInvalido = await app.inject({
+    // "open" isn't a valid closing status — only won/lost exist in
+    // CloseDealInputSchema's discriminated union.
+    const invalidStatusDeal = await createDeal("Invalid Status Deal");
+    const invalidRes = await app.inject({
       method: "PATCH",
-      url: `/v1/deals/${negocioInvalido}/close`,
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { status: "aberto" },
+      url: `/v1/deals/${invalidStatusDeal}/close`,
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { status: "open" },
     });
-    expect(resInvalido.statusCode).toBe(400);
+    expect(invalidRes.statusCode).toBe(400);
   });
 
-  it("Visualizador sem deals:move não fecha negócio: 403", async () => {
-    const tokenGerente = await assinarJwt(supabaseIdGerente);
-    const tokenVisualizador = await assinarJwt(supabaseIdVisualizador);
+  it("Viewer without deals:move can't close a deal: 403", async () => {
+    const managerToken = await signJwt(supabaseIdManager);
+    const viewerToken = await signJwt(supabaseIdViewer);
 
-    const resPipeline = await app.inject({
+    const pipelineRes = await app.inject({
       method: "POST",
       url: "/v1/pipelines",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: pipelineIdFactory.novo(), nome: "Funil Fechamento Negado" },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: pipelineIdFactory.create(), name: "Denied Closing Funnel" },
     });
-    const pipelineId = resPipeline.json().pipeline.id;
+    const pipelineId = pipelineRes.json().pipeline.id;
 
-    const stageId = stageIdFactory.novo();
+    const stageId = stageIdFactory.create();
     await app.inject({
       method: "POST",
       url: "/v1/stages",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: stageId, pipelineId, nome: "Negociação", ordem: 0 },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: stageId, pipelineId, name: "Negotiation", sortOrder: 0 },
     });
 
-    const dealId = dealIdFactory.novo();
+    const dealId = dealIdFactory.create();
     await app.inject({
       method: "POST",
       url: "/v1/deals",
-      headers: { authorization: `Bearer ${tokenGerente}` },
-      payload: { id: dealId, pipelineId, stageId, nome: "Negócio", valor: 100000 },
+      headers: { authorization: `Bearer ${managerToken}` },
+      payload: { id: dealId, pipelineId, stageId, name: "Deal", amount: 100000 },
     });
 
-    const resFechar = await app.inject({
+    const closeRes = await app.inject({
       method: "PATCH",
       url: `/v1/deals/${dealId}/close`,
-      headers: { authorization: `Bearer ${tokenVisualizador}` },
-      payload: { status: "ganho" },
+      headers: { authorization: `Bearer ${viewerToken}` },
+      payload: { status: "won" },
     });
-    expect(resFechar.statusCode).toBe(403);
+    expect(closeRes.statusCode).toBe(403);
   });
 });

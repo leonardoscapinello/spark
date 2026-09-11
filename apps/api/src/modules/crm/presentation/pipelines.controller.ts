@@ -22,8 +22,8 @@ export class PipelinesController {
     @CurrentSupabaseUser() claims: SupabaseJwtClaims,
     @Body() body: CreatePipelineDto,
   ): Promise<CreatePipelineResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
-    const resultado = await this.createPipeline.execute(usuario.orgId, body);
-    return resultado as CreatePipelineResponseDto;
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const result = await this.createPipeline.execute(user.orgId, body);
+    return result as CreatePipelineResponseDto;
   }
 }

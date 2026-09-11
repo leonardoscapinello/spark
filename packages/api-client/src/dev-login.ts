@@ -1,16 +1,16 @@
 /**
- * POST /v1/dev/login — escrito à mão porque o endpoint é
- * @ApiExcludeController (nunca aparece no openapi.json/gerado de
- * propósito: não existe em produção, ver
- * apps/api/src/modules/dev/dev.module.ts). NUNCA chamar isto fora de
- * apps/web em modo dev local — produção usa a Supabase Auth de verdade
+ * POST /v1/dev/login — hand-written because the endpoint is
+ * @ApiExcludeController (deliberately never shows up in
+ * openapi.json/the generated client: doesn't exist in production, see
+ * apps/api/src/modules/dev/dev.module.ts). NEVER call this outside
+ * apps/web in local dev mode — production uses real Supabase Auth
  * (docs/adr/0005).
  */
 import { sparkHttpClient } from "./http-client.js";
 
 export interface DevLoginInput {
   email: string;
-  nome?: string;
+  name?: string;
 }
 
 export interface DevLoginResponse {

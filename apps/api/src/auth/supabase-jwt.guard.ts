@@ -12,12 +12,12 @@ declare module "fastify" {
 }
 
 /**
- * Verifica o JWT emitido pela Supabase Auth (Authorization: Bearer <jwt>).
- * Não implementa login — login é a Supabase Auth quem faz (e-mail/senha,
- * magic link, OAuth); aqui só confiamos e verificamos o token que ela já
- * emitiu (docs/adr/0005). HS256 com segredo compartilhado é o padrão da
- * Supabase Auth hoje; se o projeto migrar pra chave assimétrica (JWKS), só
- * este arquivo muda — nada no resto da API.
+ * Verifies the JWT issued by Supabase Auth (Authorization: Bearer <jwt>).
+ * Doesn't implement login — Supabase Auth does that (email/password, magic
+ * link, OAuth); this only trusts and verifies the token it already issued
+ * (docs/adr/0005). HS256 with a shared secret is Supabase Auth's current
+ * default; if the project ever moves to an asymmetric key (JWKS), only
+ * this file changes — nothing else in the API.
  */
 @Injectable()
 export class SupabaseJwtGuard implements CanActivate {
@@ -28,7 +28,7 @@ export class SupabaseJwtGuard implements CanActivate {
     const header = request.headers.authorization;
 
     if (!header?.startsWith("Bearer ")) {
-      throw new UnauthorizedException("Token ausente");
+      throw new UnauthorizedException("Missing token");
     }
 
     const token = header.slice("Bearer ".length);
@@ -39,7 +39,7 @@ export class SupabaseJwtGuard implements CanActivate {
       request.supabaseUser = SupabaseJwtClaimsSchema.parse(payload);
       return true;
     } catch {
-      throw new UnauthorizedException("Token inválido ou expirado");
+      throw new UnauthorizedException("Invalid or expired token");
     }
   }
 }

@@ -7,6 +7,6 @@ export class CloseDealUseCase {
   constructor(private readonly dealsRepository: DealsRepository) {}
 
   async execute(orgId: OrgId, dealId: DealId, input: CloseDealInput): Promise<{ deal: Deal; txid: number }> {
-    return this.dealsRepository.fechar(orgId, dealId, input);
+    return this.dealsRepository.close(orgId, dealId, input);
   }
 }

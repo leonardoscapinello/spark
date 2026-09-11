@@ -1,5 +1,6 @@
-import { Body, Controller, Post, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { contactId as contactIdFactory } from "@spark/core";
 import {
   SupabaseJwtGuard,
   CapabilityGuard,
@@ -9,7 +10,8 @@ import {
 } from "../../../auth/index.js";
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { CreateContactUseCase } from "../application/create-contact.usecase.js";
-import { CreateContactDto, CreateContactResponseDto } from "../dto/contact.dto.js";
+import { UpdateContactUseCase } from "../application/update-contact.usecase.js";
+import { CreateContactDto, CreateContactResponseDto, UpdateContactDto, UpdateContactResponseDto } from "../dto/contact.dto.js";
 
 @ApiTags("contacts")
 @Controller("v1/contacts")
@@ -17,6 +19,7 @@ export class ContactsController {
   constructor(
     private readonly getCurrentUser: GetCurrentUserUseCase,
     private readonly createContact: CreateContactUseCase,
+    private readonly updateContact: UpdateContactUseCase,
   ) {}
 
   @Post()
@@ -28,13 +31,28 @@ export class ContactsController {
     @CurrentSupabaseUser() claims: SupabaseJwtClaims,
     @Body() body: CreateContactDto,
   ): Promise<CreateContactResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
-    const resultado = await this.createContact.execute(usuario.orgId, body);
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const result = await this.createContact.execute(user.orgId, body);
 
-    // txid no corpo, não em header — é o formato que o onInsert do
-    // TanStack DB espera de volta (`return { txid: response.txid }`) pra
-    // esperar o Electric confirmar a escrita antes de soltar o estado
-    // otimista (docs/adr/0018, packages/data).
-    return resultado as CreateContactResponseDto;
+    // txid in the body, not a header — that's the shape TanStack DB's
+    // onInsert expects back (`return { txid: response.txid }`) to wait for
+    // Electric to confirm the write before releasing the optimistic state
+    // (docs/adr/0018, packages/data).
+    return result as CreateContactResponseDto;
+  }
+
+  @Patch(":id")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("contacts:write")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: UpdateContactResponseDto })
+  async update(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Param("id") id: string,
+    @Body() body: UpdateContactDto,
+  ): Promise<UpdateContactResponseDto> {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const result = await this.updateContact.execute(user.orgId, contactIdFactory.from(id), body);
+    return result as UpdateContactResponseDto;
   }
 }

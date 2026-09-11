@@ -1,7 +1,7 @@
 /**
- * Atividade ponta a ponta (roadmap.md, Fase 1): criar ligada a um
- * contato, concluir, reabrir — cada rota exigindo activities:write
- * (docs/adr/0029), nunca só "autenticado".
+ * End-to-end activity (roadmap.md, Fase 1): create linked to a contact,
+ * complete, reopen — each route requiring activities:write
+ * (docs/adr/0029), never just "authenticated".
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Test } from "@nestjs/testing";
@@ -18,46 +18,46 @@ import {
 } from "@spark/core";
 import { AppModule } from "../src/app.module.js";
 
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-nao-usar-em-producao";
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 
 const admin = postgres(DATABASE_URL, { prepare: false });
 
-const org = orgIdFactory.novo();
-const gerente = userIdFactory.novo();
-const supabaseIdGerente = crypto.randomUUID();
-const visualizador = userIdFactory.novo();
-const supabaseIdVisualizador = crypto.randomUUID();
-const contato = contactIdFactory.novo();
+const org = orgIdFactory.create();
+const manager = userIdFactory.create();
+const supabaseIdManager = crypto.randomUUID();
+const viewer = userIdFactory.create();
+const supabaseIdViewer = crypto.randomUUID();
+const contact = contactIdFactory.create();
 
-async function assinarJwt(sub: string) {
-  const chave = new TextEncoder().encode(JWT_SECRET);
+async function signJwt(sub: string) {
+  const key = new TextEncoder().encode(JWT_SECRET);
   return new SignJWT({ role: "authenticated" })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(sub)
     .setIssuedAt()
     .setExpirationTime("1h")
-    .sign(chave);
+    .sign(key);
 }
 
 let app: NestFastifyApplication;
 
 beforeAll(async () => {
-  await admin`INSERT INTO organizations (id, nome, slug) VALUES (${org}, 'Org atividades', ${"org-activities-" + org})`;
-  await admin`INSERT INTO users (id, org_id, supabase_user_id, nome, email) VALUES
-    (${gerente}, ${org}, ${supabaseIdGerente}, 'Gerente', 'gerente@empresa.com'),
-    (${visualizador}, ${org}, ${supabaseIdVisualizador}, 'Visualizador', 'visualizador@empresa.com')`;
+  await admin`INSERT INTO organizations (id, name, slug) VALUES (${org}, 'Activities Org', ${"activities-org-" + org})`;
+  await admin`INSERT INTO users (id, org_id, supabase_user_id, name, email) VALUES
+    (${manager}, ${org}, ${supabaseIdManager}, 'Manager', 'manager@company.com'),
+    (${viewer}, ${org}, ${supabaseIdViewer}, 'Viewer', 'viewer@company.com')`;
 
-  const grupoGerente = permissionGroupIdFactory.novo();
-  const grupoVisualizador = permissionGroupIdFactory.novo();
-  await admin`INSERT INTO permission_groups (id, org_id, nome, capacidades) VALUES
-    (${grupoGerente}, ${org}, 'Gerente', ${JSON.stringify(["contacts:write", "activities:read", "activities:write"])}::jsonb),
-    (${grupoVisualizador}, ${org}, 'Visualizador', ${JSON.stringify(["activities:read"])}::jsonb)`;
+  const managerGroup = permissionGroupIdFactory.create();
+  const viewerGroup = permissionGroupIdFactory.create();
+  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
+    (${managerGroup}, ${org}, 'Gerente', ${JSON.stringify(["contacts:write", "activities:read", "activities:write"])}::jsonb),
+    (${viewerGroup}, ${org}, 'Visualizador', ${JSON.stringify(["activities:read"])}::jsonb)`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
-    (${org}, ${gerente}, ${grupoGerente}),
-    (${org}, ${visualizador}, ${grupoVisualizador})`;
+    (${org}, ${manager}, ${managerGroup}),
+    (${org}, ${viewer}, ${viewerGroup})`;
 
-  await admin`INSERT INTO contacts (id, org_id, nome) VALUES (${contato}, ${org}, 'Contato de Teste')`;
+  await admin`INSERT INTO contacts (id, org_id, name) VALUES (${contact}, ${org}, 'Test Contact')`;
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
@@ -77,67 +77,67 @@ afterAll(async () => {
   await admin.end();
 });
 
-describe("Atividade ponta a ponta — criar ligada a contato, concluir, reabrir (docs/adr/0029)", () => {
-  it("Visualizador (sem activities:write) não cria atividade: 403", async () => {
-    const token = await assinarJwt(supabaseIdVisualizador);
+describe("End-to-end activity — create linked to a contact, complete, reopen (docs/adr/0029)", () => {
+  it("Viewer (no activities:write) can't create an activity: 403", async () => {
+    const token = await signJwt(supabaseIdViewer);
     const res = await app.inject({
       method: "POST",
       url: "/v1/activities",
       headers: { authorization: `Bearer ${token}` },
       payload: {
-        id: activityIdFactory.novo(),
-        contactId: contato,
-        tipo: "ligacao",
-        titulo: "Ligar pra negociar",
-        dataHora: new Date().toISOString(),
+        id: activityIdFactory.create(),
+        contactId: contact,
+        type: "call",
+        title: "Call to negotiate",
+        scheduledAt: new Date().toISOString(),
       },
     });
     expect(res.statusCode).toBe(403);
   });
 
-  it("Gerente cria atividade ligada a um contato, conclui, e reabre", async () => {
-    const token = await assinarJwt(supabaseIdGerente);
-    const atividadeId = activityIdFactory.novo();
+  it("Manager creates an activity linked to a contact, completes it, and reopens it", async () => {
+    const token = await signJwt(supabaseIdManager);
+    const activityIdValue = activityIdFactory.create();
 
-    const resCriar = await app.inject({
+    const createRes = await app.inject({
       method: "POST",
       url: "/v1/activities",
       headers: { authorization: `Bearer ${token}` },
       payload: {
-        id: atividadeId,
-        contactId: contato,
-        tipo: "ligacao",
-        titulo: "Ligar pra negociar",
-        dataHora: "2026-09-15T14:00:00.000Z",
+        id: activityIdValue,
+        contactId: contact,
+        type: "call",
+        title: "Call to negotiate",
+        scheduledAt: "2026-09-15T14:00:00.000Z",
       },
     });
-    expect(resCriar.statusCode).toBe(201);
-    const corpoCriar = resCriar.json();
-    expect(corpoCriar.activity.titulo).toBe("Ligar pra negociar");
-    expect(corpoCriar.activity.tipo).toBe("ligacao");
-    expect(corpoCriar.activity.contactId).toBe(contato);
-    expect(corpoCriar.activity.concluida).toBe(false);
-    expect(corpoCriar.activity.concluidaEm).toBeNull();
-    expect(typeof corpoCriar.txid).toBe("number");
+    expect(createRes.statusCode).toBe(201);
+    const createBody = createRes.json();
+    expect(createBody.activity.title).toBe("Call to negotiate");
+    expect(createBody.activity.type).toBe("call");
+    expect(createBody.activity.contactId).toBe(contact);
+    expect(createBody.activity.completed).toBe(false);
+    expect(createBody.activity.completedAt).toBeNull();
+    expect(typeof createBody.txid).toBe("number");
 
-    const resConcluir = await app.inject({
+    const completeRes = await app.inject({
       method: "PATCH",
-      url: `/v1/activities/${atividadeId}/complete`,
+      url: `/v1/activities/${activityIdValue}/complete`,
       headers: { authorization: `Bearer ${token}` },
-      payload: { concluida: true },
+      payload: { completed: true },
     });
-    expect(resConcluir.statusCode).toBe(200);
-    expect(resConcluir.json().activity.concluida).toBe(true);
-    expect(resConcluir.json().activity.concluidaEm).not.toBeNull();
+    expect(completeRes.statusCode).toBe(200);
+    expect(completeRes.json().activity.completed).toBe(true);
+    expect(completeRes.json().activity.completedAt).not.toBeNull();
 
-    const resReabrir = await app.inject({
+    const reopenRes = await app.inject({
       method: "PATCH",
-      url: `/v1/activities/${atividadeId}/complete`,
+      url: `/v1/activities/${activityIdValue}/complete`,
       headers: { authorization: `Bearer ${token}` },
-      payload: { concluida: false },
+      payload: { completed: false },
     });
-    expect(resReabrir.statusCode).toBe(200);
-    expect(resReabrir.json().activity.concluida).toBe(false);
-    expect(resReabrir.json().activity.concluidaEm).toBeNull();
+    expect(reopenRes.statusCode).toBe(200);
+    expect(reopenRes.json().activity.completed).toBe(false);
+    expect(reopenRes.json().activity.completedAt).toBeNull();
   });
 });

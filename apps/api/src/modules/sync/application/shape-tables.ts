@@ -1,27 +1,27 @@
 /**
- * Lista branca de tabelas sincronizáveis via Electric — nunca "todas as
- * tabelas automaticamente" (docs/adr/0018: "local-first não é baixar
- * tudo"). Tabela nova entra aqui só depois de:
- *   1. Estar na PUBLICATION (packages/db/migrations/000X_*.sql)
- *   2. Ter a coluna de isolamento certa mapeada abaixo
+ * Whitelist of tables syncable via Electric — never "all tables
+ * automatically" (docs/adr/0018: "local-first isn't downloading
+ * everything"). A new table joins this list only after:
+ *   1. Being in the PUBLICATION (packages/db/migrations/000X_*.sql)
+ *   2. Having the right isolation column mapped below
  *
- * `coluna` é o que entra no WHERE do shape — nunca vindo do cliente
- * (docs/adr/0026: "shape mal escrito é vazamento de dado entre
- * organizações — risco de segurança nº 1").
+ * `column` is what goes into the shape's WHERE — never coming from the
+ * client (docs/adr/0026: "a badly written shape is a data leak between
+ * organizations — security risk #1").
  */
 export interface ShapeTableConfig {
-  coluna: "org_id" | "id"; // "id" só faz sentido pra organizations (sincroniza a própria linha)
+  column: "org_id" | "id"; // "id" only makes sense for organizations (syncs its own row)
 }
 
 export const SHAPE_TABLES: Readonly<Record<string, ShapeTableConfig>> = {
-  organizations: { coluna: "id" },
-  contacts: { coluna: "org_id" },
-  pipelines: { coluna: "org_id" },
-  stages: { coluna: "org_id" },
-  deals: { coluna: "org_id" },
-  activities: { coluna: "org_id" },
+  organizations: { column: "id" },
+  contacts: { column: "org_id" },
+  pipelines: { column: "org_id" },
+  stages: { column: "org_id" },
+  deals: { column: "org_id" },
+  activities: { column: "org_id" },
 };
 
-export function isTabelaSincronizavel(tabela: string): tabela is keyof typeof SHAPE_TABLES {
-  return Object.hasOwn(SHAPE_TABLES, tabela);
+export function isSyncableTable(table: string): table is keyof typeof SHAPE_TABLES {
+  return Object.hasOwn(SHAPE_TABLES, table);
 }

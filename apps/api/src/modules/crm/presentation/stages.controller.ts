@@ -25,9 +25,9 @@ export class StagesController {
     @CurrentSupabaseUser() claims: SupabaseJwtClaims,
     @Body() body: CreateStageDto,
   ): Promise<CreateStageResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
-    const resultado = await this.createStage.execute(usuario.orgId, body);
-    return resultado as CreateStageResponseDto;
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const result = await this.createStage.execute(user.orgId, body);
+    return result as CreateStageResponseDto;
   }
 
   @Patch(":id/rename")
@@ -40,8 +40,8 @@ export class StagesController {
     @Param("id") id: string,
     @Body() body: RenameStageDto,
   ): Promise<RenameStageResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
-    const resultado = await this.renameStage.execute(usuario.orgId, stageIdFactory.de(id), body.nome);
-    return resultado as RenameStageResponseDto;
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const result = await this.renameStage.execute(user.orgId, stageIdFactory.from(id), body.name);
+    return result as RenameStageResponseDto;
   }
 }

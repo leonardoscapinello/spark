@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, deals, type SparkDb } from "@spark/db";
 import {
   money,
-  toCentavos,
+  toCents,
   type Deal,
   type CreateDealInput,
   type CloseDealInput,
@@ -22,9 +22,9 @@ export class DealsRepository {
 
   async create(orgId: OrgId, input: CreateDealInput): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
-      const txid = await capturarTxid(tx);
+      const txid = await captureTxid(tx);
 
-      const [linha] = await tx
+      const [row] = await tx
         .insert(deals)
         .values({
           id: input.id,
@@ -32,94 +32,94 @@ export class DealsRepository {
           pipelineId: input.pipelineId,
           stageId: input.stageId,
           contactId: input.contactId ?? null,
-          nome: input.nome,
-          valor: toCentavos(input.valor),
-          status: input.status ?? "aberto",
-          dataFechamentoEsperada: input.dataFechamentoEsperada ? new Date(input.dataFechamentoEsperada) : null,
-          motivoPerda: input.motivoPerda ?? null,
+          name: input.name,
+          amount: toCents(input.amount),
+          status: input.status ?? "open",
+          expectedCloseDate: input.expectedCloseDate ? new Date(input.expectedCloseDate) : null,
+          lossReason: input.lossReason ?? null,
         })
         .returning();
 
-      if (!linha) throw new Error("Insert de negócio não retornou linha.");
+      if (!row) throw new Error("Deal insert returned no row.");
 
-      return { deal: paraDeal(linha), txid };
+      return { deal: toDeal(row), txid };
     });
   }
 
-  /** A ação de arrastar-e-soltar: só muda o stageId, nada mais (roadmap.md, Fase 1). */
+  /** The drag-and-drop action: only changes stageId, nothing else (roadmap.md, Fase 1). */
   async move(orgId: OrgId, dealId: DealId, stageId: StageId): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
-      const txid = await capturarTxid(tx);
+      const txid = await captureTxid(tx);
 
-      const [linha] = await tx
+      const [row] = await tx
         .update(deals)
-        .set({ stageId, atualizadoEm: new Date() })
+        .set({ stageId, updatedAt: new Date() })
         .where(eq(deals.id, dealId))
         .returning();
 
-      if (!linha) throw new NotFoundException(`Negócio ${dealId} não encontrado.`);
+      if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
 
-      return { deal: paraDeal(linha), txid };
+      return { deal: toDeal(row), txid };
     });
   }
 
-  /** Fechar como ganho ou perdido — a outra ação central do board. */
-  async fechar(orgId: OrgId, dealId: DealId, input: CloseDealInput): Promise<{ deal: Deal; txid: number }> {
+  /** Close as won or lost — the board's other central action. */
+  async close(orgId: OrgId, dealId: DealId, input: CloseDealInput): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
-      const txid = await capturarTxid(tx);
+      const txid = await captureTxid(tx);
 
-      const [linha] = await tx
+      const [row] = await tx
         .update(deals)
         .set({
           status: input.status,
-          motivoPerda: input.status === "perdido" ? (input.motivoPerda ?? null) : null,
-          atualizadoEm: new Date(),
+          lossReason: input.status === "lost" ? (input.lossReason ?? null) : null,
+          updatedAt: new Date(),
         })
         .where(eq(deals.id, dealId))
         .returning();
 
-      if (!linha) throw new NotFoundException(`Negócio ${dealId} não encontrado.`);
+      if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
 
-      return { deal: paraDeal(linha), txid };
+      return { deal: toDeal(row), txid };
     });
   }
 }
 
-async function capturarTxid(tx: SparkDb): Promise<number> {
+async function captureTxid(tx: SparkDb): Promise<number> {
   const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
   const txidRow = txidRows[0];
-  if (!txidRow) throw new Error("Não foi possível obter o txid da transação.");
+  if (!txidRow) throw new Error("Could not obtain the transaction's txid.");
   return Number(txidRow.txid);
 }
 
-function paraDeal(linha: {
+function toDeal(row: {
   id: string;
   orgId: string;
   pipelineId: string;
   stageId: string;
   contactId: string | null;
-  nome: string;
-  valor: number;
+  name: string;
+  amount: number;
   status: string;
-  dataFechamentoEsperada: Date | null;
-  motivoPerda: string | null;
-  criadoEm: Date;
-  atualizadoEm: Date;
-  excluidoEm: Date | null;
+  expectedCloseDate: Date | null;
+  lossReason: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }): Deal {
   return {
-    id: linha.id,
-    orgId: linha.orgId,
-    pipelineId: linha.pipelineId,
-    stageId: linha.stageId,
-    contactId: linha.contactId,
-    nome: linha.nome,
-    valor: money(linha.valor),
-    status: linha.status,
-    dataFechamentoEsperada: linha.dataFechamentoEsperada?.toISOString() ?? null,
-    motivoPerda: linha.motivoPerda,
-    criadoEm: linha.criadoEm.toISOString(),
-    atualizadoEm: linha.atualizadoEm.toISOString(),
-    excluidoEm: linha.excluidoEm?.toISOString() ?? null,
+    id: row.id,
+    orgId: row.orgId,
+    pipelineId: row.pipelineId,
+    stageId: row.stageId,
+    contactId: row.contactId,
+    name: row.name,
+    amount: money(row.amount),
+    status: row.status,
+    expectedCloseDate: row.expectedCloseDate?.toISOString() ?? null,
+    lossReason: row.lossReason,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    deletedAt: row.deletedAt?.toISOString() ?? null,
   } as Deal;
 }

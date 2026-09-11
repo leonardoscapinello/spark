@@ -1,7 +1,15 @@
 import { createZodDto } from "nestjs-zod";
-import { ContactSchema, CreateContactInputSchema, CreateContactResponseSchema } from "@spark/core";
+import {
+  ContactSchema,
+  CreateContactInputSchema,
+  CreateContactResponseSchema,
+  UpdateContactInputSchema,
+  UpdateContactResponseSchema,
+} from "@spark/core";
 
-/** Nenhum campo escrito à mão — os três nascem do schema Zod de core (ADR-0004, ADR-0019). */
+/** No field hand-written — born from core's Zod schema (ADR-0004, ADR-0019). */
 export class ContactDto extends createZodDto(ContactSchema) {}
 export class CreateContactDto extends createZodDto(CreateContactInputSchema) {}
 export class CreateContactResponseDto extends createZodDto(CreateContactResponseSchema) {}
+export class UpdateContactDto extends createZodDto(UpdateContactInputSchema) {}
+export class UpdateContactResponseDto extends createZodDto(UpdateContactResponseSchema) {}

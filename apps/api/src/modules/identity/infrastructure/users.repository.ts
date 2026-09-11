@@ -4,12 +4,13 @@ import { createDbClient, users, type SparkDb } from "@spark/db";
 import type { User } from "@spark/core";
 
 /**
- * Resolver "qual usuário é este JWT" é, por natureza, uma consulta que
- * atravessa organizações — é o que DEFINE em qual organização o resto da
- * requisição vai operar. Por isso usa a conexão admin (bypassa RLS), não
- * app_user: não dá pra exigir `app.current_org_id` pra descobrir justamente
- * qual é o org_id (docs/adr/0022, docs/adr/0026). Toda consulta DEPOIS
- * desta, no resto da requisição, passa por withOrgContext normalmente.
+ * Resolving "which user is this JWT" is, by nature, a query that crosses
+ * organizations — it's what DEFINES which organization the rest of the
+ * request will operate in. That's why it uses the admin connection
+ * (bypasses RLS), not app_user: there's no way to require
+ * `app.current_org_id` to discover the very org_id it's looking for
+ * (docs/adr/0022, docs/adr/0026). Every query AFTER this one, for the rest
+ * of the request, goes through withOrgContext normally.
  */
 @Injectable()
 export class UsersRepository {
@@ -32,12 +33,12 @@ export class UsersRepository {
       id: row.id,
       orgId: row.orgId,
       supabaseUserId: row.supabaseUserId,
-      nome: row.nome,
+      name: row.name,
       email: row.email,
       avatarUrl: row.avatarUrl,
-      criadoEm: row.criadoEm.toISOString(),
-      atualizadoEm: row.atualizadoEm.toISOString(),
-      desativadoEm: row.desativadoEm?.toISOString() ?? null,
+      createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+      deactivatedAt: row.deactivatedAt?.toISOString() ?? null,
     } as User;
   }
 }

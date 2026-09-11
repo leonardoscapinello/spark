@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 /**
- * Formato do JWT emitido pela Supabase Auth (docs/adr/0005). `sub` é o id
- * do usuário no espaço da Supabase Auth — diferente do nosso `users.id`
- * (UUID v7 próprio); a ligação entre os dois é `users.supabase_user_id`
+ * Shape of the JWT issued by Supabase Auth (docs/adr/0005). `sub` is the
+ * user's id in Supabase Auth's own space — different from our `users.id`
+ * (our own UUID v7); the link between the two is `users.supabase_user_id`
  * (packages/core/src/schema/user.ts, migration 0001).
  */
 export const SupabaseJwtClaimsSchema = z.object({

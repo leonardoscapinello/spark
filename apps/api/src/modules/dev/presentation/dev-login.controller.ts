@@ -11,20 +11,20 @@ import { PermissionGroupsRepository } from "../../identity/infrastructure/permis
 
 const DevLoginInputSchema = z.object({
   email: z.email(),
-  nome: z.string().min(1).max(200).optional(),
+  name: z.string().min(1).max(200).optional(),
 });
 class DevLoginInput extends createZodDto(DevLoginInputSchema) {}
 
 /**
- * Login de desenvolvimento — SÓ existe quando NODE_ENV !== "production"
- * (a checagem real está em app.module.ts: o módulo inteiro não é
- * importado em produção, não é "existe mas nega"). Em produção, quem
- * emite o token é a Supabase Auth de verdade (docs/adr/0005) — isto
- * existe só porque não há projeto Supabase Cloud disponível neste estágio
- * de desenvolvimento local. Emite um JWT no MESMO formato e assinado com
- * o MESMO segredo que SupabaseJwtGuard verifica — o resto do caminho
- * (guard, resolução de usuário, RLS) é o caminho de produção de verdade,
- * só a EMISSÃO do token é simulada.
+ * Development login — ONLY exists when NODE_ENV !== "production" (the real
+ * check is in app.module.ts: the whole module isn't imported in
+ * production, this isn't "exists but denies"). In production, the real
+ * Supabase Auth issues the token (docs/adr/0005) — this exists only
+ * because there's no Supabase Cloud project available at this stage of
+ * local development. It issues a JWT in the SAME format, signed with the
+ * SAME secret that SupabaseJwtGuard verifies — the rest of the path
+ * (guard, user resolution, RLS) is the real production path, only the
+ * token's ISSUANCE is simulated.
  */
 @ApiExcludeController()
 @Controller("v1/dev")
@@ -38,60 +38,60 @@ export class DevLoginController {
   async login(@Body() body: DevLoginInput): Promise<{ token: string; orgId: string; userId: string }> {
     const db = createDbClient(process.env.DATABASE_URL ?? "");
 
-    const [existente] = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
+    const [existing] = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
 
-    if (existente) {
-      // organização criada antes do ADR-0029 existir nunca ganhou grupo
-      // nenhum — sem isto, essa conta fica negada em tudo pra sempre,
-      // porque login de usuário existente nunca passava por aqui antes
-      // (achado testando login de uma conta de dev antiga de verdade).
-      const orgIdExistente = orgIdFactory.de(existente.orgId);
-      if (!(await this.permissionGroups.orgTemGrupos(orgIdExistente))) {
-        const grupos = await this.permissionGroups.semearGruposPadrao(orgIdExistente);
-        const proprietario = grupos.find((g) => g.nome === "Proprietário");
-        if (proprietario) {
-          await this.permissionGroups.atribuirGrupo(userIdFactory.de(existente.id), proprietario.id);
+    if (existing) {
+      // an organization created before ADR-0029 existed never received a
+      // single group — without this, that account stays denied on
+      // everything forever, because existing-user login never used to go
+      // through here (found by testing login on a real old dev account).
+      const existingOrgId = orgIdFactory.from(existing.orgId);
+      if (!(await this.permissionGroups.orgHasGroups(existingOrgId))) {
+        const groups = await this.permissionGroups.seedDefaultGroups(existingOrgId);
+        const owner = groups.find((g) => g.name === "Proprietário");
+        if (owner) {
+          await this.permissionGroups.assignGroup(userIdFactory.from(existing.id), owner.id);
         }
       }
 
-      const token = await assinarToken(existente.supabaseUserId, this.config);
-      return { token, orgId: existente.orgId, userId: existente.id };
+      const token = await signToken(existing.supabaseUserId, this.config);
+      return { token, orgId: existing.orgId, userId: existing.id };
     }
 
-    const novoOrgId = orgIdFactory.novo();
-    const novoUserId = userIdFactory.novo();
+    const newOrgId = orgIdFactory.create();
+    const newUserId = userIdFactory.create();
     const supabaseUserId = crypto.randomUUID();
-    const slug = `dev-${body.email.split("@")[0]}-${novoOrgId.slice(0, 8)}`;
+    const slug = `dev-${body.email.split("@")[0]}-${newOrgId.slice(0, 8)}`;
 
-    await db.insert(organizations).values({ id: novoOrgId, nome: `Org de ${body.email}`, slug });
+    await db.insert(organizations).values({ id: newOrgId, name: `Org for ${body.email}`, slug });
     await db.insert(users).values({
-      id: novoUserId,
-      orgId: novoOrgId,
+      id: newUserId,
+      orgId: newOrgId,
       supabaseUserId,
-      nome: body.nome ?? body.email.split("@")[0] ?? body.email,
+      name: body.name ?? body.email.split("@")[0] ?? body.email,
       email: body.email,
     });
 
-    // toda organização nasce com os cinco grupos padrão; quem cria a org
-    // é o Proprietário dela (docs/adr/0029).
-    const grupos = await this.permissionGroups.semearGruposPadrao(novoOrgId);
-    const proprietario = grupos.find((g) => g.nome === "Proprietário");
-    if (proprietario) {
-      await this.permissionGroups.atribuirGrupo(novoUserId, proprietario.id);
+    // every organization is born with the five default groups; whoever
+    // creates the org is its Owner (docs/adr/0029).
+    const groups = await this.permissionGroups.seedDefaultGroups(newOrgId);
+    const owner = groups.find((g) => g.name === "Proprietário");
+    if (owner) {
+      await this.permissionGroups.assignGroup(newUserId, owner.id);
     }
 
-    const token = await assinarToken(supabaseUserId, this.config);
-    return { token, orgId: novoOrgId, userId: novoUserId };
+    const token = await signToken(supabaseUserId, this.config);
+    return { token, orgId: newOrgId, userId: newUserId };
   }
 }
 
-async function assinarToken(supabaseUserId: string, config: ConfigService): Promise<string> {
+async function signToken(supabaseUserId: string, config: ConfigService): Promise<string> {
   const secret = config.getOrThrow<string>("SUPABASE_JWT_SECRET");
-  const chave = new TextEncoder().encode(secret);
+  const key = new TextEncoder().encode(secret);
   return new SignJWT({ role: "authenticated" })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(supabaseUserId)
     .setIssuedAt()
-    .setExpirationTime("30d") // dev — sem UX de refresh token ainda
-    .sign(chave);
+    .setExpirationTime("30d") // dev — no refresh-token UX yet
+    .sign(key);
 }

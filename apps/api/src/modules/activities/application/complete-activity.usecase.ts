@@ -6,7 +6,7 @@ import { ActivitiesRepository } from "../infrastructure/activities.repository.js
 export class CompleteActivityUseCase {
   constructor(private readonly activitiesRepository: ActivitiesRepository) {}
 
-  async execute(orgId: OrgId, id: ActivityId, concluida: boolean): Promise<{ activity: Activity; txid: number }> {
-    return this.activitiesRepository.completar(orgId, id, concluida);
+  async execute(orgId: OrgId, id: ActivityId, completed: boolean): Promise<{ activity: Activity; txid: number }> {
+    return this.activitiesRepository.complete(orgId, id, completed);
   }
 }

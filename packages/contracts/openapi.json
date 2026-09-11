@@ -63,6 +63,51 @@
         ]
       }
     },
+    "/v1/contacts/{id}": {
+      "patch": {
+        "operationId": "ContactsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateContactResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "contacts"
+        ]
+      }
+    },
     "/v1/pipelines": {
       "post": {
         "operationId": "PipelinesController_create",
@@ -421,7 +466,7 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
-          "nome": {
+          "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200
@@ -435,17 +480,17 @@
             "format": "uri",
             "nullable": true
           },
-          "criadoEm": {
+          "createdAt": {
             "type": "string",
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           },
-          "atualizadoEm": {
+          "updatedAt": {
             "type": "string",
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           },
-          "desativadoEm": {
+          "deactivatedAt": {
             "type": "string",
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
@@ -456,12 +501,12 @@
           "id",
           "orgId",
           "supabaseUserId",
-          "nome",
+          "name",
           "email",
           "avatarUrl",
-          "criadoEm",
-          "atualizadoEm",
-          "desativadoEm"
+          "createdAt",
+          "updatedAt",
+          "deactivatedAt"
         ]
       },
       "CreateContactDto": {
@@ -471,7 +516,7 @@
             "type": "string",
             "minLength": 1
           },
-          "nome": {
+          "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200
@@ -481,7 +526,7 @@
             "minLength": 1,
             "nullable": true
           },
-          "telefone": {
+          "phone": {
             "type": "string",
             "minLength": 1,
             "nullable": true
@@ -507,7 +552,7 @@
         },
         "required": [
           "id",
-          "nome"
+          "name"
         ]
       },
       "CreateContactResponseDto": {
@@ -524,7 +569,7 @@
                 "type": "string",
                 "minLength": 1
               },
-              "nome": {
+              "name": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
@@ -534,7 +579,7 @@
                 "minLength": 1,
                 "nullable": true
               },
-              "telefone": {
+              "phone": {
                 "type": "string",
                 "minLength": 1,
                 "nullable": true
@@ -557,32 +602,204 @@
                   "type": "string"
                 }
               },
-              "criadoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
-              "atualizadoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
-              "excluidoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+              "deletedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
                 "nullable": true
               }
             },
             "required": [
               "id",
               "orgId",
-              "nome",
+              "name",
               "email",
-              "telefone",
-              "criadoEm",
-              "atualizadoEm",
-              "excluidoEm"
+              "phone",
+              "createdAt",
+              "updatedAt",
+              "deletedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "contact",
+          "txid"
+        ]
+      },
+      "UpdateContactDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "email": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "score": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "customFields": {
+            "default": {},
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "tags": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UpdateContactResponseDto": {
+        "type": "object",
+        "properties": {
+          "contact": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "email": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "phone": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "score": {
+                "default": 0,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "customFields": {
+                "default": {},
+                "type": "object",
+                "additionalProperties": {}
+              },
+              "tags": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "deletedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "name",
+              "email",
+              "phone",
+              "createdAt",
+              "updatedAt",
+              "deletedAt"
             ]
           },
           "txid": {
@@ -603,19 +820,19 @@
             "type": "string",
             "minLength": 1
           },
-          "nome": {
+          "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200
           },
-          "padrao": {
+          "isDefault": {
             "default": false,
             "type": "boolean"
           }
         },
         "required": [
           "id",
-          "nome"
+          "name"
         ]
       },
       "CreatePipelineResponseDto": {
@@ -632,26 +849,26 @@
                 "type": "string",
                 "minLength": 1
               },
-              "nome": {
+              "name": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
               },
-              "padrao": {
+              "isDefault": {
                 "default": false,
                 "type": "boolean"
               },
-              "criadoEm": {
+              "createdAt": {
                 "type": "string",
                 "format": "date-time",
                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
-              "atualizadoEm": {
+              "updatedAt": {
                 "type": "string",
                 "format": "date-time",
                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
-              "arquivadoEm": {
+              "archivedAt": {
                 "type": "string",
                 "format": "date-time",
                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
@@ -661,10 +878,10 @@
             "required": [
               "id",
               "orgId",
-              "nome",
-              "criadoEm",
-              "atualizadoEm",
-              "arquivadoEm"
+              "name",
+              "createdAt",
+              "updatedAt",
+              "archivedAt"
             ]
           },
           "txid": {
@@ -689,17 +906,17 @@
             "type": "string",
             "minLength": 1
           },
-          "nome": {
+          "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200
           },
-          "ordem": {
+          "sortOrder": {
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991
           },
-          "probabilidade": {
+          "probability": {
             "default": 0,
             "type": "integer",
             "minimum": 0,
@@ -709,8 +926,8 @@
         "required": [
           "id",
           "pipelineId",
-          "nome",
-          "ordem"
+          "name",
+          "sortOrder"
         ]
       },
       "CreateStageResponseDto": {
@@ -731,36 +948,60 @@
                 "type": "string",
                 "minLength": 1
               },
-              "nome": {
+              "name": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
               },
-              "ordem": {
+              "sortOrder": {
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 9007199254740991
               },
-              "probabilidade": {
+              "probability": {
                 "default": 0,
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 100
               },
-              "criadoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
-              "atualizadoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
-              "arquivadoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+              "archivedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
                 "nullable": true
               }
             },
@@ -768,11 +1009,11 @@
               "id",
               "orgId",
               "pipelineId",
-              "nome",
-              "ordem",
-              "criadoEm",
-              "atualizadoEm",
-              "arquivadoEm"
+              "name",
+              "sortOrder",
+              "createdAt",
+              "updatedAt",
+              "archivedAt"
             ]
           },
           "txid": {
@@ -789,14 +1030,14 @@
       "RenameStageDto": {
         "type": "object",
         "properties": {
-          "nome": {
+          "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200
           }
         },
         "required": [
-          "nome"
+          "name"
         ]
       },
       "RenameStageResponseDto": {
@@ -817,36 +1058,60 @@
                 "type": "string",
                 "minLength": 1
               },
-              "nome": {
+              "name": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
               },
-              "ordem": {
+              "sortOrder": {
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 9007199254740991
               },
-              "probabilidade": {
+              "probability": {
                 "default": 0,
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 100
               },
-              "criadoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
-              "atualizadoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
-              "arquivadoEm": {
-                "type": "string",
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+              "archivedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
                 "nullable": true
               }
             },
@@ -854,11 +1119,11 @@
               "id",
               "orgId",
               "pipelineId",
-              "nome",
-              "ordem",
-              "criadoEm",
-              "atualizadoEm",
-              "arquivadoEm"
+              "name",
+              "sortOrder",
+              "createdAt",
+              "updatedAt",
+              "archivedAt"
             ]
           },
           "txid": {
@@ -892,26 +1157,26 @@
             "minLength": 1,
             "nullable": true
           },
-          "nome": {
+          "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200
           },
-          "valor": {
+          "amount": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
           "status": {
-            "default": "aberto",
+            "default": "open",
             "type": "string",
             "enum": [
-              "aberto",
-              "ganho",
-              "perdido"
+              "open",
+              "won",
+              "lost"
             ]
           },
-          "dataFechamentoEsperada": {
+          "expectedCloseDate": {
             "anyOf": [
               {
                 "type": "string",
@@ -925,7 +1190,7 @@
             ],
             "nullable": true
           },
-          "motivoPerda": {
+          "lossReason": {
             "type": "string",
             "maxLength": 500,
             "nullable": true
@@ -935,8 +1200,8 @@
           "id",
           "pipelineId",
           "stageId",
-          "nome",
-          "valor"
+          "name",
+          "amount"
         ]
       },
       "CreateDealResponseDto": {
@@ -966,26 +1231,26 @@
                 "minLength": 1,
                 "nullable": true
               },
-              "nome": {
+              "name": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
               },
-              "valor": {
+              "amount": {
                 "type": "integer",
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
               },
               "status": {
-                "default": "aberto",
+                "default": "open",
                 "type": "string",
                 "enum": [
-                  "aberto",
-                  "ganho",
-                  "perdido"
+                  "open",
+                  "won",
+                  "lost"
                 ]
               },
-              "dataFechamentoEsperada": {
+              "expectedCloseDate": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -999,12 +1264,12 @@
                 ],
                 "nullable": true
               },
-              "motivoPerda": {
+              "lossReason": {
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
               },
-              "criadoEm": {
+              "createdAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1017,7 +1282,7 @@
                   }
                 ]
               },
-              "atualizadoEm": {
+              "updatedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1030,7 +1295,7 @@
                   }
                 ]
               },
-              "excluidoEm": {
+              "deletedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1051,13 +1316,13 @@
               "pipelineId",
               "stageId",
               "contactId",
-              "nome",
-              "valor",
-              "dataFechamentoEsperada",
-              "motivoPerda",
-              "criadoEm",
-              "atualizadoEm",
-              "excluidoEm"
+              "name",
+              "amount",
+              "expectedCloseDate",
+              "lossReason",
+              "createdAt",
+              "updatedAt",
+              "deletedAt"
             ]
           },
           "txid": {
@@ -1110,26 +1375,26 @@
                 "minLength": 1,
                 "nullable": true
               },
-              "nome": {
+              "name": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
               },
-              "valor": {
+              "amount": {
                 "type": "integer",
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
               },
               "status": {
-                "default": "aberto",
+                "default": "open",
                 "type": "string",
                 "enum": [
-                  "aberto",
-                  "ganho",
-                  "perdido"
+                  "open",
+                  "won",
+                  "lost"
                 ]
               },
-              "dataFechamentoEsperada": {
+              "expectedCloseDate": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1143,12 +1408,12 @@
                 ],
                 "nullable": true
               },
-              "motivoPerda": {
+              "lossReason": {
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
               },
-              "criadoEm": {
+              "createdAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1161,7 +1426,7 @@
                   }
                 ]
               },
-              "atualizadoEm": {
+              "updatedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1174,7 +1439,7 @@
                   }
                 ]
               },
-              "excluidoEm": {
+              "deletedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1195,13 +1460,13 @@
               "pipelineId",
               "stageId",
               "contactId",
-              "nome",
-              "valor",
-              "dataFechamentoEsperada",
-              "motivoPerda",
-              "criadoEm",
-              "atualizadoEm",
-              "excluidoEm"
+              "name",
+              "amount",
+              "expectedCloseDate",
+              "lossReason",
+              "createdAt",
+              "updatedAt",
+              "deletedAt"
             ]
           },
           "txid": {
@@ -1221,11 +1486,11 @@
           "status": {
             "type": "string",
             "enum": [
-              "ganho",
-              "perdido"
+              "won",
+              "lost"
             ]
           },
-          "motivoPerda": {
+          "lossReason": {
             "type": "string",
             "maxLength": 500,
             "nullable": true
@@ -1262,26 +1527,26 @@
                 "minLength": 1,
                 "nullable": true
               },
-              "nome": {
+              "name": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
               },
-              "valor": {
+              "amount": {
                 "type": "integer",
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
               },
               "status": {
-                "default": "aberto",
+                "default": "open",
                 "type": "string",
                 "enum": [
-                  "aberto",
-                  "ganho",
-                  "perdido"
+                  "open",
+                  "won",
+                  "lost"
                 ]
               },
-              "dataFechamentoEsperada": {
+              "expectedCloseDate": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1295,12 +1560,12 @@
                 ],
                 "nullable": true
               },
-              "motivoPerda": {
+              "lossReason": {
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
               },
-              "criadoEm": {
+              "createdAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1313,7 +1578,7 @@
                   }
                 ]
               },
-              "atualizadoEm": {
+              "updatedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1326,7 +1591,7 @@
                   }
                 ]
               },
-              "excluidoEm": {
+              "deletedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1347,13 +1612,13 @@
               "pipelineId",
               "stageId",
               "contactId",
-              "nome",
-              "valor",
-              "dataFechamentoEsperada",
-              "motivoPerda",
-              "criadoEm",
-              "atualizadoEm",
-              "excluidoEm"
+              "name",
+              "amount",
+              "expectedCloseDate",
+              "lossReason",
+              "createdAt",
+              "updatedAt",
+              "deletedAt"
             ]
           },
           "txid": {
@@ -1384,26 +1649,26 @@
             "minLength": 1,
             "nullable": true
           },
-          "tipo": {
+          "type": {
             "type": "string",
             "enum": [
-              "tarefa",
-              "ligacao",
-              "reuniao",
+              "task",
+              "call",
+              "meeting",
               "email"
             ]
           },
-          "titulo": {
+          "title": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200
           },
-          "notas": {
+          "notes": {
             "type": "string",
             "maxLength": 2000,
             "nullable": true
           },
-          "dataHora": {
+          "scheduledAt": {
             "anyOf": [
               {
                 "type": "string",
@@ -1419,9 +1684,9 @@
         },
         "required": [
           "id",
-          "tipo",
-          "titulo",
-          "dataHora"
+          "type",
+          "title",
+          "scheduledAt"
         ]
       },
       "CreateActivityResponseDto": {
@@ -1448,26 +1713,26 @@
                 "minLength": 1,
                 "nullable": true
               },
-              "tipo": {
+              "type": {
                 "type": "string",
                 "enum": [
-                  "tarefa",
-                  "ligacao",
-                  "reuniao",
+                  "task",
+                  "call",
+                  "meeting",
                   "email"
                 ]
               },
-              "titulo": {
+              "title": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
               },
-              "notas": {
+              "notes": {
                 "type": "string",
                 "maxLength": 2000,
                 "nullable": true
               },
-              "dataHora": {
+              "scheduledAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1480,11 +1745,11 @@
                   }
                 ]
               },
-              "concluida": {
+              "completed": {
                 "default": false,
                 "type": "boolean"
               },
-              "concluidaEm": {
+              "completedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1498,7 +1763,7 @@
                 ],
                 "nullable": true
               },
-              "criadoEm": {
+              "createdAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1511,7 +1776,7 @@
                   }
                 ]
               },
-              "atualizadoEm": {
+              "updatedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1530,13 +1795,13 @@
               "orgId",
               "contactId",
               "dealId",
-              "tipo",
-              "titulo",
-              "notas",
-              "dataHora",
-              "concluidaEm",
-              "criadoEm",
-              "atualizadoEm"
+              "type",
+              "title",
+              "notes",
+              "scheduledAt",
+              "completedAt",
+              "createdAt",
+              "updatedAt"
             ]
           },
           "txid": {
@@ -1553,12 +1818,12 @@
       "CompleteActivityDto": {
         "type": "object",
         "properties": {
-          "concluida": {
+          "completed": {
             "type": "boolean"
           }
         },
         "required": [
-          "concluida"
+          "completed"
         ]
       },
       "CompleteActivityResponseDto": {
@@ -1585,26 +1850,26 @@
                 "minLength": 1,
                 "nullable": true
               },
-              "tipo": {
+              "type": {
                 "type": "string",
                 "enum": [
-                  "tarefa",
-                  "ligacao",
-                  "reuniao",
+                  "task",
+                  "call",
+                  "meeting",
                   "email"
                 ]
               },
-              "titulo": {
+              "title": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
               },
-              "notas": {
+              "notes": {
                 "type": "string",
                 "maxLength": 2000,
                 "nullable": true
               },
-              "dataHora": {
+              "scheduledAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1617,11 +1882,11 @@
                   }
                 ]
               },
-              "concluida": {
+              "completed": {
                 "default": false,
                 "type": "boolean"
               },
-              "concluidaEm": {
+              "completedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1635,7 +1900,7 @@
                 ],
                 "nullable": true
               },
-              "criadoEm": {
+              "createdAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1648,7 +1913,7 @@
                   }
                 ]
               },
-              "atualizadoEm": {
+              "updatedAt": {
                 "anyOf": [
                   {
                     "type": "string",
@@ -1667,13 +1932,13 @@
               "orgId",
               "contactId",
               "dealId",
-              "tipo",
-              "titulo",
-              "notas",
-              "dataHora",
-              "concluidaEm",
-              "criadoEm",
-              "atualizadoEm"
+              "type",
+              "title",
+              "notes",
+              "scheduledAt",
+              "completedAt",
+              "createdAt",
+              "updatedAt"
             ]
           },
           "txid": {

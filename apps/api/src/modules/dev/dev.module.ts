@@ -2,9 +2,9 @@ import { Module } from "@nestjs/common";
 import { DevLoginController } from "./presentation/dev-login.controller.js";
 import { PermissionGroupsRepository } from "../identity/infrastructure/permission-groups.repository.js";
 
-// ConfigModule NÃO é importado aqui — já é global via AppModule (ver o
-// mesmo comentário em identity.module.ts). Reimportar sem forRoot() por
-// cima do global é o que já causou ConfigService undefined uma vez.
+// ConfigModule is NOT imported here — already global via AppModule (see
+// the same comment in identity.module.ts). Reimporting without forRoot()
+// on top of the global one already caused ConfigService to be undefined once.
 @Module({
   controllers: [DevLoginController],
   providers: [PermissionGroupsRepository],

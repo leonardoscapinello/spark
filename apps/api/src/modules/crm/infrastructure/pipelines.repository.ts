@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, pipelines, type SparkDb } from "@spark/db";
 import type { Pipeline, CreatePipelineInput, OrgId } from "@spark/core";
 
-/** Mesmo padrão de ContactsRepository — withOrgContext, RLS de verdade, captura txid (docs/adr/0018, docs/adr/0022). */
+/** Same pattern as ContactsRepository — withOrgContext, real RLS, captures txid (docs/adr/0018, docs/adr/0022). */
 @Injectable()
 export class PipelinesRepository {
   private readonly db: SparkDb;
@@ -16,37 +16,37 @@ export class PipelinesRepository {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
       const txidRow = txidRows[0];
-      if (!txidRow) throw new Error("Não foi possível obter o txid da transação.");
+      if (!txidRow) throw new Error("Could not obtain the transaction's txid.");
       const { txid } = txidRow;
 
-      const [linha] = await tx
+      const [row] = await tx
         .insert(pipelines)
-        .values({ id: input.id, orgId, nome: input.nome, padrao: input.padrao ?? false })
+        .values({ id: input.id, orgId, name: input.name, isDefault: input.isDefault ?? false })
         .returning();
 
-      if (!linha) throw new Error("Insert de pipeline não retornou linha.");
+      if (!row) throw new Error("Pipeline insert returned no row.");
 
-      return { pipeline: paraPipeline(linha), txid: Number(txid) };
+      return { pipeline: toPipeline(row), txid: Number(txid) };
     });
   }
 }
 
-function paraPipeline(linha: {
+function toPipeline(row: {
   id: string;
   orgId: string;
-  nome: string;
-  padrao: boolean;
-  criadoEm: Date;
-  atualizadoEm: Date;
-  arquivadoEm: Date | null;
+  name: string;
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  archivedAt: Date | null;
 }): Pipeline {
   return {
-    id: linha.id,
-    orgId: linha.orgId,
-    nome: linha.nome,
-    padrao: linha.padrao,
-    criadoEm: linha.criadoEm.toISOString(),
-    atualizadoEm: linha.atualizadoEm.toISOString(),
-    arquivadoEm: linha.arquivadoEm?.toISOString() ?? null,
+    id: row.id,
+    orgId: row.orgId,
+    name: row.name,
+    isDefault: row.isDefault,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    archivedAt: row.archivedAt?.toISOString() ?? null,
   } as Pipeline;
 }

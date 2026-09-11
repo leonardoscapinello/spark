@@ -1,8 +1,9 @@
 /**
- * OpenTelemetry desde o primeiro endpoint (docs/adr/0013, fase-0.md Bloco 5).
- * Precisa ser importado e iniciado ANTES de qualquer outro módulo — em
- * especial antes do NestFactory.create — senão a auto-instrumentação não
- * tem chance de interceptar os módulos (http, pg, etc.) na hora do require.
+ * OpenTelemetry from the very first endpoint on (docs/adr/0013,
+ * fase-0.md Bloco 5). Must be imported and started BEFORE any other
+ * module — in particular before NestFactory.create — or auto-
+ * instrumentation never gets a chance to intercept the modules (http,
+ * pg, etc.) at require time.
  */
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
@@ -10,16 +11,17 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 
 const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 
-// exactOptionalPropertyTypes não aceita `traceExporter: undefined` explícito
-// — a propriedade precisa estar OMITIDA, não presente com valor undefined.
-// Por isso o spread condicional em vez de um ternário direto no objeto.
+// exactOptionalPropertyTypes doesn't accept an explicit
+// `traceExporter: undefined` — the property needs to be OMITTED, not
+// present with value undefined. Hence the conditional spread instead of a
+// direct ternary in the object.
 export const sdk = new NodeSDK({
   serviceName: "spark-api",
   ...(endpoint ? { traceExporter: new OTLPTraceExporter({ url: endpoint }) } : {}),
   instrumentations: [
     getNodeAutoInstrumentations({
-      // logs de request/response completos custam LGPD — nunca instrumentar
-      // corpo de mensagem (docs/adr/0013).
+      // full request/response logs cost LGPD compliance — never
+      // instrument message bodies (docs/adr/0013).
       "@opentelemetry/instrumentation-fs": { enabled: false },
     }),
   ],

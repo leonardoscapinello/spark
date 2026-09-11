@@ -36,20 +36,20 @@ export interface UserDto {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /** @minLength 1 */
   email: string;
   /** @nullable */
   avatarUrl: string | null;
   /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  criadoEm: string;
+  createdAt: string;
   /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  atualizadoEm: string;
+  updatedAt: string;
   /**
      * @nullable
      * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
      */
-  desativadoEm: string | null;
+  deactivatedAt: string | null;
 }
 
 export type CreateContactDtoCustomFields = {[key: string]: unknown};
@@ -61,7 +61,7 @@ export interface CreateContactDto {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minLength 1
      * @nullable
@@ -71,7 +71,7 @@ export interface CreateContactDto {
      * @minLength 1
      * @nullable
      */
-  telefone?: string | null;
+  phone?: string | null;
   /**
      * @minimum 0
      * @maximum 100
@@ -92,7 +92,7 @@ export type CreateContactResponseDtoContact = {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minLength 1
      * @nullable
@@ -102,7 +102,7 @@ export type CreateContactResponseDtoContact = {
      * @minLength 1
      * @nullable
      */
-  telefone: string | null;
+  phone: string | null;
   /**
      * @minimum 0
      * @maximum 100
@@ -110,19 +110,83 @@ export type CreateContactResponseDtoContact = {
   score?: number;
   customFields?: CreateContactResponseDtoContactCustomFields;
   tags?: string[];
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  criadoEm: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  atualizadoEm: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
-  excluidoEm: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 };
 
 export interface CreateContactResponseDto {
   contact: CreateContactResponseDtoContact;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdateContactDtoCustomFields = {[key: string]: unknown};
+
+export interface UpdateContactDto {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name?: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  phone?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score?: number;
+  customFields?: UpdateContactDtoCustomFields;
+  tags?: string[];
+}
+
+export type UpdateContactResponseDtoContactCustomFields = {[key: string]: unknown};
+
+export type UpdateContactResponseDtoContact = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  phone: string | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score?: number;
+  customFields?: UpdateContactResponseDtoContactCustomFields;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export interface UpdateContactResponseDto {
+  contact: UpdateContactResponseDtoContact;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
@@ -137,8 +201,8 @@ export interface CreatePipelineDto {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
-  padrao?: boolean;
+  name: string;
+  isDefault?: boolean;
 }
 
 export type CreatePipelineResponseDtoPipeline = {
@@ -150,17 +214,17 @@ export type CreatePipelineResponseDtoPipeline = {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
-  padrao?: boolean;
+  name: string;
+  isDefault?: boolean;
   /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  criadoEm: string;
+  createdAt: string;
   /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  atualizadoEm: string;
+  updatedAt: string;
   /**
      * @nullable
      * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
      */
-  arquivadoEm: string | null;
+  archivedAt: string | null;
 };
 
 export interface CreatePipelineResponseDto {
@@ -181,17 +245,17 @@ export interface CreateStageDto {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minimum 0
      * @maximum 9007199254740991
      */
-  ordem: number;
+  sortOrder: number;
   /**
      * @minimum 0
      * @maximum 100
      */
-  probabilidade?: number;
+  probability?: number;
 }
 
 export type CreateStageResponseDtoStage = {
@@ -205,26 +269,20 @@ export type CreateStageResponseDtoStage = {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minimum 0
      * @maximum 9007199254740991
      */
-  ordem: number;
+  sortOrder: number;
   /**
      * @minimum 0
      * @maximum 100
      */
-  probabilidade?: number;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  criadoEm: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  atualizadoEm: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
-  arquivadoEm: string | null;
+  probability?: number;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
 };
 
 export interface CreateStageResponseDto {
@@ -241,7 +299,7 @@ export interface RenameStageDto {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
 }
 
 export type RenameStageResponseDtoStage = {
@@ -255,26 +313,20 @@ export type RenameStageResponseDtoStage = {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minimum 0
      * @maximum 9007199254740991
      */
-  ordem: number;
+  sortOrder: number;
   /**
      * @minimum 0
      * @maximum 100
      */
-  probabilidade?: number;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  criadoEm: string;
-  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
-  atualizadoEm: string;
-  /**
-     * @nullable
-     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
-     */
-  arquivadoEm: string | null;
+  probability?: number;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
 };
 
 export interface RenameStageResponseDto {
@@ -290,9 +342,9 @@ export type CreateDealDtoStatus = typeof CreateDealDtoStatus[keyof typeof Create
 
 
 export const CreateDealDtoStatus = {
-  aberto: 'aberto',
-  ganho: 'ganho',
-  perdido: 'perdido',
+  open: 'open',
+  won: 'won',
+  lost: 'lost',
 } as const;
 
 export interface CreateDealDto {
@@ -311,28 +363,28 @@ export interface CreateDealDto {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
      */
-  valor: number;
+  amount: number;
   status?: CreateDealDtoStatus;
-  dataFechamentoEsperada?: string | null;
+  expectedCloseDate?: string | null;
   /**
      * @maxLength 500
      * @nullable
      */
-  motivoPerda?: string | null;
+  lossReason?: string | null;
 }
 
 export type CreateDealResponseDtoDealStatus = typeof CreateDealResponseDtoDealStatus[keyof typeof CreateDealResponseDtoDealStatus];
 
 
 export const CreateDealResponseDtoDealStatus = {
-  aberto: 'aberto',
-  ganho: 'ganho',
-  perdido: 'perdido',
+  open: 'open',
+  won: 'won',
+  lost: 'lost',
 } as const;
 
 export type CreateDealResponseDtoDeal = {
@@ -353,22 +405,22 @@ export type CreateDealResponseDtoDeal = {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
      */
-  valor: number;
+  amount: number;
   status?: CreateDealResponseDtoDealStatus;
-  dataFechamentoEsperada: string | null;
+  expectedCloseDate: string | null;
   /**
      * @maxLength 500
      * @nullable
      */
-  motivoPerda: string | null;
-  criadoEm: string;
-  atualizadoEm: string;
-  excluidoEm: string | null;
+  lossReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 };
 
 export interface CreateDealResponseDto {
@@ -389,9 +441,9 @@ export type MoveDealResponseDtoDealStatus = typeof MoveDealResponseDtoDealStatus
 
 
 export const MoveDealResponseDtoDealStatus = {
-  aberto: 'aberto',
-  ganho: 'ganho',
-  perdido: 'perdido',
+  open: 'open',
+  won: 'won',
+  lost: 'lost',
 } as const;
 
 export type MoveDealResponseDtoDeal = {
@@ -412,22 +464,22 @@ export type MoveDealResponseDtoDeal = {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
      */
-  valor: number;
+  amount: number;
   status?: MoveDealResponseDtoDealStatus;
-  dataFechamentoEsperada: string | null;
+  expectedCloseDate: string | null;
   /**
      * @maxLength 500
      * @nullable
      */
-  motivoPerda: string | null;
-  criadoEm: string;
-  atualizadoEm: string;
-  excluidoEm: string | null;
+  lossReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 };
 
 export interface MoveDealResponseDto {
@@ -443,8 +495,8 @@ export type CloseDealDtoStatus = typeof CloseDealDtoStatus[keyof typeof CloseDea
 
 
 export const CloseDealDtoStatus = {
-  ganho: 'ganho',
-  perdido: 'perdido',
+  won: 'won',
+  lost: 'lost',
 } as const;
 
 export interface CloseDealDto {
@@ -453,16 +505,16 @@ export interface CloseDealDto {
      * @maxLength 500
      * @nullable
      */
-  motivoPerda?: string | null;
+  lossReason?: string | null;
 }
 
 export type CloseDealResponseDtoDealStatus = typeof CloseDealResponseDtoDealStatus[keyof typeof CloseDealResponseDtoDealStatus];
 
 
 export const CloseDealResponseDtoDealStatus = {
-  aberto: 'aberto',
-  ganho: 'ganho',
-  perdido: 'perdido',
+  open: 'open',
+  won: 'won',
+  lost: 'lost',
 } as const;
 
 export type CloseDealResponseDtoDeal = {
@@ -483,22 +535,22 @@ export type CloseDealResponseDtoDeal = {
      * @minLength 1
      * @maxLength 200
      */
-  nome: string;
+  name: string;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
      */
-  valor: number;
+  amount: number;
   status?: CloseDealResponseDtoDealStatus;
-  dataFechamentoEsperada: string | null;
+  expectedCloseDate: string | null;
   /**
      * @maxLength 500
      * @nullable
      */
-  motivoPerda: string | null;
-  criadoEm: string;
-  atualizadoEm: string;
-  excluidoEm: string | null;
+  lossReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 };
 
 export interface CloseDealResponseDto {
@@ -510,13 +562,13 @@ export interface CloseDealResponseDto {
   txid: number;
 }
 
-export type CreateActivityDtoTipo = typeof CreateActivityDtoTipo[keyof typeof CreateActivityDtoTipo];
+export type CreateActivityDtoType = typeof CreateActivityDtoType[keyof typeof CreateActivityDtoType];
 
 
-export const CreateActivityDtoTipo = {
-  tarefa: 'tarefa',
-  ligacao: 'ligacao',
-  reuniao: 'reuniao',
+export const CreateActivityDtoType = {
+  task: 'task',
+  call: 'call',
+  meeting: 'meeting',
   email: 'email',
 } as const;
 
@@ -533,27 +585,27 @@ export interface CreateActivityDto {
      * @nullable
      */
   dealId?: string | null;
-  tipo: CreateActivityDtoTipo;
+  type: CreateActivityDtoType;
   /**
      * @minLength 1
      * @maxLength 200
      */
-  titulo: string;
+  title: string;
   /**
      * @maxLength 2000
      * @nullable
      */
-  notas?: string | null;
-  dataHora: string;
+  notes?: string | null;
+  scheduledAt: string;
 }
 
-export type CreateActivityResponseDtoActivityTipo = typeof CreateActivityResponseDtoActivityTipo[keyof typeof CreateActivityResponseDtoActivityTipo];
+export type CreateActivityResponseDtoActivityType = typeof CreateActivityResponseDtoActivityType[keyof typeof CreateActivityResponseDtoActivityType];
 
 
-export const CreateActivityResponseDtoActivityTipo = {
-  tarefa: 'tarefa',
-  ligacao: 'ligacao',
-  reuniao: 'reuniao',
+export const CreateActivityResponseDtoActivityType = {
+  task: 'task',
+  call: 'call',
+  meeting: 'meeting',
   email: 'email',
 } as const;
 
@@ -572,22 +624,22 @@ export type CreateActivityResponseDtoActivity = {
      * @nullable
      */
   dealId: string | null;
-  tipo: CreateActivityResponseDtoActivityTipo;
+  type: CreateActivityResponseDtoActivityType;
   /**
      * @minLength 1
      * @maxLength 200
      */
-  titulo: string;
+  title: string;
   /**
      * @maxLength 2000
      * @nullable
      */
-  notas: string | null;
-  dataHora: string;
-  concluida?: boolean;
-  concluidaEm: string | null;
-  criadoEm: string;
-  atualizadoEm: string;
+  notes: string | null;
+  scheduledAt: string;
+  completed?: boolean;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export interface CreateActivityResponseDto {
@@ -600,16 +652,16 @@ export interface CreateActivityResponseDto {
 }
 
 export interface CompleteActivityDto {
-  concluida: boolean;
+  completed: boolean;
 }
 
-export type CompleteActivityResponseDtoActivityTipo = typeof CompleteActivityResponseDtoActivityTipo[keyof typeof CompleteActivityResponseDtoActivityTipo];
+export type CompleteActivityResponseDtoActivityType = typeof CompleteActivityResponseDtoActivityType[keyof typeof CompleteActivityResponseDtoActivityType];
 
 
-export const CompleteActivityResponseDtoActivityTipo = {
-  tarefa: 'tarefa',
-  ligacao: 'ligacao',
-  reuniao: 'reuniao',
+export const CompleteActivityResponseDtoActivityType = {
+  task: 'task',
+  call: 'call',
+  meeting: 'meeting',
   email: 'email',
 } as const;
 
@@ -628,22 +680,22 @@ export type CompleteActivityResponseDtoActivity = {
      * @nullable
      */
   dealId: string | null;
-  tipo: CompleteActivityResponseDtoActivityTipo;
+  type: CompleteActivityResponseDtoActivityType;
   /**
      * @minLength 1
      * @maxLength 200
      */
-  titulo: string;
+  title: string;
   /**
      * @maxLength 2000
      * @nullable
      */
-  notas: string | null;
-  dataHora: string;
-  concluida?: boolean;
-  concluidaEm: string | null;
-  criadoEm: string;
-  atualizadoEm: string;
+  notes: string | null;
+  scheduledAt: string;
+  completed?: boolean;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export interface CompleteActivityResponseDto {
@@ -824,6 +876,69 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getContactsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const contactsControllerUpdate = (
+    id: string,
+    updateContactDto: UpdateContactDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<UpdateContactResponseDto>(
+      {url: `/v1/contacts/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateContactDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getContactsControllerUpdateMutationKey = () => ['contactsControllerUpdate'] as const;
+
+export const getContactsControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerUpdate>>, TError,ContactsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof contactsControllerUpdate>>, TError,ContactsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getContactsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof contactsControllerUpdate>>, ContactsControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  contactsControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ContactsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof contactsControllerUpdate>>>
+    export type ContactsControllerUpdateMutationBody = UpdateContactDto
+    export type ContactsControllerUpdateMutationError = unknown
+    export type ContactsControllerUpdateMutationVariables = {id: string;data: UpdateContactDto}
+
+    export const useContactsControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerUpdate>>, TError,ContactsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof contactsControllerUpdate>>,
+        TError,
+        ContactsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getContactsControllerUpdateMutationOptions(options), queryClient);
     }
 
 export const pipelinesControllerCreate = (

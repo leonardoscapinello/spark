@@ -13,7 +13,7 @@ import {
   MoveDealResponseDto,
   CloseDealDto,
   CloseDealResponseDto,
-  paraDealDto,
+  toDealDto,
 } from "../dto/deal.dto.js";
 
 @ApiTags("crm")
@@ -35,9 +35,9 @@ export class DealsController {
     @CurrentSupabaseUser() claims: SupabaseJwtClaims,
     @Body() body: CreateDealDto,
   ): Promise<CreateDealResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.createDeal.execute(usuario.orgId, body);
-    return { deal: paraDealDto(deal), txid } as CreateDealResponseDto;
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const { deal, txid } = await this.createDeal.execute(user.orgId, body);
+    return { deal: toDealDto(deal), txid } as CreateDealResponseDto;
   }
 
   @Patch(":id/move")
@@ -50,9 +50,9 @@ export class DealsController {
     @Param("id") id: string,
     @Body() body: MoveDealDto,
   ): Promise<MoveDealResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.moveDeal.execute(usuario.orgId, dealIdFactory.de(id), body.stageId);
-    return { deal: paraDealDto(deal), txid } as MoveDealResponseDto;
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const { deal, txid } = await this.moveDeal.execute(user.orgId, dealIdFactory.from(id), body.stageId);
+    return { deal: toDealDto(deal), txid } as MoveDealResponseDto;
   }
 
   @Patch(":id/close")
@@ -65,8 +65,8 @@ export class DealsController {
     @Param("id") id: string,
     @Body() body: CloseDealDto,
   ): Promise<CloseDealResponseDto> {
-    const usuario = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.closeDeal.execute(usuario.orgId, dealIdFactory.de(id), body);
-    return { deal: paraDealDto(deal), txid } as CloseDealResponseDto;
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const { deal, txid } = await this.closeDeal.execute(user.orgId, dealIdFactory.from(id), body);
+    return { deal: toDealDto(deal), txid } as CloseDealResponseDto;
   }
 }

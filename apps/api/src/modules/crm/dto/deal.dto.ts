@@ -1,6 +1,6 @@
 import { createZodDto } from "nestjs-zod";
 import {
-  toCentavos,
+  toCents,
   type Deal,
   DealSchema,
   CreateDealInputSchema,
@@ -20,14 +20,14 @@ export class CloseDealDto extends createZodDto(CloseDealInputSchema) {}
 export class CloseDealResponseDto extends createZodDto(CloseDealResponseSchema) {}
 
 /**
- * `Deal.valor` é `Money` — tipo opaco de verdade, chave de Symbol
- * (packages/core/src/money/money.ts). `JSON.stringify` nunca serializa
- * chave de Symbol: devolver um Deal do jeito que ele é internamente faria
- * `valor` virar `{}` na resposta, silenciosamente. Todo controller que
- * devolve Deal passa por aqui primeiro — é o único lugar da API que
- * converte Money de volta pra número (o inverso do que zMoney já faz
- * sozinho na entrada, via transform do Zod).
+ * `Deal.amount` is `Money` — a genuinely opaque type, Symbol-keyed
+ * (packages/core/src/money/money.ts). `JSON.stringify` never serializes a
+ * Symbol key: returning a Deal as-is internally would silently turn
+ * `amount` into `{}` in the response. Every controller that returns a
+ * Deal goes through here first — the only place in the API that converts
+ * Money back to a number (the inverse of what zMoney already does on its
+ * own on input, via Zod's transform).
  */
-export function paraDealDto(deal: Deal): DealDto {
-  return { ...deal, valor: toCentavos(deal.valor) } as unknown as DealDto;
+export function toDealDto(deal: Deal): DealDto {
+  return { ...deal, amount: toCents(deal.amount) } as unknown as DealDto;
 }

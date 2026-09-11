@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { startTelemetry } from "./telemetry.js"; // primeiro import de todos — ver telemetry.ts
+import { startTelemetry } from "./telemetry.js"; // first import of all — see telemetry.ts
 startTelemetry();
 
 import { NestFactory } from "@nestjs/core";
@@ -17,11 +17,12 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
   app.useGlobalPipes(new ZodValidationPipe());
   app.setGlobalPrefix("", { exclude: [] });
 
-  // apps/web (e desktop/mobile embutindo webview) fala com a API de outra
-  // origem — sem isto o preflight OPTIONS nem chega nas rotas (404 puro,
-  // Fastify não trata OPTIONS sozinho). x-electric-txid: nenhum header
-  // customizado nosso hoje precisa expose, mas Authorization é o que o
-  // sparkHttpClient manda (packages/api-client/src/http-client.ts).
+  // apps/web (and desktop/mobile embedding a webview) talk to the API
+  // from a different origin — without this the OPTIONS preflight never
+  // even reaches the routes (a plain 404, Fastify doesn't handle OPTIONS
+  // on its own). x-electric-txid: none of our custom headers need
+  // exposing today, but Authorization is what sparkHttpClient sends
+  // (packages/api-client/src/http-client.ts).
   app.enableCors({
     origin: process.env.WEB_ORIGIN ?? "http://localhost:3100",
     methods: ["GET", "POST", "PATCH", "DELETE"],
@@ -31,11 +32,11 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
   return app;
 }
 
-// só sobe o servidor HTTP quando executado diretamente — o script de geração
-// de OpenAPI (scripts/emit-openapi.mts) importa `bootstrap` sem chamar listen.
+// only starts the HTTP server when run directly — the OpenAPI generation
+// script (scripts/emit-openapi.mts) imports `bootstrap` without calling listen.
 if (import.meta.url === `file://${process.argv[1]}`) {
   const app = await bootstrap();
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port, "0.0.0.0");
-  app.get(Logger).log(`apps/api ouvindo em :${port}`);
+  app.get(Logger).log(`apps/api listening on :${port}`);
 }

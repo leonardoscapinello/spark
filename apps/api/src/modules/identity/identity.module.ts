@@ -5,11 +5,11 @@ import { UsersRepository } from "./infrastructure/users.repository.js";
 import { PermissionGroupsRepository } from "./infrastructure/permission-groups.repository.js";
 import { SupabaseJwtGuard } from "../../auth/index.js";
 
-// ConfigModule NÃO é importado aqui de propósito — já é global via
-// ConfigModule.forRoot({ isGlobal: true }) no AppModule. Reimportar a
-// versão sem forRoot() por cima é o que deixava ConfigService undefined
-// dentro de SupabaseJwtGuard (docs/adr/0003 — um módulo só, sem duplicar
-// configuração de infraestrutura por módulo de domínio).
+// ConfigModule is deliberately NOT imported here — it's already global via
+// ConfigModule.forRoot({ isGlobal: true }) in AppModule. Reimporting the
+// version without forRoot() on top is what left ConfigService undefined
+// inside SupabaseJwtGuard (docs/adr/0003 — a single module, no duplicating
+// infrastructure config per domain module).
 @Module({
   controllers: [MeController],
   providers: [GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard],

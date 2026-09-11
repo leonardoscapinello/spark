@@ -8,10 +8,11 @@ import { CrmModule } from "./modules/crm/crm.module.js";
 import { ActivitiesModule } from "./modules/activities/activities.module.js";
 import { DevModule } from "./modules/dev/dev.module.js";
 
-// DevModule só entra fora de produção — a rota /v1/dev/login literalmente
-// não existe em prod (nem mapeada, não é "existe mas nega" — docs/adr/0005,
+// DevModule is only included outside production — the /v1/dev/login route
+// literally doesn't exist in prod (not even mapped, not "exists but
+// denies" — docs/adr/0005,
 // apps/api/src/modules/dev/presentation/dev-login.controller.ts).
-const modulosCondicionais = process.env.NODE_ENV === "production" ? [] : [DevModule];
+const conditionalModules = process.env.NODE_ENV === "production" ? [] : [DevModule];
 
 @Module({
   imports: [
@@ -19,11 +20,12 @@ const modulosCondicionais = process.env.NODE_ENV === "production" ? [] : [DevMod
     LoggerModule.forRoot({
       pinoHttp: {
         level: process.env.NODE_ENV === "production" ? "info" : "debug",
-        // nunca logar corpo de request/response — pode carregar PII de
-        // contato, mensagem, e-mail (docs/adr/0013).
+        // never log request/response bodies — they can carry contact PII,
+        // message content, email (docs/adr/0013).
         redact: ["req.headers.authorization", "req.body", "res.body"],
-        // exactOptionalPropertyTypes não aceita `transport: undefined`
-        // explícito — omitido é diferente de presente-com-undefined.
+        // exactOptionalPropertyTypes doesn't accept an explicit
+        // `transport: undefined` — the property must be OMITTED, not
+        // present-with-undefined.
         ...(process.env.NODE_ENV === "production"
           ? {}
           : { transport: { target: "pino-pretty", options: { singleLine: true } } }),
@@ -34,7 +36,7 @@ const modulosCondicionais = process.env.NODE_ENV === "production" ? [] : [DevMod
     ContactsModule,
     CrmModule,
     ActivitiesModule,
-    ...modulosCondicionais,
+    ...conditionalModules,
   ],
 })
 export class AppModule {}
