@@ -8,4 +8,9 @@
 .trigger:hover { background: var(--ui-subtle); }
 .trigger[data-disabled] { color: var(--ui-disabledInk); cursor: not-allowed; }
 .trigger:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
-.panel { padding: 0 var(--space-6) var(--space-4); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.content { padding: 0 var(--space-6) var(--space-4); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+
+.panel { height: var(--accordion-panel-height); overflow: hidden; transition: height var(--motion-duration-fast) var(--motion-ease-out), opacity var(--motion-duration-fast) var(--motion-ease-out); }
+.panel[data-starting-style],.panel[data-ending-style] { height: 0; opacity: 0; }
+.chevron { transition: transform var(--motion-duration-fast) var(--motion-ease-out); }
+@media (prefers-reduced-motion: reduce) { .panel,.chevron { transition: none; } }

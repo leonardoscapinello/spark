@@ -124,6 +124,66 @@
     "spinReducedDuration": {
       "$type": "duration",
       "$value": "1200ms"
+    },
+    "menuWidth": {
+      "$type": "dimension",
+      "$value": "220px"
+    },
+    "popupMaxWidth": {
+      "$type": "dimension",
+      "$value": "480px"
+    },
+    "popupRadius": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "menuItemPadding": {
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    "modalWidth": {
+      "$type": "dimension",
+      "$value": "560px"
+    },
+    "drawerWidth": {
+      "$type": "dimension",
+      "$value": "440px"
+    },
+    "overlayLayer": {
+      "$type": "number",
+      "$value": 60
+    },
+    "modalLayer": {
+      "$type": "number",
+      "$value": 50
+    },
+    "scrim": {
+      "$type": "color",
+      "$value": "rgba(0,0,0,0.3)"
+    },
+    "popupShadow": {
+      "$type": "string",
+      "$value": "0px 8px 16px rgba(20,20,20,0.15)"
+    },
+    "switchWidth": {
+      "$type": "dimension",
+      "$value": "32px"
+    },
+    "switchHeight": {
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    "switchThumb": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "textareaHeight": {
+      "$type": "dimension",
+      "$value": "96px"
+    },
+    "disabledOpacity": {
+      "$type": "number",
+      "$value": 0.5
     }
   }
 }

@@ -1,0 +1,2 @@
+.root { min-width: 0; max-width: var(--ui-menuWidth); background: var(--ui-buttonBg); color: var(--ui-buttonInk); padding: var(--space-1) var(--space-2); border: 0; font-size: var(--typography-size-compact); border-radius: var(--radius-sm); }
+.root[data-instant] { transition: none; }

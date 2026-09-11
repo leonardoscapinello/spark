@@ -32,3 +32,15 @@ Fonte: Inbox aberto e modal «Criar visualização», consultados via DOM render
 As cores de hover/foco, indicador laranja da aba (estimado visualmente), botão grande de 40 px, campo completo de 40 px e exibição de senha são extensões iniciais; falta medição independente desses estados. Campo de senha usa a base de Input, sem afirmar inspeção da autenticação do Intercom. Tema escuro, responsividade completa, sidebar recolhível, menus, modal, tabela, combobox e demais componentes ainda exigem suas unidades de implementação e referência. O catálogo é uma bancada de componentes, não uma cópia de uma tela real de Inbox.
 
 Todos os valores novos de estilo estão em tokens. Ícones usam geometria SVG própria. A futura migração das telas precisa preservar leitura local, regras de core e integração real; o catálogo não substitui essas funcionalidades.
+
+## Segunda unidade: controles interativos para aplicação
+
+A biblioteca agora exporta menu composto (`Menu`, `MenuTrigger`, `MenuContent`, itens, grupos, separadores, checkbox e submenu), `DropdownButton`, `SplitButton`, `Select` simples/múltiplo, `SearchSelect`, popover composto, modal/painel lateral, tooltip, checkbox, switch, rádio, textarea, badge, etiqueta removível, alerta e skeleton. A vitrine usa exatamente essas exportações. Conteúdo, opções, estado e callbacks vêm do consumidor; nenhuma chamada a dados de demonstração faz parte do componente de produção.
+
+Menus, popovers, seleção e modais usam Base UI para teclado, foco, portais e fechamento. O estado pode ser controlado pelo consumidor; selects e controles de escolha recebem `name` e se integram a formulário. O componente não publica, persiste ou calcula regras de negócio: o callback conecta a ação ao módulo responsável. O catálogo informa resultados locais somente para exercitar esse contrato.
+
+Medição adicional no menu «Mais opções» do Intercom: raio externo 12 px, padding 8 px, fundo branco, sombra `0 8px 16px rgba(20,20,20,.15)`, itens de 32 px com padding 6 × 8 px e raio 8 px; animação de entrada computada 150 ms. Largura depende dos rótulos. O tempo observado foi incorporado ao token de popup. Curva e escala são implementações de interação, ainda sem prova de equivalência quadro a quadro ao Intercom.
+
+Abas têm indicador animado por clip-path; acordeões animam altura medida pelo primitivo e opacidade. Menus/popovers/modal usam transições de entrada/saída interrompíveis, com origem no gatilho quando ancorados. Movimento reduzido remove deslocamento e conserva feedback. Switch tem deslocamento do thumb. Não se aplica atraso artificial a ações.
+
+Ainda há trabalho de paridade: ícones exatos, hover/foco medidos sistematicamente, tabela com seleção/resize/reordenação, calendário próprio, editor rico, uploader, toast, estados de rede, mobile e tema escuro. Esses itens não são declarados entregues pela ampliação do catálogo.

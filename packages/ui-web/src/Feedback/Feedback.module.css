@@ -1,0 +1,8 @@
+.badge,.tag { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-full); background: var(--ui-subtle); color: var(--color-ink); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-compact); line-height: var(--ui-buttonLine); }
+.tag { padding-block: 0; border-radius: var(--radius-sm); }
+.alert { padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); background: var(--ui-subtle); color: var(--color-ink); }
+.alert > div { margin-top: var(--space-1); }
+:is(.badge,.alert)[data-tone="danger"] { color: var(--color-statusDanger); }
+:is(.badge,.alert)[data-tone="success"] { color: var(--color-statusSuccess); }
+:is(.badge,.alert)[data-tone="warning"] { color: var(--color-statusWarning); }
+.skeleton { height: var(--ui-controlMedium); border-radius: var(--radius-sm); background: var(--color-line); }

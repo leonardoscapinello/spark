@@ -1,0 +1,1 @@
+.root { min-height: var(--ui-textareaHeight); height: auto; resize: vertical; padding: var(--space-2) var(--space-3); }

@@ -10,7 +10,7 @@ export function Accordion({ items, multiple = true, ...props }: AccordionProps) 
       <BaseAccordion.Header className={styles.header}><BaseAccordion.Trigger className={styles.trigger}>
         {item.icon}<span className={styles.title}>{item.title}</span><span className={styles.chevron}><Icon name="chevron" /></span>
       </BaseAccordion.Trigger></BaseAccordion.Header>
-      <BaseAccordion.Panel className={styles.panel}>{item.content}</BaseAccordion.Panel>
+      <BaseAccordion.Panel className={styles.panel}><div className={styles.content}>{item.content}</div></BaseAccordion.Panel>
     </BaseAccordion.Item>)}
   </BaseAccordion.Root>;
 }

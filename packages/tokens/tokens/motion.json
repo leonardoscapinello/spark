@@ -3,19 +3,48 @@
     "ease": {
       "out": {
         "$type": "cubicBezier",
-        "$value": [0.23, 1, 0.32, 1],
-        "$description": "Entrada/saída — mesma curva pros dois, ease-out estrito (skill animate)."
+        "$value": [
+          0.23,
+          1,
+          0.32,
+          1
+        ],
+        "$description": "Entrada/sa\u00edda \u2014 mesma curva pros dois, ease-out estrito (skill animate)."
       },
       "inOut": {
         "$type": "cubicBezier",
-        "$value": [0.77, 0, 0.175, 1],
-        "$description": "Movimento na tela (drag, reordenação) — nunca ease-in puro em UI."
+        "$value": [
+          0.77,
+          0,
+          0.175,
+          1
+        ],
+        "$description": "Movimento na tela (drag, reordena\u00e7\u00e3o) \u2014 nunca ease-in puro em UI."
       }
     },
     "duration": {
-      "instant": { "$type": "duration", "$value": "120ms" },
-      "fast": { "$type": "duration", "$value": "180ms" },
-      "moderate": { "$type": "duration", "$value": "250ms" }
+      "instant": {
+        "$type": "duration",
+        "$value": "120ms"
+      },
+      "fast": {
+        "$type": "duration",
+        "$value": "180ms"
+      },
+      "moderate": {
+        "$type": "duration",
+        "$value": "250ms"
+      },
+      "popup": {
+        "$type": "duration",
+        "$value": "150ms"
+      }
+    },
+    "scale": {
+      "popup": {
+        "$type": "number",
+        "$value": 0.97
+      }
     }
   }
 }

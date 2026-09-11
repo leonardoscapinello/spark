@@ -11,6 +11,7 @@ import { Label } from "../Label/Label.js";
 import { Input } from "../Input/Input.js";
 import { PasswordInput } from "../PasswordInput/PasswordInput.js";
 import { ErrorText } from "../ErrorText/ErrorText.js";
+import { ExtendedCatalog } from "./ExtendedCatalog.js";
 import styles from "./Catalog.module.css";
 
 function FormExample() {
@@ -36,6 +37,7 @@ function Catalog() {
       <header className={styles.header}><div><h1>Componentes</h1><p>Biblioteca compartilhada · referência Intercom</p></div><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => setSelection("Nova visualização")}>Criar novo</Button></header>
       <div className={styles.selection} role="status">{selection}</div>
       <div className={styles.grid}>
+        <ExtendedCatalog />
         <section className={styles.card}><h2>Botões</h2><div className={styles.rows}>
           <div className={styles.row}><Button>Salvar</Button><Button variant="secondary">Cancelar</Button><Button variant="ghost">Ver tudo</Button><Button variant="raised">Adicionar</Button></div>
           <div className={styles.row}><Button size="sm">Pequeno</Button><Button>Médio</Button><Button size="lg">Grande</Button><Button shape="rounded">Retangular</Button></div>

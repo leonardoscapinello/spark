@@ -7,6 +7,7 @@ export function Tabs({ items, label, value, defaultValue, onValueChange }: TabsP
   return <BaseTabs.Root value={value} defaultValue={defaultValue ?? items.find(i => !i.disabled)?.value} onValueChange={v => { if (typeof v === "string") onValueChange?.(v); }} className={styles.root}>
     <BaseTabs.List className={styles.list} aria-label={label} activateOnFocus>
       {items.map(item => <BaseTabs.Tab key={item.value} value={item.value} disabled={item.disabled} className={styles.tab}>{item.label}</BaseTabs.Tab>)}
+      <BaseTabs.Indicator className={styles.indicator} />
     </BaseTabs.List>
     {items.map(item => <BaseTabs.Panel key={item.value} value={item.value} className={styles.panel} keepMounted>{item.content}</BaseTabs.Panel>)}
   </BaseTabs.Root>;
