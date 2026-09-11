@@ -15,6 +15,8 @@ const paths = {
   eye: "M1 8s2-5 7-5 7 5 7 5-2 5-7 5-7-5-7-5Zm7-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z",
   eyeOff: "m2 2 12 12M5 3.6A8 8 0 0 1 8 3c5 0 7 5 7 5a12 12 0 0 1-2 2.5M10.5 12.5A8 8 0 0 1 8 13c-5 0-7-5-7-5a12 12 0 0 1 2-2.5",
   menu: "M2 3h12M2 8h12M2 13h12",
+  star: "m8 1.5 2 4 4.5.6-3.2 3.1.8 4.4L8 11l-4 2.3.8-4.4-3.2-3.1 4.5-.6 2-4Z",
+  message: "M2 2.5h12v8H6l-4 3v-11Z",
 } as const;
 export type IconName = keyof typeof paths;
 export function Icon({ name, ...props }: { name: IconName } & Omit<ComponentProps<"svg">, "children">) {

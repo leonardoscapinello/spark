@@ -13,3 +13,5 @@ export * from "./activities.js";
 export * from "./audit-logs.js";
 export * from "./teams.js";
 export * from "./team-members.js";
+export * from "./conversations.js";
+export * from "./messages.js";

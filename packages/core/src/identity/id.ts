@@ -21,6 +21,8 @@ export type AuditLogId = Id<"AuditLog">;
 export type EventId = Id<"Event">;
 export type IdentityId = Id<"Identity">;
 export type TeamId = Id<"Team">;
+export type ConversationId = Id<"Conversation">;
+export type MessageId = Id<"Message">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -56,3 +58,5 @@ export const auditLogId = makeIdFactory("AuditLog");
 export const eventId = makeIdFactory("Event");
 export const identityId = makeIdFactory("Identity");
 export const teamId = makeIdFactory("Team");
+export const conversationId = makeIdFactory("Conversation");
+export const messageId = makeIdFactory("Message");

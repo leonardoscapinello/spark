@@ -26,6 +26,8 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "deals:move": "Mover negócios entre etapas",
   "activities:read": "Ver atividades",
   "activities:write": "Criar e concluir atividades",
+  "inbox:read": "Ver conversas do Inbox",
+  "inbox:write": "Criar, atribuir e responder conversas",
 };
 
 export async function clientLoader() {

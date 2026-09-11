@@ -65,6 +65,8 @@ export const CurrentUserDtoCapabilitiesItem = {
   'deals:move': 'deals:move',
   'activities:read': 'activities:read',
   'activities:write': 'activities:write',
+  'inbox:read': 'inbox:read',
+  'inbox:write': 'inbox:write',
 } as const;
 
 export interface CurrentUserDto {
@@ -108,6 +110,8 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'deals:move': 'deals:move',
   'activities:read': 'activities:read',
   'activities:write': 'activities:write',
+  'inbox:read': 'inbox:read',
+  'inbox:write': 'inbox:write',
 } as const;
 
 export interface PermissionGroupDto {
@@ -144,6 +148,8 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'deals:move': 'deals:move',
   'activities:read': 'activities:read',
   'activities:write': 'activities:write',
+  'inbox:read': 'inbox:read',
+  'inbox:write': 'inbox:write',
 } as const;
 
 export interface CreatePermissionGroupDto {
@@ -174,6 +180,8 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'deals:move': 'deals:move',
   'activities:read': 'activities:read',
   'activities:write': 'activities:write',
+  'inbox:read': 'inbox:read',
+  'inbox:write': 'inbox:write',
 } as const;
 
 export interface UpdatePermissionGroupDto {
@@ -1549,6 +1557,261 @@ export interface UpdateCompanyDto {
 
 export interface UpdateCompanyArchiveDto {
   archived: boolean;
+}
+
+export type CreateConversationDtoChannel = typeof CreateConversationDtoChannel[keyof typeof CreateConversationDtoChannel];
+
+
+export const CreateConversationDtoChannel = {
+  manual: 'manual',
+  email: 'email',
+  instagram: 'instagram',
+  whatsapp: 'whatsapp',
+  messenger: 'messenger',
+} as const;
+
+export interface CreateConversationDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  contactId: string;
+  channel: CreateConversationDtoChannel;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  subject: string;
+}
+
+export type ConversationWriteResponseDtoConversationChannel = typeof ConversationWriteResponseDtoConversationChannel[keyof typeof ConversationWriteResponseDtoConversationChannel];
+
+
+export const ConversationWriteResponseDtoConversationChannel = {
+  manual: 'manual',
+  email: 'email',
+  instagram: 'instagram',
+  whatsapp: 'whatsapp',
+  messenger: 'messenger',
+} as const;
+
+export type ConversationWriteResponseDtoConversationStatus = typeof ConversationWriteResponseDtoConversationStatus[keyof typeof ConversationWriteResponseDtoConversationStatus];
+
+
+export const ConversationWriteResponseDtoConversationStatus = {
+  open: 'open',
+  snoozed: 'snoozed',
+  closed: 'closed',
+} as const;
+
+export type ConversationWriteResponseDtoConversationPriority = typeof ConversationWriteResponseDtoConversationPriority[keyof typeof ConversationWriteResponseDtoConversationPriority];
+
+
+export const ConversationWriteResponseDtoConversationPriority = {
+  normal: 'normal',
+  priority: 'priority',
+} as const;
+
+export type ConversationWriteResponseDtoConversation = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  contactId: string;
+  channel: ConversationWriteResponseDtoConversationChannel;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  subject: string;
+  status?: ConversationWriteResponseDtoConversationStatus;
+  priority?: ConversationWriteResponseDtoConversationPriority;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  assigneeId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  teamId?: string | null;
+  snoozedUntil?: string | null;
+  lastMessageAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface ConversationWriteResponseDto {
+  conversation: ConversationWriteResponseDtoConversation;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdateConversationDtoStatus = typeof UpdateConversationDtoStatus[keyof typeof UpdateConversationDtoStatus];
+
+
+export const UpdateConversationDtoStatus = {
+  open: 'open',
+  snoozed: 'snoozed',
+  closed: 'closed',
+} as const;
+
+export type UpdateConversationDtoPriority = typeof UpdateConversationDtoPriority[keyof typeof UpdateConversationDtoPriority];
+
+
+export const UpdateConversationDtoPriority = {
+  normal: 'normal',
+  priority: 'priority',
+} as const;
+
+export interface UpdateConversationDto {
+  status?: UpdateConversationDtoStatus;
+  priority?: UpdateConversationDtoPriority;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  assigneeId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  teamId?: string | null;
+  snoozedUntil?: string | null;
+}
+
+export interface AddInternalNoteDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  body: string;
+}
+
+export type MessageWriteResponseDtoMessageDirection = typeof MessageWriteResponseDtoMessageDirection[keyof typeof MessageWriteResponseDtoMessageDirection];
+
+
+export const MessageWriteResponseDtoMessageDirection = {
+  inbound: 'inbound',
+  outbound: 'outbound',
+  internal: 'internal',
+} as const;
+
+export type MessageWriteResponseDtoMessageStatus = typeof MessageWriteResponseDtoMessageStatus[keyof typeof MessageWriteResponseDtoMessageStatus];
+
+
+export const MessageWriteResponseDtoMessageStatus = {
+  received: 'received',
+  draft: 'draft',
+  queued: 'queued',
+  sent: 'sent',
+  delivered: 'delivered',
+  read: 'read',
+  failed: 'failed',
+} as const;
+
+export type MessageWriteResponseDtoMessage = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  conversationId: string;
+  /** @minLength 1 */
+  contactId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  authorUserId: string | null;
+  direction: MessageWriteResponseDtoMessageDirection;
+  status: MessageWriteResponseDtoMessageStatus;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  body: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  externalId: string | null;
+  createdAt: string;
+};
+
+export type MessageWriteResponseDtoConversationChannel = typeof MessageWriteResponseDtoConversationChannel[keyof typeof MessageWriteResponseDtoConversationChannel];
+
+
+export const MessageWriteResponseDtoConversationChannel = {
+  manual: 'manual',
+  email: 'email',
+  instagram: 'instagram',
+  whatsapp: 'whatsapp',
+  messenger: 'messenger',
+} as const;
+
+export type MessageWriteResponseDtoConversationStatus = typeof MessageWriteResponseDtoConversationStatus[keyof typeof MessageWriteResponseDtoConversationStatus];
+
+
+export const MessageWriteResponseDtoConversationStatus = {
+  open: 'open',
+  snoozed: 'snoozed',
+  closed: 'closed',
+} as const;
+
+export type MessageWriteResponseDtoConversationPriority = typeof MessageWriteResponseDtoConversationPriority[keyof typeof MessageWriteResponseDtoConversationPriority];
+
+
+export const MessageWriteResponseDtoConversationPriority = {
+  normal: 'normal',
+  priority: 'priority',
+} as const;
+
+export type MessageWriteResponseDtoConversation = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  contactId: string;
+  channel: MessageWriteResponseDtoConversationChannel;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  subject: string;
+  status?: MessageWriteResponseDtoConversationStatus;
+  priority?: MessageWriteResponseDtoConversationPriority;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  assigneeId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  teamId?: string | null;
+  snoozedUntil?: string | null;
+  lastMessageAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface MessageWriteResponseDto {
+  message: MessageWriteResponseDtoMessage;
+  conversation: MessageWriteResponseDtoConversation;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -3697,4 +3960,192 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getCompaniesControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const inboxControllerCreate = (
+    createConversationDto: CreateConversationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ConversationWriteResponseDto>(
+      {url: `/v1/inbox/conversations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createConversationDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getInboxControllerCreateMutationKey = () => ['inboxControllerCreate'] as const;
+
+export const getInboxControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerCreate>>, TError,InboxControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof inboxControllerCreate>>, TError,InboxControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getInboxControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inboxControllerCreate>>, InboxControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  inboxControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InboxControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof inboxControllerCreate>>>
+    export type InboxControllerCreateMutationBody = CreateConversationDto
+    export type InboxControllerCreateMutationError = unknown
+    export type InboxControllerCreateMutationVariables = {data: CreateConversationDto}
+
+    export const useInboxControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerCreate>>, TError,InboxControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inboxControllerCreate>>,
+        TError,
+        InboxControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInboxControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const inboxControllerUpdate = (
+    id: string,
+    updateConversationDto: UpdateConversationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ConversationWriteResponseDto>(
+      {url: `/v1/inbox/conversations/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateConversationDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getInboxControllerUpdateMutationKey = () => ['inboxControllerUpdate'] as const;
+
+export const getInboxControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerUpdate>>, TError,InboxControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof inboxControllerUpdate>>, TError,InboxControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getInboxControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inboxControllerUpdate>>, InboxControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  inboxControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InboxControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof inboxControllerUpdate>>>
+    export type InboxControllerUpdateMutationBody = UpdateConversationDto
+    export type InboxControllerUpdateMutationError = unknown
+    export type InboxControllerUpdateMutationVariables = {id: string;data: UpdateConversationDto}
+
+    export const useInboxControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerUpdate>>, TError,InboxControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inboxControllerUpdate>>,
+        TError,
+        InboxControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInboxControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const inboxControllerNote = (
+    id: string,
+    addInternalNoteDto: AddInternalNoteDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<MessageWriteResponseDto>(
+      {url: `/v1/inbox/conversations/${id}/notes`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addInternalNoteDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getInboxControllerNoteMutationKey = () => ['inboxControllerNote'] as const;
+
+export const getInboxControllerNoteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerNote>>, TError,InboxControllerNoteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof inboxControllerNote>>, TError,InboxControllerNoteMutationVariables, TContext> => {
+
+const mutationKey = getInboxControllerNoteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inboxControllerNote>>, InboxControllerNoteMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  inboxControllerNote(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InboxControllerNoteMutationResult = NonNullable<Awaited<ReturnType<typeof inboxControllerNote>>>
+    export type InboxControllerNoteMutationBody = AddInternalNoteDto
+    export type InboxControllerNoteMutationError = unknown
+    export type InboxControllerNoteMutationVariables = {id: string;data: AddInternalNoteDto}
+
+    export const useInboxControllerNote = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inboxControllerNote>>, TError,InboxControllerNoteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inboxControllerNote>>,
+        TError,
+        InboxControllerNoteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInboxControllerNoteMutationOptions(options), queryClient);
     }

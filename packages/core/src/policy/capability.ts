@@ -18,6 +18,8 @@ export const CAPABILITIES = [
   "deals:move",
   "activities:read",
   "activities:write",
+  "inbox:read",
+  "inbox:write",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

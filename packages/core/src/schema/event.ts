@@ -6,6 +6,7 @@ export const DOMAIN_EVENT_TYPES = [
   "company.created", "company.updated", "company.archived", "company.restored",
   "deal.created", "deal.updated", "deal.stage_changed", "deal.won", "deal.lost",
   "activity.created", "activity.completed", "activity.reopened",
+  "conversation.created", "conversation.updated", "conversation.closed", "conversation.reopened", "message.note_added",
 ] as const;
 export const DomainEventTypeSchema = z.enum(DOMAIN_EVENT_TYPES);
 export type DomainEventType = z.infer<typeof DomainEventTypeSchema>;

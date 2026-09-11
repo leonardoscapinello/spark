@@ -8,6 +8,7 @@ import { CrmModule } from "./modules/crm/crm.module.js";
 import { ActivitiesModule } from "./modules/activities/activities.module.js";
 import { CompaniesModule } from "./modules/companies/companies.module.js";
 import { EventsModule } from "./modules/events/events.module.js";
+import { InboxModule } from "./modules/inbox/inbox.module.js";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { EventsModule } from "./modules/events/events.module.js";
     ActivitiesModule,
     CompaniesModule,
     EventsModule,
+    InboxModule,
   ],
 })
 export class AppModule {}

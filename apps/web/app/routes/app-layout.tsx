@@ -36,6 +36,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         </a>
         <nav className={styles.nav}>
           <Link to="/dashboard" className={styles.navItem}>Visão geral</Link>
+          {session.capabilities.includes("inbox:read") && (
+            <Link to="/inbox" className={styles.navItem}>Inbox</Link>
+          )}
           {session.capabilities.includes("contacts:read") && (
             <Link to="/" className={styles.navItem}>Contatos</Link>
           )}
