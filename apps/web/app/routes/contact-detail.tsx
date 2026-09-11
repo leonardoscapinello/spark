@@ -9,7 +9,7 @@ import {
   type ActivityType,
 } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { Button, ErrorText, Field, Input, Label } from "@spark/ui-web";
+import { Button, DateTimePicker, ErrorText, Field, Input, Label, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -36,6 +36,9 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const collection = getContactsCollection();
   const activitiesCollection = getActivitiesCollection();
   const [selectedType, setSelectedType] = useState<ActivityType>("task");
+  const [activityTitle, setActivityTitle] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [activityPending, setActivityPending] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [nameEdit, setNameEdit] = useState("");
@@ -60,15 +63,13 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         .orderBy(({ activities: a }) => a.scheduledAt, "asc"),
   });
 
-  function addActivity(event: FormEvent<HTMLFormElement>) {
+  async function addActivity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const session = getSession();
     if (!session) return;
 
-    const formData = new FormData(event.currentTarget);
-    const title = String(formData.get("title") ?? "").trim();
-    const localDateTime = String(formData.get("scheduledAt") ?? "");
-    if (!title || !localDateTime) return;
+    const title = activityTitle.trim();
+    if (!title || !scheduledAt || activityPending) return;
 
     const activity = optimisticActivity(
       {
@@ -77,18 +78,34 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         type: selectedType,
         title,
         notes: null,
-        scheduledAt: new Date(localDateTime).toISOString(),
+        scheduledAt: new Date(scheduledAt).toISOString(),
       },
       session.orgId,
     );
-    activitiesCollection.insert(activity);
-    event.currentTarget.reset();
+    setActivityPending(true);
+    try {
+      const transaction = activitiesCollection.insert(activity);
+      await transaction.isPersisted.promise;
+      setActivityTitle("");
+      setScheduledAt("");
+      notify({ title: "Atividade agendada", description: `${title} foi adicionada ao contato.`, tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível agendar", description: "Tente novamente em instantes.", tone: "error" });
+    } finally {
+      setActivityPending(false);
+    }
   }
 
-  function toggleCompleted(id: string, completed: boolean) {
-    activitiesCollection.update(id, (draft) => {
+  async function toggleCompleted(id: string, title: string, completed: boolean) {
+    const transaction = activitiesCollection.update(id, (draft) => {
       draft.completed = completed;
     });
+    try {
+      await transaction.isPersisted.promise;
+      notify({ title: completed ? "Atividade concluída" : "Atividade reaberta", description: title, tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível atualizar a atividade", tone: "error" });
+    }
   }
 
   function startEditing() {
@@ -232,7 +249,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => toggleCompleted(activity.id, !activity.completed)}
+                onClick={() => void toggleCompleted(activity.id, activity.title, !activity.completed)}
               >
                 {activity.completed ? "Reabrir" : "Concluir"}
               </Button>
@@ -256,13 +273,13 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
           </div>
           <Field>
             <Label>Título</Label>
-            <Input name="title" placeholder="O que precisa ser feito" />
+            <Input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="O que precisa ser feito" />
           </Field>
           <Field>
             <Label>Quando</Label>
-            <Input name="scheduledAt" type="datetime-local" />
+            <DateTimePicker label="Data e hora da atividade" mode="datetime" value={scheduledAt} onValueChange={setScheduledAt} placeholder="Selecionar data e hora" />
           </Field>
-          <Button type="submit" size="sm">
+          <Button type="submit" size="sm" loading={activityPending} disabled={!activityTitle.trim() || !scheduledAt}>
             Adicionar atividade
           </Button>
         </form>
