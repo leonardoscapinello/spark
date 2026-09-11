@@ -35,9 +35,9 @@ export default function Login({ actionData }: Route.ComponentProps) {
           <img className={styles.logo} src="/brand/leonardo-scapinello-ink.svg" alt="Leonardo Scapinello" />
         </a>
         <div className={styles.introCopy}>
-          <p className={styles.eyebrow}>Central de relacionamento</p>
-          <h1 className={styles.titulo}>Toda relação importante, em um só lugar.</h1>
-          <p className={styles.subtitulo}>Concentre contatos, conversas e oportunidades para o seu time agir com clareza.</p>
+          <p className={styles.eyebrow}>Relacionamento</p>
+          <h1 className={styles.titulo}>O contexto certo para cada conversa.</h1>
+          <p className={styles.subtitulo}>Organize contatos, conversas e oportunidades em um espaço feito para o seu time.</p>
         </div>
         <p className={styles.rodape}>© Leonardo Scapinello</p>
       </section>
@@ -45,9 +45,8 @@ export default function Login({ actionData }: Route.ComponentProps) {
       <section className={styles.access} aria-labelledby="access-title">
         <Form method="post" className={styles.card}>
           <div className={styles.cardHeader}>
-            <p className={styles.eyebrow}>Acesso</p>
-            <h2 id="access-title">Entre para continuar</h2>
-            <p>Use seu e-mail para entrar ou criar o acesso inicial.</p>
+            <h2 id="access-title">Boas-vindas</h2>
+            <p>Informe seus dados para acessar sua área de trabalho.</p>
           </div>
 
           <div className={styles.form}>
@@ -67,7 +66,6 @@ export default function Login({ actionData }: Route.ComponentProps) {
           <Button type="submit" size="lg" loading={isSubmitting} className={styles.submit}>
             Continuar
           </Button>
-          <p className={styles.devNote}>Ambiente de desenvolvimento</p>
         </Form>
       </section>
     </main>

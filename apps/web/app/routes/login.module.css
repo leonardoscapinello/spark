@@ -16,7 +16,7 @@
 
 .logoLink { display: inline-flex; align-self: flex-start; }
 
-.logo { display: block; width: min(100%, var(--ui-popupMaxWidth)); height: auto; }
+.logo { display: block; width: min(100%, var(--ui-menuWidth)); height: auto; }
 
 .introCopy {
   margin-block: auto;
@@ -36,7 +36,7 @@
   margin: var(--space-4) 0 0;
   max-width: var(--ui-popupMaxWidth);
   font-family: var(--typography-fontFamily-display);
-  font-size: clamp(var(--typography-size-2xl), 5vw, var(--typography-size-3xl));
+  font-size: clamp(var(--typography-size-xl), 4vw, var(--typography-size-2xl));
   font-weight: var(--typography-weight-semibold);
   line-height: var(--typography-lineHeight-tight);
   letter-spacing: var(--typography-tracking-tight);
@@ -71,7 +71,7 @@
   gap: var(--space-8);
 }
 
-.cardHeader { display: flex; flex-direction: column; gap: var(--space-3); }
+.cardHeader { display: flex; flex-direction: column; gap: var(--space-2); }
 
 .cardHeader h2 {
   margin: 0;
@@ -99,5 +99,3 @@
 }
 
 .submit { width: 100%; }
-
-.devNote { margin: calc(var(--space-4) * -1) 0 0; color: var(--color-inkFaint); font-size: var(--typography-size-compact); text-align: center; }
