@@ -11,6 +11,8 @@ import { InviteUserUseCase } from "./application/invite-user.usecase.js";
 import { IDENTITY_ADMIN_GATEWAY } from "./application/identity-admin.gateway.js";
 import { SupabaseIdentityAdminGateway } from "./infrastructure/supabase-identity-admin.gateway.js";
 import { UpdateUserAccessUseCase } from "./application/update-user-access.usecase.js";
+import { AuditLogsController } from "./presentation/audit-logs.controller.js";
+import { AuditLogsRepository } from "./infrastructure/audit-logs.repository.js";
 
 // ConfigModule is deliberately NOT imported here — it's already global via
 // ConfigModule.forRoot({ isGlobal: true }) in AppModule. Reimporting the
@@ -18,11 +20,12 @@ import { UpdateUserAccessUseCase } from "./application/update-user-access.usecas
 // inside SupabaseJwtGuard (docs/adr/0003 — a single module, no duplicating
 // infrastructure config per domain module).
 @Module({
-  controllers: [MeController, PermissionGroupsController, UsersController],
+  controllers: [MeController, PermissionGroupsController, UsersController, AuditLogsController],
   providers: [
     GetCurrentUserUseCase,
     InviteUserUseCase,
     UpdateUserAccessUseCase,
+    AuditLogsRepository,
     UsersRepository,
     PermissionGroupsRepository,
     SupabaseJwtGuard,

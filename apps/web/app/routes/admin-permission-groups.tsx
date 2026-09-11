@@ -17,6 +17,7 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "contacts:write": "Criar e editar contatos",
   "users:manage": "Gerenciar usuários",
   "permission_groups:manage": "Gerenciar permissões",
+  "audit_logs:read": "Consultar auditoria",
   "pipelines:manage": "Configurar funis e etapas",
   "deals:read": "Ver negócios",
   "deals:write": "Criar e editar negócios",

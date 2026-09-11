@@ -12,5 +12,6 @@ export default [
     route("deals", "routes/deals.tsx"),
     route("admin/users", "routes/admin-users.tsx"),
     route("admin/permission-groups", "routes/admin-permission-groups.tsx"),
+    route("admin/audit-log", "routes/admin-audit-log.tsx"),
   ]),
 ] satisfies RouteConfig;

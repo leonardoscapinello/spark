@@ -70,6 +70,7 @@ export const CurrentUserDtoCapabilitiesItem = {
   'contacts:write': 'contacts:write',
   'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
+  'audit_logs:read': 'audit_logs:read',
   'pipelines:manage': 'pipelines:manage',
   'deals:read': 'deals:read',
   'deals:write': 'deals:write',
@@ -124,6 +125,7 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'contacts:write': 'contacts:write',
   'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
+  'audit_logs:read': 'audit_logs:read',
   'pipelines:manage': 'pipelines:manage',
   'deals:read': 'deals:read',
   'deals:write': 'deals:write',
@@ -157,6 +159,7 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'contacts:write': 'contacts:write',
   'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
+  'audit_logs:read': 'audit_logs:read',
   'pipelines:manage': 'pipelines:manage',
   'deals:read': 'deals:read',
   'deals:write': 'deals:write',
@@ -184,6 +187,7 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'contacts:write': 'contacts:write',
   'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
+  'audit_logs:read': 'audit_logs:read',
   'pipelines:manage': 'pipelines:manage',
   'deals:read': 'deals:read',
   'deals:write': 'deals:write',
@@ -266,6 +270,48 @@ export interface UpdateUserAccessDto {
 export interface ReplaceUserPermissionGroupDto {
   /** @minLength 1 */
   groupId: string;
+}
+
+export type AdminAuditLogDtoAction = typeof AdminAuditLogDtoAction[keyof typeof AdminAuditLogDtoAction];
+
+
+export const AdminAuditLogDtoAction = {
+  permission_groupcreated: 'permission_group.created',
+  permission_groupupdated: 'permission_group.updated',
+  permission_groupuser_assigned: 'permission_group.user_assigned',
+  userinvited: 'user.invited',
+  userowner_bootstrapped: 'user.owner_bootstrapped',
+  useraccess_updated: 'user.access_updated',
+  userpermission_group_replaced: 'user.permission_group_replaced',
+} as const;
+
+export type AdminAuditLogDtoTargetType = typeof AdminAuditLogDtoTargetType[keyof typeof AdminAuditLogDtoTargetType];
+
+
+export const AdminAuditLogDtoTargetType = {
+  permission_group: 'permission_group',
+  user: 'user',
+} as const;
+
+export type AdminAuditLogDtoData = {[key: string]: unknown};
+
+export interface AdminAuditLogDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  actorUserId: string;
+  action: AdminAuditLogDtoAction;
+  targetType: AdminAuditLogDtoTargetType;
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  targetId: string;
+  data?: AdminAuditLogDtoData;
+  createdAt: string;
+  /** @minLength 1 */
+  actorName: string;
+  /** @minLength 1 */
+  targetLabel: string;
 }
 
 export type CreateContactDtoCustomFields = {[key: string]: unknown};
@@ -1581,6 +1627,93 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getUsersControllerPermissionGroupMutationOptions(options), queryClient);
     }
+
+export const auditLogsControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AdminAuditLogDto[]>(
+      {url: `/v1/admin/audit-logs`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getAuditLogsControllerListQueryKey = () => {
+    return [
+    `/v1/admin/audit-logs`
+    ] as const;
+    }
+
+
+export const getAuditLogsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof auditLogsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof auditLogsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAuditLogsControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof auditLogsControllerList>>> = ({ signal }) => auditLogsControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof auditLogsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AuditLogsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof auditLogsControllerList>>>
+export type AuditLogsControllerListQueryError = unknown
+
+
+export function useAuditLogsControllerList<TData = Awaited<ReturnType<typeof auditLogsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof auditLogsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof auditLogsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof auditLogsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAuditLogsControllerList<TData = Awaited<ReturnType<typeof auditLogsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof auditLogsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof auditLogsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof auditLogsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAuditLogsControllerList<TData = Awaited<ReturnType<typeof auditLogsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof auditLogsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAuditLogsControllerList<TData = Awaited<ReturnType<typeof auditLogsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof auditLogsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAuditLogsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const contactsControllerCreate = (
     createContactDto: CreateContactDto,

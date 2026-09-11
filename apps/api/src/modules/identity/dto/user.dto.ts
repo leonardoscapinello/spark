@@ -1,5 +1,5 @@
 import { createZodDto } from "nestjs-zod";
-import { AdminUserSchema, AssignUserToPermissionGroupInputSchema, CreatePermissionGroupInputSchema, CurrentUserSchema, InviteUserInputSchema, PermissionGroupSchema, ReplaceUserPermissionGroupInputSchema, UpdatePermissionGroupInputSchema, UpdateUserAccessInputSchema, UserSchema } from "@spark/core";
+import { AdminAuditLogSchema, AdminUserSchema, AssignUserToPermissionGroupInputSchema, CreatePermissionGroupInputSchema, CurrentUserSchema, InviteUserInputSchema, PermissionGroupSchema, ReplaceUserPermissionGroupInputSchema, UpdatePermissionGroupInputSchema, UpdateUserAccessInputSchema, UserSchema } from "@spark/core";
 
 /**
  * DTO generated from packages/core's Zod schema — no field hand-written
@@ -17,3 +17,4 @@ export class UpdatePermissionGroupDto extends createZodDto(UpdatePermissionGroup
 export class AssignUserToPermissionGroupDto extends createZodDto(AssignUserToPermissionGroupInputSchema) {}
 export class UpdateUserAccessDto extends createZodDto(UpdateUserAccessInputSchema) {}
 export class ReplaceUserPermissionGroupDto extends createZodDto(ReplaceUserPermissionGroupInputSchema) {}
+export class AdminAuditLogDto extends createZodDto(AdminAuditLogSchema) {}

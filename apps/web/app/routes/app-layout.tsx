@@ -51,6 +51,11 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
               Permissões
             </Link>
           )}
+          {session.capabilities.includes("audit_logs:read") && (
+            <Link to="/admin/audit-log" className={styles.navItem}>
+              Auditoria
+            </Link>
+          )}
         </nav>
         <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}>
           Sair

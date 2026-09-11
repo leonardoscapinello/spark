@@ -25,3 +25,9 @@ export const AuditLogSchema = z.object({
 });
 export type AuditLog = z.infer<typeof AuditLogSchema>;
 export type AuditAction = z.infer<typeof AuditActionSchema>;
+
+export const AdminAuditLogSchema = AuditLogSchema.extend({
+  actorName: z.string().min(1),
+  targetLabel: z.string().min(1),
+});
+export type AdminAuditLog = z.infer<typeof AdminAuditLogSchema>;

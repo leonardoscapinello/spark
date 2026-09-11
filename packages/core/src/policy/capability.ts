@@ -9,6 +9,7 @@ export const CAPABILITIES = [
   "contacts:write",
   "users:manage",
   "permission_groups:manage",
+  "audit_logs:read",
   "pipelines:manage",
   "deals:read",
   "deals:write",
