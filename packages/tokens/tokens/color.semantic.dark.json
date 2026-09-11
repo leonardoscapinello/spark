@@ -2,71 +2,82 @@
   "color": {
     "ground": {
       "$type": "color",
-      "$value": "#0C1413"
+      "$value": "{color.void}"
     },
     "surface": {
       "$type": "color",
-      "$value": "#141E1C"
+      "$value": "#111E33",
+      "$description": "Vazio elevado — COLORsoft não dá um tom de card dedicado no escuro; interpolado a partir de --cs-void com um passo de elevação modesto, mesma proporção do antigo ground→surface."
     },
     "surface2": {
       "$type": "color",
-      "$value": "#1B2725"
+      "$value": "#16263F",
+      "$description": "Interpolado — um segundo passo de elevação acima de surface."
     },
     "ink": {
       "$type": "color",
-      "$value": "#E3EAE8"
+      "$value": "{color.porcelain}"
     },
     "inkMuted": {
       "$type": "color",
-      "$value": "{color.sage.400}"
+      "$value": "#8A8F98",
+      "$description": "--cs-meta — 'metadado, tag curta, legenda auxiliar e estado neutro' na própria especificação COLORsoft."
     },
     "inkFaint": {
       "$type": "color",
-      "$value": "{color.neutral.300}"
+      "$value": "#5A6472",
+      "$description": "Interpolado — um passo abaixo de --cs-meta, entre o metadado e o vazio."
     },
     "line": {
       "$type": "color",
-      "$value": "#253331"
+      "$value": "#314563",
+      "$description": "--cs-border-dark, dado explicitamente pela especificação COLORsoft."
     },
     "lineStrong": {
       "$type": "color",
-      "$value": "#33443F"
+      "$value": "#3F567A",
+      "$description": "Interpolado — um passo mais claro que --cs-border-dark."
     },
     "accent": {
       "$type": "color",
-      "$value": "{color.teal.400}"
+      "$value": "{color.blue.600}",
+      "$description": "Mesmo azul elétrico do tema claro — é preenchimento sólido de botão (texto porcelana por cima), não texto corrido sobre o vazio, então a reprovação de contraste do azul elétrico sobre o vazio não se aplica aqui."
     },
     "accentStrong": {
       "$type": "color",
-      "$value": "#7FE0D4"
+      "$value": "{color.blue.700}"
     },
     "accentWash": {
       "$type": "color",
-      "$value": "#16302C"
+      "$value": "rgba(138, 180, 255, 0.14)",
+      "$description": "Interpolado — a versão escura do wash #EAF0FF: um tingimento baixo do azul de leitura sobre o vazio, não branco quase puro (que piscaria numa UI escura)."
     },
     "statusSuccess": {
       "$type": "color",
-      "$value": "#4FAE81"
+      "$value": "#4CB98C",
+      "$description": "Interpolado — status.success clareado para ler sobre o vazio; os tons de --cs-success/warning/danger da especificação são calibrados pro fundo claro."
     },
     "statusWarning": {
       "$type": "color",
-      "$value": "#DFA75C"
+      "$value": "#D99A3E",
+      "$description": "Interpolado — mesmo motivo de statusSuccess."
     },
     "statusDanger": {
       "$type": "color",
-      "$value": "#E28C87"
+      "$value": "#E0808C",
+      "$description": "Interpolado — mesmo motivo de statusSuccess."
     },
     "focusRing": {
       "$type": "color",
-      "$value": "{color.teal.400}"
+      "$value": "{color.blue.300}"
     },
     "glassBg": {
       "$type": "color",
-      "$value": "rgba(22, 28, 30, 0.55)"
+      "$value": "rgba(220, 224, 229, 0.10)"
     },
     "glassEdge": {
       "$type": "color",
-      "$value": "rgba(255, 255, 255, 0.08)"
+      "$value": "rgba(220, 224, 229, 0.34)"
     },
     "glassShadow": {
       "$type": "color",

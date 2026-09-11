@@ -2,7 +2,7 @@
   "color": {
     "ground": {
       "$type": "color",
-      "$value": "{color.sage.100}"
+      "$value": "{color.neutral.50}"
     },
     "surface": {
       "$type": "color",
@@ -10,7 +10,7 @@
     },
     "surface2": {
       "$type": "color",
-      "$value": "{color.sage.100}"
+      "$value": "{color.neutral.100}"
     },
     "ink": {
       "$type": "color",
@@ -18,31 +18,31 @@
     },
     "inkMuted": {
       "$type": "color",
-      "$value": "{color.neutral.600}"
+      "$value": "{color.neutral.700}"
     },
     "inkFaint": {
       "$type": "color",
-      "$value": "{color.neutral.300}"
+      "$value": "{color.neutral.600}"
     },
     "line": {
       "$type": "color",
-      "$value": "{color.sage.200}"
+      "$value": "{color.neutral.200}"
     },
     "lineStrong": {
       "$type": "color",
-      "$value": "{color.slate.200}"
+      "$value": "{color.neutral.300}"
     },
     "accent": {
       "$type": "color",
-      "$value": "{color.teal.700}"
+      "$value": "{color.blue.600}"
     },
     "accentStrong": {
       "$type": "color",
-      "$value": "{color.teal.900}"
+      "$value": "{color.blue.700}"
     },
     "accentWash": {
       "$type": "color",
-      "$value": "{color.sage.200}"
+      "$value": "#EAF0FF"
     },
     "statusSuccess": {
       "$type": "color",
@@ -58,19 +58,19 @@
     },
     "focusRing": {
       "$type": "color",
-      "$value": "{color.teal.700}"
+      "$value": "{color.blue.300}"
     },
     "glassBg": {
       "$type": "color",
-      "$value": "rgba(255, 255, 255, 0.55)"
+      "$value": "rgba(10, 21, 38, 0.10)"
     },
     "glassEdge": {
       "$type": "color",
-      "$value": "rgba(255, 255, 255, 0.60)"
+      "$value": "rgba(10, 21, 38, 0.14)"
     },
     "glassShadow": {
       "$type": "color",
-      "$value": "rgba(30, 38, 43, 0.10)"
+      "$value": "rgba(10, 21, 38, 0.14)"
     }
   }
 }

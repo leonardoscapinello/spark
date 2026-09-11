@@ -23,7 +23,7 @@ describe("cascata de tema em três estados (ADR-0025)", () => {
     expect(css).toMatch(/:root:not\(\[data-theme="light"\]\)/);
     // primitiva compartilhada NÃO deve ser redeclarada no bloco escuro —
     // ela só aparece uma vez, no :root claro.
-    const occurrences = (css.match(/--color-sage-600:/g) ?? []).length;
+    const occurrences = (css.match(/--color-void:/g) ?? []).length;
     expect(occurrences).toBe(1);
   });
 
@@ -32,8 +32,8 @@ describe("cascata de tema em três estados (ADR-0025)", () => {
   });
 
   it("todo token que aparece no claro também tem override coerente quando diverge no escuro", () => {
-    expect(css).toMatch(/--color-ground: #0c1413/); // fundo escuro dentro do bloco dark
-    expect(css).toMatch(/--color-ground: #e7edea/); // fundo claro dentro do :root
+    expect(css).toMatch(/--color-ground: #0a1526/); // fundo escuro dentro do bloco dark
+    expect(css).toMatch(/--color-ground: #f7f9fc/); // fundo claro dentro do :root
   });
 
   it("gera o tema nativo com light e dark", () => {

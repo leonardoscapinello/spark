@@ -1,6 +1,6 @@
 # ADR-0025 — Liquid glass como identidade visual, com disciplina de camadas
 
-**Status:** Aceito
+**Status:** Parcialmente substituído por [ADR-0031](0031-identidade-visual-colorsoft.md) — a paleta (seção "Os tokens") e o alcance do vidro (restrito à camada de navegação) foram atualizados lá. A disciplina de camada em si — primitivo único, `contain: paint`, fallbacks, proibição de animar blur/scale, e a regra de nunca usar vidro em conteúdo que rola — continua valendo sem alteração.
 **Data:** 2026-09-10
 
 ## Contexto

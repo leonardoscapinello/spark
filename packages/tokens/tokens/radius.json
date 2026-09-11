@@ -1,8 +1,9 @@
 {
   "radius": {
+    "$description": "Escala COLORsoft (docs/adr/0031) — o raio comunica função: campo/chip pequeno usa sm, card usa lg, superfície grande (modal, hero) usa xl.",
     "sm": {
       "$type": "dimension",
-      "$value": "6px"
+      "$value": "8px"
     },
     "md": {
       "$type": "dimension",
@@ -12,9 +13,9 @@
       "$type": "dimension",
       "$value": "16px"
     },
-    "glass": {
+    "xl": {
       "$type": "dimension",
-      "$value": "20px"
+      "$value": "24px"
     },
     "full": {
       "$type": "dimension",

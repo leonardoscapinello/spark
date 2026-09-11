@@ -1,36 +1,43 @@
 {
   "effect": {
-    "$description": "Sombra e vidro. O vidro é theme-independent em blur/saturação — só a cor (glassBg etc.) muda por tema. Ver docs/adr/0025-identidade-visual-liquid-glass.md: SÓ packages/ui-web/src/Glass usa isto.",
+    "$description": "Sombra e vidro (paleta COLORsoft, docs/adr/0031). O vidro tem três níveis — subtle/panel/modal — escolhidos pela função da superfície (docs/adr/0025 e docs/adr/0031), nunca por gosto. Blur/saturação são theme-independent; a cor (glassBg etc.) vem da camada semântica. SÓ packages/ui-web/src/Glass usa isto.",
     "shadow": {
       "sm": {
         "$type": "shadow",
         "$value": {
-          "color": "rgba(30, 38, 43, 0.08)",
+          "color": "rgba(10, 21, 38, 0.08)",
           "offsetX": "0px",
-          "offsetY": "1px",
-          "blur": "3px",
+          "offsetY": "4px",
+          "blur": "14px",
           "spread": "0px"
         }
       },
       "md": {
         "$type": "shadow",
         "$value": {
-          "color": "rgba(30, 38, 43, 0.10)",
+          "color": "rgba(10, 21, 38, 0.14)",
           "offsetX": "0px",
-          "offsetY": "8px",
-          "blur": "24px",
+          "offsetY": "14px",
+          "blur": "40px",
           "spread": "0px"
         }
       }
     },
     "glass": {
-      "blur": {
-        "$type": "dimension",
-        "$value": "20px"
+      "subtle": {
+        "$description": "Chip, tag, botão de vidro.",
+        "blur": { "$type": "dimension", "$value": "8px" },
+        "saturate": { "$type": "number", "$value": 1.0 }
       },
-      "saturate": {
-        "$type": "number",
-        "$value": 1.4
+      "panel": {
+        "$description": "Card, painel, dropdown, drawer — e a camada de navegação flutuante do ADR-0025 (sidebar, topbar, sheet).",
+        "blur": { "$type": "dimension", "$value": "18px" },
+        "saturate": { "$type": "number", "$value": 1.18 }
+      },
+      "modal": {
+        "$description": "Modal, confirmação, foco de tarefa.",
+        "blur": { "$type": "dimension", "$value": "28px" },
+        "saturate": { "$type": "number", "$value": 1.18 }
       }
     }
   }

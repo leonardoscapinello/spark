@@ -36,12 +36,13 @@ Cada arquivo aqui registra **uma decisão**, o contexto em que foi tomada, as al
 | [0022](0022-um-so-banco-postgres.md) | Um só banco: Postgres para tudo | Aceito |
 | [0023](0023-construtor-de-paginas.md) | Construtor de páginas: árvore JSON, publicação estática | Aceito |
 | [0024](0024-limite-de-verificacao.md) | Limite de verificação: critério binário, duas tentativas | Aceito |
-| [0025](0025-identidade-visual-liquid-glass.md) | Liquid glass por camada, não por superfície | Aceito |
+| [0025](0025-identidade-visual-liquid-glass.md) | ~~Liquid glass por camada, não por superfície~~ | Parcialmente substituído por 0031 |
 | [0026](0026-superficie-da-api.md) | API-first para escrita e terceiros; leitura pelo sync | Aceito |
 | [0027](0027-catalogo-de-gatilhos.md) | Catálogo de gatilhos: todo evento de domínio dispara automação | Aceito |
 | [0028](0028-armazenamento-s3.md) | Armazenamento: um adaptador S3, provedor trocável | Aceito |
 | [0029](0029-paineis-e-grupos-de-permissao.md) | Dois painéis, um app; permissão por grupo | Aceito |
 | [0030](0030-id-gerado-no-cliente.md) | ID gerado no cliente para escrita otimista | Aceito |
+| [0031](0031-identidade-visual-colorsoft.md) | Identidade visual COLORsoft substitui a paleta Luna; vidro ganha camada de conteúdo | Aceito |
 
 ## Leitura obrigatória antes do primeiro código
 
