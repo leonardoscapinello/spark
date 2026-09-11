@@ -50,3 +50,5 @@ export { DataTable, type DataTableProps, type TableColumn } from "./DataTable/Da
 export { TableActions, TableIconAction, type TableIconActionProps } from "./DataTable/TableActions.js";
 
 export { FeedbackButton, type FeedbackButtonProps, type FeedbackState } from "./Button/FeedbackButton.js";
+
+export { CashPiece, type CashPieceProps } from "./ChangeCalculator/CashPiece.js";

@@ -1,0 +1,17 @@
+.root { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); min-width: 0; color: var(--color-ink); }
+.art { width: var(--ui-cashIllustrationWidth); max-width: 100%; height: var(--ui-cashIllustrationHeight); overflow: visible; color: var(--color-accent); }
+.root[data-tone="green"] .art { color: var(--color-statusSuccess); }
+.root[data-tone="gold"] .art { color: var(--color-statusWarning); }
+.root[data-tone="red"] .art { color: var(--color-statusDanger); }
+.root[data-tone="purple"] .art { color: var(--color-inkMuted); }
+.root[data-kind="coin"] .art { color: var(--color-statusWarning); }
+.paper { fill: var(--ui-selected); stroke: currentColor; stroke-width: var(--ui-hairline); }
+.stack { fill: currentColor; opacity: .3; }
+.frame { fill: none; stroke: currentColor; stroke-width: var(--ui-hairline); }
+.security { fill: none; stroke: currentColor; stroke-width: var(--ui-hairline); opacity: .5; }
+.seal { fill: currentColor; fill-opacity: .1; stroke: currentColor; stroke-width: var(--ui-hairline); }
+.value { fill: currentColor; font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); }
+.currency { fill: currentColor; font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-xs); }
+.caption { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+.quantity { display: inline-flex; align-items: center; justify-content: center; min-width: var(--ui-controlSmall); height: var(--ui-controlSmall); padding-inline: var(--space-1); box-sizing: border-box; border-radius: var(--radius-full); background: var(--ui-subtle); border: var(--ui-hairline) solid var(--color-line); font-variant-numeric: tabular-nums; }
+.subtotal { font-size: var(--typography-size-compact); color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }

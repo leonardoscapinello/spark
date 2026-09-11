@@ -1,0 +1,10 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { CashPiece } from "./CashPiece.js";
+const meta={title:"Campos/Calculadora de troco/Notas e moedas",component:CashPiece,args:{currency:"BRL",cents:10000,kind:"note",quantity:2}} satisfies Meta<typeof CashPiece>;
+export default meta;
+type Story=StoryObj<typeof meta>;
+export const CemReais:Story={};
+export const CinquentaReais:Story={args:{cents:5000}};
+export const VinteReais:Story={args:{cents:2000}};
+export const Moeda:Story={args:{kind:"coin",cents:25,quantity:3}};
+export const Dolar:Story={args:{currency:"USD",cents:100}};

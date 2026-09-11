@@ -2,3 +2,5 @@
 .result { font-weight: var(--typography-weight-semibold); color: var(--color-ink); }
 .result p,.hint { color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
 .hint { margin: 0; }
+
+.pieces { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-cashIllustrationWidth)), 1fr)); gap: var(--space-5) var(--space-3); padding-block: var(--space-3); }

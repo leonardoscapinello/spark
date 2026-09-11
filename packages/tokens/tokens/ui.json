@@ -272,6 +272,14 @@
     "helpSolid": {
       "$type": "color",
       "$value": "#000000"
+    },
+    "cashIllustrationWidth": {
+      "$type": "dimension",
+      "$value": "128px"
+    },
+    "cashIllustrationHeight": {
+      "$type": "dimension",
+      "$value": "80px"
     }
   }
 }
