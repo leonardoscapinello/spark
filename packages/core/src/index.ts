@@ -8,3 +8,4 @@ export * from "./identity/index.js";
 export * from "./errors/index.js";
 export * from "./schema/index.js";
 export * from "./policy/index.js";
+export * from "./search/index.js";

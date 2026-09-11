@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { contatoOtimista } from "@spark/data";
+import { contatoCorresponde } from "@spark/core";
 import { Button, Field, Input, Label } from "@spark/ui-web";
 import { obterSessao } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -25,6 +26,8 @@ export default function Contacts() {
   });
 
   const [nome, setNome] = useState("");
+  const [busca, setBusca] = useState("");
+  const contatosFiltrados = contatos.filter((contato) => contatoCorresponde(contato, busca));
 
   function adicionar(evento: FormEvent) {
     evento.preventDefault();
@@ -56,13 +59,23 @@ export default function Contacts() {
         </Button>
       </form>
 
+      {contatos.length > 0 && (
+        <Input
+          value={busca}
+          onChange={(evento) => setBusca(evento.target.value)}
+          placeholder="Buscar por nome, e-mail ou telefone"
+        />
+      )}
+
       {isLoading && contatos.length === 0 ? (
         <p className={styles.vazio}>Sincronizando…</p>
       ) : contatos.length === 0 ? (
         <p className={styles.vazio}>Nenhum contato ainda.</p>
+      ) : contatosFiltrados.length === 0 ? (
+        <p className={styles.vazio}>Nenhum contato bate com "{busca}".</p>
       ) : (
         <ul className={styles.lista}>
-          {contatos.map((contato) => (
+          {contatosFiltrados.map((contato) => (
             <li key={contato.id}>
               <Link to={`/contacts/${contato.id}`} className={styles.item}>
                 <div className={styles.itemNome}>{contato.nome}</div>
