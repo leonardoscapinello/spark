@@ -39,10 +39,11 @@ Cada arquivo aqui registra **uma decisão**, o contexto em que foi tomada, as al
 | [0025](0025-identidade-visual-liquid-glass.md) | ~~Liquid glass por camada, não por superfície~~ | Parcialmente substituído por 0031 |
 | [0026](0026-superficie-da-api.md) | API-first para escrita e terceiros; leitura pelo sync | Aceito |
 | [0027](0027-catalogo-de-gatilhos.md) | Catálogo de gatilhos: todo evento de domínio dispara automação | Aceito |
-| [0028](0028-armazenamento-s3.md) | Armazenamento: um adaptador S3, provedor trocável | Aceito |
+| [0028](0028-armazenamento-s3.md) | Armazenamento: um adaptador S3, provedor trocável | Parcialmente substituído por 0032 |
 | [0029](0029-paineis-e-grupos-de-permissao.md) | Dois painéis, um app; permissão por grupo | Aceito |
 | [0030](0030-id-gerado-no-cliente.md) | ID gerado no cliente para escrita otimista | Aceito |
 | [0031](0031-identidade-visual-colorsoft.md) | Identidade visual COLORsoft substitui a paleta Luna; vidro ganha camada de conteúdo | Aceito |
+| [0032](0032-provedores-substituiveis.md) | Contratos próprios, troca de destino por configuração e coexistência de fornecedores | Aceito; implementação pendente |
 
 ## Leitura obrigatória antes do primeiro código
 

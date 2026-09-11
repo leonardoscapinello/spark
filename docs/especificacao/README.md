@@ -10,6 +10,7 @@ Data: 11/09/2026. Status: proposta de fechamento para implementação, baseada n
 | [ADRs](../adr/README.md) | Decisões arquiteturais aceitas; não reescrever silenciosamente |
 | Este contrato | Comportamento que o Spark precisa entregar e critérios de aceitação |
 | [Modelo de dados](modelo-de-dados.md) | Entidades, relações, invariantes e lacunas do schema atual |
+| [Reaproveitamento e infraestrutura](reuso-e-infraestrutura.md) | Componentes e regras únicos; fornecedores coexistentes, armazenamento configurável e critérios de entrega |
 | `packages/core` | Tipos, validações, regras e permissões executáveis |
 | `packages/db` | Schema físico e migrations versionadas |
 
