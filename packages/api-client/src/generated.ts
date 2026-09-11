@@ -259,6 +259,15 @@ export interface InviteUserDto {
   groupId: string;
 }
 
+export interface UpdateUserAccessDto {
+  active: boolean;
+}
+
+export interface ReplaceUserPermissionGroupDto {
+  /** @minLength 1 */
+  groupId: string;
+}
+
 export type CreateContactDtoCustomFields = {[key: string]: unknown};
 
 export interface CreateContactDto {
@@ -1445,6 +1454,132 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getUsersControllerInviteMutationOptions(options), queryClient);
+    }
+
+export const usersControllerAccess = (
+    id: string,
+    updateUserAccessDto: UpdateUserAccessDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AdminUserDto>(
+      {url: `/v1/admin/users/${id}/access`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserAccessDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getUsersControllerAccessMutationKey = () => ['usersControllerAccess'] as const;
+
+export const getUsersControllerAccessMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerAccess>>, TError,UsersControllerAccessMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerAccess>>, TError,UsersControllerAccessMutationVariables, TContext> => {
+
+const mutationKey = getUsersControllerAccessMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerAccess>>, UsersControllerAccessMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  usersControllerAccess(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerAccessMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerAccess>>>
+    export type UsersControllerAccessMutationBody = UpdateUserAccessDto
+    export type UsersControllerAccessMutationError = unknown
+    export type UsersControllerAccessMutationVariables = {id: string;data: UpdateUserAccessDto}
+
+    export const useUsersControllerAccess = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerAccess>>, TError,UsersControllerAccessMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerAccess>>,
+        TError,
+        UsersControllerAccessMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUsersControllerAccessMutationOptions(options), queryClient);
+    }
+
+export const usersControllerPermissionGroup = (
+    id: string,
+    replaceUserPermissionGroupDto: ReplaceUserPermissionGroupDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AdminUserDto>(
+      {url: `/v1/admin/users/${id}/permission-group`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: replaceUserPermissionGroupDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getUsersControllerPermissionGroupMutationKey = () => ['usersControllerPermissionGroup'] as const;
+
+export const getUsersControllerPermissionGroupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPermissionGroup>>, TError,UsersControllerPermissionGroupMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerPermissionGroup>>, TError,UsersControllerPermissionGroupMutationVariables, TContext> => {
+
+const mutationKey = getUsersControllerPermissionGroupMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerPermissionGroup>>, UsersControllerPermissionGroupMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  usersControllerPermissionGroup(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerPermissionGroupMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerPermissionGroup>>>
+    export type UsersControllerPermissionGroupMutationBody = ReplaceUserPermissionGroupDto
+    export type UsersControllerPermissionGroupMutationError = unknown
+    export type UsersControllerPermissionGroupMutationVariables = {id: string;data: ReplaceUserPermissionGroupDto}
+
+    export const useUsersControllerPermissionGroup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPermissionGroup>>, TError,UsersControllerPermissionGroupMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerPermissionGroup>>,
+        TError,
+        UsersControllerPermissionGroupMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUsersControllerPermissionGroupMutationOptions(options), queryClient);
     }
 
 export const contactsControllerCreate = (

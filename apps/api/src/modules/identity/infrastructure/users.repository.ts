@@ -52,6 +52,14 @@ export class UsersRepository {
     });
   }
 
+  async findById(orgId: OrgId, id: UserId): Promise<User | null> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [row] = await tx.select().from(users)
+        .where(and(eq(users.orgId, orgId), eq(users.id, id))).limit(1);
+      return row ? toUser(row) : null;
+    });
+  }
+
   async groupExists(orgId: OrgId, groupId: PermissionGroupId): Promise<boolean> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const [row] = await tx.select({ id: permissionGroups.id }).from(permissionGroups)
@@ -89,6 +97,53 @@ export class UsersRepository {
         data: { email: input.email, groupId: input.groupId },
       });
       return { ...toUser(row), groupIds: [input.groupId] } as AdminUser;
+    });
+  }
+
+  async updateAccess(orgId: OrgId, actorUserId: UserId, targetUserId: UserId, active: boolean): Promise<AdminUser | null> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [row] = await tx.update(users).set({
+        deactivatedAt: active ? null : new Date(),
+        updatedAt: new Date(),
+      }).where(and(eq(users.orgId, orgId), eq(users.id, targetUserId))).returning();
+      if (!row) return null;
+
+      const memberships = await tx.select({ groupId: userPermissionGroups.groupId })
+        .from(userPermissionGroups).where(eq(userPermissionGroups.userId, targetUserId));
+      await tx.insert(auditLogs).values({
+        orgId,
+        actorUserId,
+        action: "user.access_updated",
+        targetType: "user",
+        targetId: targetUserId,
+        data: { active },
+      });
+      return { ...toUser(row), groupIds: memberships.map((membership) => membership.groupId) } as AdminUser;
+    });
+  }
+
+  async replacePermissionGroup(orgId: OrgId, actorUserId: UserId, targetUserId: UserId, groupId: PermissionGroupId): Promise<AdminUser | null> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [user] = await tx.select().from(users)
+        .where(and(eq(users.orgId, orgId), eq(users.id, targetUserId))).limit(1);
+      const [group] = await tx.select({ id: permissionGroups.id }).from(permissionGroups)
+        .where(and(eq(permissionGroups.orgId, orgId), eq(permissionGroups.id, groupId))).limit(1);
+      if (!user || !group) return null;
+
+      await tx.delete(userPermissionGroups).where(and(
+        eq(userPermissionGroups.orgId, orgId),
+        eq(userPermissionGroups.userId, targetUserId),
+      ));
+      await tx.insert(userPermissionGroups).values({ orgId, userId: targetUserId, groupId });
+      await tx.insert(auditLogs).values({
+        orgId,
+        actorUserId,
+        action: "user.permission_group_replaced",
+        targetType: "user",
+        targetId: targetUserId,
+        data: { groupId },
+      });
+      return { ...toUser(user), groupIds: [groupId] } as AdminUser;
     });
   }
 }

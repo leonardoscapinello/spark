@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
-import { permissionGroupsControllerList, usersControllerInvite, usersControllerList, type AdminUserDto } from "@spark/api-client";
+import { permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
 import { ActionModal, Button, DataTable, Field, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
@@ -16,7 +16,7 @@ export async function clientLoader() {
     usersControllerList(),
     permissionGroupsControllerList(),
   ]);
-  return { users, groups };
+  return { users, groups, session };
 }
 
 export default function AdminUsers({ loaderData }: Route.ComponentProps) {
@@ -26,15 +26,21 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   const [email, setEmail] = useState("");
   const [groupId, setGroupId] = useState(loaderData.groups[0]?.id ?? "");
   const [lastInvited, setLastInvited] = useState<string | null>(null);
-  const groupNames = useMemo(
-    () => new Map(loaderData.groups.map((group) => [group.id, group.name])),
-    [loaderData.groups],
-  );
-  const columns = useMemo<TableColumn<AdminUserDto>[]>(() => [
+  const [busyUserId, setBusyUserId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const columns: TableColumn<AdminUserDto>[] = [
     { id: "name", label: "Pessoa", cell: (user) => <div><strong>{user.name}</strong><span className={styles.email}>{user.email}</span></div>, sortValue: (user) => user.name },
-    { id: "group", label: "Grupo", cell: (user) => user.groupIds.map((id) => groupNames.get(id) ?? "Grupo removido").join(", ") },
+    { id: "group", label: "Grupo", cell: (user) => (
+      <Select
+        label={`Grupo de ${user.name}`}
+        value={user.groupIds[0] ?? null}
+        onValueChange={(value) => { if (value) void replaceGroup(user, value); }}
+        options={loaderData.groups.map((group) => ({ value: group.id, label: group.name }))}
+        disabled={busyUserId === user.id || user.id === loaderData.session.userId}
+      />
+    ) },
     { id: "status", label: "Acesso", cell: (user) => <span className={styles.status} data-status={accessStatus(user)}>{accessStatusLabel(user)}</span>, sortValue: accessStatusLabel },
-  ], [groupNames]);
+  ];
 
   function resetForm() {
     setName("");
@@ -55,6 +61,33 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
     resetForm();
   }
 
+  async function replaceGroup(user: AdminUserDto, nextGroupId: string) {
+    setBusyUserId(user.id);
+    setActionError(null);
+    try {
+      const updated = await usersControllerPermissionGroup(user.id, { groupId: nextGroupId });
+      setUsers((current) => current.map((item) => item.id === updated.id ? updated : item));
+    } catch {
+      setActionError(`Não foi possível alterar o grupo de ${user.name}.`);
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  async function toggleAccess(user: AdminUserDto) {
+    const active = Boolean(user.deactivatedAt);
+    setBusyUserId(user.id);
+    setActionError(null);
+    try {
+      const updated = await usersControllerAccess(user.id, { active });
+      setUsers((current) => current.map((item) => item.id === updated.id ? updated : item));
+    } catch {
+      setActionError(`Não foi possível ${active ? "reativar" : "desativar"} ${user.name}.`);
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
   return (
     <div className={styles.page}>
       <PageHeader
@@ -65,12 +98,25 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
       />
 
       {lastInvited && <p className={styles.feedback} role="status">Convite enviado para {lastInvited}.</p>}
+      {actionError && <p className={styles.error} role="alert">{actionError}</p>}
 
       <DataTable
         label="Usuários da organização"
         rows={users}
         columns={columns}
         rowKey={(user) => user.id}
+        rowLabel={(user) => user.name}
+        actions={(user) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            loading={busyUserId === user.id}
+            disabled={user.id === loaderData.session.userId && !user.deactivatedAt}
+            onClick={() => void toggleAccess(user)}
+          >
+            {user.deactivatedAt ? "Reativar" : "Desativar"}
+          </Button>
+        )}
         emptyText="Nenhum usuário cadastrado."
       />
 

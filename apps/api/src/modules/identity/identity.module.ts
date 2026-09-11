@@ -10,6 +10,7 @@ import { UsersController } from "./presentation/users.controller.js";
 import { InviteUserUseCase } from "./application/invite-user.usecase.js";
 import { IDENTITY_ADMIN_GATEWAY } from "./application/identity-admin.gateway.js";
 import { SupabaseIdentityAdminGateway } from "./infrastructure/supabase-identity-admin.gateway.js";
+import { UpdateUserAccessUseCase } from "./application/update-user-access.usecase.js";
 
 // ConfigModule is deliberately NOT imported here — it's already global via
 // ConfigModule.forRoot({ isGlobal: true }) in AppModule. Reimporting the
@@ -21,6 +22,7 @@ import { SupabaseIdentityAdminGateway } from "./infrastructure/supabase-identity
   providers: [
     GetCurrentUserUseCase,
     InviteUserUseCase,
+    UpdateUserAccessUseCase,
     UsersRepository,
     PermissionGroupsRepository,
     SupabaseJwtGuard,

@@ -9,6 +9,8 @@ export const AuditActionSchema = z.enum([
   "permission_group.user_assigned",
   "user.invited",
   "user.owner_bootstrapped",
+  "user.access_updated",
+  "user.permission_group_replaced",
 ]);
 
 export const AuditLogSchema = z.object({

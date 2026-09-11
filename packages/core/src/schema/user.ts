@@ -57,3 +57,9 @@ export const InviteUserInputSchema = z.object({
   groupId: zPermissionGroupId,
 });
 export type InviteUserInput = z.infer<typeof InviteUserInputSchema>;
+
+export const UpdateUserAccessInputSchema = z.object({ active: z.boolean() });
+export type UpdateUserAccessInput = z.infer<typeof UpdateUserAccessInputSchema>;
+
+export const ReplaceUserPermissionGroupInputSchema = z.object({ groupId: zPermissionGroupId });
+export type ReplaceUserPermissionGroupInput = z.infer<typeof ReplaceUserPermissionGroupInputSchema>;

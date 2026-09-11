@@ -35,6 +35,12 @@
   font-size: var(--typography-size-sm);
 }
 
+.error {
+  margin: 0;
+  color: var(--color-statusDanger);
+  font-size: var(--typography-size-sm);
+}
+
 .modalFields {
   display: flex;
   flex-direction: column;

@@ -22,6 +22,13 @@ export class SupabaseIdentityAdminGateway implements IdentityAdminGateway {
     await this.getClient().auth.admin.deleteUser(userId);
   }
 
+  async setAccess(userId: string, active: boolean): Promise<void> {
+    const { error } = await this.getClient().auth.admin.updateUserById(userId, {
+      ban_duration: active ? "none" : "876000h",
+    });
+    if (error) throw new Error("IDENTITY_ACCESS_UPDATE_FAILED");
+  }
+
   private getClient(): SupabaseClient {
     this.client ??= createClient(
       this.config.getOrThrow<string>("SUPABASE_URL"),
