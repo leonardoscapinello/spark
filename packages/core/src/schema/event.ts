@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zCompanyId, zContactId, zDealId, zEventId, zOrgId, zServerTimestamp } from "./zodHelpers.js";
 
 export const DOMAIN_EVENT_TYPES = [
-  "contact.created", "contact.updated", "contact.archived", "contact.restored",
+  "contact.created", "contact.updated", "contact.archived", "contact.restored", "identity.added",
   "company.created", "company.updated", "company.archived", "company.restored",
   "deal.created", "deal.updated", "deal.stage_changed", "deal.won", "deal.lost",
   "activity.created", "activity.completed", "activity.reopened",

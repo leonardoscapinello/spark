@@ -280,6 +280,57 @@ export interface AdminAuditLogDto {
   targetLabel: string;
 }
 
+export type AddContactIdentityDtoChannel = typeof AddContactIdentityDtoChannel[keyof typeof AddContactIdentityDtoChannel];
+
+
+export const AddContactIdentityDtoChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+  instagram: 'instagram',
+  messenger: 'messenger',
+  phone: 'phone',
+} as const;
+
+export interface AddContactIdentityDto {
+  channel: AddContactIdentityDtoChannel;
+  /** @minLength 1 */
+  externalValue: string;
+}
+
+export type CreateIdentityResponseDtoIdentityChannel = typeof CreateIdentityResponseDtoIdentityChannel[keyof typeof CreateIdentityResponseDtoIdentityChannel];
+
+
+export const CreateIdentityResponseDtoIdentityChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+  instagram: 'instagram',
+  messenger: 'messenger',
+  phone: 'phone',
+} as const;
+
+export type CreateIdentityResponseDtoIdentity = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  contactId: string;
+  channel: CreateIdentityResponseDtoIdentityChannel;
+  /** @minLength 1 */
+  externalValue: string;
+  verified?: boolean;
+  createdAt: string;
+};
+
+export interface CreateIdentityResponseDto {
+  identity: CreateIdentityResponseDtoIdentity;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type CreateContactDtoLeadStatus = typeof CreateContactDtoLeadStatus[keyof typeof CreateContactDtoLeadStatus];
 
 
@@ -2125,6 +2176,69 @@ export function useAuditLogsControllerList<TData = Awaited<ReturnType<typeof aud
 
 
 
+
+export const contactsControllerAddIdentity = (
+    id: string,
+    addContactIdentityDto: AddContactIdentityDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CreateIdentityResponseDto>(
+      {url: `/v1/contacts/${id}/identities`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addContactIdentityDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getContactsControllerAddIdentityMutationKey = () => ['contactsControllerAddIdentity'] as const;
+
+export const getContactsControllerAddIdentityMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerAddIdentity>>, TError,ContactsControllerAddIdentityMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof contactsControllerAddIdentity>>, TError,ContactsControllerAddIdentityMutationVariables, TContext> => {
+
+const mutationKey = getContactsControllerAddIdentityMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof contactsControllerAddIdentity>>, ContactsControllerAddIdentityMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  contactsControllerAddIdentity(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ContactsControllerAddIdentityMutationResult = NonNullable<Awaited<ReturnType<typeof contactsControllerAddIdentity>>>
+    export type ContactsControllerAddIdentityMutationBody = AddContactIdentityDto
+    export type ContactsControllerAddIdentityMutationError = unknown
+    export type ContactsControllerAddIdentityMutationVariables = {id: string;data: AddContactIdentityDto}
+
+    export const useContactsControllerAddIdentity = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerAddIdentity>>, TError,ContactsControllerAddIdentityMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof contactsControllerAddIdentity>>,
+        TError,
+        ContactsControllerAddIdentityMutationVariables,
+        TContext
+      > => {
+      return useMutation(getContactsControllerAddIdentityMutationOptions(options), queryClient);
+    }
 
 export const contactsControllerCreate = (
     createContactDto: CreateContactDto,

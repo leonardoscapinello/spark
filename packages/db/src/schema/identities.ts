@@ -17,10 +17,10 @@ export const identities = pgTable(
     id: uuid("id").primaryKey().$defaultFn(() => uuidv7()),
     orgId: uuid("org_id")
       .notNull()
-      .references(() => organizations.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
     contactId: uuid("contact_id")
       .notNull()
-      .references(() => contacts.id),
+      .references(() => contacts.id, { onDelete: "cascade" }),
     channel: text("channel").notNull(),
     externalValue: text("external_value").notNull(),
     verified: boolean("verified").notNull().default(false),

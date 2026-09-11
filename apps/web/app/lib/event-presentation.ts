@@ -6,6 +6,7 @@ const TITLES: Record<DomainEventType, string> = {
   "contact.updated": "Dados do contato atualizados",
   "contact.archived": "Contato arquivado",
   "contact.restored": "Contato restaurado",
+  "identity.added": "Canal adicionado",
   "company.created": "Empresa criada",
   "company.updated": "Dados da empresa atualizados",
   "company.archived": "Empresa arquivada",

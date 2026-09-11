@@ -12,7 +12,9 @@ import { GetCurrentUserUseCase } from "../../identity/application/get-current-us
 import { CreateContactUseCase } from "../application/create-contact.usecase.js";
 import { UpdateContactUseCase } from "../application/update-contact.usecase.js";
 import { ArchiveContactUseCase } from "../application/archive-contact.usecase.js";
+import { AddContactIdentityUseCase } from "../application/add-contact-identity.usecase.js";
 import { CreateContactDto, CreateContactResponseDto, UpdateContactArchiveDto, UpdateContactDto, UpdateContactResponseDto } from "../dto/contact.dto.js";
+import { AddContactIdentityDto, CreateIdentityResponseDto } from "../dto/identity.dto.js";
 
 @ApiTags("contacts")
 @Controller("v1/contacts")
@@ -22,7 +24,22 @@ export class ContactsController {
     private readonly createContact: CreateContactUseCase,
     private readonly updateContact: UpdateContactUseCase,
     private readonly archiveContact: ArchiveContactUseCase,
+    private readonly addContactIdentity: AddContactIdentityUseCase,
   ) {}
+
+  @Post(":id/identities")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("contacts:write")
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: CreateIdentityResponseDto })
+  async addIdentity(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Param("id") id: string,
+    @Body() body: AddContactIdentityDto,
+  ): Promise<CreateIdentityResponseDto> {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    return this.addContactIdentity.execute(user.orgId, contactIdFactory.from(id), body) as Promise<CreateIdentityResponseDto>;
+  }
 
   @Post()
   @UseGuards(SupabaseJwtGuard, CapabilityGuard)

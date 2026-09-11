@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zOrgId, zContactId } from "./zodHelpers.js";
+import { zOrgId, zContactId, zIdentityId, zServerTimestamp } from "./zodHelpers.js";
 
 /**
  * The piece the four reference tools don't have — links a channel
@@ -13,14 +13,14 @@ export const IdentityChannel = z.enum(IDENTITY_CHANNELS);
 export type IdentityChannel = z.infer<typeof IdentityChannel>;
 
 export const IdentitySchema = z.object({
-  id: z.uuid(),
+  id: zIdentityId,
   orgId: zOrgId,
   contactId: zContactId,
   channel: IdentityChannel,
   /** Normalized email, E.164 phone, Instagram PSID... depends on the channel. */
   externalValue: z.string().min(1),
   verified: z.boolean().default(false),
-  createdAt: z.iso.datetime(),
+  createdAt: zServerTimestamp,
 });
 
 export type Identity = z.infer<typeof IdentitySchema>;
@@ -30,3 +30,12 @@ export const CreateIdentityInputSchema = IdentitySchema.omit({ id: true, orgId: 
   verified: true,
 });
 export type CreateIdentityInput = z.infer<typeof CreateIdentityInputSchema>;
+
+export const AddContactIdentityInputSchema = CreateIdentityInputSchema.omit({ contactId: true, verified: true });
+export type AddContactIdentityInput = z.infer<typeof AddContactIdentityInputSchema>;
+
+export const CreateIdentityResponseSchema = z.object({
+  identity: IdentitySchema,
+  txid: z.number().int(),
+});
+export type CreateIdentityResponse = z.infer<typeof CreateIdentityResponseSchema>;

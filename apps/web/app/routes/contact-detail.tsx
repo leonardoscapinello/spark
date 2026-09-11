@@ -9,8 +9,9 @@ import {
   userId as userIdFactory,
   companyId as companyIdFactory,
   type ActivityType,
+  type IdentityChannel,
 } from "@spark/core";
-import { optimisticActivity } from "@spark/data";
+import { optimisticActivity, optimisticIdentity } from "@spark/data";
 import { Button, DateTimePicker, ErrorText, Field, Input, Label, Select, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -19,12 +20,13 @@ import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
+import { getIdentitiesCollection } from "../lib/identities-collection.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
 import { getSession } from "../lib/auth.client";
 import styles from "./contact-detail.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload(), getUsersCollection().preload(), getCompaniesCollection().preload(), getEventsCollection().preload()]);
+  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload(), getUsersCollection().preload(), getCompaniesCollection().preload(), getEventsCollection().preload(), getIdentitiesCollection().preload()]);
   return null;
 }
 
@@ -33,6 +35,14 @@ const TYPES: { value: ActivityType; label: string }[] = [
   { value: "call", label: "Ligação" },
   { value: "meeting", label: "Reunião" },
   { value: "email", label: "E-mail" },
+];
+
+const IDENTITY_CHANNEL_OPTIONS: { value: IdentityChannel; label: string }[] = [
+  { value: "email", label: "E-mail" },
+  { value: "phone", label: "Telefone" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "instagram", label: "Instagram" },
+  { value: "messenger", label: "Messenger" },
 ];
 
 function formatDateTime(iso: string): string {
@@ -48,6 +58,9 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const [scheduledAt, setScheduledAt] = useState("");
   const [activityPending, setActivityPending] = useState(false);
   const [contactFieldPending, setContactFieldPending] = useState<string | null>(null);
+  const [identityChannel, setIdentityChannel] = useState<IdentityChannel>("email");
+  const [identityValue, setIdentityValue] = useState("");
+  const [identityPending, setIdentityPending] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [nameEdit, setNameEdit] = useState("");
@@ -77,6 +90,25 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   });
   const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.contactId, params.contactId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
+  const { data: identities } = useLiveQuery({ query: (q) => q.from({ identities: getIdentitiesCollection() }).where(({ identities: item }) => eq(item.contactId, params.contactId)).orderBy(({ identities: item }) => item.createdAt, "asc") });
+
+  async function addIdentity(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const session = getSession();
+    const value = identityValue.trim();
+    if (!session || !value || identityPending) return;
+    setIdentityPending(true);
+    try {
+      const transaction = getIdentitiesCollection().insert(optimisticIdentity({ contactId: contactIdFactory.from(params.contactId), channel: identityChannel, externalValue: value }, session.orgId));
+      await transaction.isPersisted.promise;
+      setIdentityValue("");
+      notify({ title: "Canal adicionado", tone: "success" });
+    } catch (error) {
+      notify({ title: "Não foi possível adicionar o canal", description: error instanceof Error ? error.message : "Confira o valor e tente novamente.", tone: "error" });
+    } finally {
+      setIdentityPending(false);
+    }
+  }
 
   async function updateLifecycle(field: "leadStatus" | "source" | "ownerId" | "companyId", value: string | null) {
     if (!data || contactFieldPending) return;
@@ -280,6 +312,26 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
           <Select label="Empresa do contato" value={data.companyId} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("companyId", value)} />
         </div>
       </div>
+
+      <section className={styles.atividades}>
+        <h2 className={styles.subtitulo}>Canais e identidades</h2>
+        <div className={styles.campos}>
+          {identities.length === 0 ? <span className={styles.valor}>Nenhum canal adicional.</span> : identities.map((identity) => (
+            <div key={identity.id} className={styles.campo}>
+              <span className={styles.rotulo}>{IDENTITY_CHANNEL_OPTIONS.find((option) => option.value === identity.channel)?.label ?? identity.channel}</span>
+              <span className={styles.valor}>{identity.channel === "instagram" ? `@${identity.externalValue}` : identity.externalValue}</span>
+            </div>
+          ))}
+          <form className={styles.formAtividade} onSubmit={addIdentity}>
+            <Select label="Tipo de canal" value={identityChannel} options={IDENTITY_CHANNEL_OPTIONS} onValueChange={(value) => { if (value) setIdentityChannel(value as IdentityChannel); }} />
+            <Field>
+              <Label>Identificador</Label>
+              <Input value={identityValue} onChange={(event) => setIdentityValue(event.target.value)} placeholder={identityChannel === "email" ? "nome@empresa.com" : identityChannel === "instagram" ? "@usuario" : "DDD + número"} />
+            </Field>
+            <Button type="submit" size="sm" loading={identityPending} disabled={!identityValue.trim()}>Adicionar canal</Button>
+          </form>
+        </div>
+      </section>
 
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Histórico</h2>
