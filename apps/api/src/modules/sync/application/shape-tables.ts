@@ -9,11 +9,13 @@
  * client (docs/adr/0026: "a badly written shape is a data leak between
  * organizations — security risk #1").
  */
+import type { SyncResource } from "@spark/core";
+
 export interface ShapeTableConfig {
   column: "org_id" | "id"; // "id" only makes sense for organizations (syncs its own row)
 }
 
-export const SHAPE_TABLES: Readonly<Record<string, ShapeTableConfig>> = {
+export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   organizations: { column: "id" },
   contacts: { column: "org_id" },
   companies: { column: "org_id" },
@@ -26,6 +28,6 @@ export const SHAPE_TABLES: Readonly<Record<string, ShapeTableConfig>> = {
   users: { column: "org_id" },
 };
 
-export function isSyncableTable(table: string): table is keyof typeof SHAPE_TABLES {
+export function isSyncableTable(table: string): table is SyncResource {
   return Object.hasOwn(SHAPE_TABLES, table);
 }

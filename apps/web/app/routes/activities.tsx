@@ -7,6 +7,7 @@ import { ActionModal, Button, DashboardGrid, DataTable, DateTimePicker, Field, I
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getSession } from "../lib/auth.client";
+import { requireCapability } from "../lib/route-access.client";
 import styles from "./activities.module.css";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: ActivityType; label: string }> = [
@@ -17,7 +18,11 @@ const TYPE_OPTIONS: ReadonlyArray<{ value: ActivityType; label: string }> = [
 ];
 
 export async function clientLoader() {
-  await Promise.all([getActivitiesCollection().preload(), getContactsCollection().preload()]);
+  const session = await requireCapability("activities:read");
+  await Promise.all([
+    getActivitiesCollection().preload(),
+    ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
+  ]);
   return null;
 }
 
@@ -26,7 +31,8 @@ export default function Activities() {
   const collection = getActivitiesCollection();
   const contactsCollection = getContactsCollection();
   const { data: activities, isLoading } = useLiveQuery({ query: (q) => q.from({ activities: collection }).orderBy(({ activities: activity }) => activity.scheduledAt, "asc") });
-  const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") });
+  const canReadContacts = getSession()?.capabilities.includes("contacts:read") ?? false;
+  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") : undefined });
   const [modalOpen, setModalOpen] = useState(false);
   const [period, setPeriod] = useState("open");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -38,6 +44,7 @@ export default function Activities() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const session = getSession();
   const canWrite = session?.capabilities.includes("activities:write") ?? false;
+  const canCreate = canReadContacts && canWrite;
   const contactNames = useMemo(() => new Map(contacts.map((contact) => [contact.id, contact.name])), [contacts]);
   const now = new Date();
   const filtered = activities.filter((activity) => {
@@ -82,7 +89,7 @@ export default function Activities() {
   function submit(event: FormEvent) { event.preventDefault(); void createActivity().catch(() => undefined); }
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Agenda comercial" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
+    <PageHeader eyebrow="Agenda comercial" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canCreate ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
     <DashboardGrid metrics>
       <MetricCard title="Atrasadas" value={overdue} sentiment={overdue > 0 ? "negative" : "neutral"} />
       <MetricCard title="Para hoje" value={today} />
@@ -93,7 +100,7 @@ export default function Activities() {
       <Select label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} />
       <span className={styles.count}>{filtered.length} {filtered.length === 1 ? "atividade" : "atividades"}</span>
     </div>
-    <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText="Nenhuma atividade neste filtro." actions={(activity) => <><Button size="sm" variant="ghost" loading={busyId === activity.id} disabled={!canWrite} onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>{activity.contactId && <TableIconAction label="Abrir contato" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}</>} />
+    <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText="Nenhuma atividade neste filtro." actions={(activity) => <><Button size="sm" variant="ghost" loading={busyId === activity.id} disabled={!canWrite} onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>{canReadContacts && activity.contactId && <TableIconAction label="Abrir contato" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}</>} />
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha contato, título e data para agendar." onConfirm={createActivity}>
       <form className={styles.form} onSubmit={submit}>
         <Field><Label>Contato</Label><SearchSelect label="Buscar contato" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>

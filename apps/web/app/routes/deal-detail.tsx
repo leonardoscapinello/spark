@@ -41,6 +41,7 @@ import { getSession } from "../lib/auth.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
+import { requireCapability } from "../lib/route-access.client";
 import styles from "./deal-detail.module.css";
 
 const ACTIVITY_TYPES: ReadonlyArray<{ value: ActivityType; label: string }> = [
@@ -51,15 +52,16 @@ const ACTIVITY_TYPES: ReadonlyArray<{ value: ActivityType; label: string }> = [
 ];
 
 export async function clientLoader() {
+  const session = await requireCapability("deals:read");
   await Promise.all([
     getDealsCollection().preload(),
     getPipelinesCollection().preload(),
     getStagesCollection().preload(),
-    getContactsCollection().preload(),
     getUsersCollection().preload(),
-    getActivitiesCollection().preload(),
-    getCompaniesCollection().preload(),
     getEventsCollection().preload(),
+    ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
+    ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
+    ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
   ]);
   return null;
 }
@@ -75,18 +77,21 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const session = getSession();
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
   const canMove = session?.capabilities.includes("deals:move") ?? false;
-  const canWriteActivities = session?.capabilities.includes("activities:write") ?? false;
+  const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
+  const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
+  const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
+  const canWriteActivities = canReadActivities && (session?.capabilities.includes("activities:write") ?? false);
 
   const { data: deal } = useLiveQuery({
     query: (q) => q.from({ deals: dealsCollection }).where(({ deals: item }) => eq(item.id, params.dealId)).findOne(),
   });
   const { data: stages } = useLiveQuery({ query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: item }) => item.sortOrder, "asc") });
   const { data: pipelines } = useLiveQuery({ query: (q) => q.from({ pipelines: pipelinesCollection }) });
-  const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") });
+  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }).orderBy(({ users: item }) => item.name, "asc") });
-  const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") });
-  const { data: activities } = useLiveQuery({
-    query: (q) => q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc"),
+  const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
+  const { data: activities = [] } = useLiveQuery({
+    query: (q) => canReadActivities ? q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc") : undefined,
   });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
 

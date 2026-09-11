@@ -9,10 +9,17 @@ import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
+import { requireCapability } from "../lib/route-access.client";
 import styles from "./companies.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getCompaniesCollection().preload(), getContactsCollection().preload(), getDealsCollection().preload(), getUsersCollection().preload()]);
+  const session = await requireCapability("companies:read");
+  await Promise.all([
+    getCompaniesCollection().preload(),
+    getUsersCollection().preload(),
+    ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
+    ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
+  ]);
   return null;
 }
 
@@ -20,10 +27,12 @@ export default function Companies() {
   const navigate = useNavigate();
   const collection = getCompaniesCollection();
   const { data: companies, isLoading } = useLiveQuery({ query: (q) => q.from({ companies: collection }).orderBy(({ companies: item }) => item.name, "asc") });
-  const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: getContactsCollection() }) });
-  const { data: deals } = useLiveQuery({ query: (q) => q.from({ deals: getDealsCollection() }) });
-  const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }) });
   const session = getSession();
+  const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
+  const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
+  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: getContactsCollection() }) : undefined });
+  const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }) : undefined });
+  const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }) });
   const canWrite = session?.capabilities.includes("companies:write") ?? false;
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");

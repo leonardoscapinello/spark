@@ -8,11 +8,17 @@ import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
+import { requireCapability } from "../lib/route-access.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS, leadStatusLabel } from "../lib/lead-options";
 import styles from "./contacts.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getContactsCollection().preload(), getUsersCollection().preload(), getCompaniesCollection().preload()]);
+  const session = await requireCapability("contacts:read");
+  await Promise.all([
+    getContactsCollection().preload(),
+    getUsersCollection().preload(),
+    ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
+  ]);
   return null;
 }
 
@@ -24,7 +30,9 @@ export default function Contacts() {
     query: (q) => q.from({ contacts: collection }).orderBy(({ contacts: c }) => c.createdAt, "desc"),
   });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }) });
-  const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") });
+  const canReadCompanies = getSession()?.capabilities.includes("companies:read") ?? false;
+  const canWrite = getSession()?.capabilities.includes("contacts:write") ?? false;
+  const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -132,7 +140,7 @@ export default function Contacts() {
   }
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Relacionamento" title="Contatos" description="Consulte e cadastre as pessoas que sua equipe acompanha." actions={<Button onClick={() => setModalOpen(true)}>Novo contato</Button>} />
+    <PageHeader eyebrow="Relacionamento" title="Contatos" description="Consulte e cadastre as pessoas que sua equipe acompanha." actions={canWrite ? <Button onClick={() => setModalOpen(true)}>Novo contato</Button> : undefined} />
     <div className={styles.toolbar}>
       <div className={styles.search}><Icon name="search" /><Input aria-label="Buscar contatos" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" /></div>
       <div className={styles.filters}>
@@ -150,7 +158,7 @@ export default function Contacts() {
       rowLabel={(contact) => contact.name}
       state={isLoading && contacts.length === 0 ? "loading" : "ready"}
       emptyText={archiveView ? "Nenhum contato arquivado." : search ? `Nenhum contato encontrado para “${search}”.` : "Nenhum contato cadastrado."}
-      actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} /><MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} /></>}
+      actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>}
     />
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Novo contato" confirmLabel="Criar contato" errorText="Não foi possível criar o contato. Corrija os campos marcados ou tente novamente." onConfirm={addContact}>
       <form className={styles.modalFields} onSubmit={submitFromForm}>

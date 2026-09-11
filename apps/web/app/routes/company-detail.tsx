@@ -12,10 +12,18 @@ import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
 import { getEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
+import { requireCapability } from "../lib/route-access.client";
 import styles from "./company-detail.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getCompaniesCollection().preload(), getContactsCollection().preload(), getDealsCollection().preload(), getUsersCollection().preload(), getEventsCollection().preload()]);
+  const session = await requireCapability("companies:read");
+  await Promise.all([
+    getCompaniesCollection().preload(),
+    getUsersCollection().preload(),
+    getEventsCollection().preload(),
+    ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
+    ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
+  ]);
   return null;
 }
 
@@ -25,13 +33,16 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
   const dealsCollection = getDealsCollection();
   const { data: company } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).where(({ companies: item }) => eq(item.id, params.companyId)).findOne() });
   const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") });
-  const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") });
-  const { data: deals } = useLiveQuery({ query: (q) => q.from({ deals: dealsCollection }).orderBy(({ deals: item }) => item.updatedAt, "desc") });
+  const session = getSession();
+  const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
+  const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
+  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
+  const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: dealsCollection }).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.companyId, params.companyId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
-  const canWrite = getSession()?.capabilities.includes("companies:write") ?? false;
-  const canLinkContacts = getSession()?.capabilities.includes("contacts:write") ?? false;
-  const canLinkDeals = getSession()?.capabilities.includes("deals:write") ?? false;
+  const canWrite = session?.capabilities.includes("companies:write") ?? false;
+  const canLinkContacts = canReadContacts && (session?.capabilities.includes("contacts:write") ?? false);
+  const canLinkDeals = canReadDeals && (session?.capabilities.includes("deals:write") ?? false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState(""); const [legalName, setLegalName] = useState("");

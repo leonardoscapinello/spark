@@ -1,12 +1,14 @@
-import { Controller, Get, NotFoundException, Param, Res, UseGuards } from "@nestjs/common";
+import { Controller, ForbiddenException, Get, NotFoundException, Param, Res, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiExcludeEndpoint } from "@nestjs/swagger";
 import { ConfigService } from "@nestjs/config";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { Readable } from "node:stream";
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
+import { canReadSyncResource, effectiveCapabilities, readableEventPrefixes } from "@spark/core";
 import { SupabaseJwtGuard, CurrentSupabaseUser, type SupabaseJwtClaims } from "../../../auth/index.js";
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { SHAPE_TABLES, isSyncableTable } from "../application/shape-tables.js";
+import { PermissionGroupsRepository } from "../../identity/infrastructure/permission-groups.repository.js";
 
 /**
  * Authorization proxy in front of Electric (docs/adr/0018, docs/adr/0026).
@@ -26,6 +28,7 @@ export class ShapesController {
   constructor(
     private readonly config: ConfigService,
     private readonly getCurrentUser: GetCurrentUserUseCase,
+    private readonly permissionGroups: PermissionGroupsRepository,
   ) {}
 
   @Get(":table")
@@ -42,6 +45,11 @@ export class ShapesController {
     }
 
     const user = await this.getCurrentUser.execute(claims.sub);
+    const groups = await this.permissionGroups.getUserCapabilities(user.id);
+    const capabilities = effectiveCapabilities(groups);
+    if (!canReadSyncResource(capabilities, table)) {
+      throw new ForbiddenException(`Missing permission to synchronize "${table}".`);
+    }
     const request = reply.request as FastifyRequest;
 
     const electricBase = this.config.get<string>("ELECTRIC_URL") ?? "http://localhost:3010";
@@ -64,8 +72,13 @@ export class ShapesController {
     }
     const { column } = tableConfig;
     upstream.searchParams.set("table", table);
-    upstream.searchParams.set("where", `"${column}" = $1`);
+    const eventPrefixes = table === "events" ? readableEventPrefixes(capabilities) : [];
+    const eventFilter = eventPrefixes.length > 0
+      ? ` AND (${eventPrefixes.map((_, index) => `"type" LIKE $${index + 2}`).join(" OR ")})`
+      : "";
+    upstream.searchParams.set("where", `"${column}" = $1${eventFilter}`);
     upstream.searchParams.set("params[1]", user.orgId);
+    eventPrefixes.forEach((prefix, index) => upstream.searchParams.set(`params[${index + 2}]`, `${prefix}.%`));
 
     const response = await fetch(upstream);
 

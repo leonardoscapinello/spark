@@ -9,16 +9,18 @@ import { getPipelinesCollection, getStagesCollection, getDealsCollection } from 
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
+import { requireCapability } from "../lib/route-access.client";
 import styles from "./deals.module.css";
 
 export async function clientLoader() {
+  const session = await requireCapability("deals:read");
   await Promise.all([
     getPipelinesCollection().preload(),
     getStagesCollection().preload(),
     getDealsCollection().preload(),
-    getContactsCollection().preload(),
     getUsersCollection().preload(),
-    getCompaniesCollection().preload(),
+    ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
+    ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
   ]);
   return null;
 }
@@ -58,9 +60,12 @@ export default function Deals() {
     query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: s }) => s.sortOrder, "asc"),
   });
   const { data: allDeals } = useLiveQuery({ query: (q) => q.from({ deals: dealsCollection }) });
-  const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") });
+  const session = getSession();
+  const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
+  const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
+  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc") });
-  const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).orderBy(({ companies: company }) => company.name, "asc") });
+  const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: companiesCollection }).orderBy(({ companies: company }) => company.name, "asc") : undefined });
 
   const [dragging, setDragging] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
@@ -85,7 +90,6 @@ export default function Deals() {
   const contactNames = new Map(contacts.map((contact) => [contact.id, contact.name]));
   const userNames = new Map(users.map((user) => [user.id, user.name]));
   const companyNames = new Map(companies.map((company) => [company.id, company.name]));
-  const session = getSession();
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
   const canMove = session?.capabilities.includes("deals:move") ?? false;
   const canManagePipeline = session?.capabilities.includes("pipelines:manage") ?? false;

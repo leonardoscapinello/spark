@@ -23,10 +23,19 @@ import { toTimelineItem } from "../lib/event-presentation";
 import { getIdentitiesCollection } from "../lib/identities-collection.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
 import { getSession } from "../lib/auth.client";
+import { requireCapability } from "../lib/route-access.client";
 import styles from "./contact-detail.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload(), getUsersCollection().preload(), getCompaniesCollection().preload(), getEventsCollection().preload(), getIdentitiesCollection().preload()]);
+  const session = await requireCapability("contacts:read");
+  await Promise.all([
+    getContactsCollection().preload(),
+    getUsersCollection().preload(),
+    getEventsCollection().preload(),
+    getIdentitiesCollection().preload(),
+    ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
+    ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
+  ]);
   return null;
 }
 
@@ -53,6 +62,11 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const collection = getContactsCollection();
   const activitiesCollection = getActivitiesCollection();
   const usersCollection = getUsersCollection();
+  const session = getSession();
+  const canWrite = session?.capabilities.includes("contacts:write") ?? false;
+  const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
+  const canWriteActivities = canReadActivities && (session?.capabilities.includes("activities:write") ?? false);
+  const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
   const [selectedType, setSelectedType] = useState<ActivityType>("task");
   const [activityTitle, setActivityTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -77,18 +91,19 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         .findOne(),
   });
 
-  const { data: activities } = useLiveQuery({
-    query: (q) =>
-      q
+  const { data: activities = [] } = useLiveQuery({
+    query: (q) => canReadActivities
+      ? q
         .from({ activities: activitiesCollection })
         .where(({ activities: a }) => eq(a.contactId, params.contactId))
-        .orderBy(({ activities: a }) => a.scheduledAt, "asc"),
+        .orderBy(({ activities: a }) => a.scheduledAt, "asc")
+      : undefined,
   });
 
   const { data: users } = useLiveQuery({
     query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc"),
   });
-  const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") });
+  const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.contactId, params.contactId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const { data: identities } = useLiveQuery({ query: (q) => q.from({ identities: getIdentitiesCollection() }).where(({ identities: item }) => eq(item.contactId, params.contactId)).orderBy(({ identities: item }) => item.createdAt, "asc") });
 
@@ -288,28 +303,26 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
             <span className={styles.rotulo}>Pontuação</span>
             <span className={styles.valor}>{data.score}</span>
           </div>
-          <Button variant="secondary" size="sm" onClick={startEditing} className={styles.botaoEditar}>
-            Editar
-          </Button>
+          {canWrite && <Button variant="secondary" size="sm" onClick={startEditing} className={styles.botaoEditar}>Editar</Button>}
         </div>
       )}
 
       <div className={styles.campos}>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Etapa do relacionamento</span>
-          <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} disabled={contactFieldPending !== null} onValueChange={(value) => { if (value) void updateLifecycle("leadStatus", value); }} />
+          <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} disabled={!canWrite || contactFieldPending !== null} onValueChange={(value) => { if (value) void updateLifecycle("leadStatus", value); }} />
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Origem</span>
-          <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("source", value)} />
+          <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} disabled={!canWrite || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("source", value)} />
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Responsável</span>
-          <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("ownerId", value)} />
+          <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} disabled={!canWrite || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("ownerId", value)} />
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Empresa</span>
-          <Select label="Empresa do contato" value={data.companyId} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("companyId", value)} />
+          <Select label="Empresa do contato" value={data.companyId} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} disabled={!canWrite || !canReadCompanies || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("companyId", value)} />
         </div>
       </div>
 
@@ -322,14 +335,14 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
               <span className={styles.valor}>{identity.channel === "instagram" ? `@${identity.externalValue}` : identity.externalValue}</span>
             </div>
           ))}
-          <form className={styles.formAtividade} onSubmit={addIdentity}>
+          {canWrite && <form className={styles.formAtividade} onSubmit={addIdentity}>
             <Select label="Tipo de canal" value={identityChannel} options={IDENTITY_CHANNEL_OPTIONS} onValueChange={(value) => { if (value) setIdentityChannel(value as IdentityChannel); }} />
             <Field>
               <Label>Identificador</Label>
               <Input value={identityValue} onChange={(event) => setIdentityValue(event.target.value)} placeholder={identityChannel === "email" ? "nome@empresa.com" : identityChannel === "instagram" ? "@usuario" : "DDD + número"} />
             </Field>
             <Button type="submit" size="sm" loading={identityPending} disabled={!identityValue.trim()}>Adicionar canal</Button>
-          </form>
+          </form>}
         </div>
       </section>
 
@@ -338,7 +351,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste contato aparecerão aqui." />
       </section>
 
-      <section className={styles.atividades}>
+      {canReadActivities && <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Atividades</h2>
 
         <ul className={styles.listaAtividades}>
@@ -356,18 +369,18 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
                 <span className={styles.atividadeTitulo}>{activity.title}</span>
                 <span className={styles.atividadeData}>{formatDateTime(activity.scheduledAt)}</span>
               </div>
-              <Button
+              {canWriteActivities && <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => void toggleCompleted(activity.id, activity.title, !activity.completed)}
               >
                 {activity.completed ? "Reabrir" : "Concluir"}
-              </Button>
+              </Button>}
             </li>
           ))}
         </ul>
 
-        <form className={styles.formAtividade} onSubmit={addActivity}>
+        {canWriteActivities && <form className={styles.formAtividade} onSubmit={addActivity}>
           <div className={styles.tipoLinha}>
             {TYPES.map((option) => (
               <Button
@@ -392,8 +405,8 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
           <Button type="submit" size="sm" loading={activityPending} disabled={!activityTitle.trim() || !scheduledAt}>
             Adicionar atividade
           </Button>
-        </form>
-      </section>
+        </form>}
+      </section>}
     </div>
   );
 }

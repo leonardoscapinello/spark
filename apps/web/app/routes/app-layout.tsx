@@ -35,15 +35,15 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           <img src="/brand/leonardo-scapinello-ink.svg" alt="Leonardo Scapinello" />
         </a>
         <nav className={styles.nav}>
-          <Link to="/" className={styles.navItem}>
-            Contatos
-          </Link>
+          {session.capabilities.includes("contacts:read") && (
+            <Link to="/" className={styles.navItem}>Contatos</Link>
+          )}
           {session.capabilities.includes("companies:read") && (
             <Link to="/companies" className={styles.navItem}>Empresas</Link>
           )}
-          <Link to="/deals" className={styles.navItem}>
-            Negócios
-          </Link>
+          {session.capabilities.includes("deals:read") && (
+            <Link to="/deals" className={styles.navItem}>Negócios</Link>
+          )}
           {session.capabilities.includes("activities:read") && (
             <Link to="/activities" className={styles.navItem}>
               Atividades
