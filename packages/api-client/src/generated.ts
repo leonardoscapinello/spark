@@ -677,6 +677,11 @@ export interface CreateDealDto {
   contactId?: string | null;
   /**
      * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
+  /**
+     * @minLength 1
      * @maxLength 200
      */
   name: string;
@@ -717,6 +722,11 @@ export type CreateDealResponseDtoDeal = {
      * @nullable
      */
   contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId: string | null;
   /**
      * @minLength 1
      * @maxLength 200
@@ -776,6 +786,11 @@ export type MoveDealResponseDtoDeal = {
      * @nullable
      */
   contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId: string | null;
   /**
      * @minLength 1
      * @maxLength 200
@@ -847,6 +862,11 @@ export type CloseDealResponseDtoDeal = {
      * @nullable
      */
   contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId: string | null;
   /**
      * @minLength 1
      * @maxLength 200

@@ -1,10 +1,12 @@
 import { type FormEvent, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
-import { money, sum, formatBRL, type StageId, type DealStatus } from "@spark/core";
+import { sum, formatBRL, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
-import { Button, Field, Input, Label } from "@spark/ui-web";
+import { ActionModal, Button, DatePicker, Field, Input, Label, MoneyInput, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getPipelinesCollection, getStagesCollection, getDealsCollection } from "../lib/deals-collections.client";
+import { getContactsCollection } from "../lib/contacts-collection.client";
+import { getUsersCollection } from "../lib/users-collection.client";
 import styles from "./deals.module.css";
 
 export async function clientLoader() {
@@ -12,6 +14,8 @@ export async function clientLoader() {
     getPipelinesCollection().preload(),
     getStagesCollection().preload(),
     getDealsCollection().preload(),
+    getContactsCollection().preload(),
+    getUsersCollection().preload(),
   ]);
   return null;
 }
@@ -40,6 +44,8 @@ export default function Deals() {
   const pipelinesCollection = getPipelinesCollection();
   const stagesCollection = getStagesCollection();
   const dealsCollection = getDealsCollection();
+  const contactsCollection = getContactsCollection();
+  const usersCollection = getUsersCollection();
 
   const { data: pipelines, isLoading: isLoadingPipelines } = useLiveQuery({
     query: (q) => q.from({ pipelines: pipelinesCollection }),
@@ -48,48 +54,86 @@ export default function Deals() {
     query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: s }) => s.sortOrder, "asc"),
   });
   const { data: allDeals } = useLiveQuery({ query: (q) => q.from({ deals: dealsCollection }) });
+  const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") });
+  const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc") });
 
   const [dragging, setDragging] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [renamingStage, setRenamingStage] = useState<string | null>(null);
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("open");
+  const [dealModalOpen, setDealModalOpen] = useState(false);
+  const [targetStageId, setTargetStageId] = useState<string | null>(null);
+  const [dealName, setDealName] = useState("");
+  const [dealAmount, setDealAmount] = useState<Money | null>(null);
+  const [dealContact, setDealContact] = useState<SelectOption | null>(null);
+  const [dealOwnerId, setDealOwnerId] = useState(() => getSession()?.userId ?? "");
+  const [expectedCloseDate, setExpectedCloseDate] = useState("");
+  const [closingDeal, setClosingDeal] = useState<Deal | null>(null);
+  const [lossReason, setLossReason] = useState("");
+  const [busyDealId, setBusyDealId] = useState<string | null>(null);
 
-  const mainPipeline = pipelines.find((p) => p.isDefault) ?? pipelines[0];
+  const mainPipeline = pipelines.find((pipeline) => pipeline.id === selectedPipelineId) ?? pipelines.find((pipeline) => pipeline.isDefault) ?? pipelines[0];
   const stages = mainPipeline ? allStages.filter((s) => s.pipelineId === mainPipeline.id) : [];
-  const deals = mainPipeline ? allDeals.filter((d) => d.pipelineId === mainPipeline.id) : [];
+  const deals = mainPipeline ? allDeals.filter((deal) => deal.pipelineId === mainPipeline.id && !deal.deletedAt && (statusFilter === "all" || deal.status === statusFilter)) : [];
+  const contactNames = new Map(contacts.map((contact) => [contact.id, contact.name]));
+  const userNames = new Map(users.map((user) => [user.id, user.name]));
+  const session = getSession();
+  const canWrite = session?.capabilities.includes("deals:write") ?? false;
+  const canMove = session?.capabilities.includes("deals:move") ?? false;
+  const canManagePipeline = session?.capabilities.includes("pipelines:manage") ?? false;
 
-  function addDeal(event: FormEvent<HTMLFormElement>, stageId: StageId) {
-    event.preventDefault();
-    const session = getSession();
-    if (!session || !mainPipeline) return;
-
-    const formData = new FormData(event.currentTarget);
-    const name = String(formData.get("name") ?? "").trim();
-    const amountReais = String(formData.get("amount") ?? "0").replace(",", ".");
-    if (!name) return;
-
-    const cents = Math.round(Number.parseFloat(amountReais || "0") * 100);
-    const deal = optimisticDeal(
-      { pipelineId: mainPipeline.id, stageId, name, amount: money(Number.isFinite(cents) ? cents : 0) },
-      session.orgId,
-    );
-    dealsCollection.insert(forInsert(deal));
-    event.currentTarget.reset();
+  function openDealModal(stageId?: string) {
+    setTargetStageId(stageId ?? stages[0]?.id ?? null);
+    setDealModalOpen(true);
   }
 
-  function dropOn(stageId: string) {
+  function resetDealForm() {
+    setDealName(""); setDealAmount(null); setDealContact(null);
+    setDealOwnerId(getSession()?.userId ?? ""); setExpectedCloseDate("");
+  }
+
+  async function addDeal() {
+    if (!session || !mainPipeline || !targetStageId || !dealName.trim() || dealAmount === null) throw new Error("MISSING_FIELDS");
+    const deal = optimisticDeal({
+      pipelineId: mainPipeline.id,
+      stageId: targetStageId as StageId,
+      contactId: dealContact ? contactIdFactory.from(dealContact.value) : null,
+      ownerId: dealOwnerId ? userIdFactory.from(dealOwnerId) : null,
+      name: dealName.trim(),
+      amount: dealAmount,
+      expectedCloseDate: expectedCloseDate || null,
+    }, session.orgId);
+    const transaction = dealsCollection.insert(forInsert(deal));
+    await transaction.isPersisted.promise;
+    notify({ title: "Negócio criado", description: deal.name, tone: "success" });
+    resetDealForm();
+  }
+
+  async function dropOn(stageId: string) {
     if (dragging) {
-      dealsCollection.update(dragging, (draft) => {
+      const transaction = dealsCollection.update(dragging, (draft) => {
         draft.stageId = stageId;
       });
+      try { await transaction.isPersisted.promise; notify({ title: "Negócio movido", tone: "success" }); }
+      catch { notify({ title: "Não foi possível mover o negócio", tone: "error" }); }
     }
     setDragging(null);
     setDropTarget(null);
   }
 
-  function closeDeal(id: string, status: Extract<DealStatus, "won" | "lost">) {
-    dealsCollection.update(id, (draft) => {
-      draft.status = status;
-    });
+  async function closeDeal(deal: Deal, status: Extract<DealStatus, "won" | "lost">, reason?: string) {
+    setBusyDealId(deal.id);
+    try {
+      const transaction = dealsCollection.update(deal.id, (draft) => {
+        draft.status = status;
+        if (status === "lost") draft.lossReason = reason?.trim() || null;
+      });
+      await transaction.isPersisted.promise;
+      notify({ title: status === "won" ? "Negócio ganho" : "Negócio perdido", description: deal.name, tone: status === "won" ? "success" : "warning" });
+      return true;
+    } catch { notify({ title: "Não foi possível fechar o negócio", tone: "error" }); return false; }
+    finally { setBusyDealId(null); }
   }
 
   function addStage(event: FormEvent<HTMLFormElement>) {
@@ -119,7 +163,7 @@ export default function Deals() {
   if (!isLoadingPipelines && !mainPipeline) {
     return (
       <div className={styles.pagina}>
-        <h1 className={styles.titulo}>Negócios</h1>
+        <PageHeader eyebrow="CRM" title="Negócios" description="Configure o primeiro funil comercial da organização." />
         <div className={styles.vazio}>
           <p>Nenhum funil ainda.</p>
           <Button onClick={() => void createDefaultPipeline()}>Criar funil de vendas</Button>
@@ -130,7 +174,11 @@ export default function Deals() {
 
   return (
     <div className={styles.pagina}>
-      <h1 className={styles.titulo}>{mainPipeline?.name ?? "Negócios"}</h1>
+      <PageHeader eyebrow="CRM" title={mainPipeline?.name ?? "Negócios"} description="Acompanhe valor, contato, responsável e avanço de cada oportunidade." actions={canWrite ? <Button onClick={() => openDealModal()}>Novo negócio</Button> : undefined} />
+      <div className={styles.toolbar}>
+        <Select label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
+        <Select label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setStatusFilter(value ?? "open")} />
+      </div>
 
       <div className={styles.board}>
         {stages.map((stage) => {
@@ -149,7 +197,7 @@ export default function Deals() {
               }}
               onDrop={(event) => {
                 event.preventDefault();
-                dropOn(stage.id);
+                void dropOn(stage.id);
               }}
             >
               <div className={styles.colunaCabecalho}>
@@ -198,7 +246,7 @@ export default function Deals() {
                       className={[styles.cartao, dragging === deal.id ? styles.cartaoArrastando : ""]
                         .filter(Boolean)
                         .join(" ")}
-                      draggable={isOpen}
+                      draggable={isOpen && canMove}
                       onDragStart={(event) => {
                         event.dataTransfer.effectAllowed = "move";
                         setDragging(deal.id);
@@ -210,12 +258,15 @@ export default function Deals() {
                     >
                       <span className={styles.cartaoNome}>{deal.name}</span>
                       <span className={styles.cartaoValor}>{formatBRL(syncedAmount(deal.amount))}</span>
+                      {deal.contactId && <span className={styles.cartaoMeta}>{contactNames.get(deal.contactId) ?? "Contato indisponível"}</span>}
+                      {deal.ownerId && <span className={styles.cartaoMeta}>Responsável: {userNames.get(deal.ownerId) ?? "Usuário indisponível"}</span>}
+                      {deal.expectedCloseDate && <span className={styles.cartaoMeta}>Previsão: {formatDate(deal.expectedCloseDate)}</span>}
                       {isOpen ? (
                         <div className={styles.cartaoAcoes}>
-                          <Button variant="ghost" size="sm" onClick={() => closeDeal(deal.id, "won")}>
+                          <Button variant="ghost" size="sm" loading={busyDealId === deal.id} disabled={!canMove} onClick={() => void closeDeal(deal, "won")}>
                             Ganho
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => closeDeal(deal.id, "lost")}>
+                          <Button variant="ghost" size="sm" disabled={!canMove || busyDealId === deal.id} onClick={() => { setLossReason(""); setClosingDeal(deal); }}>
                             Perdido
                           </Button>
                         </div>
@@ -234,26 +285,12 @@ export default function Deals() {
                 })}
               </div>
 
-              <form className={styles.formNovo} onSubmit={(event) => addDeal(event, stage.id)}>
-                <Field>
-                  <Label>Novo negócio</Label>
-                  <Input name="name" placeholder="Nome" />
-                </Field>
-                <div className={styles.formNovoLinha}>
-                  <Field className={styles.formNovoValor}>
-                    <Label>Valor</Label>
-                    <Input name="amount" placeholder="0,00" inputMode="decimal" />
-                  </Field>
-                  <Button type="submit" size="sm">
-                    +
-                  </Button>
-                </div>
-              </form>
+              {canWrite && <Button variant="ghost" size="sm" onClick={() => openDealModal(stage.id)}>+ Adicionar negócio</Button>}
             </section>
           );
         })}
 
-        <form className={styles.colunaNova} onSubmit={addStage}>
+        {canManagePipeline && <form className={styles.colunaNova} onSubmit={addStage}>
           <Field>
             <Label>Novo estágio</Label>
             <Input name="stageName" placeholder="Nome do estágio" size="sm" />
@@ -261,8 +298,25 @@ export default function Deals() {
           <Button type="submit" size="sm" variant="secondary">
             + Estágio
           </Button>
-        </form>
+        </form>}
       </div>
+      <ActionModal open={dealModalOpen} onOpenChange={(open) => { setDealModalOpen(open); if (!open) resetDealForm(); }} title="Novo negócio" confirmLabel="Criar negócio" errorText="Preencha nome, valor e etapa para criar o negócio." onConfirm={addDeal}>
+        <div className={styles.modalFields}>
+          <Field><Label>Nome</Label><Input value={dealName} onChange={(event) => setDealName(event.target.value)} placeholder="Ex.: Contrato anual Acme" /></Field>
+          <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={dealAmount} onValueChange={setDealAmount} /></Field>
+          <Field><Label>Contato</Label><SearchSelect label="Contato do negócio" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={dealContact} onValueChange={setDealContact} /></Field>
+          <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={dealOwnerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} onValueChange={(value) => setDealOwnerId(value ?? "")} /></Field>
+          <Field><Label>Etapa inicial</Label><Select label="Etapa inicial" value={targetStageId} options={stages.map((stage) => ({ value: stage.id, label: stage.name }))} onValueChange={setTargetStageId} /></Field>
+          <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
+        </div>
+      </ActionModal>
+      <ActionModal open={closingDeal !== null} onOpenChange={(open) => { if (!open) { setClosingDeal(null); setLossReason(""); } }} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Não foi possível fechar o negócio." onConfirm={async () => { if (!closingDeal) return; const closed = await closeDeal(closingDeal, "lost", lossReason); if (!closed) throw new Error("CLOSE_FAILED"); setClosingDeal(null); }}>
+        <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
+      </ActionModal>
     </div>
   );
+}
+
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(value));
 }

@@ -32,6 +32,7 @@ export class DealsRepository {
           pipelineId: input.pipelineId,
           stageId: input.stageId,
           contactId: input.contactId ?? null,
+          ownerId: input.ownerId ?? null,
           name: input.name,
           amount: toCents(input.amount),
           status: input.status ?? "open",
@@ -98,6 +99,7 @@ function toDeal(row: {
   pipelineId: string;
   stageId: string;
   contactId: string | null;
+  ownerId: string | null;
   name: string;
   amount: number;
   status: string;
@@ -113,6 +115,7 @@ function toDeal(row: {
     pipelineId: row.pipelineId,
     stageId: row.stageId,
     contactId: row.contactId,
+    ownerId: row.ownerId,
     name: row.name,
     amount: money(row.amount),
     status: row.status,

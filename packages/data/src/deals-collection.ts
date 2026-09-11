@@ -25,6 +25,7 @@ export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId)
     pipelineId: input.pipelineId,
     stageId: input.stageId,
     contactId: input.contactId ?? null,
+    ownerId: input.ownerId ?? null,
     name: input.name,
     amount: input.amount,
     status: input.status ?? "open",
@@ -129,6 +130,7 @@ export function createDealsCollection() {
           pipelineId: deal.pipelineId,
           stageId: deal.stageId,
           contactId: deal.contactId,
+          ownerId: deal.ownerId,
           name: deal.name,
           // the wire format is a plain number (cents) — zMoney does the
           // inverse conversion on the API's input validation

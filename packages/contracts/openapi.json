@@ -2206,6 +2206,11 @@
             "minLength": 1,
             "nullable": true
           },
+          "ownerId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
           "name": {
             "type": "string",
             "minLength": 1,
@@ -2280,6 +2285,11 @@
                 "minLength": 1,
                 "nullable": true
               },
+              "ownerId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
               "name": {
                 "type": "string",
                 "minLength": 1,
@@ -2365,6 +2375,7 @@
               "pipelineId",
               "stageId",
               "contactId",
+              "ownerId",
               "name",
               "amount",
               "expectedCloseDate",
@@ -2424,6 +2435,11 @@
                 "minLength": 1,
                 "nullable": true
               },
+              "ownerId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
               "name": {
                 "type": "string",
                 "minLength": 1,
@@ -2509,6 +2525,7 @@
               "pipelineId",
               "stageId",
               "contactId",
+              "ownerId",
               "name",
               "amount",
               "expectedCloseDate",
@@ -2576,6 +2593,11 @@
                 "minLength": 1,
                 "nullable": true
               },
+              "ownerId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
               "name": {
                 "type": "string",
                 "minLength": 1,
@@ -2661,6 +2683,7 @@
               "pipelineId",
               "stageId",
               "contactId",
+              "ownerId",
               "name",
               "amount",
               "expectedCloseDate",

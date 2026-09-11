@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zOrgId, zPipelineId, zStageId, zContactId, zDealId, zMoney, zServerTimestamp } from "./zodHelpers.js";
+import { zOrgId, zPipelineId, zStageId, zContactId, zDealId, zMoney, zServerTimestamp, zUserId } from "./zodHelpers.js";
 
 /** Pipedrive parity — the actual product vocabulary of the tool we're replacing. */
 export const DealStatusSchema = z.enum(["open", "won", "lost"]);
@@ -16,6 +16,7 @@ export const DealSchema = z.object({
   pipelineId: zPipelineId,
   stageId: zStageId,
   contactId: zContactId.nullable(),
+  ownerId: zUserId.nullable(),
   name: z.string().min(1, { error: "Deal name is required" }).max(200),
   amount: zMoney,
   status: DealStatusSchema.default("open"),
@@ -37,7 +38,7 @@ export const CreateDealInputSchema = DealSchema.omit({
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
-}).partial({ contactId: true, status: true, expectedCloseDate: true, lossReason: true });
+}).partial({ contactId: true, ownerId: true, status: true, expectedCloseDate: true, lossReason: true });
 export type CreateDealInput = z.infer<typeof CreateDealInputSchema>;
 
 export const UpdateDealInputSchema = CreateDealInputSchema.omit({ id: true }).partial();
