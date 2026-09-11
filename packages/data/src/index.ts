@@ -14,3 +14,4 @@ export * from "./automations-collection.js";
 export * from "./automation-versions-collection.js";
 export * from "./automation-runs-collection.js";
 export * from "./automation-run-steps-collection.js";
+export * from "./integration-connections-collection.js";

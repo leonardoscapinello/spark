@@ -32,6 +32,10 @@ const TITLES: Record<DomainEventType, string> = {
   "automation.run_started": "Execução de automação iniciada",
   "automation.run_completed": "Execução de automação concluída",
   "automation.run_failed": "Execução de automação falhou",
+  "integration.configured": "Integração configurada",
+  "integration.checked": "Conexão da integração verificada",
+  "integration.disabled": "Integração desabilitada",
+  "integration.enabled": "Integração habilitada",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

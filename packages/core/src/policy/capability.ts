@@ -23,6 +23,8 @@ export const CAPABILITIES = [
   "automations:read",
   "automations:write",
   "automations:publish",
+  "integrations:read",
+  "integrations:manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
