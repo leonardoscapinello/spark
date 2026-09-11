@@ -26,6 +26,7 @@ export * from "./Textarea/Textarea.js";
 export * from "./Feedback/Feedback.js";
 export * from "./Card/Card.js";
 export * from "./Dashboard/Dashboard.js";
+export * from "./Chart/Chart.js";
 
 export { InlineEdit, type InlineEditProps } from "./InlineEdit/InlineEdit.js";
 

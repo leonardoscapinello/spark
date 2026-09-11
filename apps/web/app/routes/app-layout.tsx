@@ -35,6 +35,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           <img src="/brand/leonardo-scapinello-ink.svg" alt="Leonardo Scapinello" />
         </a>
         <nav className={styles.nav}>
+          <Link to="/dashboard" className={styles.navItem}>Visão geral</Link>
           {session.capabilities.includes("contacts:read") && (
             <Link to="/" className={styles.navItem}>Contatos</Link>
           )}
