@@ -12,6 +12,8 @@ import { Input } from "../Input/Input.js";
 import { PasswordInput } from "../PasswordInput/PasswordInput.js";
 import { ErrorText } from "../ErrorText/ErrorText.js";
 import { InlineEdit } from "../InlineEdit/InlineEdit.js";
+import { Toaster } from "../Notification/Toast.js";
+import { OverlayExamples } from "./OverlayExamples.js";
 import { ExtendedCatalog } from "./ExtendedCatalog.js";
 import styles from "./Catalog.module.css";
 
@@ -32,7 +34,7 @@ function Catalog() {
   const [team, setTeam] = useState("Atendimento");
   const [selection, setSelection] = useState("Todos");
   return <div className={styles.page} data-theme="light">
-    <NavigationRail>{(["inbox", "user", "mail", "search"] as const).map((name, index) => <Button key={name} iconOnly variant={index === 0 ? "raised" : "ghost"} shape="rounded" icon={<Icon name={name} />} aria-label={["Inbox", "Contatos", "E-mail", "Pesquisar"][index]} onClick={() => setSelection(["Todos", "Contatos", "E-mail", "Pesquisar"][index] ?? "Todos")} />)}</NavigationRail>
+    <Toaster /><NavigationRail>{(["inbox", "user", "mail", "search"] as const).map((name, index) => <Button key={name} iconOnly variant={index === 0 ? "raised" : "ghost"} shape="rounded" icon={<Icon name={name} />} aria-label={["Inbox", "Contatos", "E-mail", "Pesquisar"][index]} onClick={() => setSelection(["Todos", "Contatos", "E-mail", "Pesquisar"][index] ?? "Todos")} />)}</NavigationRail>
     <Sidebar title="Inbox" actions={<Button iconOnly variant="secondary" icon={<Icon name="plus" />} aria-label="Nova visualização" onClick={() => setSelection("Nova visualização")} />} footer={<Button variant="ghost" icon={<Icon name="menu" />} onClick={() => setSelection("Gerenciar")}>Gerenciar</Button>}>
       {(["Pesquisar", "Sua caixa de entrada", "Menções", "Criado por você", "Todos", "Não atribuído", "Spam", "Painel"]).map((label,index) => <SidebarItem key={label} href={`#${index}`} active={selection===label} onClick={e => {e.preventDefault(); setSelection(label);}} icon={<Icon name={index===0?"search":index===4?"user":"inbox"} />} count={index>0&&index<7 ? index===4||index===5 ? 4 : 0 : undefined}>{label}</SidebarItem>)}
       <SidebarSection title="Inboxes da equipe"><SidebarItem href="#support" onClick={e=>{e.preventDefault();setSelection("Atendimento");}} active={selection==="Atendimento"} icon={<Icon name="inbox" />} count={4}>Atendimento</SidebarItem></SidebarSection>
@@ -43,7 +45,7 @@ function Catalog() {
       <div className={styles.selection} role="status">{selection}</div>
       <div className={styles.dashboard}><Suspense fallback={<p>Carregando gráficos…</p>}><DashboardExamples /></Suspense></div>
       <div className={styles.grid}>
-        <ExtendedCatalog />
+        <OverlayExamples /><ExtendedCatalog />
         <section className={styles.card}><h2>Botões</h2><div className={styles.rows}>
           <div className={styles.row}><Button>Salvar</Button><Button variant="secondary">Cancelar</Button><Button variant="ghost">Ver tudo</Button><Button variant="raised">Adicionar</Button></div>
           <div className={styles.row}><Button size="sm">Pequeno</Button><Button>Médio</Button><Button size="lg">Grande</Button><Button shape="rounded">Retangular</Button></div>

@@ -244,6 +244,22 @@
     "checkboxMark": {
       "$type": "dimension",
       "$value": "12px"
+    },
+    "modalWide": {
+      "$type": "dimension",
+      "$value": "960px"
+    },
+    "modalWorkspace": {
+      "$type": "dimension",
+      "$value": "1280px"
+    },
+    "modalColumn": {
+      "$type": "dimension",
+      "$value": "260px"
+    },
+    "toastWidth": {
+      "$type": "dimension",
+      "$value": "360px"
     }
   }
 }

@@ -1,0 +1,11 @@
+.notification { box-sizing: border-box; width: 100%; display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); background: var(--color-surface); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-inline-start: var(--ui-focusWidth) solid var(--color-accent); border-radius: var(--radius-sm); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.notification[data-tone="success"] { border-inline-start-color: var(--color-statusSuccess); }
+.notification[data-tone="warning"] { border-inline-start-color: var(--color-statusWarning); }
+.notification[data-tone="error"] { border-inline-start-color: var(--color-statusDanger); }
+.content { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.content p { margin: var(--space-1) 0 0; color: var(--color-inkMuted); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.unread { display: block; color: var(--color-accent); font-size: var(--typography-size-compact); }
+.list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
+.empty { color: var(--color-inkMuted); }
+.toast { width: min(var(--ui-toastWidth), calc(100vw - var(--space-6) * 2)); box-shadow: var(--ui-popupShadow); border-radius: var(--radius-sm); }
