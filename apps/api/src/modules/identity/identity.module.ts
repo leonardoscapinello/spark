@@ -6,6 +6,10 @@ import { PermissionGroupsRepository } from "./infrastructure/permission-groups.r
 import { SupabaseJwtGuard } from "../../auth/index.js";
 import { CapabilityGuard } from "../../auth/index.js";
 import { PermissionGroupsController } from "./presentation/permission-groups.controller.js";
+import { UsersController } from "./presentation/users.controller.js";
+import { InviteUserUseCase } from "./application/invite-user.usecase.js";
+import { IDENTITY_ADMIN_GATEWAY } from "./application/identity-admin.gateway.js";
+import { SupabaseIdentityAdminGateway } from "./infrastructure/supabase-identity-admin.gateway.js";
 
 // ConfigModule is deliberately NOT imported here — it's already global via
 // ConfigModule.forRoot({ isGlobal: true }) in AppModule. Reimporting the
@@ -13,7 +17,16 @@ import { PermissionGroupsController } from "./presentation/permission-groups.con
 // inside SupabaseJwtGuard (docs/adr/0003 — a single module, no duplicating
 // infrastructure config per domain module).
 @Module({
-  controllers: [MeController, PermissionGroupsController],
-  providers: [GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  controllers: [MeController, PermissionGroupsController, UsersController],
+  providers: [
+    GetCurrentUserUseCase,
+    InviteUserUseCase,
+    UsersRepository,
+    PermissionGroupsRepository,
+    SupabaseJwtGuard,
+    CapabilityGuard,
+    SupabaseIdentityAdminGateway,
+    { provide: IDENTITY_ADMIN_GATEWAY, useExisting: SupabaseIdentityAdminGateway },
+  ],
 })
 export class IdentityModule {}

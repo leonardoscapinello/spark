@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zOrgId, zUserId, zEmail } from "./zodHelpers.js";
+import { zOrgId, zPermissionGroupId, zUserId, zEmail } from "./zodHelpers.js";
 
 /**
  * User — who logs in. Role/permission detail lives in `permission_groups`
@@ -34,3 +34,16 @@ export const CreateUserInputSchema = UserSchema.omit({
   deactivatedAt: true,
 }).partial({ avatarUrl: true });
 export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
+
+export const AdminUserSchema = UserSchema.extend({
+  groupIds: z.array(zPermissionGroupId),
+});
+export type AdminUser = z.infer<typeof AdminUserSchema>;
+
+export const InviteUserInputSchema = z.object({
+  id: zUserId,
+  name: z.string().trim().min(1, { error: "Name is required" }).max(200),
+  email: zEmail,
+  groupId: zPermissionGroupId,
+});
+export type InviteUserInput = z.infer<typeof InviteUserInputSchema>;

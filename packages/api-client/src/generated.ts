@@ -58,6 +58,7 @@ export type PermissionGroupDtoCapabilitiesItem = typeof PermissionGroupDtoCapabi
 export const PermissionGroupDtoCapabilitiesItem = {
   'contacts:read': 'contacts:read',
   'contacts:write': 'contacts:write',
+  'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
   'pipelines:manage': 'pipelines:manage',
   'deals:read': 'deals:read',
@@ -90,6 +91,7 @@ export type CreatePermissionGroupDtoCapabilitiesItem = typeof CreatePermissionGr
 export const CreatePermissionGroupDtoCapabilitiesItem = {
   'contacts:read': 'contacts:read',
   'contacts:write': 'contacts:write',
+  'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
   'pipelines:manage': 'pipelines:manage',
   'deals:read': 'deals:read',
@@ -116,6 +118,7 @@ export type UpdatePermissionGroupDtoCapabilitiesItem = typeof UpdatePermissionGr
 export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'contacts:read': 'contacts:read',
   'contacts:write': 'contacts:write',
+  'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
   'pipelines:manage': 'pipelines:manage',
   'deals:read': 'deals:read',
@@ -137,6 +140,49 @@ export interface UpdatePermissionGroupDto {
 export interface AssignUserToPermissionGroupDto {
   /** @minLength 1 */
   userId: string;
+}
+
+export interface AdminUserDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  supabaseUserId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /** @minLength 1 */
+  email: string;
+  /** @nullable */
+  avatarUrl: string | null;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  createdAt: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  updatedAt: string;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  deactivatedAt: string | null;
+  /** @items.minLength 1 */
+  groupIds: string[];
+}
+
+export interface InviteUserDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /** @minLength 1 */
+  email: string;
+  /** @minLength 1 */
+  groupId: string;
 }
 
 export type CreateContactDtoCustomFields = {[key: string]: unknown};
@@ -1176,6 +1222,155 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPermissionGroupsControllerAssignUserMutationOptions(options), queryClient);
+    }
+
+export const usersControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AdminUserDto[]>(
+      {url: `/v1/admin/users`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getUsersControllerListQueryKey = () => {
+    return [
+    `/v1/admin/users`
+    ] as const;
+    }
+
+
+export const getUsersControllerListQueryOptions = <TData = Awaited<ReturnType<typeof usersControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerList>>> = ({ signal }) => usersControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof usersControllerList>>>
+export type UsersControllerListQueryError = unknown
+
+
+export function useUsersControllerList<TData = Awaited<ReturnType<typeof usersControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof usersControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersControllerList<TData = Awaited<ReturnType<typeof usersControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof usersControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersControllerList<TData = Awaited<ReturnType<typeof usersControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersControllerList<TData = Awaited<ReturnType<typeof usersControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const usersControllerInvite = (
+    inviteUserDto: InviteUserDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<AdminUserDto>(
+      {url: `/v1/admin/users/invite`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: inviteUserDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getUsersControllerInviteMutationKey = () => ['usersControllerInvite'] as const;
+
+export const getUsersControllerInviteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerInvite>>, TError,UsersControllerInviteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerInvite>>, TError,UsersControllerInviteMutationVariables, TContext> => {
+
+const mutationKey = getUsersControllerInviteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerInvite>>, UsersControllerInviteMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  usersControllerInvite(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerInviteMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerInvite>>>
+    export type UsersControllerInviteMutationBody = InviteUserDto
+    export type UsersControllerInviteMutationError = unknown
+    export type UsersControllerInviteMutationVariables = {data: InviteUserDto}
+
+    export const useUsersControllerInvite = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerInvite>>, TError,UsersControllerInviteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerInvite>>,
+        TError,
+        UsersControllerInviteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUsersControllerInviteMutationOptions(options), queryClient);
     }
 
 export const contactsControllerCreate = (
