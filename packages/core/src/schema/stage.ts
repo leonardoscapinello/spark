@@ -1,57 +1,55 @@
 import { z } from "zod";
-import { zOrgId, zPipelineId, zStageId, zTimestampServidor } from "./zodHelpers.js";
+import { zOrgId, zPipelineId, zStageId, zServerTimestamp } from "./zodHelpers.js";
 
 /**
- * Estágio — uma coluna do funil (pipeline.ts). `ordem` é a posição visual
- * no board; quem decide a posição é sempre este campo, nunca a ordem de
- * inserção no banco.
+ * Stage — one column of a pipeline (pipeline.ts). `sortOrder` is the
+ * visual position on the board; that field always decides position, never
+ * insertion order in the database.
  *
- * Carimbos de tempo usam `zTimestampServidor`, não `z.iso.datetime()`
- * direto: `collection.update()` da TanStack DB revalida o registro
- * MESCLADO (estado atual da linha + patch) contra este schema a cada
- * chamada, e o "estado atual" de uma linha sincronizada nunca é ISO
- * estrito (Electric nunca transforma) — mesmo bug e mesmo fix já feitos
- * em DealSchema, achado de novo aqui ao ligar o primeiro `onUpdate` de
- * Stage (renomear): sem isto, QUALQUER update de estágio sincronizado
- * quebra, não só renomear.
+ * Timestamps use `zServerTimestamp`, not `z.iso.datetime()` directly —
+ * same reason already documented on Deal: TanStack DB's `collection.update()`
+ * revalidates the whole synced row, whose timestamps are never strict ISO
+ * (Electric doesn't transform). Found again here the first time Stage
+ * gained an `onUpdate` (rename) — first happened on Deal, don't wait for
+ * it to bite a third entity before applying the fix.
  */
 export const StageSchema = z.object({
   id: zStageId,
   orgId: zOrgId,
   pipelineId: zPipelineId,
-  nome: z.string().min(1, { error: "Nome do estágio é obrigatório" }).max(200),
-  ordem: z.number().int().min(0),
-  /** probabilidade de fechamento associada a este estágio, 0–100 — usada
-   * pra previsão de receita ponderada (paridade com Pipedrive). */
-  probabilidade: z.number().int().min(0).max(100).default(0),
-  criadoEm: zTimestampServidor,
-  atualizadoEm: zTimestampServidor,
-  arquivadoEm: zTimestampServidor.nullable(),
+  name: z.string().min(1, { error: "Stage name is required" }).max(200),
+  sortOrder: z.number().int().min(0),
+  /** win probability associated with this stage, 0–100 — used for
+   * weighted revenue forecasting (Pipedrive parity). */
+  probability: z.number().int().min(0).max(100).default(0),
+  createdAt: zServerTimestamp,
+  updatedAt: zServerTimestamp,
+  archivedAt: zServerTimestamp.nullable(),
 });
 
 export type Stage = z.infer<typeof StageSchema>;
 
 export const CreateStageInputSchema = StageSchema.omit({
   orgId: true,
-  criadoEm: true,
-  atualizadoEm: true,
-  arquivadoEm: true,
-}).partial({ probabilidade: true });
+  createdAt: true,
+  updatedAt: true,
+  archivedAt: true,
+}).partial({ probability: true });
 export type CreateStageInput = z.infer<typeof CreateStageInputSchema>;
 
 export const UpdateStageInputSchema = CreateStageInputSchema.omit({ id: true }).partial();
 export type UpdateStageInput = z.infer<typeof UpdateStageInputSchema>;
 
-/** Envelope de resposta de escrita — mesmo motivo de CreateContactResponseSchema (docs/adr/0018). */
+/** Write response envelope — same reason as CreateContactResponseSchema (docs/adr/0018). */
 export const CreateStageResponseSchema = z.object({
   stage: StageSchema,
   txid: z.number().int(),
 });
 export type CreateStageResponse = z.infer<typeof CreateStageResponseSchema>;
 
-/** Renomear — mutação estreita de propósito único, mesmo padrão de MoveDealInputSchema. */
+/** Rename — a narrow, single-purpose mutation, same pattern as MoveDealInputSchema. */
 export const RenameStageInputSchema = z.object({
-  nome: z.string().min(1, { error: "Nome do estágio é obrigatório" }).max(200),
+  name: z.string().min(1, { error: "Stage name is required" }).max(200),
 });
 export type RenameStageInput = z.infer<typeof RenameStageInputSchema>;
 

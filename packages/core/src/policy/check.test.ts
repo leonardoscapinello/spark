@@ -1,43 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { temCapacidade } from "./check.js";
-import { GRUPOS_PADRAO } from "./gruposPadrao.js";
+import { hasCapability } from "./check.js";
+import { DEFAULT_GROUPS } from "./defaultGroups.js";
 
-describe("temCapacidade — única checagem de permissão do sistema (docs/adr/0029)", () => {
-  it("concede quando algum grupo do usuário tem a capacidade", () => {
-    const grupos = [{ capacidades: ["contacts:read"] as const }];
-    expect(temCapacidade(grupos, "contacts:read")).toBe(true);
+describe("hasCapability — the system's single permission check (docs/adr/0029)", () => {
+  it("grants when some group the user belongs to has the capability", () => {
+    const groups = [{ capabilities: ["contacts:read"] as const }];
+    expect(hasCapability(groups, "contacts:read")).toBe(true);
   });
 
-  it("nega quando nenhum grupo tem a capacidade", () => {
-    const grupos = [{ capacidades: ["contacts:read"] as const }];
-    expect(temCapacidade(grupos, "contacts:write")).toBe(false);
+  it("denies when no group has the capability", () => {
+    const groups = [{ capabilities: ["contacts:read"] as const }];
+    expect(hasCapability(groups, "contacts:write")).toBe(false);
   });
 
-  it("nega por padrão quando o usuário não tem grupo nenhum", () => {
-    expect(temCapacidade([], "contacts:read")).toBe(false);
+  it("denies by default when the user has no group at all", () => {
+    expect(hasCapability([], "contacts:read")).toBe(false);
   });
 
-  it("concede se QUALQUER um dos vários grupos do usuário tiver a capacidade", () => {
-    const grupos = [{ capacidades: ["contacts:read"] as const }, { capacidades: ["permission_groups:manage"] as const }];
-    expect(temCapacidade(grupos, "permission_groups:manage")).toBe(true);
+  it("grants if ANY of the user's several groups has the capability", () => {
+    const groups = [{ capabilities: ["contacts:read"] as const }, { capabilities: ["permission_groups:manage"] as const }];
+    expect(hasCapability(groups, "permission_groups:manage")).toBe(true);
   });
 });
 
-describe("GRUPOS_PADRAO — os cinco grupos que toda organização nova recebe", () => {
-  it("são exatamente cinco, com nome único", () => {
-    expect(GRUPOS_PADRAO).toHaveLength(5);
-    expect(new Set(GRUPOS_PADRAO.map((g) => g.nome)).size).toBe(5);
+describe("DEFAULT_GROUPS — the five groups every new organization receives", () => {
+  it("are exactly five, with a unique name each", () => {
+    expect(DEFAULT_GROUPS).toHaveLength(5);
+    expect(new Set(DEFAULT_GROUPS.map((g) => g.name)).size).toBe(5);
   });
 
-  it("Proprietário e Administrador têm todas as capacidades existentes", () => {
-    const proprietario = GRUPOS_PADRAO.find((g) => g.nome === "Proprietário");
-    const admin = GRUPOS_PADRAO.find((g) => g.nome === "Administrador");
-    expect(temCapacidade(proprietario ? [proprietario] : [], "permission_groups:manage")).toBe(true);
-    expect(temCapacidade(admin ? [admin] : [], "permission_groups:manage")).toBe(true);
+  it("Proprietário and Administrador have every existing capability", () => {
+    const owner = DEFAULT_GROUPS.find((g) => g.name === "Proprietário");
+    const admin = DEFAULT_GROUPS.find((g) => g.name === "Administrador");
+    expect(hasCapability(owner ? [owner] : [], "permission_groups:manage")).toBe(true);
+    expect(hasCapability(admin ? [admin] : [], "permission_groups:manage")).toBe(true);
   });
 
-  it("Visualizador nunca tem capacidade de escrita", () => {
-    const visualizador = GRUPOS_PADRAO.find((g) => g.nome === "Visualizador");
-    expect(temCapacidade(visualizador ? [visualizador] : [], "contacts:write")).toBe(false);
+  it("Visualizador never has a write capability", () => {
+    const viewer = DEFAULT_GROUPS.find((g) => g.name === "Visualizador");
+    expect(hasCapability(viewer ? [viewer] : [], "contacts:write")).toBe(false);
   });
 });

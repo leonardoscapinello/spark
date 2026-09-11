@@ -1,54 +1,69 @@
 import { z } from "zod";
-import { zOrgId, zContactId, zEmail, zTelefone } from "./zodHelpers.js";
+import { zOrgId, zContactId, zEmail, zPhone, zServerTimestamp } from "./zodHelpers.js";
 
 /**
- * Contato — o centro do produto. `identities` (fora deste arquivo, em
- * packages/db) resolve os vários canais para este mesmo registro.
- * Campo customizado vive em `customFields`, JSONB, nunca DDL por tenant
+ * Contact — the product's center. `identities` (outside this file, in
+ * packages/db) resolves the various channels back to this same record.
+ * Custom fields live in `customFields`, JSONB, never per-tenant DDL
  * (docs/adr/0021-schema-estatico-campos-dinamicos.md).
+ *
+ * Timestamps use `zServerTimestamp`, not `z.iso.datetime()` directly —
+ * same reason already documented on StageSchema: the first `onUpdate` of
+ * a collection exposes that TanStack DB's `collection.update()`
+ * revalidates the whole synced row, whose timestamps are never strict ISO
+ * (Electric doesn't transform). Applied here on purpose, before Contact
+ * had any update at all — this is already the second time this exact bug
+ * has shown up (first on Deal, then Stage); no reason to wait for a
+ * third occurrence.
  */
 export const ContactSchema = z.object({
   id: zContactId,
   orgId: zOrgId,
-  nome: z.string().min(1, { error: "Nome é obrigatório" }).max(200),
+  name: z.string().min(1, { error: "Name is required" }).max(200),
   email: zEmail.nullable(),
-  telefone: zTelefone.nullable(),
+  phone: zPhone.nullable(),
   score: z.number().int().min(0).max(100).default(0),
   customFields: z.record(z.string(), z.unknown()).default({}),
   tags: z.array(z.string()).default([]),
-  criadoEm: z.iso.datetime(),
-  atualizadoEm: z.iso.datetime(),
-  excluidoEm: z.iso.datetime().nullable(),
+  createdAt: zServerTimestamp,
+  updatedAt: zServerTimestamp,
+  deletedAt: zServerTimestamp.nullable(),
 });
 
 export type Contact = z.infer<typeof ContactSchema>;
 
-// orgId nunca vem do cliente — quem decide é o servidor, a partir do
-// usuário autenticado (docs/adr/0026). Se um DTO de criação aceitasse
-// orgId do corpo da requisição, o cliente poderia escrever em qualquer
-// organização só mudando um campo do JSON.
+// orgId never comes from the client — it's decided by the server, from
+// the authenticated user (docs/adr/0026). If a create DTO accepted orgId
+// from the request body, a client could write to any organization just by
+// changing one field in the JSON.
 //
-// id, ao contrário, é obrigatório e vem do cliente — escrita otimista
-// (TanStack DB) precisa da chave final ANTES da resposta do servidor,
-// pra inserir localmente sem re-render quando o Electric replicar de
-// volta (docs/adr/0030). Não é o mesmo tipo de campo que orgId: id não é
-// fronteira de autorização, é só identidade do recurso sendo criado.
+// id, on the other hand, is required and comes from the client — optimistic
+// writes (TanStack DB) need the final key BEFORE the server responds, to
+// insert locally without a re-render once Electric replicates it back
+// (docs/adr/0030). Not the same kind of field as orgId: id isn't an
+// authorization boundary, it's just the identity of the resource being created.
 export const CreateContactInputSchema = ContactSchema.omit({
   orgId: true,
-  criadoEm: true,
-  atualizadoEm: true,
-  excluidoEm: true,
-}).partial({ email: true, telefone: true, score: true, customFields: true, tags: true });
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+}).partial({ email: true, phone: true, score: true, customFields: true, tags: true });
 export type CreateContactInput = z.infer<typeof CreateContactInputSchema>;
 
-export const UpdateContactInputSchema = CreateContactInputSchema.partial();
+export const UpdateContactInputSchema = CreateContactInputSchema.omit({ id: true }).partial();
 export type UpdateContactInput = z.infer<typeof UpdateContactInputSchema>;
 
-/** Envelope de resposta de escrita — o txid é o que o TanStack DB usa pra
- * confirmar a escrita otimista contra o que o Electric replicou de volta
+/** Write response envelope — the txid is what TanStack DB uses to confirm
+ * the optimistic write against what Electric replicated back
  * (docs/adr/0018, packages/data). */
 export const CreateContactResponseSchema = z.object({
   contact: ContactSchema,
   txid: z.number().int(),
 });
 export type CreateContactResponse = z.infer<typeof CreateContactResponseSchema>;
+
+export const UpdateContactResponseSchema = z.object({
+  contact: ContactSchema,
+  txid: z.number().int(),
+});
+export type UpdateContactResponse = z.infer<typeof UpdateContactResponseSchema>;

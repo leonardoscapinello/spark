@@ -1,34 +1,35 @@
 /**
- * Dinheiro é sempre centavos inteiros — nunca ponto flutuante.
- * Ver docs/adr/0019-nucleo-compartilhado.md.
+ * Money is always integer cents — never floating point.
+ * See docs/adr/0019-nucleo-compartilhado.md.
  *
- * `Money` é um tipo OPACO (objeto com chave de symbol privado), não um
- * `number` com marca por interseção. Isso importa: um brand por interseção
- * (`number & { brand }`) ainda É estruturalmente um number, então operadores
- * aritméticos (`*`, `-`, `+`) continuam compilando por cima dele — a marca
- * bloqueia só a CONSTRUÇÃO, não o uso. Um objeto não é number: `preco * 0.9`
- * falha a compilar porque o operador exige operando number/bigint.
- * A prova disso é `money.types-test.ts`, verificada pelo `tsc --noEmit`.
+ * `Money` is an OPAQUE type (object with a private symbol key), not a
+ * `number` branded via intersection. This matters: an intersection brand
+ * (`number & { brand }`) is still structurally a number, so arithmetic
+ * operators (`*`, `-`, `+`) keep compiling right through it — the brand
+ * blocks only CONSTRUCTION, not USE. An object is not a number:
+ * `price * 0.9` fails to compile because the operator requires a
+ * number/bigint operand. Proven by `money.types-test.ts`, checked by
+ * `tsc --noEmit`.
  */
-const MoneyValue: unique symbol = Symbol("Money"); // valor real — precisa existir em runtime, não só em tipo
+const MoneyValue: unique symbol = Symbol("Money"); // the real value — must exist at runtime, not just in the type
 export type Money = { readonly [MoneyValue]: number };
 
 export class InvalidMoneyError extends Error {
   constructor(value: number) {
-    super(`Valor monetário inválido: ${value}. Money exige inteiro (centavos).`);
+    super(`Invalid monetary value: ${value}. Money requires an integer (cents).`);
     this.name = "InvalidMoneyError";
   }
 }
 
-/** Constrói um Money a partir de centavos inteiros. Único ponto de entrada do tipo. */
-export function money(centavos: number): Money {
-  if (!Number.isInteger(centavos)) {
-    throw new InvalidMoneyError(centavos);
+/** Builds a Money from integer cents. The only entry point for the type. */
+export function money(cents: number): Money {
+  if (!Number.isInteger(cents)) {
+    throw new InvalidMoneyError(cents);
   }
-  return { [MoneyValue]: centavos } as Money;
+  return { [MoneyValue]: cents } as Money;
 }
 
-/** Constrói um Money a partir de uma string decimal (ex.: "19.90" → 1990 centavos). */
+/** Builds a Money from a decimal string (e.g. "19.90" → 1990 cents). */
 export function moneyFromDecimal(decimal: string): Money {
   const normalized = decimal.trim().replace(",", ".");
   const value = Number(normalized);
@@ -38,36 +39,36 @@ export function moneyFromDecimal(decimal: string): Money {
   return money(Math.round(value * 100));
 }
 
-export function toCentavos(m: Money): number {
+export function toCents(m: Money): number {
   return m[MoneyValue];
 }
 
 export function toDecimal(m: Money): number {
-  return toCentavos(m) / 100;
+  return toCents(m) / 100;
 }
 
 export function add(a: Money, b: Money): Money {
-  return money(toCentavos(a) + toCentavos(b));
+  return money(toCents(a) + toCents(b));
 }
 
 export function subtract(a: Money, b: Money): Money {
-  return money(toCentavos(a) - toCentavos(b));
+  return money(toCents(a) - toCents(b));
 }
 
 export function multiply(m: Money, factor: number): Money {
-  return money(Math.round(toCentavos(m) * factor));
+  return money(Math.round(toCents(m) * factor));
 }
 
 export function isNegative(m: Money): boolean {
-  return toCentavos(m) < 0;
+  return toCents(m) < 0;
 }
 
 export function isZero(m: Money): boolean {
-  return toCentavos(m) === 0;
+  return toCents(m) === 0;
 }
 
 export function compare(a: Money, b: Money): -1 | 0 | 1 {
-  const diff = toCentavos(a) - toCentavos(b);
+  const diff = toCents(a) - toCents(b);
   return diff < 0 ? -1 : diff > 0 ? 1 : 0;
 }
 

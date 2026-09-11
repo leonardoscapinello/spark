@@ -1,17 +1,13 @@
-import type { Capacidade } from "./capability.js";
+import type { Capability } from "./capability.js";
 
 /**
- * Único ponto de checagem de capacidade do sistema inteiro — API e
- * cliente chamam esta função, nunca comparam papel/string na mão
- * (docs/adr/0029). Usuário sem nenhum grupo nega por padrão.
- *
- * Parâmetro é estrutural (não `Pick<PermissionGroup,...>`) de propósito:
- * aceita tanto o array mutável que vem de PermissionGroupSchema quanto o
- * `as const` readonly que GRUPOS_PADRAO e os testes usam.
+ * The single permission check in the whole system (docs/adr/0029). Deny by
+ * default: a user with no group, or whose groups don't list the
+ * capability, is denied — never an implicit allow.
  */
-export function temCapacidade(
-  grupos: readonly { capacidades: readonly Capacidade[] }[],
-  capacidade: Capacidade,
+export function hasCapability(
+  groups: readonly { capabilities: readonly Capability[] }[],
+  capability: Capability,
 ): boolean {
-  return grupos.some((grupo) => grupo.capacidades.includes(capacidade));
+  return groups.some((group) => group.capabilities.includes(capability));
 }

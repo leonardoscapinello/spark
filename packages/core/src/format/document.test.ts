@@ -1,59 +1,59 @@
 import { describe, expect, it } from "vitest";
-import { cpf, cnpj, isValidCpf, isValidCnpj, formatCpf, formatCnpj, documento } from "./document.js";
+import { cpf, cnpj, isValidCpf, isValidCnpj, formatCpf, formatCnpj, taxDocument } from "./document.js";
 
 describe("CPF", () => {
-  // CPFs válidos gerados por algoritmo — não pertencem a pessoa real.
-  it("aceita CPF com dígito verificador correto", () => {
+  // Valid CPFs generated algorithmically — not real people's.
+  it("accepts a CPF with a correct check digit", () => {
     expect(isValidCpf("111.444.777-35")).toBe(true);
     expect(() => cpf("111.444.777-35")).not.toThrow();
   });
 
-  it("rejeita dígito verificador errado", () => {
+  it("rejects a wrong check digit", () => {
     expect(isValidCpf("111.444.777-36")).toBe(false);
   });
 
-  it("rejeita sequência de dígitos repetidos", () => {
+  it("rejects a run of repeated digits", () => {
     expect(isValidCpf("111.111.111-11")).toBe(false);
     expect(isValidCpf("000.000.000-00")).toBe(false);
   });
 
-  it("rejeita tamanho errado", () => {
+  it("rejects wrong length", () => {
     expect(isValidCpf("123")).toBe(false);
   });
 
-  it("formata de volta com pontuação", () => {
+  it("formats back with punctuation", () => {
     expect(formatCpf(cpf("11144477735"))).toBe("111.444.777-35");
   });
 });
 
 describe("CNPJ", () => {
-  it("aceita CNPJ com dígito verificador correto", () => {
+  it("accepts a CNPJ with a correct check digit", () => {
     expect(isValidCnpj("11.222.333/0001-81")).toBe(true);
   });
 
-  it("rejeita dígito verificador errado", () => {
+  it("rejects a wrong check digit", () => {
     expect(isValidCnpj("11.222.333/0001-82")).toBe(false);
   });
 
-  it("rejeita sequência de dígitos repetidos", () => {
+  it("rejects a run of repeated digits", () => {
     expect(isValidCnpj("11.111.111/1111-11")).toBe(false);
   });
 
-  it("formata de volta com pontuação", () => {
+  it("formats back with punctuation", () => {
     expect(formatCnpj(cnpj("11222333000181"))).toBe("11.222.333/0001-81");
   });
 });
 
-describe("documento (CPF ou CNPJ)", () => {
-  it("detecta CPF por tamanho", () => {
-    expect(documento("111.444.777-35")).toEqual({ tipo: "cpf", valor: "11144477735" });
+describe("taxDocument (CPF or CNPJ)", () => {
+  it("detects CPF by length", () => {
+    expect(taxDocument("111.444.777-35")).toEqual({ type: "cpf", value: "11144477735" });
   });
 
-  it("detecta CNPJ por tamanho", () => {
-    expect(documento("11.222.333/0001-81")).toEqual({ tipo: "cnpj", valor: "11222333000181" });
+  it("detects CNPJ by length", () => {
+    expect(taxDocument("11.222.333/0001-81")).toEqual({ type: "cnpj", value: "11222333000181" });
   });
 
-  it("rejeita tamanho que não é nem CPF nem CNPJ", () => {
-    expect(() => documento("123456")).toThrow();
+  it("rejects a length that is neither CPF nor CNPJ", () => {
+    expect(() => taxDocument("123456")).toThrow();
   });
 });

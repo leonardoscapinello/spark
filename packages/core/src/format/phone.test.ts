@@ -1,28 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { telefone, isValidTelefone, formatTelefone } from "./phone.js";
+import { phone, isValidPhone, formatPhone } from "./phone.js";
 
-describe("telefone", () => {
-  it("normaliza celular (9 dígitos) para E.164", () => {
-    expect(telefone("(11) 98888-7777")).toBe("+5511988887777");
+describe("phone", () => {
+  it("normalizes mobile (9 digits) to E.164", () => {
+    expect(phone("(11) 98888-7777")).toBe("+5511988887777");
   });
 
-  it("normaliza fixo (8 dígitos) para E.164", () => {
-    expect(telefone("(11) 3888-7777")).toBe("+551138887777");
+  it("normalizes landline (8 digits) to E.164", () => {
+    expect(phone("(11) 3888-7777")).toBe("+551138887777");
   });
 
-  it("aceita já vindo com +55", () => {
-    expect(telefone("+55 11 98888-7777")).toBe("+5511988887777");
+  it("accepts input already carrying +55", () => {
+    expect(phone("+55 11 98888-7777")).toBe("+5511988887777");
   });
 
-  it("rejeita DDD inválido", () => {
-    expect(isValidTelefone("(00) 98888-7777")).toBe(false);
+  it("rejects invalid area code", () => {
+    expect(isValidPhone("(00) 98888-7777")).toBe(false);
   });
 
-  it("rejeita tamanho errado", () => {
-    expect(isValidTelefone("123")).toBe(false);
+  it("rejects wrong length", () => {
+    expect(isValidPhone("123")).toBe(false);
   });
 
-  it("formata de volta com parênteses e traço", () => {
-    expect(formatTelefone(telefone("11988887777"))).toBe("(11) 98888-7777");
+  it("formats back with parens and dash", () => {
+    expect(formatPhone(phone("11988887777"))).toBe("(11) 98888-7777");
   });
 });

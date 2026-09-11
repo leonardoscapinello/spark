@@ -1,43 +1,42 @@
 import { z } from "zod";
-import { zOrgId, zActivityId, zContactId, zDealId, zTimestampServidor } from "./zodHelpers.js";
+import { zOrgId, zActivityId, zContactId, zDealId, zServerTimestamp } from "./zodHelpers.js";
 
-/** Paridade com o Pipedrive — o vocabulário real do produto que estamos substituindo. */
-export const ActivityTypeSchema = z.enum(["tarefa", "ligacao", "reuniao", "email"]);
+/** Pipedrive parity — the actual product vocabulary of the tool we're replacing. */
+export const ActivityTypeSchema = z.enum(["task", "call", "meeting", "email"]);
 export type ActivityType = z.infer<typeof ActivityTypeSchema>;
 
 /**
- * Atividade — ligada a um contato e/ou a um negócio (pelo menos um dos
- * dois; não é imposto aqui como regra cruzada de schema, mesma escolha
- * já feita em `DealSchema.motivoPerda` — a tela é quem garante). Vive
- * como entidade própria, não como campo dentro de Contact/Deal, porque
- * um contato tem muitas.
+ * Activity — linked to a contact and/or a deal (at least one of the two;
+ * not enforced here as a cross-field schema rule, same choice already
+ * made in `DealSchema.lossReason` — the screen guarantees it). Lives as
+ * its own entity, not a field inside Contact/Deal, because a contact has many.
  */
 export const ActivitySchema = z.object({
   id: zActivityId,
   orgId: zOrgId,
   contactId: zContactId.nullable(),
   dealId: zDealId.nullable(),
-  tipo: ActivityTypeSchema,
-  titulo: z.string().min(1, { error: "Título é obrigatório" }).max(200),
-  notas: z.string().max(2000).nullable(),
-  dataHora: zTimestampServidor,
-  concluida: z.boolean().default(false),
-  concluidaEm: zTimestampServidor.nullable(),
-  criadoEm: zTimestampServidor,
-  atualizadoEm: zTimestampServidor,
+  type: ActivityTypeSchema,
+  title: z.string().min(1, { error: "Title is required" }).max(200),
+  notes: z.string().max(2000).nullable(),
+  scheduledAt: zServerTimestamp,
+  completed: z.boolean().default(false),
+  completedAt: zServerTimestamp.nullable(),
+  createdAt: zServerTimestamp,
+  updatedAt: zServerTimestamp,
 });
 
 export type Activity = z.infer<typeof ActivitySchema>;
 
-// orgId nunca vem do cliente (docs/adr/0026); id vem — escrita otimista
-// precisa da chave definitiva antes da resposta do servidor (docs/adr/0030).
+// orgId never comes from the client (docs/adr/0026); id does — optimistic
+// writes need the final key before the server responds (docs/adr/0030).
 export const CreateActivityInputSchema = ActivitySchema.omit({
   orgId: true,
-  concluida: true,
-  concluidaEm: true,
-  criadoEm: true,
-  atualizadoEm: true,
-}).partial({ contactId: true, dealId: true, notas: true });
+  completed: true,
+  completedAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial({ contactId: true, dealId: true, notes: true });
 export type CreateActivityInput = z.infer<typeof CreateActivityInputSchema>;
 
 export const CreateActivityResponseSchema = z.object({
@@ -46,9 +45,9 @@ export const CreateActivityResponseSchema = z.object({
 });
 export type CreateActivityResponse = z.infer<typeof CreateActivityResponseSchema>;
 
-/** Concluir ou reabrir — mesma rota nos dois sentidos, o corpo é que decide. */
+/** Complete or reopen — the same route both ways, the body decides. */
 export const CompleteActivityInputSchema = z.object({
-  concluida: z.boolean(),
+  completed: z.boolean(),
 });
 export type CompleteActivityInput = z.infer<typeof CompleteActivityInputSchema>;
 

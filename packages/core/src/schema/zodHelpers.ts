@@ -1,26 +1,26 @@
 /**
- * Ponte entre Zod e os tipos marcados de core. Um schema aqui é a ÚNICA
- * fonte de validação — dela derivam tipo TypeScript, validação de runtime,
- * OpenAPI, formulário e schema Drizzle (docs/adr/0004, docs/adr/0019).
+ * Bridge between Zod and core's branded types. A schema here is the ONLY
+ * source of validation — TypeScript type, runtime validation, OpenAPI,
+ * form, and Drizzle schema all derive from it (docs/adr/0004, docs/adr/0019).
  *
- * Padrão: `z.string().min(1).transform((valor, ctx) => {...})` chamando o
- * construtor do tipo marcado. Se o construtor lança, viramos `z.NEVER` com
- * uma mensagem de issue — nunca duplicamos a regra de validação aqui.
+ * Pattern: `z.string().min(1).transform((value, ctx) => {...})` calling the
+ * branded type's constructor. If the constructor throws, we turn it into
+ * `z.NEVER` with an issue message — never duplicating the validation rule here.
  *
- * O `.min(1)` não é só validação — string vazia já cairia no catch do
- * construtor de qualquer forma. É o que faz o zod v4 gerar o JSON Schema
- * de ".nullable()" como `anyOf: [{type}, {type:"null"}]` em vez do atalho
- * `type: [X,"null"]`. O atalho é json-schema-2020-12 válido, mas
- * `@nestjs/swagger` lê `type` array como "propriedade é um array" — vira
- * `{type:"array"}` errado no DTO de entrada de qualquer campo opcional e
- * nulável construído com bridged(). anyOf sobrevive intacto até o
- * cleanupOpenApiDoc da nestjs-zod, que aí sim converte pra
- * `nullable: true` corretamente (confirmado testando os dois caminhos
- * direto no gerador do zod — ver histórico do Bloco 6).
+ * The `.min(1)` isn't just validation — an empty string would already fall
+ * into the constructor's catch anyway. It's what makes zod v4 emit the
+ * JSON Schema for ".nullable()" as `anyOf: [{type}, {type:"null"}]` instead
+ * of the shorthand `type: [X,"null"]`. The shorthand is valid
+ * json-schema-2020-12, but `@nestjs/swagger` reads a `type` array as
+ * "property is an array" — it turns into a wrong `{type:"array"}` on the
+ * input DTO of any optional, nullable field built with bridged(). anyOf
+ * survives intact until nestjs-zod's cleanupOpenApiDoc, which correctly
+ * converts it to `nullable: true` (confirmed by testing both paths
+ * directly against zod's generator — see Bloco 6 history).
  */
 import { z } from "zod";
 import { email as toEmail, type Email } from "../format/email.js";
-import { telefone as toTelefone, type Telefone } from "../format/phone.js";
+import { phone as toPhone, type Phone } from "../format/phone.js";
 import { cpf as toCpf, cnpj as toCnpj, type CPF, type CNPJ } from "../format/document.js";
 import { money as toMoney } from "../money/money.js";
 import {
@@ -42,63 +42,62 @@ import {
   type ActivityId,
 } from "../identity/id.js";
 
-function bridged<Out>(construir: (valor: string) => Out) {
-  return z.string().min(1, { error: "não pode ser vazio" }).transform((valor, ctx) => {
+function bridged<Out>(build: (value: string) => Out) {
+  return z.string().min(1, { error: "cannot be empty" }).transform((value, ctx) => {
     try {
-      return construir(valor);
-    } catch (erro) {
-      ctx.addIssue({ code: "custom", message: erro instanceof Error ? erro.message : "inválido" });
+      return build(value);
+    } catch (error) {
+      ctx.addIssue({ code: "custom", message: error instanceof Error ? error.message : "invalid" });
       return z.NEVER;
     }
   });
 }
 
 export const zEmail = bridged<Email>(toEmail);
-export const zTelefone = bridged<Telefone>(toTelefone);
+export const zPhone = bridged<Phone>(toPhone);
 export const zCpf = bridged<CPF>(toCpf);
 export const zCnpj = bridged<CNPJ>(toCnpj);
 
-export const zOrgId = bridged<OrgId>(toOrgId.de);
-export const zContactId = bridged<ContactId>(toContactId.de);
-export const zUserId = bridged<UserId>(toUserId.de);
-export const zDealId = bridged<DealId>(toDealId.de);
-export const zPermissionGroupId = bridged<PermissionGroupId>(toPermissionGroupId.de);
-export const zPipelineId = bridged<PipelineId>(toPipelineId.de);
-export const zStageId = bridged<StageId>(toStageId.de);
-export const zActivityId = bridged<ActivityId>(toActivityId.de);
+export const zOrgId = bridged<OrgId>(toOrgId.from);
+export const zContactId = bridged<ContactId>(toContactId.from);
+export const zUserId = bridged<UserId>(toUserId.from);
+export const zDealId = bridged<DealId>(toDealId.from);
+export const zPermissionGroupId = bridged<PermissionGroupId>(toPermissionGroupId.from);
+export const zPipelineId = bridged<PipelineId>(toPipelineId.from);
+export const zStageId = bridged<StageId>(toStageId.from);
+export const zActivityId = bridged<ActivityId>(toActivityId.from);
 
 /**
- * Aceita centavos inteiros — é o formato de transporte, nunca decimal.
- * Fica estrito de propósito (só `number`, nunca `bigint`): este mesmo
- * schema alimenta o OpenAPI via `createZodDto`, e `z.toJSONSchema()` da
- * zod (usado por trás) lança `Error: BigInt cannot be representable in
- * JSON Schema` — achado tentando fazer `zMoney` aceitar bigint aqui pra
- * resolver a revalidação da TanStack DB numa linha sincronizada; JSON
- * Schema não tem como representar bigint, ponto final, não é limite que
- * dê pra contornar. O acomodo certo pra bigint fica só em
- * packages/data/src/deals-collection.ts, que NUNCA passa por
- * createZodDto — é o mesmo motivo de `valorSincronizado` já existir lá
- * pra leitura, não aqui.
+ * Accepts integer cents — the wire format, never decimal. Stays strict on
+ * purpose (`number` only, never `bigint`): this same schema feeds the
+ * OpenAPI doc via `createZodDto`, and zod's `z.toJSONSchema()` (used under
+ * the hood) throws `Error: BigInt cannot be represented in JSON Schema` —
+ * found while trying to make `zMoney` accept bigint here to fix TanStack
+ * DB revalidating a synced row; JSON Schema simply has no way to represent
+ * bigint, full stop, not a limit you can work around. The right
+ * accommodation for bigint lives only in
+ * packages/data/src/deals-collection.ts, which never goes through
+ * createZodDto — same reason `syncedAmount` already exists there for reads.
  */
-export const zMoney = z.number().int().transform((valor, ctx) => {
+export const zMoney = z.number().int().transform((value, ctx) => {
   try {
-    return toMoney(valor);
-  } catch (erro) {
-    ctx.addIssue({ code: "custom", message: erro instanceof Error ? erro.message : "inválido" });
+    return toMoney(value);
+  } catch (error) {
+    ctx.addIssue({ code: "custom", message: error instanceof Error ? error.message : "invalid" });
     return z.NEVER;
   }
 });
 
 /**
- * Carimbo de tempo gerado pelo servidor (criadoEm/atualizadoEm/etc. — não
- * campo digitado por gente). Aceita ISO 8601 estrito (o que a API
- * devolve, e o que escrita local já validada tem) ou qualquer string não
- * vazia: o texto que o Postgres/Electric manda numa linha sincronizada
- * não é ISO estrito ("2026-09-10 22:42:39.07083+00" — espaço em vez de
- * "T", offset sem dois-pontos) e a precisão/formato pode variar por
- * DateStyle do ambiente — travar num regex específico só troca uma
- * fragilidade por outra. Mesmo motivo de `zMoney` aceitar bigint: o
- * campo nunca é escrito por um cliente, só relido pela própria TanStack
- * DB ao revalidar o registro inteiro em `update()`.
+ * Server-generated timestamp (createdAt/updatedAt/etc. — never a field a
+ * person types in). Accepts strict ISO 8601 (what the API returns, and
+ * what an already-validated local write has) or any non-empty string: the
+ * text Postgres/Electric sends on a synced row is not strict ISO
+ * ("2026-09-10 22:42:39.07083+00" — space instead of "T", offset with no
+ * colon) and the precision/format can vary with the environment's
+ * DateStyle — pinning a specific regex would just trade one fragility for
+ * another. Same reason `zMoney` accepts bigint: the field is never written
+ * by a client, only read back by TanStack DB itself when it revalidates
+ * the whole record on `update()`.
  */
-export const zTimestampServidor = z.union([z.iso.datetime(), z.string().min(1)]);
+export const zServerTimestamp = z.union([z.iso.datetime(), z.string().min(1)]);

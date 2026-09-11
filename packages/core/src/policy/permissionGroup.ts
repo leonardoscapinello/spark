@@ -1,31 +1,31 @@
 import { z } from "zod";
 import { zOrgId, zPermissionGroupId } from "../schema/zodHelpers.js";
-import { CAPACIDADES } from "./capability.js";
+import { CAPABILITIES } from "./capability.js";
 
 /**
- * Grupo → capacidades, nunca papel fixo (docs/adr/0029). Toda organização
- * nasce com cinco grupos padrão (ver gruposPadrao.ts) e pode criar os
- * próprios.
+ * Group → capabilities, never a fixed role (docs/adr/0029). Every
+ * organization is born with five default groups (see defaultGroups.ts)
+ * and can create its own.
  */
 export const PermissionGroupSchema = z.object({
   id: zPermissionGroupId,
   orgId: zOrgId,
-  nome: z.string().min(1, { error: "Nome do grupo é obrigatório" }).max(100),
-  capacidades: z.array(z.enum(CAPACIDADES)),
-  criadoEm: z.iso.datetime(),
-  atualizadoEm: z.iso.datetime(),
+  name: z.string().min(1, { error: "Group name is required" }).max(100),
+  capabilities: z.array(z.enum(CAPABILITIES)),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
 export type PermissionGroup = z.infer<typeof PermissionGroupSchema>;
 
-// orgId nunca vem do cliente — mesma regra de contact.ts/user.ts
-// (docs/adr/0026). id é obrigatório: mesma razão do docs/adr/0030 — se
-// grupos algum dia entrarem em coleção local-first, a escrita otimista
-// precisa da chave definitiva antes da resposta do servidor.
+// orgId never comes from the client — same rule as contact.ts/user.ts
+// (docs/adr/0026). id is required: same reason as docs/adr/0030 — if
+// groups ever enter a local-first collection, optimistic writes need the
+// final key before the server responds.
 export const CreatePermissionGroupInputSchema = PermissionGroupSchema.omit({
   orgId: true,
-  criadoEm: true,
-  atualizadoEm: true,
+  createdAt: true,
+  updatedAt: true,
 });
 export type CreatePermissionGroupInput = z.infer<typeof CreatePermissionGroupInputSchema>;
 

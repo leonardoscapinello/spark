@@ -1,12 +1,12 @@
 /**
- * Todo identificador de entidade é UUID v7 — ordenável por tempo, requisito
- * do offline-first (docs/adr/0012, docs/adr/0018-arquitetura-local-first.md).
- * Cada tipo de entidade tem sua própria marca: um OrgId nunca é aceito onde
- * se espera um ContactId, mesmo os dois sendo strings por baixo.
+ * Every entity identifier is a UUID v7 — time-sortable, a requirement of
+ * offline-first (docs/adr/0012, docs/adr/0018-arquitetura-local-first.md).
+ * Each entity type carries its own brand: an OrgId is never accepted where
+ * a ContactId is expected, even though both are strings underneath.
  */
 import { v7 as uuidv7, validate as validateUuid, version as uuidVersion } from "uuid";
 
-type Id<Marca extends string> = string & { readonly __id: Marca };
+type Id<Brand extends string> = string & { readonly __id: Brand };
 
 export type OrgId = Id<"Org">;
 export type UserId = Id<"User">;
@@ -18,26 +18,26 @@ export type StageId = Id<"Stage">;
 export type ActivityId = Id<"Activity">;
 
 export class InvalidIdError extends Error {
-  constructor(tipo: string, value: string) {
-    super(`${tipo} inválido — precisa ser UUID v7: "${value}"`);
+  constructor(type: string, value: string) {
+    super(`Invalid ${type} — must be a UUID v7: "${value}"`);
     this.name = "InvalidIdError";
   }
 }
 
-function makeIdFactory<Marca extends string>(tipo: Marca) {
+function makeIdFactory<Brand extends string>(type: Brand) {
   return {
-    novo: (): Id<Marca> => uuidv7() as Id<Marca>,
-    de: (value: string): Id<Marca> => {
+    create: (): Id<Brand> => uuidv7() as Id<Brand>,
+    from: (value: string): Id<Brand> => {
       if (!validateUuid(value) || uuidVersion(value) !== 7) {
-        throw new InvalidIdError(tipo, value);
+        throw new InvalidIdError(type, value);
       }
-      return value as Id<Marca>;
+      return value as Id<Brand>;
     },
   };
 }
 
-// A string passada aqui PRECISA bater com o literal usado no alias de tipo
-// acima (Id<"Org">, Id<"User">, ...) — são o mesmo brand, checado pelo tsc.
+// The string passed here MUST match the literal used in the type alias
+// above (Id<"Org">, Id<"User">, ...) — they're the same brand, checked by tsc.
 export const orgId = makeIdFactory("Org");
 export const userId = makeIdFactory("User");
 export const contactId = makeIdFactory("Contact");

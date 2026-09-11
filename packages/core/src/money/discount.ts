@@ -1,37 +1,33 @@
 import { type Money, money, multiply, subtract, isNegative } from "./money.js";
 
 /**
- * Toda política de desconto do Spark passa por aqui — CRM, catálogo,
- * campanha. Um desconto calculado em outro lugar é bug, não estilo
- * (docs/adr/0019-nucleo-compartilhado.md).
+ * Every discount policy in Spark goes through here — CRM, catalog,
+ * campaign. A discount computed anywhere else is a bug, not a style
+ * choice (docs/adr/0019-nucleo-compartilhado.md).
  */
-export type Desconto =
-  | { tipo: "percentual"; valor: number } // 0–100
-  | { tipo: "valor_fixo"; valor: Money };
+export type Discount = { type: "percentage"; value: number } | { type: "fixed_amount"; value: Money }; // percentage: 0–100
 
-export class DescontoInvalidoError extends Error {
-  constructor(mensagem: string) {
-    super(mensagem);
-    this.name = "DescontoInvalidoError";
+export class InvalidDiscountError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidDiscountError";
   }
 }
 
-function validarDesconto(desconto: Desconto): void {
-  if (desconto.tipo === "percentual" && (desconto.valor < 0 || desconto.valor > 100)) {
-    throw new DescontoInvalidoError(
-      `Desconto percentual deve estar entre 0 e 100. Recebido: ${desconto.valor}`,
-    );
+function validateDiscount(discount: Discount): void {
+  if (discount.type === "percentage" && (discount.value < 0 || discount.value > 100)) {
+    throw new InvalidDiscountError(`Percentage discount must be between 0 and 100. Received: ${discount.value}`);
   }
 }
 
-/** Aplica um desconto sobre um preço. Nunca resulta em valor negativo. */
-export function aplicarDesconto(preco: Money, desconto: Desconto): Money {
-  validarDesconto(desconto);
+/** Applies a discount to a price. Never results in a negative value. */
+export function applyDiscount(price: Money, discount: Discount): Money {
+  validateDiscount(discount);
 
-  const resultado =
-    desconto.tipo === "percentual"
-      ? subtract(preco, multiply(preco, desconto.valor / 100))
-      : subtract(preco, desconto.valor);
+  const result =
+    discount.type === "percentage"
+      ? subtract(price, multiply(price, discount.value / 100))
+      : subtract(price, discount.value);
 
-  return isNegative(resultado) ? money(0) : resultado;
+  return isNegative(result) ? money(0) : result;
 }

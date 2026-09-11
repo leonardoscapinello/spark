@@ -1,10 +1,10 @@
 /**
- * Toda capacidade é um par `recurso:ação` (docs/adr/0029). Lista cresce
- * junto com o que existe de verdade — nunca adiantada para um recurso que
- * ainda não tem rota nenhuma (deals, automation etc. entram quando
- * ganharem endpoint, não antes).
+ * Every capability is a `resource:action` pair (docs/adr/0029). The list
+ * grows together with what actually exists — never ahead of a resource
+ * that doesn't have a route yet (deals, automation, etc. join once they
+ * ship an endpoint, not before).
  */
-export const CAPACIDADES = [
+export const CAPABILITIES = [
   "contacts:read",
   "contacts:write",
   "permission_groups:manage",
@@ -16,8 +16,8 @@ export const CAPACIDADES = [
   "activities:write",
 ] as const;
 
-export type Capacidade = (typeof CAPACIDADES)[number];
+export type Capability = (typeof CAPABILITIES)[number];
 
-export function ehCapacidade(valor: string): valor is Capacidade {
-  return (CAPACIDADES as readonly string[]).includes(valor);
+export function isCapability(value: string): value is Capability {
+  return (CAPABILITIES as readonly string[]).includes(value);
 }

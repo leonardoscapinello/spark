@@ -2,16 +2,16 @@ import { describe, expect, it } from "vitest";
 import { email, isValidEmail } from "./email.js";
 
 describe("email", () => {
-  it("normaliza para minúsculo e remove espaço nas pontas", () => {
-    expect(email("  Contato@Empresa.com.br  ")).toBe("contato@empresa.com.br");
+  it("normalizes to lowercase and trims whitespace", () => {
+    expect(email("  Contact@Company.com.br  ")).toBe("contact@company.com.br");
   });
 
-  it("aceita formatos comuns", () => {
-    expect(isValidEmail("nome.sobrenome+tag@dominio.co")).toBe(true);
+  it("accepts common formats", () => {
+    expect(isValidEmail("first.last+tag@domain.co")).toBe(true);
   });
 
-  it("rejeita sem @ ou sem domínio", () => {
-    expect(isValidEmail("sem-arroba")).toBe(false);
-    expect(isValidEmail("sem@dominio")).toBe(false);
+  it("rejects missing @ or missing domain", () => {
+    expect(isValidEmail("no-at-sign")).toBe(false);
+    expect(isValidEmail("no@domain")).toBe(false);
   });
 });

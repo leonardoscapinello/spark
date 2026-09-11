@@ -1,25 +1,25 @@
 import type { Contact } from "../schema/contact.js";
 
 /**
- * Busca de contato roda inteira sobre a coleção local — tela sincronizada
- * nunca faz chamada de rede pra procurar (docs/adr/0018, CLAUDE.md regra
- * 5). Ignora acento: nome de gente em português tem, e ninguém digita
- * "Jose" esperando não achar "José".
+ * Contact search runs entirely over the local collection — a synced
+ * screen never makes a network call to search (docs/adr/0018, CLAUDE.md
+ * rule 5). Ignores accents: Brazilian names have them, and nobody types
+ * "Jose" expecting not to find "José".
  */
-function normalizar(texto: string): string {
-  return texto
+function normalize(text: string): string {
+  return text
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 }
 
-export function contatoCorresponde(contato: Pick<Contact, "nome" | "email" | "telefone">, termo: string): boolean {
-  const alvo = normalizar(termo.trim());
-  if (!alvo) return true;
+export function contactMatches(contact: Pick<Contact, "name" | "email" | "phone">, term: string): boolean {
+  const target = normalize(term.trim());
+  if (!target) return true;
 
   return (
-    normalizar(contato.nome).includes(alvo) ||
-    (contato.email !== null && normalizar(contato.email).includes(alvo)) ||
-    (contato.telefone !== null && normalizar(contato.telefone).includes(alvo))
+    normalize(contact.name).includes(target) ||
+    (contact.email !== null && normalize(contact.email).includes(target)) ||
+    (contact.phone !== null && normalize(contact.phone).includes(target))
   );
 }

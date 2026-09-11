@@ -1,51 +1,51 @@
 /**
- * Telefone brasileiro, normalizado para E.164 (+55DDDNNNNNNNNN).
- * Ver docs/adr/0019-nucleo-compartilhado.md.
+ * Brazilian phone number, normalized to E.164 (+55DDDNNNNNNNNN).
+ * See docs/adr/0019-nucleo-compartilhado.md.
  */
 declare const PhoneBrand: unique symbol;
-export type Telefone = string & { readonly [PhoneBrand]: "Telefone" };
+export type Phone = string & { readonly [PhoneBrand]: "Phone" };
 
 export class InvalidPhoneError extends Error {
   constructor(value: string) {
-    super(`Telefone inválido: "${value}"`);
+    super(`Invalid phone number: "${value}"`);
     this.name = "InvalidPhoneError";
   }
 }
 
-/** Aceita com ou sem +55, com ou sem DDD entre parênteses, com ou sem traço. */
-export function telefone(value: string): Telefone {
+/** Accepts with or without +55, with or without area code in parens, with or without dash. */
+export function phone(value: string): Phone {
   const digits = value.replace(/\D/g, "");
 
-  // remove código do país se já vier com ele
-  const semPais = digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
+  // strip country code if already present
+  const withoutCountryCode = digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
 
-  // DDD (2) + número (8 fixo ou 9 celular)
-  if (semPais.length !== 10 && semPais.length !== 11) {
+  // area code (2) + number (8 landline or 9 mobile)
+  if (withoutCountryCode.length !== 10 && withoutCountryCode.length !== 11) {
     throw new InvalidPhoneError(value);
   }
 
-  const ddd = semPais.slice(0, 2);
-  if (Number(ddd) < 11 || Number(ddd) > 99) {
+  const areaCode = withoutCountryCode.slice(0, 2);
+  if (Number(areaCode) < 11 || Number(areaCode) > 99) {
     throw new InvalidPhoneError(value);
   }
 
-  return `+55${semPais}` as Telefone;
+  return `+55${withoutCountryCode}` as Phone;
 }
 
-export function isValidTelefone(value: string): boolean {
+export function isValidPhone(value: string): boolean {
   try {
-    telefone(value);
+    phone(value);
     return true;
   } catch {
     return false;
   }
 }
 
-export function formatTelefone(t: Telefone): string {
-  const digits = (t as string).slice(3); // remove +55
-  const ddd = digits.slice(0, 2);
-  const numero = digits.slice(2);
-  return numero.length === 9
-    ? `(${ddd}) ${numero.slice(0, 5)}-${numero.slice(5)}`
-    : `(${ddd}) ${numero.slice(0, 4)}-${numero.slice(4)}`;
+export function formatPhone(p: Phone): string {
+  const digits = (p as string).slice(3); // strip +55
+  const areaCode = digits.slice(0, 2);
+  const number = digits.slice(2);
+  return number.length === 9
+    ? `(${areaCode}) ${number.slice(0, 5)}-${number.slice(5)}`
+    : `(${areaCode}) ${number.slice(0, 4)}-${number.slice(4)}`;
 }
