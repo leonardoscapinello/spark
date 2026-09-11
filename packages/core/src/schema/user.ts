@@ -18,6 +18,8 @@ export const UserSchema = z.object({
   avatarUrl: z.url().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  invitedAt: z.iso.datetime().nullable(),
+  activatedAt: z.iso.datetime().nullable(),
   deactivatedAt: z.iso.datetime().nullable(),
 });
 
@@ -31,6 +33,8 @@ export const CreateUserInputSchema = UserSchema.omit({
   orgId: true,
   createdAt: true,
   updatedAt: true,
+  invitedAt: true,
+  activatedAt: true,
   deactivatedAt: true,
 }).partial({ avatarUrl: true });
 export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;

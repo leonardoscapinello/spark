@@ -21,25 +21,21 @@ export class UsersRepository {
   }
 
   async findBySupabaseUserId(supabaseUserId: string): Promise<User | null> {
-    const [row] = await this.db
+    const [found] = await this.db
       .select()
       .from(users)
       .where(eq(users.supabaseUserId, supabaseUserId))
       .limit(1);
 
+    if (!found) return null;
+
+    const [row] = found.activatedAt || found.deactivatedAt
+      ? [found]
+      : await this.db.update(users).set({ activatedAt: new Date(), updatedAt: new Date() })
+        .where(eq(users.id, found.id)).returning();
     if (!row) return null;
 
-    return {
-      id: row.id,
-      orgId: row.orgId,
-      supabaseUserId: row.supabaseUserId,
-      name: row.name,
-      email: row.email,
-      avatarUrl: row.avatarUrl,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-      deactivatedAt: row.deactivatedAt?.toISOString() ?? null,
-    } as User;
+    return toUser(row);
   }
 
   async listByOrg(orgId: OrgId): Promise<AdminUser[]> {
@@ -80,6 +76,7 @@ export class UsersRepository {
         supabaseUserId,
         name: input.name,
         email: input.email,
+        invitedAt: new Date(),
       }).returning();
       if (!row) throw new Error("User insert returned no row.");
       await tx.insert(userPermissionGroups).values({ orgId, userId: input.id, groupId: input.groupId });
@@ -106,6 +103,8 @@ function toUser(row: typeof users.$inferSelect): User {
     avatarUrl: row.avatarUrl,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    invitedAt: row.invitedAt?.toISOString() ?? null,
+    activatedAt: row.activatedAt?.toISOString() ?? null,
     deactivatedAt: row.deactivatedAt?.toISOString() ?? null,
   } as User;
 }

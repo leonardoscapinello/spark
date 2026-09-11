@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import type { User } from "@spark/core";
 import { UsersRepository } from "../infrastructure/users.repository.js";
 
@@ -22,6 +22,9 @@ export class GetCurrentUserUseCase {
       throw new NotFoundException(
         "No local user linked to this login — provisioning pending.",
       );
+    }
+    if (user.deactivatedAt) {
+      throw new ForbiddenException("This user no longer has access.");
     }
     return user;
   }
