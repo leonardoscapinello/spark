@@ -92,6 +92,29 @@
   gap: var(--space-4);
 }
 
+.fieldHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.textLink,
+.returnLink {
+  color: var(--color-accent);
+  font-size: var(--typography-size-xs);
+  font-weight: var(--typography-weight-medium);
+  text-decoration: none;
+}
+
+.returnLink { align-self: center; }
+
+.success {
+  margin: 0;
+  color: var(--color-statusSuccess);
+  font-size: var(--typography-size-sm);
+}
+
 .erroGeral {
   margin: 0;
   font-size: var(--typography-size-xs);

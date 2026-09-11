@@ -1,4 +1,4 @@
-import { Form, redirect, useNavigation } from "react-router";
+import { Form, Link, redirect, useNavigation, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
 import { Button, Field, Input, Label, PasswordInput } from "@spark/ui-web";
 import { signIn } from "../lib/auth.client";
@@ -23,48 +23,39 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
 export default function Login({ actionData }: Route.ComponentProps) {
   const navigation = useNavigation();
+  const [searchParams] = useSearchParams();
   const isSubmitting = navigation.state === "submitting";
+  const passwordUpdated = searchParams.get("password") === "updated";
 
   return (
-    <main className={styles.container}>
-      <section className={styles.intro} aria-label="Apresentação">
-        <a className={styles.logoLink} href="/login" aria-label="Leonardo Scapinello">
-          <img className={styles.logo} src="/brand/leonardo-scapinello-ink.svg" alt="Leonardo Scapinello" />
-        </a>
-        <div className={styles.introCopy}>
-          <p className={styles.eyebrow}>Relacionamento</p>
-          <h1 className={styles.titulo}>O contexto certo para cada conversa.</h1>
-          <p className={styles.subtitulo}>Organize contatos, conversas e oportunidades em um espaço feito para o seu time.</p>
-        </div>
-        <p className={styles.rodape}>© Leonardo Scapinello</p>
-      </section>
+    <Form method="post" className={styles.card}>
+      <div className={styles.cardHeader}>
+        <h2>Boas-vindas</h2>
+        <p>Use suas credenciais para acessar sua área de trabalho.</p>
+      </div>
 
-      <section className={styles.access} aria-labelledby="access-title">
-        <Form method="post" className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 id="access-title">Boas-vindas</h2>
-            <p>Use suas credenciais para acessar sua área de trabalho.</p>
+      {passwordUpdated && <p className={styles.success} role="status">Senha atualizada. Você já pode entrar.</p>}
+
+      <div className={styles.form}>
+        <Field invalid={!!actionData?.error}>
+          <Label>E-mail</Label>
+          <Input type="email" name="email" placeholder="voce@empresa.com" required autoFocus autoComplete="email" />
+        </Field>
+
+        <Field invalid={!!actionData?.error}>
+          <div className={styles.fieldHeader}>
+            <Label>Senha</Label>
+            <Link to="/forgot-password" className={styles.textLink}>Esqueci minha senha</Link>
           </div>
+          <PasswordInput name="password" placeholder="Digite sua senha" required autoComplete="current-password" />
+        </Field>
 
-          <div className={styles.form}>
-            <Field invalid={!!actionData?.error}>
-              <Label>E-mail</Label>
-              <Input type="email" name="email" placeholder="voce@empresa.com" required autoFocus autoComplete="email" />
-            </Field>
+        {actionData?.error && <p className={styles.erroGeral} role="alert">{actionData.error}</p>}
+      </div>
 
-            <Field invalid={!!actionData?.error}>
-              <Label>Senha</Label>
-              <PasswordInput name="password" placeholder="Digite sua senha" required autoComplete="current-password" />
-            </Field>
-
-            {actionData?.error && <p className={styles.erroGeral} role="alert">{actionData.error}</p>}
-          </div>
-
-          <Button type="submit" size="lg" loading={isSubmitting} className={styles.submit}>
-            Continuar
-          </Button>
-        </Form>
-      </section>
-    </main>
+      <Button type="submit" size="lg" loading={isSubmitting} className={styles.submit}>
+        Entrar
+      </Button>
+    </Form>
   );
 }

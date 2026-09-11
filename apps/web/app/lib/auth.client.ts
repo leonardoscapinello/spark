@@ -91,6 +91,17 @@ export async function signIn(email: string, password: string): Promise<AppSessio
   }
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  const redirectTo = `${window.location.origin}/update-password`;
+  const { error } = await getSupabaseClient().auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) throw new Error("RESET_REQUEST_FAILED");
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await getSupabaseClient().auth.updateUser({ password });
+  if (error) throw new Error("PASSWORD_UPDATE_FAILED");
+}
+
 export async function signOut(): Promise<void> {
   accessToken = null;
   clearProfile();
