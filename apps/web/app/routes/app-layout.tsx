@@ -30,7 +30,9 @@ export default function AppLayout() {
   return (
     <div className={styles.shell}>
       <Glass as="aside" className={styles.sidebar ?? ""}>
-        <div className={styles.marca}>Spark</div>
+        <a className={styles.marca} href="/" aria-label="Leonardo Scapinello">
+          <img src="/brand/leonardo-scapinello-ink.svg" alt="Leonardo Scapinello" />
+        </a>
         <nav className={styles.nav}>
           <Link to="/" className={styles.navItem}>
             Contatos

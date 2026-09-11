@@ -26,9 +26,9 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,woff2}"],
       },
       manifest: {
-        name: "Spark",
-        short_name: "Spark",
-        description: "CRM, atendimento e automação de marketing — unificado.",
+        name: "Leonardo Scapinello",
+        short_name: "Leonardo",
+        description: "Central de relacionamento Leonardo Scapinello.",
         theme_color: "#2f6f7e",
         background_color: "#e7edea",
         display: "standalone",

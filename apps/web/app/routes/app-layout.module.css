@@ -17,10 +17,13 @@
 }
 
 .marca {
-  font-family: var(--typography-fontFamily-display);
-  font-size: var(--typography-size-lg);
-  font-weight: var(--typography-weight-semibold);
   padding: 0 var(--space-2);
+  display: flex;
+}
+
+.marca img {
+  width: 100%;
+  height: auto;
 }
 
 .nav {
