@@ -1,15 +1,14 @@
 /**
- * Coleção local-first de negócios — mesmo padrão de contacts-collection.ts
- * (docs/adr/0018, docs/adr/0026). `onUpdate` cobre as duas mutações que a
- * API aceita hoje: mover de estágio (PATCH .../move) e fechar como
- * ganho/perdido (PATCH .../close) — editar outro campo do negócio é rota
- * futura.
+ * Local-first deals collection — same pattern as contacts-collection.ts
+ * (docs/adr/0018, docs/adr/0026). `onUpdate` covers the two mutations the
+ * API accepts today: moving stage (PATCH .../move) and closing as
+ * won/lost (PATCH .../close) — editing another deal field is a future route.
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { z } from "zod";
-import { DealSchema, dealId, money, toCentavos, type Deal, type Money, type CreateDealInput, type OrgId } from "@spark/core";
+import { DealSchema, dealId, money, toCents, type Deal, type Money, type CreateDealInput, type OrgId } from "@spark/core";
 import {
   dealsControllerCreate,
   dealsControllerMove,
@@ -18,83 +17,84 @@ import {
   getSparkAuthToken,
 } from "@spark/api-client";
 
-export function negocioOtimista(entrada: Omit<CreateDealInput, "id">, orgId: OrgId): Deal {
-  const agora = new Date().toISOString();
+export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId): Deal {
+  const now = new Date().toISOString();
   return {
-    id: dealId.novo(),
+    id: dealId.create(),
     orgId,
-    pipelineId: entrada.pipelineId,
-    stageId: entrada.stageId,
-    contactId: entrada.contactId ?? null,
-    nome: entrada.nome,
-    valor: entrada.valor,
-    status: entrada.status ?? "aberto",
-    dataFechamentoEsperada: entrada.dataFechamentoEsperada ?? null,
-    motivoPerda: entrada.motivoPerda ?? null,
-    criadoEm: agora,
-    atualizadoEm: agora,
-    excluidoEm: null,
+    pipelineId: input.pipelineId,
+    stageId: input.stageId,
+    contactId: input.contactId ?? null,
+    name: input.name,
+    amount: input.amount,
+    status: input.status ?? "open",
+    expectedCloseDate: input.expectedCloseDate ?? null,
+    lossReason: input.lossReason ?? null,
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: null,
   };
 }
 
 /**
- * `collection.insert()` exige o formato PRÉ-transform do schema (o que o
- * Standard Schema chama de "input") — `valor` como number, não `Money`.
- * É o oposto de `onInsert`, que já recebe o negócio PÓS-transform (por
- * isso `onInsert` acima usa `toCentavos` direto, sem passar por aqui).
- * `Money` é opaco por Symbol e não é estruturalmente um `number` — ao
- * contrário de Email/ContactId (marca por interseção, que widen pra
- * string sozinhos), este converte de verdade ou o `tsc` reprova.
+ * `collection.insert()` requires the schema's PRE-transform shape (what
+ * Standard Schema calls "input") — `amount` as a number, not `Money`. It's
+ * the opposite of `onInsert`, which already receives the deal
+ * POST-transform (that's why `onInsert` below uses `toCents` directly,
+ * without going through this). `Money` is Symbol-opaque and not
+ * structurally a `number` — unlike Email/ContactId (an intersection
+ * brand, which widens to a string on its own), this needs a real
+ * conversion or `tsc` rejects it.
  */
-export function paraInsercao(negocio: Deal) {
-  return { ...negocio, valor: toCentavos(negocio.valor) };
+export function forInsert(deal: Deal) {
+  return { ...deal, amount: toCents(deal.amount) };
 }
 
 /**
- * `useLiveQuery`/`collection.toArray` devolvem a linha do jeito que o
- * Electric sincronizou — achado testando de verdade no navegador (não só
- * no compilador, que confia no tipo `Deal` declarado): schema do Zod só
- * transforma ESCRITA local (`onInsert`/`onUpdate`), nunca LEITURA
- * sincronizada. `negocio.valor` chega como o Postgres manda (bigint da
- * coluna, não `Money`) — indexar direto com a chave de Symbol de Money
- * dá `undefined`, e qualquer conta em cima vira NaN. Todo lugar que lê
- * `valor` de um negócio VINDO DA COLEÇÃO (não um que você acabou de
- * montar com `negocioOtimista`) passa por aqui primeiro.
+ * `useLiveQuery`/`collection.toArray` return the row the way Electric
+ * synced it — found testing for real in the browser (not just the
+ * compiler, which trusts the declared `Deal` type): the Zod schema only
+ * transforms LOCAL WRITES (`onInsert`/`onUpdate`), never a SYNCED READ.
+ * `deal.amount` arrives however Postgres sends it (a bigint from the
+ * column, not `Money`) — indexing directly with Money's Symbol key gives
+ * `undefined`, and any arithmetic on top becomes NaN. Every place that
+ * reads `amount` off a deal COMING FROM THE COLLECTION (not one you just
+ * built with `optimisticDeal`) goes through here first.
  *
- * A mesma linha muda de forma ao longo da vida dela na coleção: um
- * insert recém-feito (ainda otimista, não confirmado pelo servidor) já
- * passou pelo transform local, então `valor` já é `Money` de verdade —
- * também achado testando de verdade (criar um negócio pela UI quebrava
- * com o mesmo NaN, porque `Number(umMoney)` também não é um número).
- * `Money` é sempre objeto (chave de symbol); o valor cru do Electric é
- * sempre primitivo — é essa diferença de `typeof` que distingue os dois
- * casos sem precisar saber a origem da linha.
+ * The same row changes shape over its life in the collection: a
+ * freshly-made insert (still optimistic, not yet confirmed by the
+ * server) already went through the local transform, so `amount` is
+ * already real `Money` — also found testing for real (creating a deal
+ * through the UI broke with the same NaN, because `Number(aMoney)` isn't
+ * a number either). `Money` is always an object (Symbol key); Electric's
+ * raw value is always a primitive — that `typeof` difference is what
+ * tells the two cases apart without needing to know the row's origin.
  */
-export function valorSincronizado(valorBruto: unknown): Money {
-  if (typeof valorBruto === "object" && valorBruto !== null) {
-    return valorBruto as Money;
+export function syncedAmount(rawAmount: unknown): Money {
+  if (typeof rawAmount === "object" && rawAmount !== null) {
+    return rawAmount as Money;
   }
-  return money(Number(valorBruto));
+  return money(Number(rawAmount));
 }
 
 /**
- * `DealSchema` com `valor` mais permissivo — só para o schema da
- * coleção, NUNCA para `createZodDto`/OpenAPI (por isso vive aqui, não em
- * packages/core: `z.toJSONSchema()`, usado por trás do gerador de
- * OpenAPI, lança `Error: BigInt cannot be represented in JSON Schema` —
- * achado tentando fazer essa mesma flexibilização em `zMoney`
- * compartilhado). `collection.update()` da TanStack DB revalida o
- * registro MESCLADO (estado atual da linha + patch) contra este schema
- * a cada chamada — e o "estado atual" de uma linha sincronizada é
- * sempre bigint cru (Electric nunca transforma). JSON nunca carrega
- * bigint, então nenhuma entrada de API de verdade passa por aqui.
+ * `DealSchema` with a more permissive `amount` — only for the
+ * collection's own schema, NEVER for `createZodDto`/OpenAPI (that's why
+ * it lives here, not in packages/core: `z.toJSONSchema()`, used behind
+ * the OpenAPI generator, throws `Error: BigInt cannot be represented in
+ * JSON Schema` — found trying this same widening on the shared `zMoney`).
+ * TanStack DB's `collection.update()` revalidates the MERGED record
+ * (current row state + patch) against this schema on every call — and a
+ * synced row's "current state" is always a raw bigint (Electric never
+ * transforms). JSON never carries a bigint, so no real API input ever
+ * goes through here.
  */
-const DealSchemaColecao = DealSchema.extend({
-  valor: z.union([z.number().int(), z.bigint()]).transform((valor, ctx) => {
+const DealCollectionSchema = DealSchema.extend({
+  amount: z.union([z.number().int(), z.bigint()]).transform((amount, ctx) => {
     try {
-      return money(Number(valor));
-    } catch (erro) {
-      ctx.addIssue({ code: "custom", message: erro instanceof Error ? erro.message : "inválido" });
+      return money(Number(amount));
+    } catch (error) {
+      ctx.addIssue({ code: "custom", message: error instanceof Error ? error.message : "invalid" });
       return z.NEVER;
     }
   }),
@@ -104,12 +104,13 @@ export function createDealsCollection() {
   return createCollection(
     electricCollectionOptions({
       id: "deals",
-      schema: DealSchemaColecao,
-      getKey: (negocio) => negocio.id,
+      schema: DealCollectionSchema,
+      getKey: (deal) => deal.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/deals`,
-        // Electric replica coluna do Postgres (snake_case); schema Zod é
-        // camelCase (ADR-0019) — ver o mesmo comentário em contacts-collection.ts.
+        // Electric replicates the Postgres column (snake_case); the Zod
+        // schema is camelCase (ADR-0019) — see the same comment in
+        // contacts-collection.ts.
         columnMapper: snakeCamelMapper(),
         headers: {
           authorization: () => {
@@ -119,57 +120,58 @@ export function createDealsCollection() {
         },
       },
       onInsert: async ({ transaction }) => {
-        const mutacao = transaction.mutations[0];
-        if (!mutacao) throw new Error("onInsert chamado sem mutação pendente.");
-        const negocio = mutacao.modified;
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onInsert called with no pending mutation.");
+        const deal = mutation.modified;
 
-        const resposta = await dealsControllerCreate({
-          id: negocio.id,
-          pipelineId: negocio.pipelineId,
-          stageId: negocio.stageId,
-          contactId: negocio.contactId,
-          nome: negocio.nome,
-          // wire é número (centavos) — zMoney faz o caminho inverso na
-          // validação de entrada da API (packages/core/src/schema/zodHelpers.ts).
-          valor: toCentavos(negocio.valor),
-          status: negocio.status,
-          dataFechamentoEsperada: negocio.dataFechamentoEsperada,
-          motivoPerda: negocio.motivoPerda,
+        const response = await dealsControllerCreate({
+          id: deal.id,
+          pipelineId: deal.pipelineId,
+          stageId: deal.stageId,
+          contactId: deal.contactId,
+          name: deal.name,
+          // the wire format is a plain number (cents) — zMoney does the
+          // inverse conversion on the API's input validation
+          // (packages/core/src/schema/zodHelpers.ts).
+          amount: toCents(deal.amount),
+          status: deal.status,
+          expectedCloseDate: deal.expectedCloseDate,
+          lossReason: deal.lossReason,
         });
 
-        return { txid: resposta.txid };
+        return { txid: response.txid };
       },
       onUpdate: async ({ transaction }) => {
-        const mutacao = transaction.mutations[0];
-        if (!mutacao) throw new Error("onUpdate chamado sem mutação pendente.");
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onUpdate called with no pending mutation.");
 
-        const camposAlterados = Object.keys(mutacao.changes);
+        const changedFields = Object.keys(mutation.changes);
 
-        if (camposAlterados.length === 1 && camposAlterados[0] === "stageId") {
-          const resposta = await dealsControllerMove(mutacao.original.id, { stageId: mutacao.modified.stageId });
-          return { txid: resposta.txid };
+        if (changedFields.length === 1 && changedFields[0] === "stageId") {
+          const response = await dealsControllerMove(mutation.original.id, { stageId: mutation.modified.stageId });
+          return { txid: response.txid };
         }
 
-        // fechar (ganho/perdido) muda "status" e, só no caso de perdido,
-        // também "motivoPerda" junto — nunca sozinho.
-        const ehFechamento =
-          camposAlterados.includes("status") &&
-          camposAlterados.every((campo) => campo === "status" || campo === "motivoPerda") &&
-          mutacao.modified.status !== "aberto";
-        if (ehFechamento) {
-          const status = mutacao.modified.status as "ganho" | "perdido";
-          // `exactOptionalPropertyTypes` trata `motivoPerda: undefined` como
-          // diferente de omitir a chave — por isso o corpo é montado por
-          // ramo, não com um `undefined` explícito num objeto só.
-          const resposta = await dealsControllerClose(
-            mutacao.original.id,
-            status === "perdido" ? { status, motivoPerda: mutacao.modified.motivoPerda } : { status },
+        // closing (won/lost) changes "status" and, only when lost, also
+        // "lossReason" alongside it — never lossReason alone.
+        const isClosing =
+          changedFields.includes("status") &&
+          changedFields.every((field) => field === "status" || field === "lossReason") &&
+          mutation.modified.status !== "open";
+        if (isClosing) {
+          const status = mutation.modified.status as "won" | "lost";
+          // `exactOptionalPropertyTypes` treats `lossReason: undefined` as
+          // different from omitting the key — that's why the body is built
+          // per branch, not with an explicit `undefined` in a single object.
+          const response = await dealsControllerClose(
+            mutation.original.id,
+            status === "lost" ? { status, lossReason: mutation.modified.lossReason } : { status },
           );
-          return { txid: resposta.txid };
+          return { txid: response.txid };
         }
 
         throw new Error(
-          `Só é possível mover de estágio ou fechar (ganho/perdido) hoje — campo(s) alterado(s): ${camposAlterados.join(", ")}.`,
+          `Only moving stage or closing (won/lost) is possible today — changed field(s): ${changedFields.join(", ")}.`,
         );
       },
     }),

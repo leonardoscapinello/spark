@@ -1,16 +1,16 @@
 import { Link, Outlet, redirect, useNavigate } from "react-router";
 import { Button, Glass } from "@spark/ui-web";
-import { limparSessao, obterToken } from "../lib/auth.client";
+import { clearSession, getToken } from "../lib/auth.client";
 import styles from "./app-layout.module.css";
 
 /**
- * clientLoader, não loader: precisa ler localStorage, que só existe no
- * navegador. A rota fica sem dado durante o SSR — HydrateFallback cobre
- * esse instante (docs/adr/0018: SSR só serve a primeira visita; a partir
- * daqui quem decide o que renderiza é o cliente).
+ * clientLoader, not loader: needs to read localStorage, which only
+ * exists in the browser. The route has no data during SSR —
+ * HydrateFallback covers that instant (docs/adr/0018: SSR only serves
+ * the first visit; from here on the client decides what renders).
  */
 export async function clientLoader() {
-  const token = obterToken();
+  const token = getToken();
   if (!token) throw redirect("/login");
   return null;
 }
@@ -22,8 +22,8 @@ export function HydrateFallback() {
 export default function AppLayout() {
   const navigate = useNavigate();
 
-  function sair() {
-    limparSessao();
+  function signOut() {
+    clearSession();
     navigate("/login");
   }
 
@@ -39,7 +39,7 @@ export default function AppLayout() {
             Negócios
           </Link>
         </nav>
-        <Button variant="ghost" size="sm" onClick={sair} className={styles.sair}>
+        <Button variant="ghost" size="sm" onClick={signOut} className={styles.sair}>
           Sair
         </Button>
       </Glass>

@@ -1,13 +1,19 @@
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { contactId as contactIdFactory, formatTelefone, type ActivityType } from "@spark/core";
-import { atividadeOtimista } from "@spark/data";
-import { Button, Field, Input, Label } from "@spark/ui-web";
+import {
+  contactId as contactIdFactory,
+  formatPhone,
+  email as buildEmail,
+  phone as buildPhone,
+  type ActivityType,
+} from "@spark/core";
+import { optimisticActivity } from "@spark/data";
+import { Button, ErrorText, Field, Input, Label } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
-import { obterSessao } from "../lib/auth.client";
+import { getSession } from "../lib/auth.client";
 import styles from "./contact-detail.module.css";
 
 export async function clientLoader() {
@@ -15,67 +21,117 @@ export async function clientLoader() {
   return null;
 }
 
-const TIPOS: { valor: ActivityType; rotulo: string }[] = [
-  { valor: "tarefa", rotulo: "Tarefa" },
-  { valor: "ligacao", rotulo: "Ligação" },
-  { valor: "reuniao", rotulo: "Reunião" },
-  { valor: "email", rotulo: "E-mail" },
+const TYPES: { value: ActivityType; label: string }[] = [
+  { value: "task", label: "Tarefa" },
+  { value: "call", label: "Ligação" },
+  { value: "meeting", label: "Reunião" },
+  { value: "email", label: "E-mail" },
 ];
 
-function formatarDataHora(iso: string): string {
+function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
 }
 
 export default function ContactDetail({ params }: Route.ComponentProps) {
   const collection = getContactsCollection();
   const activitiesCollection = getActivitiesCollection();
-  const [tipoSelecionado, setTipoSelecionado] = useState<ActivityType>("tarefa");
+  const [selectedType, setSelectedType] = useState<ActivityType>("task");
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [nameEdit, setNameEdit] = useState("");
+  const [emailEdit, setEmailEdit] = useState("");
+  const [phoneEdit, setPhoneEdit] = useState("");
+  const [emailEditError, setEmailEditError] = useState<string | null>(null);
+  const [phoneEditError, setPhoneEditError] = useState<string | null>(null);
 
   const { data } = useLiveQuery({
     query: (q) =>
       q
-        .from({ contatos: collection })
-        .where(({ contatos: c }) => eq(c.id, params.contactId))
+        .from({ contacts: collection })
+        .where(({ contacts: c }) => eq(c.id, params.contactId))
         .findOne(),
   });
 
-  const { data: atividades } = useLiveQuery({
+  const { data: activities } = useLiveQuery({
     query: (q) =>
       q
         .from({ activities: activitiesCollection })
         .where(({ activities: a }) => eq(a.contactId, params.contactId))
-        .orderBy(({ activities: a }) => a.dataHora, "asc"),
+        .orderBy(({ activities: a }) => a.scheduledAt, "asc"),
   });
 
-  function adicionarAtividade(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    const sessao = obterSessao();
-    if (!sessao) return;
+  function addActivity(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const session = getSession();
+    if (!session) return;
 
-    const dados = new FormData(evento.currentTarget);
-    const titulo = String(dados.get("titulo") ?? "").trim();
-    const dataHoraLocal = String(dados.get("dataHora") ?? "");
-    if (!titulo || !dataHoraLocal) return;
+    const formData = new FormData(event.currentTarget);
+    const title = String(formData.get("title") ?? "").trim();
+    const localDateTime = String(formData.get("scheduledAt") ?? "");
+    if (!title || !localDateTime) return;
 
-    const atividade = atividadeOtimista(
+    const activity = optimisticActivity(
       {
-        contactId: contactIdFactory.de(params.contactId),
+        contactId: contactIdFactory.from(params.contactId),
         dealId: null,
-        tipo: tipoSelecionado,
-        titulo,
-        notas: null,
-        dataHora: new Date(dataHoraLocal).toISOString(),
+        type: selectedType,
+        title,
+        notes: null,
+        scheduledAt: new Date(localDateTime).toISOString(),
       },
-      sessao.orgId,
+      session.orgId,
     );
-    activitiesCollection.insert(atividade);
-    evento.currentTarget.reset();
+    activitiesCollection.insert(activity);
+    event.currentTarget.reset();
   }
 
-  function alternarConcluida(id: string, concluida: boolean) {
+  function toggleCompleted(id: string, completed: boolean) {
     activitiesCollection.update(id, (draft) => {
-      draft.concluida = concluida;
+      draft.completed = completed;
     });
+  }
+
+  function startEditing() {
+    if (!data) return;
+    setNameEdit(data.name);
+    setEmailEdit(data.email ?? "");
+    setPhoneEdit(data.phone ? formatPhone(data.phone) : "");
+    setEmailEditError(null);
+    setPhoneEditError(null);
+    setIsEditing(true);
+  }
+
+  function saveEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!data) return;
+    const trimmedName = nameEdit.trim();
+    if (!trimmedName) return;
+
+    setEmailEditError(null);
+    setPhoneEditError(null);
+
+    let validEmail = null;
+    try {
+      validEmail = emailEdit.trim() ? buildEmail(emailEdit) : null;
+    } catch {
+      setEmailEditError("E-mail inválido.");
+      return;
+    }
+
+    let validPhone = null;
+    try {
+      validPhone = phoneEdit.trim() ? buildPhone(phoneEdit) : null;
+    } catch {
+      setPhoneEditError("Telefone inválido — use DDD + número.");
+      return;
+    }
+
+    collection.update(data.id, (draft) => {
+      draft.name = trimmedName;
+      draft.email = validEmail;
+      draft.phone = validPhone;
+    });
+    setIsEditing(false);
   }
 
   if (!data) {
@@ -94,73 +150,117 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
       <Link to="/" className={styles.voltar}>
         ← Contatos
       </Link>
-      <h1 className={styles.titulo}>{data.nome}</h1>
+      <h1 className={styles.titulo}>{data.name}</h1>
 
-      <div className={styles.campos}>
-        <div className={styles.campo}>
-          <span className={styles.rotulo}>E-mail</span>
-          <span className={styles.valor}>{data.email ?? "—"}</span>
+      {isEditing ? (
+        <form className={styles.camposEdicao} onSubmit={saveEdit}>
+          <Field>
+            <Label>Nome</Label>
+            <Input value={nameEdit} onChange={(event) => setNameEdit(event.target.value)} />
+          </Field>
+          <Field invalid={!!emailEditError}>
+            <Label>E-mail</Label>
+            <Input
+              value={emailEdit}
+              onChange={(event) => {
+                setEmailEdit(event.target.value);
+                setEmailEditError(null);
+              }}
+              placeholder="opcional"
+            />
+            <ErrorText>{emailEditError}</ErrorText>
+          </Field>
+          <Field invalid={!!phoneEditError}>
+            <Label>Telefone</Label>
+            <Input
+              value={phoneEdit}
+              onChange={(event) => {
+                setPhoneEdit(event.target.value);
+                setPhoneEditError(null);
+              }}
+              placeholder="opcional"
+            />
+            <ErrorText>{phoneEditError}</ErrorText>
+          </Field>
+          <div className={styles.acoesEdicao}>
+            <Button type="submit" size="sm" disabled={!nameEdit.trim()}>
+              Salvar
+            </Button>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setIsEditing(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <div className={styles.campos}>
+          <div className={styles.campo}>
+            <span className={styles.rotulo}>E-mail</span>
+            <span className={styles.valor}>{data.email ?? "—"}</span>
+          </div>
+          <div className={styles.campo}>
+            <span className={styles.rotulo}>Telefone</span>
+            <span className={styles.valor}>{data.phone ? formatPhone(data.phone) : "—"}</span>
+          </div>
+          <div className={styles.campo}>
+            <span className={styles.rotulo}>Pontuação</span>
+            <span className={styles.valor}>{data.score}</span>
+          </div>
+          <Button variant="secondary" size="sm" onClick={startEditing} className={styles.botaoEditar}>
+            Editar
+          </Button>
         </div>
-        <div className={styles.campo}>
-          <span className={styles.rotulo}>Telefone</span>
-          <span className={styles.valor}>{data.telefone ? formatTelefone(data.telefone) : "—"}</span>
-        </div>
-        <div className={styles.campo}>
-          <span className={styles.rotulo}>Pontuação</span>
-          <span className={styles.valor}>{data.score}</span>
-        </div>
-      </div>
+      )}
 
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Atividades</h2>
 
         <ul className={styles.listaAtividades}>
-          {atividades.map((atividade) => (
+          {activities.map((activity) => (
             <li
-              key={atividade.id}
-              className={[styles.atividade, atividade.concluida ? styles.atividadeConcluida : ""]
+              key={activity.id}
+              className={[styles.atividade, activity.completed ? styles.atividadeConcluida : ""]
                 .filter(Boolean)
                 .join(" ")}
             >
               <div className={styles.atividadeInfo}>
                 <span className={styles.atividadeTipo}>
-                  {TIPOS.find((t) => t.valor === atividade.tipo)?.rotulo ?? atividade.tipo}
+                  {TYPES.find((t) => t.value === activity.type)?.label ?? activity.type}
                 </span>
-                <span className={styles.atividadeTitulo}>{atividade.titulo}</span>
-                <span className={styles.atividadeData}>{formatarDataHora(atividade.dataHora)}</span>
+                <span className={styles.atividadeTitulo}>{activity.title}</span>
+                <span className={styles.atividadeData}>{formatDateTime(activity.scheduledAt)}</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => alternarConcluida(atividade.id, !atividade.concluida)}
+                onClick={() => toggleCompleted(activity.id, !activity.completed)}
               >
-                {atividade.concluida ? "Reabrir" : "Concluir"}
+                {activity.completed ? "Reabrir" : "Concluir"}
               </Button>
             </li>
           ))}
         </ul>
 
-        <form className={styles.formAtividade} onSubmit={adicionarAtividade}>
+        <form className={styles.formAtividade} onSubmit={addActivity}>
           <div className={styles.tipoLinha}>
-            {TIPOS.map((opcao) => (
+            {TYPES.map((option) => (
               <Button
-                key={opcao.valor}
+                key={option.value}
                 type="button"
                 size="sm"
-                variant={tipoSelecionado === opcao.valor ? "primary" : "secondary"}
-                onClick={() => setTipoSelecionado(opcao.valor)}
+                variant={selectedType === option.value ? "primary" : "secondary"}
+                onClick={() => setSelectedType(option.value)}
               >
-                {opcao.rotulo}
+                {option.label}
               </Button>
             ))}
           </div>
           <Field>
             <Label>Título</Label>
-            <Input name="titulo" placeholder="O que precisa ser feito" />
+            <Input name="title" placeholder="O que precisa ser feito" />
           </Field>
           <Field>
             <Label>Quando</Label>
-            <Input name="dataHora" type="datetime-local" />
+            <Input name="scheduledAt" type="datetime-local" />
           </Field>
           <Button type="submit" size="sm">
             Adicionar atividade

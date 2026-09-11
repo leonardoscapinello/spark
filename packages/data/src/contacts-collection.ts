@@ -1,48 +1,48 @@
 /**
- * Coleção local-first de contatos — TanStack DB + Electric (docs/adr/0018).
+ * Local-first contacts collection — TanStack DB + Electric (docs/adr/0018).
  *
- * O ShapeStream nunca fala com o Electric direto: `shapeOptions.url` aponta
- * pro proxy de autorização em apps/api (GET /v1/shapes/contacts), que é
- * quem decide o filtro por organização — aqui o cliente só escolhe QUE
- * tabela, nunca COM QUE FILTRO (docs/adr/0026).
+ * The ShapeStream never talks to Electric directly: `shapeOptions.url`
+ * points at the authorization proxy in apps/api (GET /v1/shapes/contacts),
+ * which decides the per-organization filter — the client only picks WHICH
+ * table, never WITH WHAT FILTER (docs/adr/0026).
  *
- * `createContactsCollection` é uma factory, não um singleton pronto no
- * módulo: `shapeOptions.url` é um campo estático, resolvido no momento em
- * que a config é montada — se isto fosse `createCollection(...)` direto no
- * top-level do módulo, a URL seria calculada na hora do `import`, antes do
- * app chamar `setSparkApiBaseUrl` na inicialização (mesmo risco de ordem
- * já documentado em http-client.ts). Cada app chama a factory DEPOIS de
- * configurar base URL e token.
+ * `createContactsCollection` is a factory, not a ready-made module-level
+ * singleton: `shapeOptions.url` is a static field, resolved at the moment
+ * the config is built — if this were `createCollection(...)` directly at
+ * the module's top level, the URL would be computed at `import` time,
+ * before the app calls `setSparkApiBaseUrl` at startup (same ordering
+ * risk already documented in http-client.ts). Each app calls the factory
+ * AFTER configuring base URL and token.
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { ContactSchema, contactId, type Contact, type CreateContactInput, type OrgId } from "@spark/core";
-import { contactsControllerCreate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { contactsControllerCreate, contactsControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
 /**
- * Monta a linha completa que `collection.insert()` exige — o schema de
- * validação da coleção é `ContactSchema` inteiro (o formato que o Electric
- * sincroniza), não só o que o formulário coleta. `id` já é o definitivo
- * (docs/adr/0030); `orgId` e os timestamps são só placeholder otimista —
- * o servidor nunca lê nenhum dos dois do corpo da requisição
- * (docs/adr/0026), e quando o Electric replicar a linha real de volta,
- * estes valores são substituídos pelos que o Postgres gravou de fato.
+ * Builds the full row `collection.insert()` requires — the collection's
+ * validation schema is the entire `ContactSchema` (the shape Electric
+ * syncs), not just what the form collects. `id` is already the final one
+ * (docs/adr/0030); `orgId` and the timestamps are only an optimistic
+ * placeholder — the server never reads either from the request body
+ * (docs/adr/0026), and once Electric replicates the real row back, these
+ * values get replaced by what Postgres actually wrote.
  */
-export function contatoOtimista(entrada: Omit<CreateContactInput, "id">, orgId: OrgId): Contact {
-  const agora = new Date().toISOString();
+export function optimisticContact(input: Omit<CreateContactInput, "id">, orgId: OrgId): Contact {
+  const now = new Date().toISOString();
   return {
-    id: contactId.novo(),
+    id: contactId.create(),
     orgId,
-    nome: entrada.nome,
-    email: entrada.email ?? null,
-    telefone: entrada.telefone ?? null,
-    score: entrada.score ?? 0,
-    customFields: entrada.customFields ?? {},
-    tags: entrada.tags ?? [],
-    criadoEm: agora,
-    atualizadoEm: agora,
-    excluidoEm: null,
+    name: input.name,
+    email: input.email ?? null,
+    phone: input.phone ?? null,
+    score: input.score ?? 0,
+    customFields: input.customFields ?? {},
+    tags: input.tags ?? [],
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: null,
   };
 }
 
@@ -51,19 +51,19 @@ export function createContactsCollection() {
     electricCollectionOptions({
       id: "contacts",
       schema: ContactSchema,
-      getKey: (contato) => contato.id,
+      getKey: (contact) => contact.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/contacts`,
-        // Electric replica coluna do Postgres (snake_case) — nosso schema
-        // Zod é todo camelCase (ADR-0019). Sem isto, campo composto
-        // (orgId, criadoEm...) chega undefined em runtime, sem erro de
-        // tipo nenhum (achado testando de verdade no navegador, não só
-        // no compilador — a suíte de teste só exercitava campo de uma
-        // palavra só, onde snake_case e camelCase são idênticos).
+        // Electric replicates the Postgres column (snake_case) — our Zod
+        // schema is all camelCase (ADR-0019). Without this, a composite
+        // field name (orgId, createdAt...) arrives undefined at runtime,
+        // with no type error at all (found testing for real in the
+        // browser, not just the compiler — the test suite only exercised
+        // single-word fields, where snake_case and camelCase are identical).
         columnMapper: snakeCamelMapper(),
         headers: {
-          // função, não string — reavaliada a cada request do stream, pra
-          // acompanhar renovação de token sem recriar a coleção inteira.
+          // function, not string — re-evaluated on every stream request,
+          // to track token renewal without recreating the whole collection.
           authorization: () => {
             const token = getSparkAuthToken();
             return token ? `Bearer ${token}` : "";
@@ -71,34 +71,56 @@ export function createContactsCollection() {
         },
       },
       onInsert: async ({ transaction }) => {
-        const mutacao = transaction.mutations[0];
-        if (!mutacao) throw new Error("onInsert chamado sem mutação pendente.");
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onInsert called with no pending mutation.");
 
-        const contato = mutacao.modified;
+        const contact = mutation.modified;
 
-        // Literal direto, não passando por uma variável tipada como
-        // CreateContactInput: Contact tem email/telefone sempre presentes
-        // (nunca `undefined`, só `| null`), mas o TIPO da propriedade
-        // opcional de CreateContactInput é `Email | null | undefined` —
-        // sob exactOptionalPropertyTypes (tsconfig.base.json), coagir por
-        // essa variável intermediária faria o `undefined` da declaração
-        // "vazar" pro argumento, mesmo o valor de verdade nunca sendo
-        // undefined aqui. Literal inline infere o tipo de cada campo da
-        // própria expressão (Email | null), que já bate com CreateContactDto.
-        const resposta = await contactsControllerCreate({
-          id: contato.id,
-          nome: contato.nome,
-          email: contato.email,
-          telefone: contato.telefone,
-          score: contato.score,
-          customFields: contato.customFields,
-          tags: contato.tags,
+        // Inline literal, not routed through a variable typed as
+        // CreateContactInput: Contact has email/phone always present
+        // (never `undefined`, only `| null`), but the OPTIONAL property's
+        // TYPE on CreateContactInput is `Email | null | undefined` — under
+        // exactOptionalPropertyTypes (tsconfig.base.json), coercing through
+        // that intermediate variable would leak the declaration's
+        // `undefined` into the argument, even though the real value is
+        // never undefined here. An inline literal infers each field's type
+        // from the expression itself (Email | null), which already
+        // matches CreateContactDto.
+        const response = await contactsControllerCreate({
+          id: contact.id,
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          score: contact.score,
+          customFields: contact.customFields,
+          tags: contact.tags,
         });
 
-        // { txid } no retorno — é o que o TanStack DB usa (awaitTxId por
-        // baixo dos panos) pra saber que o Electric já replicou esta
-        // escrita antes de soltar o estado otimista local.
-        return { txid: resposta.txid };
+        // { txid } in the return value — that's what TanStack DB uses
+        // (awaitTxId under the hood) to know Electric has already
+        // replicated this write before releasing the local optimistic state.
+        return { txid: response.txid };
+      },
+      onUpdate: async ({ transaction }) => {
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onUpdate called with no pending mutation.");
+
+        const changedFields = Object.keys(mutation.changes);
+        const allowedFields = new Set(["name", "email", "phone"]);
+        const isAllowed = changedFields.length > 0 && changedFields.every((field) => allowedFields.has(field));
+        if (!isAllowed) {
+          throw new Error(
+            `Only name, email, or phone can be edited today — changed field(s): ${changedFields.join(", ")}.`,
+          );
+        }
+
+        const response = await contactsControllerUpdate(mutation.original.id, {
+          ...("name" in mutation.changes ? { name: mutation.modified.name } : {}),
+          ...("email" in mutation.changes ? { email: mutation.modified.email } : {}),
+          ...("phone" in mutation.changes ? { phone: mutation.modified.phone } : {}),
+        });
+
+        return { txid: response.txid };
       },
     }),
   );

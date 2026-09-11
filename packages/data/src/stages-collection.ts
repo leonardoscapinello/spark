@@ -1,5 +1,5 @@
 /**
- * Coleção local-first de estágios — mesmo padrão de contacts-collection.ts
+ * Local-first stages collection — same pattern as contacts-collection.ts
  * (docs/adr/0018, docs/adr/0026).
  */
 import { createCollection } from "@tanstack/react-db";
@@ -8,18 +8,18 @@ import { snakeCamelMapper } from "@electric-sql/client";
 import { StageSchema, stageId, type Stage, type CreateStageInput, type OrgId } from "@spark/core";
 import { stagesControllerCreate, stagesControllerRename, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
-export function estagioOtimista(entrada: Omit<CreateStageInput, "id">, orgId: OrgId): Stage {
-  const agora = new Date().toISOString();
+export function optimisticStage(input: Omit<CreateStageInput, "id">, orgId: OrgId): Stage {
+  const now = new Date().toISOString();
   return {
-    id: stageId.novo(),
+    id: stageId.create(),
     orgId,
-    pipelineId: entrada.pipelineId,
-    nome: entrada.nome,
-    ordem: entrada.ordem,
-    probabilidade: entrada.probabilidade ?? 0,
-    criadoEm: agora,
-    atualizadoEm: agora,
-    arquivadoEm: null,
+    pipelineId: input.pipelineId,
+    name: input.name,
+    sortOrder: input.sortOrder,
+    probability: input.probability ?? 0,
+    createdAt: now,
+    updatedAt: now,
+    archivedAt: null,
   };
 }
 
@@ -28,11 +28,12 @@ export function createStagesCollection() {
     electricCollectionOptions({
       id: "stages",
       schema: StageSchema,
-      getKey: (estagio) => estagio.id,
+      getKey: (stage) => stage.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/stages`,
-        // Electric replica coluna do Postgres (snake_case); schema Zod é
-        // camelCase (ADR-0019) — ver o mesmo comentário em contacts-collection.ts.
+        // Electric replicates the Postgres column (snake_case); the Zod
+        // schema is camelCase (ADR-0019) — see the same comment in
+        // contacts-collection.ts.
         columnMapper: snakeCamelMapper(),
         headers: {
           authorization: () => {
@@ -42,33 +43,33 @@ export function createStagesCollection() {
         },
       },
       onInsert: async ({ transaction }) => {
-        const mutacao = transaction.mutations[0];
-        if (!mutacao) throw new Error("onInsert chamado sem mutação pendente.");
-        const estagio = mutacao.modified;
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onInsert called with no pending mutation.");
+        const stage = mutation.modified;
 
-        const resposta = await stagesControllerCreate({
-          id: estagio.id,
-          pipelineId: estagio.pipelineId,
-          nome: estagio.nome,
-          ordem: estagio.ordem,
-          probabilidade: estagio.probabilidade,
+        const response = await stagesControllerCreate({
+          id: stage.id,
+          pipelineId: stage.pipelineId,
+          name: stage.name,
+          sortOrder: stage.sortOrder,
+          probability: stage.probability,
         });
 
-        return { txid: resposta.txid };
+        return { txid: response.txid };
       },
       onUpdate: async ({ transaction }) => {
-        const mutacao = transaction.mutations[0];
-        if (!mutacao) throw new Error("onUpdate chamado sem mutação pendente.");
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onUpdate called with no pending mutation.");
 
-        const camposAlterados = Object.keys(mutacao.changes);
-        if (camposAlterados.length !== 1 || camposAlterados[0] !== "nome") {
+        const changedFields = Object.keys(mutation.changes);
+        if (changedFields.length !== 1 || changedFields[0] !== "name") {
           throw new Error(
-            `Só é possível renomear estágio hoje — campo(s) alterado(s): ${camposAlterados.join(", ")}.`,
+            `Only renaming a stage is possible today — changed field(s): ${changedFields.join(", ")}.`,
           );
         }
 
-        const resposta = await stagesControllerRename(mutacao.original.id, { nome: mutacao.modified.nome });
-        return { txid: resposta.txid };
+        const response = await stagesControllerRename(mutation.original.id, { name: mutation.modified.name });
+        return { txid: response.txid };
       },
     }),
   );

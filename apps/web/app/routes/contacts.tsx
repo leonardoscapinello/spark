@@ -1,23 +1,22 @@
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
-import { contatoOtimista } from "@spark/data";
+import { optimisticContact } from "@spark/data";
 import {
-  contatoCorresponde,
-  email as construirEmail,
-  telefone as construirTelefone,
-  formatTelefone,
+  contactMatches,
+  email as buildEmail,
+  phone as buildPhone,
+  formatPhone,
 } from "@spark/core";
 import { Button, ErrorText, Field, Input, Label } from "@spark/ui-web";
-import { obterSessao } from "../lib/auth.client";
+import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import styles from "./contacts.module.css";
 
 /**
- * Sincroniza a coleção antes do primeiro paint client-side — depois disso
- * toda leitura (aqui e em contact-detail) é local (docs/adr/0018,
- * docs/adr/0026). Não é loader (server): ShapeStream só existe no
- * navegador.
+ * Syncs the collection before the first client-side paint — after that,
+ * every read (here and in contact-detail) is local (docs/adr/0018,
+ * docs/adr/0026). Not a (server) loader: ShapeStream only exists in the browser.
  */
 export async function clientLoader() {
   await getContactsCollection().preload();
@@ -26,118 +25,118 @@ export async function clientLoader() {
 
 export default function Contacts() {
   const collection = getContactsCollection();
-  const { data: contatos, isLoading } = useLiveQuery({
-    query: (q) => q.from({ contatos: collection }).orderBy(({ contatos: c }) => c.criadoEm, "desc"),
+  const { data: contacts, isLoading } = useLiveQuery({
+    query: (q) => q.from({ contacts: collection }).orderBy(({ contacts: c }) => c.createdAt, "desc"),
   });
 
-  const [nome, setNome] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [erroEmail, setErroEmail] = useState<string | null>(null);
-  const [erroTelefone, setErroTelefone] = useState<string | null>(null);
-  const [busca, setBusca] = useState("");
-  const contatosFiltrados = contatos.filter((contato) => contatoCorresponde(contato, busca));
+  const [phone, setPhone] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const filteredContacts = contacts.filter((contact) => contactMatches(contact, search));
 
-  function adicionar(evento: FormEvent) {
-    evento.preventDefault();
-    const nomeLimpo = nome.trim();
-    if (!nomeLimpo) return;
+  function addContact(event: FormEvent) {
+    event.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
 
-    const sessao = obterSessao();
-    if (!sessao) return;
+    const session = getSession();
+    if (!session) return;
 
-    setErroEmail(null);
-    setErroTelefone(null);
+    setEmailError(null);
+    setPhoneError(null);
 
-    let emailValido = null;
+    let validEmail = null;
     try {
-      emailValido = email.trim() ? construirEmail(email) : null;
+      validEmail = email.trim() ? buildEmail(email) : null;
     } catch {
-      setErroEmail("E-mail inválido.");
+      setEmailError("E-mail inválido.");
       return;
     }
 
-    let telefoneValido = null;
+    let validPhone = null;
     try {
-      telefoneValido = telefone.trim() ? construirTelefone(telefone) : null;
+      validPhone = phone.trim() ? buildPhone(phone) : null;
     } catch {
-      setErroTelefone("Telefone inválido — use DDD + número.");
+      setPhoneError("Telefone inválido — use DDD + número.");
       return;
     }
 
     collection.insert(
-      contatoOtimista({ nome: nomeLimpo, email: emailValido, telefone: telefoneValido }, sessao.orgId),
+      optimisticContact({ name: trimmedName, email: validEmail, phone: validPhone }, session.orgId),
     );
-    setNome("");
+    setName("");
     setEmail("");
-    setTelefone("");
+    setPhone("");
   }
 
   return (
     <div className={styles.pagina}>
       <h1 className={styles.titulo}>Contatos</h1>
 
-      <form className={styles.formNovo} onSubmit={adicionar}>
+      <form className={styles.formNovo} onSubmit={addContact}>
         <Field>
           <Label>Novo contato</Label>
           <Input
-            value={nome}
-            onChange={(evento) => setNome(evento.target.value)}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
             placeholder="Nome do contato"
           />
         </Field>
-        <Field invalid={!!erroEmail}>
+        <Field invalid={!!emailError}>
           <Label>E-mail</Label>
           <Input
             value={email}
-            onChange={(evento) => {
-              setEmail(evento.target.value);
-              setErroEmail(null);
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setEmailError(null);
             }}
             placeholder="opcional"
           />
-          <ErrorText>{erroEmail}</ErrorText>
+          <ErrorText>{emailError}</ErrorText>
         </Field>
-        <Field invalid={!!erroTelefone}>
+        <Field invalid={!!phoneError}>
           <Label>Telefone</Label>
           <Input
-            value={telefone}
-            onChange={(evento) => {
-              setTelefone(evento.target.value);
-              setErroTelefone(null);
+            value={phone}
+            onChange={(event) => {
+              setPhone(event.target.value);
+              setPhoneError(null);
             }}
             placeholder="opcional"
           />
-          <ErrorText>{erroTelefone}</ErrorText>
+          <ErrorText>{phoneError}</ErrorText>
         </Field>
-        <Button type="submit" disabled={!nome.trim()}>
+        <Button type="submit" disabled={!name.trim()}>
           Adicionar
         </Button>
       </form>
 
-      {contatos.length > 0 && (
+      {contacts.length > 0 && (
         <Input
-          value={busca}
-          onChange={(evento) => setBusca(evento.target.value)}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar por nome, e-mail ou telefone"
         />
       )}
 
-      {isLoading && contatos.length === 0 ? (
+      {isLoading && contacts.length === 0 ? (
         <p className={styles.vazio}>Sincronizando…</p>
-      ) : contatos.length === 0 ? (
+      ) : contacts.length === 0 ? (
         <p className={styles.vazio}>Nenhum contato ainda.</p>
-      ) : contatosFiltrados.length === 0 ? (
-        <p className={styles.vazio}>Nenhum contato bate com "{busca}".</p>
+      ) : filteredContacts.length === 0 ? (
+        <p className={styles.vazio}>Nenhum contato bate com "{search}".</p>
       ) : (
         <ul className={styles.lista}>
-          {contatosFiltrados.map((contato) => (
-            <li key={contato.id}>
-              <Link to={`/contacts/${contato.id}`} className={styles.item}>
-                <div className={styles.itemNome}>{contato.nome}</div>
-                {(contato.email ?? contato.telefone) && (
+          {filteredContacts.map((contact) => (
+            <li key={contact.id}>
+              <Link to={`/contacts/${contact.id}`} className={styles.item}>
+                <div className={styles.itemNome}>{contact.name}</div>
+                {(contact.email ?? contact.phone) && (
                   <div className={styles.itemDetalhe}>
-                    {contato.email ?? (contato.telefone ? formatTelefone(contato.telefone) : "")}
+                    {contact.email ?? (contact.phone ? formatPhone(contact.phone) : "")}
                   </div>
                 )}
               </Link>

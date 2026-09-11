@@ -1,28 +1,28 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { orgId as orgIdFactory } from "@spark/core";
-import { limparSessao, obterSessao, obterToken, salvarSessao } from "./auth.client";
+import { clearSession, getSession, getToken, saveSession } from "./auth.client";
 
-describe("auth.client — sessão do dev-login em localStorage", () => {
+describe("auth.client — dev-login session in localStorage", () => {
   afterEach(() => {
-    limparSessao();
+    clearSession();
   });
 
-  it("salva e recupera a sessão completa", () => {
-    const org = orgIdFactory.novo();
-    salvarSessao({ token: "abc.def.ghi", orgId: org, userId: "user-1" });
+  it("saves and retrieves the full session", () => {
+    const org = orgIdFactory.create();
+    saveSession({ token: "abc.def.ghi", orgId: org, userId: "user-1" });
 
-    expect(obterSessao()).toEqual({ token: "abc.def.ghi", orgId: org, userId: "user-1" });
-    expect(obterToken()).toBe("abc.def.ghi");
+    expect(getSession()).toEqual({ token: "abc.def.ghi", orgId: org, userId: "user-1" });
+    expect(getToken()).toBe("abc.def.ghi");
   });
 
-  it("retorna null quando não há sessão salva", () => {
-    expect(obterSessao()).toBeNull();
-    expect(obterToken()).toBeNull();
+  it("returns null when there's no saved session", () => {
+    expect(getSession()).toBeNull();
+    expect(getToken()).toBeNull();
   });
 
-  it("limparSessao remove a sessão salva", () => {
-    salvarSessao({ token: "x", orgId: orgIdFactory.novo(), userId: "u" });
-    limparSessao();
-    expect(obterSessao()).toBeNull();
+  it("clearSession removes the saved session", () => {
+    saveSession({ token: "x", orgId: orgIdFactory.create(), userId: "u" });
+    clearSession();
+    expect(getSession()).toBeNull();
   });
 });

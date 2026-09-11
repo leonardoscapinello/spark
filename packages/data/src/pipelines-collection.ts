@@ -1,5 +1,5 @@
 /**
- * Coleção local-first de pipelines — mesmo padrão de contacts-collection.ts
+ * Local-first pipelines collection — same pattern as contacts-collection.ts
  * (docs/adr/0018, docs/adr/0026).
  */
 import { createCollection } from "@tanstack/react-db";
@@ -8,16 +8,16 @@ import { snakeCamelMapper } from "@electric-sql/client";
 import { PipelineSchema, pipelineId, type Pipeline, type CreatePipelineInput, type OrgId } from "@spark/core";
 import { pipelinesControllerCreate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
-export function pipelineOtimista(entrada: Omit<CreatePipelineInput, "id">, orgId: OrgId): Pipeline {
-  const agora = new Date().toISOString();
+export function optimisticPipeline(input: Omit<CreatePipelineInput, "id">, orgId: OrgId): Pipeline {
+  const now = new Date().toISOString();
   return {
-    id: pipelineId.novo(),
+    id: pipelineId.create(),
     orgId,
-    nome: entrada.nome,
-    padrao: entrada.padrao ?? false,
-    criadoEm: agora,
-    atualizadoEm: agora,
-    arquivadoEm: null,
+    name: input.name,
+    isDefault: input.isDefault ?? false,
+    createdAt: now,
+    updatedAt: now,
+    archivedAt: null,
   };
 }
 
@@ -29,8 +29,9 @@ export function createPipelinesCollection() {
       getKey: (pipeline) => pipeline.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/pipelines`,
-        // Electric replica coluna do Postgres (snake_case); schema Zod é
-        // camelCase (ADR-0019) — ver o mesmo comentário em contacts-collection.ts.
+        // Electric replicates the Postgres column (snake_case); the Zod
+        // schema is camelCase (ADR-0019) — see the same comment in
+        // contacts-collection.ts.
         columnMapper: snakeCamelMapper(),
         headers: {
           authorization: () => {
@@ -40,17 +41,17 @@ export function createPipelinesCollection() {
         },
       },
       onInsert: async ({ transaction }) => {
-        const mutacao = transaction.mutations[0];
-        if (!mutacao) throw new Error("onInsert chamado sem mutação pendente.");
-        const pipeline = mutacao.modified;
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onInsert called with no pending mutation.");
+        const pipeline = mutation.modified;
 
-        const resposta = await pipelinesControllerCreate({
+        const response = await pipelinesControllerCreate({
           id: pipeline.id,
-          nome: pipeline.nome,
-          padrao: pipeline.padrao,
+          name: pipeline.name,
+          isDefault: pipeline.isDefault,
         });
 
-        return { txid: resposta.txid };
+        return { txid: response.txid };
       },
     }),
   );

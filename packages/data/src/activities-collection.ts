@@ -1,9 +1,9 @@
 /**
- * Coleção local-first de atividades — mesmo padrão de deals-collection.ts
- * (docs/adr/0018, docs/adr/0026). `onUpdate` só cobre concluir/reabrir
- * (`concluida`, e só junto com `concluidaEm`) — é a única mutação que a
- * API aceita hoje (PATCH /v1/activities/:id/complete); editar outro
- * campo é rota futura.
+ * Local-first activities collection — same pattern as
+ * deals-collection.ts (docs/adr/0018, docs/adr/0026). `onUpdate` only
+ * covers completing/reopening (`completed`, always together with
+ * `completedAt`) — it's the only mutation the API accepts today
+ * (PATCH /v1/activities/:id/complete); editing another field is a future route.
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -11,21 +11,21 @@ import { snakeCamelMapper } from "@electric-sql/client";
 import { ActivitySchema, activityId, type Activity, type CreateActivityInput, type OrgId } from "@spark/core";
 import { activitiesControllerCreate, activitiesControllerComplete, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
-export function atividadeOtimista(entrada: Omit<CreateActivityInput, "id">, orgId: OrgId): Activity {
-  const agora = new Date().toISOString();
+export function optimisticActivity(input: Omit<CreateActivityInput, "id">, orgId: OrgId): Activity {
+  const now = new Date().toISOString();
   return {
-    id: activityId.novo(),
+    id: activityId.create(),
     orgId,
-    contactId: entrada.contactId ?? null,
-    dealId: entrada.dealId ?? null,
-    tipo: entrada.tipo,
-    titulo: entrada.titulo,
-    notas: entrada.notas ?? null,
-    dataHora: entrada.dataHora,
-    concluida: false,
-    concluidaEm: null,
-    criadoEm: agora,
-    atualizadoEm: agora,
+    contactId: input.contactId ?? null,
+    dealId: input.dealId ?? null,
+    type: input.type,
+    title: input.title,
+    notes: input.notes ?? null,
+    scheduledAt: input.scheduledAt,
+    completed: false,
+    completedAt: null,
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
@@ -34,11 +34,12 @@ export function createActivitiesCollection() {
     electricCollectionOptions({
       id: "activities",
       schema: ActivitySchema,
-      getKey: (atividade) => atividade.id,
+      getKey: (activity) => activity.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/activities`,
-        // Electric replica coluna do Postgres (snake_case); schema Zod é
-        // camelCase (ADR-0019) — ver o mesmo comentário em contacts-collection.ts.
+        // Electric replicates the Postgres column (snake_case); the Zod
+        // schema is camelCase (ADR-0019) — see the same comment in
+        // contacts-collection.ts.
         columnMapper: snakeCamelMapper(),
         headers: {
           authorization: () => {
@@ -48,40 +49,40 @@ export function createActivitiesCollection() {
         },
       },
       onInsert: async ({ transaction }) => {
-        const mutacao = transaction.mutations[0];
-        if (!mutacao) throw new Error("onInsert chamado sem mutação pendente.");
-        const atividade = mutacao.modified;
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onInsert called with no pending mutation.");
+        const activity = mutation.modified;
 
-        const resposta = await activitiesControllerCreate({
-          id: atividade.id,
-          contactId: atividade.contactId,
-          dealId: atividade.dealId,
-          tipo: atividade.tipo,
-          titulo: atividade.titulo,
-          notas: atividade.notas,
-          dataHora: atividade.dataHora,
+        const response = await activitiesControllerCreate({
+          id: activity.id,
+          contactId: activity.contactId,
+          dealId: activity.dealId,
+          type: activity.type,
+          title: activity.title,
+          notes: activity.notes,
+          scheduledAt: activity.scheduledAt,
         });
 
-        return { txid: resposta.txid };
+        return { txid: response.txid };
       },
       onUpdate: async ({ transaction }) => {
-        const mutacao = transaction.mutations[0];
-        if (!mutacao) throw new Error("onUpdate chamado sem mutação pendente.");
+        const mutation = transaction.mutations[0];
+        if (!mutation) throw new Error("onUpdate called with no pending mutation.");
 
-        const camposAlterados = Object.keys(mutacao.changes);
-        const ehConclusao =
-          camposAlterados.includes("concluida") &&
-          camposAlterados.every((campo) => campo === "concluida" || campo === "concluidaEm");
-        if (!ehConclusao) {
+        const changedFields = Object.keys(mutation.changes);
+        const isCompletion =
+          changedFields.includes("completed") &&
+          changedFields.every((field) => field === "completed" || field === "completedAt");
+        if (!isCompletion) {
           throw new Error(
-            `Só é possível concluir ou reabrir atividade hoje — campo(s) alterado(s): ${camposAlterados.join(", ")}.`,
+            `Only completing or reopening an activity is possible today — changed field(s): ${changedFields.join(", ")}.`,
           );
         }
 
-        const resposta = await activitiesControllerComplete(mutacao.original.id, {
-          concluida: mutacao.modified.concluida,
+        const response = await activitiesControllerComplete(mutation.original.id, {
+          completed: mutation.modified.completed,
         });
-        return { txid: resposta.txid };
+        return { txid: response.txid };
       },
     }),
   );

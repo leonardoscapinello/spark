@@ -1,23 +1,25 @@
 /**
- * Prova do bug real achado testando o board de CRM no navegador (não só
- * no compilador): `useLiveQuery` devolve a linha sincronizada do jeito
- * que o Electric manda — sem passar pelo transform do Zod. `valor` chega
- * como a coluna Postgres é (bigint), não como `Money`. `valorSincronizado`
- * é o único ponto que converte de volta; este teste prova que o valor
- * sobrevive ao ciclo completo (insert → Electric → outra coleção → Money).
+ * Proof of the real bug found testing the CRM board in the browser (not
+ * just the compiler): `useLiveQuery` returns the synced row exactly as
+ * Electric sends it — without going through Zod's transform. `amount`
+ * arrives as the Postgres column has it (bigint), not as `Money`.
+ * `syncedAmount` is the only point that converts it back; this test
+ * proves the value survives the full cycle (insert → Electric → another
+ * collection → Money).
  *
- * Pipeline e estágio são fixture, semeados direto por SQL (como
- * organização/usuário/grupo abaixo) — só o negócio passa pela coleção
- * local-first, que é a única coisa que este teste precisa provar. Passar
- * os três (pipeline, estágio, negócio) pela coleção, cada um esperando o
- * próprio `isPersisted.promise`, mostrou-se instável neste ambiente
- * (timeout aguardando txId do PIPELINE, não do negócio) — provavelmente
- * o custo de materializar duas shapes novas (pipelines, stages) do zero
- * na mesma janela em que outro processo de teste (contacts) já ocupa o
- * Electric local. Reduzir a fixture a SQL direto elimina esse ruído sem
- * abrir mão do que o teste existe para provar.
+ * Pipeline and stage are fixtures, seeded directly via SQL (like
+ * organization/user/group below) — only the deal goes through the
+ * local-first collection, which is the only thing this test needs to
+ * prove. Routing all three (pipeline, stage, deal) through the
+ * collection, each waiting on its own `isPersisted.promise`, proved
+ * unstable in this environment (timeout waiting on the PIPELINE's txId,
+ * not the deal's) — likely the cost of materializing two new shapes
+ * (pipelines, stages) from scratch in the same window another test
+ * process (contacts) already occupies the local Electric instance.
+ * Reducing the fixture to direct SQL removes that noise without giving
+ * up what the test exists to prove.
  *
- * Mesmo padrão de spawn de apps/api que contacts-collection.integration.test.ts.
+ * Same apps/api spawn pattern as contacts-collection.integration.test.ts.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { spawn, type ChildProcess } from "node:child_process";
@@ -29,7 +31,7 @@ import {
   permissionGroupId as permissionGroupIdFactory,
   pipelineId as pipelineIdFactory,
   stageId as stageIdFactory,
-  toCentavos,
+  toCents,
   money,
   type OrgId,
   type PipelineId,
@@ -38,87 +40,87 @@ import {
 import { setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client";
 import {
   createDealsCollection,
-  negocioOtimista,
-  paraInsercao,
-  valorSincronizado,
+  optimisticDeal,
+  forInsert,
+  syncedAmount,
   type DealsCollection,
 } from "../src/deals-collection.js";
 
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-nao-usar-em-producao";
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
-const PORTA = 3213; // dedicada a este teste — distinta de 3211/3212/3000
+const PORT = 3213; // dedicated to this test — distinct from 3211/3212/3000
 
 const admin = postgres(DATABASE_URL, { prepare: false });
-const org: OrgId = orgIdFactory.novo();
-const localUserId = userIdFactory.novo();
+const org: OrgId = orgIdFactory.create();
+const localUserId = userIdFactory.create();
 const supabaseUserId = crypto.randomUUID();
-const pipeline: PipelineId = pipelineIdFactory.novo();
-const estagio: StageId = stageIdFactory.novo();
+const pipeline: PipelineId = pipelineIdFactory.create();
+const stage: StageId = stageIdFactory.create();
 
-let processo: ChildProcess;
-const colecoesAbertas: DealsCollection[] = [];
+let apiProcess: ChildProcess;
+const openCollections: DealsCollection[] = [];
 
-function aguardarApiPronta(child: ChildProcess): Promise<void> {
+function waitForApiReady(child: ChildProcess): Promise<void> {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("API não subiu a tempo")), 15_000);
+    const timeout = setTimeout(() => reject(new Error("API did not start in time")), 15_000);
     child.stdout?.on("data", (chunk: Buffer) => {
-      if (chunk.toString().includes("ouvindo em")) {
+      if (chunk.toString().includes("listening on")) {
         clearTimeout(timeout);
         resolve();
       }
     });
     child.on("error", reject);
     child.on("exit", (code) => {
-      if (code !== 0) reject(new Error(`apps/api saiu com código ${code}`));
+      if (code !== 0) reject(new Error(`apps/api exited with code ${code}`));
     });
   });
 }
 
-async function aguardarAte(condicao: () => boolean, timeoutMs: number, intervaloMs = 20): Promise<void> {
-  const inicio = Date.now();
-  while (!condicao()) {
-    if (Date.now() - inicio > timeoutMs) throw new Error(`timeout (${timeoutMs}ms) aguardando condição`);
-    await new Promise((resolve) => setTimeout(resolve, intervaloMs));
+async function waitUntil(condition: () => boolean, timeoutMs: number, intervalMs = 20): Promise<void> {
+  const start = Date.now();
+  while (!condition()) {
+    if (Date.now() - start > timeoutMs) throw new Error(`timeout (${timeoutMs}ms) waiting on condition`);
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
 }
 
 beforeAll(async () => {
-  await admin`INSERT INTO organizations (id, nome, slug) VALUES (${org}, 'Org deals-collection', ${"org-deals-" + org})`;
-  await admin`INSERT INTO users (id, org_id, supabase_user_id, nome, email) VALUES
-    (${localUserId}, ${org}, ${supabaseUserId}, 'Pessoa deals-collection', 'deals-collection@empresa.com')`;
+  await admin`INSERT INTO organizations (id, name, slug) VALUES (${org}, 'Deals Collection Org', ${"org-deals-" + org})`;
+  await admin`INSERT INTO users (id, org_id, supabase_user_id, name, email) VALUES
+    (${localUserId}, ${org}, ${supabaseUserId}, 'Deals Collection Person', 'deals-collection@company.com')`;
 
-  const grupo = permissionGroupIdFactory.novo();
-  await admin`INSERT INTO permission_groups (id, org_id, nome, capacidades) VALUES
-    (${grupo}, ${org}, 'Gerente', ${JSON.stringify(["deals:read", "deals:write", "deals:move"])}::jsonb)`;
-  await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES (${org}, ${localUserId}, ${grupo})`;
+  const group = permissionGroupIdFactory.create();
+  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
+    (${group}, ${org}, 'Gerente', ${JSON.stringify(["deals:read", "deals:write", "deals:move"])}::jsonb)`;
+  await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES (${org}, ${localUserId}, ${group})`;
 
-  await admin`INSERT INTO pipelines (id, org_id, nome, padrao) VALUES (${pipeline}, ${org}, 'Funil de Teste', true)`;
-  await admin`INSERT INTO stages (id, org_id, pipeline_id, nome, ordem) VALUES (${estagio}, ${org}, ${pipeline}, 'Novo', 0)`;
+  await admin`INSERT INTO pipelines (id, org_id, name, is_default) VALUES (${pipeline}, ${org}, 'Test Funnel', true)`;
+  await admin`INSERT INTO stages (id, org_id, pipeline_id, name, sort_order) VALUES (${stage}, ${org}, ${pipeline}, 'New', 0)`;
 
-  processo = spawn("node", ["--loader", "ts-node/esm", "src/main.ts"], {
+  apiProcess = spawn("node", ["--loader", "ts-node/esm", "src/main.ts"], {
     cwd: new URL("../../../apps/api", import.meta.url).pathname,
-    env: { ...process.env, PORT: String(PORTA), DATABASE_URL, SUPABASE_JWT_SECRET: JWT_SECRET, NODE_ENV: "test" },
+    env: { ...process.env, PORT: String(PORT), DATABASE_URL, SUPABASE_JWT_SECRET: JWT_SECRET, NODE_ENV: "test" },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  await aguardarApiPronta(processo);
+  await waitForApiReady(apiProcess);
 
-  setSparkApiBaseUrl(`http://127.0.0.1:${PORTA}`);
-  const chave = new TextEncoder().encode(JWT_SECRET);
+  setSparkApiBaseUrl(`http://127.0.0.1:${PORT}`);
+  const key = new TextEncoder().encode(JWT_SECRET);
   const token = await new SignJWT({})
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(supabaseUserId)
     .setIssuedAt()
     .setExpirationTime("1h")
-    .sign(chave);
+    .sign(key);
   setSparkAuthTokenProvider(() => token);
 }, 20_000);
 
 afterEach(async () => {
-  await Promise.all(colecoesAbertas.splice(0).map((c) => c.cleanup()));
+  await Promise.all(openCollections.splice(0).map((c) => c.cleanup()));
 });
 
 afterAll(async () => {
-  processo?.kill();
+  apiProcess?.kill();
   await admin`DELETE FROM deals WHERE org_id = ${org}`;
   await admin`DELETE FROM stages WHERE org_id = ${org}`;
   await admin`DELETE FROM pipelines WHERE org_id = ${org}`;
@@ -129,28 +131,28 @@ afterAll(async () => {
   await admin.end();
 });
 
-describe("packages/data — Money sobrevive ao ciclo completo de sincronização (Fase 1)", () => {
-  it("valor inserido numa coleção chega correto em outra, via valorSincronizado()", async () => {
+describe("packages/data — Money survives the full sync cycle (Fase 1)", () => {
+  it("an amount inserted in one collection arrives correct in another, via syncedAmount()", async () => {
     const dealsA: DealsCollection = createDealsCollection();
     const dealsB: DealsCollection = createDealsCollection();
-    colecoesAbertas.push(dealsA, dealsB);
+    openCollections.push(dealsA, dealsB);
     await Promise.all([dealsA.preload(), dealsB.preload()]);
 
-    const negocio = negocioOtimista(
-      { pipelineId: pipeline, stageId: estagio, nome: "Negócio de Teste", valor: money(150_000) },
+    const deal = optimisticDeal(
+      { pipelineId: pipeline, stageId: stage, name: "Test Deal", amount: money(150_000) },
       org,
     );
-    dealsA.insert(paraInsercao(negocio));
+    dealsA.insert(forInsert(deal));
 
-    // dealsB nunca chamou insert — só está inscrita na mesma shape. Se o
-    // valor chegar aqui, veio do Electric replicando do Postgres.
-    await aguardarAte(() => dealsB.has(negocio.id), 2_000);
+    // dealsB never called insert — it's only subscribed to the same shape.
+    // If the amount arrives here, it came from Electric replicating from Postgres.
+    await waitUntil(() => dealsB.has(deal.id), 2_000);
 
-    const lido = dealsB.get(negocio.id);
-    expect(lido).toBeDefined();
-    expect(toCentavos(valorSincronizado(lido?.valor))).toBe(150_000);
+    const read = dealsB.get(deal.id);
+    expect(read).toBeDefined();
+    expect(toCents(syncedAmount(read?.amount))).toBe(150_000);
 
-    const linhaNoBanco = await admin`SELECT valor FROM deals WHERE id = ${negocio.id}`;
-    expect(Number(linhaNoBanco[0]?.valor)).toBe(150_000);
+    const dbRow = await admin`SELECT amount FROM deals WHERE id = ${deal.id}`;
+    expect(Number(dbRow[0]?.amount)).toBe(150_000);
   }, 10_000);
 });

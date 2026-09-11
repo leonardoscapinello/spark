@@ -1,23 +1,21 @@
 /**
- * A prova do critério de saída do Bloco 6 (docs/arquitetura/fase-0.md):
- * "a lista de contatos renderiza a partir da coleção local sem nenhuma
- * chamada de rede na navegação, e um insert numa aba aparece na outra em
- * menos de 1 segundo."
+ * Proof of Bloco 6's exit criterion (docs/arquitetura/fase-0.md): "the
+ * contact list renders from the local collection with no network call on
+ * navigation, and an insert in one tab appears in the other in under 1 second."
  *
- * "Duas abas" vira, aqui, duas instâncias independentes de
- * createContactsCollection() — cada uma com seu próprio ShapeStream —
- * autenticadas como o MESMO usuário (é exatamente isso que duas abas do
- * navegador são: duas sessões independentes, mesmo token). A coleção B
- * nunca chama insert; se o contato aparece nela mesmo assim, é porque
- * veio do Electric replicando do Postgres, não do estado otimista local
- * da A — a única forma de provar que a sincronização entre clientes
- * funciona de verdade, não só o caminho de escrita de um cliente com ele
- * mesmo (isso já foi provado manualmente, ver histórico do Bloco 6, mas
- * nunca ficou como teste).
+ * "Two tabs" becomes, here, two independent instances of
+ * createContactsCollection() — each with its own ShapeStream —
+ * authenticated as the SAME user (that's exactly what two browser tabs
+ * are: two independent sessions, same token). Collection B never calls
+ * insert; if the contact appears in it anyway, it's because it came from
+ * Electric replicating from Postgres, not A's local optimistic state —
+ * the only way to prove cross-client sync genuinely works, not just one
+ * client's own write path talking to itself (this was already proven
+ * manually, see Bloco 6's history, but never landed as a test).
  *
- * apps/api sobe como PROCESSO SEPARADO pelo mesmo motivo do
- * packages/api-client/test/generated-client.e2e.test.ts: metadata de
- * decorator do NestJS não atravessa o transform de outro pacote.
+ * apps/api runs as a SEPARATE PROCESS for the same reason as
+ * packages/api-client/test/generated-client.e2e.test.ts: NestJS's
+ * decorator metadata doesn't survive another package's transform.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { spawn, type ChildProcess } from "node:child_process";
@@ -30,97 +28,98 @@ import {
   type OrgId,
 } from "@spark/core";
 import { setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client";
-import { createContactsCollection, contatoOtimista, type ContactsCollection } from "../src/contacts-collection.js";
+import { createContactsCollection, optimisticContact, type ContactsCollection } from "../src/contacts-collection.js";
 
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-nao-usar-em-producao";
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
-const PORTA = 3212; // dedicada a este teste — distinta de 3211 (api-client) e 3000 (dev)
+const PORT = 3212; // dedicated to this test — distinct from 3211 (api-client) and 3000 (dev)
 
 const admin = postgres(DATABASE_URL, { prepare: false });
-const org: OrgId = orgIdFactory.novo();
-const localUserId = userIdFactory.novo();
+const org: OrgId = orgIdFactory.create();
+const localUserId = userIdFactory.create();
 const supabaseUserId = crypto.randomUUID();
 
-let processo: ChildProcess;
-const colecoesAbertas: ContactsCollection[] = [];
+let apiProcess: ChildProcess;
+const openCollections: ContactsCollection[] = [];
 
-function aguardarApiPronta(child: ChildProcess): Promise<void> {
+function waitForApiReady(child: ChildProcess): Promise<void> {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("API não subiu a tempo")), 15_000);
+    const timeout = setTimeout(() => reject(new Error("API did not start in time")), 15_000);
     child.stdout?.on("data", (chunk: Buffer) => {
-      if (chunk.toString().includes("ouvindo em")) {
+      if (chunk.toString().includes("listening on")) {
         clearTimeout(timeout);
         resolve();
       }
     });
     child.on("error", reject);
     child.on("exit", (code) => {
-      if (code !== 0) reject(new Error(`apps/api saiu com código ${code}`));
+      if (code !== 0) reject(new Error(`apps/api exited with code ${code}`));
     });
   });
 }
 
-async function aguardarAte(condicao: () => boolean, timeoutMs: number, intervaloMs = 20): Promise<void> {
-  const inicio = Date.now();
-  while (!condicao()) {
-    if (Date.now() - inicio > timeoutMs) {
-      throw new Error(`timeout (${timeoutMs}ms) aguardando condição`);
+async function waitUntil(condition: () => boolean, timeoutMs: number, intervalMs = 20): Promise<void> {
+  const start = Date.now();
+  while (!condition()) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error(`timeout (${timeoutMs}ms) waiting on condition`);
     }
-    await new Promise((resolve) => setTimeout(resolve, intervaloMs));
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
 }
 
-function criarColecaoRastreada(): ContactsCollection {
-  const colecao = createContactsCollection();
-  colecoesAbertas.push(colecao);
-  return colecao;
+function createTrackedCollection(): ContactsCollection {
+  const collection = createContactsCollection();
+  openCollections.push(collection);
+  return collection;
 }
 
 beforeAll(async () => {
-  await admin`INSERT INTO organizations (id, nome, slug) VALUES (${org}, 'Org packages/data', ${"org-data-" + org})`;
-  await admin`INSERT INTO users (id, org_id, supabase_user_id, nome, email) VALUES
-    (${localUserId}, ${org}, ${supabaseUserId}, 'Pessoa packages/data', 'data@empresa.com')`;
+  await admin`INSERT INTO organizations (id, name, slug) VALUES (${org}, 'packages/data Org', ${"org-data-" + org})`;
+  await admin`INSERT INTO users (id, org_id, supabase_user_id, name, email) VALUES
+    (${localUserId}, ${org}, ${supabaseUserId}, 'packages/data Person', 'data@company.com')`;
 
-  // POST /v1/contacts agora exige a capacidade contacts:write
-  // (docs/adr/0029) — este teste não passa pelo dev-login (que semeia os
-  // grupos padrão sozinho), então precisa da própria permissão direto.
-  const grupo = permissionGroupIdFactory.novo();
-  await admin`INSERT INTO permission_groups (id, org_id, nome, capacidades) VALUES
-    (${grupo}, ${org}, 'Gerente', ${JSON.stringify(["contacts:read", "contacts:write"])}::jsonb)`;
+  // POST /v1/contacts now requires the contacts:write capability
+  // (docs/adr/0029) — this test doesn't go through dev-login (which
+  // seeds the default groups on its own), so it needs the permission
+  // itself, directly.
+  const group = permissionGroupIdFactory.create();
+  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
+    (${group}, ${org}, 'Gerente', ${JSON.stringify(["contacts:read", "contacts:write"])}::jsonb)`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
-    (${org}, ${localUserId}, ${grupo})`;
+    (${org}, ${localUserId}, ${group})`;
 
-  processo = spawn("node", ["--loader", "ts-node/esm", "src/main.ts"], {
+  apiProcess = spawn("node", ["--loader", "ts-node/esm", "src/main.ts"], {
     cwd: new URL("../../../apps/api", import.meta.url).pathname,
     env: {
       ...process.env,
-      PORT: String(PORTA),
+      PORT: String(PORT),
       DATABASE_URL,
       SUPABASE_JWT_SECRET: JWT_SECRET,
       NODE_ENV: "test",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  await aguardarApiPronta(processo);
+  await waitForApiReady(apiProcess);
 
-  setSparkApiBaseUrl(`http://127.0.0.1:${PORTA}`);
+  setSparkApiBaseUrl(`http://127.0.0.1:${PORT}`);
 
-  const chave = new TextEncoder().encode(JWT_SECRET);
+  const key = new TextEncoder().encode(JWT_SECRET);
   const token = await new SignJWT({})
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(supabaseUserId)
     .setIssuedAt()
     .setExpirationTime("1h")
-    .sign(chave);
+    .sign(key);
   setSparkAuthTokenProvider(() => token);
 }, 20_000);
 
 afterEach(async () => {
-  await Promise.all(colecoesAbertas.splice(0).map((colecao) => colecao.cleanup()));
+  await Promise.all(openCollections.splice(0).map((collection) => collection.cleanup()));
 });
 
 afterAll(async () => {
-  processo?.kill();
+  apiProcess?.kill();
   await admin`DELETE FROM contacts WHERE org_id = ${org}`;
   await admin`DELETE FROM user_permission_groups WHERE org_id = ${org}`;
   await admin`DELETE FROM permission_groups WHERE org_id = ${org}`;
@@ -129,47 +128,47 @@ afterAll(async () => {
   await admin.end();
 });
 
-describe("packages/data — coleção de contatos local-first (Bloco 6)", () => {
-  it("um insert na coleção A aparece na coleção B (outra aba) em menos de 1 segundo, via Electric — não via estado otimista local", async () => {
-    const colecaoA = criarColecaoRastreada();
-    const colecaoB = criarColecaoRastreada();
+describe("packages/data — local-first contacts collection (Bloco 6)", () => {
+  it("an insert in collection A appears in collection B (another tab) in under 1 second, via Electric — not via local optimistic state", async () => {
+    const collectionA = createTrackedCollection();
+    const collectionB = createTrackedCollection();
 
-    await Promise.all([colecaoA.preload(), colecaoB.preload()]);
+    await Promise.all([collectionA.preload(), collectionB.preload()]);
 
-    const contato = contatoOtimista({ nome: "Contato Sincronizado" }, org);
+    const contact = optimisticContact({ name: "Synced Contact" }, org);
 
-    const inicio = Date.now();
-    const tx = colecaoA.insert(contato);
+    const start = Date.now();
+    const tx = collectionA.insert(contact);
 
-    // colecaoB nunca chamou insert — só está inscrita no mesmo shape.
-    await aguardarAte(() => colecaoB.has(contato.id), 2_000);
-    const decorrido = Date.now() - inicio;
+    // collectionB never called insert — it's only subscribed to the same shape.
+    await waitUntil(() => collectionB.has(contact.id), 2_000);
+    const elapsed = Date.now() - start;
 
-    expect(decorrido).toBeLessThan(1_000);
-    expect(colecaoB.get(contato.id)?.nome).toBe("Contato Sincronizado");
-    // campo de mais de uma palavra — é o que pegaria o bug real já
-    // corrigido de columnMapper ausente: Electric replica coluna do
-    // Postgres (snake_case, "criado_em"), e sem o mapper o campo
-    // camelCase do schema Zod chega undefined, sem erro de tipo nenhum.
-    // "nome" sozinho nunca pegaria isso — é igual nos dois casings.
-    expect(typeof colecaoB.get(contato.id)?.criadoEm).toBe("string");
+    expect(elapsed).toBeLessThan(1_000);
+    expect(collectionB.get(contact.id)?.name).toBe("Synced Contact");
+    // a multi-word field — this is what would catch the real bug already
+    // fixed of a missing columnMapper: Electric replicates the Postgres
+    // column (snake_case, "created_at"), and without the mapper the Zod
+    // schema's camelCase field arrives undefined, with no type error at
+    // all. "name" alone would never catch this — it's the same in both casings.
+    expect(typeof collectionB.get(contact.id)?.createdAt).toBe("string");
 
-    // a escrita otimista da própria A também precisa ter sido persistida
-    // de verdade no servidor, não só aparecido localmente.
+    // A's own optimistic write also needs to have really been persisted
+    // on the server, not just appeared locally.
     await tx.isPersisted.promise;
 
-    const linhaNoBanco = await admin`SELECT nome FROM contacts WHERE id = ${contato.id}`;
-    expect(linhaNoBanco[0]?.nome).toBe("Contato Sincronizado");
+    const dbRow = await admin`SELECT name FROM contacts WHERE id = ${contact.id}`;
+    expect(dbRow[0]?.name).toBe("Synced Contact");
   }, 10_000);
 
-  it("leitura da coleção já sincronizada não faz chamada de rede — toArray é síncrono e local", async () => {
-    const colecao = criarColecaoRastreada();
-    await colecao.preload();
+  it("reading an already-synced collection makes no network call — toArray is synchronous and local", async () => {
+    const collection = createTrackedCollection();
+    await collection.preload();
 
-    // toArray é um getter síncrono sobre estado em memória — se isto
-    // precisasse de rede, seria uma Promise, não um valor direto. É essa
-    // diferença de tipo que torna a leitura ~0ms possível (docs/adr/0018).
-    const antes = colecao.toArray;
-    expect(Array.isArray(antes)).toBe(true);
+    // toArray is a synchronous getter over in-memory state — if this
+    // needed the network, it would be a Promise, not a direct value.
+    // That type difference is what makes ~0ms reads possible (docs/adr/0018).
+    const before = collection.toArray;
+    expect(Array.isArray(before)).toBe(true);
   });
 });
