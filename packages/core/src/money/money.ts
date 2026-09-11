@@ -23,7 +23,7 @@ export class InvalidMoneyError extends Error {
 
 /** Builds a Money from integer cents. The only entry point for the type. */
 export function money(cents: number): Money {
-  if (!Number.isInteger(cents)) {
+  if (!Number.isSafeInteger(cents)) {
     throw new InvalidMoneyError(cents);
   }
   return { [MoneyValue]: cents } as Money;
@@ -32,11 +32,11 @@ export function money(cents: number): Money {
 /** Builds a Money from a decimal string (e.g. "19.90" → 1990 cents). */
 export function moneyFromDecimal(decimal: string): Money {
   const normalized = decimal.trim().replace(",", ".");
-  const value = Number(normalized);
-  if (Number.isNaN(value)) {
-    throw new InvalidMoneyError(NaN);
-  }
-  return money(Math.round(value * 100));
+  if (!/^-?\d+(?:\.\d{0,2})?$/.test(normalized)) throw new InvalidMoneyError(NaN);
+  const negative = normalized.startsWith("-");
+  const [whole = "0", fraction = ""] = normalized.replace("-", "").split(".");
+  const cents = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0"));
+  return money(Number(negative ? -cents : cents));
 }
 
 export function toCents(m: Money): number {
@@ -78,4 +78,11 @@ export function sum(values: readonly Money[]): Money {
 
 export function formatBRL(m: Money): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(toDecimal(m));
+}
+
+/** Decimal text for inputs/serialization without floating-point division. */
+export function moneyToDecimalString(value: Money): string {
+  const cents = BigInt(toCents(value));
+  const absolute = cents < 0n ? -cents : cents;
+  return `${cents < 0n ? "-" : ""}${absolute / 100n}.${String(absolute % 100n).padStart(2, "0")}`;
 }

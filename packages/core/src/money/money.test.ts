@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { add, formatBRL, money, moneyFromDecimal, multiply, subtract, toDecimal, sum, compare } from "./money.js";
+import { toCents, moneyToDecimalString, add, formatBRL, money, moneyFromDecimal, multiply, subtract, toDecimal, sum, compare } from "./money.js";
 import { applyDiscount } from "./discount.js";
 
 describe("money", () => {
@@ -60,4 +60,13 @@ describe("applyDiscount", () => {
   it("rejects a percentage discount outside 0–100", () => {
     expect(() => applyDiscount(money(1000), { type: "percentage", value: 150 })).toThrow("between 0 and 100");
   });
+});
+
+it("converts exact cents and rejects unsafe integers or excess precision", () => {
+  expect(toCents(moneyFromDecimal("100.00"))).toBe(10000);
+  expect(toCents(moneyFromDecimal("0.29"))).toBe(29);
+  expect(moneyToDecimalString(money(Number.MAX_SAFE_INTEGER))).toBe("90071992547409.91");
+  expect(()=>money(Number.MAX_SAFE_INTEGER + 1)).toThrow();
+  expect(()=>moneyFromDecimal("90071992547409.92")).toThrow();
+  expect(()=>moneyFromDecimal("1.001")).toThrow();
 });
