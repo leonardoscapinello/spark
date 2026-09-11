@@ -851,6 +851,132 @@
           "activities"
         ]
       }
+    },
+    "/v1/companies": {
+      "post": {
+        "operationId": "CompaniesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "companies"
+        ]
+      }
+    },
+    "/v1/companies/{id}": {
+      "patch": {
+        "operationId": "CompaniesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "companies"
+        ]
+      }
+    },
+    "/v1/companies/{id}/archive": {
+      "patch": {
+        "operationId": "CompaniesController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyArchiveDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "companies"
+        ]
+      }
     }
   },
   "info": {
@@ -1088,6 +1214,8 @@
               "enum": [
                 "contacts:read",
                 "contacts:write",
+                "companies:read",
+                "companies:write",
                 "users:manage",
                 "permission_groups:manage",
                 "audit_logs:read",
@@ -1139,6 +1267,8 @@
               "enum": [
                 "contacts:read",
                 "contacts:write",
+                "companies:read",
+                "companies:write",
                 "users:manage",
                 "permission_groups:manage",
                 "audit_logs:read",
@@ -1190,6 +1320,8 @@
               "enum": [
                 "contacts:read",
                 "contacts:write",
+                "companies:read",
+                "companies:write",
                 "users:manage",
                 "permission_groups:manage",
                 "audit_logs:read",
@@ -1224,6 +1356,8 @@
               "enum": [
                 "contacts:read",
                 "contacts:write",
+                "companies:read",
+                "companies:write",
                 "users:manage",
                 "permission_groups:manage",
                 "audit_logs:read",
@@ -1545,6 +1679,11 @@
             "minLength": 1,
             "nullable": true
           },
+          "companyId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
           "score": {
             "default": 0,
             "type": "integer",
@@ -1617,6 +1756,11 @@
                 "nullable": true
               },
               "ownerId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "companyId": {
                 "type": "string",
                 "minLength": 1,
                 "nullable": true
@@ -1743,6 +1887,11 @@
             "minLength": 1,
             "nullable": true
           },
+          "companyId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
           "score": {
             "default": 0,
             "type": "integer",
@@ -1811,6 +1960,11 @@
                 "nullable": true
               },
               "ownerId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "companyId": {
                 "type": "string",
                 "minLength": 1,
                 "nullable": true
@@ -2239,6 +2393,11 @@
             "minLength": 1,
             "nullable": true
           },
+          "companyId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
           "ownerId": {
             "type": "string",
             "minLength": 1,
@@ -2293,6 +2452,11 @@
                 "minLength": 1
               },
               "contactId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "companyId": {
                 "type": "string",
                 "minLength": 1,
                 "nullable": true
@@ -2387,6 +2551,7 @@
               "pipelineId",
               "stageId",
               "contactId",
+              "companyId",
               "ownerId",
               "name",
               "amount",
@@ -2424,6 +2589,11 @@
             "minLength": 1
           },
           "contactId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "companyId": {
             "type": "string",
             "minLength": 1,
             "nullable": true
@@ -2507,6 +2677,11 @@
                 "minLength": 1,
                 "nullable": true
               },
+              "companyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
               "ownerId": {
                 "type": "string",
                 "minLength": 1,
@@ -2597,6 +2772,7 @@
               "pipelineId",
               "stageId",
               "contactId",
+              "companyId",
               "ownerId",
               "name",
               "amount",
@@ -2657,6 +2833,11 @@
                 "minLength": 1,
                 "nullable": true
               },
+              "companyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
               "ownerId": {
                 "type": "string",
                 "minLength": 1,
@@ -2747,6 +2928,7 @@
               "pipelineId",
               "stageId",
               "contactId",
+              "companyId",
               "ownerId",
               "name",
               "amount",
@@ -2815,6 +2997,11 @@
                 "minLength": 1,
                 "nullable": true
               },
+              "companyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
               "ownerId": {
                 "type": "string",
                 "minLength": 1,
@@ -2905,6 +3092,7 @@
               "pipelineId",
               "stageId",
               "contactId",
+              "companyId",
               "ownerId",
               "name",
               "amount",
@@ -3244,6 +3432,317 @@
         "required": [
           "activity",
           "txid"
+        ]
+      },
+      "CreateCompanyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parentCompanyId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "ownerId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "legalName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240,
+            "nullable": true
+          },
+          "taxId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "industry": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "nullable": true
+          },
+          "customFields": {
+            "default": {},
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "tags": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "CompanyWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "company": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "parentCompanyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "ownerId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "legalName": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 240,
+                "nullable": true
+              },
+              "taxId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40,
+                "nullable": true
+              },
+              "website": {
+                "type": "string",
+                "format": "uri",
+                "nullable": true
+              },
+              "industry": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120,
+                "nullable": true
+              },
+              "email": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "phone": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "address": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "nullable": true
+              },
+              "customFields": {
+                "default": {},
+                "type": "object",
+                "additionalProperties": {}
+              },
+              "tags": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "deletedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "parentCompanyId",
+              "ownerId",
+              "name",
+              "legalName",
+              "taxId",
+              "website",
+              "industry",
+              "email",
+              "phone",
+              "address",
+              "createdAt",
+              "updatedAt",
+              "deletedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "company",
+          "txid"
+        ]
+      },
+      "UpdateCompanyDto": {
+        "type": "object",
+        "properties": {
+          "parentCompanyId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "ownerId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "legalName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240,
+            "nullable": true
+          },
+          "taxId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "industry": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "nullable": true
+          },
+          "customFields": {
+            "default": {},
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "tags": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UpdateCompanyArchiveDto": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "archived"
         ]
       }
     }

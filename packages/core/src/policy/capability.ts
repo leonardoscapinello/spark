@@ -7,6 +7,8 @@
 export const CAPABILITIES = [
   "contacts:read",
   "contacts:write",
+  "companies:read",
+  "companies:write",
   "users:manage",
   "permission_groups:manage",
   "audit_logs:read",

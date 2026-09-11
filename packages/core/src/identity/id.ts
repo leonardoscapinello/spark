@@ -11,6 +11,7 @@ type Id<Brand extends string> = string & { readonly __id: Brand };
 export type OrgId = Id<"Org">;
 export type UserId = Id<"User">;
 export type ContactId = Id<"Contact">;
+export type CompanyId = Id<"Company">;
 export type DealId = Id<"Deal">;
 export type PermissionGroupId = Id<"PermissionGroup">;
 export type PipelineId = Id<"Pipeline">;
@@ -42,6 +43,7 @@ function makeIdFactory<Brand extends string>(type: Brand) {
 export const orgId = makeIdFactory("Org");
 export const userId = makeIdFactory("User");
 export const contactId = makeIdFactory("Contact");
+export const companyId = makeIdFactory("Company");
 export const dealId = makeIdFactory("Deal");
 export const permissionGroupId = makeIdFactory("PermissionGroup");
 export const pipelineId = makeIdFactory("Pipeline");

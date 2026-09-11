@@ -6,6 +6,7 @@ import { pipelines } from "./pipelines.js";
 import { stages } from "./stages.js";
 import { contacts } from "./contacts.js";
 import { users } from "./users.js";
+import { companies } from "./companies.js";
 import { APP_ROLE } from "../roles.js";
 
 /**
@@ -30,6 +31,7 @@ export const deals = pgTable(
       .notNull()
       .references(() => stages.id),
     contactId: uuid("contact_id").references(() => contacts.id),
+    companyId: uuid("company_id").references(() => companies.id, { onDelete: "set null" }),
     ownerId: uuid("owner_id").references(() => users.id, { onDelete: "set null" }),
     name: text("name").notNull(),
     amount: bigint("amount", { mode: "number" }).notNull(),

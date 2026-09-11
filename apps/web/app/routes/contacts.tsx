@@ -2,16 +2,17 @@ import { type FormEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
-import { contactMatches, email as buildEmail, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
+import { companyId as companyIdFactory, contactMatches, email as buildEmail, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
 import { ActionModal, Button, DataTable, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
+import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS, leadStatusLabel } from "../lib/lead-options";
 import styles from "./contacts.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getContactsCollection().preload(), getUsersCollection().preload()]);
+  await Promise.all([getContactsCollection().preload(), getUsersCollection().preload(), getCompaniesCollection().preload()]);
   return null;
 }
 
@@ -23,6 +24,7 @@ export default function Contacts() {
     query: (q) => q.from({ contacts: collection }).orderBy(({ contacts: c }) => c.createdAt, "desc"),
   });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }) });
+  const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") });
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,6 +32,7 @@ export default function Contacts() {
   const [leadStatus, setLeadStatus] = useState<LeadStatus>("new");
   const [source, setSource] = useState("manual");
   const [ownerId, setOwnerId] = useState(() => getSession()?.userId ?? "");
+  const [companyId, setCompanyId] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -45,7 +48,14 @@ export default function Contacts() {
   );
   const columns = useMemo<TableColumn<Contact>[]>(() => {
     const userNames = new Map(users.map((user) => [user.id, user.name]));
+    const companyNames = new Map(companies.map((company) => [company.id, company.name]));
     return [
+    {
+      id: "company",
+      label: "Empresa",
+      cell: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "Empresa indisponível" : <span className={styles.muted}>Não vinculada</span>,
+      sortValue: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "" : "",
+    },
     {
       id: "name",
       label: "Contato",
@@ -71,11 +81,11 @@ export default function Contacts() {
       sortValue: (contact) => contact.ownerId ? userNames.get(contact.ownerId) ?? "" : "",
     },
   ];
-  }, [users]);
+  }, [companies, users]);
 
   function resetForm() {
     setName(""); setEmail(""); setPhone("");
-    setLeadStatus("new"); setSource("manual"); setOwnerId(getSession()?.userId ?? "");
+    setLeadStatus("new"); setSource("manual"); setOwnerId(getSession()?.userId ?? ""); setCompanyId("");
     setNameError(null); setEmailError(null); setPhoneError(null);
   }
 
@@ -95,7 +105,7 @@ export default function Contacts() {
     try { validPhone = phone.trim() ? buildPhone(phone) : null; }
     catch { setPhoneError("Use DDD e um número com oito ou nove dígitos."); throw new Error("INVALID_PHONE"); }
 
-    const transaction = collection.insert(optimisticContact({ name: trimmedName, email: validEmail, phone: validPhone, leadStatus, source, ownerId: ownerId ? userIdFactory.from(ownerId) : null }, session.orgId));
+    const transaction = collection.insert(optimisticContact({ name: trimmedName, email: validEmail, phone: validPhone, leadStatus, source, ownerId: ownerId ? userIdFactory.from(ownerId) : null, companyId: companyId ? companyIdFactory.from(companyId) : null }, session.orgId));
     await transaction.isPersisted.promise;
     resetForm();
     notify({ title: "Contato criado", description: `${trimmedName} já está disponível na gestão de leads.`, tone: "success" });
@@ -150,6 +160,7 @@ export default function Contacts() {
         <Field><Label>Etapa</Label><Select label="Etapa do relacionamento" value={leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) setLeadStatus(value as LeadStatus); }} /></Field>
         <Field><Label>Origem</Label><Select label="Origem do lead" value={source} options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => setSource(value ?? "manual")} /></Field>
         <Field><Label>Responsável</Label><Select label="Responsável pelo lead" value={ownerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
+        <Field><Label>Empresa</Label><Select label="Empresa do contato" value={companyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
       </form>
     </ActionModal>
   </div>;

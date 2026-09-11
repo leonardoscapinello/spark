@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
 import { users } from "./users.js";
+import { companies } from "./companies.js";
 import { APP_ROLE } from "../roles.js";
 
 /** Mirrors ContactSchema (packages/core/src/schema/contact.ts). */
@@ -19,6 +20,7 @@ export const contacts = pgTable(
     leadStatus: text("lead_status").notNull().default("new"),
     source: text("source"),
     ownerId: uuid("owner_id").references(() => users.id, { onDelete: "set null" }),
+    companyId: uuid("company_id").references(() => companies.id, { onDelete: "set null" }),
     score: integer("score").notNull().default(0),
     customFields: jsonb("custom_fields").notNull().default({}),
     tags: jsonb("tags").notNull().default([]),

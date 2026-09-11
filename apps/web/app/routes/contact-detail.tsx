@@ -7,6 +7,7 @@ import {
   email as buildEmail,
   phone as buildPhone,
   userId as userIdFactory,
+  companyId as companyIdFactory,
   type ActivityType,
 } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
@@ -15,12 +16,13 @@ import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
+import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
 import { getSession } from "../lib/auth.client";
 import styles from "./contact-detail.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload(), getUsersCollection().preload()]);
+  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload(), getUsersCollection().preload(), getCompaniesCollection().preload()]);
   return null;
 }
 
@@ -71,8 +73,9 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const { data: users } = useLiveQuery({
     query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc"),
   });
+  const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") });
 
-  async function updateLifecycle(field: "leadStatus" | "source" | "ownerId", value: string | null) {
+  async function updateLifecycle(field: "leadStatus" | "source" | "ownerId" | "companyId", value: string | null) {
     if (!data || contactFieldPending) return;
     setContactFieldPending(field);
     try {
@@ -80,6 +83,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         if (field === "leadStatus") draft.leadStatus = value as typeof draft.leadStatus;
         if (field === "source") draft.source = value;
         if (field === "ownerId") draft.ownerId = value ? userIdFactory.from(value) : null;
+        if (field === "companyId") draft.companyId = value ? companyIdFactory.from(value) : null;
       });
       await transaction.isPersisted.promise;
       notify({ title: "Lead atualizado", tone: "success" });
@@ -267,6 +271,10 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         <div className={styles.campo}>
           <span className={styles.rotulo}>Responsável</span>
           <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("ownerId", value)} />
+        </div>
+        <div className={styles.campo}>
+          <span className={styles.rotulo}>Empresa</span>
+          <Select label="Empresa do contato" value={data.companyId} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("companyId", value)} />
         </div>
       </div>
 

@@ -40,6 +40,7 @@ export class ContactsRepository {
           leadStatus: input.leadStatus ?? "new",
           source: input.source ?? null,
           ownerId: input.ownerId ?? null,
+          companyId: input.companyId ?? null,
           score: input.score ?? 0,
           customFields: input.customFields ?? {},
           tags: input.tags ?? [],
@@ -71,6 +72,7 @@ export class ContactsRepository {
           leadStatus: input.leadStatus,
           source: input.source,
           ownerId: input.ownerId,
+          companyId: input.companyId,
           score: input.score,
           customFields: input.customFields,
           tags: input.tags,
@@ -106,6 +108,7 @@ function toContact(row: {
   leadStatus: string;
   source: string | null;
   ownerId: string | null;
+  companyId: string | null;
   score: number;
   customFields: unknown;
   tags: unknown;
@@ -122,6 +125,7 @@ function toContact(row: {
     leadStatus: row.leadStatus,
     source: row.source,
     ownerId: row.ownerId,
+    companyId: row.companyId,
     score: row.score,
     customFields: (row.customFields ?? {}) as Record<string, unknown>,
     tags: (row.tags ?? []) as string[],

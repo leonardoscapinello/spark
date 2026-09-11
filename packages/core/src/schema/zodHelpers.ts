@@ -26,6 +26,7 @@ import { money as toMoney } from "../money/money.js";
 import {
   orgId as toOrgId,
   contactId as toContactId,
+  companyId as toCompanyId,
   userId as toUserId,
   dealId as toDealId,
   permissionGroupId as toPermissionGroupId,
@@ -35,6 +36,7 @@ import {
   auditLogId as toAuditLogId,
   type OrgId,
   type ContactId,
+  type CompanyId,
   type UserId,
   type DealId,
   type PermissionGroupId,
@@ -62,6 +64,7 @@ export const zCnpj = bridged<CNPJ>(toCnpj);
 
 export const zOrgId = bridged<OrgId>(toOrgId.from);
 export const zContactId = bridged<ContactId>(toContactId.from);
+export const zCompanyId = bridged<CompanyId>(toCompanyId.from);
 export const zUserId = bridged<UserId>(toUserId.from);
 export const zDealId = bridged<DealId>(toDealId.from);
 export const zPermissionGroupId = bridged<PermissionGroupId>(toPermissionGroupId.from);

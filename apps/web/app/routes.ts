@@ -9,6 +9,8 @@ export default [
   layout("routes/app-layout.tsx", [
     index("routes/contacts.tsx"),
     route("contacts/:contactId", "routes/contact-detail.tsx"),
+    route("companies", "routes/companies.tsx"),
+    route("companies/:companyId", "routes/company-detail.tsx"),
     route("deals", "routes/deals.tsx"),
     route("deals/:dealId", "routes/deal-detail.tsx"),
     route("activities", "routes/activities.tsx"),

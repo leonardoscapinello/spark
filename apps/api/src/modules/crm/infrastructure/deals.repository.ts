@@ -33,6 +33,7 @@ export class DealsRepository {
           pipelineId: input.pipelineId,
           stageId: input.stageId,
           contactId: input.contactId ?? null,
+          companyId: input.companyId ?? null,
           ownerId: input.ownerId ?? null,
           name: input.name,
           amount: toCents(input.amount),
@@ -74,6 +75,7 @@ export class DealsRepository {
           ...(input.name !== undefined ? { name: input.name } : {}),
           ...(input.amount !== undefined ? { amount: toCents(input.amount) } : {}),
           ...(input.contactId !== undefined ? { contactId: input.contactId } : {}),
+          ...(input.companyId !== undefined ? { companyId: input.companyId } : {}),
           ...(input.ownerId !== undefined ? { ownerId: input.ownerId } : {}),
           ...(input.expectedCloseDate !== undefined
             ? { expectedCloseDate: input.expectedCloseDate ? new Date(input.expectedCloseDate) : null }
@@ -123,6 +125,7 @@ function toDeal(row: {
   pipelineId: string;
   stageId: string;
   contactId: string | null;
+  companyId: string | null;
   ownerId: string | null;
   name: string;
   amount: number;
@@ -139,6 +142,7 @@ function toDeal(row: {
     pipelineId: row.pipelineId,
     stageId: row.stageId,
     contactId: row.contactId,
+    companyId: row.companyId,
     ownerId: row.ownerId,
     name: row.name,
     amount: money(row.amount),

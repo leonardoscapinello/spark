@@ -16,6 +16,7 @@ export interface ShapeTableConfig {
 export const SHAPE_TABLES: Readonly<Record<string, ShapeTableConfig>> = {
   organizations: { column: "id" },
   contacts: { column: "org_id" },
+  companies: { column: "org_id" },
   pipelines: { column: "org_id" },
   stages: { column: "org_id" },
   deals: { column: "org_id" },

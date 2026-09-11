@@ -26,6 +26,7 @@ export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId)
     pipelineId: input.pipelineId,
     stageId: input.stageId,
     contactId: input.contactId ?? null,
+    companyId: input.companyId ?? null,
     ownerId: input.ownerId ?? null,
     name: input.name,
     amount: input.amount,
@@ -131,6 +132,7 @@ export function createDealsCollection() {
           pipelineId: deal.pipelineId,
           stageId: deal.stageId,
           contactId: deal.contactId,
+          companyId: deal.companyId,
           ownerId: deal.ownerId,
           name: deal.name,
           // the wire format is a plain number (cents) — zMoney does the
@@ -173,12 +175,13 @@ export function createDealsCollection() {
           return { txid: response.txid };
         }
 
-        const editableFields = ["name", "amount", "contactId", "ownerId", "expectedCloseDate"];
+        const editableFields = ["name", "amount", "contactId", "companyId", "ownerId", "expectedCloseDate"];
         if (changedFields.length > 0 && changedFields.every((field) => editableFields.includes(field))) {
           const response = await dealsControllerEdit(mutation.original.id, {
             name: mutation.modified.name,
             amount: toCents(mutation.modified.amount),
             contactId: mutation.modified.contactId,
+            companyId: mutation.modified.companyId,
             ownerId: mutation.modified.ownerId,
             expectedCloseDate: mutation.modified.expectedCloseDate,
           });

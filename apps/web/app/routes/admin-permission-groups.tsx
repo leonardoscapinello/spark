@@ -15,6 +15,8 @@ import styles from "./admin-permission-groups.module.css";
 const CAPABILITY_LABELS: Record<Capability, string> = {
   "contacts:read": "Ver contatos",
   "contacts:write": "Criar e editar contatos",
+  "companies:read": "Ver empresas",
+  "companies:write": "Criar e editar empresas",
   "users:manage": "Gerenciar usuários",
   "permission_groups:manage": "Gerenciar permissões",
   "audit_logs:read": "Consultar auditoria",

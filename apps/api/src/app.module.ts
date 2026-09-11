@@ -6,6 +6,7 @@ import { SyncModule } from "./modules/sync/sync.module.js";
 import { ContactsModule } from "./modules/contacts/contacts.module.js";
 import { CrmModule } from "./modules/crm/crm.module.js";
 import { ActivitiesModule } from "./modules/activities/activities.module.js";
+import { CompaniesModule } from "./modules/companies/companies.module.js";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ActivitiesModule } from "./modules/activities/activities.module.js";
     ContactsModule,
     CrmModule,
     ActivitiesModule,
+    CompaniesModule,
   ],
 })
 export class AppModule {}

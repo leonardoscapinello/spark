@@ -54,6 +54,8 @@ export type CurrentUserDtoCapabilitiesItem = typeof CurrentUserDtoCapabilitiesIt
 export const CurrentUserDtoCapabilitiesItem = {
   'contacts:read': 'contacts:read',
   'contacts:write': 'contacts:write',
+  'companies:read': 'companies:read',
+  'companies:write': 'companies:write',
   'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
   'audit_logs:read': 'audit_logs:read',
@@ -95,6 +97,8 @@ export type PermissionGroupDtoCapabilitiesItem = typeof PermissionGroupDtoCapabi
 export const PermissionGroupDtoCapabilitiesItem = {
   'contacts:read': 'contacts:read',
   'contacts:write': 'contacts:write',
+  'companies:read': 'companies:read',
+  'companies:write': 'companies:write',
   'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
   'audit_logs:read': 'audit_logs:read',
@@ -129,6 +133,8 @@ export type CreatePermissionGroupDtoCapabilitiesItem = typeof CreatePermissionGr
 export const CreatePermissionGroupDtoCapabilitiesItem = {
   'contacts:read': 'contacts:read',
   'contacts:write': 'contacts:write',
+  'companies:read': 'companies:read',
+  'companies:write': 'companies:write',
   'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
   'audit_logs:read': 'audit_logs:read',
@@ -157,6 +163,8 @@ export type UpdatePermissionGroupDtoCapabilitiesItem = typeof UpdatePermissionGr
 export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'contacts:read': 'contacts:read',
   'contacts:write': 'contacts:write',
+  'companies:read': 'companies:read',
+  'companies:write': 'companies:write',
   'users:manage': 'users:manage',
   'permission_groups:manage': 'permission_groups:manage',
   'audit_logs:read': 'audit_logs:read',
@@ -316,6 +324,11 @@ export interface CreateContactDto {
      */
   ownerId?: string | null;
   /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId?: string | null;
+  /**
      * @minimum 0
      * @maximum 100
      */
@@ -369,6 +382,11 @@ export type CreateContactResponseDtoContact = {
      * @nullable
      */
   ownerId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId?: string | null;
   /**
      * @minimum 0
      * @maximum 100
@@ -432,6 +450,11 @@ export interface UpdateContactDto {
      */
   ownerId?: string | null;
   /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId?: string | null;
+  /**
      * @minimum 0
      * @maximum 100
      */
@@ -485,6 +508,11 @@ export type UpdateContactResponseDtoContact = {
      * @nullable
      */
   ownerId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId?: string | null;
   /**
      * @minimum 0
      * @maximum 100
@@ -664,6 +692,11 @@ export interface EditDealDto {
      * @minLength 1
      * @nullable
      */
+  companyId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
   ownerId?: string | null;
   /**
      * @minLength 1
@@ -701,6 +734,11 @@ export type EditDealResponseDtoDeal = {
      * @nullable
      */
   contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId: string | null;
   /**
      * @minLength 1
      * @nullable
@@ -762,6 +800,11 @@ export interface CreateDealDto {
      * @minLength 1
      * @nullable
      */
+  companyId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
   ownerId?: string | null;
   /**
      * @minLength 1
@@ -805,6 +848,11 @@ export type CreateDealResponseDtoDeal = {
      * @nullable
      */
   contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId: string | null;
   /**
      * @minLength 1
      * @nullable
@@ -869,6 +917,11 @@ export type MoveDealResponseDtoDeal = {
      * @nullable
      */
   contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId: string | null;
   /**
      * @minLength 1
      * @nullable
@@ -945,6 +998,11 @@ export type CloseDealResponseDtoDeal = {
      * @nullable
      */
   contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId: string | null;
   /**
      * @minLength 1
      * @nullable
@@ -1124,6 +1182,202 @@ export interface CompleteActivityResponseDto {
      * @maximum 9007199254740991
      */
   txid: number;
+}
+
+export type CreateCompanyDtoCustomFields = {[key: string]: unknown};
+
+export interface CreateCompanyDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  parentCompanyId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 240
+     * @nullable
+     */
+  legalName?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     * @nullable
+     */
+  taxId?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     * @nullable
+     */
+  industry?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  phone?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     * @nullable
+     */
+  address?: string | null;
+  customFields?: CreateCompanyDtoCustomFields;
+  tags?: string[];
+}
+
+export type CompanyWriteResponseDtoCompanyCustomFields = {[key: string]: unknown};
+
+export type CompanyWriteResponseDtoCompany = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  parentCompanyId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 240
+     * @nullable
+     */
+  legalName: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     * @nullable
+     */
+  taxId: string | null;
+  /** @nullable */
+  website: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     * @nullable
+     */
+  industry: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  phone: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     * @nullable
+     */
+  address: string | null;
+  customFields?: CompanyWriteResponseDtoCompanyCustomFields;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export interface CompanyWriteResponseDto {
+  company: CompanyWriteResponseDtoCompany;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdateCompanyDtoCustomFields = {[key: string]: unknown};
+
+export interface UpdateCompanyDto {
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  parentCompanyId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name?: string;
+  /**
+     * @minLength 1
+     * @maxLength 240
+     * @nullable
+     */
+  legalName?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     * @nullable
+     */
+  taxId?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     * @nullable
+     */
+  industry?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  phone?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     * @nullable
+     */
+  address?: string | null;
+  customFields?: UpdateCompanyDtoCustomFields;
+  tags?: string[];
+}
+
+export interface UpdateCompanyArchiveDto {
+  archived: boolean;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -2621,4 +2875,192 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getActivitiesControllerCompleteMutationOptions(options), queryClient);
+    }
+
+export const companiesControllerCreate = (
+    createCompanyDto: CreateCompanyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CompanyWriteResponseDto>(
+      {url: `/v1/companies`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCompanyDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCompaniesControllerCreateMutationKey = () => ['companiesControllerCreate'] as const;
+
+export const getCompaniesControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof companiesControllerCreate>>, TError,CompaniesControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof companiesControllerCreate>>, TError,CompaniesControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getCompaniesControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof companiesControllerCreate>>, CompaniesControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  companiesControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompaniesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof companiesControllerCreate>>>
+    export type CompaniesControllerCreateMutationBody = CreateCompanyDto
+    export type CompaniesControllerCreateMutationError = unknown
+    export type CompaniesControllerCreateMutationVariables = {data: CreateCompanyDto}
+
+    export const useCompaniesControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof companiesControllerCreate>>, TError,CompaniesControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof companiesControllerCreate>>,
+        TError,
+        CompaniesControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCompaniesControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const companiesControllerUpdate = (
+    id: string,
+    updateCompanyDto: UpdateCompanyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CompanyWriteResponseDto>(
+      {url: `/v1/companies/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateCompanyDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCompaniesControllerUpdateMutationKey = () => ['companiesControllerUpdate'] as const;
+
+export const getCompaniesControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof companiesControllerUpdate>>, TError,CompaniesControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof companiesControllerUpdate>>, TError,CompaniesControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getCompaniesControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof companiesControllerUpdate>>, CompaniesControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  companiesControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompaniesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof companiesControllerUpdate>>>
+    export type CompaniesControllerUpdateMutationBody = UpdateCompanyDto
+    export type CompaniesControllerUpdateMutationError = unknown
+    export type CompaniesControllerUpdateMutationVariables = {id: string;data: UpdateCompanyDto}
+
+    export const useCompaniesControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof companiesControllerUpdate>>, TError,CompaniesControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof companiesControllerUpdate>>,
+        TError,
+        CompaniesControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCompaniesControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const companiesControllerArchive = (
+    id: string,
+    updateCompanyArchiveDto: UpdateCompanyArchiveDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CompanyWriteResponseDto>(
+      {url: `/v1/companies/${id}/archive`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateCompanyArchiveDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCompaniesControllerArchiveMutationKey = () => ['companiesControllerArchive'] as const;
+
+export const getCompaniesControllerArchiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof companiesControllerArchive>>, TError,CompaniesControllerArchiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof companiesControllerArchive>>, TError,CompaniesControllerArchiveMutationVariables, TContext> => {
+
+const mutationKey = getCompaniesControllerArchiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof companiesControllerArchive>>, CompaniesControllerArchiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  companiesControllerArchive(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompaniesControllerArchiveMutationResult = NonNullable<Awaited<ReturnType<typeof companiesControllerArchive>>>
+    export type CompaniesControllerArchiveMutationBody = UpdateCompanyArchiveDto
+    export type CompaniesControllerArchiveMutationError = unknown
+    export type CompaniesControllerArchiveMutationVariables = {id: string;data: UpdateCompanyArchiveDto}
+
+    export const useCompaniesControllerArchive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof companiesControllerArchive>>, TError,CompaniesControllerArchiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof companiesControllerArchive>>,
+        TError,
+        CompaniesControllerArchiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCompaniesControllerArchiveMutationOptions(options), queryClient);
     }

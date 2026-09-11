@@ -38,6 +38,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           <Link to="/" className={styles.navItem}>
             Contatos
           </Link>
+          {session.capabilities.includes("companies:read") && (
+            <Link to="/companies" className={styles.navItem}>Empresas</Link>
+          )}
           <Link to="/deals" className={styles.navItem}>
             Negócios
           </Link>

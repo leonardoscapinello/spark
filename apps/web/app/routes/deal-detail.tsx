@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
   contactId as contactIdFactory,
+  companyId as companyIdFactory,
   dealId as dealIdFactory,
   formatBRL,
   toCents,
@@ -36,6 +37,7 @@ import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
+import { getCompaniesCollection } from "../lib/companies-collection.client";
 import styles from "./deal-detail.module.css";
 
 const ACTIVITY_TYPES: ReadonlyArray<{ value: ActivityType; label: string }> = [
@@ -53,6 +55,7 @@ export async function clientLoader() {
     getContactsCollection().preload(),
     getUsersCollection().preload(),
     getActivitiesCollection().preload(),
+    getCompaniesCollection().preload(),
   ]);
   return null;
 }
@@ -64,6 +67,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const contactsCollection = getContactsCollection();
   const usersCollection = getUsersCollection();
   const activitiesCollection = getActivitiesCollection();
+  const companiesCollection = getCompaniesCollection();
   const session = getSession();
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
   const canMove = session?.capabilities.includes("deals:move") ?? false;
@@ -76,6 +80,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: pipelines } = useLiveQuery({ query: (q) => q.from({ pipelines: pipelinesCollection }) });
   const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }).orderBy(({ users: item }) => item.name, "asc") });
+  const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") });
   const { data: activities } = useLiveQuery({
     query: (q) => q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc"),
   });
@@ -85,6 +90,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [amount, setAmount] = useState<Money | null>(null);
   const [contact, setContact] = useState<SelectOption | null>(null);
   const [ownerId, setOwnerId] = useState("");
+  const [companyId, setCompanyId] = useState("");
   const [expectedCloseDate, setExpectedCloseDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
@@ -101,6 +107,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const stage = deal ? stages.find((item) => item.id === deal.stageId) : undefined;
   const linkedContact = deal?.contactId ? contacts.find((item) => item.id === deal.contactId) : undefined;
   const owner = deal?.ownerId ? users.find((item) => item.id === deal.ownerId) : undefined;
+  const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
 
   function beginEditing() {
@@ -109,6 +116,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     setAmount(syncedAmount(deal.amount));
     setContact(linkedContact ? { value: linkedContact.id, label: linkedContact.name, ...(linkedContact.email ? { description: linkedContact.email } : {}) } : null);
     setOwnerId(deal.ownerId ?? "");
+    setCompanyId(deal.companyId ?? "");
     setExpectedCloseDate(deal.expectedCloseDate?.slice(0, 10) ?? "");
     setEditing(true);
   }
@@ -122,6 +130,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         draft.name = name.trim();
         draft.amount = toCents(amount);
         draft.contactId = contact ? contactIdFactory.from(contact.value) : null;
+        draft.companyId = companyId ? companyIdFactory.from(companyId) : null;
         draft.ownerId = ownerId ? userIdFactory.from(ownerId) : null;
         draft.expectedCloseDate = expectedCloseDate ? new Date(`${expectedCloseDate}T12:00:00`).toISOString() : null;
       });
@@ -210,11 +219,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
           <Field><Label>Contato</Label><SearchSelect label="Contato do negócio" searchPlacement="dropdown" placeholder="Sem contato" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
+          <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={companyId || null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
           <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
           <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
         </form> : <section className={styles.details}>
           <div><span>Contato</span>{linkedContact ? <Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link> : <strong>Não vinculado</strong>}</div>
+          <div><span>Empresa</span>{linkedCompany ? <Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link> : <strong>Não vinculada</strong>}</div>
           <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
           <div><span>Etapa do funil</span><Select label="Etapa do funil" value={deal.stageId} options={pipelineStages.map((item) => ({ value: item.id, label: item.name }))} disabled={!canMove || deal.status !== "open"} onValueChange={(value) => void moveDeal(value)} /></div>
           {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}

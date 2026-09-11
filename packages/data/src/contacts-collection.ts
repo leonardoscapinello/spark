@@ -40,6 +40,7 @@ export function optimisticContact(input: Omit<CreateContactInput, "id">, orgId: 
     leadStatus: input.leadStatus ?? "new",
     source: input.source ?? null,
     ownerId: input.ownerId ?? null,
+    companyId: input.companyId ?? null,
     score: input.score ?? 0,
     customFields: input.customFields ?? {},
     tags: input.tags ?? [],
@@ -97,6 +98,7 @@ export function createContactsCollection() {
           leadStatus: contact.leadStatus,
           source: contact.source,
           ownerId: contact.ownerId,
+          companyId: contact.companyId,
           score: contact.score,
           customFields: contact.customFields,
           tags: contact.tags,
@@ -116,7 +118,7 @@ export function createContactsCollection() {
           const response = await contactsControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
           return { txid: response.txid };
         }
-        const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId"]);
+        const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId", "companyId"]);
         const isAllowed = changedFields.length > 0 && changedFields.every((field) => allowedFields.has(field));
         if (!isAllowed) {
           throw new Error(
@@ -131,6 +133,7 @@ export function createContactsCollection() {
           ...("leadStatus" in mutation.changes ? { leadStatus: mutation.modified.leadStatus } : {}),
           ...("source" in mutation.changes ? { source: mutation.modified.source } : {}),
           ...("ownerId" in mutation.changes ? { ownerId: mutation.modified.ownerId } : {}),
+          ...("companyId" in mutation.changes ? { companyId: mutation.modified.companyId } : {}),
         });
 
         return { txid: response.txid };
