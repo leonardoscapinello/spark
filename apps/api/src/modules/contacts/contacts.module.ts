@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ContactsController } from "./presentation/contacts.controller.js";
 import { CreateContactUseCase } from "./application/create-contact.usecase.js";
 import { UpdateContactUseCase } from "./application/update-contact.usecase.js";
+import { ArchiveContactUseCase } from "./application/archive-contact.usecase.js";
 import { ContactsRepository } from "./infrastructure/contacts.repository.js";
 import { GetCurrentUserUseCase } from "../identity/application/get-current-user.usecase.js";
 import { UsersRepository } from "../identity/infrastructure/users.repository.js";
@@ -13,6 +14,7 @@ import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
   providers: [
     CreateContactUseCase,
     UpdateContactUseCase,
+    ArchiveContactUseCase,
     ContactsRepository,
     GetCurrentUserUseCase,
     UsersRepository,

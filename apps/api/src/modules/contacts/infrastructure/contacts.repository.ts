@@ -84,6 +84,17 @@ export class ContactsRepository {
       return { contact: toContact(row), txid: Number(txid) };
     });
   }
+
+  async archive(orgId: OrgId, id: ContactId, archived: boolean): Promise<{ contact: Contact; txid: number }> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
+      const txidRow = txidRows[0];
+      if (!txidRow) throw new Error("Could not obtain the transaction's txid.");
+      const [row] = await tx.update(contacts).set({ deletedAt: archived ? new Date() : null, updatedAt: new Date() }).where(eq(contacts.id, id)).returning();
+      if (!row) throw new NotFoundException(`Contact ${id} not found.`);
+      return { contact: toContact(row), txid: Number(txidRow.txid) };
+    });
+  }
 }
 
 function toContact(row: {

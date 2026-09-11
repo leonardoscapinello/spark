@@ -4,6 +4,7 @@ import {
   CreateContactInputSchema,
   CreateContactResponseSchema,
   UpdateContactInputSchema,
+  UpdateContactArchiveInputSchema,
   UpdateContactResponseSchema,
 } from "@spark/core";
 
@@ -12,4 +13,5 @@ export class ContactDto extends createZodDto(ContactSchema) {}
 export class CreateContactDto extends createZodDto(CreateContactInputSchema) {}
 export class CreateContactResponseDto extends createZodDto(CreateContactResponseSchema) {}
 export class UpdateContactDto extends createZodDto(UpdateContactInputSchema) {}
+export class UpdateContactArchiveDto extends createZodDto(UpdateContactArchiveInputSchema) {}
 export class UpdateContactResponseDto extends createZodDto(UpdateContactResponseSchema) {}

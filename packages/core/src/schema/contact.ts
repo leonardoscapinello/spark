@@ -59,6 +59,9 @@ export type CreateContactInput = z.infer<typeof CreateContactInputSchema>;
 export const UpdateContactInputSchema = CreateContactInputSchema.omit({ id: true }).partial();
 export type UpdateContactInput = z.infer<typeof UpdateContactInputSchema>;
 
+export const UpdateContactArchiveInputSchema = z.object({ archived: z.boolean() });
+export type UpdateContactArchiveInput = z.infer<typeof UpdateContactArchiveInputSchema>;
+
 /** Write response envelope — the txid is what TanStack DB uses to confirm
  * the optimistic write against what Electric replicated back
  * (docs/adr/0018, packages/data). */

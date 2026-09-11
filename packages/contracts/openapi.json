@@ -438,6 +438,51 @@
         ]
       }
     },
+    "/v1/contacts/{id}/archive": {
+      "patch": {
+        "operationId": "ContactsController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactArchiveDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateContactResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "contacts"
+        ]
+      }
+    },
     "/v1/pipelines": {
       "post": {
         "operationId": "PipelinesController_create",
@@ -1804,6 +1849,17 @@
         "required": [
           "contact",
           "txid"
+        ]
+      },
+      "UpdateContactArchiveDto": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "archived"
         ]
       },
       "CreatePipelineDto": {

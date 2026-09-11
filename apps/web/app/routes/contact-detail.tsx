@@ -8,7 +8,6 @@ import {
   phone as buildPhone,
   userId as userIdFactory,
   type ActivityType,
-  type LeadStatus,
 } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
 import { Button, DateTimePicker, ErrorText, Field, Input, Label, Select, notify } from "@spark/ui-web";
@@ -16,6 +15,7 @@ import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
+import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
 import { getSession } from "../lib/auth.client";
 import styles from "./contact-detail.module.css";
 
@@ -29,23 +29,6 @@ const TYPES: { value: ActivityType; label: string }[] = [
   { value: "call", label: "Ligação" },
   { value: "meeting", label: "Reunião" },
   { value: "email", label: "E-mail" },
-];
-
-const LEAD_STATUS_OPTIONS: { value: LeadStatus; label: string }[] = [
-  { value: "new", label: "Novo" },
-  { value: "qualified", label: "Qualificado" },
-  { value: "nurturing", label: "Em nutrição" },
-  { value: "customer", label: "Cliente" },
-  { value: "unqualified", label: "Desqualificado" },
-];
-
-const SOURCE_OPTIONS = [
-  { value: "instagram", label: "Instagram" },
-  { value: "whatsapp", label: "WhatsApp" },
-  { value: "website", label: "Site" },
-  { value: "referral", label: "Indicação" },
-  { value: "manual", label: "Cadastro manual" },
-  { value: "other", label: "Outra origem" },
 ];
 
 function formatDateTime(iso: string): string {
@@ -94,7 +77,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
     setContactFieldPending(field);
     try {
       const transaction = collection.update(data.id, (draft) => {
-        if (field === "leadStatus") draft.leadStatus = value as LeadStatus;
+        if (field === "leadStatus") draft.leadStatus = value as typeof draft.leadStatus;
         if (field === "source") draft.source = value;
         if (field === "ownerId") draft.ownerId = value ? userIdFactory.from(value) : null;
       });
@@ -279,7 +262,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Origem</span>
-          <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={SOURCE_OPTIONS} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("source", value)} />
+          <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("source", value)} />
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Responsável</span>

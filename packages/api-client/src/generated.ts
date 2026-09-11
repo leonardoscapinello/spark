@@ -506,6 +506,10 @@ export interface UpdateContactResponseDto {
   txid: number;
 }
 
+export interface UpdateContactArchiveDto {
+  archived: boolean;
+}
+
 export interface CreatePipelineDto {
   /** @minLength 1 */
   id: string;
@@ -1888,6 +1892,69 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getContactsControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const contactsControllerArchive = (
+    id: string,
+    updateContactArchiveDto: UpdateContactArchiveDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<UpdateContactResponseDto>(
+      {url: `/v1/contacts/${id}/archive`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateContactArchiveDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getContactsControllerArchiveMutationKey = () => ['contactsControllerArchive'] as const;
+
+export const getContactsControllerArchiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerArchive>>, TError,ContactsControllerArchiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof contactsControllerArchive>>, TError,ContactsControllerArchiveMutationVariables, TContext> => {
+
+const mutationKey = getContactsControllerArchiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof contactsControllerArchive>>, ContactsControllerArchiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  contactsControllerArchive(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ContactsControllerArchiveMutationResult = NonNullable<Awaited<ReturnType<typeof contactsControllerArchive>>>
+    export type ContactsControllerArchiveMutationBody = UpdateContactArchiveDto
+    export type ContactsControllerArchiveMutationError = unknown
+    export type ContactsControllerArchiveMutationVariables = {id: string;data: UpdateContactArchiveDto}
+
+    export const useContactsControllerArchive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerArchive>>, TError,ContactsControllerArchiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof contactsControllerArchive>>,
+        TError,
+        ContactsControllerArchiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getContactsControllerArchiveMutationOptions(options), queryClient);
     }
 
 export const pipelinesControllerCreate = (

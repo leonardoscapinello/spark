@@ -11,7 +11,8 @@ import {
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { CreateContactUseCase } from "../application/create-contact.usecase.js";
 import { UpdateContactUseCase } from "../application/update-contact.usecase.js";
-import { CreateContactDto, CreateContactResponseDto, UpdateContactDto, UpdateContactResponseDto } from "../dto/contact.dto.js";
+import { ArchiveContactUseCase } from "../application/archive-contact.usecase.js";
+import { CreateContactDto, CreateContactResponseDto, UpdateContactArchiveDto, UpdateContactDto, UpdateContactResponseDto } from "../dto/contact.dto.js";
 
 @ApiTags("contacts")
 @Controller("v1/contacts")
@@ -20,6 +21,7 @@ export class ContactsController {
     private readonly getCurrentUser: GetCurrentUserUseCase,
     private readonly createContact: CreateContactUseCase,
     private readonly updateContact: UpdateContactUseCase,
+    private readonly archiveContact: ArchiveContactUseCase,
   ) {}
 
   @Post()
@@ -53,6 +55,21 @@ export class ContactsController {
   ): Promise<UpdateContactResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
     const result = await this.updateContact.execute(user.orgId, contactIdFactory.from(id), body);
+    return result as UpdateContactResponseDto;
+  }
+
+  @Patch(":id/archive")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("contacts:write")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: UpdateContactResponseDto })
+  async archive(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Param("id") id: string,
+    @Body() body: UpdateContactArchiveDto,
+  ): Promise<UpdateContactResponseDto> {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const result = await this.archiveContact.execute(user.orgId, contactIdFactory.from(id), body.archived);
     return result as UpdateContactResponseDto;
   }
 }

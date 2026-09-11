@@ -18,7 +18,7 @@ import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { ContactSchema, contactId, type Contact, type CreateContactInput, type OrgId } from "@spark/core";
-import { contactsControllerCreate, contactsControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { contactsControllerArchive, contactsControllerCreate, contactsControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
 /**
  * Builds the full row `collection.insert()` requires — the collection's
@@ -112,6 +112,10 @@ export function createContactsCollection() {
         if (!mutation) throw new Error("onUpdate called with no pending mutation.");
 
         const changedFields = Object.keys(mutation.changes);
+        if (changedFields.length === 1 && changedFields[0] === "deletedAt") {
+          const response = await contactsControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
+          return { txid: response.txid };
+        }
         const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId"]);
         const isAllowed = changedFields.length > 0 && changedFields.every((field) => allowedFields.has(field));
         if (!isAllowed) {

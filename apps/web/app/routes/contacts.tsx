@@ -2,11 +2,12 @@ import { type FormEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
-import { contactMatches, email as buildEmail, phone as buildPhone, formatPhone, type Contact } from "@spark/core";
-import { ActionModal, Button, DataTable, ErrorText, Field, Icon, Input, Label, PageHeader, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { contactMatches, email as buildEmail, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
+import { ActionModal, Button, DataTable, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
+import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS, leadStatusLabel } from "../lib/lead-options";
 import styles from "./contacts.module.css";
 
 export async function clientLoader() {
@@ -26,11 +27,22 @@ export default function Contacts() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [leadStatus, setLeadStatus] = useState<LeadStatus>("new");
+  const [source, setSource] = useState("manual");
+  const [ownerId, setOwnerId] = useState(() => getSession()?.userId ?? "");
   const [nameError, setNameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const filteredContacts = contacts.filter((contact) => contactMatches(contact, search));
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("all");
+  const [archiveView, setArchiveView] = useState(false);
+  const filteredContacts = contacts.filter((contact) =>
+    (archiveView ? contact.deletedAt !== null : contact.deletedAt === null) &&
+    contactMatches(contact, search) &&
+    (statusFilter === "all" || contact.leadStatus === statusFilter) &&
+    (ownerFilter === "all" || (ownerFilter === "unassigned" ? contact.ownerId === null : contact.ownerId === ownerFilter)),
+  );
   const columns = useMemo<TableColumn<Contact>[]>(() => {
     const userNames = new Map(users.map((user) => [user.id, user.name]));
     return [
@@ -63,6 +75,7 @@ export default function Contacts() {
 
   function resetForm() {
     setName(""); setEmail(""); setPhone("");
+    setLeadStatus("new"); setSource("manual"); setOwnerId(getSession()?.userId ?? "");
     setNameError(null); setEmailError(null); setPhoneError(null);
   }
 
@@ -82,7 +95,7 @@ export default function Contacts() {
     try { validPhone = phone.trim() ? buildPhone(phone) : null; }
     catch { setPhoneError("Use DDD e um número com oito ou nove dígitos."); throw new Error("INVALID_PHONE"); }
 
-    const transaction = collection.insert(optimisticContact({ name: trimmedName, email: validEmail, phone: validPhone }, session.orgId));
+    const transaction = collection.insert(optimisticContact({ name: trimmedName, email: validEmail, phone: validPhone, leadStatus, source, ownerId: ownerId ? userIdFactory.from(ownerId) : null }, session.orgId));
     await transaction.isPersisted.promise;
     resetForm();
     notify({ title: "Contato criado", description: `${trimmedName} já está disponível na gestão de leads.`, tone: "success" });
@@ -93,11 +106,31 @@ export default function Contacts() {
     void addContact().catch(() => undefined);
   }
 
+  async function updateArchived(contact: Contact, archived: boolean, offerUndo = true) {
+    try {
+      const transaction = collection.update(contact.id, (draft) => { draft.deletedAt = archived ? new Date().toISOString() : null; });
+      await transaction.isPersisted.promise;
+      notify({
+        title: archived ? "Contato arquivado" : "Contato restaurado",
+        description: contact.name,
+        tone: "success",
+        ...(offerUndo ? { actions: <Button size="sm" variant="ghost" onClick={() => void updateArchived(contact, !archived, false)}>Desfazer</Button> } : {}),
+      });
+    } catch {
+      notify({ title: "Não foi possível atualizar o contato", tone: "error" });
+    }
+  }
+
   return <div className={styles.page}>
     <PageHeader eyebrow="Relacionamento" title="Contatos" description="Consulte e cadastre as pessoas que sua equipe acompanha." actions={<Button onClick={() => setModalOpen(true)}>Novo contato</Button>} />
     <div className={styles.toolbar}>
       <div className={styles.search}><Icon name="search" /><Input aria-label="Buscar contatos" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" /></div>
-      <p className={styles.count} role="status">{search ? `${filteredContacts.length} de ${contacts.length}` : `${contacts.length}`} {contacts.length === 1 ? "contato" : "contatos"}</p>
+      <div className={styles.filters}>
+        <Select label="Filtrar por etapa" value={statusFilter} options={[{ value: "all", label: "Todas as etapas" }, ...LEAD_STATUS_OPTIONS]} onValueChange={(value) => setStatusFilter(value ?? "all")} />
+        <Select label="Filtrar por responsável" value={ownerFilter} options={[{ value: "all", label: "Todos os responsáveis" }, { value: "unassigned", label: "Não atribuídos" }, ...users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))]} onValueChange={(value) => setOwnerFilter(value ?? "all")} />
+        <Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>
+      </div>
+      <p className={styles.count} role="status">{filteredContacts.length} {filteredContacts.length === 1 ? "contato" : "contatos"}</p>
     </div>
     <DataTable
       label="Contatos da organização"
@@ -106,14 +139,17 @@ export default function Contacts() {
       rowKey={(contact) => contact.id}
       rowLabel={(contact) => contact.name}
       state={isLoading && contacts.length === 0 ? "loading" : "ready"}
-      emptyText={search ? `Nenhum contato encontrado para “${search}”.` : "Nenhum contato cadastrado."}
-      actions={(contact) => <TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />}
+      emptyText={archiveView ? "Nenhum contato arquivado." : search ? `Nenhum contato encontrado para “${search}”.` : "Nenhum contato cadastrado."}
+      actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} /><MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} /></>}
     />
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Novo contato" confirmLabel="Criar contato" errorText="Não foi possível criar o contato. Corrija os campos marcados ou tente novamente." onConfirm={addContact}>
       <form className={styles.modalFields} onSubmit={submitFromForm}>
         <Field invalid={Boolean(nameError)}><Label>Nome</Label><Input autoFocus autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setNameError(null); }} placeholder="Nome completo" /><ErrorText>{nameError}</ErrorText></Field>
         <Field invalid={Boolean(emailError)}><Label>E-mail</Label><Input type="email" autoComplete="email" value={email} onChange={(event) => { setEmail(event.target.value); setEmailError(null); }} placeholder="nome@empresa.com" /><ErrorText>{emailError}</ErrorText></Field>
         <Field invalid={Boolean(phoneError)}><Label>Telefone</Label><Input type="tel" autoComplete="tel" value={phone} onChange={(event) => { setPhone(event.target.value); setPhoneError(null); }} placeholder="(11) 99999-9999" /><ErrorText>{phoneError}</ErrorText></Field>
+        <Field><Label>Etapa</Label><Select label="Etapa do relacionamento" value={leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) setLeadStatus(value as LeadStatus); }} /></Field>
+        <Field><Label>Origem</Label><Select label="Origem do lead" value={source} options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => setSource(value ?? "manual")} /></Field>
+        <Field><Label>Responsável</Label><Select label="Responsável pelo lead" value={ownerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
       </form>
     </ActionModal>
   </div>;
@@ -121,8 +157,4 @@ export default function Contacts() {
 
 function initials(name: string): string {
   return name.split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase("pt-BR");
-}
-
-function leadStatusLabel(status: Contact["leadStatus"]): string {
-  return { new: "Novo", qualified: "Qualificado", nurturing: "Em nutrição", customer: "Cliente", unqualified: "Desqualificado" }[status];
 }
