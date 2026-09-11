@@ -1,22 +1,25 @@
 import { Form, Link, redirect, useNavigation, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
 import { Button, Field, Input, Label, PasswordInput } from "@spark/ui-web";
-import { signIn } from "../lib/auth.client";
+import { AuthFlowError, signIn } from "../lib/auth.client";
 import styles from "./login.module.css";
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const totpCode = String(formData.get("totpCode") ?? "").replace(/\D/g, "");
 
   if (!email || !password) {
     return { error: "Informe seu e-mail e sua senha." };
   }
 
   try {
-    await signIn(email, password);
+    await signIn(email, password, totpCode || undefined);
     return redirect("/");
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthFlowError && error.code === "MFA_REQUIRED") return { mfaRequired: true as const };
+    if (error instanceof AuthFlowError && error.code === "MFA_INVALID") return { mfaRequired: true as const, error: "Código inválido ou expirado." };
     return { error: "E-mail ou senha incorretos." };
   }
 }
@@ -42,6 +45,13 @@ export default function Login({ actionData }: Route.ComponentProps) {
           <Input type="email" name="email" placeholder="voce@empresa.com" required autoFocus autoComplete="email" />
         </Field>
 
+        {actionData?.mfaRequired && (
+          <Field invalid={!!actionData.error}>
+            <Label>Código de segurança</Label>
+            <Input name="totpCode" inputMode="numeric" autoComplete="one-time-code" placeholder="000000" minLength={6} maxLength={6} required autoFocus />
+          </Field>
+        )}
+
         <Field invalid={!!actionData?.error}>
           <div className={styles.fieldHeader}>
             <Label>Senha</Label>
@@ -54,7 +64,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
       </div>
 
       <Button type="submit" size="lg" loading={isSubmitting} className={styles.submit}>
-        Entrar
+        {actionData?.mfaRequired ? "Verificar e entrar" : "Entrar"}
       </Button>
     </Form>
   );

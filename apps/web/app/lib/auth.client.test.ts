@@ -8,6 +8,11 @@ const mocks = vi.hoisted(() => ({
   signInWithPassword: vi.fn(),
   signOut: vi.fn(),
   onAuthStateChange: vi.fn(),
+  getAuthenticatorAssuranceLevel: vi.fn(),
+  listFactors: vi.fn(),
+  challengeAndVerify: vi.fn(),
+  enroll: vi.fn(),
+  unenroll: vi.fn(),
 }));
 
 vi.mock("@spark/api-client", () => ({
@@ -25,6 +30,13 @@ vi.mock("./supabase.client", () => ({
       signInWithPassword: mocks.signInWithPassword,
       signOut: mocks.signOut,
       onAuthStateChange: mocks.onAuthStateChange,
+      mfa: {
+        getAuthenticatorAssuranceLevel: mocks.getAuthenticatorAssuranceLevel,
+        listFactors: mocks.listFactors,
+        challengeAndVerify: mocks.challengeAndVerify,
+        enroll: mocks.enroll,
+        unenroll: mocks.unenroll,
+      },
     },
   }),
 }));
@@ -41,6 +53,7 @@ describe("auth.client — Supabase Auth session", () => {
   it("authenticates with Supabase and resolves the provisioned local user", async () => {
     const orgId = orgIdFactory.create();
     mocks.signInWithPassword.mockResolvedValue({ data: { session: { access_token: "real-jwt" } }, error: null });
+    mocks.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: "aal1", nextLevel: "aal1" }, error: null });
     mocks.me.mockResolvedValue({ id: "local-user", orgId, capabilities: ["users:manage"] });
 
     await expect(signIn("person@company.com", "strong-password")).resolves.toEqual({

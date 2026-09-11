@@ -1,0 +1,51 @@
+.page {
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: var(--ui-hairline) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.cardHeader,
+.factor,
+.actions,
+.instructions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.cardHeader,
+.factor { justify-content: space-between; }
+
+.cardHeader h2,
+.cardHeader p,
+.instructions p { margin: 0; }
+.cardHeader h2 { font-size: var(--typography-size-lg); }
+.cardHeader p,
+.instructions p,
+.factor span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+.factor span { display: block; margin-top: var(--space-1); }
+
+.enrollment { display: flex; flex-direction: column; gap: var(--space-4); max-width: var(--ui-drawerWidth); }
+.qrCode { width: var(--ui-menuWidth); height: var(--ui-menuWidth); border-radius: var(--radius-md); }
+.step { display: inline-flex; align-items: center; justify-content: center; width: var(--space-6); height: var(--space-6); flex: 0 0 auto; border-radius: var(--radius-full); background: var(--color-accent); color: var(--ui-buttonInk); font-weight: var(--typography-weight-semibold); }
+.secret { display: flex; flex-direction: column; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.secret code { color: var(--color-ink); font-size: var(--typography-size-sm); overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  .page { padding: var(--space-4); }
+  .cardHeader { align-items: flex-start; }
+  .factor { align-items: flex-start; }
+}

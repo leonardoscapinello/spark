@@ -64,6 +64,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
               Auditoria
             </Link>
           )}
+          <Link to="/security" className={styles.navItem}>Segurança</Link>
         </nav>
         <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}>
           Sair
