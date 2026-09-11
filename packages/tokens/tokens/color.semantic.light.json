@@ -34,15 +34,15 @@
     },
     "accent": {
       "$type": "color",
-      "$value": "#222222"
+      "$value": "{color.blue.600}"
     },
     "accentStrong": {
       "$type": "color",
-      "$value": "#333333"
+      "$value": "{color.blue.700}"
     },
     "accentWash": {
       "$type": "color",
-      "$value": "#f8f8f7"
+      "$value": "#EAF0FF"
     },
     "statusSuccess": {
       "$type": "color",
@@ -58,7 +58,7 @@
     },
     "focusRing": {
       "$type": "color",
-      "$value": "#165fc6"
+      "$value": "{color.blue.600}"
     },
     "glassBg": {
       "$type": "color",

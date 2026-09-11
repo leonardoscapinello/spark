@@ -1,5 +1,5 @@
 {
-  "$description": "ADR-0033: medidas Intercom e extens\u00f5es expl\u00edcitas em docs/especificacao/componentes-intercom.md",
+  "$description": "ADR-0033: medidas Intercom e extensões explícitas em docs/especificacao/componentes-intercom.md",
   "ui": {
     "controlSmall": {
       "$type": "dimension",
@@ -83,7 +83,7 @@
     },
     "buttonBg": {
       "$type": "color",
-      "$value": "#222222"
+      "$value": "{color.accent}"
     },
     "buttonInk": {
       "$type": "color",
@@ -91,7 +91,7 @@
     },
     "buttonHover": {
       "$type": "color",
-      "$value": "#333333"
+      "$value": "{color.accentStrong}"
     },
     "subtle": {
       "$type": "color",
@@ -107,7 +107,7 @@
     },
     "tabIndicator": {
       "$type": "color",
-      "$value": "#d87936"
+      "$value": "{color.accent}"
     },
     "panelShadow": {
       "$type": "string",
@@ -223,7 +223,7 @@
     },
     "chart1": {
       "$type": "color",
-      "$value": "#4844a3"
+      "$value": "{color.accent}"
     },
     "chart2": {
       "$type": "color",
@@ -239,7 +239,7 @@
     },
     "chart5": {
       "$type": "color",
-      "$value": "#d4a258"
+      "$value": "{color.accentStrong}"
     }
   }
 }

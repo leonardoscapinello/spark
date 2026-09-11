@@ -29,7 +29,7 @@ Fonte: Inbox aberto e modal «Criar visualização», consultados via DOM render
 - `Accordion`: seções independentes, controle externo opcional e teclado.
 - `Icon`: conjunto inicial de desenhos locais de 16 px; silhuetas ainda não representam reprodução exata dos ícones do Intercom.
 
-As cores de hover/foco, indicador laranja da aba (estimado visualmente), botão grande de 40 px, campo completo de 40 px e exibição de senha são extensões iniciais; falta medição independente desses estados. Campo de senha usa a base de Input, sem afirmar inspeção da autenticação do Intercom. Tema escuro, responsividade completa, sidebar recolhível, menus, modal, tabela, combobox e demais componentes ainda exigem suas unidades de implementação e referência. O catálogo é uma bancada de componentes, não uma cópia de uma tela real de Inbox.
+As cores de hover/foco, botão grande de 40 px, campo completo de 40 px e exibição de senha são extensões iniciais; falta medição independente desses estados. Campo de senha usa a base de Input, sem afirmar inspeção da autenticação do Intercom. Tema escuro, responsividade completa, sidebar recolhível, menus, modal, tabela, combobox e demais componentes ainda exigem suas unidades de implementação e referência. O catálogo é uma bancada de componentes, não uma cópia de uma tela real de Inbox.
 
 Todos os valores novos de estilo estão em tokens. Ícones usam geometria SVG própria. A futura migração das telas precisa preservar leitura local, regras de core e integração real; o catálogo não substitui essas funcionalidades.
 
@@ -52,3 +52,7 @@ Ainda há trabalho de paridade: ícones exatos, hover/foco medidos sistematicame
 `MenuButton` compõe o mesmo Button com menu: texto sem indicador, texto com ícone e indicador, variantes e tamanhos existentes. Catálogo e histórias incluem as formas e o split em carregamento. Separadores pertencem ao conteúdo do menu; não dependem de texto ou ícones fictícios.
 
 Popover de formulário tem título e corpo próprios, largura de 320 px limitada ao espaço disponível e padding de 20 px. Medição do exemplo de filtro: 21 px da borda externa até o conteúdo em ambos os lados (20 px internos + borda de 1 px). Estes valores corrigem a composição reportada pelo usuário; não constituem nova prova de paridade completa com o Intercom.
+
+## Cores de marca e semântica
+
+Conforme ADR-0034, acentos, indicador de aba, foco e botão primário usam os azuis da marca existente. A referência Intercom orienta estrutura e interação, sem substituir a marca. Laranja/âmbar permanece permitido para atenção por `color.statusWarning`. Os componentes recebem conteúdo e callbacks por props e consomem os tokens compartilhados; não se cria uma versão exclusiva para o catálogo.
