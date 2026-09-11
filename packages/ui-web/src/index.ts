@@ -48,3 +48,5 @@ export { ChangeCalculator, type ChangeCalculatorProps } from "./ChangeCalculator
 export { DataTable, type DataTableProps, type TableColumn } from "./DataTable/DataTable.js";
 
 export { TableActions, TableIconAction, type TableIconActionProps } from "./DataTable/TableActions.js";
+
+export { FeedbackButton, type FeedbackButtonProps, type FeedbackState } from "./Button/FeedbackButton.js";

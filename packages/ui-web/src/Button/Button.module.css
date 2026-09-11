@@ -1,6 +1,6 @@
 .root {
   box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
-  gap: var(--space-1); font-family: var(--typography-fontFamily-body);
+  gap: var(--space-2); font-family: var(--typography-fontFamily-body);
   font-weight: var(--typography-weight-semibold); line-height: var(--ui-buttonLine);
   border: 0; cursor: pointer; white-space: nowrap; flex-shrink: 0;
 }
@@ -20,7 +20,7 @@
 .iconOnly { padding: var(--space-1); aspect-ratio: 1; }
 .icon { display: inline-flex; width: var(--ui-icon); height: var(--ui-icon); align-items: center; justify-content: center; }
 .icon > svg { width: 100%; height: 100%; }
-.spinner { width: var(--ui-icon); height: var(--ui-icon); border: var(--ui-focusWidth) solid currentColor; border-right-color: transparent; border-radius: var(--radius-full); animation: spin var(--ui-spinDuration) linear infinite; }
+.spinner { box-sizing: border-box; flex-shrink: 0; width: var(--space-3); height: var(--space-3); border: var(--ui-focusWidth) solid currentColor; border-right-color: transparent; border-radius: var(--radius-full); animation: spin var(--ui-spinDuration) linear infinite; }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: var(--ui-spinReducedDuration); } }
 @media (pointer: coarse) { .root { min-height: var(--ui-touchTarget); min-width: var(--ui-touchTarget); } }
 @keyframes spin { to { transform: rotate(1turn); } }
