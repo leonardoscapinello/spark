@@ -17,6 +17,7 @@ import { FormsModule } from "./modules/forms/forms.module.js";
 import { EmailVerificationModule } from "./modules/email-verification/email-verification.module.js";
 import { SocialModule } from "./modules/social/social.module.js";
 import { CampaignsModule } from "./modules/campaigns/campaigns.module.js";
+import { SettingsModule } from "./modules/settings/settings.module.js";
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { CampaignsModule } from "./modules/campaigns/campaigns.module.js";
     EmailVerificationModule,
     SocialModule,
     CampaignsModule,
+    SettingsModule,
   ],
 })
 export class AppModule {}

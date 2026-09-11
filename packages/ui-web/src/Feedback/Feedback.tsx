@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Button } from "../Button/Button.js";
 import { Icon } from "../Icon/Icon.js";
 import styles from "./Feedback.module.css";
-export type FeedbackTone = "neutral" | "success" | "warning" | "danger";
+export type FeedbackTone = "neutral" | "info" | "success" | "warning" | "danger";
 export function Badge({ tone = "neutral", children }: { tone?: FeedbackTone; children: ReactNode }) {
   return <span className={styles.badge} data-tone={tone}>{children}</span>;
 }

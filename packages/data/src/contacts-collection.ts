@@ -118,7 +118,7 @@ export function createContactsCollection() {
           const response = await contactsControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
           return { txid: response.txid };
         }
-        const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId", "companyId"]);
+        const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId", "companyId", "score", "tags", "customFields"]);
         const isAllowed = changedFields.length > 0 && changedFields.every((field) => allowedFields.has(field));
         if (!isAllowed) {
           throw new Error(
@@ -134,6 +134,9 @@ export function createContactsCollection() {
           ...("source" in mutation.changes ? { source: mutation.modified.source } : {}),
           ...("ownerId" in mutation.changes ? { ownerId: mutation.modified.ownerId } : {}),
           ...("companyId" in mutation.changes ? { companyId: mutation.modified.companyId } : {}),
+          ...("score" in mutation.changes ? { score: mutation.modified.score } : {}),
+          ...("tags" in mutation.changes ? { tags: mutation.modified.tags } : {}),
+          ...("customFields" in mutation.changes ? { customFields: mutation.modified.customFields } : {}),
         });
 
         return { txid: response.txid };

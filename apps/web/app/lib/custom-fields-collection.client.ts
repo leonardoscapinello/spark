@@ -1,0 +1,1 @@
+import { createCustomFieldsCollection, type CustomFieldsCollection } from "@spark/data"; let fields: CustomFieldsCollection | undefined; export function getCustomFieldsCollection() { fields ??= createCustomFieldsCollection(); return fields; }

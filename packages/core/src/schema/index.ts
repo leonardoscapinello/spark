@@ -20,3 +20,4 @@ export * from "./leadForm.js";
 export * from "./emailVerification.js";
 export * from "./social.js";
 export * from "./campaign.js";
+export * from "./customField.js";

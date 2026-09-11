@@ -44,6 +44,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   audiences: { column: "org_id" },
   campaigns: { column: "org_id" },
   campaign_recipients: { column: "org_id" },
+  custom_field_definitions: { column: "org_id" },
 };
 
 export function isSyncableTable(table: string): table is SyncResource {

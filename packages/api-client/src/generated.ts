@@ -82,6 +82,7 @@ export const CurrentUserDtoCapabilitiesItem = {
   'social:write': 'social:write',
   'campaigns:read': 'campaigns:read',
   'campaigns:write': 'campaigns:write',
+  'settings:manage': 'settings:manage',
 } as const;
 
 export interface CurrentUserDto {
@@ -142,6 +143,7 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'social:write': 'social:write',
   'campaigns:read': 'campaigns:read',
   'campaigns:write': 'campaigns:write',
+  'settings:manage': 'settings:manage',
 } as const;
 
 export interface PermissionGroupDto {
@@ -195,6 +197,7 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'social:write': 'social:write',
   'campaigns:read': 'campaigns:read',
   'campaigns:write': 'campaigns:write',
+  'settings:manage': 'settings:manage',
 } as const;
 
 export interface CreatePermissionGroupDto {
@@ -242,6 +245,7 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'social:write': 'social:write',
   'campaigns:read': 'campaigns:read',
   'campaigns:write': 'campaigns:write',
+  'settings:manage': 'settings:manage',
 } as const;
 
 export interface UpdatePermissionGroupDto {
@@ -3640,6 +3644,106 @@ export interface CampaignWriteResponseDto {
      * @maximum 9007199254740991
      */
   txid: number;
+}
+
+export type CreateCustomFieldDtoEntityType = typeof CreateCustomFieldDtoEntityType[keyof typeof CreateCustomFieldDtoEntityType];
+
+
+export const CreateCustomFieldDtoEntityType = {
+  contact: 'contact',
+  company: 'company',
+  deal: 'deal',
+} as const;
+
+export type CreateCustomFieldDtoType = typeof CreateCustomFieldDtoType[keyof typeof CreateCustomFieldDtoType];
+
+
+export const CreateCustomFieldDtoType = {
+  text: 'text',
+  number: 'number',
+  date: 'date',
+  boolean: 'boolean',
+  single_select: 'single_select',
+  multi_select: 'multi_select',
+} as const;
+
+export interface CreateCustomFieldDto {
+  /** @minLength 1 */
+  id: string;
+  entityType: CreateCustomFieldDtoEntityType;
+  /**
+     * @minLength 1
+     * @maxLength 63
+     * @pattern ^[a-z][a-z0-9_]*$
+     */
+  key: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  type: CreateCustomFieldDtoType;
+  required?: boolean;
+  /**
+     * @maxItems 100
+     * @items.minLength 1
+     * @items.maxLength 100
+     */
+  options?: string[];
+}
+
+export type CustomFieldWriteResponseDtoFieldEntityType = typeof CustomFieldWriteResponseDtoFieldEntityType[keyof typeof CustomFieldWriteResponseDtoFieldEntityType];
+
+
+export const CustomFieldWriteResponseDtoFieldEntityType = {
+  contact: 'contact',
+  company: 'company',
+  deal: 'deal',
+} as const;
+
+export type CustomFieldWriteResponseDtoFieldType = typeof CustomFieldWriteResponseDtoFieldType[keyof typeof CustomFieldWriteResponseDtoFieldType];
+
+
+export const CustomFieldWriteResponseDtoFieldType = {
+  text: 'text',
+  number: 'number',
+  date: 'date',
+  boolean: 'boolean',
+  single_select: 'single_select',
+  multi_select: 'multi_select',
+} as const;
+
+export type CustomFieldWriteResponseDtoField = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  entityType: CustomFieldWriteResponseDtoFieldEntityType;
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  label: string;
+  type: CustomFieldWriteResponseDtoFieldType;
+  required: boolean;
+  options: string[];
+  /** @minLength 1 */
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+};
+
+export interface CustomFieldWriteResponseDto {
+  field: CustomFieldWriteResponseDtoField;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface ArchiveCustomFieldDto {
+  archived: boolean;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -7945,4 +8049,129 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getCampaignsControllerSendMutationOptions(options), queryClient);
+    }
+
+export const settingsControllerCreate = (
+    createCustomFieldDto: CreateCustomFieldDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CustomFieldWriteResponseDto>(
+      {url: `/v1/settings/custom-fields`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCustomFieldDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getSettingsControllerCreateMutationKey = () => ['settingsControllerCreate'] as const;
+
+export const getSettingsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsControllerCreate>>, TError,SettingsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof settingsControllerCreate>>, TError,SettingsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getSettingsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsControllerCreate>>, SettingsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  settingsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SettingsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof settingsControllerCreate>>>
+    export type SettingsControllerCreateMutationBody = CreateCustomFieldDto
+    export type SettingsControllerCreateMutationError = unknown
+    export type SettingsControllerCreateMutationVariables = {data: CreateCustomFieldDto}
+
+    export const useSettingsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsControllerCreate>>, TError,SettingsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof settingsControllerCreate>>,
+        TError,
+        SettingsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSettingsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const settingsControllerArchive = (
+    id: string,
+    archiveCustomFieldDto: ArchiveCustomFieldDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CustomFieldWriteResponseDto>(
+      {url: `/v1/settings/custom-fields/${id}/archive`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: archiveCustomFieldDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getSettingsControllerArchiveMutationKey = () => ['settingsControllerArchive'] as const;
+
+export const getSettingsControllerArchiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsControllerArchive>>, TError,SettingsControllerArchiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof settingsControllerArchive>>, TError,SettingsControllerArchiveMutationVariables, TContext> => {
+
+const mutationKey = getSettingsControllerArchiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settingsControllerArchive>>, SettingsControllerArchiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  settingsControllerArchive(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SettingsControllerArchiveMutationResult = NonNullable<Awaited<ReturnType<typeof settingsControllerArchive>>>
+    export type SettingsControllerArchiveMutationBody = ArchiveCustomFieldDto
+    export type SettingsControllerArchiveMutationError = unknown
+    export type SettingsControllerArchiveMutationVariables = {id: string;data: ArchiveCustomFieldDto}
+
+    export const useSettingsControllerArchive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settingsControllerArchive>>, TError,SettingsControllerArchiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof settingsControllerArchive>>,
+        TError,
+        SettingsControllerArchiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSettingsControllerArchiveMutationOptions(options), queryClient);
     }

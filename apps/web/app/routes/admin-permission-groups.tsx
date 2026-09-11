@@ -56,6 +56,7 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "social:write": "Criar e agendar publicações sociais",
   "campaigns:read": "Ver campanhas e públicos",
   "campaigns:write": "Criar e enviar campanhas",
+  "settings:manage": "Gerenciar configurações e campos",
 };
 
 export async function clientLoader() {

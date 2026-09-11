@@ -35,6 +35,7 @@ export const CAPABILITIES = [
   "social:write",
   "campaigns:read",
   "campaigns:write",
+  "settings:manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

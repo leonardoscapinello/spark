@@ -1,0 +1,1 @@
+.page { display: grid; gap: var(--space-6); padding: var(--space-8); min-width: 0; } .form { display: grid; gap: var(--space-4); } .primary { display: grid; gap: var(--space-1); } .primary span { color: var(--color-inkMuted); font-family: var(--typography-fontFamily-mono); font-size: var(--typography-size-xs); } @media (max-width: 720px) { .page { padding: var(--space-4); } }

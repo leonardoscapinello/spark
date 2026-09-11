@@ -62,6 +62,8 @@ const TITLES: Record<DomainEventType, string> = {
   "audience.created": "Público de campanha criado",
   "campaign.created": "Campanha criada",
   "campaign.sent": "Campanha enviada",
+  "custom_field.created": "Campo personalizado criado",
+  "custom_field.archived": "Campo personalizado arquivado",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

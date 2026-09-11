@@ -5,4 +5,5 @@
 :is(.badge,.alert)[data-tone="danger"] { color: var(--color-statusDanger); }
 :is(.badge,.alert)[data-tone="success"] { color: var(--color-statusSuccess); }
 :is(.badge,.alert)[data-tone="warning"] { color: var(--color-statusWarning); }
+:is(.badge,.alert)[data-tone="info"] { color: var(--color-accent); }
 .skeleton { height: var(--ui-controlMedium); border-radius: var(--radius-sm); background: var(--color-line); }
