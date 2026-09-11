@@ -53,7 +53,9 @@ Esta ordem organiza dependências; não remove o escopo completo pedido pelo usu
 
 ## Supabase: situação verificada nesta sessão
 
-`packages/db/.env` e `apps/api/.env` possuem configuração de banco apontando para `localhost`; a API tem configuração de segredo JWT. Nenhum valor de segredo foi reproduzido. Não há ferramenta Supabase específica disponível nesta sessão. Portanto, ainda não está confirmado acesso administrativo ao projeto remoto nem o estado de suas tabelas.
+O usuário forneceu o projeto remoto e o acesso SQL foi confirmado em transação somente leitura. Projeto: `vrxjqqqsoqfaxzanebtf`. O schema `public` não possui tabelas; não há registro de migrations do Spark, role `app_user` ou publicação Electric. O banco tem `wal_level=logical`. O endpoint JWKS respondeu HTTP 200 com chave ES256. Consulte o [diagnóstico do ambiente remoto](supabase-diagnostico.md).
+
+`packages/db/.env` e `apps/api/.env` continuam apontando para `localhost`. Nenhuma credencial foi adicionada aos documentos, arquivos de configuração ou Git. A inspeção não aplicou migrations nem alterou o ambiente remoto.
 
 Antes de aplicar migrations remotas: identificar projeto e ambiente (desenvolvimento/homologação/produção), comparar migrations aplicadas, confirmar role de aplicação/RLS, configuração de Auth e replicação para Electric. Inspeção deve começar por metadados em modo somente leitura. Não usar `db:push` como substituto de migrations revisadas.
 
