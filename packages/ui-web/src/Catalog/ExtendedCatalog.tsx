@@ -18,6 +18,7 @@ import { Label } from "../Label/Label.js";
 import { Input } from "../Input/Input.js";
 import { ErrorText } from "../ErrorText/ErrorText.js";
 import styles from "./Catalog.module.css";
+const people = [{value:"maria",label:"Maria Oliveira",description:"Atendimento · Disponível",avatar:"https://i.pravatar.cc/80?img=47"},{value:"joao",label:"João Silva",description:"Vendas · Disponível",avatar:"https://i.pravatar.cc/80?img=12"},{value:"ana",label:"Ana Costa",description:"Sucesso do cliente",avatar:null}];
 const teams = [{value:"support",label:"Atendimento"},{value:"sales",label:"Vendas"},{value:"success",label:"Sucesso do cliente"},{value:"archived",label:"Equipe arquivada",disabled:true}];
 export function ExtendedCatalog() {
   const [lastAction,setLastAction] = useState("Escolha uma ação para experimentar.");
@@ -37,9 +38,12 @@ export function ExtendedCatalog() {
       <MenuButton variant="secondary" icon={<Icon name="user" />} menu={<><MenuItem icon={<Icon name="user" />} onClick={()=>setLastAction("Atribuir selecionado")}>Atribuir</MenuItem><MenuSeparator /><MenuItem icon={<Icon name="inbox" />} onClick={()=>setLastAction("Mover selecionado")}>Mover para inbox</MenuItem></>}>Texto com ícone</MenuButton>
       <SplitButton shape="rounded" variant="secondary" menuLabel="Opções de salvar" onClick={()=>setLastAction("Salvar selecionado")} menu={<MenuItem onClick={()=>setLastAction("Salvar como selecionado")}>Salvar como...</MenuItem>}>Salvar</SplitButton>
     </div><p role="status" className={styles.note}>{lastAction}</p></div></section>
-    <section className={styles.card}><h2>Seletores e busca de opções</h2><div className={styles.rows}>
+    <section className={styles.card}><h2>Seletores com busca e foto</h2><div className={styles.rows}>
       <Field><Label>Equipe responsável</Label><Select label="Equipe responsável" options={teams} value={team} onValueChange={setTeam} name="team" /></Field>
       <Field><Label>Pesquisar equipe</Label><SearchSelect label="Pesquisar equipe" options={teams} placeholder="Buscar pelo nome da equipe" /></Field>
+      <Field><Label>Equipe responsável com busca no menu</Label><SearchSelect label="Equipe responsável com busca" searchPlacement="dropdown" options={teams} placeholder="Selecionar equipe"/></Field>
+      <Field><Label>Colaborador com foto e busca</Label><SearchSelect label="Colaborador com foto e busca" searchPlacement="dropdown" options={people} placeholder="Selecionar colaborador"/></Field>
+      <Field><Label>Dropdown com foto</Label><Select label="Dropdown com foto" options={people} defaultValue="maria"/></Field>
       <Field><Label>Canais</Label><Select multiple label="Canais" defaultValue={["email"]} options={[{value:"email",label:"E-mail"},{value:"instagram",label:"Instagram"},{value:"whatsapp",label:"WhatsApp"}]} /></Field>
       <Field><Label>Seletor indisponível</Label><Select disabled label="Seletor indisponível" options={teams} defaultValue="archived" /></Field>
     </div></section>
