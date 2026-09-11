@@ -44,6 +44,17 @@
   min-height: 0;
 }
 
+.colunaNova {
+  flex: 0 0 280px;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
 .colunaCabecalho {
   display: flex;
   align-items: baseline;

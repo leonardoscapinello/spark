@@ -91,6 +91,20 @@ export default function Deals() {
     });
   }
 
+  function adicionarEstagio(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const sessao = obterSessao();
+    if (!sessao || !pipelinePrincipal) return;
+
+    const dados = new FormData(evento.currentTarget);
+    const nome = String(dados.get("nomeEstagio") ?? "").trim();
+    if (!nome) return;
+
+    const estagio = estagioOtimista({ pipelineId: pipelinePrincipal.id, nome, ordem: estagios.length }, sessao.orgId);
+    stagesCollection.insert(estagio);
+    evento.currentTarget.reset();
+  }
+
   if (!carregandoPipelines && !pipelinePrincipal) {
     return (
       <div className={styles.pagina}>
@@ -197,6 +211,16 @@ export default function Deals() {
             </section>
           );
         })}
+
+        <form className={styles.colunaNova} onSubmit={adicionarEstagio}>
+          <Field>
+            <Label>Novo estágio</Label>
+            <Input name="nomeEstagio" placeholder="Nome do estágio" size="sm" />
+          </Field>
+          <Button type="submit" size="sm" variant="secondary">
+            + Estágio
+          </Button>
+        </form>
       </div>
     </div>
   );
