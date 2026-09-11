@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zOrgId, zPermissionGroupId } from "../schema/zodHelpers.js";
+import { zOrgId, zPermissionGroupId, zUserId } from "../schema/zodHelpers.js";
 import { CAPABILITIES } from "./capability.js";
 
 /**
@@ -31,3 +31,11 @@ export type CreatePermissionGroupInput = z.infer<typeof CreatePermissionGroupInp
 
 export const UpdatePermissionGroupInputSchema = CreatePermissionGroupInputSchema.omit({ id: true }).partial();
 export type UpdatePermissionGroupInput = z.infer<typeof UpdatePermissionGroupInputSchema>;
+
+/** The only input necessary to add a member to a group. Both identifiers
+ * are verified against the current organization by the repository; an id
+ * alone never grants cross-organization access (docs/adr/0026). */
+export const AssignUserToPermissionGroupInputSchema = z.object({
+  userId: zUserId,
+});
+export type AssignUserToPermissionGroupInput = z.infer<typeof AssignUserToPermissionGroupInputSchema>;

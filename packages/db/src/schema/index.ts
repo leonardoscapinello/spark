@@ -9,3 +9,4 @@ export * from "./pipelines.js";
 export * from "./stages.js";
 export * from "./deals.js";
 export * from "./activities.js";
+export * from "./audit-logs.js";

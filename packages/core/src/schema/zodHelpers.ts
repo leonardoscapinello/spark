@@ -32,6 +32,7 @@ import {
   pipelineId as toPipelineId,
   stageId as toStageId,
   activityId as toActivityId,
+  auditLogId as toAuditLogId,
   type OrgId,
   type ContactId,
   type UserId,
@@ -40,6 +41,7 @@ import {
   type PipelineId,
   type StageId,
   type ActivityId,
+  type AuditLogId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -66,6 +68,7 @@ export const zPermissionGroupId = bridged<PermissionGroupId>(toPermissionGroupId
 export const zPipelineId = bridged<PipelineId>(toPipelineId.from);
 export const zStageId = bridged<StageId>(toStageId.from);
 export const zActivityId = bridged<ActivityId>(toActivityId.from);
+export const zAuditLogId = bridged<AuditLogId>(toAuditLogId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

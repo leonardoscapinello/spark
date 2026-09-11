@@ -52,6 +52,93 @@ export interface UserDto {
   deactivatedAt: string | null;
 }
 
+export type PermissionGroupDtoCapabilitiesItem = typeof PermissionGroupDtoCapabilitiesItem[keyof typeof PermissionGroupDtoCapabilitiesItem];
+
+
+export const PermissionGroupDtoCapabilitiesItem = {
+  'contacts:read': 'contacts:read',
+  'contacts:write': 'contacts:write',
+  'permission_groups:manage': 'permission_groups:manage',
+  'pipelines:manage': 'pipelines:manage',
+  'deals:read': 'deals:read',
+  'deals:write': 'deals:write',
+  'deals:move': 'deals:move',
+  'activities:read': 'activities:read',
+  'activities:write': 'activities:write',
+} as const;
+
+export interface PermissionGroupDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  capabilities: PermissionGroupDtoCapabilitiesItem[];
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  createdAt: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  updatedAt: string;
+}
+
+export type CreatePermissionGroupDtoCapabilitiesItem = typeof CreatePermissionGroupDtoCapabilitiesItem[keyof typeof CreatePermissionGroupDtoCapabilitiesItem];
+
+
+export const CreatePermissionGroupDtoCapabilitiesItem = {
+  'contacts:read': 'contacts:read',
+  'contacts:write': 'contacts:write',
+  'permission_groups:manage': 'permission_groups:manage',
+  'pipelines:manage': 'pipelines:manage',
+  'deals:read': 'deals:read',
+  'deals:write': 'deals:write',
+  'deals:move': 'deals:move',
+  'activities:read': 'activities:read',
+  'activities:write': 'activities:write',
+} as const;
+
+export interface CreatePermissionGroupDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  capabilities: CreatePermissionGroupDtoCapabilitiesItem[];
+}
+
+export type UpdatePermissionGroupDtoCapabilitiesItem = typeof UpdatePermissionGroupDtoCapabilitiesItem[keyof typeof UpdatePermissionGroupDtoCapabilitiesItem];
+
+
+export const UpdatePermissionGroupDtoCapabilitiesItem = {
+  'contacts:read': 'contacts:read',
+  'contacts:write': 'contacts:write',
+  'permission_groups:manage': 'permission_groups:manage',
+  'pipelines:manage': 'pipelines:manage',
+  'deals:read': 'deals:read',
+  'deals:write': 'deals:write',
+  'deals:move': 'deals:move',
+  'activities:read': 'activities:read',
+  'activities:write': 'activities:write',
+} as const;
+
+export interface UpdatePermissionGroupDto {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name?: string;
+  capabilities?: UpdatePermissionGroupDtoCapabilitiesItem[];
+}
+
+export interface AssignUserToPermissionGroupDto {
+  /** @minLength 1 */
+  userId: string;
+}
+
 export type CreateContactDtoCustomFields = {[key: string]: unknown};
 
 export interface CreateContactDto {
@@ -815,6 +902,281 @@ export function useMeControllerMe<TData = Awaited<ReturnType<typeof meController
 
 
 
+
+export const permissionGroupsControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<PermissionGroupDto[]>(
+      {url: `/v1/admin/permission-groups`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPermissionGroupsControllerListQueryKey = () => {
+    return [
+    `/v1/admin/permission-groups`
+    ] as const;
+    }
+
+
+export const getPermissionGroupsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPermissionGroupsControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof permissionGroupsControllerList>>> = ({ signal }) => permissionGroupsControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PermissionGroupsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof permissionGroupsControllerList>>>
+export type PermissionGroupsControllerListQueryError = unknown
+
+
+export function usePermissionGroupsControllerList<TData = Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof permissionGroupsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof permissionGroupsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePermissionGroupsControllerList<TData = Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof permissionGroupsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof permissionGroupsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePermissionGroupsControllerList<TData = Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function usePermissionGroupsControllerList<TData = Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof permissionGroupsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPermissionGroupsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const permissionGroupsControllerCreate = (
+    createPermissionGroupDto: CreatePermissionGroupDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<PermissionGroupDto>(
+      {url: `/v1/admin/permission-groups`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createPermissionGroupDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPermissionGroupsControllerCreateMutationKey = () => ['permissionGroupsControllerCreate'] as const;
+
+export const getPermissionGroupsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerCreate>>, TError,PermissionGroupsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerCreate>>, TError,PermissionGroupsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getPermissionGroupsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof permissionGroupsControllerCreate>>, PermissionGroupsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  permissionGroupsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PermissionGroupsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof permissionGroupsControllerCreate>>>
+    export type PermissionGroupsControllerCreateMutationBody = CreatePermissionGroupDto
+    export type PermissionGroupsControllerCreateMutationError = unknown
+    export type PermissionGroupsControllerCreateMutationVariables = {data: CreatePermissionGroupDto}
+
+    export const usePermissionGroupsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerCreate>>, TError,PermissionGroupsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof permissionGroupsControllerCreate>>,
+        TError,
+        PermissionGroupsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPermissionGroupsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const permissionGroupsControllerUpdate = (
+    id: string,
+    updatePermissionGroupDto: UpdatePermissionGroupDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<PermissionGroupDto>(
+      {url: `/v1/admin/permission-groups/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePermissionGroupDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPermissionGroupsControllerUpdateMutationKey = () => ['permissionGroupsControllerUpdate'] as const;
+
+export const getPermissionGroupsControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerUpdate>>, TError,PermissionGroupsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerUpdate>>, TError,PermissionGroupsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getPermissionGroupsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof permissionGroupsControllerUpdate>>, PermissionGroupsControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  permissionGroupsControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PermissionGroupsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof permissionGroupsControllerUpdate>>>
+    export type PermissionGroupsControllerUpdateMutationBody = UpdatePermissionGroupDto
+    export type PermissionGroupsControllerUpdateMutationError = unknown
+    export type PermissionGroupsControllerUpdateMutationVariables = {id: string;data: UpdatePermissionGroupDto}
+
+    export const usePermissionGroupsControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerUpdate>>, TError,PermissionGroupsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof permissionGroupsControllerUpdate>>,
+        TError,
+        PermissionGroupsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPermissionGroupsControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const permissionGroupsControllerAssignUser = (
+    id: string,
+    assignUserToPermissionGroupDto: AssignUserToPermissionGroupDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/admin/permission-groups/${id}/users`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: assignUserToPermissionGroupDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPermissionGroupsControllerAssignUserMutationKey = () => ['permissionGroupsControllerAssignUser'] as const;
+
+export const getPermissionGroupsControllerAssignUserMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerAssignUser>>, TError,PermissionGroupsControllerAssignUserMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerAssignUser>>, TError,PermissionGroupsControllerAssignUserMutationVariables, TContext> => {
+
+const mutationKey = getPermissionGroupsControllerAssignUserMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof permissionGroupsControllerAssignUser>>, PermissionGroupsControllerAssignUserMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  permissionGroupsControllerAssignUser(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PermissionGroupsControllerAssignUserMutationResult = NonNullable<Awaited<ReturnType<typeof permissionGroupsControllerAssignUser>>>
+    export type PermissionGroupsControllerAssignUserMutationBody = AssignUserToPermissionGroupDto
+    export type PermissionGroupsControllerAssignUserMutationError = unknown
+    export type PermissionGroupsControllerAssignUserMutationVariables = {id: string;data: AssignUserToPermissionGroupDto}
+
+    export const usePermissionGroupsControllerAssignUser = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permissionGroupsControllerAssignUser>>, TError,PermissionGroupsControllerAssignUserMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof permissionGroupsControllerAssignUser>>,
+        TError,
+        PermissionGroupsControllerAssignUserMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPermissionGroupsControllerAssignUserMutationOptions(options), queryClient);
+    }
 
 export const contactsControllerCreate = (
     createContactDto: CreateContactDto,

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { eq } from "drizzle-orm";
-import { createDbClient, permissionGroups, userPermissionGroups, type SparkDb } from "@spark/db";
-import { DEFAULT_GROUPS, type Capability, type OrgId, type PermissionGroup, type UserId } from "@spark/core";
+import { and, eq } from "drizzle-orm";
+import { auditLogs, createDbClient, permissionGroups, userPermissionGroups, users, withOrgContext, type SparkDb } from "@spark/db";
+import { DEFAULT_GROUPS, type AuditAction, type Capability, type CreatePermissionGroupInput, type OrgId, type PermissionGroup, type PermissionGroupId, type UpdatePermissionGroupInput, type UserId } from "@spark/core";
 
 /**
  * Admin connection, not withOrgContext — same reason as UsersRepository:
@@ -41,8 +41,58 @@ export class PermissionGroupsRepository {
     return rows.map(toPermissionGroup);
   }
 
+  async list(orgId: OrgId): Promise<PermissionGroup[]> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const rows = await tx.select().from(permissionGroups).where(eq(permissionGroups.orgId, orgId));
+      return rows.map(toPermissionGroup);
+    });
+  }
+
+  async create(orgId: OrgId, actorUserId: UserId, input: CreatePermissionGroupInput): Promise<PermissionGroup> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [row] = await tx.insert(permissionGroups).values({
+        id: input.id,
+        orgId,
+        name: input.name,
+        capabilities: input.capabilities,
+      }).returning();
+      if (!row) throw new Error("Permission group insert returned no row.");
+      const group = toPermissionGroup(row);
+      await this.audit(tx, orgId, actorUserId, "permission_group.created", group.id, { name: group.name, capabilities: group.capabilities });
+      return group;
+    });
+  }
+
+  async update(orgId: OrgId, actorUserId: UserId, id: PermissionGroupId, input: UpdatePermissionGroupInput): Promise<PermissionGroup | null> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [row] = await tx.update(permissionGroups).set({ ...input, updatedAt: new Date() })
+        .where(and(eq(permissionGroups.id, id), eq(permissionGroups.orgId, orgId))).returning();
+      if (!row) return null;
+      const group = toPermissionGroup(row);
+      await this.audit(tx, orgId, actorUserId, "permission_group.updated", group.id, input);
+      return group;
+    });
+  }
+
   async assignGroup(userId: UserId, groupId: PermissionGroup["id"]): Promise<void> {
-    await this.db.insert(userPermissionGroups).values({ orgId: await this.orgIdOfGroup(groupId), userId, groupId });
+    await this.db.insert(userPermissionGroups).values({ orgId: await this.orgIdOfGroup(groupId), userId, groupId }).onConflictDoNothing();
+  }
+
+  async assignUser(orgId: OrgId, actorUserId: UserId, userId: UserId, groupId: PermissionGroupId): Promise<boolean> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [user] = await tx.select({ id: users.id }).from(users)
+        .where(and(eq(users.id, userId), eq(users.orgId, orgId))).limit(1);
+      const [group] = await tx.select({ id: permissionGroups.id }).from(permissionGroups)
+        .where(and(eq(permissionGroups.id, groupId), eq(permissionGroups.orgId, orgId))).limit(1);
+      if (!user || !group) return false;
+      await tx.insert(userPermissionGroups).values({ orgId, userId, groupId }).onConflictDoNothing();
+      await this.audit(tx, orgId, actorUserId, "permission_group.user_assigned", groupId, { userId });
+      return true;
+    });
+  }
+
+  private async audit(tx: SparkDb, orgId: OrgId, actorUserId: UserId, action: AuditAction, targetId: PermissionGroupId, data: Record<string, unknown>): Promise<void> {
+    await tx.insert(auditLogs).values({ orgId, actorUserId, action, targetType: "permission_group", targetId, data });
   }
 
   async getUserCapabilities(userId: UserId): Promise<PermissionGroup[]> {
