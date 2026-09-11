@@ -1,0 +1,10 @@
+.page { display: grid; gap: var(--space-6); padding: var(--space-8); }
+.toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(var(--ui-menuWidth), auto) auto; align-items: center; gap: var(--space-3); }
+.toolbar > span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); white-space: nowrap; }
+.fileName { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.fileName > span:last-child { display: grid; min-width: 0; }
+.fileName strong, .fileName small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fileName small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.fileIcon { display: grid; place-items: center; flex: 0 0 var(--space-9); width: var(--space-9); height: var(--space-9); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
+.fileIcon svg { width: var(--space-4); height: var(--space-4); }
+@media (max-width: 720px) { .page { padding: var(--space-4); } .toolbar { grid-template-columns: 1fr; } }

@@ -30,6 +30,7 @@ export type AutomationStepId = Id<"AutomationStep">;
 export type AutomationTimerId = Id<"AutomationTimer">;
 export type AutomationJobId = Id<"AutomationJob">;
 export type IntegrationConnectionId = Id<"IntegrationConnection">;
+export type FileId = Id<"File">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -74,3 +75,4 @@ export const automationStepId = makeIdFactory("AutomationStep");
 export const automationTimerId = makeIdFactory("AutomationTimer");
 export const automationJobId = makeIdFactory("AutomationJob");
 export const integrationConnectionId = makeIdFactory("IntegrationConnection");
+export const fileId = makeIdFactory("File");

@@ -17,6 +17,10 @@ const paths = {
   menu: "M2 3h12M2 8h12M2 13h12",
   star: "m8 1.5 2 4 4.5.6-3.2 3.1.8 4.4L8 11l-4 2.3.8-4.4-3.2-3.1 4.5-.6 2-4Z",
   message: "M2 2.5h12v8H6l-4 3v-11Z",
+  upload: "M8 11V2m0 0L4.5 5.5M8 2l3.5 3.5M2 10v4h12v-4",
+  download: "M8 2v9m0 0 3.5-3.5M8 11 4.5 7.5M2 14h12",
+  trash: "M3 4h10M6 4V2h4v2m2 0-.6 10H4.6L4 4m3 3v4m2-4v4",
+  file: "M4 1h5l3 3v11H4V1Zm5 0v3h3",
 } as const;
 export type IconName = keyof typeof paths;
 export function Icon({ name, ...props }: { name: IconName } & Omit<ComponentProps<"svg">, "children">) {

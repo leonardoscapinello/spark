@@ -1,0 +1,7 @@
+.root { display: grid; place-items: center; gap: var(--space-2); min-height: calc(var(--space-16) * 2.5); padding: var(--space-6); border: var(--ui-hairline) dashed var(--color-lineStrong); border-radius: var(--radius-lg); background: var(--color-surface); color: var(--color-ink); cursor: pointer; text-align: center; transition: border-color var(--motion-duration-fast) var(--motion-ease-out), background var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out); }
+.root:hover, .root[data-dragging] { border-color: var(--color-accent); background: var(--color-accentWash); transform: translateY(calc(var(--ui-hairline) * -1)); }
+.root[data-disabled] { cursor: not-allowed; opacity: .55; transform: none; }
+.input { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.icon { display: grid; place-items: center; inline-size: var(--space-10); block-size: var(--space-10); border-radius: var(--radius-full); background: var(--color-accentWash); color: var(--color-accent); }
+.icon svg { inline-size: var(--space-5); block-size: var(--space-5); }
+.root small { color: var(--color-inkMuted); }

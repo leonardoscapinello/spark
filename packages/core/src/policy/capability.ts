@@ -25,6 +25,8 @@ export const CAPABILITIES = [
   "automations:publish",
   "integrations:read",
   "integrations:manage",
+  "files:read",
+  "files:write",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

@@ -11,5 +11,5 @@ import { IntegrationsRepository } from "./infrastructure/integrations.repository
 import { IntegrationProviderRegistry } from "./infrastructure/provider-registry.service.js";
 import { SecretVault } from "./infrastructure/secret-vault.service.js";
 import { IntegrationsController } from "./presentation/integrations.controller.js";
-@Module({ imports: [EventsModule], controllers: [IntegrationsController], providers: [UpsertIntegrationUseCase, CheckIntegrationUseCase, UpdateIntegrationStatusUseCase, IntegrationsRepository, IntegrationProviderRegistry, SecretVault, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard] })
+@Module({ imports: [EventsModule], controllers: [IntegrationsController], providers: [UpsertIntegrationUseCase, CheckIntegrationUseCase, UpdateIntegrationStatusUseCase, IntegrationsRepository, IntegrationProviderRegistry, SecretVault, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard], exports: [SecretVault] })
 export class IntegrationsModule {}

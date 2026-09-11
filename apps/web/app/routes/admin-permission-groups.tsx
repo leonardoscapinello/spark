@@ -33,6 +33,8 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "automations:publish": "Publicar automações",
   "integrations:read": "Ver integrações",
   "integrations:manage": "Configurar integrações",
+  "files:read": "Ver arquivos",
+  "files:write": "Enviar e excluir arquivos",
 };
 
 export async function clientLoader() {

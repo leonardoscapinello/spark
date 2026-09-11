@@ -11,6 +11,7 @@ import { EventsModule } from "./modules/events/events.module.js";
 import { InboxModule } from "./modules/inbox/inbox.module.js";
 import { AutomationsModule } from "./modules/automations/automations.module.js";
 import { IntegrationsModule } from "./modules/integrations/integrations.module.js";
+import { FilesModule } from "./modules/files/files.module.js";
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { IntegrationsModule } from "./modules/integrations/integrations.module.j
     InboxModule,
     AutomationsModule,
     IntegrationsModule,
+    FilesModule,
   ],
 })
 export class AppModule {}

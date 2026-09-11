@@ -36,6 +36,9 @@ const TITLES: Record<DomainEventType, string> = {
   "integration.checked": "Conexão da integração verificada",
   "integration.disabled": "Integração desabilitada",
   "integration.enabled": "Integração habilitada",
+  "file.upload_requested": "Envio de arquivo iniciado",
+  "file.upload_completed": "Arquivo enviado",
+  "file.deleted": "Arquivo excluído",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

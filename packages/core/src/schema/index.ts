@@ -14,3 +14,4 @@ export * from "./team.js";
 export * from "./inbox.js";
 export * from "./automation.js";
 export * from "./integration.js";
+export * from "./file.js";

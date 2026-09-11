@@ -13,6 +13,7 @@ export default [
     route("automations", "routes/automations.tsx"),
     route("automations/:automationId", "routes/automation-builder.tsx"),
     route("integrations", "routes/integrations.tsx"),
+    route("files", "routes/files.tsx"),
     route("contacts/import", "routes/contact-import.tsx"),
     route("contacts/:contactId", "routes/contact-detail.tsx"),
     route("companies", "routes/companies.tsx"),
