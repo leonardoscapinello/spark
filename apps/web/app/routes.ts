@@ -11,5 +11,6 @@ export default [
     route("contacts/:contactId", "routes/contact-detail.tsx"),
     route("deals", "routes/deals.tsx"),
     route("admin/users", "routes/admin-users.tsx"),
+    route("admin/permission-groups", "routes/admin-permission-groups.tsx"),
   ]),
 ] satisfies RouteConfig;

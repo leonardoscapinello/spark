@@ -52,3 +52,4 @@ export { TableActions, TableIconAction, type TableIconActionProps } from "./Data
 export { FeedbackButton, type FeedbackButtonProps, type FeedbackState } from "./Button/FeedbackButton.js";
 
 export { CashPiece, type CashPieceProps } from "./ChangeCalculator/CashPiece.js";
+export { PageHeader, type PageHeaderProps } from "./PageHeader/PageHeader.js";

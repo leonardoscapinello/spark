@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { permissionGroupsControllerList, usersControllerInvite, usersControllerList, type AdminUserDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Button, DataTable, Field, Input, Label, Select, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Button, DataTable, Field, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -57,14 +57,12 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Administração</p>
-          <h1>Usuários</h1>
-          <p>Controle quem acessa o sistema e quais permissões cada pessoa recebe.</p>
-        </div>
-        <Button onClick={() => setModalOpen(true)}>Convidar usuário</Button>
-      </header>
+      <PageHeader
+        eyebrow="Administração"
+        title="Usuários"
+        description="Controle quem acessa o sistema e quais permissões cada pessoa recebe."
+        actions={<Button onClick={() => setModalOpen(true)}>Convidar usuário</Button>}
+      />
 
       {lastInvited && <p className={styles.feedback} role="status">Convite enviado para {lastInvited}.</p>}
 

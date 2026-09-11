@@ -43,7 +43,12 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           </Link>
           {session.capabilities.includes("users:manage") && (
             <Link to="/admin/users" className={styles.navItem}>
-              Administração
+              Usuários
+            </Link>
+          )}
+          {session.capabilities.includes("permission_groups:manage") && (
+            <Link to="/admin/permission-groups" className={styles.navItem}>
+              Permissões
             </Link>
           )}
         </nav>
