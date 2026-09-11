@@ -83,6 +83,8 @@ export const CurrentUserDtoCapabilitiesItem = {
   'campaigns:read': 'campaigns:read',
   'campaigns:write': 'campaigns:write',
   'settings:manage': 'settings:manage',
+  'pages:read': 'pages:read',
+  'pages:write': 'pages:write',
 } as const;
 
 export interface CurrentUserDto {
@@ -144,6 +146,8 @@ export const PermissionGroupDtoCapabilitiesItem = {
   'campaigns:read': 'campaigns:read',
   'campaigns:write': 'campaigns:write',
   'settings:manage': 'settings:manage',
+  'pages:read': 'pages:read',
+  'pages:write': 'pages:write',
 } as const;
 
 export interface PermissionGroupDto {
@@ -198,6 +202,8 @@ export const CreatePermissionGroupDtoCapabilitiesItem = {
   'campaigns:read': 'campaigns:read',
   'campaigns:write': 'campaigns:write',
   'settings:manage': 'settings:manage',
+  'pages:read': 'pages:read',
+  'pages:write': 'pages:write',
 } as const;
 
 export interface CreatePermissionGroupDto {
@@ -246,6 +252,8 @@ export const UpdatePermissionGroupDtoCapabilitiesItem = {
   'campaigns:read': 'campaigns:read',
   'campaigns:write': 'campaigns:write',
   'settings:manage': 'settings:manage',
+  'pages:read': 'pages:read',
+  'pages:write': 'pages:write',
 } as const;
 
 export interface UpdatePermissionGroupDto {
@@ -3744,6 +3752,220 @@ export interface CustomFieldWriteResponseDto {
 
 export interface ArchiveCustomFieldDto {
   archived: boolean;
+}
+
+export interface CreatePageDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @pattern ^[a-z0-9]+(?:-[a-z0-9]+)*$
+     */
+  slug: string;
+}
+
+export type PageWriteResponseDtoPageStatus = typeof PageWriteResponseDtoPageStatus[keyof typeof PageWriteResponseDtoPageStatus];
+
+
+export const PageWriteResponseDtoPageStatus = {
+  draft: 'draft',
+  published: 'published',
+  archived: 'archived',
+} as const;
+
+export type PageWriteResponseDtoPageDraftTreeBlocksItem = {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'hero';
+  props: {
+  /** @maxLength 100 */
+  eyebrow: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /** @maxLength 1000 */
+  text: string;
+  align: 'left' | 'center';
+};
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'text';
+  props: {
+  /** @maxLength 200 */
+  heading: string;
+  /** @maxLength 5000 */
+  text: string;
+  align: 'left' | 'center';
+};
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'image';
+  props: {
+  url: string;
+  /** @maxLength 300 */
+  alt: string;
+};
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'button';
+  props: {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  url: string;
+  align: 'left' | 'center';
+};
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'spacer';
+  props: {
+  size: 'small' | 'medium' | 'large';
+};
+};
+
+export type PageWriteResponseDtoPageDraftTree = {
+  /** @maxItems 100 */
+  blocks: PageWriteResponseDtoPageDraftTreeBlocksItem[];
+};
+
+export type PageWriteResponseDtoPage = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  slug: string;
+  /** @minLength 20 */
+  publicKey: string;
+  status: PageWriteResponseDtoPageStatus;
+  draftTree: PageWriteResponseDtoPageDraftTree;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  publishedVersionId: string | null;
+  publishedAt: string | null;
+  /** @minLength 1 */
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface PageWriteResponseDto {
+  page: PageWriteResponseDtoPage;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdatePageDtoDraftTreeBlocksItem = {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'hero';
+  props: {
+  /** @maxLength 100 */
+  eyebrow: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /** @maxLength 1000 */
+  text: string;
+  align: 'left' | 'center';
+};
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'text';
+  props: {
+  /** @maxLength 200 */
+  heading: string;
+  /** @maxLength 5000 */
+  text: string;
+  align: 'left' | 'center';
+};
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'image';
+  props: {
+  url: string;
+  /** @maxLength 300 */
+  alt: string;
+};
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'button';
+  props: {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  url: string;
+  align: 'left' | 'center';
+};
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  type: 'spacer';
+  props: {
+  size: 'small' | 'medium' | 'large';
+};
+};
+
+export type UpdatePageDtoDraftTree = {
+  /** @maxItems 100 */
+  blocks: UpdatePageDtoDraftTreeBlocksItem[];
+};
+
+export interface UpdatePageDto {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name?: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @pattern ^[a-z0-9]+(?:-[a-z0-9]+)*$
+     */
+  slug?: string;
+  draftTree?: UpdatePageDtoDraftTree;
+}
+
+export interface PublicPageDto {
+  name: string;
+  html: string;
+  publicKey: string;
 }
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -8175,3 +8397,269 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getSettingsControllerArchiveMutationOptions(options), queryClient);
     }
+
+export const pagesControllerCreate = (
+    createPageDto: CreatePageDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<PageWriteResponseDto>(
+      {url: `/v1/pages`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createPageDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPagesControllerCreateMutationKey = () => ['pagesControllerCreate'] as const;
+
+export const getPagesControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pagesControllerCreate>>, TError,PagesControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof pagesControllerCreate>>, TError,PagesControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getPagesControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof pagesControllerCreate>>, PagesControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  pagesControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PagesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof pagesControllerCreate>>>
+    export type PagesControllerCreateMutationBody = CreatePageDto
+    export type PagesControllerCreateMutationError = unknown
+    export type PagesControllerCreateMutationVariables = {data: CreatePageDto}
+
+    export const usePagesControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pagesControllerCreate>>, TError,PagesControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof pagesControllerCreate>>,
+        TError,
+        PagesControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPagesControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const pagesControllerUpdate = (
+    id: string,
+    updatePageDto: UpdatePageDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<PageWriteResponseDto>(
+      {url: `/v1/pages/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePageDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPagesControllerUpdateMutationKey = () => ['pagesControllerUpdate'] as const;
+
+export const getPagesControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pagesControllerUpdate>>, TError,PagesControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof pagesControllerUpdate>>, TError,PagesControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getPagesControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof pagesControllerUpdate>>, PagesControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  pagesControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PagesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof pagesControllerUpdate>>>
+    export type PagesControllerUpdateMutationBody = UpdatePageDto
+    export type PagesControllerUpdateMutationError = unknown
+    export type PagesControllerUpdateMutationVariables = {id: string;data: UpdatePageDto}
+
+    export const usePagesControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pagesControllerUpdate>>, TError,PagesControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof pagesControllerUpdate>>,
+        TError,
+        PagesControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPagesControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const pagesControllerPublish = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<PageWriteResponseDto>(
+      {url: `/v1/pages/${id}/publish`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPagesControllerPublishMutationKey = () => ['pagesControllerPublish'] as const;
+
+export const getPagesControllerPublishMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pagesControllerPublish>>, TError,PagesControllerPublishMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof pagesControllerPublish>>, TError,PagesControllerPublishMutationVariables, TContext> => {
+
+const mutationKey = getPagesControllerPublishMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof pagesControllerPublish>>, PagesControllerPublishMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  pagesControllerPublish(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PagesControllerPublishMutationResult = NonNullable<Awaited<ReturnType<typeof pagesControllerPublish>>>
+
+    export type PagesControllerPublishMutationError = unknown
+    export type PagesControllerPublishMutationVariables = {id: string}
+
+    export const usePagesControllerPublish = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pagesControllerPublish>>, TError,PagesControllerPublishMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof pagesControllerPublish>>,
+        TError,
+        PagesControllerPublishMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPagesControllerPublishMutationOptions(options), queryClient);
+    }
+
+export const publicPagesControllerGet = (
+    publicKey: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<PublicPageDto>(
+      {url: `/v1/public/pages/${publicKey}`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPublicPagesControllerGetQueryKey = (publicKey: string,) => {
+    return [
+    `/v1/public/pages/${publicKey}`
+    ] as const;
+    }
+
+
+export const getPublicPagesControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof publicPagesControllerGet>>, TError = unknown>(publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicPagesControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPublicPagesControllerGetQueryKey(publicKey);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof publicPagesControllerGet>>> = ({ signal }) => publicPagesControllerGet(publicKey, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: publicKey !== null && publicKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof publicPagesControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PublicPagesControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof publicPagesControllerGet>>>
+export type PublicPagesControllerGetQueryError = unknown
+
+
+export function usePublicPagesControllerGet<TData = Awaited<ReturnType<typeof publicPagesControllerGet>>, TError = unknown>(
+ publicKey: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicPagesControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicPagesControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof publicPagesControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicPagesControllerGet<TData = Awaited<ReturnType<typeof publicPagesControllerGet>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicPagesControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicPagesControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof publicPagesControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicPagesControllerGet<TData = Awaited<ReturnType<typeof publicPagesControllerGet>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicPagesControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function usePublicPagesControllerGet<TData = Awaited<ReturnType<typeof publicPagesControllerGet>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicPagesControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPublicPagesControllerGetQueryOptions(publicKey,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

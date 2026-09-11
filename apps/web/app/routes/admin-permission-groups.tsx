@@ -57,6 +57,8 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "campaigns:read": "Ver campanhas e públicos",
   "campaigns:write": "Criar e enviar campanhas",
   "settings:manage": "Gerenciar configurações e campos",
+  "pages:read": "Ver páginas e versões",
+  "pages:write": "Criar, editar e publicar páginas",
 };
 
 export async function clientLoader() {

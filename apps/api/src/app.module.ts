@@ -18,6 +18,7 @@ import { EmailVerificationModule } from "./modules/email-verification/email-veri
 import { SocialModule } from "./modules/social/social.module.js";
 import { CampaignsModule } from "./modules/campaigns/campaigns.module.js";
 import { SettingsModule } from "./modules/settings/settings.module.js";
+import { PagesModule } from "./modules/pages/pages.module.js";
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { SettingsModule } from "./modules/settings/settings.module.js";
     SocialModule,
     CampaignsModule,
     SettingsModule,
+    PagesModule,
   ],
 })
 export class AppModule {}

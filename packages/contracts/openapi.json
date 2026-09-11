@@ -2648,6 +2648,152 @@
           "settings"
         ]
       }
+    },
+    "/v1/pages": {
+      "post": {
+        "operationId": "PagesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pages"
+        ]
+      }
+    },
+    "/v1/pages/{id}": {
+      "patch": {
+        "operationId": "PagesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pages"
+        ]
+      }
+    },
+    "/v1/pages/{id}/publish": {
+      "post": {
+        "operationId": "PagesController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pages"
+        ]
+      }
+    },
+    "/v1/public/pages/{publicKey}": {
+      "get": {
+        "operationId": "PublicPagesController_get",
+        "parameters": [
+          {
+            "name": "publicKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPageDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public-pages"
+        ]
+      }
     }
   },
   "info": {
@@ -2913,7 +3059,9 @@
                 "social:write",
                 "campaigns:read",
                 "campaigns:write",
-                "settings:manage"
+                "settings:manage",
+                "pages:read",
+                "pages:write"
               ]
             }
           }
@@ -2984,7 +3132,9 @@
                 "social:write",
                 "campaigns:read",
                 "campaigns:write",
-                "settings:manage"
+                "settings:manage",
+                "pages:read",
+                "pages:write"
               ]
             }
           },
@@ -3055,7 +3205,9 @@
                 "social:write",
                 "campaigns:read",
                 "campaigns:write",
-                "settings:manage"
+                "settings:manage",
+                "pages:read",
+                "pages:write"
               ]
             }
           }
@@ -3109,7 +3261,9 @@
                 "social:write",
                 "campaigns:read",
                 "campaigns:write",
-                "settings:manage"
+                "settings:manage",
+                "pages:read",
+                "pages:write"
               ]
             }
           }
@@ -9775,6 +9929,650 @@
         },
         "required": [
           "archived"
+        ]
+      },
+      "CreatePageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "PageWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "slug": {
+                "type": "string",
+                "minLength": 1
+              },
+              "publicKey": {
+                "type": "string",
+                "minLength": 20
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "published",
+                  "archived"
+                ]
+              },
+              "draftTree": {
+                "type": "object",
+                "properties": {
+                  "blocks": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "hero"
+                              ]
+                            },
+                            "props": {
+                              "type": "object",
+                              "properties": {
+                                "eyebrow": {
+                                  "type": "string",
+                                  "maxLength": 100
+                                },
+                                "title": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "text": {
+                                  "type": "string",
+                                  "maxLength": 1000
+                                },
+                                "align": {
+                                  "type": "string",
+                                  "enum": [
+                                    "left",
+                                    "center"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "eyebrow",
+                                "title",
+                                "text",
+                                "align"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "props"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text"
+                              ]
+                            },
+                            "props": {
+                              "type": "object",
+                              "properties": {
+                                "heading": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                },
+                                "text": {
+                                  "type": "string",
+                                  "maxLength": 5000
+                                },
+                                "align": {
+                                  "type": "string",
+                                  "enum": [
+                                    "left",
+                                    "center"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "heading",
+                                "text",
+                                "align"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "props"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image"
+                              ]
+                            },
+                            "props": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                "alt": {
+                                  "type": "string",
+                                  "maxLength": 300
+                                }
+                              },
+                              "required": [
+                                "url",
+                                "alt"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "props"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "button"
+                              ]
+                            },
+                            "props": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 80
+                                },
+                                "url": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 2000
+                                },
+                                "align": {
+                                  "type": "string",
+                                  "enum": [
+                                    "left",
+                                    "center"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "label",
+                                "url",
+                                "align"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "props"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "spacer"
+                              ]
+                            },
+                            "props": {
+                              "type": "object",
+                              "properties": {
+                                "size": {
+                                  "type": "string",
+                                  "enum": [
+                                    "small",
+                                    "medium",
+                                    "large"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "size"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "props"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "blocks"
+                ]
+              },
+              "publishedVersionId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "publishedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              },
+              "createdBy": {
+                "type": "string",
+                "minLength": 1
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "name",
+              "slug",
+              "publicKey",
+              "status",
+              "draftTree",
+              "publishedVersionId",
+              "publishedAt",
+              "createdBy",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "page",
+          "txid"
+        ]
+      },
+      "UpdatePageDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "draftTree": {
+            "type": "object",
+            "properties": {
+              "blocks": {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "hero"
+                          ]
+                        },
+                        "props": {
+                          "type": "object",
+                          "properties": {
+                            "eyebrow": {
+                              "type": "string",
+                              "maxLength": 100
+                            },
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "text": {
+                              "type": "string",
+                              "maxLength": 1000
+                            },
+                            "align": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "center"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "eyebrow",
+                            "title",
+                            "text",
+                            "align"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "props"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text"
+                          ]
+                        },
+                        "props": {
+                          "type": "object",
+                          "properties": {
+                            "heading": {
+                              "type": "string",
+                              "maxLength": 200
+                            },
+                            "text": {
+                              "type": "string",
+                              "maxLength": 5000
+                            },
+                            "align": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "center"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "heading",
+                            "text",
+                            "align"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "props"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "image"
+                          ]
+                        },
+                        "props": {
+                          "type": "object",
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "alt": {
+                              "type": "string",
+                              "maxLength": 300
+                            }
+                          },
+                          "required": [
+                            "url",
+                            "alt"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "props"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "button"
+                          ]
+                        },
+                        "props": {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 80
+                            },
+                            "url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            },
+                            "align": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "center"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "label",
+                            "url",
+                            "align"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "props"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "spacer"
+                          ]
+                        },
+                        "props": {
+                          "type": "object",
+                          "properties": {
+                            "size": {
+                              "type": "string",
+                              "enum": [
+                                "small",
+                                "medium",
+                                "large"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "size"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "props"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "blocks"
+            ]
+          }
+        }
+      },
+      "PublicPageDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          },
+          "publicKey": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "html",
+          "publicKey"
         ]
       }
     }

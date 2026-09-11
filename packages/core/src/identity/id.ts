@@ -43,6 +43,8 @@ export type CampaignId = Id<"Campaign">;
 export type CampaignRecipientId = Id<"CampaignRecipient">;
 export type EmailSuppressionId = Id<"EmailSuppression">;
 export type CustomFieldDefinitionId = Id<"CustomFieldDefinition">;
+export type PageId = Id<"Page">;
+export type PageVersionId = Id<"PageVersion">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -100,3 +102,5 @@ export const campaignId = makeIdFactory("Campaign");
 export const campaignRecipientId = makeIdFactory("CampaignRecipient");
 export const emailSuppressionId = makeIdFactory("EmailSuppression");
 export const customFieldDefinitionId = makeIdFactory("CustomFieldDefinition");
+export const pageId = makeIdFactory("Page");
+export const pageVersionId = makeIdFactory("PageVersion");

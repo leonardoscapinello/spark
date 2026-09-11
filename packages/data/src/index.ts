@@ -21,3 +21,4 @@ export * from "./forms-collections.js";
 export * from "./social-collections.js";
 export * from "./campaign-collections.js";
 export * from "./custom-fields-collection.js";
+export * from "./pages-collections.js";

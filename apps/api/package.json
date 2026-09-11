@@ -37,6 +37,7 @@
     "@opentelemetry/exporter-trace-otlp-http": "^0.222.0",
     "@opentelemetry/sdk-node": "^0.222.0",
     "@spark/core": "workspace:*",
+    "@spark/blocks": "workspace:*",
     "@spark/db": "workspace:*",
     "@spark/storage": "workspace:^",
     "@supabase/supabase-js": "^2.116.0",

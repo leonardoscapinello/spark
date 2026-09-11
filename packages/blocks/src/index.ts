@@ -1,4 +1,20 @@
-// Blocos de página — mesmo render no editor e na publicação (ADR-0023).
-// Esqueleto — Bloco 1 da Fase 0. Conteúdo real chega nos blocos seguintes.
-
-export const PACKAGE_NAME = "@spark/blocks" as const;
+export type PageBlock =
+  | { id: string; type: "hero"; props: { eyebrow: string; title: string; text: string; align: "left" | "center" } }
+  | { id: string; type: "text"; props: { heading: string; text: string; align: "left" | "center" } }
+  | { id: string; type: "image"; props: { url: string; alt: string } }
+  | { id: string; type: "button"; props: { label: string; url: string; align: "left" | "center" } }
+  | { id: string; type: "spacer"; props: { size: "small" | "medium" | "large" } };
+export interface PageTree { blocks: PageBlock[] }
+export const BLOCK_CATALOG = [
+  { type: "hero", label: "Destaque", description: "Título, chamada e texto de abertura" },
+  { type: "text", label: "Texto", description: "Seção de conteúdo" },
+  { type: "image", label: "Imagem", description: "Imagem responsiva com texto alternativo" },
+  { type: "button", label: "Botão", description: "Chamada para uma ação" },
+  { type: "spacer", label: "Espaço", description: "Respiro vertical entre blocos" },
+] as const;
+export function defaultBlock(type: PageBlock["type"], id: string): PageBlock { if (type === "hero") return { id, type, props: { eyebrow: "Bem-vindo", title: "Uma página feita para converter", text: "Apresente sua proposta com clareza.", align: "center" } }; if (type === "text") return { id, type, props: { heading: "Conteúdo", text: "Escreva aqui sua mensagem.", align: "left" } }; if (type === "image") return { id, type, props: { url: "https://images.unsplash.com/photo-1497366754035-f200968a6e72", alt: "Ambiente de trabalho" } }; if (type === "button") return { id, type, props: { label: "Quero saber mais", url: "#", align: "center" } }; return { id, type, props: { size: "medium" } }; }
+export function renderPageBody(tree: PageTree): string { return tree.blocks.map(renderBlock).join(""); }
+export function renderPageDocument(tree: PageTree, title: string): string { return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title><style>${PAGE_CSS}</style></head><body><main>${renderPageBody(tree)}</main></body></html>`; }
+function renderBlock(block: PageBlock): string { if (block.type === "hero") return `<section class="b hero ${block.props.align}"><small>${escapeHtml(block.props.eyebrow)}</small><h1>${escapeHtml(block.props.title)}</h1><p>${escapeHtml(block.props.text)}</p></section>`; if (block.type === "text") return `<section class="b text ${block.props.align}"><h2>${escapeHtml(block.props.heading)}</h2><p>${escapeHtml(block.props.text).replace(/\n/g, "<br>")}</p></section>`; if (block.type === "image") return `<figure class="b image"><img src="${escapeAttr(block.props.url)}" alt="${escapeAttr(block.props.alt)}" loading="lazy"></figure>`; if (block.type === "button") return `<section class="b action ${block.props.align}"><a href="${escapeAttr(block.props.url)}">${escapeHtml(block.props.label)}</a></section>`; return `<div class="spacer ${block.props.size}" aria-hidden="true"></div>`; }
+const PAGE_CSS = `:root{color-scheme:light;--ink:#18181b;--muted:#62646a;--accent:#2355e8;--surface:#fff}*{box-sizing:border-box}body{margin:0;background:var(--surface);color:var(--ink);font:16px/1.55 Inter,ui-sans-serif,system-ui,sans-serif}main{overflow:hidden}.b{width:min(100% - 40px,1080px);margin-inline:auto}.hero{padding:96px 0 56px}.hero small{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.08em}.hero h1{max-width:820px;margin:12px auto 16px;font-size:clamp(42px,7vw,76px);line-height:1.02;letter-spacing:-.045em}.hero p,.text p{color:var(--muted);font-size:clamp(18px,2vw,22px)}.text{padding:36px 0}.text h2{font-size:clamp(28px,4vw,44px);line-height:1.1}.center{text-align:center}.image{padding:24px 0}.image img{display:block;width:100%;max-height:680px;object-fit:cover;border-radius:20px}.action{padding:24px 0}.action a{display:inline-flex;padding:13px 20px;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;text-decoration:none}.spacer.small{height:24px}.spacer.medium{height:56px}.spacer.large{height:96px}@media(max-width:640px){.hero{padding-top:64px}.b{width:min(100% - 28px,1080px)}}`;
+function escapeHtml(value: string) { return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char); } function escapeAttr(value: string) { return escapeHtml(value).replace(/`/g, "&#96;"); }

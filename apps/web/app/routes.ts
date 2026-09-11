@@ -2,6 +2,7 @@ import { type RouteConfig, index, layout, route } from "@react-router/dev/routes
 
 export default [
   route("f/:publicKey", "routes/public-form.tsx"),
+  route("p/:publicKey", "routes/public-page.tsx"),
   layout("routes/auth-layout.tsx", [
     route("login", "routes/login.tsx"),
     route("forgot-password", "routes/forgot-password.tsx"),
@@ -21,6 +22,8 @@ export default [
     route("social", "routes/social.tsx"),
     route("campaigns", "routes/campaigns.tsx"),
     route("settings", "routes/settings.tsx"),
+    route("pages", "routes/pages.tsx"),
+    route("pages/:pageId", "routes/page-builder.tsx"),
     route("contacts/import", "routes/contact-import.tsx"),
     route("contacts/:contactId", "routes/contact-detail.tsx"),
     route("companies", "routes/companies.tsx"),

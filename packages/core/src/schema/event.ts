@@ -71,6 +71,9 @@ export const DOMAIN_EVENT_TYPES = [
   "campaign.sent",
   "custom_field.created",
   "custom_field.archived",
+  "page.created",
+  "page.updated",
+  "page.published",
 ] as const;
 export const DomainEventTypeSchema = z.enum(DOMAIN_EVENT_TYPES);
 export type DomainEventType = z.infer<typeof DomainEventTypeSchema>;

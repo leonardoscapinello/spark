@@ -36,6 +36,8 @@ export const CAPABILITIES = [
   "campaigns:read",
   "campaigns:write",
   "settings:manage",
+  "pages:read",
+  "pages:write",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];

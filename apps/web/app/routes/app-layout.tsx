@@ -92,6 +92,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {session.capabilities.includes("campaigns:read") && (
             <Link to="/campaigns" className={styles.navItem}>Campanhas</Link>
           )}
+          {session.capabilities.includes("pages:read") && (
+            <Link to="/pages" className={styles.navItem}>Páginas</Link>
+          )}
           <Link to="/security" className={styles.navItem}>Segurança</Link>
           {session.capabilities.includes("settings:manage") && (
             <Link to="/settings" className={styles.navItem}>Configurações</Link>

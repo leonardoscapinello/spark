@@ -17,6 +17,7 @@
     "@react-router/node": "8.3.1",
     "@react-router/serve": "8.3.1",
     "@spark/api-client": "workspace:*",
+    "@spark/blocks": "workspace:*",
     "@spark/core": "workspace:*",
     "@spark/data": "workspace:*",
     "@spark/tokens": "workspace:*",

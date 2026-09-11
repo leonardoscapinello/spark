@@ -30,6 +30,8 @@ export const SYNC_RESOURCES = [
   "campaigns",
   "campaign_recipients",
   "custom_field_definitions",
+  "pages",
+  "page_versions",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
@@ -63,6 +65,8 @@ const READ_REQUIREMENTS: Record<
   campaigns: ["campaigns:read"],
   campaign_recipients: ["campaigns:read"],
   custom_field_definitions: ["contacts:read", "companies:read", "deals:read"],
+  pages: ["pages:read"],
+  page_versions: ["pages:read"],
 };
 
 const DIRECTORY_READERS: readonly Capability[] = [
@@ -78,6 +82,7 @@ const DIRECTORY_READERS: readonly Capability[] = [
   "social:read",
   "campaigns:read",
   "settings:manage",
+  "pages:read",
   "users:manage",
 ];
 
@@ -108,5 +113,6 @@ export function readableEventPrefixes(capabilities: readonly Capability[]): stri
   if (capabilities.includes("social:read")) prefixes.push("social");
   if (capabilities.includes("campaigns:read")) prefixes.push("campaign", "audience");
   if (capabilities.includes("settings:manage")) prefixes.push("custom_field");
+  if (capabilities.includes("pages:read")) prefixes.push("page");
   return prefixes;
 }
