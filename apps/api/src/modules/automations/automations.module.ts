@@ -8,8 +8,9 @@ import { CreateAutomationUseCase } from "./application/create-automation.usecase
 import { PublishAutomationUseCase } from "./application/publish-automation.usecase.js";
 import { UpdateAutomationDraftUseCase } from "./application/update-automation-draft.usecase.js";
 import { UpdateAutomationStatusUseCase } from "./application/update-automation-status.usecase.js";
+import { StartAutomationRunUseCase } from "./application/start-automation-run.usecase.js";
 import { AutomationsRepository } from "./infrastructure/automations.repository.js";
 import { AutomationsController } from "./presentation/automations.controller.js";
 
-@Module({ imports: [EventsModule], controllers: [AutomationsController], providers: [CreateAutomationUseCase, UpdateAutomationDraftUseCase, UpdateAutomationStatusUseCase, PublishAutomationUseCase, AutomationsRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard] })
+@Module({ imports: [EventsModule], controllers: [AutomationsController], providers: [CreateAutomationUseCase, UpdateAutomationDraftUseCase, UpdateAutomationStatusUseCase, PublishAutomationUseCase, StartAutomationRunUseCase, AutomationsRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard] })
 export class AutomationsModule {}

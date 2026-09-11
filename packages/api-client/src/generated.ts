@@ -2234,6 +2234,59 @@ export interface AutomationPublishResponseDto {
   txid: number;
 }
 
+export type StartAutomationRunDtoContext = {[key: string]: unknown};
+
+export interface StartAutomationRunDto {
+  /** @minLength 1 */
+  contactId: string;
+  context?: StartAutomationRunDtoContext;
+}
+
+export type StartAutomationRunResponseDtoRunStatus = typeof StartAutomationRunResponseDtoRunStatus[keyof typeof StartAutomationRunResponseDtoRunStatus];
+
+
+export const StartAutomationRunResponseDtoRunStatus = {
+  queued: 'queued',
+  running: 'running',
+  waiting: 'waiting',
+  completed: 'completed',
+  failed: 'failed',
+  cancelled: 'cancelled',
+} as const;
+
+export type StartAutomationRunResponseDtoRunContext = {[key: string]: unknown};
+
+export type StartAutomationRunResponseDtoRun = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  automationId: string;
+  /** @minLength 1 */
+  versionId: string;
+  /** @minLength 1 */
+  contactId: string;
+  status: StartAutomationRunResponseDtoRunStatus;
+  /** @nullable */
+  currentNodeId: string | null;
+  context: StartAutomationRunResponseDtoRunContext;
+  /** @nullable */
+  error: string | null;
+  startedAt: string;
+  completedAt: string | null;
+  updatedAt: string;
+};
+
+export interface StartAutomationRunResponseDto {
+  run: StartAutomationRunResponseDtoRun;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
@@ -4819,4 +4872,67 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getAutomationsControllerPublishMutationOptions(options), queryClient);
+    }
+
+export const automationsControllerRun = (
+    id: string,
+    startAutomationRunDto: StartAutomationRunDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<StartAutomationRunResponseDto>(
+      {url: `/v1/automations/${id}/runs`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: startAutomationRunDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getAutomationsControllerRunMutationKey = () => ['automationsControllerRun'] as const;
+
+export const getAutomationsControllerRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerRun>>, TError,AutomationsControllerRunMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof automationsControllerRun>>, TError,AutomationsControllerRunMutationVariables, TContext> => {
+
+const mutationKey = getAutomationsControllerRunMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof automationsControllerRun>>, AutomationsControllerRunMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  automationsControllerRun(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AutomationsControllerRunMutationResult = NonNullable<Awaited<ReturnType<typeof automationsControllerRun>>>
+    export type AutomationsControllerRunMutationBody = StartAutomationRunDto
+    export type AutomationsControllerRunMutationError = unknown
+    export type AutomationsControllerRunMutationVariables = {id: string;data: StartAutomationRunDto}
+
+    export const useAutomationsControllerRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof automationsControllerRun>>, TError,AutomationsControllerRunMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof automationsControllerRun>>,
+        TError,
+        AutomationsControllerRunMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAutomationsControllerRunMutationOptions(options), queryClient);
     }

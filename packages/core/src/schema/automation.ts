@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zAutomationId, zAutomationVersionId, zOrgId, zServerTimestamp, zUserId } from "./zodHelpers.js";
+import { zAutomationId, zAutomationRunId, zAutomationStepId, zAutomationVersionId, zContactId, zOrgId, zServerTimestamp, zUserId } from "./zodHelpers.js";
 
 export const AUTOMATION_STATUSES = ["draft", "active", "paused"] as const;
 export const AUTOMATION_NODE_TYPES = ["trigger", "action", "condition", "wait"] as const;
@@ -71,3 +71,37 @@ export const AutomationWriteResponseSchema = z.object({ automation: AutomationSc
 export const AutomationPublishResponseSchema = z.object({ automation: AutomationSchema, version: AutomationVersionSchema, txid: z.number().int() });
 export type AutomationWriteResponse = z.infer<typeof AutomationWriteResponseSchema>;
 export type AutomationPublishResponse = z.infer<typeof AutomationPublishResponseSchema>;
+
+export const AUTOMATION_RUN_STATUSES = ["queued", "running", "waiting", "completed", "failed", "cancelled"] as const;
+export const AUTOMATION_STEP_STATUSES = ["running", "waiting", "completed", "failed", "skipped"] as const;
+export const AutomationRunSchema = z.object({
+  id: zAutomationRunId,
+  orgId: zOrgId,
+  automationId: zAutomationId,
+  versionId: zAutomationVersionId,
+  contactId: zContactId,
+  status: z.enum(AUTOMATION_RUN_STATUSES),
+  currentNodeId: z.string().nullable(),
+  context: z.record(z.string(), z.unknown()),
+  error: z.string().nullable(),
+  startedAt: zServerTimestamp,
+  completedAt: zServerTimestamp.nullable(),
+  updatedAt: zServerTimestamp,
+});
+export type AutomationRun = z.infer<typeof AutomationRunSchema>;
+export const AutomationRunStepSchema = z.object({
+  id: zAutomationStepId,
+  orgId: zOrgId,
+  runId: zAutomationRunId,
+  nodeId: z.string(),
+  attempt: z.number().int().min(1),
+  status: z.enum(AUTOMATION_STEP_STATUSES),
+  result: z.record(z.string(), z.unknown()),
+  startedAt: zServerTimestamp,
+  finishedAt: zServerTimestamp.nullable(),
+});
+export type AutomationRunStep = z.infer<typeof AutomationRunStepSchema>;
+export const StartAutomationRunInputSchema = z.object({ contactId: zContactId, context: z.record(z.string(), z.unknown()).default({}) });
+export type StartAutomationRunInput = z.infer<typeof StartAutomationRunInputSchema>;
+export const StartAutomationRunResponseSchema = z.object({ run: AutomationRunSchema, txid: z.number().int() });
+export type StartAutomationRunResponse = z.infer<typeof StartAutomationRunResponseSchema>;

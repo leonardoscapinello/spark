@@ -15,6 +15,8 @@ export const SYNC_RESOURCES = [
   "messages",
   "automations",
   "automation_versions",
+  "automation_runs",
+  "automation_run_steps",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
@@ -30,6 +32,8 @@ const READ_REQUIREMENTS: Record<Exclude<SyncResource, "organizations" | "events"
   messages: ["inbox:read"],
   automations: ["automations:read"],
   automation_versions: ["automations:read"],
+  automation_runs: ["automations:read"],
+  automation_run_steps: ["automations:read"],
 };
 
 const DIRECTORY_READERS: readonly Capability[] = [

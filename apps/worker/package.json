@@ -9,8 +9,17 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "build": "tsc",
-    "dev": "echo \"apps/worker — dev server chega no bloco que implementa este app\"",
+    "dev": "tsx watch src/index.ts",
     "test": "echo \"sem testes ainda — apps/worker\""
   },
-  "devDependencies": {}
+  "dependencies": {
+    "@spark/core": "workspace:^",
+    "@spark/db": "workspace:^",
+    "bullmq": "^6.3.4",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.23.13"
+  }
 }

@@ -25,6 +25,10 @@ export type ConversationId = Id<"Conversation">;
 export type MessageId = Id<"Message">;
 export type AutomationId = Id<"Automation">;
 export type AutomationVersionId = Id<"AutomationVersion">;
+export type AutomationRunId = Id<"AutomationRun">;
+export type AutomationStepId = Id<"AutomationStep">;
+export type AutomationTimerId = Id<"AutomationTimer">;
+export type AutomationJobId = Id<"AutomationJob">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -64,3 +68,7 @@ export const conversationId = makeIdFactory("Conversation");
 export const messageId = makeIdFactory("Message");
 export const automationId = makeIdFactory("Automation");
 export const automationVersionId = makeIdFactory("AutomationVersion");
+export const automationRunId = makeIdFactory("AutomationRun");
+export const automationStepId = makeIdFactory("AutomationStep");
+export const automationTimerId = makeIdFactory("AutomationTimer");
+export const automationJobId = makeIdFactory("AutomationJob");

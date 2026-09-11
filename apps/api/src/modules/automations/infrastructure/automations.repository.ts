@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { automationVersions, automations, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
-import { automationVersionId, validateAutomationGraph, type Automation, type AutomationId, type AutomationPublishResponse, type AutomationVersion, type AutomationWriteResponse, type CreateAutomationInput, type OrgId, type PublishAutomationInput, type UpdateAutomationDraftInput, type UpdateAutomationStatusInput, type UserId } from "@spark/core";
+import { automationJobs, automationRuns, automationVersions, automations, contacts, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
+import { automationJobId, automationRunId, automationVersionId, firstAutomationNode, validateAutomationGraph, type Automation, type AutomationId, type AutomationPublishResponse, type AutomationRun, type AutomationVersion, type AutomationWriteResponse, type CreateAutomationInput, type OrgId, type PublishAutomationInput, type StartAutomationRunInput, type StartAutomationRunResponse, type UpdateAutomationDraftInput, type UpdateAutomationStatusInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
@@ -61,6 +61,26 @@ export class AutomationsRepository {
       return { automation: toAutomation(automationRow), version: toVersion(versionRow), txid };
     });
   }
+
+  startRun(orgId: OrgId, actorUserId: UserId, id: AutomationId, input: StartAutomationRunInput): Promise<StartAutomationRunResponse> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [automation] = await tx.select().from(automations).where(and(eq(automations.id, id), eq(automations.orgId, orgId))).limit(1);
+      if (!automation?.currentPublishedVersionId || automation.status !== "active") throw new BadRequestException("Only a published, active automation can run.");
+      const [version] = await tx.select().from(automationVersions).where(and(eq(automationVersions.id, automation.currentPublishedVersionId), eq(automationVersions.orgId, orgId))).limit(1);
+      if (!version) throw new NotFoundException("Published automation version not found.");
+      const [contact] = await tx.select({ id: contacts.id, name: contacts.name, email: contacts.email, phone: contacts.phone, score: contacts.score, leadStatus: contacts.leadStatus, tags: contacts.tags }).from(contacts).where(and(eq(contacts.id, input.contactId), eq(contacts.orgId, orgId), sql`${contacts.deletedAt} IS NULL`)).limit(1);
+      if (!contact) throw new BadRequestException("Contact is not available in this organization.");
+      const first = firstAutomationNode(version.graph);
+      if (!first) throw new BadRequestException("Published automation has no trigger.");
+      const runId = automationRunId.create();
+      const txid = await captureTxid(tx);
+      const [row] = await tx.insert(automationRuns).values({ id: runId, orgId, automationId: id, versionId: version.id, contactId: input.contactId, status: "queued", currentNodeId: first.id, context: { ...input.context, contact } }).returning();
+      await tx.insert(automationJobs).values({ id: automationJobId.create(), orgId, runId, nodeId: first.id });
+      if (!row) throw new Error("Automation run insert returned no row.");
+      await this.events.append(tx, { orgId, contactId: input.contactId, type: "automation.run_started", data: { automationId: id, runId, version: version.version, actorUserId } });
+      return { run: toRun(row), txid };
+    });
+  }
 }
 
 async function captureTxid(tx: SparkDb): Promise<number> {
@@ -73,4 +93,7 @@ function toAutomation(row: typeof automations.$inferSelect): Automation {
 }
 function toVersion(row: typeof automationVersions.$inferSelect): AutomationVersion {
   return { ...row, publishedAt: row.publishedAt.toISOString() } as AutomationVersion;
+}
+function toRun(row: typeof automationRuns.$inferSelect): AutomationRun {
+  return { ...row, startedAt: row.startedAt.toISOString(), completedAt: row.completedAt?.toISOString() ?? null, updatedAt: row.updatedAt.toISOString() } as AutomationRun;
 }

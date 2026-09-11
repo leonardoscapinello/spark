@@ -12,3 +12,5 @@ export * from "./conversations-collection.js";
 export * from "./messages-collection.js";
 export * from "./automations-collection.js";
 export * from "./automation-versions-collection.js";
+export * from "./automation-runs-collection.js";
+export * from "./automation-run-steps-collection.js";

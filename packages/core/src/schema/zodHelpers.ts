@@ -41,6 +41,10 @@ import {
   messageId as toMessageId,
   automationId as toAutomationId,
   automationVersionId as toAutomationVersionId,
+  automationRunId as toAutomationRunId,
+  automationStepId as toAutomationStepId,
+  automationTimerId as toAutomationTimerId,
+  automationJobId as toAutomationJobId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -58,6 +62,10 @@ import {
   type MessageId,
   type AutomationId,
   type AutomationVersionId,
+  type AutomationRunId,
+  type AutomationStepId,
+  type AutomationTimerId,
+  type AutomationJobId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -93,6 +101,10 @@ export const zConversationId = bridged<ConversationId>(toConversationId.from);
 export const zMessageId = bridged<MessageId>(toMessageId.from);
 export const zAutomationId = bridged<AutomationId>(toAutomationId.from);
 export const zAutomationVersionId = bridged<AutomationVersionId>(toAutomationVersionId.from);
+export const zAutomationRunId = bridged<AutomationRunId>(toAutomationRunId.from);
+export const zAutomationStepId = bridged<AutomationStepId>(toAutomationStepId.from);
+export const zAutomationTimerId = bridged<AutomationTimerId>(toAutomationTimerId.from);
+export const zAutomationJobId = bridged<AutomationJobId>(toAutomationJobId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

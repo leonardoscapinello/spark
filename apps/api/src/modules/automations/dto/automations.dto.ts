@@ -1,5 +1,5 @@
 import { createZodDto } from "nestjs-zod";
-import { AutomationPublishResponseSchema, AutomationVersionSchema, AutomationWriteResponseSchema, CreateAutomationInputSchema, PublishAutomationInputSchema, UpdateAutomationDraftInputSchema, UpdateAutomationStatusInputSchema } from "@spark/core";
+import { AutomationPublishResponseSchema, AutomationVersionSchema, AutomationWriteResponseSchema, CreateAutomationInputSchema, PublishAutomationInputSchema, StartAutomationRunInputSchema, StartAutomationRunResponseSchema, UpdateAutomationDraftInputSchema, UpdateAutomationStatusInputSchema } from "@spark/core";
 
 export class CreateAutomationDto extends createZodDto(CreateAutomationInputSchema) {}
 export class UpdateAutomationDraftDto extends createZodDto(UpdateAutomationDraftInputSchema) {}
@@ -8,3 +8,5 @@ export class PublishAutomationDto extends createZodDto(PublishAutomationInputSch
 export class AutomationWriteResponseDto extends createZodDto(AutomationWriteResponseSchema) {}
 export class AutomationPublishResponseDto extends createZodDto(AutomationPublishResponseSchema) {}
 export class AutomationVersionDto extends createZodDto(AutomationVersionSchema) {}
+export class StartAutomationRunDto extends createZodDto(StartAutomationRunInputSchema) {}
+export class StartAutomationRunResponseDto extends createZodDto(StartAutomationRunResponseSchema) {}

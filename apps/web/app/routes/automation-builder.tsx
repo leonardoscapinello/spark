@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { useLiveQuery } from "@tanstack/react-db";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useParams } from "react-router";
-import { automationsControllerPublish } from "@spark/api-client";
+import { automationsControllerPublish, automationsControllerRun } from "@spark/api-client";
 import { validateAutomationGraph, type AutomationEdge, type AutomationGraph, type AutomationNode, type AutomationNodeType } from "@spark/core";
-import { Badge, Button, Field, Input, Label, PageHeader, Textarea, notify } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Input, Label, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
-import { getAutomationVersionsCollection, getAutomationsCollection } from "../lib/automations-collections.client";
+import { getAutomationRunsCollection, getAutomationRunStepsCollection, getAutomationVersionsCollection, getAutomationsCollection } from "../lib/automations-collections.client";
+import { getContactsCollection } from "../lib/contacts-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./automation-builder.module.css";
 
@@ -16,7 +17,7 @@ const NODE_DEFAULTS: Record<AutomationNodeType, { label: string; description: st
   wait: { label: "Nova espera", description: "Aguarda um período ou evento" },
 };
 
-export async function clientLoader() { await requireCapability("automations:read"); await Promise.all([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload()]); return null; }
+export async function clientLoader() { const session = await requireCapability("automations:read"); await Promise.all([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload(), getAutomationRunsCollection().preload(), getAutomationRunStepsCollection().preload(), ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : [])]); return null; }
 
 export default function AutomationBuilder() {
   const navigate = useNavigate();
@@ -24,12 +25,17 @@ export default function AutomationBuilder() {
   const session = getSession();
   const collection = getAutomationsCollection();
   const { data: automations } = useLiveQuery({ query: (q) => q.from({ automations: collection }) });
+  const { data: runs = [] } = useLiveQuery({ query: (q) => automationId ? q.from({ runs: getAutomationRunsCollection() }).where(({ runs: run }) => eq(run.automationId, automationId)).orderBy(({ runs: run }) => run.startedAt, "desc") : undefined });
+  const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
+  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: getContactsCollection() }).orderBy(({ contacts: contact }) => contact.name, "asc") : undefined });
   const automation = automations.find((item) => item.id === automationId) ?? null;
   const [name, setName] = useState("");
   const [graph, setGraph] = useState<AutomationGraph>({ nodes: [], edges: [] });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [runModalOpen, setRunModalOpen] = useState(false);
+  const [runContact, setRunContact] = useState<SelectOption | null>(null);
   const hydratedId = useRef<string | null>(null);
   const drag = useRef<{ id: string; startX: number; startY: number; originX: number; originY: number } | null>(null);
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
@@ -77,7 +83,12 @@ export default function AutomationBuilder() {
     if (!connectingFrom) { setConnectingFrom(targetId); return; }
     if (connectingFrom === targetId) { setConnectingFrom(null); return; }
     const exists = graph.edges.some((edge) => edge.source === connectingFrom && edge.target === targetId);
-    if (!exists) setGraph((value) => ({ ...value, edges: [...value.edges, { id: `edge-${crypto.randomUUID()}`, source: connectingFrom, target: targetId }] }));
+    if (!exists) setGraph((value) => {
+      const source = value.nodes.find((node) => node.id === connectingFrom);
+      const branchCount = value.edges.filter((edge) => edge.source === connectingFrom).length;
+      const label = source?.type === "condition" ? (branchCount === 0 ? "sim" : "não") : undefined;
+      return { ...value, edges: [...value.edges, { id: `edge-${crypto.randomUUID()}`, source: connectingFrom, target: targetId, ...(label ? { label } : {}) }] };
+    });
     setConnectingFrom(null);
   }
 
@@ -115,10 +126,18 @@ export default function AutomationBuilder() {
     finally { setSaving(false); }
   }
 
+  async function startRun() {
+    if (!automation || !runContact) throw new Error("MISSING_CONTACT");
+    const response = await automationsControllerRun(automation.id, { contactId: runContact.value, context: { source: "manual" } });
+    notify({ title: "Execução iniciada", description: `Run ${response.run.id.slice(0, 8)} entrou na fila.`, tone: "success" });
+    setRunContact(null);
+  }
+
   if (!automation) return <div className={styles.loading}>Carregando automação…</div>;
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Automações" title={automation.name} description="Arraste os blocos, conecte o caminho e publique quando o fluxo estiver completo." actions={<div className={styles.headerActions}><Button variant="ghost" onClick={() => navigate("/automations")}>Voltar</Button>{canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}{canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}</div>} />
+    <PageHeader eyebrow="Automações" title={automation.name} description="Arraste os blocos, conecte o caminho e publique quando o fluxo estiver completo." actions={<div className={styles.headerActions}><Button variant="ghost" onClick={() => navigate("/automations")}>Voltar</Button>{canWrite && automation.status === "active" && canReadContacts && <Button variant="secondary" onClick={() => setRunModalOpen(true)}>Executar agora</Button>}{canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}{canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}</div>} />
+    <section className={styles.runBar} aria-label="Execuções recentes"><div><strong>Execuções recentes</strong><span>{runs.length ? `${runs.length} registradas nesta automação` : "Nenhuma execução iniciada"}</span></div><div className={styles.runList}>{runs.slice(0, 5).map((run) => <span key={run.id}><Badge tone={run.status === "completed" ? "success" : run.status === "failed" ? "danger" : run.status === "waiting" ? "warning" : "neutral"}>{runStatusLabel(run.status)}</Badge><small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(run.startedAt))}</small></span>)}</div></section>
     <div className={styles.workspace}>
       <aside className={styles.palette}>
         <header><strong>Blocos</strong><span>Adicione ao canvas</span></header>
@@ -143,18 +162,17 @@ export default function AutomationBuilder() {
         </> : <div className={styles.inspectorEmpty}><strong>Configuração do bloco</strong><span>Selecione um bloco no canvas para editar suas propriedades.</span></div>}
       </aside>
     </div>
+    <ActionModal open={runModalOpen} onOpenChange={setRunModalOpen} title="Executar automação" confirmLabel="Iniciar execução" errorText="Selecione um contato." onConfirm={startRun}><Field><Label>Contato</Label><SearchSelect label="Contato da execução" searchPlacement="dropdown" placeholder="Buscar contato" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={runContact} onValueChange={setRunContact} /></Field></ActionModal>
   </div>;
 }
 
 function NodeConfiguration({ node, disabled, onChange }: { node: AutomationNode; disabled: boolean; onChange: (config: Record<string, unknown>) => void }) {
-  const value = typeof node.data.config.value === "string" ? node.data.config.value : "";
-  const labels: Record<AutomationNodeType, { field: string; placeholder: string }> = {
-    trigger: { field: "Evento", placeholder: "Ex.: Instagram: mensagem recebida" },
-    action: { field: "Ação", placeholder: "Ex.: Adicionar tag Qualificado" },
-    condition: { field: "Regra", placeholder: "Ex.: Cidade é São Paulo" },
-    wait: { field: "Duração", placeholder: "Ex.: 2 horas" },
-  };
-  return <Field><Label>{labels[node.type].field}</Label><Input value={value} disabled={disabled} placeholder={labels[node.type].placeholder} onChange={(event) => onChange({ ...node.data.config, value: event.target.value })} /></Field>;
+  const config = node.data.config;
+  if (node.type === "trigger") return <Field><Label>Evento</Label><Select label="Evento que inicia o fluxo" disabled={disabled} value={stringConfig(config.eventType)} options={[{ value: "manual", label: "Execução manual" }, { value: "contact.created", label: "Contato criado" }, { value: "deal.created", label: "Negócio criado" }, { value: "instagram.message_received", label: "Mensagem recebida no Instagram" }, { value: "instagram.comment_created", label: "Comentário no Instagram" }]} onValueChange={(eventType) => onChange({ ...config, eventType })} /></Field>;
+  if (node.type === "wait") return <div className={styles.configGrid}><Field><Label>Quantidade</Label><Input type="number" min={0} disabled={disabled} value={numberConfig(config.amount)} onChange={(event) => onChange({ ...config, amount: Number(event.target.value) })} /></Field><Field><Label>Unidade</Label><Select label="Unidade da espera" disabled={disabled} value={stringConfig(config.unit) || "minutes"} options={[{ value: "seconds", label: "Segundos" }, { value: "minutes", label: "Minutos" }, { value: "hours", label: "Horas" }, { value: "days", label: "Dias" }]} onValueChange={(unit) => onChange({ ...config, unit })} /></Field></div>;
+  if (node.type === "condition") return <><Field><Label>Campo do contexto</Label><Input disabled={disabled} value={stringConfig(config.field)} placeholder="contact.score" onChange={(event) => onChange({ ...config, field: event.target.value })} /></Field><Field><Label>Operador</Label><Select label="Operador da condição" disabled={disabled} value={stringConfig(config.operator) || "equals"} options={[{ value: "equals", label: "É igual a" }, { value: "not_equals", label: "É diferente de" }, { value: "contains", label: "Contém" }, { value: "greater_than", label: "É maior que" }, { value: "less_than", label: "É menor que" }, { value: "exists", label: "Está preenchido" }]} onValueChange={(operator) => onChange({ ...config, operator })} /></Field>{config.operator !== "exists" && <Field><Label>Valor</Label><Input disabled={disabled} value={stringConfig(config.value)} placeholder="Valor para comparar" onChange={(event) => onChange({ ...config, value: event.target.value })} /></Field>}</>;
+  const operation = stringConfig(config.operation);
+  return <><Field><Label>Ação no contato</Label><Select label="Ação no contato" disabled={disabled} value={operation} options={[{ value: "contact.add_tag", label: "Adicionar etiqueta" }, { value: "contact.remove_tag", label: "Remover etiqueta" }, { value: "contact.set_status", label: "Alterar situação do lead" }, { value: "contact.add_score", label: "Somar pontuação" }]} onValueChange={(nextOperation) => onChange({ operation: nextOperation, value: nextOperation === "contact.add_score" ? 0 : "" })} /></Field>{operation === "contact.set_status" ? <Field><Label>Nova situação</Label><Select label="Nova situação" disabled={disabled} value={stringConfig(config.value)} options={[{ value: "new", label: "Novo" }, { value: "qualified", label: "Qualificado" }, { value: "nurturing", label: "Em nutrição" }, { value: "customer", label: "Cliente" }, { value: "unqualified", label: "Desqualificado" }]} onValueChange={(value) => onChange({ ...config, value })} /></Field> : <Field><Label>{operation === "contact.add_score" ? "Pontos" : "Etiqueta"}</Label><Input type={operation === "contact.add_score" ? "number" : "text"} disabled={disabled} value={operation === "contact.add_score" ? numberConfig(config.value) : stringConfig(config.value)} onChange={(event) => onChange({ ...config, value: operation === "contact.add_score" ? Number(event.target.value) : event.target.value })} /></Field>}</>;
 }
 
 function EdgeLine({ edge, nodes }: { edge: AutomationEdge; nodes: AutomationNode[] }) {
@@ -165,3 +183,6 @@ function EdgeLine({ edge, nodes }: { edge: AutomationEdge; nodes: AutomationNode
   return <path d={`M ${x1} ${y1} C ${middle} ${y1}, ${middle} ${y2}, ${x2} ${y2}`} />;
 }
 function typeLabel(type: AutomationNodeType): string { return ({ trigger: "Gatilho", action: "Ação", condition: "Condição", wait: "Espera" })[type]; }
+function runStatusLabel(status: "queued" | "running" | "waiting" | "completed" | "failed" | "cancelled"): string { return ({ queued: "Na fila", running: "Executando", waiting: "Aguardando", completed: "Concluída", failed: "Falhou", cancelled: "Cancelada" })[status]; }
+function stringConfig(value: unknown): string { return typeof value === "string" ? value : ""; }
+function numberConfig(value: unknown): number { return typeof value === "number" && Number.isFinite(value) ? value : 0; }

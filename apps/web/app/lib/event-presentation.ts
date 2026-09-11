@@ -29,6 +29,9 @@ const TITLES: Record<DomainEventType, string> = {
   "automation.published": "Automação publicada",
   "automation.paused": "Automação pausada",
   "automation.activated": "Automação ativada",
+  "automation.run_started": "Execução de automação iniciada",
+  "automation.run_completed": "Execução de automação concluída",
+  "automation.run_failed": "Execução de automação falhou",
 };
 
 export function toTimelineItem(event: Event): TimelineItem {

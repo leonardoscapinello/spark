@@ -1,5 +1,10 @@
-.page { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-4); padding: var(--space-6); overflow: hidden; }
+.page { height: 100%; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: var(--space-4); padding: var(--space-6); overflow: hidden; }
 .headerActions { display: flex; align-items: center; gap: var(--space-2); }
+.runBar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-width: 0; padding: var(--space-3) var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+.runBar > div:first-child { display: grid; gap: var(--space-1); }
+.runBar > div:first-child span, .runList small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.runList { display: flex; align-items: center; gap: var(--space-3); overflow-x: auto; }
+.runList > span { display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
 .workspace { min-height: 0; display: grid; grid-template-columns: calc(var(--space-16) * 3.4) minmax(0, 1fr) calc(var(--space-16) * 4.2); overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); }
 .palette, .inspector { min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); overflow-y: auto; background: var(--color-surface); z-index: 2; }
 .palette { border-right: var(--ui-hairline) solid var(--color-line); }
@@ -32,5 +37,6 @@
 .inspector > header { display: flex; justify-content: space-between; align-items: flex-start; }
 .inspector > header > div { display: grid; gap: var(--space-2); }
 .deleteButton { margin-top: auto; color: var(--color-statusDanger); }
+.configGrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .loading { padding: var(--space-10); color: var(--color-inkMuted); }
 @media (max-width: 1000px) { .workspace { grid-template-columns: calc(var(--space-16) * 3) minmax(0, 1fr); } .inspector { position: absolute; right: var(--space-6); top: calc(var(--space-16) * 2); bottom: var(--space-6); width: calc(var(--space-16) * 4); border: var(--ui-hairline) solid var(--color-line); box-shadow: var(--effect-shadow-md); } }
