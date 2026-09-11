@@ -1,4 +1,4 @@
-import type { OrgId } from "@spark/core";
+import type { Capability, OrgId } from "@spark/core";
 import { meControllerMe, setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client";
 import { getSupabaseClient } from "./supabase.client";
 
@@ -13,6 +13,7 @@ if (API_BASE_URL) setSparkApiBaseUrl(API_BASE_URL);
 export interface AppSession {
   orgId: OrgId;
   userId: string;
+  capabilities: Capability[];
 }
 
 let accessToken: string | null = null;
@@ -46,7 +47,7 @@ function listenForTokenRotation(): void {
 
 async function resolveAppSession(): Promise<AppSession> {
   const user = await meControllerMe();
-  const profile = { orgId: user.orgId as OrgId, userId: user.id };
+  const profile = { orgId: user.orgId as OrgId, userId: user.id, capabilities: user.capabilities };
   saveProfile(profile);
   return profile;
 }

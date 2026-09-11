@@ -1,4 +1,5 @@
 import { Link, Outlet, redirect, useNavigate } from "react-router";
+import type { Route } from "./+types/app-layout";
 import { Button, Glass } from "@spark/ui-web";
 import { restoreSession, signOut } from "../lib/auth.client";
 import styles from "./app-layout.module.css";
@@ -12,14 +13,14 @@ import styles from "./app-layout.module.css";
 export async function clientLoader() {
   const session = await restoreSession();
   if (!session) throw redirect("/login");
-  return null;
+  return session;
 }
 
 export function HydrateFallback() {
   return <div className={styles.carregando}>Carregando…</div>;
 }
 
-export default function AppLayout() {
+export default function AppLayout({ loaderData: session }: Route.ComponentProps) {
   const navigate = useNavigate();
 
   async function handleSignOut() {
@@ -40,6 +41,11 @@ export default function AppLayout() {
           <Link to="/deals" className={styles.navItem}>
             Negócios
           </Link>
+          {session.capabilities.includes("users:manage") && (
+            <Link to="/admin/users" className={styles.navItem}>
+              Administração
+            </Link>
+          )}
         </nav>
         <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}>
           Sair

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { zOrgId, zPermissionGroupId, zUserId, zEmail } from "./zodHelpers.js";
+import { CAPABILITIES } from "../policy/capability.js";
 
 /**
  * User — who logs in. Role/permission detail lives in `permission_groups`
@@ -24,6 +25,11 @@ export const UserSchema = z.object({
 });
 
 export type User = z.infer<typeof UserSchema>;
+
+export const CurrentUserSchema = UserSchema.extend({
+  capabilities: z.array(z.enum(CAPABILITIES)),
+});
+export type CurrentUser = z.infer<typeof CurrentUserSchema>;
 
 // orgId never comes from the client — same rule as contact.ts (docs/adr/0026).
 // Inviting a user is always "invite someone to MY organization," never

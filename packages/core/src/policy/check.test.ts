@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { hasCapability } from "./check.js";
+import { effectiveCapabilities, hasCapability } from "./check.js";
 import { DEFAULT_GROUPS } from "./defaultGroups.js";
 
 describe("hasCapability — the system's single permission check (docs/adr/0029)", () => {
   it("grants when some group the user belongs to has the capability", () => {
     const groups = [{ capabilities: ["contacts:read"] as const }];
     expect(hasCapability(groups, "contacts:read")).toBe(true);
+  });
+
+  it("flattens effective capabilities in canonical order without duplicates", () => {
+    expect(effectiveCapabilities([
+      { capabilities: ["contacts:read", "users:manage"] },
+      { capabilities: ["contacts:read", "deals:read"] },
+    ])).toEqual(["contacts:read", "users:manage", "deals:read"]);
   });
 
   it("denies when no group has the capability", () => {

@@ -41,18 +41,19 @@ describe("auth.client — Supabase Auth session", () => {
   it("authenticates with Supabase and resolves the provisioned local user", async () => {
     const orgId = orgIdFactory.create();
     mocks.signInWithPassword.mockResolvedValue({ data: { session: { access_token: "real-jwt" } }, error: null });
-    mocks.me.mockResolvedValue({ id: "local-user", orgId });
+    mocks.me.mockResolvedValue({ id: "local-user", orgId, capabilities: ["users:manage"] });
 
     await expect(signIn("person@company.com", "strong-password")).resolves.toEqual({
       orgId,
       userId: "local-user",
+      capabilities: ["users:manage"],
     });
     expect(mocks.signInWithPassword).toHaveBeenCalledWith({
       email: "person@company.com",
       password: "strong-password",
     });
     expect(mocks.apiTokenProvider?.()).toBe("real-jwt");
-    expect(getSession()).toEqual({ orgId, userId: "local-user" });
+    expect(getSession()).toEqual({ orgId, userId: "local-user", capabilities: ["users:manage"] });
   });
 
   it("does not create a session when Supabase has no authenticated user", async () => {

@@ -1,4 +1,4 @@
-import type { Capability } from "./capability.js";
+import { CAPABILITIES, type Capability } from "./capability.js";
 
 /**
  * The single permission check in the whole system (docs/adr/0029). Deny by
@@ -10,4 +10,10 @@ export function hasCapability(
   capability: Capability,
 ): boolean {
   return groups.some((group) => group.capabilities.includes(capability));
+}
+
+export function effectiveCapabilities(
+  groups: readonly { capabilities: readonly Capability[] }[],
+): Capability[] {
+  return CAPABILITIES.filter((capability) => hasCapability(groups, capability));
 }
