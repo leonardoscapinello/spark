@@ -39,3 +39,15 @@ export const CreateStageResponseSchema = z.object({
   txid: z.number().int(),
 });
 export type CreateStageResponse = z.infer<typeof CreateStageResponseSchema>;
+
+/** Renomear — mutação estreita de propósito único, mesmo padrão de MoveDealInputSchema. */
+export const RenameStageInputSchema = z.object({
+  nome: z.string().min(1, { error: "Nome do estágio é obrigatório" }).max(200),
+});
+export type RenameStageInput = z.infer<typeof RenameStageInputSchema>;
+
+export const RenameStageResponseSchema = z.object({
+  stage: StageSchema,
+  txid: z.number().int(),
+});
+export type RenameStageResponse = z.infer<typeof RenameStageResponseSchema>;

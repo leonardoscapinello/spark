@@ -4,6 +4,7 @@ import { StagesController } from "./presentation/stages.controller.js";
 import { DealsController } from "./presentation/deals.controller.js";
 import { CreatePipelineUseCase } from "./application/create-pipeline.usecase.js";
 import { CreateStageUseCase } from "./application/create-stage.usecase.js";
+import { RenameStageUseCase } from "./application/rename-stage.usecase.js";
 import { CreateDealUseCase } from "./application/create-deal.usecase.js";
 import { MoveDealUseCase } from "./application/move-deal.usecase.js";
 import { CloseDealUseCase } from "./application/close-deal.usecase.js";
@@ -20,6 +21,7 @@ import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
   providers: [
     CreatePipelineUseCase,
     CreateStageUseCase,
+    RenameStageUseCase,
     CreateDealUseCase,
     MoveDealUseCase,
     CloseDealUseCase,

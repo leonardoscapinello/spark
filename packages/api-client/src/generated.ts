@@ -236,6 +236,56 @@ export interface CreateStageResponseDto {
   txid: number;
 }
 
+export interface RenameStageDto {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+}
+
+export type RenameStageResponseDtoStage = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  nome: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  ordem: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  probabilidade?: number;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  criadoEm: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  atualizadoEm: string;
+  /**
+     * @nullable
+     * @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+     */
+  arquivadoEm: string | null;
+};
+
+export interface RenameStageResponseDto {
+  stage: RenameStageResponseDtoStage;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type CreateDealDtoStatus = typeof CreateDealDtoStatus[keyof typeof CreateDealDtoStatus];
 
 
@@ -898,6 +948,69 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getStagesControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const stagesControllerRename = (
+    id: string,
+    renameStageDto: RenameStageDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<RenameStageResponseDto>(
+      {url: `/v1/stages/${id}/rename`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: renameStageDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getStagesControllerRenameMutationKey = () => ['stagesControllerRename'] as const;
+
+export const getStagesControllerRenameMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerRename>>, TError,StagesControllerRenameMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof stagesControllerRename>>, TError,StagesControllerRenameMutationVariables, TContext> => {
+
+const mutationKey = getStagesControllerRenameMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stagesControllerRename>>, StagesControllerRenameMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  stagesControllerRename(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StagesControllerRenameMutationResult = NonNullable<Awaited<ReturnType<typeof stagesControllerRename>>>
+    export type StagesControllerRenameMutationBody = RenameStageDto
+    export type StagesControllerRenameMutationError = unknown
+    export type StagesControllerRenameMutationVariables = {id: string;data: RenameStageDto}
+
+    export const useStagesControllerRename = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerRename>>, TError,StagesControllerRenameMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof stagesControllerRename>>,
+        TError,
+        StagesControllerRenameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStagesControllerRenameMutationOptions(options), queryClient);
     }
 
 export const dealsControllerCreate = (

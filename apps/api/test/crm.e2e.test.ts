@@ -149,6 +149,23 @@ describe("CRM ponta a ponta — pipeline → estágio → negócio → mover (do
     expect(resMove.statusCode).toBe(200);
     expect(resMove.json().deal.stageId).toBe(stageBId);
     expect(resMove.json().deal.valor).toBe(150000);
+
+    const resRenomear = await app.inject({
+      method: "PATCH",
+      url: `/v1/stages/${stageAId}/rename`,
+      headers: { authorization: `Bearer ${tokenGerente}` },
+      payload: { nome: "Qualificação Renomeada" },
+    });
+    expect(resRenomear.statusCode).toBe(200);
+    expect(resRenomear.json().stage.nome).toBe("Qualificação Renomeada");
+
+    const resAgenteRenomear = await app.inject({
+      method: "PATCH",
+      url: `/v1/stages/${stageBId}/rename`,
+      headers: { authorization: `Bearer ${await assinarJwt(supabaseIdAgente)}` },
+      payload: { nome: "Não deveria valer" },
+    });
+    expect(resAgenteRenomear.statusCode).toBe(403);
   });
 
   it("Gerente fecha negócio como ganho, e outro como perdido com motivo", async () => {
