@@ -6,7 +6,7 @@ const paths = {
   close: "m4 4 8 8M12 4l-8 8",
   right: "m6 4 4 4-4 4",
   plus: "M8 3v10M3 8h10",
-  chevron: "m5 6 3 3 3-3",
+  chevron: "m5 6.5 3 3 3-3",
   search: "M7 2a5 5 0 1 0 0 10A5 5 0 0 0 7 2Zm4 9 3 3",
   inbox: "M3 3h10l2 7v3H1v-3l2-7Zm-2 7h4l1 2h4l1-2h4",
   user: "M8 1a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM2 15v-2a6 6 0 0 1 12 0v2",

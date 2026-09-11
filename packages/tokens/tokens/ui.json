@@ -240,6 +240,10 @@
     "chart5": {
       "$type": "color",
       "$value": "{color.accentStrong}"
+    },
+    "checkboxMark": {
+      "$type": "dimension",
+      "$value": "12px"
     }
   }
 }

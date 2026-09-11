@@ -2,7 +2,8 @@
 .label:has([data-disabled]) { color: var(--ui-disabledInk); cursor: not-allowed; }
 .checkbox,.radio { box-sizing: border-box; display: flex; justify-content: center; align-items: center; width: var(--ui-icon); height: var(--ui-icon); padding: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-lineStrong); border-radius: var(--space-1); flex-shrink: 0; }
 .checkbox[data-checked],.checkbox[data-indeterminate],.radio[data-checked] { background: var(--ui-buttonBg); border-color: var(--ui-buttonBg); color: var(--ui-buttonInk); }
-.indicator { display: flex; }
+.indicator { display: flex; align-items: center; justify-content: center; }
+.checkbox .indicator > svg { width: var(--ui-checkboxMark); height: var(--ui-checkboxMark); }
 .radio { border-radius: var(--radius-full); }
 .dot { width: var(--space-2); height: var(--space-2); background: var(--ui-buttonInk); border-radius: var(--radius-full); }
 .group { display: flex; flex-direction: column; gap: var(--space-3); }
