@@ -1,0 +1,114 @@
+import { type FormEvent, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
+import { useLiveQuery } from "@tanstack/react-db";
+import { contactId as contactIdFactory, type Activity, type ActivityType } from "@spark/core";
+import { optimisticActivity } from "@spark/data";
+import { ActionModal, Button, DashboardGrid, DataTable, DateTimePicker, Field, Input, Label, MetricCard, PageHeader, SearchSelect, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { getActivitiesCollection } from "../lib/activities-collection.client";
+import { getContactsCollection } from "../lib/contacts-collection.client";
+import { getSession } from "../lib/auth.client";
+import styles from "./activities.module.css";
+
+const TYPE_OPTIONS: ReadonlyArray<{ value: ActivityType; label: string }> = [
+  { value: "task", label: "Tarefa" },
+  { value: "call", label: "Ligação" },
+  { value: "meeting", label: "Reunião" },
+  { value: "email", label: "E-mail" },
+];
+
+export async function clientLoader() {
+  await Promise.all([getActivitiesCollection().preload(), getContactsCollection().preload()]);
+  return null;
+}
+
+export default function Activities() {
+  const navigate = useNavigate();
+  const collection = getActivitiesCollection();
+  const contactsCollection = getContactsCollection();
+  const { data: activities, isLoading } = useLiveQuery({ query: (q) => q.from({ activities: collection }).orderBy(({ activities: activity }) => activity.scheduledAt, "asc") });
+  const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [period, setPeriod] = useState("open");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [type, setType] = useState<ActivityType>("task");
+  const [selectedContact, setSelectedContact] = useState<SelectOption | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const session = getSession();
+  const canWrite = session?.capabilities.includes("activities:write") ?? false;
+  const contactNames = useMemo(() => new Map(contacts.map((contact) => [contact.id, contact.name])), [contacts]);
+  const now = new Date();
+  const filtered = activities.filter((activity) => {
+    const scheduled = new Date(activity.scheduledAt);
+    const periodMatch = period === "all" || (period === "completed" ? activity.completed : period === "overdue" ? !activity.completed && scheduled < startOfToday(now) : period === "today" ? !activity.completed && isSameDay(scheduled, now) : period === "upcoming" ? !activity.completed && scheduled >= endOfToday(now) : !activity.completed);
+    return periodMatch && (typeFilter === "all" || activity.type === typeFilter);
+  });
+  const overdue = activities.filter((activity) => !activity.completed && new Date(activity.scheduledAt) < startOfToday(now)).length;
+  const today = activities.filter((activity) => !activity.completed && isSameDay(new Date(activity.scheduledAt), now)).length;
+  const completed = activities.filter((activity) => activity.completed).length;
+  const columns: TableColumn<Activity>[] = [
+    { id: "title", label: "Atividade", cell: (activity) => <div><strong>{activity.title}</strong><span className={styles.secondary}>{typeLabel(activity.type)}</span></div>, sortValue: (activity) => activity.title },
+    { id: "contact", label: "Contato", cell: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "Contato indisponível" : "—", sortValue: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "" : "" },
+    { id: "date", label: "Data e hora", cell: (activity) => <span className={isOverdue(activity, now) ? styles.overdue : undefined}>{formatDateTime(activity.scheduledAt)}</span>, sortValue: (activity) => activity.scheduledAt },
+    { id: "status", label: "Situação", cell: (activity) => <span className={styles.status} data-completed={activity.completed}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : "Pendente"}</span>, sortValue: (activity) => activity.completed ? 2 : isOverdue(activity, now) ? 0 : 1 },
+  ];
+
+  function resetForm() {
+    setTitle(""); setNotes(""); setScheduledAt(""); setType("task"); setSelectedContact(null);
+  }
+
+  async function createActivity() {
+    if (!session || !title.trim() || !scheduledAt || !selectedContact) throw new Error("MISSING_FIELDS");
+    const transaction = collection.insert(optimisticActivity({ contactId: contactIdFactory.from(selectedContact.value), dealId: null, type, title: title.trim(), notes: notes.trim() || null, scheduledAt: new Date(scheduledAt).toISOString() }, session.orgId));
+    await transaction.isPersisted.promise;
+    notify({ title: "Atividade agendada", description: title.trim(), tone: "success" });
+    resetForm();
+  }
+
+  async function toggle(activity: Activity) {
+    if (busyId) return;
+    setBusyId(activity.id);
+    try {
+      const transaction = collection.update(activity.id, (draft) => { draft.completed = !activity.completed; });
+      await transaction.isPersisted.promise;
+      notify({ title: activity.completed ? "Atividade reaberta" : "Atividade concluída", description: activity.title, tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível atualizar a atividade", tone: "error" });
+    } finally { setBusyId(null); }
+  }
+
+  function submit(event: FormEvent) { event.preventDefault(); void createActivity().catch(() => undefined); }
+
+  return <div className={styles.page}>
+    <PageHeader eyebrow="Agenda comercial" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
+    <DashboardGrid metrics>
+      <MetricCard title="Atrasadas" value={overdue} sentiment={overdue > 0 ? "negative" : "neutral"} />
+      <MetricCard title="Para hoje" value={today} />
+      <MetricCard title="Concluídas" value={completed} sentiment="positive" />
+    </DashboardGrid>
+    <div className={styles.toolbar}>
+      <Select label="Período das atividades" value={period} options={[{ value: "open", label: "Todas pendentes" }, { value: "overdue", label: "Atrasadas" }, { value: "today", label: "Hoje" }, { value: "upcoming", label: "Próximas" }, { value: "completed", label: "Concluídas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setPeriod(value ?? "open")} />
+      <Select label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} />
+      <span className={styles.count}>{filtered.length} {filtered.length === 1 ? "atividade" : "atividades"}</span>
+    </div>
+    <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText="Nenhuma atividade neste filtro." actions={(activity) => <><Button size="sm" variant="ghost" loading={busyId === activity.id} disabled={!canWrite} onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>{activity.contactId && <TableIconAction label="Abrir contato" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}</>} />
+    <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha contato, título e data para agendar." onConfirm={createActivity}>
+      <form className={styles.form} onSubmit={submit}>
+        <Field><Label>Contato</Label><SearchSelect label="Buscar contato" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>
+        <Field><Label>Tipo</Label><Select label="Tipo de atividade" value={type} options={TYPE_OPTIONS} onValueChange={(value) => { if (value) setType(value as ActivityType); }} /></Field>
+        <Field><Label>Título</Label><Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="O que precisa ser feito" /></Field>
+        <Field><Label>Data e hora</Label><DateTimePicker label="Data e hora da atividade" mode="datetime" value={scheduledAt} onValueChange={setScheduledAt} /></Field>
+        <Field><Label>Observações</Label><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Contexto para quem executar a atividade" /></Field>
+      </form>
+    </ActionModal>
+  </div>;
+}
+
+function typeLabel(type: ActivityType): string { return TYPE_OPTIONS.find((option) => option.value === type)?.label ?? type; }
+function startOfToday(value: Date): Date { return new Date(value.getFullYear(), value.getMonth(), value.getDate()); }
+function endOfToday(value: Date): Date { return new Date(value.getFullYear(), value.getMonth(), value.getDate() + 1); }
+function isSameDay(left: Date, right: Date): boolean { return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate(); }
+function isOverdue(activity: Activity, now: Date): boolean { return !activity.completed && new Date(activity.scheduledAt) < startOfToday(now); }
+function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }

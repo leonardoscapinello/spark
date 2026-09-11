@@ -41,6 +41,11 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           <Link to="/deals" className={styles.navItem}>
             Negócios
           </Link>
+          {session.capabilities.includes("activities:read") && (
+            <Link to="/activities" className={styles.navItem}>
+              Atividades
+            </Link>
+          )}
           {session.capabilities.includes("users:manage") && (
             <Link to="/admin/users" className={styles.navItem}>
               Usuários

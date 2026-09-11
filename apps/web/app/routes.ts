@@ -10,6 +10,7 @@ export default [
     index("routes/contacts.tsx"),
     route("contacts/:contactId", "routes/contact-detail.tsx"),
     route("deals", "routes/deals.tsx"),
+    route("activities", "routes/activities.tsx"),
     route("admin/users", "routes/admin-users.tsx"),
     route("admin/permission-groups", "routes/admin-permission-groups.tsx"),
     route("admin/audit-log", "routes/admin-audit-log.tsx"),
