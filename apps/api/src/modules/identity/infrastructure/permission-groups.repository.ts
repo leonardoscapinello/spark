@@ -21,7 +21,7 @@ export class PermissionGroupsRepository {
    * An organization created before ADR-0029 existed never received the
    * five default groups — found while testing login on an old dev
    * account: no group at all, `hasCapability` denies everything, forever,
-   * with no way to self-heal. `dev-login.controller.ts` calls this on the
+   * with no way to self-heal. The administrative provisioning flow calls this on the
    * EXISTING-user path before deciding whether to seed — without this
    * check, `seedDefaultGroups` (an INSERT with no check) would duplicate
    * the five groups on every new login.

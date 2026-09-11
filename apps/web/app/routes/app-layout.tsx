@@ -1,6 +1,6 @@
 import { Link, Outlet, redirect, useNavigate } from "react-router";
 import { Button, Glass } from "@spark/ui-web";
-import { clearSession, getToken } from "../lib/auth.client";
+import { restoreSession, signOut } from "../lib/auth.client";
 import styles from "./app-layout.module.css";
 
 /**
@@ -10,8 +10,8 @@ import styles from "./app-layout.module.css";
  * the first visit; from here on the client decides what renders).
  */
 export async function clientLoader() {
-  const token = getToken();
-  if (!token) throw redirect("/login");
+  const session = await restoreSession();
+  if (!session) throw redirect("/login");
   return null;
 }
 
@@ -22,8 +22,8 @@ export function HydrateFallback() {
 export default function AppLayout() {
   const navigate = useNavigate();
 
-  function signOut() {
-    clearSession();
+  async function handleSignOut() {
+    await signOut();
     navigate("/login");
   }
 
@@ -41,7 +41,7 @@ export default function AppLayout() {
             Negócios
           </Link>
         </nav>
-        <Button variant="ghost" size="sm" onClick={signOut} className={styles.sair}>
+        <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}>
           Sair
         </Button>
       </Glass>

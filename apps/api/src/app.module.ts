@@ -6,13 +6,6 @@ import { SyncModule } from "./modules/sync/sync.module.js";
 import { ContactsModule } from "./modules/contacts/contacts.module.js";
 import { CrmModule } from "./modules/crm/crm.module.js";
 import { ActivitiesModule } from "./modules/activities/activities.module.js";
-import { DevModule } from "./modules/dev/dev.module.js";
-
-// DevModule is only included outside production — the /v1/dev/login route
-// literally doesn't exist in prod (not even mapped, not "exists but
-// denies" — docs/adr/0005,
-// apps/api/src/modules/dev/presentation/dev-login.controller.ts).
-const conditionalModules = process.env.NODE_ENV === "production" ? [] : [DevModule];
 
 @Module({
   imports: [
@@ -36,7 +29,6 @@ const conditionalModules = process.env.NODE_ENV === "production" ? [] : [DevModu
     ContactsModule,
     CrmModule,
     ActivitiesModule,
-    ...conditionalModules,
   ],
 })
 export class AppModule {}

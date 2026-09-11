@@ -1,20 +1,8 @@
-/**
- * dev-login session, client-only (the .client.ts suffix — never enters
- * the server bundle: localStorage doesn't exist in Node, and RR8 strips
- * .client.* files from the SSR build automatically).
- *
- * Real production login (Supabase Auth, httpOnly cookie session, read on
- * the server) is a bigger decision — cookie, CSRF, refresh — outside
- * Fase 0's scope (docs/arquitetura/fase-0.md, Bloco 7). This is
- * deliberately the simplest path that already proves the real
- * architecture (same guard, same JWT, same server-side RLS — only the
- * token's ISSUANCE is dev-only, see
- * apps/api/src/modules/dev/presentation/dev-login.controller.ts).
- */
 import type { OrgId } from "@spark/core";
-import { setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client";
+import { meControllerMe, setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client";
+import { getSupabaseClient } from "./supabase.client";
 
-const SESSION_KEY = "spark_dev_session";
+const PROFILE_KEY = "leonardo_app_profile";
 
 // import.meta.env.VITE_API_BASE_URL is empty in local dev — the default
 // in packages/api-client/src/http-client.ts (http://localhost:3000) is
@@ -22,35 +10,91 @@ const SESSION_KEY = "spark_dev_session";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 if (API_BASE_URL) setSparkApiBaseUrl(API_BASE_URL);
 
-interface Session {
-  token: string;
+export interface AppSession {
   orgId: OrgId;
   userId: string;
 }
 
-export function getSession(): Session | null {
+let accessToken: string | null = null;
+let listening = false;
+
+function readProfile(): AppSession | null {
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? (JSON.parse(raw) as Session) : null;
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? (JSON.parse(raw) as AppSession) : null;
   } catch {
     return null;
   }
 }
 
+function saveProfile(profile: AppSession): void {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+}
+
+function clearProfile(): void {
+  localStorage.removeItem(PROFILE_KEY);
+}
+
+function listenForTokenRotation(): void {
+  if (listening) return;
+  listening = true;
+  getSupabaseClient().auth.onAuthStateChange((_event, session) => {
+    accessToken = session?.access_token ?? null;
+    if (!session) clearProfile();
+  });
+}
+
+async function resolveAppSession(): Promise<AppSession> {
+  const user = await meControllerMe();
+  const profile = { orgId: user.orgId as OrgId, userId: user.id };
+  saveProfile(profile);
+  return profile;
+}
+
+export function getSession(): AppSession | null {
+  return accessToken ? readProfile() : null;
+}
+
 export function getToken(): string | null {
-  return getSession()?.token ?? null;
+  return accessToken;
 }
 
-export function saveSession(session: Session): void {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  setSparkAuthTokenProvider(getToken);
+export async function restoreSession(): Promise<AppSession | null> {
+  listenForTokenRotation();
+  const { data, error } = await getSupabaseClient().auth.getSession();
+  if (error || !data.session) {
+    accessToken = null;
+    clearProfile();
+    return null;
+  }
+
+  accessToken = data.session.access_token;
+  try {
+    return await resolveAppSession();
+  } catch {
+    await signOut();
+    return null;
+  }
 }
 
-export function clearSession(): void {
-  localStorage.removeItem(SESSION_KEY);
+export async function signIn(email: string, password: string): Promise<AppSession> {
+  listenForTokenRotation();
+  const { data, error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
+  if (error || !data.session) throw new Error("INVALID_CREDENTIALS");
+
+  accessToken = data.session.access_token;
+  try {
+    return await resolveAppSession();
+  } catch {
+    await signOut();
+    throw new Error("ACCOUNT_NOT_PROVISIONED");
+  }
 }
 
-// runs once, on this module's first import (entry.client.tsx) — if a
-// session from a previous visit already exists, the provider is already
-// configured before any route loader runs.
+export async function signOut(): Promise<void> {
+  accessToken = null;
+  clearProfile();
+  await getSupabaseClient().auth.signOut({ scope: "local" });
+}
+
 setSparkAuthTokenProvider(getToken);
