@@ -41,7 +41,7 @@ vi.mock("./supabase.client", () => ({
   }),
 }));
 
-import { getSession, restoreSession, signIn, signOut } from "./auth.client";
+import { getSession, restoreSession, signIn, signOut, signOutEverywhere, signOutOtherSessions } from "./auth.client";
 
 describe("auth.client — Supabase Auth session", () => {
   afterEach(async () => {
@@ -72,6 +72,34 @@ describe("auth.client — Supabase Auth session", () => {
   it("does not create a session when Supabase has no authenticated user", async () => {
     mocks.getSession.mockResolvedValue({ data: { session: null }, error: null });
     await expect(restoreSession()).resolves.toBeNull();
+    expect(getSession()).toBeNull();
+  });
+
+  it("revokes other sessions without clearing the current device", async () => {
+    const orgId = orgIdFactory.create();
+    mocks.signInWithPassword.mockResolvedValue({ data: { session: { access_token: "real-jwt" } }, error: null });
+    mocks.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: "aal1", nextLevel: "aal1" }, error: null });
+    mocks.me.mockResolvedValue({ id: "local-user", orgId, capabilities: [] });
+    mocks.signOut.mockResolvedValue({ error: null });
+
+    await signIn("person@company.com", "strong-password");
+    await signOutOtherSessions();
+
+    expect(mocks.signOut).toHaveBeenCalledWith({ scope: "others" });
+    expect(getSession()).not.toBeNull();
+  });
+
+  it("clears the local session when every device is signed out", async () => {
+    const orgId = orgIdFactory.create();
+    mocks.signInWithPassword.mockResolvedValue({ data: { session: { access_token: "real-jwt" } }, error: null });
+    mocks.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: "aal1", nextLevel: "aal1" }, error: null });
+    mocks.me.mockResolvedValue({ id: "local-user", orgId, capabilities: [] });
+    mocks.signOut.mockResolvedValue({ error: null });
+
+    await signIn("person@company.com", "strong-password");
+    await signOutEverywhere();
+
+    expect(mocks.signOut).toHaveBeenCalledWith({ scope: "global" });
     expect(getSession()).toBeNull();
   });
 });

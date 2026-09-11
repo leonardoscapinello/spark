@@ -36,6 +36,12 @@ export interface MfaEnrollment {
   secret: string;
 }
 
+export interface AuthSessionDetails {
+  email: string;
+  lastSignInAt: string | null;
+  expiresAt: string | null;
+}
+
 let accessToken: string | null = null;
 let listening = false;
 
@@ -149,6 +155,18 @@ export async function getMfaStatus(): Promise<MfaStatus> {
   };
 }
 
+export async function getAuthSessionDetails(): Promise<AuthSessionDetails> {
+  const { data, error } = await getSupabaseClient().auth.getSession();
+  const session = data.session;
+  if (error || !session) throw new Error("SESSION_DETAILS_FAILED");
+
+  return {
+    email: session.user.email ?? "",
+    lastSignInAt: session.user.last_sign_in_at ?? null,
+    expiresAt: session.expires_at ? new Date(session.expires_at * 1_000).toISOString() : null,
+  };
+}
+
 export async function beginMfaEnrollment(): Promise<MfaEnrollment> {
   const client = getSupabaseClient();
   const { data: listed } = await client.auth.mfa.listFactors();
@@ -189,6 +207,18 @@ export async function signOut(): Promise<void> {
   accessToken = null;
   clearProfile();
   await getSupabaseClient().auth.signOut({ scope: "local" });
+}
+
+export async function signOutOtherSessions(): Promise<void> {
+  const { error } = await getSupabaseClient().auth.signOut({ scope: "others" });
+  if (error) throw new Error("SIGN_OUT_OTHERS_FAILED");
+}
+
+export async function signOutEverywhere(): Promise<void> {
+  const { error } = await getSupabaseClient().auth.signOut({ scope: "global" });
+  accessToken = null;
+  clearProfile();
+  if (error) throw new Error("SIGN_OUT_GLOBAL_FAILED");
 }
 
 setSparkAuthTokenProvider(getToken);

@@ -29,6 +29,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
   const [searchParams] = useSearchParams();
   const isSubmitting = navigation.state === "submitting";
   const passwordUpdated = searchParams.get("password") === "updated";
+  const sessionsClosed = searchParams.get("sessions") === "closed";
 
   return (
     <Form method="post" className={styles.card}>
@@ -38,6 +39,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
       </div>
 
       {passwordUpdated && <p className={styles.success} role="status">Senha atualizada. Você já pode entrar.</p>}
+      {sessionsClosed && <p className={styles.success} role="status">Todas as sessões foram encerradas com segurança.</p>}
 
       <div className={styles.form}>
         <Field invalid={!!actionData?.error}>
