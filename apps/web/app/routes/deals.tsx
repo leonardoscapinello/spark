@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from "react";
+import { Link } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { sum, formatBRL, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
@@ -256,7 +257,7 @@ export default function Deals() {
                         setDropTarget(null);
                       }}
                     >
-                      <span className={styles.cartaoNome}>{deal.name}</span>
+                      <Link className={styles.cartaoNome} to={`/deals/${deal.id}`}>{deal.name}</Link>
                       <span className={styles.cartaoValor}>{formatBRL(syncedAmount(deal.amount))}</span>
                       {deal.contactId && <span className={styles.cartaoMeta}>{contactNames.get(deal.contactId) ?? "Contato indisponível"}</span>}
                       {deal.ownerId && <span className={styles.cartaoMeta}>Responsável: {userNames.get(deal.ownerId) ?? "Usuário indisponível"}</span>}

@@ -63,6 +63,21 @@ export const MoveDealResponseSchema = z.object({
 });
 export type MoveDealResponse = z.infer<typeof MoveDealResponseSchema>;
 
+/** Editable commercial data. Moving and closing remain explicit commands. */
+export const EditDealInputSchema = UpdateDealInputSchema.omit({
+  pipelineId: true,
+  stageId: true,
+  status: true,
+  lossReason: true,
+});
+export type EditDealInput = z.infer<typeof EditDealInputSchema>;
+
+export const EditDealResponseSchema = z.object({
+  deal: DealSchema,
+  txid: z.number().int(),
+});
+export type EditDealResponse = z.infer<typeof EditDealResponseSchema>;
+
 /**
  * Close as won or lost — the board's other central action, besides moving
  * stages. Not a discriminated union: `nestjs-zod`'s `createZodDto` breaks

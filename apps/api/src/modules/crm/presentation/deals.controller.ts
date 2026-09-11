@@ -6,6 +6,7 @@ import { GetCurrentUserUseCase } from "../../identity/application/get-current-us
 import { CreateDealUseCase } from "../application/create-deal.usecase.js";
 import { MoveDealUseCase } from "../application/move-deal.usecase.js";
 import { CloseDealUseCase } from "../application/close-deal.usecase.js";
+import { EditDealUseCase } from "../application/edit-deal.usecase.js";
 import {
   CreateDealDto,
   CreateDealResponseDto,
@@ -13,6 +14,8 @@ import {
   MoveDealResponseDto,
   CloseDealDto,
   CloseDealResponseDto,
+  EditDealDto,
+  EditDealResponseDto,
   toDealDto,
 } from "../dto/deal.dto.js";
 
@@ -24,7 +27,23 @@ export class DealsController {
     private readonly createDeal: CreateDealUseCase,
     private readonly moveDeal: MoveDealUseCase,
     private readonly closeDeal: CloseDealUseCase,
+    private readonly editDeal: EditDealUseCase,
   ) {}
+
+  @Patch(":id")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("deals:write")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: EditDealResponseDto })
+  async edit(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Param("id") id: string,
+    @Body() body: EditDealDto,
+  ): Promise<EditDealResponseDto> {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const { deal, txid } = await this.editDeal.execute(user.orgId, dealIdFactory.from(id), body);
+    return { deal: toDealDto(deal), txid } as EditDealResponseDto;
+  }
 
   @Post()
   @UseGuards(SupabaseJwtGuard, CapabilityGuard)

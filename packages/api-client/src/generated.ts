@@ -654,6 +654,89 @@ export interface RenameStageResponseDto {
   txid: number;
 }
 
+export interface EditDealDto {
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name?: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount?: number;
+  expectedCloseDate?: string | null;
+}
+
+export type EditDealResponseDtoDealStatus = typeof EditDealResponseDtoDealStatus[keyof typeof EditDealResponseDtoDealStatus];
+
+
+export const EditDealResponseDtoDealStatus = {
+  open: 'open',
+  won: 'won',
+  lost: 'lost',
+} as const;
+
+export type EditDealResponseDtoDeal = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /** @minLength 1 */
+  stageId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount: number;
+  status?: EditDealResponseDtoDealStatus;
+  expectedCloseDate: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  lossReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export interface EditDealResponseDto {
+  deal: EditDealResponseDtoDeal;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type CreateDealDtoStatus = typeof CreateDealDtoStatus[keyof typeof CreateDealDtoStatus];
 
 
@@ -2162,6 +2245,69 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getStagesControllerRenameMutationOptions(options), queryClient);
+    }
+
+export const dealsControllerEdit = (
+    id: string,
+    editDealDto: EditDealDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<EditDealResponseDto>(
+      {url: `/v1/deals/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: editDealDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealsControllerEditMutationKey = () => ['dealsControllerEdit'] as const;
+
+export const getDealsControllerEditMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerEdit>>, TError,DealsControllerEditMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealsControllerEdit>>, TError,DealsControllerEditMutationVariables, TContext> => {
+
+const mutationKey = getDealsControllerEditMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealsControllerEdit>>, DealsControllerEditMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  dealsControllerEdit(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealsControllerEditMutationResult = NonNullable<Awaited<ReturnType<typeof dealsControllerEdit>>>
+    export type DealsControllerEditMutationBody = EditDealDto
+    export type DealsControllerEditMutationError = unknown
+    export type DealsControllerEditMutationVariables = {id: string;data: EditDealDto}
+
+    export const useDealsControllerEdit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerEdit>>, TError,DealsControllerEditMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealsControllerEdit>>,
+        TError,
+        DealsControllerEditMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealsControllerEditMutationOptions(options), queryClient);
     }
 
 export const dealsControllerCreate = (

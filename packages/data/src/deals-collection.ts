@@ -11,6 +11,7 @@ import { z } from "zod";
 import { DealSchema, dealId, money, toCents, type Deal, type Money, type CreateDealInput, type OrgId } from "@spark/core";
 import {
   dealsControllerCreate,
+  dealsControllerEdit,
   dealsControllerMove,
   dealsControllerClose,
   getSparkApiBaseUrl,
@@ -172,8 +173,20 @@ export function createDealsCollection() {
           return { txid: response.txid };
         }
 
+        const editableFields = ["name", "amount", "contactId", "ownerId", "expectedCloseDate"];
+        if (changedFields.length > 0 && changedFields.every((field) => editableFields.includes(field))) {
+          const response = await dealsControllerEdit(mutation.original.id, {
+            name: mutation.modified.name,
+            amount: toCents(mutation.modified.amount),
+            contactId: mutation.modified.contactId,
+            ownerId: mutation.modified.ownerId,
+            expectedCloseDate: mutation.modified.expectedCloseDate,
+          });
+          return { txid: response.txid };
+        }
+
         throw new Error(
-          `Only moving stage or closing (won/lost) is possible today — changed field(s): ${changedFields.join(", ")}.`,
+          `Unsupported deal update — changed field(s): ${changedFields.join(", ")}.`,
         );
       },
     }),

@@ -7,6 +7,8 @@ import {
   CreateDealResponseSchema,
   MoveDealInputSchema,
   MoveDealResponseSchema,
+  EditDealInputSchema,
+  EditDealResponseSchema,
   CloseDealInputSchema,
   CloseDealResponseSchema,
 } from "@spark/core";
@@ -16,6 +18,8 @@ export class CreateDealDto extends createZodDto(CreateDealInputSchema) {}
 export class CreateDealResponseDto extends createZodDto(CreateDealResponseSchema) {}
 export class MoveDealDto extends createZodDto(MoveDealInputSchema) {}
 export class MoveDealResponseDto extends createZodDto(MoveDealResponseSchema) {}
+export class EditDealDto extends createZodDto(EditDealInputSchema) {}
+export class EditDealResponseDto extends createZodDto(EditDealResponseSchema) {}
 export class CloseDealDto extends createZodDto(CloseDealInputSchema) {}
 export class CloseDealResponseDto extends createZodDto(CloseDealResponseSchema) {}
 

@@ -7,6 +7,7 @@ import {
   type Deal,
   type CreateDealInput,
   type CloseDealInput,
+  type EditDealInput,
   type OrgId,
   type DealId,
   type StageId,
@@ -60,6 +61,29 @@ export class DealsRepository {
 
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
 
+      return { deal: toDeal(row), txid };
+    });
+  }
+
+  async edit(orgId: OrgId, dealId: DealId, input: EditDealInput): Promise<{ deal: Deal; txid: number }> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const txid = await captureTxid(tx);
+      const [row] = await tx
+        .update(deals)
+        .set({
+          ...(input.name !== undefined ? { name: input.name } : {}),
+          ...(input.amount !== undefined ? { amount: toCents(input.amount) } : {}),
+          ...(input.contactId !== undefined ? { contactId: input.contactId } : {}),
+          ...(input.ownerId !== undefined ? { ownerId: input.ownerId } : {}),
+          ...(input.expectedCloseDate !== undefined
+            ? { expectedCloseDate: input.expectedCloseDate ? new Date(input.expectedCloseDate) : null }
+            : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(deals.id, dealId))
+        .returning();
+
+      if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
       return { deal: toDeal(row), txid };
     });
   }

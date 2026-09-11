@@ -133,6 +133,12 @@
 .cartaoNome {
   font-size: var(--typography-size-sm);
   font-weight: var(--typography-weight-medium);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.cartaoNome:hover {
+  text-decoration: underline;
 }
 
 .cartaoValor {
