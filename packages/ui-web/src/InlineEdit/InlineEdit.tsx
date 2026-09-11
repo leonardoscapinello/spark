@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from "react";
 import { Button } from "../Button/Button.js";
+import { Icon } from "../Icon/Icon.js";
 import { Input } from "../Input/Input.js";
 import { Select, type SelectOption } from "../Select/Select.js";
 import s from "./InlineEdit.module.css";
@@ -32,8 +33,8 @@ export function InlineEdit({ label, value, onSave, options, placeholder = "Não 
   }
   if (!editing) return <button type="button" className={s.value} disabled={disabled} aria-label={`Editar ${label}: ${options?.find(o=>o.value===value)?.label || value || placeholder}`} ref={node=>{if(node && restoreFocus.current){restoreFocus.current=false;node.focus();}}} onClick={()=>{setDraft(value);setError(false);setEditing(true);}}>{options?.find(o=>o.value===value)?.label || value || placeholder}</button>;
   return <div className={s.editor} role="group" aria-label={`Editar ${label}`} aria-busy={pending} onKeyDown={event=>{if(event.defaultPrevented || busy.current)return;if(event.key === "Escape"){event.preventDefault();close();}else if(event.key === "Enter" && !options && !event.nativeEvent.isComposing){event.preventDefault();void save();}}}>
-    {options ? <Select label={label} options={options} value={draft} onValueChange={next=>{if(next!==null)setDraft(next);}} disabled={pending} defaultOpen /> : <Input aria-label={label} value={draft} onChange={event=>setDraft(event.target.value)} autoFocus disabled={pending} aria-invalid={error} aria-describedby={error ? errorId : undefined} />}
-    <div className={s.actions}><Button type="button" size="sm" loading={pending} onClick={()=>void save()}>Salvar</Button><Button type="button" size="sm" variant="ghost" disabled={pending} onClick={close}>Cancelar</Button></div>
+    <div className={s.control}>{options ? <Select label={label} options={options} value={draft} onValueChange={next=>{if(next!==null)setDraft(next);}} disabled={pending} defaultOpen /> : <Input aria-label={label} value={draft} onChange={event=>setDraft(event.target.value)} autoFocus disabled={pending} aria-invalid={error} aria-describedby={error ? errorId : undefined} />}</div>
+    <div className={s.actions}><Button type="button" size="sm" shape="rounded" iconOnly icon={<Icon name="check" />} aria-label="Salvar" title="Salvar" loading={pending} onClick={()=>void save()} /><Button type="button" size="sm" shape="rounded" iconOnly icon={<Icon name="close" />} aria-label="Cancelar" title="Cancelar" variant="ghost" disabled={pending} onClick={close} /></div>
     {error && <p id={errorId} role="alert" className={s.error}>{errorText}</p>}
   </div>;
 }
