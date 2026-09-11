@@ -2,12 +2,13 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, activities, type SparkDb } from "@spark/db";
 import type { Activity, CreateActivityInput, OrgId, ActivityId } from "@spark/core";
+import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
 export class ActivitiesRepository {
   private readonly db: SparkDb;
 
-  constructor() {
+  constructor(private readonly eventWriter: DomainEventWriter) {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
@@ -31,7 +32,9 @@ export class ActivitiesRepository {
 
       if (!row) throw new Error("Activity insert returned no row.");
 
-      return { activity: toActivity(row), txid };
+      const activity = toActivity(row);
+      await this.eventWriter.append(tx, { orgId, contactId: activity.contactId, dealId: activity.dealId, type: "activity.created", data: { activityId: activity.id, title: activity.title, activityType: activity.type, scheduledAt: activity.scheduledAt } });
+      return { activity, txid };
     });
   }
 
@@ -48,7 +51,9 @@ export class ActivitiesRepository {
 
       if (!row) throw new NotFoundException(`Activity ${id} not found.`);
 
-      return { activity: toActivity(row), txid };
+      const activity = toActivity(row);
+      await this.eventWriter.append(tx, { orgId, contactId: activity.contactId, dealId: activity.dealId, type: completed ? "activity.completed" : "activity.reopened", data: { activityId: activity.id, title: activity.title } });
+      return { activity, txid };
     });
   }
 }

@@ -8,8 +8,10 @@ import { CreateCompanyUseCase } from "./application/create-company.usecase.js";
 import { UpdateCompanyUseCase } from "./application/update-company.usecase.js";
 import { CompaniesRepository } from "./infrastructure/companies.repository.js";
 import { CompaniesController } from "./presentation/companies.controller.js";
+import { EventsModule } from "../events/events.module.js";
 
 @Module({
+  imports: [EventsModule],
   controllers: [CompaniesController],
   providers: [CreateCompanyUseCase, UpdateCompanyUseCase, ArchiveCompanyUseCase, CompaniesRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })

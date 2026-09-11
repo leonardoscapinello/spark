@@ -11,18 +11,20 @@ import {
   type ActivityType,
 } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { Button, DateTimePicker, ErrorText, Field, Input, Label, Select, notify } from "@spark/ui-web";
+import { Button, DateTimePicker, ErrorText, Field, Input, Label, Select, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
+import { getEventsCollection } from "../lib/events-collection.client";
+import { toTimelineItem } from "../lib/event-presentation";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
 import { getSession } from "../lib/auth.client";
 import styles from "./contact-detail.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload(), getUsersCollection().preload(), getCompaniesCollection().preload()]);
+  await Promise.all([getContactsCollection().preload(), getActivitiesCollection().preload(), getUsersCollection().preload(), getCompaniesCollection().preload(), getEventsCollection().preload()]);
   return null;
 }
 
@@ -74,6 +76,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
     query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc"),
   });
   const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") });
+  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.contactId, params.contactId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
 
   async function updateLifecycle(field: "leadStatus" | "source" | "ownerId" | "companyId", value: string | null) {
     if (!data || contactFieldPending) return;
@@ -277,6 +280,11 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
           <Select label="Empresa do contato" value={data.companyId} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} disabled={contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("companyId", value)} />
         </div>
       </div>
+
+      <section className={styles.atividades}>
+        <h2 className={styles.subtitulo}>Histórico</h2>
+        <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste contato aparecerão aqui." />
+      </section>
 
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Atividades</h2>

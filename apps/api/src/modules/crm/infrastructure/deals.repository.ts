@@ -12,12 +12,13 @@ import {
   type DealId,
   type StageId,
 } from "@spark/core";
+import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
 export class DealsRepository {
   private readonly db: SparkDb;
 
-  constructor() {
+  constructor(private readonly eventWriter: DomainEventWriter) {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
@@ -45,7 +46,9 @@ export class DealsRepository {
 
       if (!row) throw new Error("Deal insert returned no row.");
 
-      return { deal: toDeal(row), txid };
+      const deal = toDeal(row);
+      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.created", data: { name: deal.name, stageId: deal.stageId } });
+      return { deal, txid };
     });
   }
 
@@ -62,7 +65,9 @@ export class DealsRepository {
 
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
 
-      return { deal: toDeal(row), txid };
+      const deal = toDeal(row);
+      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.stage_changed", data: { stageId: deal.stageId } });
+      return { deal, txid };
     });
   }
 
@@ -86,7 +91,9 @@ export class DealsRepository {
         .returning();
 
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
-      return { deal: toDeal(row), txid };
+      const deal = toDeal(row);
+      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.updated", data: { fields: Object.keys(input) } });
+      return { deal, txid };
     });
   }
 
@@ -107,7 +114,9 @@ export class DealsRepository {
 
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
 
-      return { deal: toDeal(row), txid };
+      const deal = toDeal(row);
+      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: input.status === "won" ? "deal.won" : "deal.lost", data: input.status === "lost" ? { reason: input.lossReason ?? null } : {} });
+      return { deal, txid };
     });
   }
 }

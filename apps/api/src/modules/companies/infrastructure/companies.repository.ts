@@ -2,10 +2,13 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, sql } from "drizzle-orm";
 import { companies, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
 import type { Company, CompanyId, CreateCompanyInput, OrgId, UpdateCompanyInput } from "@spark/core";
+import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
 export class CompaniesRepository {
   private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+
+  constructor(private readonly eventWriter: DomainEventWriter) {}
 
   async create(orgId: OrgId, input: CreateCompanyInput): Promise<{ company: Company; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
@@ -27,7 +30,9 @@ export class CompaniesRepository {
         tags: input.tags ?? [],
       }).returning();
       if (!row) throw new Error("Company insert returned no row.");
-      return { company: toCompany(row), txid };
+      const company = toCompany(row);
+      await this.eventWriter.append(tx, { orgId, companyId: company.id, type: "company.created", data: { name: company.name } });
+      return { company, txid };
     });
   }
 
@@ -36,7 +41,9 @@ export class CompaniesRepository {
       const txid = await captureTxid(tx);
       const [row] = await tx.update(companies).set({ ...input, updatedAt: new Date() }).where(eq(companies.id, id)).returning();
       if (!row) throw new NotFoundException(`Company ${id} not found.`);
-      return { company: toCompany(row), txid };
+      const company = toCompany(row);
+      await this.eventWriter.append(tx, { orgId, companyId: company.id, type: "company.updated", data: { fields: Object.keys(input) } });
+      return { company, txid };
     });
   }
 
@@ -45,7 +52,9 @@ export class CompaniesRepository {
       const txid = await captureTxid(tx);
       const [row] = await tx.update(companies).set({ deletedAt: archived ? new Date() : null, updatedAt: new Date() }).where(eq(companies.id, id)).returning();
       if (!row) throw new NotFoundException(`Company ${id} not found.`);
-      return { company: toCompany(row), txid };
+      const company = toCompany(row);
+      await this.eventWriter.append(tx, { orgId, companyId: company.id, type: archived ? "company.archived" : "company.restored" });
+      return { company, txid };
     });
   }
 }

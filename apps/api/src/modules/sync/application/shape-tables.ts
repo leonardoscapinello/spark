@@ -21,6 +21,7 @@ export const SHAPE_TABLES: Readonly<Record<string, ShapeTableConfig>> = {
   stages: { column: "org_id" },
   deals: { column: "org_id" },
   activities: { column: "org_id" },
+  events: { column: "org_id" },
   users: { column: "org_id" },
 };
 

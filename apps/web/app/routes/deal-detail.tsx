@@ -28,6 +28,7 @@ import {
   SearchSelect,
   Select,
   Textarea,
+  Timeline,
   notify,
   type SelectOption,
 } from "@spark/ui-web";
@@ -38,6 +39,8 @@ import { getDealsCollection, getPipelinesCollection, getStagesCollection } from 
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
+import { getEventsCollection } from "../lib/events-collection.client";
+import { toTimelineItem } from "../lib/event-presentation";
 import styles from "./deal-detail.module.css";
 
 const ACTIVITY_TYPES: ReadonlyArray<{ value: ActivityType; label: string }> = [
@@ -56,6 +59,7 @@ export async function clientLoader() {
     getUsersCollection().preload(),
     getActivitiesCollection().preload(),
     getCompaniesCollection().preload(),
+    getEventsCollection().preload(),
   ]);
   return null;
 }
@@ -84,6 +88,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: activities } = useLiveQuery({
     query: (q) => q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc"),
   });
+  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
@@ -231,6 +236,11 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           {deal.status === "open" && canMove && <div className={styles.closeActions}><Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Marcar como ganho</Button><Button variant="secondary" onClick={() => setLossModalOpen(true)}>Marcar como perdido</Button></div>}
         </section>}
+
+        <section className={styles.activities}>
+          <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas neste negócio.</p></div></div>
+          <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />
+        </section>
 
         <section className={styles.activities}>
           <div className={styles.sectionHeader}><div><h2>Atividades</h2><p>Próximos passos e histórico operacional deste negócio.</p></div>{canWriteActivities && <Button size="sm" onClick={() => setActivityModalOpen(true)}>Nova atividade</Button>}</div>

@@ -8,8 +8,10 @@ import { GetCurrentUserUseCase } from "../identity/application/get-current-user.
 import { UsersRepository } from "../identity/infrastructure/users.repository.js";
 import { PermissionGroupsRepository } from "../identity/infrastructure/permission-groups.repository.js";
 import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
+import { EventsModule } from "../events/events.module.js";
 
 @Module({
+  imports: [EventsModule],
   controllers: [ContactsController],
   providers: [
     CreateContactUseCase,

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, contacts, type SparkDb } from "@spark/db";
 import type { Contact, CreateContactInput, UpdateContactInput, OrgId, ContactId } from "@spark/core";
+import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 /**
  * Every business write goes through withOrgContext — RLS actually
@@ -14,7 +15,7 @@ import type { Contact, CreateContactInput, UpdateContactInput, OrgId, ContactId 
 export class ContactsRepository {
   private readonly db: SparkDb;
 
-  constructor() {
+  constructor(private readonly eventWriter: DomainEventWriter) {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
@@ -49,10 +50,9 @@ export class ContactsRepository {
 
       if (!row) throw new Error("Contact insert returned no row.");
 
-      return {
-        contact: toContact(row),
-        txid: Number(txid),
-      };
+      const contact = toContact(row);
+      await this.eventWriter.append(tx, { orgId, contactId: contact.id, companyId: contact.companyId, type: "contact.created", data: { name: contact.name, source: contact.source } });
+      return { contact, txid: Number(txid) };
     });
   }
 
@@ -83,7 +83,9 @@ export class ContactsRepository {
 
       if (!row) throw new NotFoundException(`Contact ${id} not found.`);
 
-      return { contact: toContact(row), txid: Number(txid) };
+      const contact = toContact(row);
+      await this.eventWriter.append(tx, { orgId, contactId: contact.id, companyId: contact.companyId, type: "contact.updated", data: { fields: Object.keys(input) } });
+      return { contact, txid: Number(txid) };
     });
   }
 
@@ -94,7 +96,9 @@ export class ContactsRepository {
       if (!txidRow) throw new Error("Could not obtain the transaction's txid.");
       const [row] = await tx.update(contacts).set({ deletedAt: archived ? new Date() : null, updatedAt: new Date() }).where(eq(contacts.id, id)).returning();
       if (!row) throw new NotFoundException(`Contact ${id} not found.`);
-      return { contact: toContact(row), txid: Number(txidRow.txid) };
+      const contact = toContact(row);
+      await this.eventWriter.append(tx, { orgId, contactId: contact.id, companyId: contact.companyId, type: archived ? "contact.archived" : "contact.restored" });
+      return { contact, txid: Number(txidRow.txid) };
     });
   }
 }

@@ -53,3 +53,4 @@ export { FeedbackButton, type FeedbackButtonProps, type FeedbackState } from "./
 
 export { CashPiece, type CashPieceProps } from "./ChangeCalculator/CashPiece.js";
 export { PageHeader, type PageHeaderProps } from "./PageHeader/PageHeader.js";
+export { Timeline, type TimelineItem } from "./Timeline/Timeline.js";

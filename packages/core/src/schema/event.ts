@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { zOrgId, zContactId } from "./zodHelpers.js";
+import { zCompanyId, zContactId, zDealId, zEventId, zOrgId, zServerTimestamp } from "./zodHelpers.js";
+
+export const DOMAIN_EVENT_TYPES = [
+  "contact.created", "contact.updated", "contact.archived", "contact.restored",
+  "company.created", "company.updated", "company.archived", "company.restored",
+  "deal.created", "deal.updated", "deal.stage_changed", "deal.won", "deal.lost",
+  "activity.created", "activity.completed", "activity.reopened",
+] as const;
+export const DomainEventTypeSchema = z.enum(DOMAIN_EVENT_TYPES);
+export type DomainEventType = z.infer<typeof DomainEventTypeSchema>;
 
 /**
  * The contact's unified timeline — every automation trigger is born here
@@ -7,12 +16,14 @@ import { zOrgId, zContactId } from "./zodHelpers.js";
  * month in the migration (docs/adr/0021), never at runtime.
  */
 export const EventSchema = z.object({
-  id: z.uuid(),
+  id: zEventId,
   orgId: zOrgId,
   contactId: zContactId.nullable(),
-  type: z.string().min(1).max(100),
+  dealId: zDealId.nullable(),
+  companyId: zCompanyId.nullable(),
+  type: DomainEventTypeSchema,
   data: z.record(z.string(), z.unknown()).default({}),
-  occurredAt: z.iso.datetime(),
+  occurredAt: zServerTimestamp,
 });
 
 export type Event = z.infer<typeof EventSchema>;
@@ -20,6 +31,8 @@ export type Event = z.infer<typeof EventSchema>;
 // orgId never comes from the client — same rule as contact.ts (docs/adr/0026).
 export const CreateEventInputSchema = EventSchema.omit({ id: true, orgId: true }).partial({
   contactId: true,
+  dealId: true,
+  companyId: true,
   data: true,
   occurredAt: true,
 });

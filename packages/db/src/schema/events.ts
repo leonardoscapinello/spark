@@ -3,6 +3,8 @@ import { sql } from "drizzle-orm";
 import { v7 as uuidv7 } from "uuid";
 import { organizations } from "./organizations.js";
 import { contacts } from "./contacts.js";
+import { deals } from "./deals.js";
+import { companies } from "./companies.js";
 import { APP_ROLE } from "../roles.js";
 
 /**
@@ -22,8 +24,10 @@ export const events = pgTable(
     id: uuid("id").notNull().$defaultFn(() => uuidv7()),
     orgId: uuid("org_id")
       .notNull()
-      .references(() => organizations.id),
-    contactId: uuid("contact_id").references(() => contacts.id),
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
+    dealId: uuid("deal_id").references(() => deals.id, { onDelete: "cascade" }),
+    companyId: uuid("company_id").references(() => companies.id, { onDelete: "cascade" }),
     type: text("type").notNull(),
     data: jsonb("data").notNull().default({}),
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),

@@ -3,17 +3,19 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionModal, Button, Field, Input, Label, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, Field, Input, Label, PageHeader, SearchSelect, Select, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
+import { getEventsCollection } from "../lib/events-collection.client";
+import { toTimelineItem } from "../lib/event-presentation";
 import styles from "./company-detail.module.css";
 
 export async function clientLoader() {
-  await Promise.all([getCompaniesCollection().preload(), getContactsCollection().preload(), getDealsCollection().preload(), getUsersCollection().preload()]);
+  await Promise.all([getCompaniesCollection().preload(), getContactsCollection().preload(), getDealsCollection().preload(), getUsersCollection().preload(), getEventsCollection().preload()]);
   return null;
 }
 
@@ -26,6 +28,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
   const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") });
   const { data: deals } = useLiveQuery({ query: (q) => q.from({ deals: dealsCollection }).orderBy(({ deals: item }) => item.updatedAt, "desc") });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
+  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.companyId, params.companyId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const canWrite = getSession()?.capabilities.includes("companies:write") ?? false;
   const canLinkContacts = getSession()?.capabilities.includes("contacts:write") ?? false;
   const canLinkDeals = getSession()?.capabilities.includes("deals:write") ?? false;
@@ -126,6 +129,11 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
         {linkedDeals.length ? <ul>{linkedDeals.map((deal) => <li key={deal.id}><div><Link to={`/deals/${deal.id}`}>{deal.name}</Link><span>{formatBRL(syncedAmount(deal.amount))} · {deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></div>{canLinkDeals && <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhum negócio vinculado.</p>}
       </section>
     </div>
+
+    <section className={styles.relationCard}>
+      <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas nesta empresa e em seus vínculos comerciais.</p></div></div>
+      <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações desta empresa aparecerão aqui." />
+    </section>
 
     <ActionModal open={linkContactOpen} onOpenChange={setLinkContactOpen} title="Vincular contato" confirmLabel="Vincular" errorText="Selecione um contato." onConfirm={linkContact}>
       <Field><Label>Contato</Label><SearchSelect label="Buscar contato" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((item) => !item.deletedAt && item.companyId !== company.id).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>

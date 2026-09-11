@@ -1,0 +1,11 @@
+.root { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.item { position: relative; display: grid; grid-template-columns: var(--space-4) minmax(0, 1fr); gap: var(--space-3); padding-bottom: var(--space-5); }
+.item:not(:last-child)::before { content: ""; position: absolute; left: calc(var(--space-2) - var(--ui-hairline)); top: var(--space-3); bottom: 0; width: var(--ui-hairline); background: var(--color-line); }
+.marker { position: relative; z-index: 1; width: var(--space-3); height: var(--space-3); margin-top: var(--space-1); border: 2px solid var(--color-surface); border-radius: var(--radius-full); background: var(--color-inkMuted); box-shadow: 0 0 0 var(--ui-hairline) var(--color-line); }
+.item[data-tone="accent"] .marker { background: var(--color-accent); }
+.item[data-tone="positive"] .marker { background: var(--color-statusSuccess); }
+.item[data-tone="negative"] .marker { background: var(--color-statusDanger); }
+.content { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.content strong { color: var(--color-ink); font-size: var(--typography-size-sm); }
+.description, .content time { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.empty { padding: var(--space-6); border: 1px dashed var(--color-line); border-radius: var(--radius-md); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }
