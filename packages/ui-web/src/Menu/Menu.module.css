@@ -1,6 +1,9 @@
-.root { display: inline-flex; gap: var(--ui-hairline); align-items: stretch; isolation: isolate; }
+.root { display: inline-flex; gap: 0; align-items: stretch; isolation: isolate; }
 /* Base UI mounts focus guards beside the trigger while open. Segment identity
    must not depend on DOM order (:last-child stops matching at that moment). */
 .root > [data-split-part="action"] { border-start-end-radius: 0; border-end-end-radius: 0; }
 .root > [data-split-part="menu"] { border-start-start-radius: 0; border-end-start-radius: 0; }
 .root > button:focus-visible { position: relative; z-index: 1; }
+
+.root > [data-split-part="menu"] { position: relative; }
+.root > [data-split-part="menu"]::before { content: ""; position: absolute; inset-inline-start: 0; top: var(--space-2); bottom: var(--space-2); width: var(--ui-hairline); background: currentColor; opacity: var(--ui-splitDividerOpacity); pointer-events: none; }

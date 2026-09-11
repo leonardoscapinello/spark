@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../Button/Button.js";
 import { Icon } from "../Icon/Icon.js";
@@ -13,6 +13,8 @@ import { PasswordInput } from "../PasswordInput/PasswordInput.js";
 import { ErrorText } from "../ErrorText/ErrorText.js";
 import { ExtendedCatalog } from "./ExtendedCatalog.js";
 import styles from "./Catalog.module.css";
+
+const DashboardExamples = lazy(() => import("../Chart/DashboardExamples.js"));
 
 function FormExample() {
   const [saved, setSaved] = useState(false);
@@ -36,6 +38,7 @@ function Catalog() {
     <main className={styles.main}>
       <header className={styles.header}><div><h1>Componentes</h1><p>Biblioteca compartilhada · referência Intercom</p></div><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => setSelection("Nova visualização")}>Criar novo</Button></header>
       <div className={styles.selection} role="status">{selection}</div>
+      <div className={styles.dashboard}><Suspense fallback={<p>Carregando gráficos…</p>}><DashboardExamples /></Suspense></div>
       <div className={styles.grid}>
         <ExtendedCatalog />
         <section className={styles.card}><h2>Botões</h2><div className={styles.rows}>

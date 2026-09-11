@@ -24,3 +24,5 @@ export * from "./Switch/Switch.js";
 export * from "./RadioGroup/RadioGroup.js";
 export * from "./Textarea/Textarea.js";
 export * from "./Feedback/Feedback.js";
+export * from "./Card/Card.js";
+export * from "./Dashboard/Dashboard.js";

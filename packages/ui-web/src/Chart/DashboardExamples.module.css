@@ -1,0 +1,2 @@
+.root { display: flex; flex-direction: column; gap: var(--space-4); }
+.caption { font-family: var(--typography-fontFamily-body); color: var(--color-inkMuted); font-size: var(--typography-size-compact); margin: 0; line-height: var(--ui-tabLine); }

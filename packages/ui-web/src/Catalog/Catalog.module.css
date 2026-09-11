@@ -13,3 +13,5 @@
 .attributes { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: 0; }
 .attributes dt { color: var(--color-inkMuted); }
 .attributes dd { margin: 0; }
+
+.dashboard { padding: 0 var(--space-6) var(--space-6); }

@@ -188,6 +188,58 @@
     "popoverWidth": {
       "$type": "dimension",
       "$value": "320px"
+    },
+    "splitDividerOpacity": {
+      "$type": "number",
+      "$value": 0.16
+    },
+    "chartHeight": {
+      "$type": "dimension",
+      "$value": "260px"
+    },
+    "chartColumn": {
+      "$type": "dimension",
+      "$value": "460px"
+    },
+    "metricColumn": {
+      "$type": "dimension",
+      "$value": "200px"
+    },
+    "chartStroke": {
+      "$type": "number",
+      "$value": 2
+    },
+    "chartFillOpacity": {
+      "$type": "number",
+      "$value": 0.12
+    },
+    "chartTickSize": {
+      "$type": "number",
+      "$value": 12
+    },
+    "chartAxisWidth": {
+      "$type": "number",
+      "$value": 48
+    },
+    "chart1": {
+      "$type": "color",
+      "$value": "#4844a3"
+    },
+    "chart2": {
+      "$type": "color",
+      "$value": "#62a7dd"
+    },
+    "chart3": {
+      "$type": "color",
+      "$value": "#b398dd"
+    },
+    "chart4": {
+      "$type": "color",
+      "$value": "#6baca0"
+    },
+    "chart5": {
+      "$type": "color",
+      "$value": "#d4a258"
     }
   }
 }
