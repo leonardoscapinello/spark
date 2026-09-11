@@ -4,7 +4,7 @@ import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
 import { APP_ROLE } from "../roles.js";
 
-/** Espelha PipelineSchema (packages/core/src/schema/pipeline.ts). */
+/** Mirrors PipelineSchema (packages/core/src/schema/pipeline.ts). */
 export const pipelines = pgTable(
   "pipelines",
   {
@@ -12,14 +12,14 @@ export const pipelines = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => organizations.id),
-    nome: text("nome").notNull(),
-    padrao: boolean("padrao").notNull().default(false),
-    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
-    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
-    arquivadoEm: timestamp("arquivado_em", { withTimezone: true }),
+    name: text("name").notNull(),
+    isDefault: boolean("is_default").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [
-    pgPolicy("pipelines_isolamento_por_org", {
+    pgPolicy("pipelines_isolation_by_org", {
       for: "all",
       to: APP_ROLE,
       using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid`,

@@ -5,7 +5,7 @@ import { organizations } from "./organizations.js";
 import { pipelines } from "./pipelines.js";
 import { APP_ROLE } from "../roles.js";
 
-/** Espelha StageSchema (packages/core/src/schema/stage.ts). */
+/** Mirrors StageSchema (packages/core/src/schema/stage.ts). */
 export const stages = pgTable(
   "stages",
   {
@@ -16,15 +16,15 @@ export const stages = pgTable(
     pipelineId: uuid("pipeline_id")
       .notNull()
       .references(() => pipelines.id),
-    nome: text("nome").notNull(),
-    ordem: integer("ordem").notNull(),
-    probabilidade: integer("probabilidade").notNull().default(0),
-    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
-    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
-    arquivadoEm: timestamp("arquivado_em", { withTimezone: true }),
+    name: text("name").notNull(),
+    sortOrder: integer("sort_order").notNull(),
+    probability: integer("probability").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [
-    pgPolicy("stages_isolamento_por_org", {
+    pgPolicy("stages_isolation_by_org", {
       for: "all",
       to: APP_ROLE,
       using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid`,

@@ -1,1 +1,0 @@
-ALTER PUBLICATION electric_publication_default ADD TABLE activities;

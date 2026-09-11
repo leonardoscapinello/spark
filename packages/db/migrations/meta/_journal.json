@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1789070003206,
-      "tag": "0000_giant_slipstream",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1789071195814,
-      "tag": "0001_even_gravity",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1789078234314,
-      "tag": "0003_rich_shotgun",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1789079022808,
-      "tag": "0004_curly_speed_demon",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1789082827690,
-      "tag": "0006_typical_dagger",
+      "when": 1789134228119,
+      "tag": "0000_ambiguous_la_nuit",
       "breakpoints": true
     }
   ]

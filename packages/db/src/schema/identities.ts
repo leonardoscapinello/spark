@@ -6,10 +6,10 @@ import { APP_ROLE } from "../roles.js";
 import { v7 as uuidv7 } from "uuid";
 
 /**
- * Espelha IdentitySchema (packages/core/src/schema/identity.ts). A tabela
- * que liga um canal (e-mail, WhatsApp, Instagram) ao mesmo contato — sem
- * ela o Spark é só mais um dos quatro sistemas que substitui
- * (docs/arquitetura/visao-geral.md).
+ * Mirrors IdentitySchema (packages/core/src/schema/identity.ts). The
+ * table that links a channel (email, WhatsApp, Instagram) to the same
+ * contact — without it Spark is just one more of the four systems it
+ * replaces (docs/arquitetura/visao-geral.md).
  */
 export const identities = pgTable(
   "identities",
@@ -21,15 +21,15 @@ export const identities = pgTable(
     contactId: uuid("contact_id")
       .notNull()
       .references(() => contacts.id),
-    canal: text("canal").notNull(),
-    valorExterno: text("valor_externo").notNull(),
-    verificado: boolean("verificado").notNull().default(false),
-    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    channel: text("channel").notNull(),
+    externalValue: text("external_value").notNull(),
+    verified: boolean("verified").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    // uma identidade pertence a um contato só, por organização e canal
-    unique("identities_org_canal_valor").on(t.orgId, t.canal, t.valorExterno),
-    pgPolicy("identities_isolamento_por_org", {
+    // an identity belongs to exactly one contact, per organization and channel
+    unique("identities_org_channel_value").on(t.orgId, t.channel, t.externalValue),
+    pgPolicy("identities_isolation_by_org", {
       for: "all",
       to: APP_ROLE,
       using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid`,

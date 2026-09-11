@@ -1,43 +1,55 @@
 # @spark/db
 
-Schema Drizzle + migrations. Ver `docs/adr/0005`, `docs/adr/0021`, `docs/adr/0022`.
+Drizzle schema + migrations. See `docs/adr/0005`, `docs/adr/0021`, `docs/adr/0022`.
 
-**Só `apps/api`, `apps/worker` e `apps/scheduler` importam isto** — o cliente lê via sync/Electric, nunca direto do banco (`docs/adr/0026`).
+**Only `apps/api`, `apps/worker`, and `apps/scheduler` import this** — the client reads via sync/Electric, never straight from the database (`docs/adr/0026`).
 
-## Dois papéis de conexão — não confundir
+## Two connection roles — don't mix them up
 
-| Papel | Uso | RLS |
+| Role | Used by | RLS |
 |---|---|---|
-| `postgres` (`DATABASE_URL`) | Migration, seed, suporte | **Bypassa** — nunca serve requisição de negócio |
-| `app_user` (`DATABASE_URL_APP`) | Toda query de `apps/api`/`worker`/`scheduler` em runtime | **Aplicada** |
+| `postgres` (`DATABASE_URL`) | Migrations, seeding, support | **Bypassed** — never serves a business request |
+| `app_user` (`DATABASE_URL_APP`) | Every runtime query from `apps/api`/`worker`/`scheduler` | **Enforced** |
 
-`app_user` é criado pela migration `0000` (`CREATE ROLE app_user LOGIN`). A senha em `.env.example` é só para o Postgres local do docker-compose — em produção/Supabase Cloud, o segredo nasce por processo separado, fora do git.
+`app_user` is created by migration `0000` (`CREATE ROLE app_user LOGIN`). The password in `.env.example` is only for the local docker-compose Postgres — in production/Supabase Cloud, the secret is born through a separate process, outside git.
 
-## Comandos
+## Commands
 
 ```bash
-docker compose up -d postgres   # sobe o Postgres local (ver nota abaixo)
-pnpm db:generate                # gera migration a partir de packages/db/src/schema
-pnpm db:migrate                 # aplica migrations/*.sql pendentes
-pnpm test                       # inclui o teste de isolamento de RLS — precisa do Postgres em pé e migrado
+docker compose up -d postgres   # start the local Postgres (see note below)
+pnpm db:generate                # generate a migration from packages/db/src/schema
+pnpm db:migrate                 # apply pending migrations/*.sql
+pnpm test                       # includes the RLS isolation test — needs Postgres up and migrated
 ```
 
-`db:migrate` roda `scripts/migrate.mjs`, não `drizzle-kit migrate` — a CLI do drizzle-kit trava de forma reproduzível neste tipo de ambiente (fica com o spinner girando, sem nunca conectar de verdade nem devolver erro). O script próprio é determinístico: lê `migrations/*.sql` em ordem, aplica o que falta, registra em `_spark_migrations`. Use `pnpm db:generate` pra criar uma migration nova a partir do schema — isso funciona normalmente pela CLI, é só o `migrate` que trava.
+`db:migrate` runs `scripts/migrate.mjs`, not `drizzle-kit migrate` — the drizzle-kit CLI hangs reproducibly in this kind of environment (the spinner just spins forever, never actually connecting or returning an error). The custom script is deterministic: it reads `migrations/*.sql` in order, applies whatever's missing, and records it in `_spark_migrations`. Use `pnpm db:generate` to create a new migration from the schema — that works fine through the CLI, it's only `migrate` that hangs.
 
-### ⚠️ `listen_addresses` — por que o docker-compose tem essa flag
+### ⚠️ `listen_addresses` — why docker-compose has this flag
 
-A imagem `supabase/postgres` escuta só em `127.0.0.1`/`::1` por padrão — correto dentro do stack completo deles (tudo na mesma rede Docker, atrás do Kong), errado quando algo de **fora** do container (seu `DATABASE_URL` apontando pra `localhost:5432`) tenta conectar: a conexão chega pela interface do container, não por loopback, e o Postgres a derruba **em silêncio** — nem erro de autenticação, só fecha. `docker-compose.yml` já tem `-c listen_addresses=*` para isso. Se algum dia trocar de imagem base, confirmar que essa flag continua lá.
+The `supabase/postgres` image listens only on `127.0.0.1`/`::1` by default — correct inside their full stack (everything on the same Docker network, behind Kong), wrong when something **outside** the container (your `DATABASE_URL` pointing at `localhost:5432`) tries to connect: the connection arrives through the container's interface, not loopback, and Postgres drops it **silently** — no auth error, it just closes. `docker-compose.yml` already sets `-c listen_addresses=*` for this. If the base image ever changes, confirm this flag is still there.
 
-## Migration 0002 — escrita à mão, fora do journal do drizzle-kit
+## Hand-written migrations, outside drizzle-kit's journal
 
-`0002_electric_publication.sql` (`CREATE PUBLICATION`) foi escrita direto, sem passar por `drizzle-kit generate` — não muda schema de tabela nenhuma, então não faz sentido nascer de um diff. Consequência prática: o journal do drizzle-kit (`migrations/meta/_journal.json`) não sabe que ela existe, e todo `pnpm db:generate` daqui pra frente propõe o PRÓXIMO número da sequência DELE (que já não bate com o próximo arquivo de verdade). **Depois de rodar `db:generate`, confira se o arquivo gerado colide com um nome já existente** — se colidir, renomeie o `.sql` pro número certo e corrija só o campo `tag` da entrada correspondente em `_journal.json` (o `idx` pode ficar como está — é numeração interna do drizzle-kit, `migrate.mjs` não olha pra ela, só ordena os nomes de arquivo). Já aconteceu duas vezes (`0003_rich_shotgun`, `0004_curly_speed_demon`) — é o preço de ter uma migration fora do fluxo normal, não um bug pra caçar.
+`0001_electric_publication.sql` (`CREATE PUBLICATION`) is written by hand, never through `drizzle-kit generate` — it doesn't change any table schema, so there's nothing for a diff to generate it from. Practical consequence: drizzle-kit's journal (`migrations/meta/_journal.json`) has no idea it exists, and every `pnpm db:generate` from now on proposes THE NEXT NUMBER IN ITS OWN SEQUENCE (which no longer matches the real next filename — it'll try to propose `0001_*` again, colliding with the hand-written one). **After running `db:generate`, check whether the generated file collides with an existing name** — if it does, rename the `.sql` to the correct number and fix only the `tag` field of the matching entry in `_journal.json` (leave `idx` alone — that's drizzle-kit's own internal bookkeeping; `migrate.mjs` never reads it, it just sorts filenames). This already happened repeatedly during Fase 1 (deals/stages/pipelines added several hand-written publication migrations in a row) — it's the cost of having a migration outside the normal flow, not a bug to chase.
 
-## Migration 0000 — o que foi editado à mão
+## Migration 0000 — what was hand-edited
 
-`drizzle-kit generate` produz DDL de tabela comum; três coisas não saem dele e foram editadas direto no `.sql` gerado (comentários `EDITADO 1/3`, `2/3`, `3/3` no arquivo):
+`drizzle-kit generate` produces plain table DDL; three things don't come out of it and were edited directly into the generated `.sql` (comments `EDITED 1/3`, `2/3`, `3/3` in the file):
 
-1. `CREATE ROLE app_user` — as políticas de RLS referenciam essa role; sem criá-la antes, todo `CREATE POLICY ... TO app_user` falha.
-2. `events` particionada de verdade por mês (`PARTITION BY RANGE`) — o DSL do Drizzle não tem particionamento declarativo.
-3. `GRANT` pra `app_user` + os dois índices já prometidos em `docs/adr/0021` (GIN em `custom_fields`, parcial em `org_id, atualizado_em`).
+1. `CREATE ROLE app_user` — the RLS policies reference this role; without creating it first, every `CREATE POLICY ... TO app_user` fails.
+2. `events` actually partitioned by month (`PARTITION BY RANGE`) — Drizzle's DSL has no declarative partitioning.
+3. `GRANT` to `app_user` + the two indexes already promised in `docs/adr/0021` (GIN on `custom_fields`, partial on `org_id, updated_at`).
 
-Toda migration futura que mexer nessas três tabelas precisa considerar essas edições — elas não renascem sozinhas de um novo `drizzle-kit generate`.
+Any future migration touching these three tables needs to account for these edits — they don't come back on their own from a fresh `drizzle-kit generate`.
+
+## English-only rename (2026-09-11)
+
+Every identifier, column, table, and code comment in this package was
+rewritten from Portuguese to English in one pass — domain vocabulary
+(`packages/core`) first, then this schema, then the API/data/web layers
+that consume it. The database had zero real rows at the time (Fase 0/1,
+pre-launch, no staging deployed), so this shipped as a full reset —
+migration history wiped and regenerated from the new English schema,
+rather than a chain of `ALTER TABLE ... RENAME COLUMN` — this is
+mentioned here only so nobody goes looking for the old Portuguese
+migration files or wonders why the migration numbering restarted at 0000.

@@ -1,16 +1,17 @@
 /**
- * Pedaços repetidos entre tabelas — mas cada tabela ainda declara seus
- * próprios nomes de campo, espelhando o schema Zod correspondente em
- * packages/core (docs/adr/0019: "um schema Zod... dele derivam TODOS os
- * artefatos, inclusive o schema Drizzle"). Não existe um `tenantColumns()`
- * genérico porque as entidades não concordam em nome de campo — Organization
- * usa `arquivadoEm`, Contact usa `excluidoEm`, e Organization nem tem `orgId`
- * (ela É o tenant). Forçar um helper único esconderia essa diferença real.
+ * Bits shared across tables — but each table still declares its own field
+ * names, mirroring its corresponding Zod schema in packages/core
+ * (docs/adr/0019: "one Zod schema... every artifact derives from it,
+ * including the Drizzle schema"). There's no generic `tenantColumns()`
+ * helper because entities don't agree on a field name — Organization uses
+ * `archivedAt`, Contact uses `deletedAt`, and Organization doesn't even
+ * have `orgId` (it IS the tenant). Forcing a single helper would hide that
+ * real difference.
  *
- * O UUID v7 é gerado no cliente (`$defaultFn`), não no banco — o Postgres 15
- * (nossa imagem local e o que o Supabase roda hoje) não tem gerador nativo;
- * isso só chega na v18. Gerar no app também mantém a regra do ADR-0019:
- * quem cria identificador é o código, não o banco.
+ * The UUID v7 is generated client-side (`$defaultFn`), not by the
+ * database — Postgres 15 (our local image, and what Supabase runs today)
+ * has no native generator for it; that only lands in v18. Generating it
+ * app-side also keeps ADR-0019's rule: code creates identifiers, not the database.
  */
 import { v7 as uuidv7 } from "uuid";
 import { uuid } from "drizzle-orm/pg-core";

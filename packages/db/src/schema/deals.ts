@@ -8,12 +8,12 @@ import { contacts } from "./contacts.js";
 import { APP_ROLE } from "../roles.js";
 
 /**
- * Espelha DealSchema (packages/core/src/schema/deal.ts). `status` é text,
- * não enum do Postgres — o enum já existe uma vez, no Zod (DealStatusSchema);
- * duplicar como tipo de banco é duas fontes da mesma regra podendo divergir
- * (docs/adr/0019). `valor` é bigint: Money é sempre centavos inteiros, e um
- * negócio de verdade não pode estourar o teto de ~21 milhões de reais que
- * um integer permitiria.
+ * Mirrors DealSchema (packages/core/src/schema/deal.ts). `status` is
+ * text, not a Postgres enum — the enum already exists once, in Zod
+ * (DealStatusSchema); duplicating it as a database type is two sources of
+ * the same rule that could drift apart (docs/adr/0019). `amount` is
+ * bigint: Money is always integer cents, and a real deal can't hit the
+ * ceiling an integer column would allow (~21 million reais).
  */
 export const deals = pgTable(
   "deals",
@@ -29,17 +29,17 @@ export const deals = pgTable(
       .notNull()
       .references(() => stages.id),
     contactId: uuid("contact_id").references(() => contacts.id),
-    nome: text("nome").notNull(),
-    valor: bigint("valor", { mode: "number" }).notNull(),
-    status: text("status").notNull().default("aberto"),
-    dataFechamentoEsperada: timestamp("data_fechamento_esperada", { withTimezone: true }),
-    motivoPerda: text("motivo_perda"),
-    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
-    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
-    excluidoEm: timestamp("excluido_em", { withTimezone: true }),
+    name: text("name").notNull(),
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    status: text("status").notNull().default("open"),
+    expectedCloseDate: timestamp("expected_close_date", { withTimezone: true }),
+    lossReason: text("loss_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (t) => [
-    pgPolicy("deals_isolamento_por_org", {
+    pgPolicy("deals_isolation_by_org", {
       for: "all",
       to: APP_ROLE,
       using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid`,

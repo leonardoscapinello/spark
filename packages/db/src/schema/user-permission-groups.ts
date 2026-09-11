@@ -6,10 +6,10 @@ import { permissionGroups } from "./permission-groups.js";
 import { APP_ROLE } from "../roles.js";
 
 /**
- * Junção muitos-para-muitos entre usuário e grupo (docs/adr/0029). orgId
- * aqui é redundante com users.org_id/permission_groups.org_id — mantido
- * mesmo assim pra seguir a mesma política de RLS simples (igualdade
- * direta) que toda outra tabela usa, em vez de RLS por subquery.
+ * Many-to-many join between user and group (docs/adr/0029). orgId here is
+ * redundant with users.org_id/permission_groups.org_id — kept anyway to
+ * follow the same simple RLS policy (direct equality) every other table
+ * uses, instead of subquery-based RLS.
  */
 export const userPermissionGroups = pgTable(
   "user_permission_groups",
@@ -26,7 +26,7 @@ export const userPermissionGroups = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.userId, t.groupId] }),
-    pgPolicy("user_permission_groups_isolamento_por_org", {
+    pgPolicy("user_permission_groups_isolation_by_org", {
       for: "all",
       to: APP_ROLE,
       using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid`,

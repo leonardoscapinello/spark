@@ -4,7 +4,7 @@ import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
 import { APP_ROLE } from "../roles.js";
 
-/** Espelha PermissionGroupSchema (packages/core/src/policy/permissionGroup.ts). */
+/** Mirrors PermissionGroupSchema (packages/core/src/policy/permissionGroup.ts). */
 export const permissionGroups = pgTable(
   "permission_groups",
   {
@@ -12,16 +12,16 @@ export const permissionGroups = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => organizations.id),
-    nome: text("nome").notNull(),
-    /** array de Capacidade (packages/core/src/policy/capability.ts) —
-     * jsonb pelo mesmo motivo de contacts.tags: lista simples, mesma
-     * convenção do resto do schema. */
-    capacidades: jsonb("capacidades").notNull().default([]),
-    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
-    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+    name: text("name").notNull(),
+    /** array of Capability (packages/core/src/policy/capability.ts) —
+     * jsonb for the same reason as contacts.tags: a simple list, same
+     * convention as the rest of the schema. */
+    capabilities: jsonb("capabilities").notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    pgPolicy("permission_groups_isolamento_por_org", {
+    pgPolicy("permission_groups_isolation_by_org", {
       for: "all",
       to: APP_ROLE,
       using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid`,
