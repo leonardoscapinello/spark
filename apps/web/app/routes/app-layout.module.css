@@ -86,6 +86,8 @@
   box-shadow: var(--ui-panelShadow);
 }
 
+.accountMenu { display: flex; flex: 0 0 auto; justify-content: center; }
+
 .sidebar {
   height: 100%;
   min-height: 0;

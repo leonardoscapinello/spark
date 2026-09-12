@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
-import { Link, Outlet, redirect, useLocation, useNavigation } from "react-router";
+import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
-import { Icon, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
+import { Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
-import { restoreSession } from "../lib/auth.client";
+import { restoreSession, signOut } from "../lib/auth.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import styles from "./app-layout.module.css";
 
@@ -163,8 +163,10 @@ export function HydrateFallback() {
 
 export default function AppLayout({ loaderData: session }: Route.ComponentProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
+  const accountRailLink = useRef<HTMLDivElement>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const allowed = (capability?: Capability) => !capability || session.capabilities.includes(capability);
   const visibleModules = modules.filter((module) => module.id === "admin"
@@ -178,10 +180,15 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     && !["/automations/", "/pages/", "/forms/"].some((prefix) => location.pathname.startsWith(prefix));
 
   useEffect(() => {
-    const active = activeRailLink.current;
+    const active = current.id === "account" ? accountRailLink.current : activeRailLink.current;
     const rail = active?.closest("nav");
     if (active && rail && rail.scrollWidth > rail.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
   }, [current.id]);
+
+  async function leaveAccount() {
+    await signOut().catch(() => undefined);
+    void navigate("/login", { replace: true });
+  }
 
   function railLink(module: NavModule) {
     const active = current.id === module.id;
@@ -197,7 +204,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         <div className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.railBottom}>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
-          {railLink(accountModule)}
+          <div ref={accountRailLink} className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} icon={<Icon name="account" />} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label="Minha conta"><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>} /></div>
         </div>
       </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
