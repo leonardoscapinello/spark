@@ -151,8 +151,8 @@ export async function clientLoader() {
 
 export function HydrateFallback() {
   return <div className={styles.shell} data-sidebar="hidden" aria-busy="true">
-    <NavigationRail className={styles.rail}>
-      <div className={styles.railBrand}><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="Leonardo Scapinello" /></div>
+    <NavigationRail className={styles.rail} data-collapsed>
+      <div className={styles.railBrand}><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="Leonardo Scapinello" /></div>
       <div className={styles.railModules} aria-hidden="true">{modules.filter((module) => module.id !== "admin").map((module) => <div key={module.id} className={styles.railPlaceholder} />)}</div>
     </NavigationRail>
     <main className={styles.conteudo}>
@@ -288,7 +288,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
           <div ref={accountRailLink} className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}>
             {accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />}
-            <span className={styles.railLabel}>Minha conta</span>
+            <span className={styles.railLabel}>Perfil</span>
           </MenuButton></div>
         </div>
       </NavigationRail>
