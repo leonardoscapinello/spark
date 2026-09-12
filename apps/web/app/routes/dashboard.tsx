@@ -62,8 +62,8 @@ export default function Dashboard() {
   ];
 
   return <div className={styles.page}>
-    <PageHeader icon="chart" title="Visão geral" />
     {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar contatos</Button> : undefined} />}
+    <PageHeader icon="chart" title="Visão geral" />
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar contatos, negócios ou atividades." />}
     {firstRun && <ActionCardGroup title="Acompanhe o trabalho da equipe">
       {canReadContacts && <ActionCard icon="team" title="Pessoas" description="Veja quem entrou na base e como o relacionamento evolui." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir Leads</Button>} />}
