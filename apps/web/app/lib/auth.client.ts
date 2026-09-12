@@ -17,7 +17,7 @@ export interface AppSession {
   capabilities: Capability[];
 }
 
-export type AuthFlowErrorCode = "INVALID_CREDENTIALS" | "ACCOUNT_NOT_PROVISIONED" | "MFA_REQUIRED" | "MFA_INVALID";
+export type AuthFlowErrorCode = "INVALID_CREDENTIALS" | "AUTH_UNAVAILABLE" | "ACCOUNT_NOT_PROVISIONED" | "MFA_REQUIRED" | "MFA_INVALID";
 
 export class AuthFlowError extends Error {
   constructor(readonly code: AuthFlowErrorCode) {
@@ -108,13 +108,14 @@ export async function restoreSession(): Promise<AppSession | null> {
 export async function signIn(email: string, password: string, totpCode?: string): Promise<AppSession> {
   listenForTokenRotation();
   const { data, error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
-  if (error || !data.session) throw new AuthFlowError("INVALID_CREDENTIALS");
+  if (error) throw new AuthFlowError(error.code === "invalid_credentials" ? "INVALID_CREDENTIALS" : "AUTH_UNAVAILABLE");
+  if (!data.session) throw new AuthFlowError("AUTH_UNAVAILABLE");
 
   accessToken = data.session.access_token;
   const { data: assurance, error: assuranceError } = await getSupabaseClient().auth.mfa.getAuthenticatorAssuranceLevel();
   if (assuranceError) {
     await signOut();
-    throw new AuthFlowError("INVALID_CREDENTIALS");
+    throw new AuthFlowError("AUTH_UNAVAILABLE");
   }
 
   if (assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
@@ -122,7 +123,7 @@ export async function signIn(email: string, password: string, totpCode?: string)
     const factor = factors?.totp[0];
     if (factorsError || !factor) {
       await signOut();
-      throw new AuthFlowError("INVALID_CREDENTIALS");
+      throw new AuthFlowError("AUTH_UNAVAILABLE");
     }
     if (!totpCode) throw new AuthFlowError("MFA_REQUIRED");
 
@@ -195,7 +196,8 @@ export async function removeMfaFactor(factorId: string): Promise<void> {
 
 export async function requestPasswordReset(email: string): Promise<void> {
   const redirectTo = `${window.location.origin}/update-password`;
-  const { error } = await getSupabaseClient().auth.resetPasswordForEmail(email, { redirectTo });
+  // Recovery emails must work even when the request and the email are opened in different browsers.
+  const { error } = await getImplicitRecoveryClient().auth.resetPasswordForEmail(email, { redirectTo });
   if (error) throw new Error("RESET_REQUEST_FAILED");
 }
 

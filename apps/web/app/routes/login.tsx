@@ -1,10 +1,13 @@
 import { Form, Link, redirect, useNavigation, useSearchParams } from "react-router";
 import type { Route } from "./+types/login";
 import { Button, Field, Input, Label, PasswordInput } from "@spark/ui-web";
-import { AuthFlowError, signIn } from "../lib/auth.client";
+import { AuthFlowError, restoreSession, signIn } from "../lib/auth.client";
 import styles from "./login.module.css";
 
-export async function clientLoader() { return null; }
+export async function clientLoader() {
+  if (await restoreSession()) throw redirect("/");
+  return null;
+}
 
 export function HydrateFallback() {
   return <div className={styles.card} role="status">Preparando acesso…</div>;
@@ -26,7 +29,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   } catch (error) {
     if (error instanceof AuthFlowError && error.code === "MFA_REQUIRED") return { mfaRequired: true as const };
     if (error instanceof AuthFlowError && error.code === "MFA_INVALID") return { mfaRequired: true as const, error: "Código inválido ou expirado." };
-    return { error: "E-mail ou senha incorretos." };
+    if (error instanceof AuthFlowError && error.code === "INVALID_CREDENTIALS") return { error: "Não foi possível entrar com esse e-mail e senha. Confira os dados e tente novamente." };
+    if (error instanceof AuthFlowError && error.code === "ACCOUNT_NOT_PROVISIONED") return { error: "Não foi possível abrir seu acesso agora. Tente novamente em instantes." };
+    return { error: "O acesso está indisponível no momento. Tente novamente em instantes." };
   }
 }
 
