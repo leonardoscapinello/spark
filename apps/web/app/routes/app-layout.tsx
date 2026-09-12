@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
 import { Icon, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
@@ -163,6 +164,7 @@ export function HydrateFallback() {
 export default function AppLayout({ loaderData: session }: Route.ComponentProps) {
   const location = useLocation();
   const navigation = useNavigation();
+  const activeRailLink = useRef<HTMLAnchorElement>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const allowed = (capability?: Capability) => !capability || session.capabilities.includes(capability);
   const visibleModules = modules.filter((module) => module.id === "admin"
@@ -175,11 +177,17 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const showSidebar = (current.id === "content" || current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox")
     && !["/automations/", "/pages/", "/forms/"].some((prefix) => location.pathname.startsWith(prefix));
 
+  useEffect(() => {
+    const active = activeRailLink.current;
+    const rail = active?.closest("nav");
+    if (active && rail && rail.scrollWidth > rail.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [current.id]);
+
   function railLink(module: NavModule) {
     const active = current.id === module.id;
     const pending = pendingLocation && moduleForPath(pendingLocation.pathname).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
-    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link to={first?.to ?? module.to} prefetch="intent" className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !pendingLocation ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={first?.to ?? module.to} prefetch="intent" className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !pendingLocation ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
