@@ -198,6 +198,23 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     : [];
   const showSidebar = current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox";
 
+  useEffect(() => {
+    if (!window.requestIdleCallback) return;
+    const order = ["leads", "crm", "inbox", "automations", "content", "social", "admin", "overview"];
+    let canceled = false;
+    let idleId = 0;
+    let index = 0;
+    function schedule() {
+      if (canceled || index >= order.length) return;
+      idleId = window.requestIdleCallback(() => {
+        const entry = moduleEntry[order[index++]!];
+        if (entry) void entry().catch(() => undefined).finally(schedule);
+      });
+    }
+    schedule();
+    return () => { canceled = true; window.cancelIdleCallback(idleId); };
+  }, []);
+
   function markNavigation(to: string) {
     if (`${location.pathname}${location.search}` !== to) setNavigationIntent({ to, fromKey: location.key });
   }
