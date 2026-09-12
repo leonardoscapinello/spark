@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
   contactId as contactIdFactory,
@@ -68,6 +68,7 @@ function formatDateTime(iso: string): string {
 }
 
 export default function ContactDetail({ params }: Route.ComponentProps) {
+  const navigate = useNavigate();
   const collection = getContactsCollection();
   const activitiesCollection = getActivitiesCollection();
   const usersCollection = getUsersCollection();
@@ -77,6 +78,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const canWriteActivities = canReadActivities && (session?.capabilities.includes("activities:write") ?? false);
   const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
   const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
+  const canWriteDeals = session?.capabilities.includes("deals:write") ?? false;
   const canReadInbox = session?.capabilities.includes("inbox:read") ?? false;
   const [selectedType, setSelectedType] = useState<ActivityType>("task");
   const [activityTitle, setActivityTitle] = useState("");
@@ -346,7 +348,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         </div>
         <div className={layout.workColumn}>
       {canReadDeals && <section className={styles.atividades}>
-        <h2 className={styles.subtitulo}>Negócios</h2>
+        <div className={styles.sectionHeading}><h2 className={styles.subtitulo}>Negócios</h2>{canWriteDeals && <Button size="sm" variant="secondary" onClick={() => void navigate(`/deals?createFor=${params.contactId}`)}>Novo negócio</Button>}</div>
         {deals.length === 0 ? <span className={styles.valor}>Nenhum negócio desta pessoa.</span> : <ul className={styles.listaAtividades}>{deals.map((deal) => <li key={deal.id} className={styles.atividade}><Link className={layout.recordLink} to={`/deals/${deal.id}`}>{deal.name}<span>{deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></Link></li>)}</ul>}
       </section>}
       {canReadInbox && <section className={styles.atividades}>
