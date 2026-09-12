@@ -196,27 +196,6 @@
   background: var(--color-accent);
 }
 
-.navigationFeedback {
-  box-sizing: border-box;
-  position: absolute;
-  z-index: 9;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  background: var(--color-surface);
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
-  pointer-events: none;
-}
-
-.conteudo[data-switching-page] > :not(.moduleTabs):not(.navigationFeedback) { visibility: hidden; }
-.conteudo[data-switching-module] > .moduleTabs { visibility: hidden; }
-.conteudo[data-switching-page]:not([data-switching-module])[data-has-tabs] .navigationFeedback { inset-block-start: var(--ui-touchTarget); }
-
-.navigationFeedback svg { color: var(--color-accent); }
-
 .moduleTabs {
   position: sticky;
   z-index: 2;
