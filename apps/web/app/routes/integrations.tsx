@@ -32,8 +32,9 @@ interface ProviderDefinition {
   provider: IntegrationProvider;
   name: string;
   description: string;
-  category: string;
+  category: "Comunicação" | "Redes sociais" | "Dados e arquivos";
 }
+const CATEGORIES = ["Comunicação", "Redes sociais", "Dados e arquivos"] as const;
 const PROVIDERS: ProviderDefinition[] = [
   {
     provider: "google_workspace",
@@ -51,25 +52,25 @@ const PROVIDERS: ProviderDefinition[] = [
     provider: "instagram",
     name: "Instagram",
     description: "Direct, comentários, menções, stories e gatilhos da Meta.",
-    category: "Canais",
+    category: "Redes sociais",
   },
   {
     provider: "buffer",
     name: "Buffer",
     description: "Publicação social, calendário, engajamento e métricas.",
-    category: "Social",
+    category: "Redes sociais",
   },
   {
     provider: "s3",
-    name: "Armazenamento S3",
-    description: "Bucket compatível com AWS, R2 ou Supabase Storage.",
-    category: "Infraestrutura",
+    name: "Armazenamento de arquivos",
+    description: "Escolha onde o sistema guarda e encontra seus arquivos.",
+    category: "Dados e arquivos",
   },
   {
     provider: "reoon",
     name: "Reoon Email Verifier",
     description: "Validação de e-mail com cache operacional de três meses.",
-    category: "Dados",
+    category: "Dados e arquivos",
   },
 ];
 
@@ -150,26 +151,16 @@ export default function Integrations() {
       <PageHeader
         eyebrow="Configurações"
         title="Integrações"
-        description="Conecte provedores atrás de contratos estáveis. Trocar o fornecedor preserva o restante do sistema."
+        description="Conecte os canais e serviços usados pela sua equipe. Gerencie cada conexão em um só lugar."
       />
-      <section className={styles.security}>
-        <div>
-          <strong>Credenciais protegidas</strong>
-          <span>
-            Segredos usam AES-256-GCM no servidor e nunca entram no Electric, no estado local ou nas
-            respostas da API.
-          </span>
-        </div>
-        <Badge tone="success">Cofre ativo</Badge>
-      </section>
-      <section className={styles.grid}>
-        {PROVIDERS.map((definition) => {
+      {CATEGORIES.map((category) => <section key={category} className={styles.category} aria-label={category}>
+        <h2>{category}</h2>
+        <div className={styles.grid}>{PROVIDERS.filter((item) => item.category === category).map((definition) => {
           const connection = connections.find((item) => item.provider === definition.provider);
           return (
             <div key={definition.provider} className={styles.providerCard}>
               <Card title={definition.name} description={definition.description}>
                 <div className={styles.providerMeta}>
-                  <span>{definition.category}</span>
                   <Badge
                     tone={
                       connection?.status === "connected"
@@ -223,8 +214,8 @@ export default function Integrations() {
               </Card>
             </div>
           );
-        })}
-      </section>
+        })}</div>
+      </section>)}
       <ActionModal
         open={Boolean(editing)}
         onOpenChange={(open) => {
