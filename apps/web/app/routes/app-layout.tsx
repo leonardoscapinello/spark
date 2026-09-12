@@ -1,7 +1,7 @@
 import { type MouseEvent, type PointerEvent, useEffect, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
-import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName, type QuickNavigationItem } from "@spark/ui-web";
+import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
@@ -274,7 +274,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
     const target = first?.to ?? module.to;
-    return <Tooltip key={module.id} content={module.title} size="compact" pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={(event) => { startLinkNavigation(event, target); setRailCollapsed(true); }} onClick={(event) => { finishLinkNavigation(event, target); setRailCollapsed(true); }} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    return <Link key={module.id} ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={(event) => { startLinkNavigation(event, target); setRailCollapsed(true); }} onClick={(event) => { finishLinkNavigation(event, target); setRailCollapsed(true); }} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link>;
   }
 
   return (
@@ -289,12 +289,12 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           })}</MenuGroup>}><span className={styles.mobileModuleTitle}>{current.title}</span></MenuButton>
         </div>
         <div className={styles.railBottom}>
-          <Tooltip content="Pesquisar áreas" size="compact" pinOnClick={false}><Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railLink} aria-label="Pesquisar áreas" onClick={() => setQuickNavigationOpen(true)} icon={<Icon name="search" />}><span className={styles.railLabel}>Pesquisar</span></Button></Tooltip>
+          <Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railLink} aria-label="Pesquisar áreas" onClick={() => setQuickNavigationOpen(true)} icon={<Icon name="search" />}><span className={styles.railLabel}>Pesquisar</span></Button>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
-          <div ref={accountRailLink} className={styles.accountMenu}><Tooltip content="Minha conta" size="compact" pinOnClick={false}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}>
+          <div ref={accountRailLink} className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}>
             {accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />}
             <span className={styles.railLabel}>Minha conta</span>
-          </MenuButton></Tooltip></div>
+          </MenuButton></div>
         </div>
       </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
