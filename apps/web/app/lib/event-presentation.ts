@@ -24,6 +24,7 @@ const TITLES: Record<DomainEventType, string> = {
   "conversation.closed": "Conversa fechada",
   "conversation.reopened": "Conversa reaberta",
   "message.note_added": "Nota interna adicionada",
+  "message.received": "Mensagem recebida",
   "message.queued": "Mensagem aguardando envio",
   "message.sent": "Mensagem enviada",
   "message.failed": "Falha no envio da mensagem",

@@ -8,6 +8,8 @@
 .providerMeta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .connectionInfo { display: grid; gap: var(--space-1); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .connectionInfo small { color: var(--color-statusDanger); }
+.callbackUrl { overflow-wrap: anywhere; }
+.fieldHint { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: auto; }
 .fields { display: grid; gap: var(--space-4); }
 .columns { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: var(--space-3); }

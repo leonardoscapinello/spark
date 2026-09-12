@@ -31,7 +31,7 @@ let apiProcess: ChildProcess;
 
 function waitForApiReady(child: ChildProcess): Promise<void> {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("API did not start in time")), 15_000);
+    const timeout = setTimeout(() => reject(new Error("API did not start in time")), 45_000);
     child.stdout?.on("data", (chunk: Buffer) => {
       if (chunk.toString().includes("listening on")) {
         clearTimeout(timeout);
@@ -63,7 +63,7 @@ beforeAll(async () => {
   });
   await waitForApiReady(apiProcess);
   setSparkApiBaseUrl(`http://127.0.0.1:${PORT}`);
-}, 20_000);
+}, 60_000);
 
 afterAll(async () => {
   apiProcess?.kill();

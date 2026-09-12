@@ -31,6 +31,7 @@ export const DOMAIN_EVENT_TYPES = [
   "conversation.closed",
   "conversation.reopened",
   "message.note_added",
+  "message.received",
   "message.queued",
   "message.sent",
   "message.failed",

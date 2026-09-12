@@ -1706,6 +1706,74 @@
         ]
       }
     },
+    "/v1/webhooks/instagram/{connectionId}": {
+      "get": {
+        "operationId": "InstagramWebhookController_verify",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.mode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.verify_token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.challenge",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "InstagramWebhook"
+        ]
+      },
+      "post": {
+        "operationId": "InstagramWebhookController_receive",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "InstagramWebhook"
+        ]
+      }
+    },
     "/v1/automations": {
       "post": {
         "operationId": "AutomationsController_create",

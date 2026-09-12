@@ -11,6 +11,7 @@ import { AppModule } from "./app.module.js";
 export async function bootstrap(): Promise<NestFastifyApplication> {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
     bufferLogs: true,
+    rawBody: true,
   });
 
   app.useLogger(app.get(Logger));

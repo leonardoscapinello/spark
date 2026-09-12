@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import {
+  getSparkApiBaseUrl,
   integrationsControllerCheck,
   integrationsControllerStatus,
   integrationsControllerUpsert,
@@ -196,6 +197,7 @@ export default function Integrations() {
                         : "Ainda não verificada"}
                     </span>
                     {connection.lastError && <small>{connection.lastError}</small>}
+                    {definition.provider === "instagram" && <span className={styles.callbackUrl}>Webhook: {instagramCallbackUrl(connection.id)}</span>}
                   </div>
                 )}
                 {canManage && (
@@ -241,6 +243,7 @@ export default function Integrations() {
             setConfig={setConfig}
             setCredentials={setCredentials}
             hasExistingCredentials={Boolean(editingId)}
+            connectionId={editingId}
           />
         )}
       </ActionModal>
@@ -255,6 +258,7 @@ function IntegrationFields({
   setConfig,
   setCredentials,
   hasExistingCredentials,
+  connectionId,
 }: {
   provider: IntegrationProvider;
   config: Record<string, string | number | boolean>;
@@ -262,6 +266,7 @@ function IntegrationFields({
   setConfig: (value: Record<string, string | number | boolean>) => void;
   setCredentials: (value: Record<string, string>) => void;
   hasExistingCredentials: boolean;
+  connectionId: string | null;
 }) {
   const publicField = (key: string, value: string | number | boolean) =>
     setConfig({ ...config, [key]: value });
@@ -432,6 +437,25 @@ function IntegrationFields({
           existing={hasExistingCredentials}
           onChange={secretField}
         />
+        <SecretToken
+          name="App Secret da Meta"
+          field="appSecret"
+          value={credentials.appSecret ?? ""}
+          existing={hasExistingCredentials}
+          onChange={secretField}
+        />
+        <SecretToken
+          name="Token de verificação do webhook"
+          field="verifyToken"
+          value={credentials.verifyToken ?? ""}
+          existing={hasExistingCredentials}
+          onChange={secretField}
+        />
+        {connectionId && <Field>
+          <Label>URL de callback para a Meta</Label>
+          <Input value={instagramCallbackUrl(connectionId)} readOnly onFocus={(event) => event.target.select()} />
+          <span className={styles.fieldHint}>Cadastre esta URL e o token de verificação no painel da Meta; assine o evento de mensagens. A URL precisa ser pública em HTTPS para a Meta entregar as DMs.</span>
+        </Field>}
       </div>
     );
   if (provider === "buffer")
@@ -520,4 +544,7 @@ function formatDate(value: string): string {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
     new Date(value),
   );
+}
+function instagramCallbackUrl(connectionId: string): string {
+  return `${getSparkApiBaseUrl().replace(/\/$/, "")}/v1/webhooks/instagram/${connectionId}`;
 }

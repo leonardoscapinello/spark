@@ -14,10 +14,12 @@ import { SendMessageUseCase } from "./application/send-message.usecase.js";
 import { ChannelSender } from "./infrastructure/channel-sender.service.js";
 import { OutboundMessagesRepository } from "./infrastructure/outbound-messages.repository.js";
 import { CannedRepliesRepository } from "./infrastructure/canned-replies.repository.js";
+import { InstagramWebhookRepository } from "./infrastructure/instagram-webhook.repository.js";
+import { InstagramWebhookController } from "./presentation/instagram-webhook.controller.js";
 
 @Module({
   imports: [EventsModule, IntegrationsModule],
-  controllers: [InboxController],
-  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  controllers: [InboxController, InstagramWebhookController],
+  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

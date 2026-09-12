@@ -4065,6 +4065,12 @@ export interface PublicPageDto {
   publicKey: string;
 }
 
+export type InstagramWebhookControllerVerifyParams = {
+'hub.mode': string;
+'hub.verify_token': string;
+'hub.challenge': string;
+};
+
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
@@ -6897,6 +6903,161 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getInboxControllerArchiveCannedReplyMutationOptions(options), queryClient);
+    }
+
+export const instagramWebhookControllerVerify = (
+    connectionId: string,
+    params: InstagramWebhookControllerVerifyParams,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/webhooks/instagram/${connectionId}`, method: 'GET',
+        params, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getInstagramWebhookControllerVerifyQueryKey = (connectionId: string,
+    params?: InstagramWebhookControllerVerifyParams,) => {
+    return [
+    `/v1/webhooks/instagram/${connectionId}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getInstagramWebhookControllerVerifyQueryOptions = <TData = Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError = unknown>(connectionId: string,
+    params: InstagramWebhookControllerVerifyParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInstagramWebhookControllerVerifyQueryKey(connectionId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof instagramWebhookControllerVerify>>> = ({ signal }) => instagramWebhookControllerVerify(connectionId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: connectionId !== null && connectionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InstagramWebhookControllerVerifyQueryResult = NonNullable<Awaited<ReturnType<typeof instagramWebhookControllerVerify>>>
+export type InstagramWebhookControllerVerifyQueryError = unknown
+
+
+export function useInstagramWebhookControllerVerify<TData = Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError = unknown>(
+ connectionId: string,
+    params: InstagramWebhookControllerVerifyParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof instagramWebhookControllerVerify>>,
+          TError,
+          Awaited<ReturnType<typeof instagramWebhookControllerVerify>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInstagramWebhookControllerVerify<TData = Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError = unknown>(
+ connectionId: string,
+    params: InstagramWebhookControllerVerifyParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof instagramWebhookControllerVerify>>,
+          TError,
+          Awaited<ReturnType<typeof instagramWebhookControllerVerify>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInstagramWebhookControllerVerify<TData = Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError = unknown>(
+ connectionId: string,
+    params: InstagramWebhookControllerVerifyParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useInstagramWebhookControllerVerify<TData = Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError = unknown>(
+ connectionId: string,
+    params: InstagramWebhookControllerVerifyParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof instagramWebhookControllerVerify>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInstagramWebhookControllerVerifyQueryOptions(connectionId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const instagramWebhookControllerReceive = (
+    connectionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/webhooks/instagram/${connectionId}`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getInstagramWebhookControllerReceiveMutationKey = () => ['instagramWebhookControllerReceive'] as const;
+
+export const getInstagramWebhookControllerReceiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof instagramWebhookControllerReceive>>, TError,InstagramWebhookControllerReceiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof instagramWebhookControllerReceive>>, TError,InstagramWebhookControllerReceiveMutationVariables, TContext> => {
+
+const mutationKey = getInstagramWebhookControllerReceiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof instagramWebhookControllerReceive>>, InstagramWebhookControllerReceiveMutationVariables> = (props) => {
+          const {connectionId} = props ?? {};
+
+          return  instagramWebhookControllerReceive(connectionId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InstagramWebhookControllerReceiveMutationResult = NonNullable<Awaited<ReturnType<typeof instagramWebhookControllerReceive>>>
+
+    export type InstagramWebhookControllerReceiveMutationError = unknown
+    export type InstagramWebhookControllerReceiveMutationVariables = {connectionId: string}
+
+    export const useInstagramWebhookControllerReceive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof instagramWebhookControllerReceive>>, TError,InstagramWebhookControllerReceiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof instagramWebhookControllerReceive>>,
+        TError,
+        InstagramWebhookControllerReceiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInstagramWebhookControllerReceiveMutationOptions(options), queryClient);
     }
 
 export const automationsControllerCreate = (
