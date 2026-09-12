@@ -4,7 +4,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Badge, Button, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, DataTable, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Textarea, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -50,6 +50,7 @@ export default function Inbox() {
   const { data: teams = [] } = useLiveQuery({ query: (q) => q.from({ teams: getTeamsCollection() }).orderBy(({ teams: item }) => item.name, "asc") });
   const filter = parseInboxFilter(searchParams.get("box"));
   const [mobileView, setMobileView] = useState<"list" | "thread">("list");
+  const [layout, setLayout] = useState<"chat" | "table">("chat");
   const [now, setNow] = useState(() => new Date());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -87,6 +88,14 @@ export default function Inbox() {
     return counts;
   }, [conversations, session?.userId]);
   const queueCount = (box: InboxFilter) => queueCounts.get(box) ?? 0;
+  const tableColumns: TableColumn<Conversation>[] = [
+    { id: "subject", label: "Conversa", cell: (item) => <Button size="sm" variant="ghost" className={styles.tableSubject} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>{item.subject}</Button>, sortValue: (item) => item.subject },
+    { id: "contact", label: "Contato", cell: (item) => contactNames.get(item.contactId) ?? "Contato", sortValue: (item) => contactNames.get(item.contactId) ?? "" },
+    { id: "channel", label: "Canal", cell: (item) => channelLabel(item.channel), sortValue: (item) => channelLabel(item.channel) },
+    { id: "assignee", label: "Responsável", cell: (item) => item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída", sortValue: (item) => item.assigneeId ? userNames.get(item.assigneeId) ?? "" : "" },
+    { id: "status", label: "Situação", cell: (item) => statusLabel(item.status), sortValue: (item) => statusLabel(item.status) },
+    { id: "updated", label: "Última atividade", cell: (item) => relativeTime(item.lastMessageAt), sortValue: (item) => item.lastMessageAt },
+  ];
   const queues = [
     { label: "Abertas", box: "open" as const, to: "/inbox", icon: "inbox" as const },
     { label: "Minhas conversas", box: "mine" as const, to: "/inbox?box=mine", icon: "user" as const },
@@ -167,12 +176,13 @@ export default function Inbox() {
       </SidebarSection>}
       <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" prefetch="intent" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
     </Sidebar>
-    <div className={styles.workspace} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"}>
+    <div className={styles.workspace} data-layout={layout} data-preview-open={layout === "table" && selectedId && selected ? "true" : "false"} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
         <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</div></header>
         {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
-        <div className={styles.listControls}><span>{filtered.length} {filtered.length === 1 ? "conversa" : "conversas"}</span><MenuButton size="sm" variant="ghost" shape="rounded" menu={<><MenuItem onClick={() => setSortOrder("recent")}>Mais recentes</MenuItem><MenuItem onClick={() => setSortOrder("oldest")}>Mais antigas</MenuItem></>}>{sortOrder === "recent" ? "Mais recentes" : "Mais antigas"}</MenuButton></div>
+        <div className={styles.listControls}><span>{filtered.length} {filtered.length === 1 ? "conversa" : "conversas"}</span><div className={styles.listControlActions}><div className={styles.layoutSwitch} role="group" aria-label="Formato das conversas"><Button iconOnly size="sm" variant={layout === "chat" ? "raised" : "ghost"} aria-label="Visualização de conversa" aria-pressed={layout === "chat"} onClick={() => setLayout("chat")}><Icon name="message" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>{layout === "chat" && <MenuButton size="sm" variant="ghost" shape="rounded" menu={<><MenuItem onClick={() => setSortOrder("recent")}>Mais recentes</MenuItem><MenuItem onClick={() => setSortOrder("oldest")}>Mais antigas</MenuItem></>}>{sortOrder === "recent" ? "Mais recentes" : "Mais antigas"}</MenuButton>}</div></div>
         <div className={styles.listBody}>
+          {layout === "table" ? <DataTable label="Conversas" rows={filtered} columns={tableColumns} rowKey={(item) => item.id} rowLabel={(item) => item.subject} state={isLoading && conversations.length === 0 ? "loading" : "ready"} emptyText={searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."} actions={(item) => <TableIconAction label={`Abrir conversa ${item.subject}`} icon={<Icon name="right" />} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }} />} /> : <>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
           {!isLoading && filtered.length === 0 && <p className={styles.empty}>{searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."}</p>}
           {filtered.map((item) => <Button key={item.id} variant="ghost" shape="rounded" className={styles.conversationButton} data-selected={selected?.id === item.id || undefined} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>
@@ -180,6 +190,7 @@ export default function Inbox() {
             <span className={styles.preview}><span><strong>{contactNames.get(item.contactId) ?? "Contato"}</strong><time>{relativeTime(item.lastMessageAt)}</time></span><b>{item.subject}</b><small>{channelLabel(item.channel)} · {item.teamId ? teamNames.get(item.teamId) ?? "Equipe" : item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída"}</small><SlaBadge conversation={item} now={now} /></span>
             {item.priority === "priority" && <Icon name="star" />}
           </Button>)}
+          </>}
         </div>
       </section>
 
