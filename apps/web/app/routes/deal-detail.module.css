@@ -1,6 +1,8 @@
 .page { box-sizing: border-box; width: 100%; min-width: 0; padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); }
 .back { width: fit-content; color: var(--color-inkMuted); font-size: var(--typography-size-sm); text-decoration: none; }
 .back:hover { color: var(--color-ink); }
+.loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
+.loading > :first-child { width: var(--ui-menuWidth); }
 .contentGrid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, .95fr); grid-template-areas: "profile activities history"; align-items: stretch; min-width: 0; border-top: var(--ui-hairline) solid var(--color-line); }
 .contentGrid > * { min-width: 0; }
 .profile { grid-area: profile; padding: var(--space-4) var(--space-4) var(--space-4) 0; border-right: var(--ui-hairline) solid var(--color-line); }

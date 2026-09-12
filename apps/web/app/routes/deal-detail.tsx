@@ -27,6 +27,7 @@ import {
   RecordHero,
   SearchSelect,
   Select,
+  Skeleton,
   Textarea,
   Timeline,
   notify,
@@ -82,7 +83,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
   const canWriteActivities = canReadActivities && (session?.capabilities.includes("activities:write") ?? false);
 
-  const { data: deal } = useLiveQuery({
+  const { data: deal, isLoading } = useLiveQuery({
     query: (q) => q.from({ deals: dealsCollection }).where(({ deals: item }) => eq(item.id, params.dealId)).findOne(),
   });
   const { data: stages } = useLiveQuery({ query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: item }) => item.sortOrder, "asc") });
@@ -205,7 +206,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   }
 
   if (!deal) {
-    return <div className={styles.page}><Link className={styles.back} to="/deals">← Negócios</Link><p>Negócio não encontrado.</p></div>;
+    return <div className={styles.page}><Link className={styles.back} to="/deals">← Negócios</Link>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Negócio não encontrado.</p>}</div>;
   }
 
   return <div className={styles.page}>
