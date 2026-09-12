@@ -77,7 +77,7 @@
 }
 
 .railLink {
-  transition: color var(--motion-duration-instant) var(--motion-ease-out), background-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out);
+  transition: color var(--motion-duration-fast) var(--motion-ease-out), background-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .railLink[data-pending],
@@ -121,8 +121,6 @@
 @media (min-width: 761px) and (hover: hover) {
   .rail { position: relative; z-index: 20; overflow: hidden; transition: width var(--motion-duration-fast) var(--motion-ease-out), padding-inline var(--motion-duration-fast) var(--motion-ease-out), background-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out); }
   .sidebar { transition: opacity var(--motion-duration-fast) var(--motion-ease-out); }
-  .railLink svg { transition: transform var(--motion-duration-instant) var(--motion-ease-out); }
-  .railLink:hover svg { transform: translateX(var(--space-1)); }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) {
     width: var(--ui-sidebarWidth);
     align-items: stretch;
@@ -153,7 +151,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .rail, .sidebar, .railLink, .railLink svg, .railLabel, .railBrand .brandSymbol, .railBrand .brandWordmark { transition: none; }
-  .railLink:hover svg { transform: none; }
   .railLabel { transform: none; }
 }
 

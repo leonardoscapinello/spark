@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import type { Capability } from "@spark/core";
-import { Icon, PageHeader, type IconName } from "@spark/ui-web";
+import { Icon, PageFrame, PageHeader, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/admin-home";
 import { ADMIN_CAPABILITIES, requireAnyCapability } from "../lib/route-access.client";
 import styles from "./admin-home.module.css";
@@ -33,8 +33,8 @@ export async function clientLoader() {
 export default function AdminHome({ loaderData }: Route.ComponentProps) {
   const allowed = (capability: Capability) => loaderData.session.capabilities.includes(capability);
 
-  return <div className={styles.page}>
-    <div className={styles.pageHeader}><PageHeader icon="grid" title="Início" /></div>
+  return <PageFrame>
+    <PageHeader icon="grid" title="Início" />
     <div className={styles.sections}>{sections.map((section) => {
       const visible = section.areas.filter((area) => allowed(area.capability));
       if (visible.length === 0) return null;
@@ -46,5 +46,5 @@ export default function AdminHome({ loaderData }: Route.ComponentProps) {
         </Link>)}</div>
       </section>;
     })}</div>
-  </div>;
+  </PageFrame>;
 }

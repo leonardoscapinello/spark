@@ -1,11 +1,4 @@
-.page {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.pageHeader { padding: var(--space-5) var(--space-6); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.sections { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-8); width: 100%; max-width: calc(var(--ui-settingsCardWidth) * 3 + var(--space-6) * 4); margin-inline: auto; padding: var(--space-8) var(--space-6); }
+.sections { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-8); width: 100%; max-width: calc(var(--ui-settingsCardWidth) * 3 + var(--space-6) * 2); margin-inline: auto; padding-block: var(--space-4); }
 
 .section {
   display: grid;
@@ -75,6 +68,5 @@
 
 @media (max-width: 760px) {
   .sections { gap: var(--space-8); }
-  .pageHeader { padding: var(--space-4); }
-  .sections { padding: var(--space-6) var(--space-4); }
+  .sections { padding-block: var(--space-4); }
 }
