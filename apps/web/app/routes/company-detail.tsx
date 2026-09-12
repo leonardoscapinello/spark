@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionModal, Button, Field, Icon, Input, Label, PageHeader, SearchSelect, Select, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, Field, Input, Label, RecordHero, SearchSelect, Select, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -114,10 +114,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
 
   return <div className={styles.page}>
     <Link className={styles.back} to="/companies">← Empresas</Link>
-    <div className={styles.hero}>
-      <div className={styles.heroMain}><span className={styles.heroAvatar}><Icon name="building" /></span><PageHeader eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Empresa"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} /></div>
-      <div className={styles.metrics}><div><span>Contatos</span><strong>{linkedContacts.length}</strong></div><div><span>Negócios</span><strong>{linkedDeals.length}</strong></div><div><span>Valor em aberto</span><strong>{formatBRL(syncedAmount(openValue))}</strong></div></div>
-    </div>
+    <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Empresa"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[{ label: "Contatos", value: linkedContacts.length }, { label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }]} />
 
     <div className={styles.contentGrid}><div className={styles.profileColumn}>{editing ? <form className={styles.editForm} onSubmit={saveCompany}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
