@@ -63,7 +63,7 @@ export default function Companies() {
   const columns: TableColumn<Company>[] = [
     { id: "name", label: "Empresa", cell: (company) => <div><strong>{company.name}</strong><span className={styles.secondary}>{company.legalName ?? company.website ?? "Sem dados complementares"}</span></div>, sortValue: (company) => company.name },
     { id: "industry", label: "Segmento", cell: (company) => company.industry ?? "—", sortValue: (company) => company.industry ?? "" },
-    { id: "contacts", label: "Contatos", cell: (company) => contactCounts.get(company.id) ?? 0, sortValue: (company) => contactCounts.get(company.id) ?? 0 },
+    { id: "contacts", label: "Pessoas", cell: (company) => contactCounts.get(company.id) ?? 0, sortValue: (company) => contactCounts.get(company.id) ?? 0 },
     { id: "deals", label: "Negócios", cell: (company) => dealCounts.get(company.id) ?? 0, sortValue: (company) => dealCounts.get(company.id) ?? 0 },
     { id: "owner", label: "Responsável", cell: (company) => company.ownerId ? ownerNames.get(company.ownerId) ?? "Indisponível" : "Não atribuído", sortValue: (company) => company.ownerId ? ownerNames.get(company.ownerId) ?? "" : "" },
   ];
@@ -103,7 +103,7 @@ export default function Companies() {
     <PageHeader icon="building" title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="building" title="Cadastre sua primeira empresa" description="Reúna as pessoas e oportunidades de uma organização em um único perfil." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
     {firstRun && (canReadContacts || canReadDeals) && <ActionCardGroup title="Explore os vínculos">
-      {canReadContacts && <ActionCard icon="team" title="Pessoas da empresa" description="Encontre seus contatos e conecte cada pessoa à organização certa." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir contatos</Button>} />}
+      {canReadContacts && <ActionCard icon="team" title="Pessoas da empresa" description="Encontre as pessoas da sua base e conecte cada uma à organização certa." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir pessoas</Button>} />}
       {canReadDeals && <ActionCard icon="briefcase" title="Oportunidades" description="Acompanhe os negócios associados às empresas no funil de vendas." action={<Button variant="secondary" onClick={() => void navigate("/deals")}>Abrir negócios</Button>} />}
     </ActionCardGroup>}
     {!firstRun && <CollectionToolbar

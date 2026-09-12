@@ -90,12 +90,12 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
   async function linkContact() {
     if (!company || !selectedContact) throw new Error("MISSING_CONTACT");
     const transaction = contactsCollection.update(selectedContact.value, (draft) => { draft.companyId = companyIdFactory.from(company.id); });
-    await transaction.isPersisted.promise; setSelectedContact(null); notify({ title: "Contato vinculado", tone: "success" });
+    await transaction.isPersisted.promise; setSelectedContact(null); notify({ title: "Pessoa vinculada", tone: "success" });
   }
 
   async function unlinkContact(id: string) {
     setBusyLink(id);
-    try { const tx = contactsCollection.update(id, (draft) => { draft.companyId = null; }); await tx.isPersisted.promise; notify({ title: "Contato desvinculado", tone: "success" }); }
+    try { const tx = contactsCollection.update(id, (draft) => { draft.companyId = null; }); await tx.isPersisted.promise; notify({ title: "Pessoa desvinculada", tone: "success" }); }
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 
@@ -115,7 +115,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
 
   return <PageFrame>
     <BackLink render={<Link to="/companies" />}>Empresas</BackLink>
-    <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Contatos", value: linkedContacts.length }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }] : [])]} />
+    <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Pessoas", value: linkedContacts.length }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }] : [])]} />
 
     <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <Card title="Editar empresa"><form className={styles.editForm} onSubmit={saveCompany}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
@@ -133,8 +133,8 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
     </div></Card>}</div>
 
     {hasRelations && <div className={styles.relations}>
-      {canReadContacts && <div className={styles.relationCard}><Card title="Contatos" description="Pessoas que trabalham ou se relacionam com esta empresa." actions={canLinkContacts ? <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular contato</Button> : undefined}>
-        {linkedContacts.length ? <ul>{linkedContacts.map((contact) => <li key={contact.id}><div><Link to={`/contacts/${contact.id}`}>{contact.name}</Link><span>{contact.email ?? "Sem e-mail"}</span></div>{canLinkContacts && <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhum contato vinculado.</p>}
+      {canReadContacts && <div className={styles.relationCard}><Card title="Pessoas" description="Pessoas que trabalham ou se relacionam com esta empresa." actions={canLinkContacts ? <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular pessoa</Button> : undefined}>
+        {linkedContacts.length ? <ul>{linkedContacts.map((contact) => <li key={contact.id}><div><Link to={`/contacts/${contact.id}`}>{contact.name}</Link><span>{contact.email ?? "Sem e-mail"}</span></div>{canLinkContacts && <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhuma pessoa vinculada.</p>}
       </Card></div>}
       {canReadDeals && <div className={styles.relationCard}><Card title="Negócios" description="Oportunidades comerciais desta empresa." actions={canLinkDeals ? <Button size="sm" onClick={() => setLinkDealOpen(true)}>Vincular negócio</Button> : undefined}>
         {linkedDeals.length ? <ul>{linkedDeals.map((deal) => <li key={deal.id}><div><Link to={`/deals/${deal.id}`}>{deal.name}</Link><span>{formatBRL(syncedAmount(deal.amount))} · {deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></div>{canLinkDeals && <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhum negócio vinculado.</p>}
@@ -146,8 +146,8 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
     </Card></div>
     </div>
 
-    <ActionModal open={linkContactOpen} onOpenChange={setLinkContactOpen} title="Vincular contato" confirmLabel="Vincular" errorText="Selecione um contato." onConfirm={linkContact}>
-      <Field><Label>Contato</Label><SearchSelect label="Buscar contato" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((item) => !item.deletedAt && item.companyId !== company.id).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>
+    <ActionModal open={linkContactOpen} onOpenChange={setLinkContactOpen} title="Vincular pessoa" confirmLabel="Vincular" errorText="Selecione uma pessoa." onConfirm={linkContact}>
+      <Field><Label>Pessoa</Label><SearchSelect label="Buscar pessoa" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt && item.companyId !== company.id).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>
     </ActionModal>
     <ActionModal open={linkDealOpen} onOpenChange={setLinkDealOpen} title="Vincular negócio" confirmLabel="Vincular" errorText="Selecione um negócio." onConfirm={linkDeal}>
       <Field><Label>Negócio</Label><SearchSelect label="Buscar negócio" searchPlacement="dropdown" placeholder="Selecionar negócio" options={deals.filter((item) => !item.deletedAt && item.companyId !== company.id).map((item) => ({ value: item.id, label: item.name, description: formatBRL(syncedAmount(item.amount)) }))} value={selectedDeal} onValueChange={setSelectedDeal} /></Field>
