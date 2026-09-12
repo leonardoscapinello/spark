@@ -87,7 +87,7 @@
 }
 
 .accountMenu { display: flex; flex: 0 0 auto; justify-content: center; }
-.accountMenu .accountLink { background: var(--ui-selected); box-shadow: var(--ui-selectionShadow); }
+.accountMenu .accountLink[aria-current="page"] { background: var(--ui-selected); box-shadow: var(--ui-selectionShadow); }
 .mobileModuleMenu { display: none; }
 .mobileSecondaryNav { display: none; }
 
