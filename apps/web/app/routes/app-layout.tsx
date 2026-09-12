@@ -146,7 +146,8 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     ? adminCapabilities.some(allowed)
     : module.sections.some((section) => section.items.some((item) => allowed(item.capability))));
   const current = moduleForPath(location.pathname);
-  const showSidebar = current.id !== "overview" && current.id !== "leads"
+  const showModuleTabs = current.id === "leads" || current.id === "crm" && location.pathname === "/deals";
+  const showSidebar = current.id !== "overview" && !showModuleTabs
     && !["/automations/", "/pages/", "/forms/"].some((prefix) => location.pathname.startsWith(prefix));
 
   async function handleSignOut() {
@@ -182,7 +183,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         })}
       </Sidebar>}
       <main className={styles.conteudo} aria-busy={Boolean(pendingLocation)}>
-        {current.id === "leads" && <nav className={styles.moduleTabs} aria-label="Áreas de Leads">
+        {showModuleTabs && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability)).map((item) =>
             <Link key={item.to} to={item.to} className={styles.moduleTab} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
           )}
