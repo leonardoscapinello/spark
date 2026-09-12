@@ -3,6 +3,7 @@ import type { Capability } from "@spark/core";
 import { Button, Icon, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { restoreSession, signOut } from "../lib/auth.client";
+import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import styles from "./app-layout.module.css";
 
 type NavItem = { label: string; to: string; icon: IconName; capability?: Capability };
@@ -80,7 +81,8 @@ const modules: NavModule[] = [
       { label: "Canais conectados", to: "/social?view=channels", icon: "team", capability: "social:read" },
     ] },
   ] },
-  { id: "admin", title: "Administração", icon: "settings", to: "/admin/users", sections: [
+  { id: "admin", title: "Administração", icon: "settings", to: "/admin", sections: [
+    { title: "Início", items: [{ label: "Visão geral", to: "/admin", icon: "grid" }] },
     { title: "Acesso", items: [
       { label: "Usuários", to: "/admin/users", icon: "user", capability: "users:manage" },
       { label: "Times", to: "/admin/teams", icon: "team", capability: "users:manage" },
@@ -89,12 +91,11 @@ const modules: NavModule[] = [
     { title: "Sistema", items: [
       { label: "Integrações", to: "/integrations", icon: "bolt", capability: "integrations:read" },
       { label: "Auditoria", to: "/admin/audit-log", icon: "file", capability: "audit_logs:read" },
-      { label: "Configurações", to: "/settings", icon: "settings", capability: "settings:manage" },
+      { label: "Campos personalizados", to: "/settings", icon: "file", capability: "settings:manage" },
     ] },
   ] },
 ];
 
-const adminCapabilities: Capability[] = ["users:manage", "permission_groups:manage", "settings:manage"];
 const accountModule: NavModule = { id: "account", title: "Minha conta", icon: "user", to: "/security", sections: [
   { title: "Conta", items: [{ label: "Segurança", to: "/security", icon: "settings" }] },
 ] };
@@ -103,7 +104,7 @@ function pathMatches(pathname: string, to: string, search = "") {
   const [route, query] = to.split("?");
   const routeMatches = route === "/"
     ? pathname === "/" || pathname.startsWith("/contacts/") && pathname !== "/contacts/import"
-    : route === "/inbox" ? pathname === route : pathname === route || pathname.startsWith(`${route}/`);
+    : route === "/inbox" || route === "/admin" ? pathname === route : pathname === route || pathname.startsWith(`${route}/`);
   if (!query) {
     const relevantParameter = ({ "/": "status", "/deals": "status", "/inbox": "box", "/automations": "filter", "/campaigns": "view", "/social": "view" } as Record<string, string>)[route ?? ""];
     return routeMatches && (!relevantParameter || !new URLSearchParams(search).has(relevantParameter));
@@ -115,7 +116,7 @@ function pathMatches(pathname: string, to: string, search = "") {
 
 function moduleForPath(pathname: string): NavModule {
   if (pathname === "/security") return accountModule;
-  if (pathname.startsWith("/admin/") || pathname === "/integrations" || pathname === "/settings") return modules[7]!;
+  if (pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/integrations" || pathname === "/settings") return modules[7]!;
   if (pathname.startsWith("/contacts/") || pathname === "/" || pathname.startsWith("/companies")) return modules[1]!;
   if (["/deals", "/activities", "/catalog"].some((route) => pathMatches(pathname, route))) return modules[2]!;
   if (pathname.startsWith("/inbox")) return modules[3]!;
@@ -143,7 +144,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const allowed = (capability?: Capability) => !capability || session.capabilities.includes(capability);
   const visibleModules = modules.filter((module) => module.id === "admin"
-    ? adminCapabilities.some(allowed)
+    ? ADMIN_CAPABILITIES.some(allowed)
     : module.sections.some((section) => section.items.some((item) => allowed(item.capability))));
   const current = moduleForPath(location.pathname);
   const showModuleTabs = current.id === "leads" || current.id === "crm" && location.pathname === "/deals";

@@ -33,6 +33,7 @@ export default [
     route("deals/:dealId", "routes/deal-detail.tsx"),
     route("activities", "routes/activities.tsx"),
     route("security", "routes/security.tsx"),
+    route("admin", "routes/admin-home.tsx"),
     route("admin/users", "routes/admin-users.tsx"),
     route("admin/teams", "routes/admin-teams.tsx"),
     route("admin/permission-groups", "routes/admin-permission-groups.tsx"),

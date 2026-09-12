@@ -12,10 +12,19 @@ const LANDING_ROUTES: ReadonlyArray<readonly [Capability, string]> = [
   ["audit_logs:read", "/admin/audit-log"],
 ];
 
+export const ADMIN_CAPABILITIES: readonly Capability[] = ["users:manage", "permission_groups:manage", "integrations:read", "audit_logs:read", "settings:manage"];
+
 export async function requireCapability(capability: Capability): Promise<AppSession> {
   const session = await restoreSession();
   if (!session) throw redirect("/login");
   if (!session.capabilities.includes(capability)) throw redirect(firstAccessibleRoute(session));
+  return session;
+}
+
+export async function requireAnyCapability(capabilities: readonly Capability[]): Promise<AppSession> {
+  const session = await restoreSession();
+  if (!session) throw redirect("/login");
+  if (!capabilities.some((capability) => session.capabilities.includes(capability))) throw redirect(firstAccessibleRoute(session));
   return session;
 }
 

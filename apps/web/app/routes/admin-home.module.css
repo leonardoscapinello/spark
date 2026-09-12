@@ -1,0 +1,86 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+  padding: var(--space-8);
+}
+
+.section {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.section h2 {
+  margin: 0;
+  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-semibold);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-chartColumn)), 1fr));
+  gap: var(--space-3);
+}
+
+.card {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  border: var(--ui-hairline) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  text-decoration: none;
+  box-shadow: var(--ui-panelShadow);
+}
+
+.card:hover {
+  border-color: var(--color-focusRing);
+}
+
+.card:focus-visible {
+  outline: var(--ui-focusWidth) solid var(--color-focusRing);
+  outline-offset: var(--ui-focusOffset);
+}
+
+.card > svg:last-child {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  color: var(--color-inkMuted);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--ui-controlMedium);
+  width: var(--ui-controlMedium);
+  height: var(--ui-controlMedium);
+  border-radius: var(--radius-sm);
+  background: var(--color-accentWash);
+  color: var(--color-accent);
+}
+
+.copy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.copy strong {
+  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-semibold);
+}
+
+.copy span {
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-compact);
+  line-height: var(--ui-tabLine);
+}
+
+@media (max-width: 640px) {
+  .page { padding: var(--space-4); }
+}
