@@ -4,7 +4,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Badge, Button, DataTable, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Textarea, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, DataTable, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Textarea, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -176,13 +176,20 @@ export default function Inbox() {
   return <div className={styles.page}>
     <Sidebar title="Atendimento" className={styles.queueSidebar}>
       <SidebarSection title="Caixas">
-        {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
+        {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} onClick={() => setMobileView("list")} />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
       </SidebarSection>
       {teams.some((team) => !team.archivedAt) && <SidebarSection title="Equipes">
-        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link ref={filter === `team:${team.id}` ? activeQueueLink : undefined} to={`/inbox?box=team:${team.id}`} />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
+        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link ref={filter === `team:${team.id}` ? activeQueueLink : undefined} to={`/inbox?box=team:${team.id}`} onClick={() => setMobileView("list")} />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
       </SidebarSection>}
       <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
     </Sidebar>
+    <div className={styles.mobileQueueMenu}>
+      <MenuButton variant="ghost" shape="rounded" className={styles.mobileQueueTrigger} icon={<Icon name="inbox" />} aria-label="Selecionar caixa de atendimento" menu={<>
+        <MenuGroup label="Caixas">{queues.map((queue) => <MenuItem key={queue.box} icon={<Icon name={queue.icon} />} shortcut={String(queueCount(queue.box))} aria-current={filter === queue.box ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(queue.to); }}>{queue.label}</MenuItem>)}</MenuGroup>
+        {teams.some((team) => !team.archivedAt) && <MenuGroup label="Equipes">{teams.filter((team) => !team.archivedAt).map((team) => <MenuItem key={team.id} icon={<Icon name="team" />} shortcut={String(queueCount(`team:${team.id}`))} aria-current={filter === `team:${team.id}` ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=team:${team.id}`); }}>{team.name}</MenuItem>)}</MenuGroup>}
+        <MenuGroup label="Ferramentas"><MenuItem icon={<Icon name="file" />} onClick={() => void navigate("/inbox/replies")}>Respostas prontas</MenuItem></MenuGroup>
+      </>}>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</MenuButton>
+    </div>
     <div className={styles.workspace} data-layout={layout} data-preview-open={layout === "table" && selectedId && selected ? "true" : "false"} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"} data-first-run={firstRun ? "true" : undefined}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
         <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</div></header>
