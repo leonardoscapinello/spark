@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { filesControllerComplete, filesControllerDownload, filesControllerRemove, filesControllerUpload } from "@spark/api-client";
 import { fileId, type StoredFile } from "@spark/core";
-import { Badge, DataTable, EmptyState, FilePicker, Icon, Input, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { Badge, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, Input, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getFilesCollection } from "../lib/files-collection.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -32,7 +32,11 @@ export default function Files() {
   return <div className={styles.page}>
     <PageHeader title="Arquivos" description="Use o mesmo arquivo em contatos, campanhas, conversas e automações." actions={canWrite && hasFiles ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />
     {!hasFiles && !isLoading ? <EmptyState icon="file" title="Envie seu primeiro arquivo" description="Organize imagens e documentos para reutilizá-los em toda a equipe." action={canWrite ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} /> : <>
-      <div className={styles.toolbar}><Input aria-label="Buscar arquivos" placeholder="Buscar por nome" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} /><Select label="Tipo de arquivo" value={kind} options={[{ value: "all", label: "Todos os tipos" }, { value: "image", label: "Imagens" }, { value: "video", label: "Vídeos" }, { value: "document", label: "Documentos" }, { value: "other", label: "Outros" }]} onValueChange={(value) => setKind(value ?? "all")} /><span>{files.length} {files.length === 1 ? "arquivo" : "arquivos"}</span></div>
+      <CollectionToolbar
+        search={<Input aria-label="Buscar arquivos" placeholder="Buscar por nome" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+        filters={<Select label="Tipo de arquivo" value={kind} options={[{ value: "all", label: "Todos os tipos" }, { value: "image", label: "Imagens" }, { value: "video", label: "Vídeos" }, { value: "document", label: "Documentos" }, { value: "other", label: "Outros" }]} onValueChange={(value) => setKind(value ?? "all")} />}
+        count={`${files.length} ${files.length === 1 ? "arquivo" : "arquivos"}`}
+      />
       <DataTable label="Biblioteca de arquivos" rows={files} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !allFiles.length ? "loading" : "ready"} emptyText="Nenhum arquivo neste filtro." actions={(item) => <><TableIconAction label="Baixar arquivo" icon={<Icon name="download" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void download(item)} />{canWrite && <TableIconAction label="Excluir arquivo" icon={<Icon name="trash" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void remove(item)} />}</>} />
     </>}
   </div>;
