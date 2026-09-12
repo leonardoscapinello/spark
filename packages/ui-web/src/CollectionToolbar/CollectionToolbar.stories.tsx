@@ -4,6 +4,7 @@ import { CollectionToolbar } from "./CollectionToolbar.js";
 import { Input } from "../Input/Input.js";
 import { Select } from "../Select/Select.js";
 import { Icon } from "../Icon/Icon.js";
+import { Button } from "../Button/Button.js";
 
 const meta: Meta<typeof CollectionToolbar> = { title: "Tabelas/Barra de ferramentas", component: CollectionToolbar };
 export default meta;
@@ -17,6 +18,7 @@ function Example() {
   return <CollectionToolbar
     search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar páginas" value={search} onChange={(event) => setSearch(event.target.value)} />}
     filters={<Select label="Filtrar por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
+    actions={<Button variant="secondary" onClick={() => setStatus("draft")}>Ver rascunhos</Button>}
     count="12 páginas"
   />;
 }
