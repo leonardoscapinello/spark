@@ -1,0 +1,1 @@
+.root { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); }

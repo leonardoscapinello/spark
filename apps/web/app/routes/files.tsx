@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { filesControllerComplete, filesControllerDownload, filesControllerRemove, filesControllerUpload } from "@spark/api-client";
 import { fileId, type StoredFile } from "@spark/core";
-import { Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, Input, PageHeader, Select, Skeleton, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { Badge, Card, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, Input, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getFilesCollection } from "../lib/files-collection.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -13,7 +13,7 @@ export async function clientLoader() { await requireCapability("files:read"); vo
 export default function Files() {
   const session = getSession(); const canWrite = session?.capabilities.includes("files:write") ?? false;
   const { data: allFiles, isLoading } = useLiveQuery({ query: (q) => q.from({ files: getFilesCollection() }).orderBy(({ files: item }) => item.createdAt, "desc") });
-  const [search, setSearch] = useState(""); const [kind, setKind] = useState("all"); const [status, setStatus] = useState("all"); const [layout, setLayout] = useState<"grid" | "table">("grid"); const [uploading, setUploading] = useState<string | null>(null); const [busyId, setBusyId] = useState<string | null>(null);
+  const [search, setSearch] = useState(""); const [kind, setKind] = useState("all"); const [status, setStatus] = useState("all"); const [layout, setLayout] = useState<"cards" | "table">("cards"); const [uploading, setUploading] = useState<string | null>(null); const [busyId, setBusyId] = useState<string | null>(null);
   const hasFiles = allFiles.some((item) => !item.deletedAt);
   const firstRun = !hasFiles && !isLoading && !search && kind === "all" && status === "all";
   const files = useMemo(() => allFiles.filter((item) => !item.deletedAt && (kind === "all" || fileKind(item.mimeType) === kind) && (status === "all" || item.status === status) && (!search.trim() || item.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")))), [allFiles, kind, search, status]);
@@ -38,7 +38,7 @@ export default function Files() {
         search={<Input aria-label="Buscar arquivos" placeholder="Buscar por nome" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
         filters={<><Select label="Tipo de arquivo" value={kind} options={[{ value: "all", label: "Todos os tipos" }, { value: "image", label: "Imagens" }, { value: "video", label: "Vídeos" }, { value: "document", label: "Documentos" }, { value: "other", label: "Outros" }]} onValueChange={(value) => setKind(value ?? "all")} /><Select label="Status do arquivo" value={status} options={[{ value: "all", label: "Todos os status" }, { value: "ready", label: "Disponíveis" }, { value: "pending", label: "Processando" }, { value: "failed", label: "Com falha" }]} onValueChange={(value) => setStatus(value ?? "all")} /></>}
         count={`${files.length} ${files.length === 1 ? "arquivo" : "arquivos"}`}
-        actions={<div className={styles.layoutSwitch} role="group" aria-label="Visualização dos arquivos"><Button iconOnly size="sm" variant={layout === "grid" ? "raised" : "ghost"} aria-label="Visualização em cartões" aria-pressed={layout === "grid"} onClick={() => setLayout("grid")}><Icon name="grid" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>}
+        actions={<ViewSwitcher label="Visualização dos arquivos" value={layout} onValueChange={setLayout} />}
       />
       {layout === "table" ? <DataTable label="Biblioteca de arquivos" rows={files} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !allFiles.length ? "loading" : "ready"} emptyText="Nenhum arquivo neste filtro." actions={fileActions} /> : <div className={styles.fileGrid} aria-label="Biblioteca de arquivos">
         {isLoading && !allFiles.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}

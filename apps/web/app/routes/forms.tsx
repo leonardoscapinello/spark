@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { formsControllerCreate, formsControllerStatus } from "@spark/api-client";
 import { leadFormId, type LeadForm } from "@spark/core";
-import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Skeleton, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getFormSubmissionsCollection, getLeadFormsCollection } from "../lib/forms-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -67,7 +67,7 @@ export default function Forms() {
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select label="Filtrar formulários por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicados" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "formulário" : "formulários"}`}
-        actions={<div className={styles.layoutSwitch} role="group" aria-label="Visualização dos formulários"><Button iconOnly size="sm" variant={layout === "cards" ? "raised" : "ghost"} aria-label="Visualização em cartões" aria-pressed={layout === "cards"} onClick={() => setLayout("cards")}><Icon name="grid" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>}
+        actions={<ViewSwitcher label="Visualização dos formulários" value={layout} onValueChange={setLayout} />}
       />
       {layout === "table" ? <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText="Nenhum formulário encontrado." actions={formActions} /> : <div className={styles.cardGrid} aria-label="Formulários">
         {isLoading && !forms.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}

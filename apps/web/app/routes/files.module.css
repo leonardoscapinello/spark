@@ -5,7 +5,6 @@
 .fileName small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .fileIcon { display: grid; place-items: center; flex: 0 0 var(--space-9); width: var(--space-9); height: var(--space-9); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
 .fileIcon svg { width: var(--space-4); height: var(--space-4); }
-.layoutSwitch { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); }
 .fileGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-cardMinWidth)), 1fr)); align-content: start; gap: var(--space-3); min-width: 0; }
 .fileGrid > section { min-width: 0; }
 .fileGrid > section h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

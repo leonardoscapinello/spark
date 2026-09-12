@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { pagesControllerCreate } from "@spark/api-client";
 import { pageId, type Page } from "@spark/core";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getPagesCollection } from "../lib/pages-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -24,6 +24,7 @@ export default function Pages() {
   const [slug, setSlug] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [layout, setLayout] = useState<"cards" | "table">("cards");
   const firstRun = !isLoading && pages.length === 0 && !search && status === "all";
   const term = search.trim().toLocaleLowerCase("pt-BR");
   const filtered = pages.filter((page) => (status === "all" || page.status === status)
@@ -31,8 +32,8 @@ export default function Pages() {
 
   const columns: TableColumn<Page>[] = [
     { id: "name", label: "Página", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><span>/{item.slug}</span></div>, sortValue: (item) => item.name },
-    { id: "status", label: "Situação", cell: (item) => <Badge tone={item.status === "published" ? "success" : "neutral"}>{item.status === "published" ? "Publicada" : item.status === "archived" ? "Arquivada" : "Rascunho"}</Badge>, sortValue: (item) => item.status },
-    { id: "updated", label: "Atualizada", cell: (item) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.updatedAt)), sortValue: (item) => item.updatedAt },
+    { id: "status", label: "Situação", cell: (item) => pageStatusBadge(item), sortValue: (item) => item.status },
+    { id: "updated", label: "Atualizada", cell: (item) => formatDate(item.updatedAt), sortValue: (item) => item.updatedAt },
   ];
 
   async function create() {
@@ -49,8 +50,13 @@ export default function Pages() {
         search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select label="Filtrar páginas por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "página" : "páginas"}`}
+        actions={<ViewSwitcher label="Visualização das páginas" value={layout} onValueChange={setLayout} />}
       />
-      <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText="Nenhuma página encontrada." actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} /></>}
+      {layout === "table" ? <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText="Nenhuma página encontrada." actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} /> : <div className={styles.cardGrid} aria-label="Páginas">
+        {isLoading && !pages.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
+        {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhuma página encontrada.</p>}
+        {filtered.map((item) => <Card key={item.id} title={item.name} description={`/${item.slug}`} actions={pageStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizada {formatDate(item.updatedAt)}</span><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} /></div>}><div className={styles.cardMeta}><Icon name="file" /><span>{item.status === "published" ? "Página disponível para visitantes" : item.status === "archived" ? "Página arquivada" : "Página em edição"}</span></div></Card>)}
+      </div>}</>}
     <ActionModal open={open} onOpenChange={setOpen} title="Nova página" confirmLabel="Criar e editar" errorText="Informe nome e endereço válidos." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Landing de campanha" onChange={(event) => { setName(event.target.value); if (!slug) setSlug(toSlug(event.target.value)); }} /></Field>
@@ -63,3 +69,5 @@ export default function Pages() {
 function toSlug(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
+function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function pageStatusBadge(item: Page) { return <Badge tone={item.status === "published" ? "success" : "neutral"}>{item.status === "published" ? "Publicada" : item.status === "archived" ? "Arquivada" : "Rascunho"}</Badge>; }

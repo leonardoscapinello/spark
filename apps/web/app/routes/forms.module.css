@@ -1,7 +1,6 @@
 .page { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; padding: var(--space-6); }
 .secondary { display: block; margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
 .form { display: grid; gap: var(--space-4); }
-.layoutSwitch { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); }
 .cardGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-cardMinWidth)), 1fr)); align-content: start; gap: var(--space-3); min-width: 0; }
 .cardGrid > section { min-width: 0; }
 .cardGrid > section h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
