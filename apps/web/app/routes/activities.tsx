@@ -98,7 +98,7 @@ export default function Activities() {
   function submit(event: FormEvent) { event.preventDefault(); void createActivity().catch(() => undefined); }
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Agenda comercial" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canCreate ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
+    <PageHeader eyebrow="Agenda comercial" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canCreate && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
     {!firstRun && <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="ghost" shape="rounded" className={styles.periodOption} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<strong>{option.count}</strong></Button>)}</div>}
     {!firstRun && <div className={styles.toolbar}>
       <div className={styles.typeFilter}><Select label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} /></div>
