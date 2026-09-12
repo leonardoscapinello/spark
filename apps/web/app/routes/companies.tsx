@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, phone as buildPhone, userId as userIdFactory, type Company } from "@spark/core";
 import { optimisticCompany } from "@spark/data";
-import { ActionModal, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -101,13 +101,17 @@ export default function Companies() {
 
   return <div className={styles.page}>
     <PageHeader icon="building" title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
-    {firstRun && <EmptyState variant="featured" icon="building" title="Cadastre sua primeira empresa" description="Vincule contatos e negócios à organização para acompanhar o relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
-    <CollectionToolbar
+    {firstRun && <EmptyState variant="featured" icon="building" title="Cadastre sua primeira empresa" description="Reúna as pessoas e oportunidades de uma organização em um único perfil." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
+    {firstRun && (canReadContacts || canReadDeals) && <ActionCardGroup title="Explore os vínculos">
+      {canReadContacts && <ActionCard icon="team" title="Pessoas da empresa" description="Encontre seus contatos e conecte cada pessoa à organização certa." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir contatos</Button>} />}
+      {canReadDeals && <ActionCard icon="briefcase" title="Oportunidades" description="Acompanhe os negócios associados às empresas no funil de vendas." action={<Button variant="secondary" onClick={() => void navigate("/deals")}>Abrir negócios</Button>} />}
+    </ActionCardGroup>}
+    {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar empresas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />}
       filters={<Select appearance="filter" label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
       count={isLoading ? "Carregando empresas…" : `${filtered.length} ${filtered.length === 1 ? "empresa" : "empresas"}`}
-    />
-    <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} emptyText={firstRun ? "As empresas cadastradas aparecerão nesta tabela." : "Nenhuma empresa neste filtro."} actions={(company) => <><TableIconAction label="Abrir empresa" icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busyId === company.id} onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</Button>}</>} />
+    />}
+    {!firstRun && <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} emptyText="Nenhuma empresa neste filtro." actions={(company) => <><TableIconAction label={`Abrir ${company.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${company.name}`} loading={busyId === company.id} menu={<MenuItem onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>} />}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova empresa" confirmLabel="Criar empresa" errorText="Revise os dados da empresa." onConfirm={createCompany}>
       <div className={styles.form}>
         <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nome comercial" /></Field>
