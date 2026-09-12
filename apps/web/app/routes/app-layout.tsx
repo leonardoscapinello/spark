@@ -69,11 +69,11 @@ const modules: NavModule[] = [
       { label: "Públicos", to: "/campaigns?view=audiences", icon: "team", capability: "campaigns:read" },
     ] },
     { title: "Captação", items: [
-      { label: "Páginas", to: "/pages", icon: "file", capability: "pages:read" },
-      { label: "Formulários", to: "/forms", icon: "file", capability: "forms:read" },
+      { label: "Páginas", to: "/pages", icon: "page", capability: "pages:read" },
+      { label: "Formulários", to: "/forms", icon: "form", capability: "forms:read" },
     ] },
     { title: "Biblioteca", items: [
-      { label: "Arquivos", to: "/files", icon: "file", capability: "files:read" },
+      { label: "Arquivos", to: "/files", icon: "folder", capability: "files:read" },
     ] },
   ] },
   { id: "social", title: "Redes sociais", icon: "message", to: "/social", sections: [
