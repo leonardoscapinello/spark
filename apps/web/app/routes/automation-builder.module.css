@@ -40,6 +40,7 @@
 .zoomControls > :nth-child(2) { min-width: var(--ui-touchTarget); font-variant-numeric: tabular-nums; }
 .canvasAdd { position: sticky; z-index: 3; inset-block-start: var(--space-5); inset-inline-start: calc(100% - var(--space-16)); width: var(--space-12); height: var(--space-12); border-radius: var(--radius-full); background: var(--color-accent); color: var(--ui-buttonInk); box-shadow: var(--ui-panelShadow); }
 .canvasAdd:hover:not([data-disabled]) { background: var(--color-accent); }
+.workspace[data-panel="palette"] .canvasAdd { display: none; }
 .edges { position: absolute; inset: var(--space-0); width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .edges path { fill: none; stroke: var(--color-lineStrong); stroke-width: calc(var(--ui-hairline) * 2); }
 .node { position: absolute; top: var(--space-0); left: var(--space-0); width: calc(var(--space-16) * 4); padding: 0; overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); cursor: grab; user-select: none; transition: border-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out); }
@@ -58,8 +59,16 @@
 .node footer { display: flex; justify-content: flex-end; padding: var(--space-2) var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); }
 .canvasEmpty { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: var(--space-3); color: var(--color-inkMuted); text-align: center; }
 .canvasEmpty strong { color: var(--color-ink); font-size: var(--typography-size-lg); }
-.inspector > header { display: flex; justify-content: space-between; align-items: flex-start; }
-.inspector > header > div { display: grid; gap: var(--space-2); }
+.inspector { gap: var(--space-4); padding: 0 var(--space-4) var(--space-4); }
+.inspector > header { display: flex; justify-content: space-between; align-items: center; min-height: var(--space-16); margin-inline: calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4); }
+.inspector[data-type="trigger"] > header { background: var(--ui-automationTrigger); }
+.inspector[data-type="condition"] > header { background: var(--ui-automationCondition); }
+.inspector[data-type="action"] > header { background: var(--ui-automationAction); }
+.inspector[data-type="wait"] > header { background: var(--ui-automationWait); }
+.inspector > header > div { display: grid; gap: var(--space-1); padding-inline-end: var(--space-8); }
+.inspector > header strong { color: var(--color-ink); font-size: var(--typography-size-sm); }
+.inspectorType { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-ink); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); text-transform: uppercase; letter-spacing: var(--typography-tracking-wide); }
+.inspectorType svg { width: var(--ui-icon); height: var(--ui-icon); }
 .deleteButton { margin-top: auto; color: var(--color-statusDanger); }
 .configGrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }

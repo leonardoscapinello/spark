@@ -167,8 +167,8 @@ export default function AutomationBuilder() {
             {(["action", "condition", "wait"] as const).map((type) => <Button key={type} variant="ghost" shape="rounded" className={styles.paletteButton} data-type={type} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeIcon}><Icon name={NODE_ICONS[type]} /></span><span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
           </div></div>
           <div className={styles.validation}><strong>Pronto para publicar</strong>{issues.length ? issues.map((issue) => <span key={`${issue.code}-${issue.nodeId ?? issue.edgeId ?? "graph"}`}>{issue.message}</span>) : <span data-valid="true">Fluxo válido e conectado.</span>}</div>
-        </div> : <div className={styles.inspector}>
-          <header><div><Badge tone="neutral">{typeLabel(selected.type)}</Badge><strong>Configuração</strong></div></header>
+        </div> : <div className={styles.inspector} data-type={selected.type}>
+          <header><div><span className={styles.inspectorType}><Icon name={NODE_ICONS[selected.type]} />{typeLabel(selected.type)}</span><strong>{selected.data.label}</strong></div></header>
           <Field><Label>Nome do bloco</Label><Input value={selected.data.label} disabled={!canWrite} onChange={(event) => updateSelected({ label: event.target.value })} /></Field>
           <Field><Label>Descrição</Label><Textarea value={selected.data.description} disabled={!canWrite} rows={4} onChange={(event) => updateSelected({ description: event.target.value })} /></Field>
           <NodeConfiguration node={selected} disabled={!canWrite} onChange={(config) => updateSelected({ config })} />
