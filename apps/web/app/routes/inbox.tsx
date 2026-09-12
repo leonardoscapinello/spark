@@ -4,7 +4,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Badge, Button, Field, Icon, Label, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Icon, Input, Label, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -52,6 +52,8 @@ export default function Inbox() {
   const [mobileView, setMobileView] = useState<"list" | "thread">("list");
   const [now, setNow] = useState(() => new Date());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const [newContact, setNewContact] = useState<SelectOption | null>(null);
   const [newSubject, setNewSubject] = useState("");
@@ -62,7 +64,10 @@ export default function Inbox() {
   const contactNames = useMemo(() => new Map(contacts.map((item) => [item.id, item.name])), [contacts]);
   const userNames = useMemo(() => new Map(users.map((item) => [item.id, item.name])), [users]);
   const teamNames = useMemo(() => new Map(teams.map((item) => [item.id, item.name])), [teams]);
-  const filtered = conversations.filter((item) => matchesFilter(item, filter, session?.userId ?? null));
+  const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
+  const filtered = conversations.filter((item) => matchesFilter(item, filter, session?.userId ?? null)
+    && (!searchTerm || [item.subject, contactNames.get(item.contactId), channelLabel(item.channel), item.teamId ? teamNames.get(item.teamId) : null]
+      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm))));
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
   const { data: messages = [] } = useLiveQuery({ query: (q) => selected ? q.from({ messages: messagesCollection }).where(({ messages: item }) => eq(item.conversationId, selected.id)).orderBy(({ messages: item }) => item.createdAt, "asc") : undefined });
@@ -122,10 +127,11 @@ export default function Inbox() {
         {teams.some((team) => !team.archivedAt) && <div className={styles.filters} aria-label="Filtrar por equipe">
           {teams.filter((team) => !team.archivedAt).map((team) => <FilterButton key={team.id} active={filter === `team:${team.id}`} count={conversations.filter((item) => item.status === "open" && item.teamId === team.id).length} onClick={() => setSearchParams({ box: `team:${team.id}` })}>{team.name}</FilterButton>)}
         </div>}
-        <header><strong>{filterLabel(filter)}</strong><span>{filtered.length}</span>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</header>
+        <header><strong>{filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</div></header>
+        {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
         <div className={styles.listBody}>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
-          {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhuma conversa nesta caixa.</p>}
+          {!isLoading && filtered.length === 0 && <p className={styles.empty}>{searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."}</p>}
           {filtered.map((item) => <Button key={item.id} variant="ghost" shape="rounded" className={styles.conversationButton} data-selected={selected?.id === item.id || undefined} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>
             <span className={styles.avatar}>{initials(contactNames.get(item.contactId) ?? "Contato")}</span>
             <span className={styles.preview}><span><strong>{contactNames.get(item.contactId) ?? "Contato"}</strong><time>{relativeTime(item.lastMessageAt)}</time></span><b>{item.subject}</b><small>{channelLabel(item.channel)} · {item.teamId ? teamNames.get(item.teamId) ?? "Equipe" : item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída"}</small><SlaBadge conversation={item} now={now} /></span>
@@ -160,8 +166,8 @@ export default function Inbox() {
           </form>}
         </> : <div className={styles.threadEmpty}>
           <Icon name="message" />
-          <strong>{isLoading ? "Preparando atendimento" : conversations.length === 0 ? "Comece seu primeiro atendimento" : "Nenhuma conversa nesta caixa"}</strong>
-          <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : conversations.length === 0 ? "Crie uma conversa para acompanhar o histórico e responder em um só lugar." : "Escolha outra caixa para continuar o atendimento."}</span>
+          <strong>{isLoading ? "Preparando atendimento" : searchTerm ? "Nenhuma conversa encontrada" : conversations.length === 0 ? "Comece seu primeiro atendimento" : "Nenhuma conversa nesta caixa"}</strong>
+          <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou canal." : conversations.length === 0 ? "Crie uma conversa para acompanhar o histórico e responder em um só lugar." : "Escolha outra caixa para continuar o atendimento."}</span>
           {!isLoading && conversations.length === 0 && canWrite && canReadContacts && (contacts.length > 0
             ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button>
             : <Button variant="secondary" onClick={() => navigate("/")}>Adicionar contato</Button>)}
