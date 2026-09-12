@@ -114,6 +114,22 @@ const moduleEntry: Record<string, () => Promise<unknown>> = {
   admin: () => import("./admin-home"),
 };
 
+// A navegação entre abas carrega só o código da próxima tela, sem iniciar
+// sincronização nem requisições de dados antes de a pessoa abrir a rota.
+const secondaryEntry: Record<string, () => Promise<unknown>> = {
+  "/companies": () => import("./companies"),
+  "/activities": () => import("./activities"),
+  "/catalog": () => import("./catalog"),
+  "/pages": () => import("./pages"),
+  "/forms": () => import("./forms"),
+  "/files": () => import("./files"),
+};
+
+function warmRoute(to: string) {
+  const route = to.split("?")[0]!;
+  void (secondaryEntry[route] ?? moduleEntry[moduleForPath(route).id])?.().catch(() => undefined);
+}
+
 function pathMatches(pathname: string, to: string, search = "") {
   const [route, query] = to.split("?");
   const routeMatches = route === "/"
@@ -223,6 +239,22 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     return () => { canceled = true; window.cancelIdleCallback(idleId); };
   }, []);
 
+  useEffect(() => {
+    if (!window.requestIdleCallback) return;
+    const targets = current.sections.flatMap((section) => section.items)
+      .filter((item) => TOP_NAVIGATION[current.id]?.includes(item.label) && item.to.split("?")[0] !== location.pathname)
+      .map((item) => item.to);
+    let canceled = false;
+    let idleId = 0;
+    let index = 0;
+    function schedule() {
+      if (canceled || index >= targets.length) return;
+      idleId = window.requestIdleCallback(() => { warmRoute(targets[index++]!); schedule(); });
+    }
+    schedule();
+    return () => { canceled = true; window.cancelIdleCallback(idleId); };
+  }, [current.id]);
+
   function markNavigation(to: string) {
     if (`${location.pathname}${location.search}` !== to) setNavigationIntent({ to, fromKey: location.key });
   }
@@ -282,7 +314,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} ref={pathMatches(location.pathname, item.to, location.search) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
+            <Link key={item.to} ref={pathMatches(location.pathname, item.to, location.search) ? activeTopTab : undefined} to={item.to} prefetch="none" onPointerEnter={() => warmRoute(item.to)} onFocus={() => warmRoute(item.to)} onTouchStart={() => warmRoute(item.to)} onPointerDown={() => { warmRoute(item.to); markNavigation(item.to); }} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
