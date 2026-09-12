@@ -9,3 +9,9 @@ it("abre ajuda no hover, no foco e no clique",async()=>{
  fireEvent.focus(trigger);expect(trigger).toHaveAccessibleDescription("Explicação");
  fireEvent.click(trigger);fireEvent.mouseLeave(trigger);expect(screen.getByRole("tooltip")).toHaveTextContent("Explicação");
 });
+it("fecha a dica ao clicar em um atalho de navegação",async()=>{
+ render(<TooltipProvider><Tooltip content="Leads" pinOnClick={false}><Button aria-label="Leads">Leads</Button></Tooltip></TooltipProvider>);
+ const trigger=screen.getByRole("button",{name:"Leads"});
+ fireEvent.mouseEnter(trigger);expect(await screen.findByRole("tooltip")).toHaveTextContent("Leads");
+ fireEvent.click(trigger);expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+});
