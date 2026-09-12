@@ -26,6 +26,7 @@ import {
   Input,
   Label,
   MoneyInput,
+  PageFrame,
   RecordHero,
   SearchSelect,
   Select,
@@ -212,10 +213,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   }
 
   if (!deal) {
-    return <div className={styles.page}><BackLink render={<Link to="/deals" />}>Negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Negócio não encontrado.</p>}</div>;
+    return <PageFrame className={styles.page}><BackLink render={<Link to="/deals" />}>Negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Negócio não encontrado.</p>}</PageFrame>;
   }
 
-  return <div className={styles.page}>
+  return <PageFrame className={styles.page}>
     <BackLink render={<Link to="/deals" />}>Negócios</BackLink>
     <RecordHero
       icon="briefcase"
@@ -230,13 +231,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         <div className={styles.profile}>{editing ? <Card title="Editar negócio"><form className={styles.editForm} onSubmit={saveDeal}>
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
-          <Field><Label>Contato</Label><SearchSelect label="Contato do negócio" searchPlacement="dropdown" placeholder="Sem contato" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
+          <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Sem pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
           <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={companyId || null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
           <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
           <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
         </form></Card> : <Card title="Detalhes do negócio"><div className={styles.details}>
-          <div><span>Contato</span>{linkedContact ? <Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link> : <strong>Não vinculado</strong>}</div>
+          <div><span>Pessoa</span>{linkedContact ? <Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link> : <strong>Não vinculada</strong>}</div>
           <div><span>Empresa</span>{linkedCompany ? <Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link> : <strong>Não vinculada</strong>}</div>
           <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
           <div><span>Etapa do funil</span><Select label="Etapa do funil" value={deal.stageId} options={pipelineStages.map((item) => ({ value: item.id, label: item.name }))} disabled={!canMove || deal.status !== "open"} onValueChange={(value) => void moveDeal(value)} /></div>
@@ -270,7 +271,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     <ActionModal open={lossModalOpen} onOpenChange={setLossModalOpen} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Informe o motivo da perda." onConfirm={async () => { if (!lossReason.trim()) throw new Error("MISSING_REASON"); await closeDeal("lost", lossReason); setLossReason(""); }}>
       <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
     </ActionModal>
-  </div>;
+  </PageFrame>;
 }
 
 function statusLabel(status: DealStatus): string { return status === "open" ? "Em aberto" : status === "won" ? "Ganho" : "Perdido"; }
