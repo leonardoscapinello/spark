@@ -1,13 +1,6 @@
 .page { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; padding: var(--space-8); }
-.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
-.search { width: min(100%, var(--ui-drawerWidth)); }
-.status { width: var(--ui-menuWidth); }
-.count { margin-inline-start: auto; color: var(--color-inkMuted); font-size: var(--typography-size-sm); white-space: nowrap; }
 .secondary { display: block; margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
 .form { display: grid; gap: var(--space-4); }
 @media (max-width: 720px) {
   .page { padding: var(--space-4); }
-  .toolbar { align-items: stretch; flex-direction: column; }
-  .search, .status { width: 100%; }
-  .count { margin-inline-start: 0; }
 }
