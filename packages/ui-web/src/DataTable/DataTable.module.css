@@ -10,8 +10,7 @@
 .table tbody tr:hover { background: var(--ui-subtle); }
 .actions { white-space: nowrap; }
 .table td.empty { color: var(--color-inkMuted); text-align: center; padding-block: var(--space-10); }
-.hint { display: none; font-size: var(--typography-size-compact); color: var(--color-inkMuted); margin: var(--space-2) 0 0; }
+.hint { font-size: var(--typography-size-compact); color: var(--color-inkMuted); margin: var(--space-2) 0 0; }
 
 .actionGroup { display: flex; align-items: center; gap: var(--space-1); }
 .actionGroup > * { flex-shrink: 0; }
-@media (max-width: 760px) { .hint { display: block; } }
