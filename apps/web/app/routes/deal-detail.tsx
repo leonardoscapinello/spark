@@ -17,6 +17,7 @@ import {
 import { optimisticActivity, syncedAmount } from "@spark/data";
 import {
   ActionModal,
+  BackLink,
   Button,
   Card,
   DatePicker,
@@ -207,11 +208,11 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   }
 
   if (!deal) {
-    return <div className={styles.page}><Link className={styles.back} to="/deals">← Negócios</Link>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Negócio não encontrado.</p>}</div>;
+    return <div className={styles.page}><BackLink render={<Link to="/deals" />}>Negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Negócio não encontrado.</p>}</div>;
   }
 
   return <div className={styles.page}>
-    <Link className={styles.back} to="/deals">← Negócios</Link>
+    <BackLink render={<Link to="/deals" />}>Negócios</BackLink>
     <RecordHero
       icon="briefcase"
       eyebrow={`${pipeline?.name ?? "Funil"} · ${stage?.name ?? "Etapa"}`}
