@@ -3,6 +3,7 @@
 .search { flex: 0 1 var(--ui-drawerWidth); min-width: min(100%, var(--ui-menuWidth)); }
 .filters { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
 .filters > * { width: var(--ui-menuWidth); }
+.filters > [data-appearance="filter"] { width: auto; min-width: 0; }
 .summaryRow { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); min-width: 0; }
 .filterRow + .summaryRow { padding-top: var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); }
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-inline-start: auto; }
@@ -10,6 +11,7 @@
 @media (max-width: 720px) {
   .filterRow { align-items: stretch; flex-direction: column; }
   .search, .filters, .filters > * { width: 100%; min-width: 0; }
+  .filters > [data-appearance="filter"] { width: 100%; }
   .search { flex: none; }
   .actions { margin-inline-start: 0; }
 }
