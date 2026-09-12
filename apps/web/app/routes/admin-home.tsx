@@ -34,7 +34,7 @@ export default function AdminHome({ loaderData }: Route.ComponentProps) {
   const allowed = (capability: Capability) => loaderData.session.capabilities.includes(capability);
 
   return <div className={styles.page}>
-    <div className={styles.pageHeader}><PageHeader icon="grid" title="Início" /></div>
+    <div className={styles.pageHeader}><PageHeader title="Configurações" description="Gerencie equipe, acesso e conexões do sistema." /></div>
     <div className={styles.sections}>{sections.map((section) => {
       const visible = section.areas.filter((area) => allowed(area.capability));
       if (visible.length === 0) return null;
