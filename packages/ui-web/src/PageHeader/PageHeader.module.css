@@ -20,6 +20,7 @@
   font-size: var(--typography-size-lg);
   font-weight: var(--typography-weight-semibold);
   line-height: var(--typography-lineHeight-tight);
+  overflow-wrap: anywhere;
 }
 
 .eyebrow {
