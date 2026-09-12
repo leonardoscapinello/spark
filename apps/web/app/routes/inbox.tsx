@@ -252,7 +252,11 @@ export default function Inbox() {
             <div className={styles.composerFooter}><span>{note.length}/20.000</span><Button type="submit" loading={saving} disabled={!note.trim()}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button></div>
           </form>}
         </> : <div className={styles.threadEmpty}>
-          <Icon name="message" />
+          {!isLoading && conversations.length === 0 ? <span className={styles.threadEmptyArt} aria-hidden="true">
+            <span className={styles.threadEmptyArtMail}><Icon name="mail" /></span>
+            <span className={styles.threadEmptyArtMessage}><Icon name="message" /></span>
+            <span className={styles.threadEmptyArtInbox}><Icon name="inbox" /></span>
+          </span> : <Icon name="message" />}
           <strong>{isLoading ? "Preparando atendimento" : searchTerm ? "Nenhuma conversa encontrada" : conversations.length === 0 ? "Sua caixa de atendimento está pronta" : "Nenhuma conversa nesta caixa"}</strong>
           <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou canal." : conversations.length === 0 ? "Comece uma conversa ou conecte um canal para receber mensagens da sua equipe e dos seus contatos." : "Escolha outra caixa para continuar o atendimento."}</span>
           {!isLoading && conversations.length === 0 && <div className={styles.threadEmptyActions}>{startConversationAction()}{canReadIntegrations && <Button variant="secondary" onClick={() => navigate("/integrations")}>Conectar canal</Button>}</div>}

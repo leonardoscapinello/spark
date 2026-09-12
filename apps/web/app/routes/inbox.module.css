@@ -92,6 +92,13 @@
 .listFirstRunAction { display: none; }
 .threadEmpty { margin: auto; padding: var(--space-8); display: flex; align-items: center; flex-direction: column; gap: var(--space-2); text-align: center; }
 .threadEmpty > svg { width: var(--space-8); height: var(--space-8); color: var(--color-inkMuted); }
+.threadEmptyArt { position: relative; display: block; width: min(100%, var(--ui-cardMinWidth)); height: calc(var(--space-16) * 2); margin-bottom: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface2); }
+.threadEmptyArt > span { position: absolute; display: grid; place-items: center; border-radius: var(--radius-full); background: var(--color-surface); box-shadow: var(--ui-panelShadow); color: var(--color-ink); }
+.threadEmptyArt svg { width: var(--space-5); height: var(--space-5); }
+.threadEmptyArtMail { width: var(--space-10); height: var(--space-10); inset-block-start: var(--space-6); inset-inline-start: var(--space-8); }
+.threadEmptyArtMessage { width: var(--space-16); height: var(--space-16); inset-block-start: var(--space-8); inset-inline-start: calc(50% - var(--space-8)); }
+.threadEmptyArtMessage svg { width: var(--space-8); height: var(--space-8); }
+.threadEmptyArtInbox { width: var(--space-10); height: var(--space-10); inset-block-end: var(--space-4); inset-inline-end: var(--space-8); }
 .threadEmpty strong { color: var(--color-ink); font-size: var(--typography-size-lg); }
 .threadEmpty span { max-width: var(--ui-previewColumn); line-height: var(--ui-bodyLine); }
 .threadEmptyActions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); margin-top: var(--space-4); }
