@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionModal, Button, Field, Input, Label, RecordHero, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, Card, Field, Input, Label, RecordHero, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -117,7 +117,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
     <Link className={styles.back} to="/companies">← Empresas</Link>
     <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Empresa"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Contatos", value: linkedContacts.length }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }] : [])]} />
 
-    <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <form className={styles.editForm} onSubmit={saveCompany}>
+    <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <Card title="Editar empresa"><form className={styles.editForm} onSubmit={saveCompany}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
       <Field><Label>Segmento</Label><Input value={industry} onChange={(event) => setIndustry(event.target.value)} /></Field><Field><Label>Documento fiscal</Label><Input value={taxId} onChange={(event) => setTaxId(event.target.value)} /></Field>
       <Field><Label>Site</Label><Input value={website} onChange={(event) => setWebsite(event.target.value)} /></Field><Field><Label>E-mail</Label><Input value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
@@ -125,26 +125,25 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
       <Field><Label>Empresa controladora</Label><Select label="Empresa controladora" value={parentCompanyId || null} placeholder="Nenhuma" options={companies.filter((item) => item.id !== company.id && !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setParentCompanyId(value ?? "")} /></Field>
       <Field><Label>Endereço</Label><Textarea value={address} onChange={(event) => setAddress(event.target.value)} /></Field>
       <div className={styles.formActions}><Button type="submit" loading={saving}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
-    </form> : <section className={styles.details}><h2>Detalhes da empresa</h2>
+    </form></Card> : <Card title="Detalhes da empresa"><div className={styles.details}>
       <Info label="Responsável" value={owner?.name ?? "Não atribuído"} /><Info label="Empresa controladora" value={parent?.name ?? "Nenhuma"} />
       <Info label="Documento fiscal" value={company.taxId ?? "—"} /><Info label="Telefone" value={company.phone ? formatPhone(company.phone) : "—"} />
       <Info label="E-mail" value={company.email ?? "—"} /><Info label="Site" value={company.website ?? "—"} link={company.website} />
       <Info label="Endereço" value={company.address ?? "—"} wide />
-    </section>}</div>
+    </div></Card>}</div>
 
     {hasRelations && <div className={styles.relations}>
-      {canReadContacts && <section className={styles.relationCard}><div className={styles.sectionHeader}><div><h2>Contatos</h2><p>Pessoas que trabalham ou se relacionam com esta empresa.</p></div>{canLinkContacts && <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular contato</Button>}</div>
+      {canReadContacts && <div className={styles.relationCard}><Card title="Contatos" description="Pessoas que trabalham ou se relacionam com esta empresa." actions={canLinkContacts ? <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular contato</Button> : undefined}>
         {linkedContacts.length ? <ul>{linkedContacts.map((contact) => <li key={contact.id}><div><Link to={`/contacts/${contact.id}`}>{contact.name}</Link><span>{contact.email ?? "Sem e-mail"}</span></div>{canLinkContacts && <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhum contato vinculado.</p>}
-      </section>}
-      {canReadDeals && <section className={styles.relationCard}><div className={styles.sectionHeader}><div><h2>Negócios</h2><p>Oportunidades comerciais desta empresa.</p></div>{canLinkDeals && <Button size="sm" onClick={() => setLinkDealOpen(true)}>Vincular negócio</Button>}</div>
+      </Card></div>}
+      {canReadDeals && <div className={styles.relationCard}><Card title="Negócios" description="Oportunidades comerciais desta empresa." actions={canLinkDeals ? <Button size="sm" onClick={() => setLinkDealOpen(true)}>Vincular negócio</Button> : undefined}>
         {linkedDeals.length ? <ul>{linkedDeals.map((deal) => <li key={deal.id}><div><Link to={`/deals/${deal.id}`}>{deal.name}</Link><span>{formatBRL(syncedAmount(deal.amount))} · {deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></div>{canLinkDeals && <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhum negócio vinculado.</p>}
-      </section>}
+      </Card></div>}
     </div>}
 
-    <section className={`${styles.relationCard} ${styles.history}`}>
-      <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas nesta empresa e em seus vínculos comerciais.</p></div></div>
+    <div className={`${styles.relationCard} ${styles.history}`}><Card title="Histórico" description="Mudanças registradas nesta empresa e em seus vínculos comerciais.">
       <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações desta empresa aparecerão aqui." />
-    </section>
+    </Card></div>
     </div>
 
     <ActionModal open={linkContactOpen} onOpenChange={setLinkContactOpen} title="Vincular contato" confirmLabel="Vincular" errorText="Selecione um contato." onConfirm={linkContact}>
