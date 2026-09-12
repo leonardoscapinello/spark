@@ -199,14 +199,14 @@ export default function Social() {
         </>}
         count={`${channelView ? shownChannels.length : shownPosts.length} ${channelView ? shownChannels.length === 1 ? "canal" : "canais" : shownPosts.length === 1 ? "publicação" : "publicações"}`}
       />
-      {channelView ? <DataTable label="Canais conectados" rows={shownChannels} columns={channelColumns} rowKey={(channel) => channel.id} rowLabel={(channel) => channel.name} state={channelsLoading && !channels.length ? "loading" : "ready"} emptyText="Nenhum canal encontrado." /> : <DataTable
+      {channelView ? <DataTable label="Canais conectados" rows={shownChannels} columns={channelColumns} rowKey={(channel) => channel.id} rowLabel={(channel) => channel.name} state={channelsLoading && !channels.length ? "loading" : "ready"} emptyText={firstRun ? "Os canais conectados aparecerão nesta tabela." : "Nenhum canal encontrado."} /> : <DataTable
         label="Publicações"
         rows={shownPosts}
         columns={columns}
         rowKey={(post) => post.id}
         rowLabel={(post) => post.text}
         state={isLoading && !posts.length ? "loading" : "ready"}
-        emptyText="Nenhuma publicação encontrada."
+        emptyText={firstRun ? "As publicações criadas aparecerão nesta tabela." : "Nenhuma publicação encontrada."}
       />}</>
       <ActionModal
         open={composerOpen}
