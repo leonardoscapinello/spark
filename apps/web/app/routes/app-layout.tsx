@@ -130,6 +130,15 @@ function warmRoute(to: string) {
   void (secondaryEntry[route] ?? moduleEntry[moduleForPath(route).id])?.().catch(() => undefined);
 }
 
+function whenIdle(callback: () => void): () => void {
+  if (typeof window.requestIdleCallback === "function") {
+    const id = window.requestIdleCallback(callback);
+    return () => window.cancelIdleCallback(id);
+  }
+  const id = window.setTimeout(callback, 0);
+  return () => window.clearTimeout(id);
+}
+
 function pathMatches(pathname: string, to: string, search = "") {
   const [route, query] = to.split("?");
   const routeMatches = route === "/"
@@ -223,36 +232,34 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   }, [session.name]);
 
   useEffect(() => {
-    if (!window.requestIdleCallback) return;
     const order = ["leads", "crm", "inbox", "automations", "content", "social", "admin", "overview"];
     let canceled = false;
-    let idleId = 0;
+    let cancelPending: (() => void) | undefined;
     let index = 0;
     function schedule() {
       if (canceled || index >= order.length) return;
-      idleId = window.requestIdleCallback(() => {
+      cancelPending = whenIdle(() => {
         const entry = moduleEntry[order[index++]!];
         if (entry) void entry().catch(() => undefined).finally(schedule);
       });
     }
     schedule();
-    return () => { canceled = true; window.cancelIdleCallback(idleId); };
+    return () => { canceled = true; cancelPending?.(); };
   }, []);
 
   useEffect(() => {
-    if (!window.requestIdleCallback) return;
     const targets = current.sections.flatMap((section) => section.items)
       .filter((item) => TOP_NAVIGATION[current.id]?.includes(item.label) && item.to.split("?")[0] !== location.pathname)
       .map((item) => item.to);
     let canceled = false;
-    let idleId = 0;
+    let cancelPending: (() => void) | undefined;
     let index = 0;
     function schedule() {
       if (canceled || index >= targets.length) return;
-      idleId = window.requestIdleCallback(() => { warmRoute(targets[index++]!); schedule(); });
+      cancelPending = whenIdle(() => { warmRoute(targets[index++]!); schedule(); });
     }
     schedule();
-    return () => { canceled = true; window.cancelIdleCallback(idleId); };
+    return () => { canceled = true; cancelPending?.(); };
   }, [current.id]);
 
   function markNavigation(to: string) {
