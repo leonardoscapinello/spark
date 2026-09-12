@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionModal, Button, Field, Input, Label, PageHeader, SearchSelect, Select, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, Field, Icon, Input, Label, PageHeader, SearchSelect, Select, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -114,10 +114,12 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
 
   return <div className={styles.page}>
     <Link className={styles.back} to="/companies">← Empresas</Link>
-    <PageHeader eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Conta comercial"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} />
-    <div className={styles.metrics}><div><span>Contatos</span><strong>{linkedContacts.length}</strong></div><div><span>Negócios</span><strong>{linkedDeals.length}</strong></div><div><span>Valor em aberto</span><strong>{formatBRL(syncedAmount(openValue))}</strong></div></div>
+    <div className={styles.hero}>
+      <div className={styles.heroMain}><span className={styles.heroAvatar}><Icon name="building" /></span><PageHeader eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Empresa"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} /></div>
+      <div className={styles.metrics}><div><span>Contatos</span><strong>{linkedContacts.length}</strong></div><div><span>Negócios</span><strong>{linkedDeals.length}</strong></div><div><span>Valor em aberto</span><strong>{formatBRL(syncedAmount(openValue))}</strong></div></div>
+    </div>
 
-    {editing ? <form className={styles.editForm} onSubmit={saveCompany}>
+    <div className={styles.contentGrid}><div className={styles.profileColumn}>{editing ? <form className={styles.editForm} onSubmit={saveCompany}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
       <Field><Label>Segmento</Label><Input value={industry} onChange={(event) => setIndustry(event.target.value)} /></Field><Field><Label>Documento fiscal</Label><Input value={taxId} onChange={(event) => setTaxId(event.target.value)} /></Field>
       <Field><Label>Site</Label><Input value={website} onChange={(event) => setWebsite(event.target.value)} /></Field><Field><Label>E-mail</Label><Input value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
@@ -130,7 +132,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
       <Info label="Documento fiscal" value={company.taxId ?? "—"} /><Info label="Telefone" value={company.phone ? formatPhone(company.phone) : "—"} />
       <Info label="E-mail" value={company.email ?? "—"} /><Info label="Site" value={company.website ?? "—"} link={company.website} />
       <Info label="Endereço" value={company.address ?? "—"} wide />
-    </section>}
+    </section>}</div>
 
     <div className={styles.relations}>
       <section className={styles.relationCard}><div className={styles.sectionHeader}><div><h2>Contatos</h2><p>Pessoas que trabalham ou se relacionam com esta empresa.</p></div>{canLinkContacts && <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular contato</Button>}</div>
@@ -145,6 +147,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
       <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas nesta empresa e em seus vínculos comerciais.</p></div></div>
       <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações desta empresa aparecerão aqui." />
     </section>
+    </div>
 
     <ActionModal open={linkContactOpen} onOpenChange={setLinkContactOpen} title="Vincular contato" confirmLabel="Vincular" errorText="Selecione um contato." onConfirm={linkContact}>
       <Field><Label>Contato</Label><SearchSelect label="Buscar contato" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((item) => !item.deletedAt && item.companyId !== company.id).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>
