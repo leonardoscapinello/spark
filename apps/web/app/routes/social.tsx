@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { socialControllerCreatePost, socialControllerSyncChannels } from "@spark/api-client";
 import {
@@ -45,10 +45,12 @@ export async function clientLoader() {
 }
 
 export default function Social() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const channelView = searchParams.get("view") === "channels";
   const session = getSession();
   const canWrite = session?.capabilities.includes("social:write") ?? false;
+  const canReadIntegrations = session?.capabilities.includes("integrations:read") ?? false;
   const { data: channels, isLoading: channelsLoading } = useLiveQuery({
     query: (q) =>
       q
@@ -187,13 +189,13 @@ export default function Social() {
         }
       />
       {firstRun && (channelView
-        ? <EmptyState variant="onboarding" icon="message" title="Conecte suas redes sociais" description="Conecte um provedor em Integrações e sincronize suas contas para publicar aqui." action={canWrite ? <Button loading={syncing} onClick={() => void syncChannels()}>Sincronizar canais</Button> : undefined} />
-        : <EmptyState variant="onboarding" icon="calendar" title={activeChannels.length ? "Planeje sua primeira publicação" : "Conecte um canal para começar"} description={activeChannels.length ? "Escreva uma publicação, escolha um canal e defina quando ela deve sair." : "Depois de conectar uma conta social, você poderá agendar e acompanhar as publicações aqui."} action={activeChannels.length && canWrite ? <Button onClick={() => setComposerOpen(true)}>Nova publicação</Button> : <Button variant="secondary" onClick={() => setSearchParams({ view: "channels" })}>Ver canais</Button>} />)}
+        ? <EmptyState variant="featured" icon="message" title="Conecte suas redes sociais" description="Conecte um provedor em Integrações e sincronize suas contas para publicar aqui." action={canReadIntegrations ? <Button onClick={() => void navigate("/integrations")}>Abrir integrações</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" loading={syncing} onClick={() => void syncChannels()}>Sincronizar canais</Button> : undefined} />
+        : <EmptyState variant="featured" icon="calendar" title={activeChannels.length ? "Planeje sua primeira publicação" : "Conecte um canal para começar"} description={activeChannels.length ? "Escreva uma publicação, escolha um canal e defina quando ela deve sair." : "Depois de conectar uma conta social, você poderá agendar e acompanhar as publicações aqui."} action={activeChannels.length && canWrite ? <Button onClick={() => setComposerOpen(true)}>Nova publicação</Button> : <Button variant="secondary" onClick={() => setSearchParams({ view: "channels" })}>Ver canais</Button>} />)}
       {!firstRun && <><CollectionToolbar
         search={<Input aria-label={channelView ? "Buscar canais" : "Buscar publicações"} placeholder={channelView ? "Buscar canal ou rede" : "Buscar texto ou canal"} value={channelView ? channelSearch : postSearch} startAdornment={<Icon name="search" />} onChange={(event) => channelView ? setChannelSearch(event.target.value) : setPostSearch(event.target.value)} />}
         filters={<>
-          <Select label="Filtrar por situação" value={channelView ? channelStatusFilter : postStatusFilter} options={channelView ? [{ value: "all", label: "Todas as situações" }, { value: "active", label: "Conectados" }, { value: "inactive", label: "Indisponíveis" }] : [{ value: "all", label: "Todas as situações" }, ...(["draft", "scheduled", "publishing", "published", "failed", "cancelled"] as const).map((value) => ({ value, label: statusLabel(value) }))]} onValueChange={(value) => channelView ? setChannelStatusFilter(value ?? "all") : setPostStatusFilter(value ?? "all")} />
-          {!channelView && <Select label="Filtrar por canal" value={channelFilter} options={[{ value: "all", label: "Todos os canais" }, ...channels.map((channel) => ({ value: channel.id, label: channel.name }))]} onValueChange={(value) => setChannelFilter(value ?? "all")} />}
+          <Select appearance="filter" label="Filtrar por situação" value={channelView ? channelStatusFilter : postStatusFilter} options={channelView ? [{ value: "all", label: "Todas as situações" }, { value: "active", label: "Conectados" }, { value: "inactive", label: "Indisponíveis" }] : [{ value: "all", label: "Todas as situações" }, ...(["draft", "scheduled", "publishing", "published", "failed", "cancelled"] as const).map((value) => ({ value, label: statusLabel(value) }))]} onValueChange={(value) => channelView ? setChannelStatusFilter(value ?? "all") : setPostStatusFilter(value ?? "all")} />
+          {!channelView && <Select appearance="filter" label="Filtrar por canal" value={channelFilter} options={[{ value: "all", label: "Todos os canais" }, ...channels.map((channel) => ({ value: channel.id, label: channel.name }))]} onValueChange={(value) => setChannelFilter(value ?? "all")} />}
         </>}
         count={`${channelView ? shownChannels.length : shownPosts.length} ${channelView ? shownChannels.length === 1 ? "canal" : "canais" : shownPosts.length === 1 ? "publicação" : "publicações"}`}
       />
