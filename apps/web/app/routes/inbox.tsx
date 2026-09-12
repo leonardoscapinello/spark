@@ -147,6 +147,14 @@ export default function Inbox() {
     notify({ title: "Conversa criada", description: conversation.subject, tone: "success" });
   }
 
+  function closeNewConversation(open: boolean) {
+    setNewConversationOpen(open);
+    if (open) return;
+    setNewContact(null);
+    setNewSubject("");
+    setNewChannel("manual");
+  }
+
   async function updateConversation(changes: Partial<Pick<Conversation, "status" | "priority" | "assigneeId" | "teamId">>) {
     if (!selected || saving) return;
     setSaving(true);
@@ -289,7 +297,7 @@ export default function Inbox() {
 
     <Modal open={detailsOpen && selected !== null} onOpenChange={setDetailsOpen}><ModalContent title="Detalhes da conversa" placement="right"><div className={styles.detailContent}>{renderDetails()}</div></ModalContent></Modal>
 
-    <ActionModal open={newConversationOpen} onOpenChange={setNewConversationOpen} title="Nova conversa" confirmLabel="Criar conversa" errorText="Selecione uma pessoa e informe o assunto." onConfirm={createConversation}>
+    <ActionModal open={newConversationOpen} onOpenChange={closeNewConversation} title="Nova conversa" confirmLabel="Criar conversa" errorText="Selecione uma pessoa e informe o assunto." onConfirm={createConversation}>
       <div className={styles.modalFields}>
         <Field><Label>Pessoa</Label><SearchSelect label="Buscar pessoa" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={newContact} onValueChange={setNewContact} /></Field>
         <Field><Label>Canal de origem</Label><Select label="Canal de origem" value={newChannel} options={CHANNELS} onValueChange={(value) => { if (value) setNewChannel(value as ConversationChannel); }} /></Field>
