@@ -68,19 +68,18 @@ export default function Dashboard() {
       {canReadActivities && <Link className={styles.metricLink} to="/activities" prefetch="intent"><MetricCard title="Atividades atrasadas" value={snapshot.overdueActivities} comparison="Pendências anteriores a hoje" sentiment={snapshot.overdueActivities > 0 ? "negative" : "positive"} state={loadingActivities ? "loading" : "ready"} /></Link>}
       {canReadActivities && <Link className={styles.metricLink} to="/activities" prefetch="intent"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
     </DashboardGrid>
-    {(loading || hasRecords) && <>
       <div className={styles.sectionHeading}><h2>Movimento no período</h2><span>Novos registros e atividades por dia</span></div>
       <DashboardGrid>
-        <DataChart title="Evolução diária" description="Contatos, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : "ready"} />
+        <DataChart title="Evolução diária" description="Contatos, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : hasRecords ? "ready" : "empty"} />
       </DashboardGrid>
       <div className={styles.sectionHeading}><h2>Distribuição</h2><span>Como os registros estão organizados agora</span></div>
       <DashboardGrid>
-        {canReadDeals && <DonutChart title="Negócios por situação" state={loadingDeals ? "loading" : "ready"} data={[
+        {canReadDeals && <DonutChart title="Negócios por situação" state={loadingDeals ? "loading" : deals.length ? "ready" : "empty"} data={[
         { id: "open", label: "Em aberto", value: snapshot.dealsByStatus.open, color: 1 },
         { id: "won", label: "Ganhos", value: snapshot.dealsByStatus.won, color: 2 },
         { id: "lost", label: "Perdidos", value: snapshot.dealsByStatus.lost, color: 4 },
         ]} />}
-        {canReadContacts && <DonutChart title="Contatos por etapa" state={loadingContacts ? "loading" : "ready"} data={[
+        {canReadContacts && <DonutChart title="Contatos por etapa" state={loadingContacts ? "loading" : contacts.length ? "ready" : "empty"} data={[
         { id: "new", label: "Novos", value: snapshot.contactsByStatus.new, color: 1 },
         { id: "qualified", label: "Qualificados", value: snapshot.contactsByStatus.qualified, color: 2 },
         { id: "nurturing", label: "Em nutrição", value: snapshot.contactsByStatus.nurturing, color: 3 },
@@ -88,7 +87,6 @@ export default function Dashboard() {
         { id: "unqualified", label: "Desqualificados", value: snapshot.contactsByStatus.unqualified, color: 4 },
         ]} />}
       </DashboardGrid>
-    </>}
   </div>;
 }
 
