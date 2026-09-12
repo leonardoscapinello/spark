@@ -170,6 +170,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const navigate = useNavigate();
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
+  const activeTopTab = useRef<HTMLAnchorElement>(null);
   const accountRailLink = useRef<HTMLDivElement>(null);
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
@@ -194,6 +195,12 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const rail = active?.closest("nav");
     if (active && rail && rail.scrollWidth > rail.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
   }, [current.id]);
+
+  useEffect(() => {
+    const active = activeTopTab.current;
+    const tabs = active?.closest("nav");
+    if (active && tabs && tabs.scrollWidth > tabs.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [location.pathname, location.search]);
 
   async function leaveAccount() {
     await signOut().catch(() => undefined);
@@ -232,7 +239,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
+            <Link key={item.to} ref={pathMatches(location.pathname, item.to, location.search) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
