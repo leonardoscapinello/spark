@@ -15,11 +15,14 @@ import {
   ActionModal,
   Badge,
   Button,
+  CollectionToolbar,
+  EmptyState,
   Field,
   Icon,
   Input,
   Label,
   PageHeader,
+  Select,
   Switch,
   notify,
   type IconName,
@@ -102,6 +105,18 @@ export default function Integrations() {
   const [config, setConfig] = useState<Record<string, string | number | boolean>>({});
   const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [checkingId, setCheckingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
+  const connectionByProvider = new Map<IntegrationProvider, IntegrationConnection>(
+    connections.map((connection) => [connection.provider, connection]),
+  );
+  const visibleProviders = PROVIDERS.filter((definition) => {
+    const connection = connectionByProvider.get(definition.provider);
+    const matchesSearch = !searchTerm || `${definition.name} ${definition.description} ${definition.category}`.toLocaleLowerCase("pt-BR").includes(searchTerm);
+    const matchesStatus = statusFilter === "all" || (statusFilter === "not_configured" ? !connection || connection.status === "not_configured" : connection?.status === statusFilter);
+    return matchesSearch && matchesStatus;
+  });
 
   function open(definition: ProviderDefinition, connection?: IntegrationConnection) {
     setEditing(definition);
@@ -160,10 +175,16 @@ export default function Integrations() {
         title="Integrações"
         description="Conecte os canais e serviços usados pela sua equipe. Gerencie cada conexão em um só lugar."
       />
-      {CATEGORIES.map((category) => <section key={category} className={styles.category} aria-label={category}>
+      <CollectionToolbar
+        search={<Input aria-label="Buscar integrações" placeholder="Buscar serviço ou canal" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+        filters={<Select label="Filtrar integrações por situação" value={statusFilter} options={[{ value: "all", label: "Todas as situações" }, { value: "connected", label: "Conectadas" }, { value: "not_configured", label: "Não configuradas" }, { value: "error", label: "Com erro" }, { value: "disabled", label: "Desabilitadas" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
+        count={`${visibleProviders.length} ${visibleProviders.length === 1 ? "integração" : "integrações"}`}
+      />
+      {visibleProviders.length === 0 && <EmptyState icon="search" title="Nenhuma integração encontrada" description="Tente outro nome ou situação para encontrar o serviço." />}
+      {CATEGORIES.filter((category) => visibleProviders.some((provider) => provider.category === category)).map((category) => <section key={category} className={styles.category} aria-label={category}>
         <h2>{category}</h2>
-        <div className={styles.grid}>{PROVIDERS.filter((item) => item.category === category).map((definition) => {
-          const connection = connections.find((item) => item.provider === definition.provider);
+        <div className={styles.grid}>{visibleProviders.filter((item) => item.category === category).map((definition) => {
+          const connection = connectionByProvider.get(definition.provider);
           return (
             <div key={definition.provider} className={styles.providerCard}>
               <div className={styles.providerHeading}>
