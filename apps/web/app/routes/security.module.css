@@ -1,11 +1,4 @@
 .page {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: var(--ui-settingsContentWidth);
-  margin: 0 auto;
-  padding: var(--space-8);
-  display: flex;
-  flex-direction: column;
   gap: var(--space-6);
 }
 
@@ -73,7 +66,6 @@
 .sessionActions p { margin: var(--space-1) 0 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
 
 @media (max-width: 640px) {
-  .page { padding: var(--space-4); }
   .cardHeader, .factor, .actions { align-items: flex-start; flex-wrap: wrap; }
   .cardHeader > div, .factor > div { min-width: 0; }
   .instructions { align-items: flex-start; }

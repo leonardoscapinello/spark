@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { redirect, useNavigate } from "react-router";
-import { ActionModal, Badge, Button, Field, Input, Label, PageHeader, notify } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Input, Label, PageFrame, PageHeader, notify } from "@spark/ui-web";
 import {
   beginMfaEnrollment,
   getAuthSessionDetails,
@@ -97,7 +97,7 @@ export default function Security() {
   }
 
   return (
-    <div className={styles.page}>
+    <PageFrame width="content" className={styles.page}>
       <PageHeader icon="account" eyebrow="Minha conta" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." />
 
       <section className={styles.card}>
@@ -192,7 +192,7 @@ export default function Security() {
           ? "Você precisará informar suas credenciais novamente em todos os dispositivos."
           : "Todas as outras sessões da sua conta perderão a autorização para se renovar."}
       </ActionModal>
-    </div>
+    </PageFrame>
   );
 }
 
