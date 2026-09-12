@@ -15,6 +15,7 @@ import {
   Card,
   DataTable,
   DateTimePicker,
+  EmptyState,
   Field,
   Label,
   PageHeader,
@@ -41,7 +42,7 @@ export async function clientLoader() {
 }
 
 export default function Social() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const channelView = searchParams.get("view") === "channels";
   const session = getSession();
   const canWrite = session?.capabilities.includes("social:write") ?? false;
@@ -174,14 +175,8 @@ export default function Social() {
             </div>
           </Card>
         ))}
-        {!channels.length && (
-          <Card title="Nenhum canal sincronizado">
-            <div className={styles.empty}>
-              <span>Conecte um provedor em Integrações e sincronize suas contas sociais.</span>
-            </div>
-          </Card>
-        )}
-      </section> : <DataTable
+        {!channels.length && <EmptyState icon="message" title="Conecte suas redes sociais" description="Conecte um provedor em Integrações e sincronize suas contas para publicar aqui." action={canWrite ? <Button loading={syncing} onClick={() => void syncChannels()}>Sincronizar canais</Button> : undefined} />}
+      </section> : posts.length === 0 && !isLoading ? <EmptyState icon="calendar" title={activeChannels.length ? "Planeje sua primeira publicação" : "Conecte um canal para começar"} description={activeChannels.length ? "Escreva uma publicação, escolha um canal e defina quando ela deve sair." : "Depois de conectar uma conta social, você poderá agendar e acompanhar as publicações aqui."} action={activeChannels.length && canWrite ? <Button onClick={() => setComposerOpen(true)}>Nova publicação</Button> : <Button variant="secondary" onClick={() => setSearchParams({ view: "channels" })}>Ver canais</Button>} /> : <DataTable
         label="Calendário de publicações"
         rows={posts}
         columns={columns}
