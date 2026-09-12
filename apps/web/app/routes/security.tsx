@@ -7,7 +7,6 @@ import {
   getMfaStatus,
   removeMfaFactor,
   restoreSession,
-  signOut,
   signOutEverywhere,
   signOutOtherSessions,
   verifyMfaEnrollment,
@@ -46,11 +45,6 @@ export default function Security() {
     }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [reloadKey]);
-
-  async function leaveAccount() {
-    await signOut();
-    navigate("/login", { replace: true });
-  }
 
   async function startEnrollment() {
     setBusy(true);
@@ -104,7 +98,7 @@ export default function Security() {
 
   return (
     <div className={styles.page}>
-      <PageHeader icon="account" eyebrow="Minha conta" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." actions={<Button variant="secondary" onClick={() => void leaveAccount()}>Sair da conta</Button>} />
+      <PageHeader icon="account" eyebrow="Minha conta" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." />
 
       <section className={styles.card}>
         <div className={styles.cardHeader}>
