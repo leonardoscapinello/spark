@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
@@ -10,9 +10,13 @@ import { getAudiencesCollection, getCampaignRecipientsCollection, getCampaignsCo
 const LEAD_STATUSES = [{ value: "new", label: "Novo" }, { value: "qualified", label: "Qualificado" }, { value: "customer", label: "Cliente" }, { value: "lost", label: "Perdido" }];
 export async function clientLoader() { await requireCapability("campaigns:read"); void Promise.allSettled([getAudiencesCollection().preload(), getCampaignsCollection().preload(), getCampaignRecipientsCollection().preload(), getContactsCollection().preload()]); return null; }
 export default function Campaigns() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const audienceView = searchParams.get("view") === "audiences";
-  const canWrite = getSession()?.capabilities.includes("campaigns:write") ?? false;
+  const capabilities = getSession()?.capabilities ?? [];
+  const canWrite = capabilities.includes("campaigns:write");
+  const canImportContacts = capabilities.includes("contacts:write");
+  const canConfigureEmail = capabilities.includes("integrations:manage");
   const { data: audiences, isLoading: audiencesLoading } = useLiveQuery({ query: (q) => q.from({ audiences: getAudiencesCollection() }).orderBy(({ audiences: item }) => item.updatedAt, "desc") });
   const { data: campaigns, isLoading } = useLiveQuery({ query: (q) => q.from({ campaigns: getCampaignsCollection() }).orderBy(({ campaigns: item }) => item.createdAt, "desc") });
   const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: getContactsCollection() }) });
@@ -48,14 +52,37 @@ export default function Campaigns() {
     {firstRun && (audienceView
       ? <EmptyState variant="featured" icon="team" title="Crie seu primeiro público" description="Defina quem deve receber suas campanhas. Os contatos entram automaticamente quando correspondem aos filtros." action={canWrite ? <Button onClick={() => setAudienceOpen(true)}>Criar público</Button> : undefined} />
       : <EmptyState variant="featured" icon="mail" title={audiences.length ? "Prepare sua primeira campanha" : "Comece criando um público"} description={audiences.length ? "Escreva a mensagem e escolha quem deve recebê-la. Você poderá revisar o rascunho antes de enviar." : "Um público organiza os contatos por regras e permite criar sua primeira campanha de e-mail."} action={canWrite ? audiences.length ? <Button onClick={openCampaign}>Nova campanha</Button> : <Button onClick={() => setAudienceOpen(true)}>Criar público</Button> : undefined} />)}
-    <><CollectionToolbar
+    {!audienceView && firstRun && (canWrite || canImportContacts || canConfigureEmail) && <section className={styles.starter} aria-label="Primeiros passos para campanhas">
+      <h2>Prepare seu primeiro envio</h2>
+      <div className={styles.starterGrid}>
+        {canWrite && <div className={styles.starterCard}>
+          <span className={styles.starterIcon}><Icon name={audiences.length ? "mail" : "team"} /></span>
+          <h3>{audiences.length ? "Escreva a mensagem" : "Escolha o público"}</h3>
+          <p>{audiences.length ? "Crie um rascunho para revisar antes do envio." : "Defina os contatos que devem receber a campanha."}</p>
+          <Button variant="secondary" onClick={audiences.length ? openCampaign : () => setAudienceOpen(true)}>{audiences.length ? "Nova campanha" : "Criar público"}</Button>
+        </div>}
+        {canImportContacts && <div className={styles.starterCard}>
+          <span className={styles.starterIcon}><Icon name="upload" /></span>
+          <h3>Traga seus contatos</h3>
+          <p>Importe sua base para enviar mensagens às pessoas certas.</p>
+          <Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar contatos</Button>
+        </div>}
+        {canConfigureEmail && <div className={styles.starterCard}>
+          <span className={styles.starterIcon}><Icon name="mail" /></span>
+          <h3>Conecte o e-mail</h3>
+          <p>Prepare o canal que enviará as mensagens da equipe.</p>
+          <Button variant="secondary" onClick={() => void navigate("/integrations")}>Configurar e-mail</Button>
+        </div>}
+      </div>
+    </section>}
+    {!firstRun && <><CollectionToolbar
       search={<Input aria-label={audienceView ? "Buscar públicos" : "Buscar campanhas"} placeholder={audienceView ? "Buscar público" : "Buscar campanha, assunto ou público"} value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
       filters={!audienceView ? <Select appearance="filter" label="Filtrar campanhas por situação" value={statusFilter} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "sending", label: "Em envio" }, { value: "sent", label: "Enviadas" }, { value: "partial", label: "Parciais" }, { value: "failed", label: "Com falha" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} /> : undefined}
       count={`${audienceView ? filteredAudiences.length : filteredCampaigns.length} ${audienceView ? filteredAudiences.length === 1 ? "público" : "públicos" : filteredCampaigns.length === 1 ? "campanha" : "campanhas"}`}
     />
     {audienceView
       ? <DataTable label="Públicos" rows={filteredAudiences} columns={audienceColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={audiencesLoading && !audiences.length ? "loading" : "ready"} emptyText={firstRun ? "Os públicos criados aparecerão nesta tabela." : "Nenhum público encontrado."} />
-      : <DataTable label="Histórico de campanhas" rows={filteredCampaigns} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !campaigns.length ? "loading" : "ready"} emptyText={firstRun ? "As campanhas criadas aparecerão nesta tabela." : "Nenhuma campanha neste filtro."} actions={(item) => canWrite && item.status === "draft" ? <Button size="sm" loading={sending === item.id} onClick={() => void send(item)}>Enviar agora</Button> : undefined} />}</>
+      : <DataTable label="Histórico de campanhas" rows={filteredCampaigns} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !campaigns.length ? "loading" : "ready"} emptyText="Nenhuma campanha neste filtro." actions={(item) => canWrite && item.status === "draft" ? <Button size="sm" loading={sending === item.id} onClick={() => void send(item)}>Enviar agora</Button> : undefined} />}</>}
     <ActionModal open={audienceOpen} onOpenChange={setAudienceOpen} title="Novo público" confirmLabel="Salvar público" errorText="Informe um nome e filtros válidos." onConfirm={createAudience}><div className={styles.form}><Field><Label>Nome</Label><Input value={audienceName} placeholder="Leads qualificados" onChange={(event) => setAudienceName(event.target.value)} /></Field><Field><Label>Descrição</Label><Input value={description} placeholder="Quem faz parte deste público" onChange={(event) => setDescription(event.target.value)} /></Field><Field><Label>Combinação dos filtros</Label><Select label="Operador dos filtros" value={operator} options={[{ value: "all", label: "Todos os filtros" }, { value: "any", label: "Qualquer filtro" }]} onValueChange={(value) => setOperator((value ?? "all") as "all" | "any")} /></Field><Field><Label>Status do lead</Label><div className={styles.checks}>{LEAD_STATUSES.map((item) => <Checkbox key={item.value} checked={statuses.includes(item.value)} onCheckedChange={(checked) => toggleStatus(item.value, checked === true)}>{item.label}</Checkbox>)}</div></Field><Field><Label>Tags</Label><Input value={tags} placeholder="vip, evento, oportunidade" onChange={(event) => setTags(event.target.value)} /></Field><Field><Label>Score mínimo</Label><Input type="number" min="0" value={minimumScore} placeholder="Sem mínimo" onChange={(event) => setMinimumScore(event.target.value)} /></Field><div className={styles.preview}><strong>{previewCount}</strong><span>contato(s) com e-mail entram neste público agora</span></div></div></ActionModal>
     <ActionModal open={campaignOpen} onOpenChange={setCampaignOpen} title="Nova campanha" confirmLabel="Criar rascunho" errorText="Preencha público, nome, assunto e mensagem." onConfirm={createCampaign}><div className={styles.form}><Field><Label>Público</Label><Select label="Público" value={audienceIdValue} options={audiences.map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setAudienceIdValue(value ?? "")} /></Field><Field><Label>Nome interno</Label><Input value={name} placeholder="Reativação de setembro" onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Assunto</Label><Input value={subject} placeholder="Temos novidades para você" onChange={(event) => setSubject(event.target.value)} /></Field><Field><Label>Mensagem</Label><Textarea rows={10} value={body} placeholder="Olá {{nome}}…" onChange={(event) => setBody(event.target.value)} /></Field></div></ActionModal>
   </div>;
