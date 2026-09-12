@@ -26,6 +26,7 @@ import {
   PageFrame,
   PageHeader,
   Select,
+  SettingsSection,
   Switch,
   notify,
   type IconName,
@@ -186,9 +187,8 @@ export default function Integrations() {
         count={`${visibleProviders.length} ${visibleProviders.length === 1 ? "integração" : "integrações"}`}
       />}
       {visibleProviders.length === 0 && <EmptyState icon="search" title="Nenhuma integração encontrada" description="Tente outro nome ou situação para encontrar o serviço." />}
-      {CATEGORIES.filter((category) => visibleProviders.some((provider) => provider.category === category)).map((category) => <section key={category} className={styles.category} aria-label={category}>
-        <h2>{category}</h2>
-        <div className={styles.grid}>{visibleProviders.filter((item) => item.category === category).map((definition) => {
+      {CATEGORIES.filter((category) => visibleProviders.some((provider) => provider.category === category)).map((category) => <SettingsSection key={category} title={category}>
+        {visibleProviders.filter((item) => item.category === category).map((definition) => {
           const connection = connectionByProvider.get(definition.provider);
           return (
             <div key={definition.provider} className={styles.providerCard}>
@@ -235,8 +235,8 @@ export default function Integrations() {
               </div>
             </div>
           );
-        })}</div>
-      </section>)}
+        })}
+      </SettingsSection>)}
       <ActionModal
         open={Boolean(editing)}
         onOpenChange={(open) => {

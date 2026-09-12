@@ -1,18 +1,4 @@
-.sections { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-8); width: 100%; max-width: calc(var(--ui-settingsCardWidth) * 3 + var(--space-6) * 2); margin-inline: auto; padding-block: var(--space-4); }
-
-.section {
-  display: grid;
-  gap: var(--space-5);
-  min-width: 0;
-}
-
-.section h2 {
-  margin: 0;
-  font-size: var(--typography-size-md);
-  font-weight: var(--typography-weight-semibold);
-}
-
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); column-gap: var(--space-6); row-gap: var(--space-4); width: 100%; }
+.sections { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-8); width: 100%; padding-block: var(--space-4); }
 
 .card {
   box-sizing: border-box;
