@@ -1,10 +1,10 @@
 .card { box-sizing: border-box; min-width: 0; background: var(--color-surface); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); font-family: var(--typography-fontFamily-body); }
 .card[data-appearance="elevated"] { border-color: transparent; border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); }
-.actionCard { box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-ink); font-family: var(--typography-fontFamily-body); }
-.actionIcon { display: grid; place-items: center; width: var(--ui-controlLarge); height: var(--ui-controlLarge); margin-bottom: var(--space-2); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
-.actionCard h3 { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
-.actionCard p { flex: 1; margin: 0 0 var(--space-3); color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
-.actionControl { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.actionCard { box-sizing: border-box; display: grid; grid-template-columns: var(--ui-icon) minmax(0, 1fr); grid-template-rows: auto 1fr auto; align-content: start; column-gap: var(--space-3); row-gap: var(--space-1); min-width: 0; padding: var(--space-3) 0; border-top: var(--ui-hairline) solid var(--color-line); color: var(--color-ink); font-family: var(--typography-fontFamily-body); }
+.actionIcon { grid-column: 1; grid-row: 1; display: grid; place-items: center; width: var(--ui-icon); height: var(--ui-icon); color: var(--color-inkMuted); }
+.actionCard h3 { grid-column: 2; grid-row: 1; margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+.actionCard p { grid-column: 2; grid-row: 2; margin: 0 0 var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.actionControl { grid-column: 2; grid-row: 3; display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
 .actionGroup { display: grid; gap: var(--space-4); padding: var(--space-4) 0; }
 .actionGroup h2 { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); text-align: left; }
 .actionGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); gap: var(--space-3); width: 100%; }
