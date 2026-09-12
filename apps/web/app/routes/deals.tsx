@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
-import { ActionModal, Button, DatePicker, EmptyState, Field, Input, Label, MoneyInput, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, DatePicker, EmptyState, Field, Input, Label, MoneyInput, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getPipelinesCollection, getStagesCollection, getDealsCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -176,7 +176,7 @@ export default function Deals() {
       <div className={styles.pagina}>
         <PageHeader title="Negócios" />
         {isLoadingPipelines
-          ? <div className={styles.loading} role="status">Carregando funis…</div>
+          ? <div className={styles.board} role="status" aria-label="Carregando funis">{[0, 1, 2].map((column) => <div key={column} className={styles.coluna}><Skeleton className={styles.loadingTitle} /><Skeleton className={styles.loadingValue} /><Skeleton className={styles.loadingCard} /><Skeleton className={styles.loadingCard} /></div>)}</div>
           : <EmptyState variant="onboarding" icon="briefcase" title="Organize seu primeiro funil" description="Defina as etapas da venda para acompanhar cada oportunidade e o valor da negociação." action={canManagePipeline ? <Button onClick={() => { setPipelineName("Funil de Vendas"); setPipelineModalOpen(true); }}>Criar funil</Button> : undefined} />}
         <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
           <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
