@@ -7,6 +7,8 @@
 .workspace[data-layout="table"] .thread,.workspace[data-layout="table"] .details { display: none; }
 .workspace[data-layout="table"][data-preview-open="true"] { grid-template-columns: minmax(0, 1.3fr) minmax(var(--ui-cardMinWidth), .7fr); }
 .workspace[data-layout="table"][data-preview-open="true"] .thread { display: flex; }
+.workspace[data-first-run="true"] { grid-template-columns: minmax(0, 1fr); }
+.workspace[data-first-run="true"] .thread,.workspace[data-first-run="true"] .listControls { display: none; }
 .filters,.conversationList,.thread,.details { min-width: 0; min-height: 0; }
 .conversationList,.thread,.details { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); overflow: hidden; }
 .conversationList { display: flex; flex-direction: column; }
