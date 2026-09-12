@@ -258,7 +258,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   return (
     <div className={layout.page}>
       <BackLink render={<Link to="/" />}>Pessoas</BackLink>
-      <RecordHero icon="user" avatarName={data.name} eyebrow="Contato" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite && !isEditing ? <Button variant="secondary" onClick={startEditing}>Editar contato</Button> : undefined} metrics={[{ label: "Pontuação", value: data.score }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada" }]} />
+      <RecordHero icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite && !isEditing ? <Button variant="secondary" onClick={startEditing}>Editar pessoa</Button> : undefined} metrics={[{ label: "Pontuação", value: data.score }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada" }]} />
       <div className={layout.contentGrid}>
         <div className={layout.profileColumn}>
       {isEditing ? (
