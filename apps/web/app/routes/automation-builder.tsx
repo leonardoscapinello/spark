@@ -3,7 +3,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useParams } from "react-router";
 import { automationsControllerPublish, automationsControllerRun } from "@spark/api-client";
 import { validateAutomationGraph, type AutomationEdge, type AutomationGraph, type AutomationNode, type AutomationNodeType } from "@spark/core";
-import { ActionModal, Badge, Button, Field, Icon, Input, Label, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Icon, Input, Label, PageHeader, SearchSelect, Select, Textarea, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationRunsCollection, getAutomationRunStepsCollection, getAutomationVersionsCollection, getAutomationsCollection } from "../lib/automations-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -16,6 +16,7 @@ const NODE_DEFAULTS: Record<AutomationNodeType, { label: string; description: st
   condition: { label: "Nova condição", description: "Divide o caminho por uma regra" },
   wait: { label: "Nova espera", description: "Aguarda um período ou evento" },
 };
+const NODE_ICONS: Record<AutomationNodeType, IconName> = { trigger: "bolt", action: "plus", condition: "grid", wait: "calendar" };
 
 export async function clientLoader() { const session = await requireCapability("automations:read"); void Promise.allSettled([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload(), getAutomationRunsCollection().preload(), getAutomationRunStepsCollection().preload(), ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : [])]); return null; }
 
@@ -147,7 +148,7 @@ export default function AutomationBuilder() {
         <Button iconOnly size="sm" variant="ghost" className={styles.panelClose} aria-label="Fechar painel" onClick={() => { setPanelMode("closed"); setSelectedId(null); }}><Icon name="close" /></Button>
         {panelMode === "palette" || !selected ? <div className={styles.palette}>
           <header><strong>Blocos</strong><span>Escolha a próxima etapa do fluxo.</span></header>
-          {(["trigger", "action", "condition", "wait"] as const).map((type) => <Button key={type} variant="secondary" className={styles.paletteButton} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeMark} data-type={type} /> <span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
+          {(["trigger", "action", "condition", "wait"] as const).map((type) => <Button key={type} variant="ghost" shape="rounded" className={styles.paletteButton} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeIcon}><Icon name={NODE_ICONS[type]} /></span><span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
           <div className={styles.validation}><strong>Pronto para publicar</strong>{issues.length ? issues.map((issue) => <span key={`${issue.code}-${issue.nodeId ?? issue.edgeId ?? "graph"}`}>{issue.message}</span>) : <span data-valid="true">Fluxo válido e conectado.</span>}</div>
         </div> : <div className={styles.inspector}>
           <header><div><Badge tone="neutral">{typeLabel(selected.type)}</Badge><strong>Configuração</strong></div></header>
@@ -162,7 +163,7 @@ export default function AutomationBuilder() {
         <svg className={styles.edges} aria-hidden="true">{graph.edges.map((edge) => <EdgeLine key={edge.id} edge={edge} nodes={graph.nodes} />)}</svg>
         {graph.nodes.length === 0 && <div className={styles.canvasEmpty}><strong>O fluxo começa com um gatilho</strong><span>Adicione um bloco pelo painel à esquerda.</span><Button disabled={!canWrite} onClick={(event) => { event.stopPropagation(); addNode("trigger"); }}>Adicionar gatilho</Button></div>}
         {graph.nodes.map((node) => <article key={node.id} className={styles.node} data-type={node.type} data-selected={selectedId === node.id || undefined} style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }} onPointerDown={(event) => { event.stopPropagation(); startDrag(event, node); }}>
-          <header><span className={styles.nodeMark} data-type={node.type} /><small>{typeLabel(node.type)}</small></header>
+          <header><span className={styles.nodeIcon}><Icon name={NODE_ICONS[node.type]} /></span><small>{typeLabel(node.type)}</small></header>
           <strong>{node.data.label}</strong><p>{node.data.description || "Sem descrição"}</p>
           {canWrite && <footer><Button size="sm" variant={connectingFrom === node.id ? "raised" : "ghost"} onPointerDown={(event) => event.stopPropagation()} onClick={() => connect(node.id)}>{connectingFrom && connectingFrom !== node.id ? "Ligar aqui" : connectingFrom === node.id ? "Cancelar" : "Conectar"}</Button></footer>}
         </article>)}
