@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
-import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Input, Label, MoneyInput, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getPipelinesCollection, getStagesCollection, getDealsCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -269,22 +269,14 @@ export default function Deals() {
                         setDropTarget(null);
                       }}
                     >
-                      <Link className={styles.cartaoNome} to={`/deals/${deal.id}`}>{deal.name}</Link>
+                      <div className={styles.cartaoCabecalho}>
+                        <Link className={styles.cartaoNome} to={`/deals/${deal.id}`}>{deal.name}</Link>
+                        {isOpen && canMove && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Ações do negócio ${deal.name}`} disabled={busyDealId === deal.id} menu={<><MenuItem onClick={() => void closeDeal(deal, "won")}>Marcar como ganho</MenuItem><MenuItem onClick={() => { setLossReason(""); setClosingDeal(deal); }}>Marcar como perdido</MenuItem></>} />}
+                      </div>
                       <span className={styles.cartaoValor}>{formatBRL(syncedAmount(deal.amount))}</span>
-                      {deal.contactId && <span className={styles.cartaoMeta}>{contactNames.get(deal.contactId) ?? "Contato indisponível"}</span>}
-                      {deal.companyId && <span className={styles.cartaoMeta}>{companyNames.get(deal.companyId) ?? "Empresa indisponível"}</span>}
-                      {deal.ownerId && <span className={styles.cartaoMeta}>Responsável: {userNames.get(deal.ownerId) ?? "Usuário indisponível"}</span>}
-                      {deal.expectedCloseDate && <span className={styles.cartaoMeta}>Previsão: {formatDate(deal.expectedCloseDate)}</span>}
-                      {isOpen ? (
-                        <div className={styles.cartaoAcoes}>
-                          <Button variant="ghost" size="sm" loading={busyDealId === deal.id} disabled={!canMove} onClick={() => void closeDeal(deal, "won")}>
-                            Ganho
-                          </Button>
-                          <Button variant="ghost" size="sm" disabled={!canMove || busyDealId === deal.id} onClick={() => { setLossReason(""); setClosingDeal(deal); }}>
-                            Perdido
-                          </Button>
-                        </div>
-                      ) : (
+                      {(deal.contactId || deal.companyId) && <span className={styles.cartaoMeta}>{[deal.contactId ? contactNames.get(deal.contactId) ?? "Contato indisponível" : null, deal.companyId ? companyNames.get(deal.companyId) ?? "Empresa indisponível" : null].filter(Boolean).join(" · ")}</span>}
+                      {(deal.ownerId || deal.expectedCloseDate) && <span className={styles.cartaoRodape}>{deal.ownerId && <span className={styles.cartaoMeta}>{userNames.get(deal.ownerId) ?? "Usuário indisponível"}</span>}{deal.expectedCloseDate && <span className={styles.cartaoMeta}>{formatDate(deal.expectedCloseDate)}</span>}</span>}
+                      {!isOpen && (
                         <span
                           className={[
                             styles.cartaoBadge,
