@@ -198,7 +198,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     (item.to === "/" && location.pathname === "/") ||
     (item.to === "/deals" && location.pathname === "/deals") ||
     pathMatches(location.pathname, item.to, location.search);
-  const showSidebar = current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox";
+  const showSidebar = current.id === "admin";
   const visibleSections = current.sections.map((section) => ({
     title: section.title,
     items: section.items.filter((item) => allowed(item.capability)),

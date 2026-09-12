@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { inboxControllerArchiveCannedReply, inboxControllerCreateCannedReply, inboxControllerUpdateCannedReply } from "@spark/api-client";
 import { cannedReplyId, type CannedReply } from "@spark/core";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, BackLink, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getCannedRepliesCollection } from "../lib/canned-replies-collection.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -66,6 +67,7 @@ export default function InboxReplies() {
   }
 
   return <PageFrame width="content">
+    <BackLink render={<Link to="/inbox" />}>Atendimento</BackLink>
     <PageHeader icon="message" title={showArchived ? "Respostas arquivadas" : "Respostas prontas"} description="Mantenha mensagens consistentes e disponíveis para a equipe certa." actions={canWrite && !firstRun ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="message" title="Crie sua primeira resposta pronta" description="Salve mensagens recorrentes para que a equipe responda com rapidez e consistência." action={canWrite ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />}
     {!firstRun && <CollectionToolbar
