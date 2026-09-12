@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "../Icon/Icon.js";
+import { Avatar } from "../Avatar/Avatar.js";
 import { PageHeader } from "../PageHeader/PageHeader.js";
 import styles from "./RecordHero.module.css";
 
@@ -11,6 +12,7 @@ export interface RecordMetric {
 
 export interface RecordHeroProps {
   icon: IconName;
+  avatarName?: string;
   eyebrow?: string;
   title: string;
   description?: string;
@@ -18,10 +20,10 @@ export interface RecordHeroProps {
   metrics?: readonly RecordMetric[];
 }
 
-export function RecordHero({ icon, eyebrow, title, description, actions, metrics = [] }: RecordHeroProps) {
+export function RecordHero({ icon, avatarName, eyebrow, title, description, actions, metrics = [] }: RecordHeroProps) {
   return <section className={styles.root} aria-label={title}>
     <div className={styles.identity}>
-      <span className={styles.avatar}><Icon name={icon} /></span>
+      {avatarName ? <Avatar name={avatarName} size="hero" /> : <span className={styles.avatar}><Icon name={icon} /></span>}
       <PageHeader title={title} {...(eyebrow ? { eyebrow } : {})} {...(description ? { description } : {})} {...(actions ? { actions } : {})} />
     </div>
     {metrics.length > 0 && <dl className={styles.metrics}>{metrics.map((metric) => <div key={metric.label}>

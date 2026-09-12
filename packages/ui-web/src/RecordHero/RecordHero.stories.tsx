@@ -18,3 +18,4 @@ export default meta;
 type Story = StoryObj<typeof RecordHero>;
 export const Empresa: Story = {};
 export const Negocio: Story = { args: { icon: "briefcase", eyebrow: "Funil comercial · Proposta", title: "Expansão da conta", description: "Atualizado hoje", actions: <Button variant="secondary">Editar negócio</Button>, metrics: [{ label: "Valor", value: "R$ 35.000,00" }, { label: "Situação", value: "Em aberto" }, { label: "Previsão", value: "28 set 2026" }] } };
+export const Contato: Story = { args: { icon: "user", avatarName: "Maria Oliveira", eyebrow: "Contato", title: "Maria Oliveira", description: "maria@empresa.com", actions: <Button variant="secondary">Editar contato</Button>, metrics: [{ label: "Pontuação", value: 87 }, { label: "Etapa", value: "Qualificado" }, { label: "Empresa", value: "Acme Brasil" }] } };

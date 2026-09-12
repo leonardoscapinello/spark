@@ -3,7 +3,7 @@ import styles from "./Avatar.module.css";
 export interface AvatarProps {
   name: string;
   src?: string | null;
-  size?: "small" | "medium" | "large";
+  size?: "small" | "medium" | "large" | "hero";
 }
 
 export function Avatar({ name, src, size = "medium" }: AvatarProps) {

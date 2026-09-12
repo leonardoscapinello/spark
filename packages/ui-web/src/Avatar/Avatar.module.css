@@ -1,4 +1,5 @@
 .root { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--ui-controlMedium); width: var(--ui-controlMedium); height: var(--ui-controlMedium); overflow: hidden; border-radius: var(--radius-full); background: var(--color-accentWash); color: var(--color-accent); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); }
 .root[data-size="small"] { flex-basis: var(--ui-controlSmall); width: var(--ui-controlSmall); height: var(--ui-controlSmall); }
 .root[data-size="large"] { flex-basis: var(--ui-controlLarge); width: var(--ui-controlLarge); height: var(--ui-controlLarge); }
+.root[data-size="hero"] { flex-basis: var(--space-16); width: var(--space-16); height: var(--space-16); font-size: var(--typography-size-xl); }
 .root img { display: block; width: 100%; height: 100%; object-fit: cover; }
