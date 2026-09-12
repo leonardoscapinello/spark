@@ -7,39 +7,6 @@
   gap: var(--space-4);
 }
 
-.startHeading {
-  padding-block-start: var(--space-2);
-  font-size: var(--typography-size-sm);
-  font-weight: var(--typography-weight-semibold);
-}
-
-.startGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-cardMinWidth)), 1fr));
-  gap: var(--space-3);
-}
-
-.startCard {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-4);
-  border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-md);
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.startCard:hover { background: var(--color-surface2); }
-.startCard:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.startCard > span:nth-child(2) { display: flex; flex: 1; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.startCard strong { font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
-.startCard small { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
-.startCard > svg { color: var(--color-inkMuted); }
-.startIcon { display: flex; align-items: center; justify-content: center; flex: 0 0 var(--ui-controlLarge); height: var(--ui-controlLarge); border-radius: var(--radius-md); background: var(--color-surface2); }
-.startIcon svg { width: var(--ui-icon); height: var(--ui-icon); }
-
 .reportFilters { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding-block: var(--space-3); border-block: var(--ui-hairline) solid var(--color-line); }
 .filterLabel { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 .filterLabel svg { width: var(--ui-icon); height: var(--ui-icon); }
