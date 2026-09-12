@@ -1,8 +1,21 @@
+import { createHash } from "node:crypto";
+import { relative } from "node:path";
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  css: {
+    modules: {
+      // Vite's default hash includes CSS contents. During HMR, a stylesheet can
+      // update before its importing route, leaving old class names in the DOM.
+      generateScopedName: (name, filename) => {
+        const source = relative(process.cwd(), filename);
+        const fileHash = createHash("sha1").update(source).digest("hex").slice(0, 8);
+        return `_${name}_${fileHash}`;
+      },
+    },
+  },
   plugins: [
     reactRouter(),
     VitePWA({
