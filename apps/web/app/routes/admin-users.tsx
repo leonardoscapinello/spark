@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto, type PermissionGroupDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, Field, Icon, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, Field, Icon, Input, Label, PageFrame, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -129,7 +129,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div className={styles.page}>
+    <PageFrame width="content">
       <PageHeader
         icon="user"
         eyebrow="Administração"
@@ -213,7 +213,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
           </Field>
         </div>
       </ActionModal>
-    </div>
+    </PageFrame>
   );
 }
 

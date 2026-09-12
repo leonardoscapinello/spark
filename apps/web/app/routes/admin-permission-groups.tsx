@@ -23,6 +23,7 @@ import {
   Input,
   Label,
   PageHeader,
+  PageFrame,
   TableIconAction,
   type TableColumn,
 } from "@spark/ui-web";
@@ -157,7 +158,7 @@ export default function AdminPermissionGroups() {
   }
 
   return (
-    <div className={styles.page}>
+    <PageFrame width="content">
       <PageHeader
         icon="settings"
         eyebrow="Administração"
@@ -216,6 +217,6 @@ export default function AdminPermissionGroups() {
           </div>
         </div>
       </ActionModal>
-    </div>
+    </PageFrame>
   );
 }

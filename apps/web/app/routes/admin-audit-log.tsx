@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { redirect } from "react-router";
 import { auditLogsControllerList, type AdminAuditLogDto } from "@spark/api-client";
-import { Button, CollectionToolbar, DataTable, EmptyState, Icon, Input, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { Button, CollectionToolbar, DataTable, EmptyState, Icon, Input, PageFrame, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
-import styles from "./admin-audit-log.module.css";
 
 const ACTION_LABELS: Record<AdminAuditLogDto["action"], string> = {
   "permission_group.created": "Criou grupo",
@@ -65,7 +64,7 @@ export default function AdminAuditLog() {
   ];
 
   return (
-    <div className={styles.page}>
+    <PageFrame width="content">
       <PageHeader
         icon="chart"
         eyebrow="Administração"
@@ -85,7 +84,7 @@ export default function AdminAuditLog() {
         state={loading ? "loading" : "ready"}
         emptyText={logs.length ? "Nenhum registro encontrado." : "Nenhuma alteração administrativa registrada."}
       />}
-    </div>
+    </PageFrame>
   );
 }
 

@@ -54,6 +54,7 @@ export { FeedbackButton, type FeedbackButtonProps, type FeedbackState } from "./
 
 export { CashPiece, type CashPieceProps } from "./ChangeCalculator/CashPiece.js";
 export { PageHeader, type PageHeaderProps } from "./PageHeader/PageHeader.js";
+export { PageFrame, type PageFrameProps } from "./PageFrame/PageFrame.js";
 export { CollectionToolbar, type CollectionToolbarProps } from "./CollectionToolbar/CollectionToolbar.js";
 export { RecordHero, type RecordHeroProps, type RecordMetric } from "./RecordHero/RecordHero.js";
 export { EmptyState, type EmptyStateProps } from "./EmptyState/EmptyState.js";
