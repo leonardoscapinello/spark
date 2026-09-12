@@ -61,6 +61,7 @@ export { EmptyState, type EmptyStateProps } from "./EmptyState/EmptyState.js";
 export { ViewSwitcher, type ViewSwitcherProps, type ViewMode } from "./ViewSwitcher/ViewSwitcher.js";
 export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from "./SegmentedControl/SegmentedControl.js";
 export { Avatar, type AvatarProps } from "./Avatar/Avatar.js";
+export { PersonChoice, type PersonChoiceProps } from "./PersonChoice/PersonChoice.js";
 export { Timeline, type TimelineItem } from "./Timeline/Timeline.js";
 export { FilePicker, type FilePickerProps } from "./FilePicker/FilePicker.js";
 export { LeadFormRenderer, type LeadFormRendererProps } from "./LeadForm/LeadForm.js";

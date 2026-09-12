@@ -21,9 +21,3 @@
   font-size: var(--typography-size-sm);
   font-weight: var(--typography-weight-semibold);
 }
-
-.members small {
-  display: block;
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-xs);
-}

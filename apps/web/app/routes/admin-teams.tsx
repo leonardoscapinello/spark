@@ -10,7 +10,7 @@ import {
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
-import { ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonChoice, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
 
@@ -132,7 +132,7 @@ export default function AdminTeams() {
         <Field><Label>Descrição</Label><Textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Responsabilidade principal deste time" /></Field>
         <div className={styles.members} role="group" aria-labelledby={membersLabelId}>
           <p id={membersLabelId}>Membros</p>
-          {users.filter((user) => !user.deactivatedAt).map((user) => <Checkbox key={user.id} checked={memberIds.includes(user.id)} onCheckedChange={(checked) => toggleMember(user.id, checked)}><span>{user.name}<small>{user.email}</small></span></Checkbox>)}
+          {users.filter((user) => !user.deactivatedAt).map((user) => <PersonChoice key={user.id} name={user.name} detail={user.email} checked={memberIds.includes(user.id)} onCheckedChange={(checked) => toggleMember(user.id, checked)} />)}
         </div>
       </div>
     </ActionModal>
