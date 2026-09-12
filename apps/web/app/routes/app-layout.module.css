@@ -199,7 +199,9 @@
     flex-shrink: 0;
     padding: 0;
     overflow-x: auto;
+    scrollbar-width: none;
   }
+  .rail::-webkit-scrollbar { display: none; }
 
   .railBrand { margin: 0 var(--space-2) 0 0; flex-shrink: 0; }
   .railModules, .railBottom { flex-direction: row; flex-shrink: 0; }
@@ -217,12 +219,14 @@
 
   .sidebar > footer { display: none; }
   .sidebar > header { display: none; }
-  .sidebar > div:nth-child(2) { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-2); overflow-x: auto; overflow-y: hidden; }
+  .sidebar > div:nth-child(2) { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-2); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .sidebar > div:nth-child(2)::-webkit-scrollbar { display: none; }
   .singleSection { display: flex; align-items: center; gap: var(--space-1); flex-shrink: 0; padding: 0; }
   .sidebar section { display: flex; gap: var(--space-1); align-items: center; flex-shrink: 0; margin: 0; }
   .sidebar section h3 { display: none; }
   .sidebar section a { white-space: nowrap; }
 
   .conteudo { flex: 1; }
-  .moduleTabs { padding-inline: var(--space-4); }
+  .moduleTabs { padding-inline: var(--space-4); scrollbar-width: none; }
+  .moduleTabs::-webkit-scrollbar { display: none; }
 }

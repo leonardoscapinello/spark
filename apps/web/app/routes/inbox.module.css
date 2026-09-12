@@ -74,7 +74,8 @@
   .page { display: flex; flex-direction: column; }
   .queueSidebar { width: 100%; height: var(--ui-touchTarget); max-height: var(--ui-touchTarget); flex-shrink: 0; }
   .queueSidebar > header { display: none; }
-  .queueSidebar > div:nth-child(2) { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-2); overflow-x: auto; overflow-y: hidden; }
+  .queueSidebar > div:nth-child(2) { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-2); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .queueSidebar > div:nth-child(2)::-webkit-scrollbar { display: none; }
   .queueSidebar section { display: flex; align-items: center; flex-shrink: 0; gap: var(--space-1); margin: 0; }
   .queueSidebar section h3 { display: none; }
   .queueSidebar section a { white-space: nowrap; }
