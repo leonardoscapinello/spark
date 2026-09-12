@@ -75,6 +75,15 @@
 
 .railBottom {
   margin-top: auto;
+  width: 100%;
+  padding-top: var(--space-2);
+  border-top: var(--ui-hairline) solid var(--color-line);
+}
+
+.accountLink {
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  box-shadow: var(--ui-panelShadow);
 }
 
 .sidebar {
@@ -188,7 +197,7 @@
 
   .railBrand { margin: 0 var(--space-2) 0 0; flex-shrink: 0; }
   .railModules, .railBottom { flex-direction: row; flex-shrink: 0; }
-  .railBottom { margin-top: 0; margin-left: auto; }
+  .railBottom { width: auto; margin-top: 0; margin-left: auto; padding-top: 0; padding-left: var(--space-2); border-top: 0; border-left: var(--ui-hairline) solid var(--color-line); }
   .railLink { flex-shrink: 0; }
   .railLink[aria-current="page"] { width: auto; padding-inline: var(--space-3); gap: var(--space-2); }
   .railLink[aria-current="page"] .railLabel { display: inline; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); white-space: nowrap; }
