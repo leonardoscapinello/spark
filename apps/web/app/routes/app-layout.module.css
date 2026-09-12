@@ -96,6 +96,8 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--ui-panelShadow);
   }
+  .shell[data-sidebar="visible"] .rail:is(:hover, :focus-within) { width: calc(var(--ui-railWidth) + var(--space-2) + var(--ui-sidebarWidth)); }
+  .rail:is(:hover, :focus-within) + .sidebar { visibility: hidden; }
   .rail:is(:hover, :focus-within) .railBrand,
   .rail:is(:hover, :focus-within) .railLink {
     width: 100%;
