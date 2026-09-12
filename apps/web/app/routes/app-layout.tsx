@@ -234,7 +234,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   useEffect(() => {
     const active = activeTopTab.current;
     const tabs = active?.closest("nav");
-    if (active && tabs && tabs.scrollWidth > tabs.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
+    if (active && tabs && tabs.scrollWidth > tabs.clientWidth) active.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [location.pathname, location.search]);
 
   useEffect(() => {
