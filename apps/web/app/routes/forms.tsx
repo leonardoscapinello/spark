@@ -61,7 +61,7 @@ export default function Forms() {
   function formActions(item: LeadForm) { return <><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busy === item.id} onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar" : "Publicar"}</Button>}</>; }
 
   return <div className={styles.page}>
-    <PageHeader icon="file" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
+    <PageHeader icon="file" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
       <><CollectionToolbar
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}
