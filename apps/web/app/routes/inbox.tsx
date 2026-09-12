@@ -117,7 +117,7 @@ export default function Inbox() {
   }
 
   return <div className={styles.page}>
-    <div className={styles.workspace} data-mobile-view={mobileView}>
+    <div className={styles.workspace} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
         {teams.some((team) => !team.archivedAt) && <div className={styles.filters} aria-label="Filtrar por equipe">
           {teams.filter((team) => !team.archivedAt).map((team) => <FilterButton key={team.id} active={filter === `team:${team.id}`} count={conversations.filter((item) => item.status === "open" && item.teamId === team.id).length} onClick={() => setSearchParams({ box: `team:${team.id}` })}>{team.name}</FilterButton>)}
@@ -158,7 +158,14 @@ export default function Inbox() {
             <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Respostas prontas" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) setNote((current) => current ? `${current}\n${reply.body}` : reply.body); }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar respostas</Button></div>
             <div className={styles.composerFooter}><span>{note.length}/20.000</span><Button type="submit" loading={saving} disabled={!note.trim()}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button></div>
           </form>}
-        </> : <div className={styles.threadEmpty}><Icon name="message" /><strong>Selecione uma conversa</strong><span>O histórico completo aparecerá aqui.</span></div>}
+        </> : <div className={styles.threadEmpty}>
+          <Icon name="message" />
+          <strong>{isLoading ? "Preparando atendimento" : conversations.length === 0 ? "Comece seu primeiro atendimento" : "Nenhuma conversa nesta caixa"}</strong>
+          <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : conversations.length === 0 ? "Crie uma conversa para acompanhar o histórico e responder em um só lugar." : "Escolha outra caixa para continuar o atendimento."}</span>
+          {!isLoading && conversations.length === 0 && canWrite && canReadContacts && (contacts.length > 0
+            ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button>
+            : <Button variant="secondary" onClick={() => navigate("/")}>Adicionar contato</Button>)}
+        </div>}
       </section>
 
       <aside className={styles.details}>
