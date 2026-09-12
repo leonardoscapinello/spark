@@ -46,7 +46,7 @@ export default function Activities() {
   const session = getSession();
   const canWrite = session?.capabilities.includes("activities:write") ?? false;
   const canCreate = canReadContacts && canWrite && contacts.length > 0;
-  const firstRun = !isLoading && activities.length === 0;
+  const firstRun = !isLoading && activities.length === 0 && period === "open" && typeFilter === "all" && !search;
   const contactNames = useMemo(() => new Map(contacts.map((contact) => [contact.id, contact.name])), [contacts]);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const now = new Date();
@@ -102,13 +102,14 @@ export default function Activities() {
 
   return <div className={styles.page}>
     <PageHeader icon="calendar" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canCreate && contacts.length > 0 && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
-    {!firstRun && <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="ghost" shape="rounded" className={styles.periodOption} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<strong>{option.count}</strong></Button>)}</div>}
-    {!firstRun && <CollectionToolbar
+    {firstRun && <EmptyState variant="featured" icon="calendar" title={contacts.length > 0 ? "Planeje a primeira atividade" : "Comece com um contato"} description={contacts.length > 0 ? "Agende uma tarefa, ligação ou reunião e acompanhe o que sua equipe precisa fazer." : "Cadastre um contato para poder agendar tarefas, ligações e reuniões."} action={contacts.length > 0 && canCreate ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : canReadContacts ? <Button variant="secondary" onClick={() => void navigate("/")}>Ver contatos</Button> : undefined} />}
+    <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="ghost" shape="rounded" className={styles.periodOption} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<strong>{option.count}</strong></Button>)}</div>
+    <CollectionToolbar
       search={<Input aria-label="Buscar atividades" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar atividade ou contato" />}
-      filters={<Select label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} />}
+      filters={<Select appearance="filter" label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} />}
       count={`${filtered.length} ${filtered.length === 1 ? "atividade" : "atividades"}`}
-    />}
-    {firstRun ? <EmptyState variant="onboarding" icon="calendar" title={contacts.length > 0 ? "Planeje a primeira atividade" : "Comece com um contato"} description={contacts.length > 0 ? "Agende uma tarefa, ligação ou reunião e acompanhe o que sua equipe precisa fazer." : "Cadastre um contato para poder agendar tarefas, ligações e reuniões."} action={contacts.length > 0 && canCreate ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : canReadContacts ? <Button variant="secondary" onClick={() => void navigate("/")}>Ver contatos</Button> : undefined} /> : <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText="Nenhuma atividade neste filtro." actions={(activity) => <><Button size="sm" variant="ghost" loading={busyId === activity.id} disabled={!canWrite} onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>{canReadContacts && activity.contactId && <TableIconAction label="Abrir contato" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}</>} />}
+    />
+    <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText={activities.length ? "Nenhuma atividade neste filtro." : "Nenhuma atividade cadastrada."} actions={(activity) => <><Button size="sm" variant="ghost" loading={busyId === activity.id} disabled={!canWrite} onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>{canReadContacts && activity.contactId && <TableIconAction label="Abrir contato" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}</>} />
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha contato, título e data para agendar." onConfirm={createActivity}>
       <form className={styles.form} onSubmit={submit}>
         <Field><Label>Contato</Label><SearchSelect label="Buscar contato" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>
