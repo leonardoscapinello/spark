@@ -35,22 +35,28 @@
 
 .railBrand {
   margin-bottom: var(--space-6);
+  position: relative;
+  overflow: hidden;
 }
 
-.railBrand img {
+.railBrand .brandSymbol {
   width: var(--space-6);
   height: var(--space-6);
   object-fit: contain;
 }
 
-.railLabel,
-.brandLabel { display: none; }
+.railBrand .brandWordmark { display: none; }
+.railLabel { display: none; }
 
 .railLink:hover,
 .railLink[aria-current="page"] {
   color: var(--color-ink);
   background: var(--ui-selected);
   box-shadow: var(--ui-selectionShadow);
+}
+
+.railLink {
+  transition: color var(--motion-duration-instant) var(--motion-ease-out), background-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out);
 }
 
 .railLink[data-pending],
@@ -93,6 +99,8 @@
 
 @media (min-width: 761px) and (hover: hover) {
   .rail { position: relative; z-index: 20; }
+  .railLink svg { transition: transform var(--motion-duration-instant) var(--motion-ease-out); }
+  .railLink:hover svg { transform: translateX(var(--space-1)); }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) {
     width: var(--ui-sidebarWidth);
     align-items: stretch;
@@ -115,10 +123,15 @@
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .accountMenu { width: 100%; align-items: stretch; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railModules { overflow-y: auto; scrollbar-width: none; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railModules::-webkit-scrollbar { display: none; }
-  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railLabel,
-  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .brandLabel { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
-  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .brandLabel { font-weight: var(--typography-weight-semibold); }
+  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railLabel { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
+  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .brandSymbol { display: none; }
+  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .brandWordmark { display: block; width: 100%; max-width: 100%; height: var(--space-6); object-fit: contain; object-position: left center; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .accountLink { border-radius: var(--radius-md); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .railLink, .railLink svg { transition: none; }
+  .railLink:hover svg { transform: none; }
 }
 
 .sidebar {

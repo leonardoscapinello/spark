@@ -282,7 +282,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   return (
     <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
       <NavigationRail className={styles.rail} data-collapsed={railCollapsed || undefined} onPointerEnter={() => setRailCollapsed(false)}>
-        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início" onClick={() => setRailCollapsed(true)}><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><span className={styles.brandLabel}>Leonardo Scapinello</span></Link>
+        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início" onClick={() => setRailCollapsed(true)}><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><img className={styles.brandWordmark} src="/brand/leonardo-scapinello-ink.svg" alt="" /></Link>
         <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.mobileModuleMenu}>
           <MenuButton variant="ghost" shape="rounded" className={styles.mobileModuleTrigger} icon={<Icon name={current.icon} />} aria-label={`Módulo atual: ${current.title}. Mudar módulo`} menu={<MenuGroup label="Módulos">{visibleModules.filter((module) => module.id !== "admin").map((module) => {
