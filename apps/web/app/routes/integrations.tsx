@@ -172,6 +172,7 @@ export default function Integrations() {
   return (
     <div className={styles.page}>
       <PageHeader
+        icon="bolt"
         title="Integrações"
         description="Conecte os canais e serviços usados pela sua equipe. Gerencie cada conexão em um só lugar."
       />

@@ -67,6 +67,7 @@ export default function AdminAuditLog() {
   return (
     <div className={styles.page}>
       <PageHeader
+        icon="chart"
         eyebrow="Administração"
         title="Auditoria"
         description="Acompanhe alterações de acesso, usuários, times e grupos de permissão."

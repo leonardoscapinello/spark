@@ -158,6 +158,7 @@ export default function AdminPermissionGroups() {
   return (
     <div className={styles.page}>
       <PageHeader
+        icon="settings"
         eyebrow="Administração"
         title="Grupos de permissões"
         description="Defina o que cada equipe pode consultar, criar e administrar."

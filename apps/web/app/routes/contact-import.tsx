@@ -78,7 +78,7 @@ export default function ContactImport(_props: Route.ComponentProps) {
 
   return <div className={styles.page}>
     <Link to="/" className={styles.back}>← Contatos</Link>
-    <PageHeader title="Importar contatos" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
+    <PageHeader icon="upload" title="Importar contatos" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
 
     <section className={styles.uploadSection} aria-label="Selecionar arquivo CSV">
       <div className={styles.sectionTitle}><h2>Selecione o arquivo</h2><span>1 de 2</span></div>

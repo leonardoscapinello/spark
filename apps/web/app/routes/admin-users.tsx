@@ -131,6 +131,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   return (
     <div className={styles.page}>
       <PageHeader
+        icon="user"
         eyebrow="Administração"
         title="Usuários"
         description="Controle quem acessa o sistema e quais permissões cada pessoa recebe."

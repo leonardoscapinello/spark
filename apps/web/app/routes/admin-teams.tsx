@@ -108,7 +108,7 @@ export default function AdminTeams() {
   const firstRun = !loading && !loadError && teams.length === 0 && !search && !showArchived;
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Administração" title={showArchived ? "Times arquivados" : "Times"} description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={teams.length > 0 ? <Button onClick={openCreate}>Novo time</Button> : undefined} />
+    <PageHeader icon="team" eyebrow="Administração" title={showArchived ? "Times arquivados" : "Times"} description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={teams.length > 0 ? <Button onClick={openCreate}>Novo time</Button> : undefined} />
     {loadError ? <EmptyState icon="team" title="Não foi possível carregar os times" description="Tente novamente para consultar a equipe." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} /> : <>
     {firstRun && <EmptyState variant="onboarding" icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} />}
     <CollectionToolbar

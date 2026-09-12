@@ -104,7 +104,7 @@ export default function Security() {
 
   return (
     <div className={styles.page}>
-      <PageHeader eyebrow="Minha conta" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." actions={<Button variant="secondary" onClick={() => void leaveAccount()}>Sair da conta</Button>} />
+      <PageHeader icon="account" eyebrow="Minha conta" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." actions={<Button variant="secondary" onClick={() => void leaveAccount()}>Sair da conta</Button>} />
 
       <section className={styles.card}>
         <div className={styles.cardHeader}>
