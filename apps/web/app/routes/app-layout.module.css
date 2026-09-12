@@ -16,8 +16,21 @@
 }
 
 .rail {
+  position: relative;
+  z-index: var(--ui-navigationLayer);
   height: 100%;
   padding-top: var(--space-2);
+}
+
+.rail::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--ui-railWidth);
+  pointer-events: none;
+  transition: width var(--motion-duration-fast) var(--motion-ease-out), background-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .railBrand,
@@ -44,6 +57,9 @@
   object-fit: contain;
   flex: 0 0 auto;
 }
+
+.brandWordmark { display: none; }
+.railLabel { display: none; }
 
 .railLink:hover,
 .railLink[aria-current="page"] {
@@ -84,8 +100,6 @@
 .railBottom {
   flex-shrink: 0;
   width: 100%;
-  padding-top: var(--space-2);
-  border-top: var(--ui-hairline) solid var(--color-line);
 }
 
 .accountLink {
@@ -97,7 +111,27 @@
 .mobileModuleMenu { display: none; }
 .mobileSecondaryNav { display: none; }
 
-@media (prefers-reduced-motion: reduce) { .railLink { transition: none; } }
+@media (min-width: 761px) {
+  .railBrand, .railModules, .railBottom { transition: width var(--motion-duration-fast) var(--motion-ease-out); }
+  .rail[data-expanded] { align-items: flex-start; }
+  .rail[data-expanded]::before { width: var(--ui-railFlyoutWidth); background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); }
+  .rail[data-expanded] .railBrand,
+  .rail[data-expanded] .railModules,
+  .rail[data-expanded] .railBottom { box-sizing: border-box; width: var(--ui-railFlyoutWidth); padding-inline: var(--space-2); }
+  .rail[data-expanded] .railBrand { justify-content: flex-start; overflow: hidden; }
+  .rail[data-expanded] .brandSymbol { display: none; }
+  .rail[data-expanded] .brandWordmark { display: block; width: calc(var(--ui-railFlyoutWidth) - var(--space-8)); max-height: var(--ui-controlMedium); object-fit: contain; }
+  .rail[data-expanded] .railModules,
+  .rail[data-expanded] .railBottom { align-items: stretch; }
+  .rail[data-expanded] .railBottom { overflow: hidden; }
+  .rail[data-expanded] .railLink { justify-content: flex-start; gap: var(--space-2); width: 100%; padding-inline: var(--space-2); }
+  .rail[data-expanded] .railLink svg { flex: 0 0 var(--ui-icon); }
+  .rail[data-expanded] .railLabel { display: block; min-width: 0; overflow: hidden; color: inherit; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); text-overflow: ellipsis; white-space: nowrap; }
+  .rail[data-expanded] .accountMenu { justify-content: flex-start; width: 100%; }
+  .rail[data-expanded] .accountLink { border-radius: var(--radius-md); }
+}
+
+@media (prefers-reduced-motion: reduce) { .railLink, .rail::before, .railBrand, .railModules, .railBottom { transition: none; } }
 
 .sidebar {
   height: 100%;
@@ -226,13 +260,14 @@
     overflow: hidden;
   }
 
+  .rail::before { display: none; }
+
   .railBrand { margin: 0 var(--space-2) 0 0; flex-shrink: 0; }
   .railModules { display: none; }
   .mobileModuleMenu { display: flex; flex: 1 1 auto; min-width: 0; }
   .mobileModuleTrigger { width: 100%; min-width: 0; justify-content: flex-start; overflow: hidden; white-space: nowrap; }
   .mobileModuleTitle { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .railBottom { flex-direction: row; width: auto; margin-left: 0; padding-top: 0; padding-left: var(--space-2); border-top: 0; border-left: var(--ui-hairline) solid var(--color-line); }
-  .railBottom > a.railLink[aria-current="page"] { display: none; }
   .railLink { flex-shrink: 0; }
 
   .sidebar { display: none; }

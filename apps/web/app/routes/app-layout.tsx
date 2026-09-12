@@ -1,7 +1,7 @@
 import { type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
-import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, Tooltip, TooltipProvider, type IconName, type QuickNavigationItem } from "@spark/ui-web";
+import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
@@ -174,6 +174,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const [accountProfile, setAccountProfile] = useState(session);
   const [quickNavigationOpen, setQuickNavigationOpen] = useState(false);
+  const [railExpanded, setRailExpanded] = useState(false);
   const [tabIndicator, setTabIndicator] = useState<{ left: number; width: number } | null>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
@@ -284,13 +285,13 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
     const target = first?.to ?? module.to;
-    return <Tooltip key={module.id} content={module.title} size="compact" side="right" pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, target)} onClick={(event) => finishLinkNavigation(event, target)} className={styles.railLink} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /></Link></Tooltip>;
+    return <Link key={module.id} ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, target)} onClick={(event) => finishLinkNavigation(event, target)} className={styles.railLink} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link>;
   }
 
   return (
     <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
-      <TooltipProvider><NavigationRail className={styles.rail}>
-        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /></Link>
+      <NavigationRail className={styles.rail} data-expanded={railExpanded || undefined} onPointerEnter={(event) => { if (event.pointerType === "mouse") setRailExpanded(true); }} onPointerLeave={(event) => { if (event.pointerType === "mouse") setRailExpanded(false); }} onFocusCapture={() => setRailExpanded(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setRailExpanded(false); }}>
+        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><img className={styles.brandWordmark} src="/brand/leonardo-scapinello-ink.svg" alt="" /></Link>
         <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.mobileModuleMenu}>
           <MenuButton variant="ghost" shape="rounded" className={styles.mobileModuleTrigger} icon={<Icon name={current.icon} />} aria-label={`Módulo atual: ${current.title}. Mudar módulo`} menu={<MenuGroup label="Módulos">{visibleModules.filter((module) => module.id !== "admin").map((module) => {
@@ -299,13 +300,13 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           })}</MenuGroup>}><span className={styles.mobileModuleTitle}>{current.title}</span></MenuButton>
         </div>
         <div className={styles.railBottom}>
-          <Tooltip content="Pesquisar" size="compact" side="right" pinOnClick={false}><Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railLink} aria-label="Pesquisar áreas" onClick={() => setQuickNavigationOpen(true)} icon={<Icon name="search" />} /></Tooltip>
+          <Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railLink} aria-label="Pesquisar áreas" onClick={() => setQuickNavigationOpen(true)} icon={<Icon name="search" />}><span className={styles.railLabel}>Pesquisar</span></Button>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
           <div className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}> 
-            {accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />}
+            {accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />}<span className={styles.railLabel}>Minha conta</span>
           </MenuButton></div>
         </div>
-      </NavigationRail></TooltipProvider>
+      </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
         {visibleSections.map((section) => {
           const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);

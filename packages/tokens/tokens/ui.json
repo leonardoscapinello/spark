@@ -29,6 +29,10 @@
       "$type": "dimension",
       "$value": "36px"
     },
+    "railFlyoutWidth": {
+      "$type": "dimension",
+      "$value": "196px"
+    },
     "sidebarWidth": {
       "$type": "dimension",
       "$value": "236px"
@@ -200,6 +204,10 @@
     "overlayLayer": {
       "$type": "number",
       "$value": 60
+    },
+    "navigationLayer": {
+      "$type": "number",
+      "$value": 20
     },
     "modalLayer": {
       "$type": "number",
