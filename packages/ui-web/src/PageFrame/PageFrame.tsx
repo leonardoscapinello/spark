@@ -4,7 +4,7 @@ import styles from "./PageFrame.module.css";
 export interface PageFrameProps {
   children: ReactNode;
   width?: "fluid" | "content";
-  className?: string;
+  className?: string | undefined;
 }
 
 export function PageFrame({ children, width = "fluid", className }: PageFrameProps) {
