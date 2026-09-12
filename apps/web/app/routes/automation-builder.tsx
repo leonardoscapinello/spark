@@ -32,6 +32,7 @@ export default function AutomationBuilder() {
   const [name, setName] = useState("");
   const [graph, setGraph] = useState<AutomationGraph>({ nodes: [], edges: [] });
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [panelMode, setPanelMode] = useState<"palette" | "inspector">("palette");
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [runModalOpen, setRunModalOpen] = useState(false);
@@ -70,12 +71,14 @@ export default function AutomationBuilder() {
     const node: AutomationNode = { id, type, position: { x: 56 + (count % 3) * 292, y: 64 + Math.floor(count / 3) * 184 }, data: { ...NODE_DEFAULTS[type], config: {} } };
     setGraph((value) => ({ ...value, nodes: [...value.nodes, node] }));
     setSelectedId(id);
+    setPanelMode("inspector");
   }
 
   function startDrag(event: ReactPointerEvent, node: AutomationNode) {
     if (!canWrite) return;
     event.preventDefault();
     setSelectedId(node.id);
+    setPanelMode("inspector");
     drag.current = { id: node.id, startX: event.clientX, startY: event.clientY, originX: node.position.x, originY: node.position.y };
   }
 
@@ -101,6 +104,7 @@ export default function AutomationBuilder() {
     if (!selectedId) return;
     setGraph((value) => ({ nodes: value.nodes.filter((node) => node.id !== selectedId), edges: value.edges.filter((edge) => edge.source !== selectedId && edge.target !== selectedId) }));
     setSelectedId(null);
+    setPanelMode("palette");
     setConnectingFrom(null);
   }
 
@@ -136,15 +140,23 @@ export default function AutomationBuilder() {
   if (!automation) return <div className={styles.loading}>Carregando automação…</div>;
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Automações" title={automation.name} description="Arraste os blocos, conecte o caminho e publique quando o fluxo estiver completo." actions={<div className={styles.headerActions}><Button variant="ghost" onClick={() => navigate("/automations")}>Voltar</Button>{canWrite && automation.status === "active" && canReadContacts && <Button variant="secondary" onClick={() => setRunModalOpen(true)}>Executar agora</Button>}{canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}{canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}</div>} />
+    <PageHeader eyebrow="Automações" title={automation.name} actions={<div className={styles.headerActions}><Button variant="ghost" onClick={() => navigate("/automations")}>Voltar</Button>{canWrite && <Button variant="secondary" onClick={() => setPanelMode("palette")}>Adicionar bloco</Button>}{selected && panelMode === "palette" && <Button variant="ghost" onClick={() => setPanelMode("inspector")}>Configurar bloco</Button>}{canWrite && automation.status === "active" && canReadContacts && <Button variant="secondary" onClick={() => setRunModalOpen(true)}>Executar agora</Button>}{canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}{canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}</div>} />
     <section className={styles.runBar} aria-label="Execuções recentes"><div><strong>Execuções recentes</strong><span>{runs.length ? `${runs.length} registradas nesta automação` : "Nenhuma execução iniciada"}</span></div><div className={styles.runList}>{runs.slice(0, 5).map((run) => <span key={run.id}><Badge tone={run.status === "completed" ? "success" : run.status === "failed" ? "danger" : run.status === "waiting" ? "warning" : "neutral"}>{runStatusLabel(run.status)}</Badge><small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(run.startedAt))}</small></span>)}</div></section>
     <div className={styles.workspace}>
-      <aside className={styles.palette}>
-        <header><strong>Blocos</strong><span>Adicione ao canvas</span></header>
-        {(["trigger", "action", "condition", "wait"] as const).map((type) => <Button key={type} variant="secondary" className={styles.paletteButton} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeMark} data-type={type} /> <span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
-        <div className={styles.validation}><strong>Pronto para publicar</strong>{issues.length ? issues.map((issue) => <span key={`${issue.code}-${issue.nodeId ?? issue.edgeId ?? "graph"}`}>{issue.message}</span>) : <span data-valid="true">Fluxo válido e conectado.</span>}</div>
+      <aside className={styles.panel} aria-label={panelMode === "palette" ? "Adicionar blocos" : "Configurar bloco"}>
+        {panelMode === "palette" || !selected ? <div className={styles.palette}>
+          <header><strong>Blocos</strong><span>Escolha a próxima etapa do fluxo.</span></header>
+          {(["trigger", "action", "condition", "wait"] as const).map((type) => <Button key={type} variant="secondary" className={styles.paletteButton} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeMark} data-type={type} /> <span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
+          <div className={styles.validation}><strong>Pronto para publicar</strong>{issues.length ? issues.map((issue) => <span key={`${issue.code}-${issue.nodeId ?? issue.edgeId ?? "graph"}`}>{issue.message}</span>) : <span data-valid="true">Fluxo válido e conectado.</span>}</div>
+        </div> : <div className={styles.inspector}>
+          <header><div><Badge tone="neutral">{typeLabel(selected.type)}</Badge><strong>Configuração</strong></div><Button iconOnly size="sm" variant="ghost" aria-label="Fechar configuração" onClick={() => { setSelectedId(null); setPanelMode("palette"); }}>×</Button></header>
+          <Field><Label>Nome do bloco</Label><Input value={selected.data.label} disabled={!canWrite} onChange={(event) => updateSelected({ label: event.target.value })} /></Field>
+          <Field><Label>Descrição</Label><Textarea value={selected.data.description} disabled={!canWrite} rows={4} onChange={(event) => updateSelected({ description: event.target.value })} /></Field>
+          <NodeConfiguration node={selected} disabled={!canWrite} onChange={(config) => updateSelected({ config })} />
+          {canWrite && <Button variant="ghost" className={styles.deleteButton} onClick={removeSelected}>Excluir bloco</Button>}
+        </div>}
       </aside>
-      <main className={styles.canvas} onPointerDown={() => setSelectedId(null)}>
+      <main className={styles.canvas} onPointerDown={() => { setSelectedId(null); setPanelMode("palette"); }}>
         <svg className={styles.edges} aria-hidden="true">{graph.edges.map((edge) => <EdgeLine key={edge.id} edge={edge} nodes={graph.nodes} />)}</svg>
         {graph.nodes.length === 0 && <div className={styles.canvasEmpty}><strong>O fluxo começa com um gatilho</strong><span>Adicione um bloco pelo painel à esquerda.</span><Button disabled={!canWrite} onClick={(event) => { event.stopPropagation(); addNode("trigger"); }}>Adicionar gatilho</Button></div>}
         {graph.nodes.map((node) => <article key={node.id} className={styles.node} data-type={node.type} data-selected={selectedId === node.id || undefined} style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }} onPointerDown={(event) => { event.stopPropagation(); startDrag(event, node); }}>
@@ -153,14 +165,6 @@ export default function AutomationBuilder() {
           {canWrite && <footer><Button size="sm" variant={connectingFrom === node.id ? "raised" : "ghost"} onPointerDown={(event) => event.stopPropagation()} onClick={() => connect(node.id)}>{connectingFrom && connectingFrom !== node.id ? "Ligar aqui" : connectingFrom === node.id ? "Cancelar" : "Conectar"}</Button></footer>}
         </article>)}
       </main>
-      <aside className={styles.inspector}>
-        {selected ? <><header><div><Badge tone="neutral">{typeLabel(selected.type)}</Badge><strong>Configuração</strong></div><Button iconOnly size="sm" variant="ghost" aria-label="Fechar configuração" onClick={() => setSelectedId(null)}>×</Button></header>
-          <Field><Label>Nome do bloco</Label><Input value={selected.data.label} disabled={!canWrite} onChange={(event) => updateSelected({ label: event.target.value })} /></Field>
-          <Field><Label>Descrição</Label><Textarea value={selected.data.description} disabled={!canWrite} rows={4} onChange={(event) => updateSelected({ description: event.target.value })} /></Field>
-          <NodeConfiguration node={selected} disabled={!canWrite} onChange={(config) => updateSelected({ config })} />
-          {canWrite && <Button variant="ghost" className={styles.deleteButton} onClick={removeSelected}>Excluir bloco</Button>}
-        </> : <div className={styles.inspectorEmpty}><strong>Configuração do bloco</strong><span>Selecione um bloco no canvas para editar suas propriedades.</span></div>}
-      </aside>
     </div>
     <ActionModal open={runModalOpen} onOpenChange={setRunModalOpen} title="Executar automação" confirmLabel="Iniciar execução" errorText="Selecione um contato." onConfirm={startRun}><Field><Label>Contato</Label><SearchSelect label="Contato da execução" searchPlacement="dropdown" placeholder="Buscar contato" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={runContact} onValueChange={setRunContact} /></Field></ActionModal>
   </div>;
