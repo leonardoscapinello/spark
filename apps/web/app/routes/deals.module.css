@@ -21,15 +21,6 @@
   font-weight: var(--typography-weight-semibold);
 }
 
-.vazio {
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: flex-start;
-}
-
 /* Board rola na horizontal — nunca vidro aqui dentro (docs/adr/0025). */
 .board {
   display: flex;

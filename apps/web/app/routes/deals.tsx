@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
-import { ActionModal, Button, DatePicker, Field, Input, Label, MoneyInput, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, DatePicker, EmptyState, Field, Input, Label, MoneyInput, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getPipelinesCollection, getStagesCollection, getDealsCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -176,18 +176,15 @@ export default function Deals() {
   if (!isLoadingPipelines && !mainPipeline) {
     return (
       <div className={styles.pagina}>
-        <PageHeader eyebrow="CRM" title="Negócios" description="Configure o primeiro funil comercial da organização." />
-        <div className={styles.vazio}>
-          <p>Nenhum funil ainda.</p>
-          <Button onClick={() => void createDefaultPipeline()}>Criar funil de vendas</Button>
-        </div>
+        <PageHeader title="Negócios" description="Acompanhe as oportunidades do primeiro contato ao fechamento." />
+        <EmptyState icon="briefcase" title="Crie seu primeiro funil" description="Organize os negócios por etapa e acompanhe o valor de cada oportunidade." action={canManagePipeline ? <Button onClick={() => void createDefaultPipeline()}>Criar funil de vendas</Button> : undefined} />
       </div>
     );
   }
 
   return (
     <div className={styles.pagina}>
-      <PageHeader eyebrow="CRM" title={mainPipeline?.name ?? "Negócios"} description="Acompanhe valor, contato, responsável e avanço de cada oportunidade." actions={canWrite ? <Button onClick={() => openDealModal()}>Novo negócio</Button> : undefined} />
+      <PageHeader title={mainPipeline?.name ?? "Negócios"} description="Acompanhe valor, contato, responsável e avanço de cada oportunidade." actions={canWrite ? <Button onClick={() => openDealModal()}>Novo negócio</Button> : undefined} />
       <div className={styles.toolbar}>
         <Select label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
         <Select label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value && value !== "open" ? { status: value } : {})} />
