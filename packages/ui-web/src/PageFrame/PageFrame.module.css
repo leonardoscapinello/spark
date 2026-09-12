@@ -1,6 +1,6 @@
 .root { box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-4); width: 100%; min-width: 0; margin-inline: auto; padding: var(--space-8); }
-.content { max-width: var(--ui-settingsContentWidth); }
-.root:not(.content) > header:first-child {
+.content > :not(header:first-child) { box-sizing: border-box; width: 100%; max-width: var(--ui-settingsContentWidth); align-self: center; }
+.root > header:first-child {
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -11,5 +11,5 @@
 }
 @media (max-width: 760px) {
   .root { padding: var(--space-4); }
-  .root:not(.content) > header:first-child { margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) 0; padding: var(--space-3) var(--space-4); }
+  .root > header:first-child { margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) 0; padding: var(--space-3) var(--space-4); }
 }
