@@ -50,7 +50,7 @@ export default function Contacts() {
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [archiveView, setArchiveView] = useState(false);
   const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && ownerFilter === "all";
-  const viewTitle = archiveView ? "Contatos arquivados" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Contatos";
+  const viewTitle = archiveView ? "Contatos arquivados" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Todos os contatos";
   const viewDescription = archiveView ? "Registros fora da base ativa que você pode restaurar." : statusFilter === "all" ? "" : "Acompanhe os contatos desta etapa e abra cada perfil para ver o histórico.";
   const filteredContacts = contacts.filter((contact) =>
     (archiveView ? contact.deletedAt !== null : contact.deletedAt === null) &&

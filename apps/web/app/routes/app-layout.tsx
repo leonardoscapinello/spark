@@ -16,7 +16,7 @@ const modules: NavModule[] = [
   ] },
   { id: "leads", title: "Leads", icon: "user", to: "/", sections: [
     { title: "Pessoas", items: [
-      { label: "Contatos", to: "/", icon: "team", capability: "contacts:read" },
+      { label: "Pessoas", to: "/", icon: "team", capability: "contacts:read" },
       { label: "Novos leads", to: "/?status=new", icon: "user", capability: "contacts:read" },
       { label: "Qualificados", to: "/?status=qualified", icon: "check", capability: "contacts:read" },
       { label: "Clientes", to: "/?status=customer", icon: "star", capability: "contacts:read" },
@@ -128,7 +128,7 @@ function moduleForPath(pathname: string): NavModule {
 }
 
 const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
-  leads: ["Contatos", "Empresas"],
+  leads: ["Pessoas", "Empresas"],
   crm: ["Negócios", "Atividades", "Produtos", "Ofertas e descontos"],
   automations: ["Todos os fluxos", "Ativos", "Rascunhos", "Pausados"],
   content: ["Campanhas", "Públicos", "Páginas", "Formulários", "Arquivos"],
