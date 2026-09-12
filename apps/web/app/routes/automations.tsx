@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useSearchParams } from "react-router";
 import { optimisticAutomation } from "@spark/data";
 import type { Automation } from "@spark/core";
-import { ActionModal, Badge, Button, DataTable, EmptyState, Field, Input, Label, PageHeader, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationsCollection } from "../lib/automations-collections.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -45,10 +45,10 @@ export default function Automations() {
 
   return <div className={styles.page}>
     <PageHeader title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} description="Crie e acompanhe fluxos com vários gatilhos e etapas." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
-    {automations.length > 0 && <div className={styles.toolbar}><Input aria-label="Buscar automações" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" /><span className={styles.count}>{visibleAutomations.length} {visibleAutomations.length === 1 ? "automação" : "automações"}</span></div>}
+    {automations.length > 0 && <CollectionToolbar search={<Input aria-label="Buscar automações" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" />} count={`${visibleAutomations.length} ${visibleAutomations.length === 1 ? "automação" : "automações"}`} />}
     {firstRun
       ? <EmptyState icon="bolt" title="Crie sua primeira automação" description="Desenhe gatilhos e etapas para acompanhar cada contato sem repetir tarefas manuais." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
-      : <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <Button variant="secondary" size="sm" onClick={() => navigate(`/automations/${item.id}`)}>{canWrite ? "Editar fluxo" : "Abrir fluxo"}</Button>} />}
+      : <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} />}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Qualificar leads do Instagram" maxLength={160} /></Field>
     </ActionModal>
