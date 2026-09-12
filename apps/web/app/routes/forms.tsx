@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { formsControllerCreate, formsControllerStatus } from "@spark/api-client";
 import { leadFormId, type LeadForm } from "@spark/core";
-import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getFormSubmissionsCollection, getLeadFormsCollection } from "../lib/forms-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -17,7 +17,10 @@ export async function clientLoader() {
 
 export default function Forms() {
   const navigate = useNavigate();
-  const canWrite = getSession()?.capabilities.includes("forms:write") ?? false;
+  const capabilities = getSession()?.capabilities ?? [];
+  const canWrite = capabilities.includes("forms:write");
+  const canReadPages = capabilities.includes("pages:read");
+  const canReadContacts = capabilities.includes("contacts:read");
   const { data: forms, isLoading } = useLiveQuery({ query: (q) => q.from({ forms: getLeadFormsCollection() }).orderBy(({ forms: item }) => item.updatedAt, "desc") });
   const { data: submissions } = useLiveQuery({ query: (q) => q.from({ submissions: getFormSubmissionsCollection() }) });
   const [open, setOpen] = useState(false);
@@ -64,18 +67,23 @@ export default function Forms() {
 
   return <div className={styles.page}>
     <PageHeader icon="form" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
-    {firstRun && <EmptyState variant="featured" icon="form" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
-      <><CollectionToolbar
+    {firstRun && <EmptyState variant="featured" icon="form" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." />}
+    {firstRun && (canWrite || canReadPages || canReadContacts) && <ActionCardGroup title="Prepare a captação">
+      {canWrite && <ActionCard icon="form" title="Monte o formulário" description="Escolha os campos e publique quando estiver pronto." action={<Button variant="secondary" onClick={() => setOpen(true)}>Novo formulário</Button>} />}
+      {canReadPages && <ActionCard icon="page" title="Use em uma página" description="Coloque o formulário em uma página de captação." action={<Button variant="secondary" onClick={() => void navigate("/pages")}>Abrir páginas</Button>} />}
+      {canReadContacts && <ActionCard icon="team" title="Acompanhe contatos" description="Veja as pessoas que chegam pelos seus formulários." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir contatos</Button>} />}
+    </ActionCardGroup>}
+      {!firstRun && <><CollectionToolbar
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select appearance="filter" label="Filtrar formulários por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicados" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "formulário" : "formulários"}`}
         actions={<ViewSwitcher label="Visualização dos formulários" value={layout} onValueChange={setLayout} />}
       />
-      {layout === "table" ? <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText={firstRun ? "Os formulários criados aparecerão nesta tabela." : "Nenhum formulário encontrado."} actions={formActions} /> : <div className={styles.cardGrid} aria-label="Formulários">
+      {layout === "table" ? <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText="Nenhum formulário encontrado." actions={formActions} /> : <div className={styles.cardGrid} aria-label="Formulários">
         {isLoading && !forms.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && filtered.length === 0 && !firstRun && <p className={styles.empty}>Nenhum formulário encontrado.</p>}
         {filtered.map((item) => <Card key={item.id} title={item.name} description={item.title} actions={formStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizado {formatDate(item.updatedAt)}</span><div>{formActions(item)}</div></div>}><div className={styles.cardMeta}><span><Icon name="form" />{item.fields.length} {item.fields.length === 1 ? "campo" : "campos"}</span><span>{counts.get(item.id) ?? 0} {counts.get(item.id) === 1 ? "resposta" : "respostas"}</span></div></Card>)}
-      </div>}</>
+      </div>}</>}
     <ActionModal open={open} onOpenChange={setOpen} title="Novo formulário" confirmLabel="Criar e editar" errorText="Informe o nome interno e o título público." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Captação do site" onChange={(event) => setName(event.target.value)} /></Field>
