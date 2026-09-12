@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto, type PermissionGroupDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, Field, Icon, Input, Label, PageFrame, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, Field, Icon, InlineEdit, Input, Label, PageFrame, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -51,11 +51,12 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   const columns: TableColumn<AdminUserDto>[] = [
     { id: "name", label: "Pessoa", cell: (user) => <div className={styles.person}><Avatar name={user.name} /><div><strong>{user.name}</strong><span className={styles.email}>{user.email}</span></div></div>, sortValue: (user) => user.name },
     { id: "group", label: "Grupo", cell: (user) => (
-      <Select
+      <InlineEdit
         label={`Grupo de ${user.name}`}
-        value={user.groupIds[0] ?? null}
-        onValueChange={(value) => { if (value) void replaceGroup(user, value); }}
+        value={user.groupIds[0] ?? ""}
+        onSave={(value) => replaceGroup(user, value)}
         options={groups.map((group) => ({ value: group.id, label: group.name }))}
+        placeholder="Sem grupo"
         disabled={busyUserId === user.id || user.id === loaderData.session.userId}
       />
     ) },
@@ -109,6 +110,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
       setUsers((current) => current.map((item) => item.id === updated.id ? updated : item));
     } catch {
       setActionError(`Não foi possível alterar o grupo de ${user.name}.`);
+      throw new Error("GROUP_UPDATE_FAILED");
     } finally {
       setBusyUserId(null);
     }
@@ -142,7 +144,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
       {actionError && <p className={styles.error} role="alert">{actionError}</p>}
       <CollectionToolbar
         search={<Input aria-label="Buscar usuários" placeholder="Buscar por nome ou e-mail" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
-        filters={<Select label="Filtrar usuários por acesso" value={statusFilter} options={[{ value: "all", label: "Todos os acessos" }, { value: "active", label: "Ativos" }, { value: "pending", label: "Convite enviado" }, { value: "disabled", label: "Desativados" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
+        filters={<Select appearance="filter" label="Filtrar usuários por acesso" value={statusFilter} options={[{ value: "all", label: "Todos os acessos" }, { value: "active", label: "Ativos" }, { value: "pending", label: "Convite enviado" }, { value: "disabled", label: "Desativados" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
         count={loading ? "Carregando usuários…" : loadError ? "Usuários indisponíveis" : `${filteredUsers.length} ${filteredUsers.length === 1 ? "usuário" : "usuários"}`}
       />
 
