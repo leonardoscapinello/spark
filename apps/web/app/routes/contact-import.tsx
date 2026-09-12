@@ -44,7 +44,7 @@ export default function ContactImport(_props: Route.ComponentProps) {
       return;
     }
     const parsed = parseContactCsv(await file.text());
-    if (parsed.rows.length > MAX_CONTACTS) parsed.errors.push(`O arquivo possui mais de ${MAX_CONTACTS.toLocaleString("pt-BR")} contatos.`);
+    if (parsed.rows.length > MAX_CONTACTS) parsed.errors.push(`O arquivo possui mais de ${MAX_CONTACTS.toLocaleString("pt-BR")} pessoas.`);
     setRows(parsed.rows);
     setFileErrors(parsed.errors);
   }
@@ -64,25 +64,25 @@ export default function ContactImport(_props: Route.ComponentProps) {
         })),
       });
       notify({
-        title: `${result.imported} ${result.imported === 1 ? "contato importado" : "contatos importados"}`,
-        description: result.skipped ? `${result.skipped} duplicado(s) já existentes foram ignorados.` : "A lista de contatos já está sendo atualizada.",
+        title: `${result.imported} ${result.imported === 1 ? "pessoa importada" : "pessoas importadas"}`,
+        description: result.skipped ? `${result.skipped} duplicado(s) já existentes foram ignorados.` : "A lista de pessoas já está sendo atualizada.",
         tone: "success",
       });
       navigate("/");
     } catch {
-      notify({ title: "Não foi possível importar o arquivo", description: "Nenhum contato foi gravado. Tente novamente.", tone: "error" });
+      notify({ title: "Não foi possível importar o arquivo", description: "Nenhuma pessoa foi gravada. Tente novamente.", tone: "error" });
     } finally {
       setImporting(false);
     }
   }
 
-  return <div className={styles.page} data-has-preview={rows.length > 0 || undefined}>
+  return <div className={styles.page}>
     <BackLink render={<Link to="/" />}>Pessoas</BackLink>
-    <PageHeader icon="upload" title="Importar contatos" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
+    <PageHeader icon="upload" title="Importar pessoas" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
 
     <section className={styles.uploadSection} aria-label="Selecionar arquivo CSV">
       <div className={styles.sectionTitle}><h2>Selecione o arquivo</h2><span>1 de 2</span></div>
-      <FilePicker accept=".csv,text/csv" multiple={false} label="Solte o CSV aqui ou escolha no computador" hint="Até 5 MB · até 2.000 contatos" onFiles={(files) => void selectFile(files[0])} />
+      <FilePicker accept=".csv,text/csv" multiple={false} label="Solte o CSV aqui ou escolha no computador" hint="Até 5 MB · até 2.000 pessoas" onFiles={(files) => void selectFile(files[0])} />
       <p>Coluna obrigatória: <strong>Nome</strong>. Também reconhecemos E-mail, Telefone, Origem e Tags. Use vírgula ou ponto e vírgula.</p>
       {fileName && <span className={styles.fileName}>{fileName}</span>}
       {fileErrors.map((error) => <p key={error} className={styles.error} role="alert">{error}</p>)}
@@ -99,7 +99,7 @@ export default function ContactImport(_props: Route.ComponentProps) {
       {rows.length > previewRows.length && <p className={styles.previewNotice}>Mostrando as primeiras {previewRows.length} linhas de {rows.length}.</p>}
       <div className={styles.footerActions}>
         <Button variant="secondary" onClick={() => navigate("/")}>Cancelar</Button>
-        <Button loading={importing} disabled={!validRows.length || fileErrors.length > 0} onClick={() => void importContacts()}>Importar {validRows.length} {validRows.length === 1 ? "contato" : "contatos"}</Button>
+        <Button loading={importing} disabled={!validRows.length || fileErrors.length > 0} onClick={() => void importContacts()}>Importar {validRows.length} {validRows.length === 1 ? "pessoa" : "pessoas"}</Button>
       </div>
     </>}
   </div>;
