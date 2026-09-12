@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useSearchParams } from "react-router";
 import { optimisticAutomation } from "@spark/data";
-import { ActionModal, Badge, Button, Card, Field, Input, Label, PageHeader, notify } from "@spark/ui-web";
+import type { Automation } from "@spark/core";
+import { ActionModal, Badge, Button, DataTable, Field, Input, Label, PageHeader, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationsCollection } from "../lib/automations-collections.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -19,10 +20,18 @@ export default function Automations() {
   const { data: automations, isLoading } = useLiveQuery({ query: (q) => q.from({ automations: collection }).orderBy(({ automations: item }) => item.updatedAt, "desc") });
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
+  const [search, setSearch] = useState("");
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
+  const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
   const visibleAutomations = selectedStatus === "active" || selectedStatus === "draft" || selectedStatus === "paused"
-    ? automations.filter((item) => item.status === selectedStatus)
-    : automations;
+    ? automations.filter((item) => item.status === selectedStatus && item.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch))
+    : automations.filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
+  const columns: TableColumn<Automation>[] = [
+    { id: "name", label: "Automação", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><small>Atualizada {relativeTime(item.updatedAt)}</small></div>, sortValue: (item) => item.name },
+    { id: "structure", label: "Estrutura", cell: (item) => `${item.draftGraph.nodes.length} blocos · ${item.draftGraph.edges.length} conexões`, sortValue: (item) => item.draftGraph.nodes.length },
+    { id: "version", label: "Versão", cell: (item) => item.publishedVersion ? `v${item.publishedVersion}` : "Ainda não publicada", sortValue: (item) => item.publishedVersion ?? 0 },
+    { id: "status", label: "Situação", cell: (item) => <Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>, sortValue: (item) => item.status },
+  ];
 
   async function create() {
     if (!session || !name.trim()) throw new Error("MISSING_NAME");
@@ -35,24 +44,8 @@ export default function Automations() {
 
   return <div className={styles.page}>
     <PageHeader title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} description="Crie e acompanhe fluxos com vários gatilhos e etapas." actions={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
-    <section className={styles.summary}>
-      <Card title="Fluxos"><strong>{automations.length}</strong></Card>
-      <Card title="Ativos"><strong>{automations.filter((item) => item.status === "active").length}</strong></Card>
-      <Card title="Rascunhos"><strong>{automations.filter((item) => item.status === "draft").length}</strong></Card>
-      <Card title="Pausados"><strong>{automations.filter((item) => item.status === "paused").length}</strong></Card>
-    </section>
-    <section className={styles.list} aria-label="Lista de automações">
-      <header><span>Nome</span><span>Estrutura</span><span>Versão</span><span>Status</span><span /></header>
-      {isLoading && !automations.length && <p className={styles.empty}>Carregando automações…</p>}
-      {!isLoading && !visibleAutomations.length && <div className={styles.zero}><strong>{automations.length ? "Nenhum fluxo neste filtro" : "Construa seu primeiro fluxo"}</strong><span>{automations.length ? "Selecione outra situação no menu para ver seus fluxos." : "Escolha gatilhos e conecte cada etapa em um canvas visual."}</span>{canWrite && !automations.length && <Button onClick={() => setModalOpen(true)}>Criar automação</Button>}</div>}
-      {visibleAutomations.map((automation) => <article key={automation.id}>
-        <div><strong>{automation.name}</strong><small>Atualizada {relativeTime(automation.updatedAt)}</small></div>
-        <span>{automation.draftGraph.nodes.length} blocos · {automation.draftGraph.edges.length} conexões</span>
-        <span>{automation.publishedVersion ? `v${automation.publishedVersion}` : "Ainda não publicada"}</span>
-        <Badge tone={automation.status === "active" ? "success" : automation.status === "paused" ? "warning" : "neutral"}>{statusLabel(automation.status)}</Badge>
-        <Button variant="secondary" size="sm" onClick={() => navigate(`/automations/${automation.id}`)}>{canWrite ? "Editar fluxo" : "Abrir fluxo"}</Button>
-      </article>)}
-    </section>
+    <div className={styles.toolbar}><Input aria-label="Buscar automações" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" /><span className={styles.count}>{visibleAutomations.length} {visibleAutomations.length === 1 ? "automação" : "automações"}</span></div>
+    <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação criada."} actions={(item) => <Button variant="secondary" size="sm" onClick={() => navigate(`/automations/${item.id}`)}>{canWrite ? "Editar fluxo" : "Abrir fluxo"}</Button>} />
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Qualificar leads do Instagram" maxLength={160} /></Field>
     </ActionModal>
