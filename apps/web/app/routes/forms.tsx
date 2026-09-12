@@ -63,7 +63,7 @@ export default function Forms() {
     : <TableIconAction label={`Abrir ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />; }
 
   return <div className={styles.page}>
-    <PageHeader icon="form" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
+    <PageHeader icon="form" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="form" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
       <><CollectionToolbar
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}
@@ -73,7 +73,7 @@ export default function Forms() {
       />
       {layout === "table" ? <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText={firstRun ? "Os formulários criados aparecerão nesta tabela." : "Nenhum formulário encontrado."} actions={formActions} /> : <div className={styles.cardGrid} aria-label="Formulários">
         {isLoading && !forms.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
-        {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhum formulário encontrado.</p>}
+        {!isLoading && filtered.length === 0 && !firstRun && <p className={styles.empty}>Nenhum formulário encontrado.</p>}
         {filtered.map((item) => <Card key={item.id} title={item.name} description={item.title} actions={formStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizado {formatDate(item.updatedAt)}</span><div>{formActions(item)}</div></div>}><div className={styles.cardMeta}><span><Icon name="form" />{item.fields.length} {item.fields.length === 1 ? "campo" : "campos"}</span><span>{counts.get(item.id) ?? 0} {counts.get(item.id) === 1 ? "resposta" : "respostas"}</span></div></Card>)}
       </div>}</>
     <ActionModal open={open} onOpenChange={setOpen} title="Novo formulário" confirmLabel="Criar e editar" errorText="Informe o nome interno e o título público." onConfirm={create}>
