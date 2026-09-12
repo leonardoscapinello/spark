@@ -311,7 +311,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           </MenuGroup>)}
         </>}>{activeSecondaryItem.label}</MenuButton>
       </nav>}
-      <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
+      <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} data-switching-module={changingModule || undefined} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
             <Link key={item.to} ref={topTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>

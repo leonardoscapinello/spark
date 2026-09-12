@@ -164,21 +164,18 @@
   box-sizing: border-box;
   position: absolute;
   z-index: 9;
-  inset-block-start: var(--space-4);
-  inset-inline-end: var(--space-4);
+  inset: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
-  max-width: calc(100% - var(--space-8));
-  padding: var(--space-2) var(--space-3);
   background: var(--color-surface);
-  border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-md);
-  box-shadow: var(--ui-panelShadow);
   color: var(--color-inkMuted);
   font-size: var(--typography-size-sm);
   pointer-events: none;
 }
+
+.conteudo[data-switching-module] > :not(.navigationFeedback) { visibility: hidden; }
 
 .navigationFeedback svg { color: var(--color-accent); }
 
