@@ -14,6 +14,14 @@
   flex-wrap: wrap;
 }
 
+.loading {
+  display: grid;
+  place-items: center;
+  min-height: var(--ui-previewColumn);
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-sm);
+}
+
 .titulo {
   margin: 0;
   font-family: var(--typography-fontFamily-display);
