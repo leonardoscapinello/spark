@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Avatar, Badge, Button, DataTable, Field, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, Field, Icon, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -30,6 +30,13 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   const [lastInvited, setLastInvited] = useState<string | null>(null);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
+  const filteredUsers = users.filter((user) =>
+    (statusFilter === "all" || accessStatus(user) === statusFilter) &&
+    (!searchTerm || `${user.name} ${user.email}`.toLocaleLowerCase("pt-BR").includes(searchTerm)),
+  );
   const columns: TableColumn<AdminUserDto>[] = [
     { id: "name", label: "Pessoa", cell: (user) => <div className={styles.person}><Avatar name={user.name} /><div><strong>{user.name}</strong><span className={styles.email}>{user.email}</span></div></div>, sortValue: (user) => user.name },
     { id: "group", label: "Grupo", cell: (user) => (
@@ -41,7 +48,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
         disabled={busyUserId === user.id || user.id === loaderData.session.userId}
       />
     ) },
-    { id: "status", label: "Acesso", cell: (user) => <span className={styles.status} data-status={accessStatus(user)}>{accessStatusLabel(user)}</span>, sortValue: accessStatusLabel },
+    { id: "status", label: "Acesso", cell: (user) => <Badge tone={accessStatus(user) === "active" ? "success" : accessStatus(user) === "disabled" ? "danger" : "warning"}>{accessStatusLabel(user)}</Badge>, sortValue: accessStatusLabel },
   ];
 
   function resetForm() {
@@ -122,9 +129,15 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
       {lastInvited && <p className={styles.feedback} role="status">Convite enviado para {lastInvited}.</p>}
       {actionError && <p className={styles.error} role="alert">{actionError}</p>}
 
+      <CollectionToolbar
+        search={<Input aria-label="Buscar usuários" placeholder="Buscar por nome ou e-mail" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+        filters={<Select label="Filtrar usuários por acesso" value={statusFilter} options={[{ value: "all", label: "Todos os acessos" }, { value: "active", label: "Ativos" }, { value: "pending", label: "Convite enviado" }, { value: "disabled", label: "Desativados" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
+        count={`${filteredUsers.length} ${filteredUsers.length === 1 ? "usuário" : "usuários"}`}
+      />
+
       <DataTable
         label="Usuários da organização"
-        rows={users}
+        rows={filteredUsers}
         columns={columns}
         rowKey={(user) => user.id}
         rowLabel={(user) => user.name}
@@ -139,7 +152,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
             {user.deactivatedAt ? "Reativar" : "Desativar"}
           </Button>
         )}
-        emptyText="Nenhum usuário cadastrado."
+        emptyText="Nenhum usuário encontrado."
       />
 
       <ActionModal
