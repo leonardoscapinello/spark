@@ -253,7 +253,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
     const target = first?.to ?? module.to;
-    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="render" onPointerDown={() => markNavigation(target)} onClick={() => setRailCollapsed(true)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={() => markNavigation(target)} onClick={() => setRailCollapsed(true)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
@@ -294,7 +294,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} ref={topTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="render" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
+            <Link key={item.to} ref={topTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
