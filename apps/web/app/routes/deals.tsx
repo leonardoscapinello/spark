@@ -117,11 +117,11 @@ export default function Deals() {
   }
 
   async function addDeal() {
-    if (!session || !mainPipeline || !targetStageId || !dealName.trim() || dealAmount === null) throw new Error("MISSING_FIELDS");
+    if (!session || !mainPipeline || !targetStageId || !dealContact || !dealName.trim() || dealAmount === null) throw new Error("MISSING_FIELDS");
     const deal = optimisticDeal({
       pipelineId: mainPipeline.id,
       stageId: targetStageId as StageId,
-      contactId: dealContact ? contactIdFactory.from(dealContact.value) : null,
+      contactId: contactIdFactory.from(dealContact.value),
       companyId: dealCompanyId ? companyIdFactory.from(dealCompanyId) : null,
       ownerId: dealOwnerId ? userIdFactory.from(dealOwnerId) : null,
       name: dealName.trim(),
@@ -322,7 +322,7 @@ export default function Deals() {
       <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
         <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
       </ActionModal>
-      <ActionModal open={dealModalOpen} onOpenChange={(open) => { setDealModalOpen(open); if (!open) resetDealForm(); }} title="Novo negócio" confirmLabel="Criar negócio" errorText="Preencha nome, valor e etapa para criar o negócio." onConfirm={addDeal}>
+      <ActionModal open={dealModalOpen} onOpenChange={(open) => { setDealModalOpen(open); if (!open) resetDealForm(); }} title="Novo negócio" confirmLabel="Criar negócio" errorText="Preencha nome, valor, pessoa e etapa para criar o negócio." onConfirm={addDeal}>
         <div className={styles.modalFields}>
           <Field><Label>Nome</Label><Input value={dealName} onChange={(event) => setDealName(event.target.value)} placeholder="Ex.: Contrato anual Acme" /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={dealAmount} onValueChange={setDealAmount} /></Field>

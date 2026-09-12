@@ -141,13 +141,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
 
   async function saveDeal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!deal || !name.trim() || amount === null || saving) return;
+    if (!deal || !contact || !name.trim() || amount === null || saving) return;
     setSaving(true);
     try {
       const transaction = dealsCollection.update(deal.id, (draft) => {
         draft.name = name.trim();
         draft.amount = toCents(amount);
-        draft.contactId = contact ? contactIdFactory.from(contact.value) : null;
+        draft.contactId = contactIdFactory.from(contact.value);
         draft.companyId = companyId ? companyIdFactory.from(companyId) : null;
         draft.ownerId = ownerId ? userIdFactory.from(ownerId) : null;
         draft.expectedCloseDate = expectedCloseDate ? new Date(`${expectedCloseDate}T12:00:00`).toISOString() : null;
@@ -231,11 +231,11 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         <div className={styles.profile}>{editing ? <Card title="Editar negócio"><form className={styles.editForm} onSubmit={saveDeal}>
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
-          <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Sem pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
+          <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
           <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={companyId || null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
           <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
-          <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
+          <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null || !contact}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
         </form></Card> : <Card title="Detalhes do negócio"><div className={styles.details}>
           <div><span>Pessoa</span>{linkedContact ? <Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link> : <strong>Não vinculada</strong>}</div>
           <div><span>Empresa</span>{linkedCompany ? <Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link> : <strong>Não vinculada</strong>}</div>
