@@ -7,3 +7,4 @@ export default meta;
 type Story = StoryObj<typeof Tooltip>;
 export const Default: Story = { render: () => (<TooltipProvider><Tooltip content="Mais informações"><Button>Ajuda</Button></Tooltip></TooltipProvider>) };
 export const Compacto: Story = { render: () => (<TooltipProvider><Tooltip size="compact" pinOnClick={false} content="Automações"><Button iconOnly aria-label="Automações">A</Button></Tooltip></TooltipProvider>) };
+export const AoLado: Story = { render: () => (<TooltipProvider><Tooltip size="compact" side="right" pinOnClick={false} content="Atendimento"><Button iconOnly aria-label="Atendimento">A</Button></Tooltip></TooltipProvider>) };
