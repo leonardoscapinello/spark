@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { redirect } from "react-router";
-import type { Route } from "./+types/admin-audit-log";
 import { auditLogsControllerList, type AdminAuditLogDto } from "@spark/api-client";
-import { CollectionToolbar, DataTable, Icon, Input, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { Button, CollectionToolbar, DataTable, EmptyState, Icon, Input, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-audit-log.module.css";
 
@@ -25,18 +24,31 @@ export async function clientLoader() {
   const session = await restoreSession();
   if (!session) throw redirect("/login");
   if (!session.capabilities.includes("audit_logs:read")) throw redirect("/");
-  return { logs: await auditLogsControllerList() };
+  return null;
 }
 
-export default function AdminAuditLog({ loaderData }: Route.ComponentProps) {
+export default function AdminAuditLog() {
+  const [logs, setLogs] = useState<AdminAuditLogDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
+  useEffect(() => {
+    let active = true;
+    void auditLogsControllerList().then((nextLogs) => {
+      if (!active) return;
+      setLogs(nextLogs);
+      setLoadError(false);
+    }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [reloadKey]);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
-  const filteredLogs = loaderData.logs.filter((entry) =>
+  const filteredLogs = logs.filter((entry) =>
     (actionFilter === "all" || entry.action === actionFilter) &&
     (!searchTerm || `${entry.actorName} ${entry.targetLabel} ${ACTION_LABELS[entry.action]} ${describeEntry(entry)}`.toLocaleLowerCase("pt-BR").includes(searchTerm)),
   );
-  const actionOptions = [...new Set(loaderData.logs.map((entry) => entry.action))]
+  const actionOptions = [...new Set(logs.map((entry) => entry.action))]
     .map((action) => ({ value: action, label: ACTION_LABELS[action] }))
     .sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
   const columns: TableColumn<AdminAuditLogDto>[] = [
@@ -59,18 +71,19 @@ export default function AdminAuditLog({ loaderData }: Route.ComponentProps) {
         title="Auditoria"
         description="Acompanhe alterações de acesso, usuários, times e grupos de permissão."
       />
-      {loaderData.logs.length > 0 && <CollectionToolbar
+      {logs.length > 0 && <CollectionToolbar
         search={<Input aria-label="Buscar auditoria" placeholder="Buscar pessoa, registro ou ação" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select label="Filtrar auditoria por ação" value={actionFilter} options={[{ value: "all", label: "Todas as ações" }, ...actionOptions]} onValueChange={(value) => setActionFilter(value ?? "all")} />}
         count={`${filteredLogs.length} ${filteredLogs.length === 1 ? "registro" : "registros"}`}
       />}
-      <DataTable
+      {loadError ? <EmptyState icon="file" title="Não foi possível carregar a auditoria" description="Tente novamente para consultar o histórico." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} /> : <DataTable
         label="Histórico de auditoria"
         rows={filteredLogs}
         columns={columns}
         rowKey={(entry) => entry.id}
-        emptyText={loaderData.logs.length ? "Nenhum registro encontrado." : "Nenhuma alteração administrativa registrada."}
-      />
+        state={loading ? "loading" : "ready"}
+        emptyText={logs.length ? "Nenhum registro encontrado." : "Nenhuma alteração administrativa registrada."}
+      />}
     </div>
   );
 }
