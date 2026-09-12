@@ -7,5 +7,6 @@
 @media (max-width: 720px) {
   .root { align-items: stretch; flex-direction: column; }
   .search, .filters, .filters > * { width: 100%; min-width: 0; }
+  .search { flex: none; }
   .count { margin-inline-start: 0; }
 }
