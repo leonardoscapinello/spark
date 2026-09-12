@@ -21,7 +21,7 @@ export interface RecordHeroProps {
 }
 
 export function RecordHero({ icon, avatarName, eyebrow, title, description, actions, metrics = [] }: RecordHeroProps) {
-  return <section className={styles.root} aria-label={title}>
+  return <section className={styles.root} aria-label={title} data-person={Boolean(avatarName)}>
     <div className={styles.identity}>
       {avatarName ? <Avatar name={avatarName} size="hero" /> : <span className={styles.avatar}><Icon name={icon} /></span>}
       <PageHeader title={title} {...(eyebrow ? { eyebrow } : {})} {...(description ? { description } : {})} {...(actions ? { actions } : {})} />
