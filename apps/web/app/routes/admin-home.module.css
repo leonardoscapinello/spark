@@ -5,7 +5,7 @@
 }
 
 .pageHeader { padding: var(--space-5) var(--space-6); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.sections { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-8); width: 100%; max-width: var(--ui-settingsContentWidth); margin-inline: auto; padding: var(--space-8) var(--space-6); }
+.sections { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-8); width: 100%; max-width: calc(var(--ui-settingsCardWidth) * 3 + var(--space-6) * 4); margin-inline: auto; padding: var(--space-8) var(--space-6); }
 
 .section {
   display: grid;
@@ -19,7 +19,7 @@
   font-weight: var(--typography-weight-semibold);
 }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); gap: var(--space-3); width: 100%; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); column-gap: var(--space-6); row-gap: var(--space-4); width: 100%; }
 
 .card {
   box-sizing: border-box;
