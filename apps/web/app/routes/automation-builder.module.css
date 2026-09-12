@@ -42,6 +42,7 @@
 .inspector > header > div { display: grid; gap: var(--space-2); }
 .deleteButton { margin-top: auto; color: var(--color-statusDanger); }
 .configGrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-.loading { padding: var(--space-10); color: var(--color-inkMuted); }
+.loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
+.loading > :first-child { width: var(--ui-menuWidth); }
 @media (max-width: 1000px) { .workspace { grid-template-columns: calc(var(--space-16) * 5) minmax(0, 1fr); } }
 @media (max-width: 760px) { .page { padding: var(--space-3); } .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(0, calc(var(--space-16) * 4)) minmax(0, 1fr); } .workspace[data-panel="closed"] { grid-template-rows: minmax(0, 1fr); } .canvas { min-height: 0; } }

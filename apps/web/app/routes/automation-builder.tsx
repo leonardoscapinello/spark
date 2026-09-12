@@ -3,7 +3,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useParams } from "react-router";
 import { automationsControllerPublish, automationsControllerRun } from "@spark/api-client";
 import { validateAutomationGraph, type AutomationEdge, type AutomationGraph, type AutomationNode, type AutomationNodeType } from "@spark/core";
-import { ActionModal, Badge, Button, Field, Icon, Input, Label, PageHeader, SearchSelect, Select, Textarea, notify, type IconName, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, EmptyState, Field, Icon, Input, Label, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationRunsCollection, getAutomationRunStepsCollection, getAutomationVersionsCollection, getAutomationsCollection } from "../lib/automations-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -25,7 +25,7 @@ export default function AutomationBuilder() {
   const { automationId } = useParams();
   const session = getSession();
   const collection = getAutomationsCollection();
-  const { data: automations } = useLiveQuery({ query: (q) => q.from({ automations: collection }) });
+  const { data: automations, isLoading } = useLiveQuery({ query: (q) => q.from({ automations: collection }) });
   const { data: runs = [] } = useLiveQuery({ query: (q) => automationId ? q.from({ runs: getAutomationRunsCollection() }).where(({ runs: run }) => eq(run.automationId, automationId)).orderBy(({ runs: run }) => run.startedAt, "desc") : undefined });
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: getContactsCollection() }).orderBy(({ contacts: contact }) => contact.name, "asc") : undefined });
@@ -138,7 +138,7 @@ export default function AutomationBuilder() {
     setRunContact(null);
   }
 
-  if (!automation) return <div className={styles.loading}>Carregando automação…</div>;
+  if (!automation) return <div className={styles.page}><PageHeader title="Editor de automação" />{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando automação"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="bolt" title="Automação não encontrada" description="Este fluxo não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/automations")}>Ver automações</Button>} />}</div>;
 
   return <div className={styles.page}>
     <PageHeader eyebrow="Automações" title={automation.name} actions={<div className={styles.headerActions}><Button variant="ghost" onClick={() => navigate("/automations")}>Voltar</Button>{selected && panelMode === "palette" && <Button variant="ghost" onClick={() => setPanelMode("inspector")}>Configurar bloco</Button>}{canWrite && automation.status === "active" && canReadContacts && <Button variant="secondary" onClick={() => setRunModalOpen(true)}>Executar agora</Button>}{canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}{canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}</div>} />
