@@ -4,7 +4,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Badge, Button, Field, Icon, Input, Label, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Icon, Input, Label, MenuButton, MenuItem, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -54,6 +54,7 @@ export default function Inbox() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"recent" | "oldest">("recent");
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const [newContact, setNewContact] = useState<SelectOption | null>(null);
   const [newSubject, setNewSubject] = useState("");
@@ -67,7 +68,8 @@ export default function Inbox() {
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const filtered = conversations.filter((item) => matchesFilter(item, filter, session?.userId ?? null)
     && (!searchTerm || [item.subject, contactNames.get(item.contactId), channelLabel(item.channel), item.teamId ? teamNames.get(item.teamId) : null]
-      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm))));
+      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm))))
+    .sort((a, b) => sortOrder === "recent" ? b.lastMessageAt.localeCompare(a.lastMessageAt) : a.lastMessageAt.localeCompare(b.lastMessageAt));
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
   const queueCounts = useMemo(() => {
@@ -157,6 +159,7 @@ export default function Inbox() {
       <section className={styles.conversationList} aria-label="Lista de conversas">
         <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</div></header>
         {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
+        <div className={styles.listControls}><span>{filtered.length} {filtered.length === 1 ? "conversa" : "conversas"}</span><MenuButton size="sm" variant="ghost" shape="rounded" menu={<><MenuItem onClick={() => setSortOrder("recent")}>Mais recentes</MenuItem><MenuItem onClick={() => setSortOrder("oldest")}>Mais antigas</MenuItem></>}>{sortOrder === "recent" ? "Mais recentes" : "Mais antigas"}</MenuButton></div>
         <div className={styles.listBody}>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
           {!isLoading && filtered.length === 0 && <p className={styles.empty}>{searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."}</p>}
