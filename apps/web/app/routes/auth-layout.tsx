@@ -9,8 +9,8 @@ export default function AuthLayout() {
           <img className={styles.logo} src="/brand/leonardo-scapinello-ink.svg" alt="Leonardo Scapinello" />
         </a>
         <div className={styles.introCopy}>
-          <h1 className={styles.titulo}>Contatos, conversas e negócios em um só lugar.</h1>
-          <p className={styles.subtitulo}>Acompanhe o trabalho da equipe e continue de onde parou.</p>
+          <h1 className={styles.titulo}>Cada pessoa. Todo o contexto.</h1>
+          <p className={styles.subtitulo}>Atendimento, negócios e automações conectados para a sua equipe.</p>
         </div>
         <p className={styles.rodape}>© Leonardo Scapinello</p>
       </section>
