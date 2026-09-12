@@ -61,6 +61,16 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "pages:write": "Criar, editar e publicar páginas",
 };
 
+const CAPABILITY_SECTIONS = [
+  { title: "Leads", prefixes: ["contacts:", "companies:"] },
+  { title: "CRM", prefixes: ["pipelines:", "deals:", "activities:", "catalog:"] },
+  { title: "Atendimento", prefixes: ["inbox:"] },
+  { title: "Automações", prefixes: ["automations:"] },
+  { title: "Marketing e conteúdo", prefixes: ["campaigns:", "forms:", "pages:", "social:", "files:"] },
+  { title: "Integrações", prefixes: ["integrations:"] },
+  { title: "Administração", prefixes: ["users:", "permission_groups:", "audit_logs:", "settings:"] },
+] as const;
+
 export async function clientLoader() {
   const session = await restoreSession();
   if (!session) throw redirect("/login");
@@ -161,6 +171,7 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
         open={modalOpen}
         onOpenChange={setModalOpen}
         title={editingId ? "Editar grupo" : "Novo grupo"}
+        size="wide"
         confirmLabel={editingId ? "Salvar alterações" : "Criar grupo"}
         errorText="Não foi possível salvar o grupo. Confira os dados e tente novamente."
         onConfirm={save}
@@ -178,15 +189,14 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
             <p id={capabilityLabelId} className={styles.capabilityLegend}>
               Permissões
             </p>
-            {CAPABILITIES.map((capability) => (
-              <Checkbox
+            {CAPABILITY_SECTIONS.map((section) => <section key={section.title} className={styles.capabilityGroup} aria-label={section.title}>
+              <h3>{section.title}</h3>
+              {CAPABILITIES.filter((capability) => section.prefixes.some((prefix) => capability.startsWith(prefix))).map((capability) => <Checkbox
                 key={capability}
                 checked={capabilities.includes(capability)}
                 onCheckedChange={(checked) => toggleCapability(capability, checked)}
-              >
-                {CAPABILITY_LABELS[capability]}
-              </Checkbox>
-            ))}
+              >{CAPABILITY_LABELS[capability]}</Checkbox>)}
+            </section>)}
           </div>
         </div>
       </ActionModal>

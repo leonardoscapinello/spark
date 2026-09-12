@@ -57,11 +57,14 @@
 .capabilityPicker {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-5);
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   border: 0;
 }
+
+.capabilityGroup { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); }
+.capabilityGroup h3 { margin: 0 0 var(--space-1); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 
 .capabilityLegend {
   grid-column: 1 / -1;
