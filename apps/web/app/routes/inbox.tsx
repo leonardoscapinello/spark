@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { availableCannedReplies, cannedReplyId, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
-import { inboxControllerCreateCannedReply, inboxControllerSend } from "@spark/api-client";
+import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
+import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Badge, Button, Field, Icon, Input, Label, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Icon, Label, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -58,10 +58,6 @@ export default function Inbox() {
   const [note, setNote] = useState("");
   const [composerMode, setComposerMode] = useState<"reply" | "note">("note");
   const [saving, setSaving] = useState(false);
-  const [replyModalOpen, setReplyModalOpen] = useState(false);
-  const [replyTitle, setReplyTitle] = useState("");
-  const [replyShortcut, setReplyShortcut] = useState("");
-  const [replyBody, setReplyBody] = useState("");
   const contactNames = useMemo(() => new Map(contacts.map((item) => [item.id, item.name])), [contacts]);
   const userNames = useMemo(() => new Map(users.map((item) => [item.id, item.name])), [users]);
   const teamNames = useMemo(() => new Map(teams.map((item) => [item.id, item.name])), [teams]);
@@ -119,12 +115,6 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
-  async function createCannedReply() {
-    await inboxControllerCreateCannedReply({ id: cannedReplyId.create(), title: replyTitle.trim(), shortcut: replyShortcut.trim(), body: replyBody.trim(), teamId: null });
-    setReplyTitle(""); setReplyShortcut(""); setReplyBody("");
-    notify({ title: "Resposta pronta criada", description: `/${replyShortcut.trim().replace(/^\/+/, "")}`, tone: "success" });
-  }
-
   return <div className={styles.page}>
     <PageHeader eyebrow="Atendimento" title="Inbox" description="Converse com contexto, atribuição e histórico em uma única área." actions={canWrite && canReadContacts ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button> : undefined} />
     <div className={styles.workspace} data-mobile-view={mobileView}>
@@ -174,7 +164,7 @@ export default function Inbox() {
           {canWrite && <form className={styles.composer} onSubmit={submitMessage}>
             <div className={styles.composerMode}><div className={styles.modeButtons}>{(selected.channel === "email" || selected.channel === "instagram") && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
             <Textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />
-            <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Respostas prontas" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) setNote((current) => current ? `${current}\n${reply.body}` : reply.body); }} /><Button type="button" size="sm" variant="ghost" onClick={() => setReplyModalOpen(true)}>Criar resposta</Button></div>
+            <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Respostas prontas" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) setNote((current) => current ? `${current}\n${reply.body}` : reply.body); }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar respostas</Button></div>
             <div className={styles.composerFooter}><span>{note.length}/20.000</span><Button type="submit" loading={saving} disabled={!note.trim()}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button></div>
           </form>}
         </> : <div className={styles.threadEmpty}><Icon name="message" /><strong>Selecione uma conversa</strong><span>O histórico completo aparecerá aqui.</span></div>}
@@ -197,9 +187,6 @@ export default function Inbox() {
         <Field><Label>Canal de origem</Label><Select label="Canal de origem" value={newChannel} options={CHANNELS} onValueChange={(value) => { if (value) setNewChannel(value as ConversationChannel); }} /></Field>
         <Field><Label>Assunto</Label><Textarea value={newSubject} onChange={(event) => setNewSubject(event.target.value)} placeholder="Descreva o motivo do contato" rows={2} maxLength={300} /></Field>
       </div>
-    </ActionModal>
-    <ActionModal open={replyModalOpen} onOpenChange={setReplyModalOpen} title="Nova resposta pronta" confirmLabel="Criar resposta" errorText="Informe título, atalho e conteúdo." onConfirm={createCannedReply}>
-      <div className={styles.modalFields}><Field><Label>Título</Label><Input value={replyTitle} onChange={(event) => setReplyTitle(event.target.value)} placeholder="Boas-vindas" /></Field><Field><Label>Atalho</Label><Input value={replyShortcut} onChange={(event) => setReplyShortcut(event.target.value)} placeholder="boas-vindas" /></Field><Field><Label>Conteúdo</Label><Textarea value={replyBody} onChange={(event) => setReplyBody(event.target.value)} placeholder="Olá! Como posso ajudar?" rows={5} /></Field></div>
     </ActionModal>
   </div>;
 }

@@ -12,6 +12,7 @@ export default [
     index("routes/contacts.tsx"),
     route("dashboard", "routes/dashboard.tsx"),
     route("inbox", "routes/inbox.tsx"),
+    route("inbox/replies", "routes/inbox-replies.tsx"),
     route("automations", "routes/automations.tsx"),
     route("automations/:automationId", "routes/automation-builder.tsx"),
     route("integrations", "routes/integrations.tsx"),
