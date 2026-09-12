@@ -22,7 +22,7 @@ export default function Automations() {
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
   const [triggerFilter, setTriggerFilter] = useState("all");
-  const [layout, setLayout] = useState<"cards" | "table">("cards");
+  const [layout, setLayout] = useState<"cards" | "table">("table");
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canReadIntegrations = session?.capabilities.includes("integrations:read") ?? false;
@@ -35,7 +35,7 @@ export default function Automations() {
     : automations.filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch) && (triggerFilter === "all" || item.draftGraph.nodes.some((node) => node.type === "trigger" && node.data.label === triggerFilter)));
   const columns: TableColumn<Automation>[] = [
     { id: "name", label: "Automação", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><small>Atualizada {relativeTime(item.updatedAt)}</small></div>, sortValue: (item) => item.name },
-    { id: "trigger", label: "Gatilho", cell: (item) => item.draftGraph.nodes.filter((node) => node.type === "trigger").map((node) => node.data.label).join(", ") || "Não configurado", sortValue: (item) => item.draftGraph.nodes.find((node) => node.type === "trigger")?.data.label ?? "" },
+    { id: "trigger", label: "Gatilho", cell: (item) => <AutomationTriggers automation={item} />, sortValue: (item) => item.draftGraph.nodes.find((node) => node.type === "trigger")?.data.label ?? "" },
     { id: "structure", label: "Estrutura", cell: (item) => `${item.draftGraph.nodes.length} blocos · ${item.draftGraph.edges.length} conexões`, sortValue: (item) => item.draftGraph.nodes.length },
     { id: "version", label: "Versão", cell: (item) => item.publishedVersion ? `v${item.publishedVersion}` : "Ainda não publicada", sortValue: (item) => item.publishedVersion ?? 0 },
     { id: "status", label: "Situação", cell: (item) => <Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>, sortValue: (item) => item.status },
@@ -62,14 +62,18 @@ export default function Automations() {
     {layout === "table" ? <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /> : <div className={styles.cardList} aria-label="Lista de automações">
       {!isLoading && visibleAutomations.length === 0 && !firstRun && <p className={styles.empty}>{automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."}</p>}
       {visibleAutomations.map((item) => {
-        const triggers = item.draftGraph.nodes.filter((node) => node.type === "trigger");
-        return <Link key={item.id} to={`/automations/${item.id}`} className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} actions={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardBody}><div className={styles.cardTriggers}>{triggers.length ? <>{triggers.slice(0, 2).map((node) => <span key={node.id}><Icon name="bolt" />{node.data.label}</span>)}{triggers.length > 2 && <span>+{triggers.length - 2} gatilhos</span>}</> : <span>Nenhum gatilho configurado</span>}</div><div className={styles.cardMeta}><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></div></Card></Link>;
+        return <Link key={item.id} to={`/automations/${item.id}`} className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} actions={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardBody}><AutomationTriggers automation={item} /><div className={styles.cardMeta}><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></div></Card></Link>;
       })}
     </div>}</>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Qualificar leads do Instagram" maxLength={160} /></Field>
     </ActionModal>
   </PageFrame>;
+}
+
+function AutomationTriggers({ automation }: { automation: Automation }) {
+  const triggers = automation.draftGraph.nodes.filter((node) => node.type === "trigger");
+  return <div className={styles.cardTriggers}>{triggers.length ? <>{triggers.slice(0, 2).map((node) => <span key={node.id}><Icon name="bolt" />{node.data.label}</span>)}{triggers.length > 2 && <span>+{triggers.length - 2} gatilhos</span>}</> : <span>Nenhum gatilho configurado</span>}</div>;
 }
 
 function statusLabel(status: "draft" | "active" | "paused"): string { return ({ draft: "Rascunho", active: "Ativa", paused: "Pausada" })[status]; }
