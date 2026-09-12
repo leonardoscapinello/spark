@@ -6,3 +6,4 @@ export default meta;
 type Story = StoryObj<typeof Icon>;
 export const Default: Story = { render: () => (<Icon name="inbox" />) };
 export const Navigation: Story = { render: () => <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}><Icon name="user" aria-label="Leads" /><Icon name="settings" aria-label="Administração" /><Icon name="account" aria-label="Minha conta" /><Icon name="image" aria-label="Imagem" /><Icon name="text" aria-label="Texto" /></div> };
+export const Actions: Story = { render: () => <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}><Icon name="more" aria-label="Mais ações" /><Icon name="menu" aria-label="Visualização em lista" /></div> };

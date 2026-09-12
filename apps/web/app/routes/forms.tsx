@@ -59,7 +59,7 @@ export default function Forms() {
   }
 
   function formActions(item: LeadForm) { return canWrite
-    ? <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Ações de ${item.name}`} loading={busy === item.id} menu={<><MenuItem onClick={() => void navigate(`/forms/${item.id}`)}>Abrir editor</MenuItem><MenuItem onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar formulário" : "Publicar formulário"}</MenuItem></>} />
+    ? <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${item.name}`} loading={busy === item.id} menu={<><MenuItem onClick={() => void navigate(`/forms/${item.id}`)}>Abrir editor</MenuItem><MenuItem onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar formulário" : "Publicar formulário"}</MenuItem></>} />
     : <TableIconAction label={`Abrir ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />; }
 
   return <div className={styles.page}>

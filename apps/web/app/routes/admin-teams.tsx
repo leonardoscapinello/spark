@@ -124,7 +124,7 @@ export default function AdminTeams() {
       rowKey={(team) => team.id}
       rowLabel={(team) => team.name}
       emptyText={showArchived ? "Nenhum time arquivado." : firstRun ? "Os times criados aparecerão nesta tabela." : "Nenhum time criado."}
-      actions={(team) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Ações de ${team.name}`} loading={busyId === team.id} menu={<><MenuItem onClick={() => openEdit(team)}>Editar time</MenuItem><MenuItem onClick={() => void toggleArchive(team)}>{team.archivedAt ? "Restaurar time" : "Arquivar time"}</MenuItem></>} />}
+      actions={(team) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${team.name}`} loading={busyId === team.id} menu={<><MenuItem onClick={() => openEdit(team)}>Editar time</MenuItem><MenuItem onClick={() => void toggleArchive(team)}>{team.archivedAt ? "Restaurar time" : "Arquivar time"}</MenuItem></>} />}
     /></>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar time" : "Novo time"} confirmLabel={editingId ? "Salvar alterações" : "Criar time"} errorText="Não foi possível salvar o time. Revise os dados e tente novamente." onConfirm={save}>
       <div className={styles.modalFields}>

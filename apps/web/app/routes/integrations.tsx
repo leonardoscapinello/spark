@@ -224,7 +224,7 @@ export default function Integrations() {
                       {connection ? "Configurar" : "Conectar"}
                     </Button>
                     {connection && (
-                      <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Ações de ${definition.name}`} loading={checkingId === connection.id} menu={<>
+                      <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${definition.name}`} loading={checkingId === connection.id} menu={<>
                         {connection.credentialsConfigured && connection.status !== "disabled" && <MenuItem icon={<Icon name="check" />} onClick={() => void check(connection)}>Testar conexão</MenuItem>}
                         <MenuItem icon={<Icon name={connection.status === "disabled" ? "check" : "close"} />} onClick={() => void toggle(connection)}>{connection.status === "disabled" ? "Habilitar" : "Desabilitar"}</MenuItem>
                       </>} />
