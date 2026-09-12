@@ -8,6 +8,7 @@ import {
   getMfaStatus,
   removeMfaFactor,
   restoreSession,
+  signOut,
   signOutEverywhere,
   signOutOtherSessions,
   verifyMfaEnrollment,
@@ -30,6 +31,11 @@ export default function Security({ loaderData }: Route.ComponentProps) {
   const [busy, setBusy] = useState(false);
   const [removeId, setRemoveId] = useState<string | null>(null);
   const [sessionAction, setSessionAction] = useState<"others" | "global" | null>(null);
+
+  async function leaveAccount() {
+    await signOut();
+    navigate("/login", { replace: true });
+  }
 
   async function startEnrollment() {
     setBusy(true);
@@ -83,7 +89,7 @@ export default function Security({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className={styles.page}>
-      <PageHeader eyebrow="Sua conta" title="Segurança" description="Proteja o acesso com uma senha temporária gerada no seu celular." />
+      <PageHeader eyebrow="Minha conta" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." actions={<Button variant="secondary" onClick={() => void leaveAccount()}>Sair da conta</Button>} />
 
       <section className={styles.card}>
         <div className={styles.cardHeader}>

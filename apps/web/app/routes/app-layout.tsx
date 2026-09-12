@@ -1,8 +1,8 @@
-import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
+import { Link, Outlet, redirect, useLocation, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
-import { Button, Icon, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
+import { Icon, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
-import { restoreSession, signOut } from "../lib/auth.client";
+import { restoreSession } from "../lib/auth.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import styles from "./app-layout.module.css";
 
@@ -139,7 +139,6 @@ export function HydrateFallback() {
 
 export default function AppLayout({ loaderData: session }: Route.ComponentProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   const navigation = useNavigation();
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const allowed = (capability?: Capability) => !capability || session.capabilities.includes(capability);
@@ -148,13 +147,8 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     : module.sections.some((section) => section.items.some((item) => allowed(item.capability))));
   const current = moduleForPath(location.pathname);
   const showModuleTabs = current.id === "leads" || current.id === "crm" && location.pathname === "/deals";
-  const showSidebar = current.id !== "overview" && !showModuleTabs
+  const showSidebar = current.id !== "overview" && current.id !== "account" && !showModuleTabs
     && !["/automations/", "/pages/", "/forms/"].some((prefix) => location.pathname.startsWith(prefix));
-
-  async function handleSignOut() {
-    await signOut();
-    navigate("/login");
-  }
 
   function railLink(module: NavModule) {
     const active = current.id === module.id;
@@ -173,7 +167,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {railLink(accountModule)}
         </div>
       </NavigationRail>
-      {showSidebar && <Sidebar title={current.title} className={styles.sidebar} footer={current.id === "account" ? <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}><Icon name="exit" /> Sair da conta</Button> : null}>
+      {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
