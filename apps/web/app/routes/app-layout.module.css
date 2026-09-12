@@ -6,6 +6,7 @@
   height: 100dvh;
   min-height: 0;
   padding: var(--space-2);
+  padding-inline-start: 0;
   background: var(--color-ground);
   color: var(--color-ink);
 }
@@ -25,8 +26,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: var(--ui-controlLarge);
-  height: var(--ui-controlLarge);
+  width: var(--ui-controlMedium);
+  height: var(--ui-controlMedium);
   border-radius: var(--radius-md);
   color: var(--color-inkMuted);
   text-decoration: none;
@@ -225,8 +226,8 @@
 }
 
 .railPlaceholder {
-  width: var(--ui-controlLarge);
-  height: var(--ui-controlLarge);
+  width: var(--ui-controlMedium);
+  height: var(--ui-controlMedium);
   border-radius: var(--radius-md);
   background: var(--color-line);
 }

@@ -27,7 +27,7 @@
     },
     "railWidth": {
       "$type": "dimension",
-      "$value": "44px"
+      "$value": "36px"
     },
     "sidebarWidth": {
       "$type": "dimension",
