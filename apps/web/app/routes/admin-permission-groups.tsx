@@ -39,7 +39,7 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   "deals:move": "Mover negócios entre etapas",
   "activities:read": "Ver atividades",
   "activities:write": "Criar e concluir atividades",
-  "inbox:read": "Ver conversas do Inbox",
+  "inbox:read": "Ver conversas de atendimento",
   "inbox:write": "Criar, atribuir e responder conversas",
   "automations:read": "Ver automações",
   "automations:write": "Criar e editar automações",

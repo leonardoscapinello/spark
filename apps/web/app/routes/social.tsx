@@ -237,7 +237,7 @@ export default function Social() {
                 { value: "queue", label: "Próximo horário da fila" },
                 { value: "schedule", label: "Data e hora específicas" },
                 { value: "now", label: "Agora" },
-                { value: "draft", label: "Salvar como rascunho no Spark" },
+                { value: "draft", label: "Salvar como rascunho" },
               ]}
               onValueChange={(value) => setPublishMode((value ?? "queue") as SocialPublishMode)}
             />

@@ -456,7 +456,7 @@ function IntegrationFields({
           <Label>ID da organização no Buffer</Label>
           <Input
             value={text(config.organizationId)}
-            placeholder="Opcional: o Spark descobre automaticamente"
+            placeholder="Opcional: preenchimento automático"
             onChange={(event) => publicField("organizationId", event.target.value)}
           />
         </Field>
