@@ -6,6 +6,7 @@ import type { LeadFormField } from "@spark/core";
 import {
   Badge,
   Button,
+  EmptyState,
   Field,
   Icon,
   Input,
@@ -13,6 +14,7 @@ import {
   LeadFormRenderer,
   PageHeader,
   Select,
+  Skeleton,
   Switch,
   Textarea,
   notify,
@@ -31,7 +33,7 @@ export default function FormBuilder() {
   const navigate = useNavigate();
   const session = getSession();
   const canWrite = session?.capabilities.includes("forms:write") ?? false;
-  const { data: forms } = useLiveQuery({
+  const { data: forms, isLoading } = useLiveQuery({
     query: (q) => q.from({ forms: getLeadFormsCollection() }),
   });
   const form = forms.find((item) => item.id === formId);
@@ -54,7 +56,8 @@ export default function FormBuilder() {
   if (!form)
     return (
       <div className={styles.page}>
-        <PageHeader eyebrow="Formulários" title="Carregando…" />
+        <PageHeader eyebrow="Formulários" title="Editor de formulário" />
+        {isLoading ? <div className={styles.loading} role="status" aria-label="Carregando formulário"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="file" title="Formulário não encontrado" description="Este formulário não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/forms")}>Ver formulários</Button>} />}
       </div>
     );
   const selectedForm = form;

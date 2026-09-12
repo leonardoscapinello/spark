@@ -1,4 +1,6 @@
 .page { display: grid; gap: var(--space-5); padding: var(--space-8); min-width: 0; }
+.loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
+.loading > :first-child { width: var(--ui-menuWidth); }
 .headerActions,.fieldCardHeader > div { display: flex; align-items: center; gap: var(--space-2); }
 .status { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 .status code { overflow: hidden; color: var(--color-inkMuted); text-overflow: ellipsis; white-space: nowrap; }
