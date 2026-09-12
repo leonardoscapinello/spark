@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { pagesControllerCreate } from "@spark/api-client";
 import { pageId, type Page } from "@spark/core";
-import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getPagesCollection } from "../lib/pages-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -17,7 +17,10 @@ export async function clientLoader() {
 
 export default function Pages() {
   const navigate = useNavigate();
-  const canWrite = getSession()?.capabilities.includes("pages:write") ?? false;
+  const capabilities = getSession()?.capabilities ?? [];
+  const canWrite = capabilities.includes("pages:write");
+  const canReadForms = capabilities.includes("forms:read");
+  const canReadFiles = capabilities.includes("files:read");
   const { data: pages, isLoading } = useLiveQuery({ query: (q) => q.from({ pages: getPagesCollection() }).orderBy(({ pages: item }) => item.updatedAt, "desc") });
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -45,18 +48,23 @@ export default function Pages() {
 
   return <div className={styles.page}>
     <PageHeader icon="page" title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
-    {firstRun && <EmptyState variant="featured" icon="page" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
-      <><CollectionToolbar
+    {firstRun && <EmptyState variant="featured" icon="page" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." />}
+    {firstRun && (canWrite || canReadForms || canReadFiles) && <ActionCardGroup title="Prepare sua página">
+      {canWrite && <ActionCard icon="page" title="Comece pelo layout" description="Crie a página e organize os blocos no editor." action={<Button variant="secondary" onClick={() => setOpen(true)}>Nova página</Button>} />}
+      {canReadForms && <ActionCard icon="form" title="Capture respostas" description="Use um formulário para receber novos contatos pela página." action={<Button variant="secondary" onClick={() => void navigate("/forms")}>Abrir formulários</Button>} />}
+      {canReadFiles && <ActionCard icon="folder" title="Prepare os arquivos" description="Encontre imagens e documentos para usar no conteúdo." action={<Button variant="secondary" onClick={() => void navigate("/files")}>Abrir arquivos</Button>} />}
+    </ActionCardGroup>}
+      {!firstRun && <><CollectionToolbar
         search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select appearance="filter" label="Filtrar páginas por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "página" : "páginas"}`}
         actions={<ViewSwitcher label="Visualização das páginas" value={layout} onValueChange={setLayout} />}
       />
-      {layout === "table" ? <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText={firstRun ? "As páginas criadas aparecerão nesta tabela." : "Nenhuma página encontrada."} actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} /> : <div className={styles.cardGrid} aria-label="Páginas">
+      {layout === "table" ? <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText="Nenhuma página encontrada." actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} /> : <div className={styles.cardGrid} aria-label="Páginas">
         {isLoading && !pages.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && filtered.length === 0 && !firstRun && <p className={styles.empty}>Nenhuma página encontrada.</p>}
         {filtered.map((item) => <Card key={item.id} title={item.name} description={`Identificador: ${item.slug}`} actions={pageStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizada {formatDate(item.updatedAt)}</span><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} /></div>}><div className={styles.cardMeta}><Icon name="page" /><span>{item.status === "published" ? "Página disponível para visitantes" : item.status === "archived" ? "Página arquivada" : "Página em edição"}</span></div></Card>)}
-      </div>}</>
+      </div>}</>}
     <ActionModal open={open} onOpenChange={setOpen} title="Nova página" confirmLabel="Criar e editar" errorText="Informe nome e endereço válidos." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Landing de campanha" onChange={(event) => { setName(event.target.value); if (!slug) setSlug(toSlug(event.target.value)); }} /></Field>
