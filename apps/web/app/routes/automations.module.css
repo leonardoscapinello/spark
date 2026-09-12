@@ -21,5 +21,4 @@
 .cardTriggers + .cardMeta { padding-top: var(--space-2); border-top: var(--ui-hairline) solid var(--color-line); }
 .cardMeta span { display: inline-flex; align-items: center; gap: var(--space-1); }
 .cardMeta svg { width: var(--ui-icon); height: var(--ui-icon); color: var(--color-accent); }
-.cardLoading { display: block; height: var(--ui-textareaHeight); border-radius: var(--radius-md); }
 .empty { margin: 0; padding: var(--space-8); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }
