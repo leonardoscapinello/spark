@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionModal, Button, Field, Input, Label, RecordHero, SearchSelect, Select, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, Field, Input, Label, RecordHero, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -31,7 +31,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
   const companiesCollection = getCompaniesCollection();
   const contactsCollection = getContactsCollection();
   const dealsCollection = getDealsCollection();
-  const { data: company } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).where(({ companies: item }) => eq(item.id, params.companyId)).findOne() });
+  const { data: company, isLoading } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).where(({ companies: item }) => eq(item.id, params.companyId)).findOne() });
   const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") });
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
@@ -110,7 +110,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 
-  if (!company) return <div className={styles.page}><Link className={styles.back} to="/companies">← Empresas</Link><p>Empresa não encontrada.</p></div>;
+  if (!company) return <div className={styles.page}><Link className={styles.back} to="/companies">← Empresas</Link>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</div>;
 
   return <div className={styles.page}>
     <Link className={styles.back} to="/companies">← Empresas</Link>
