@@ -1,4 +1,4 @@
-.page { display: grid; gap: var(--space-5); padding: var(--space-8); min-width: 0; }
+.page { gap: var(--space-5); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
 .headerActions,.fieldCardHeader > div { display: flex; align-items: center; gap: var(--space-2); }
@@ -27,4 +27,4 @@
   .editor { padding-right: 0; }
   .preview { position: static; padding: var(--space-4) 0; border-left: 0; border-top: 0; }
 }
-@media (max-width: 720px) { .page { padding: var(--space-4); } .columns { grid-template-columns: 1fr; } .headerActions { flex-wrap: wrap; } }
+@media (max-width: 720px) { .columns { grid-template-columns: 1fr; } .headerActions { flex-wrap: wrap; } }

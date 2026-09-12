@@ -13,6 +13,7 @@ import {
   Label,
   LeadFormRenderer,
   PageHeader,
+  PageFrame,
   PublicationStatus,
   SegmentedControl,
   Select,
@@ -60,10 +61,10 @@ export default function FormBuilder() {
   }, [form]);
   if (!form)
     return (
-      <div className={styles.page}>
+      <PageFrame className={styles.page}>
         <PageHeader back={<BackLink render={<Link to="/forms" />}>Formulários</BackLink>} eyebrow="Formulários" title="Editor de formulário" />
         {isLoading ? <div className={styles.loading} role="status" aria-label="Carregando formulário"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="file" title="Formulário não encontrado" description="Este formulário não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/forms")}>Ver formulários</Button>} />}
-      </div>
+      </PageFrame>
     );
   const selectedForm = form;
   function updateField(index: number, patch: Partial<LeadFormField>) {
@@ -135,7 +136,7 @@ export default function FormBuilder() {
     setPreviewSubmitted(false);
   }
   return (
-    <div className={styles.page}>
+    <PageFrame className={styles.page}>
       <PageHeader
         back={<BackLink render={<Link to="/forms" />}>Formulários</BackLink>}
         title={form.name}
@@ -359,6 +360,6 @@ export default function FormBuilder() {
           />
         </aside>
       </div>
-    </div>
+    </PageFrame>
   );
 }
