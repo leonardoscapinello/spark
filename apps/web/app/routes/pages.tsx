@@ -45,8 +45,8 @@ export default function Pages() {
 
   return <div className={styles.page}>
     <PageHeader icon="file" title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
-    {firstRun && <EmptyState variant="onboarding" icon="file" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
-      {!firstRun && <><CollectionToolbar
+    {firstRun && <EmptyState variant="featured" icon="file" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
+      <><CollectionToolbar
         search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select label="Filtrar páginas por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "página" : "páginas"}`}
@@ -56,7 +56,7 @@ export default function Pages() {
         {isLoading && !pages.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhuma página encontrada.</p>}
         {filtered.map((item) => <Card key={item.id} title={item.name} description={`/${item.slug}`} actions={pageStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizada {formatDate(item.updatedAt)}</span><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} /></div>}><div className={styles.cardMeta}><Icon name="file" /><span>{item.status === "published" ? "Página disponível para visitantes" : item.status === "archived" ? "Página arquivada" : "Página em edição"}</span></div></Card>)}
-      </div>}</>}
+      </div>}</>
     <ActionModal open={open} onOpenChange={setOpen} title="Nova página" confirmLabel="Criar e editar" errorText="Informe nome e endereço válidos." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Landing de campanha" onChange={(event) => { setName(event.target.value); if (!slug) setSlug(toSlug(event.target.value)); }} /></Field>
