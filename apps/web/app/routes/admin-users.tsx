@@ -140,19 +140,18 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
 
       {lastInvited && <p className={styles.feedback} role="status">Convite enviado para {lastInvited}.</p>}
       {actionError && <p className={styles.error} role="alert">{actionError}</p>}
-      {loadError && <div className={styles.loadError} role="alert"><span>Não foi possível carregar os usuários.</span><Button size="sm" variant="secondary" onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button></div>}
-
       <CollectionToolbar
         search={<Input aria-label="Buscar usuários" placeholder="Buscar por nome ou e-mail" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select label="Filtrar usuários por acesso" value={statusFilter} options={[{ value: "all", label: "Todos os acessos" }, { value: "active", label: "Ativos" }, { value: "pending", label: "Convite enviado" }, { value: "disabled", label: "Desativados" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
-        count={`${filteredUsers.length} ${filteredUsers.length === 1 ? "usuário" : "usuários"}`}
+        count={loading ? "Carregando usuários…" : loadError ? "Usuários indisponíveis" : `${filteredUsers.length} ${filteredUsers.length === 1 ? "usuário" : "usuários"}`}
       />
 
       <DataTable
         label="Usuários da organização"
         rows={filteredUsers}
         columns={columns}
-        state={loading ? "loading" : "ready"}
+        state={loading ? "loading" : loadError ? "error" : "ready"}
+        onRetry={() => { setLoading(true); setReloadKey((value) => value + 1); }}
         rowKey={(user) => user.id}
         rowLabel={(user) => user.name}
         actions={(user) => (
