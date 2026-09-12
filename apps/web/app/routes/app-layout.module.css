@@ -52,7 +52,9 @@
 }
 
 .railLink[data-pending],
-.sidebar a[data-pending] {
+.sidebar a[data-pending],
+.railLink:active,
+.sidebar a:active {
   color: var(--color-accent);
   background: var(--color-accentWash);
 }
@@ -147,7 +149,8 @@
 }
 
 .moduleTab[aria-current="page"],
-.moduleTab[data-pending] {
+.moduleTab[data-pending],
+.moduleTab:active {
   border-bottom-color: var(--color-accent);
   color: var(--color-ink);
 }
