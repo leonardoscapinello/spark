@@ -59,7 +59,8 @@ export default function Dashboard() {
   ];
 
   return <div className={styles.page}>
-    <PageHeader title="Visão geral" description="Acompanhe o desempenho comercial e identifique o que precisa de atenção." actions={<div className={styles.period}><Select label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>} />
+    <PageHeader title="Visão geral" actions={<div className={styles.period}><Select label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>} />
+    {!loading && !hasRecords && <EmptyState variant="onboarding" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canReadContacts ? <Button onClick={() => void navigate("/")}>Ir para Leads</Button> : undefined} />}
     <div className={styles.sectionHeading}><h2>Desempenho comercial</h2><span>Indicadores do período selecionado</span></div>
     <DashboardGrid metrics>
       {canReadContacts && <Link className={styles.metricLink} to="/" prefetch="intent"><MetricCard title="Contatos ativos" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} /></Link>}
@@ -67,7 +68,7 @@ export default function Dashboard() {
       {canReadActivities && <Link className={styles.metricLink} to="/activities" prefetch="intent"><MetricCard title="Atividades atrasadas" value={snapshot.overdueActivities} comparison="Pendências anteriores a hoje" sentiment={snapshot.overdueActivities > 0 ? "negative" : "positive"} state={loadingActivities ? "loading" : "ready"} /></Link>}
       {canReadActivities && <Link className={styles.metricLink} to="/activities" prefetch="intent"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
     </DashboardGrid>
-    {!loading && !hasRecords ? <EmptyState icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canReadContacts ? <Button onClick={() => void navigate("/")}>Ir para Leads</Button> : undefined} /> : <>
+    {(loading || hasRecords) && <>
       <div className={styles.sectionHeading}><h2>Movimento no período</h2><span>Novos registros e atividades por dia</span></div>
       <DashboardGrid>
         <DataChart title="Evolução diária" description="Contatos, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : "ready"} />
