@@ -170,6 +170,11 @@ export default function Inbox() {
       : <Button onClick={() => navigate("/")}>Adicionar contato</Button>;
   }
 
+  function openConversationOrContact() {
+    if (contacts.length > 0) setNewConversationOpen(true);
+    else void navigate("/");
+  }
+
   function renderDetails() {
     if (!selected) return null;
     const contact = contacts.find((item) => item.id === selected.contactId);
@@ -186,7 +191,8 @@ export default function Inbox() {
   }
 
   return <div className={styles.page}>
-    <Sidebar title="Atendimento" className={styles.queueSidebar}>
+    <Sidebar title="Atendimento" className={styles.queueSidebar} actions={canWrite && canReadContacts ? <Button iconOnly size="sm" variant="ghost" aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar contato"} onClick={openConversationOrContact}><Icon name="plus" /></Button> : undefined}>
+      <Button variant="ghost" size="sm" shape="rounded" className={styles.queueSearch} icon={<Icon name="search" />} onClick={() => setSearchOpen(true)}>Buscar conversas</Button>
       <SidebarSection title="Caixas">
         {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} onClick={() => setMobileView("list")} />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
       </SidebarSection>
@@ -204,7 +210,7 @@ export default function Inbox() {
     </div>
     <div className={styles.workspace} data-layout={layout} data-preview-open={layout === "table" && selectedId && selected ? "true" : "false"} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"} data-first-run={firstRun ? "true" : undefined}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
-        <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</div></header>
+        <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" className={styles.mobileCreate} aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar contato"} onClick={openConversationOrContact}><Icon name="plus" /></Button>}</div></header>
         {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
         <div className={styles.listControls}><span>{filtered.length} {filtered.length === 1 ? "conversa" : "conversas"}</span><div className={styles.listControlActions}><div className={styles.layoutSwitch} role="group" aria-label="Formato das conversas"><Button iconOnly size="sm" variant={layout === "chat" ? "raised" : "ghost"} aria-label="Visualização de conversa" aria-pressed={layout === "chat"} onClick={() => setLayout("chat")}><Icon name="message" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>{layout === "chat" && <MenuButton size="sm" variant="ghost" shape="rounded" menu={<><MenuItem onClick={() => setSortOrder("recent")}>Mais recentes</MenuItem><MenuItem onClick={() => setSortOrder("oldest")}>Mais antigas</MenuItem></>}>{sortOrder === "recent" ? "Mais recentes" : "Mais antigas"}</MenuButton>}</div></div>
         <div className={styles.listBody}>
