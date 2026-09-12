@@ -186,7 +186,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
       await transaction.isPersisted.promise;
       setActivityTitle("");
       setScheduledAt("");
-      notify({ title: "Atividade agendada", description: `${title} foi adicionada ao contato.`, tone: "success" });
+      notify({ title: "Atividade agendada", description: `${title} foi adicionada à pessoa.`, tone: "success" });
     } catch {
       notify({ title: "Não foi possível agendar", description: "Tente novamente em instantes.", tone: "error" });
     } finally {
@@ -253,7 +253,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
     return (
       <div className={layout.page}>
         <BackLink render={<Link to="/" />}>Pessoas</BackLink>
-        {isLoading ? <div className={layout.loading} role="status" aria-label="Carregando contato"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Contato não encontrado.</p>}
+        {isLoading ? <div className={layout.loading} role="status" aria-label="Carregando pessoa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Pessoa não encontrada.</p>}
       </div>
     );
   }
@@ -334,7 +334,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Empresa</span>
-          <Select label="Empresa do contato" value={data.companyId} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} disabled={!canWrite || !canReadCompanies || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("companyId", value)} />
+          <Select label="Empresa da pessoa" value={data.companyId} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} disabled={!canWrite || !canReadCompanies || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("companyId", value)} />
         </div>
       </div>
 

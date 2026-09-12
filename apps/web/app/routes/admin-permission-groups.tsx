@@ -31,8 +31,8 @@ import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-permission-groups.module.css";
 
 const CAPABILITY_LABELS: Record<Capability, string> = {
-  "contacts:read": "Ver contatos",
-  "contacts:write": "Criar e editar contatos",
+  "contacts:read": "Ver pessoas",
+  "contacts:write": "Criar e editar pessoas",
   "companies:read": "Ver empresas",
   "companies:write": "Criar e editar empresas",
   "users:manage": "Gerenciar usuários",

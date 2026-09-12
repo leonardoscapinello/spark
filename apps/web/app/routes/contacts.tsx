@@ -178,7 +178,7 @@ export default function Contacts() {
         <Field><Label>Etapa</Label><Select label="Etapa do relacionamento" value={leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) setLeadStatus(value as LeadStatus); }} /></Field>
         <Field><Label>Origem</Label><Select label="Origem do lead" value={source} options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => setSource(value ?? "manual")} /></Field>
         <Field><Label>Responsável</Label><Select label="Responsável pelo lead" value={ownerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
-        <Field><Label>Empresa</Label><Select label="Empresa do contato" value={companyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
+        <Field><Label>Empresa</Label><Select label="Empresa da pessoa" value={companyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
       </form>
     </ActionModal>
   </PageFrame>;

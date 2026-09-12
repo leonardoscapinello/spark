@@ -11,7 +11,7 @@ const meta: StoryMeta<typeof RecordHero> = {
     title: "Acme Brasil",
     description: "Acme Serviços Ltda.",
     actions: <Button variant="secondary">Editar empresa</Button>,
-    metrics: [{ label: "Contatos", value: 12 }, { label: "Negócios", value: 4 }, { label: "Valor em aberto", value: "R$ 85.000,00" }],
+    metrics: [{ label: "Pessoas", value: 12 }, { label: "Negócios", value: 4 }, { label: "Valor em aberto", value: "R$ 85.000,00" }],
   },
 };
 export default meta;

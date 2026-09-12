@@ -67,10 +67,10 @@ export default function Forms() {
 
   return <PageFrame className={styles.page}>
     <PageHeader icon="form" title="Formulários" actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
-    {firstRun && <EmptyState variant="featured" icon="form" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
+    {firstRun && <EmptyState variant="featured" icon="form" title="Crie seu primeiro formulário" description="Capture pessoas com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
     {firstRun && (canReadPages || canReadContacts) && <ActionCardGroup title="Prepare a captação">
       {canReadPages && <ActionCard icon="page" title="Use em uma página" description="Coloque o formulário em uma página de captação." action={<Button variant="secondary" onClick={() => void navigate("/pages")}>Abrir páginas</Button>} />}
-      {canReadContacts && <ActionCard icon="team" title="Acompanhe contatos" description="Veja as pessoas que chegam pelos seus formulários." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir contatos</Button>} />}
+      {canReadContacts && <ActionCard icon="team" title="Acompanhe pessoas" description="Veja as pessoas que chegam pelos seus formulários." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir pessoas</Button>} />}
     </ActionCardGroup>}
       {!firstRun && <><CollectionToolbar
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}

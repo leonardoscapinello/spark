@@ -50,7 +50,7 @@ export default function Pages() {
     <PageHeader icon="page" title="Páginas" actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="page" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
     {firstRun && (canReadForms || canReadFiles) && <ActionCardGroup title="Prepare sua página">
-      {canReadForms && <ActionCard icon="form" title="Capture respostas" description="Use um formulário para receber novos contatos pela página." action={<Button variant="secondary" onClick={() => void navigate("/forms")}>Abrir formulários</Button>} />}
+      {canReadForms && <ActionCard icon="form" title="Capture respostas" description="Use um formulário para receber novas pessoas pela página." action={<Button variant="secondary" onClick={() => void navigate("/forms")}>Abrir formulários</Button>} />}
       {canReadFiles && <ActionCard icon="folder" title="Prepare os arquivos" description="Encontre imagens e documentos para usar no conteúdo." action={<Button variant="secondary" onClick={() => void navigate("/files")}>Abrir arquivos</Button>} />}
     </ActionCardGroup>}
       {!firstRun && <><CollectionToolbar

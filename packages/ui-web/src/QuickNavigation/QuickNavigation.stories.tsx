@@ -4,7 +4,7 @@ import { Button } from "../Button/Button.js";
 import { QuickNavigation, type QuickNavigationItem } from "./QuickNavigation.js";
 
 const items: QuickNavigationItem[] = [
-  { id: "contacts", label: "Contatos", group: "Leads", icon: "user" },
+  { id: "contacts", label: "Pessoas", group: "Leads", icon: "user" },
   { id: "companies", label: "Empresas", group: "Leads", icon: "building" },
   { id: "deals", label: "Negócios", group: "CRM", icon: "briefcase" },
   { id: "activities", label: "Atividades", group: "CRM", icon: "calendar" },

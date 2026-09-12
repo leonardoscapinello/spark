@@ -29,7 +29,7 @@ function MultipleFilters() {
   const [owner, setOwner] = useState("all");
   const [period, setPeriod] = useState("week");
   return <CollectionToolbar
-    search={<Input aria-label="Buscar contatos" startAdornment={<Icon name="search" />} placeholder="Buscar contatos" />}
+    search={<Input aria-label="Buscar pessoas" startAdornment={<Icon name="search" />} placeholder="Buscar pessoas" />}
     filters={<>
       <Select appearance="filter" label="Etapa" value={stage} options={[{ value: "all", label: "Todas as etapas" }, { value: "new", label: "Novos leads" }]} onValueChange={(value) => setStage(value ?? "all")} />
       <Select appearance="filter" label="Responsável" value={owner} options={[{ value: "all", label: "Todos os responsáveis" }, { value: "mine", label: "Meus contatos" }]} onValueChange={(value) => setOwner(value ?? "all")} />
