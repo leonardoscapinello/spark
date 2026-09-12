@@ -100,11 +100,11 @@ export default function Companies() {
   }
 
   return <div className={styles.page}>
-    <PageHeader icon="building" title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} description={visibility === "archived" ? "Organizações fora da base ativa que você pode restaurar." : "Organize os contatos por empresa e acompanhe seus negócios."} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
+    <PageHeader icon="building" title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
     {firstRun && <EmptyState variant="onboarding" icon="building" title="Cadastre sua primeira empresa" description="Vincule contatos e negócios à organização para acompanhar o relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
     {!firstRun && <><CollectionToolbar
       search={<Input aria-label="Buscar empresas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />}
-      filters={<Select label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
+      filters={<Select appearance="filter" label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
       count={`${filtered.length} ${filtered.length === 1 ? "empresa" : "empresas"}`}
     />
     <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} emptyText="Nenhuma empresa neste filtro." actions={(company) => <><TableIconAction label="Abrir empresa" icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busyId === company.id} onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</Button>}</>} /></>}
