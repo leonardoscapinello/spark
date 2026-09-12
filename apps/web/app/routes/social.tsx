@@ -24,6 +24,7 @@ import {
   Input,
   Label,
   PageHeader,
+  PageFrame,
   Select,
   Textarea,
   notify,
@@ -175,7 +176,7 @@ export default function Social() {
   }
 
   return (
-    <div className={styles.page}>
+    <PageFrame className={styles.page}>
       <PageHeader
         icon={channelView ? "team" : "calendar"}
         title={channelView ? "Canais conectados" : "Publicações"}
@@ -198,7 +199,7 @@ export default function Social() {
       </div>}
       {firstRun && (channelView
         ? <EmptyState variant="featured" icon="message" title="Conecte suas redes sociais" description="Conecte um provedor em Integrações e sincronize suas contas para publicar aqui." action={canReadIntegrations ? <Button onClick={() => void navigate("/integrations")}>Abrir integrações</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" loading={syncing} onClick={() => void syncChannels()}>Sincronizar canais</Button> : undefined} />
-        : <EmptyState variant="featured" icon="calendar" title={activeChannels.length ? "Planeje sua primeira publicação" : "Conecte um canal para começar"} description={activeChannels.length ? "Escreva uma publicação, escolha um canal e defina quando ela deve sair." : "Depois de conectar uma conta social, você poderá agendar e acompanhar as publicações aqui."} action={!canReadIntegrations && !canWrite ? <Button variant="secondary" onClick={() => setSearchParams({ view: "channels" })}>Ver canais</Button> : undefined} />)}
+        : <EmptyState variant="featured" icon="calendar" title={activeChannels.length ? "Planeje sua primeira publicação" : "Conecte um canal para começar"} description={activeChannels.length ? "Escreva uma publicação, escolha um canal e defina quando ela deve sair." : "Depois de conectar uma conta social, você poderá agendar e acompanhar as publicações aqui."} action={canWrite && activeChannels.length ? <Button onClick={() => setComposerOpen(true)}>Nova publicação</Button> : !canReadIntegrations && !canWrite ? <Button variant="secondary" onClick={() => setSearchParams({ view: "channels" })}>Ver canais</Button> : undefined} />)}
       {!channelView && firstRun && (canReadIntegrations || canWrite) && <ActionCardGroup title="Prepare suas publicações">
         {canReadIntegrations && <ActionCard icon="message" title="Conecte suas redes" description="Vincule as contas que sua equipe usa para publicar." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Abrir integrações</Button>} />}
         {canWrite && <ActionCard icon="team" title="Sincronize os canais" description="Atualize as contas disponíveis para a equipe." action={<Button variant="secondary" loading={syncing} onClick={() => void syncChannels()}>Sincronizar canais</Button>} />}
@@ -286,7 +287,7 @@ export default function Social() {
           )}
         </div>
       </ActionModal>
-    </div>
+    </PageFrame>
   );
 }
 
