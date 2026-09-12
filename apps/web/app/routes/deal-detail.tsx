@@ -24,7 +24,7 @@ import {
   Input,
   Label,
   MoneyInput,
-  PageHeader,
+  RecordHero,
   SearchSelect,
   Select,
   Textarea,
@@ -210,21 +210,16 @@ export default function DealDetail({ params }: Route.ComponentProps) {
 
   return <div className={styles.page}>
     <Link className={styles.back} to="/deals">← Negócios</Link>
-    <PageHeader
+    <RecordHero
+      icon="briefcase"
       eyebrow={`${pipeline?.name ?? "Funil"} · ${stage?.name ?? "Etapa"}`}
       title={deal.name}
       description={`Criado em ${formatDateTime(deal.createdAt)} · atualizado em ${formatDateTime(deal.updatedAt)}`}
       actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar negócio</Button> : undefined}
+      metrics={[{ label: "Valor", value: formatBRL(syncedAmount(deal.amount)) }, { label: "Situação", value: statusLabel(deal.status), ...(deal.status === "won" ? { tone: "success" as const } : deal.status === "lost" ? { tone: "danger" as const } : {}) }, { label: "Previsão", value: deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão" }]}
     />
 
-    <div className={styles.summary}>
-      <div><span>Valor</span><strong>{formatBRL(syncedAmount(deal.amount))}</strong></div>
-      <div><span>Situação</span><strong data-status={deal.status}>{statusLabel(deal.status)}</strong></div>
-      <div><span>Previsão</span><strong>{deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"}</strong></div>
-    </div>
-
-    <div className={styles.layout}>
-      <main className={styles.main}>
+    <main className={styles.contentGrid}>
         {editing ? <form className={styles.editForm} onSubmit={saveDeal}>
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
@@ -243,19 +238,17 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         </section>}
 
         <section className={styles.activities}>
-          <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas neste negócio.</p></div></div>
-          <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />
-        </section>
-
-        <section className={styles.activities}>
           <div className={styles.sectionHeader}><div><h2>Atividades</h2><p>Próximos passos e histórico operacional deste negócio.</p></div>{canWriteActivities && <Button size="sm" onClick={() => setActivityModalOpen(true)}>Nova atividade</Button>}</div>
           {orderedActivities.length === 0 ? <div className={styles.empty}>Nenhuma atividade vinculada a este negócio.</div> : <ul className={styles.activityList}>{orderedActivities.map((activity) => <li key={activity.id} data-completed={activity.completed}>
             <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.notes && <p>{activity.notes}</p>}<time>{formatDateTime(activity.scheduledAt)}</time></div>
             {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>}
           </li>)}</ul>}
         </section>
-      </main>
-    </div>
+        <section className={styles.activities}>
+          <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas neste negócio.</p></div></div>
+          <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />
+        </section>
+    </main>
 
     <ActionModal open={activityModalOpen} onOpenChange={(open) => setActivityModalOpen(open)} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha título, tipo, data e hora." onConfirm={createActivity}>
       <div className={styles.modalFields}>
