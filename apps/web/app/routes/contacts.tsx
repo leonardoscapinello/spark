@@ -140,7 +140,7 @@ export default function Contacts() {
   }
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Relacionamento" title="Contatos" description="Consulte e cadastre as pessoas que sua equipe acompanha." actions={canWrite ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Novo contato</Button></> : undefined} />
+    <PageHeader title="Contatos" description="Pessoas e oportunidades em um só lugar." actions={canWrite ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Novo contato</Button></> : undefined} />
     <div className={styles.toolbar}>
       <div className={styles.search}><Icon name="search" /><Input aria-label="Buscar contatos" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" /></div>
       <div className={styles.filters}>

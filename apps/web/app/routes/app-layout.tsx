@@ -13,18 +13,23 @@ const modules: NavModule[] = [
     { title: "Visão geral", items: [{ label: "Painel", to: "/dashboard", icon: "chart" }] },
   ] },
   { id: "leads", title: "Leads", icon: "user", to: "/", sections: [
-    { title: "Pessoas", items: [
+    { title: "Base de leads", items: [
       { label: "Contatos", to: "/", icon: "team", capability: "contacts:read" },
+      { label: "Empresas", to: "/companies", icon: "building", capability: "companies:read" },
+    ] },
+    { title: "Entrada", items: [
       { label: "Importar contatos", to: "/contacts/import", icon: "upload", capability: "contacts:write" },
     ] },
   ] },
   { id: "crm", title: "CRM", icon: "briefcase", to: "/deals", sections: [
-    { title: "Vendas", items: [
+    { title: "Operação comercial", items: [
       { label: "Negócios", to: "/deals", icon: "briefcase", capability: "deals:read" },
-      { label: "Empresas", to: "/companies", icon: "building", capability: "companies:read" },
       { label: "Atividades", to: "/activities", icon: "calendar", capability: "activities:read" },
     ] },
-    { title: "Recursos", items: [{ label: "Catálogo", to: "/catalog", icon: "file", capability: "catalog:read" }] },
+    { title: "Oferta", items: [
+      { label: "Produtos", to: "/catalog?view=products", icon: "file", capability: "catalog:read" },
+      { label: "Ofertas e descontos", to: "/catalog?view=discounts", icon: "bolt", capability: "catalog:read" },
+    ] },
   ] },
   { id: "inbox", title: "Conversas", icon: "inbox", to: "/inbox", sections: [
     { title: "Atendimento", items: [
@@ -63,15 +68,20 @@ const accountModule: NavModule = { id: "account", title: "Minha conta", icon: "u
   { title: "Conta", items: [{ label: "Segurança", to: "/security", icon: "settings" }] },
 ] };
 
-function pathMatches(pathname: string, to: string) {
-  return to === "/" ? pathname === "/" || pathname.startsWith("/contacts/") && pathname !== "/contacts/import" : pathname === to || pathname.startsWith(`${to}/`);
+function pathMatches(pathname: string, to: string, search = "") {
+  const [route, query] = to.split("?");
+  if (route === "/") return pathname === "/" || pathname.startsWith("/contacts/") && pathname !== "/contacts/import";
+  const routeMatches = pathname === route || pathname.startsWith(`${route}/`);
+  if (!query) return routeMatches;
+  const selectedView = new URLSearchParams(search).get("view") ?? "products";
+  return routeMatches && selectedView === new URLSearchParams(query).get("view");
 }
 
 function moduleForPath(pathname: string): NavModule {
   if (pathname === "/security") return accountModule;
   if (pathname.startsWith("/admin/") || pathname === "/integrations" || pathname === "/settings") return modules[6]!;
-  if (pathname.startsWith("/contacts/") || pathname === "/") return modules[1]!;
-  if (["/deals", "/companies", "/activities", "/catalog"].some((route) => pathMatches(pathname, route))) return modules[2]!;
+  if (pathname.startsWith("/contacts/") || pathname === "/" || pathname.startsWith("/companies")) return modules[1]!;
+  if (["/deals", "/activities", "/catalog"].some((route) => pathMatches(pathname, route))) return modules[2]!;
   if (pathname.startsWith("/inbox")) return modules[3]!;
   if (pathname.startsWith("/automations")) return modules[4]!;
   if (["/campaigns", "/pages", "/forms", "/social", "/files"].some((route) => pathMatches(pathname, route))) return modules[5]!;
@@ -123,7 +133,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
-          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} />} active={pathMatches(location.pathname, item.to)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return current.sections.length === 1
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
