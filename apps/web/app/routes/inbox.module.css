@@ -7,10 +7,9 @@
 .workspace[data-layout="table"] .thread,.workspace[data-layout="table"] .details { display: none; }
 .workspace[data-layout="table"][data-preview-open="true"] { grid-template-columns: minmax(0, 1.3fr) minmax(var(--ui-cardMinWidth), .7fr); }
 .workspace[data-layout="table"][data-preview-open="true"] .thread { display: flex; }
-.workspace[data-first-run="true"] { grid-template-columns: minmax(0, 1fr); }
-.workspace[data-first-run="true"] .thread,.workspace[data-first-run="true"] .listControls { display: none; }
-.workspace[data-first-run="true"][data-mobile-view] .conversationList { display: flex; }
-.workspace[data-first-run="true"][data-layout][data-mobile-view] .thread { display: none; }
+.workspace[data-first-run="true"] { grid-template-columns: minmax(var(--ui-menuWidth), var(--ui-previewColumn)) minmax(0, 1fr); }
+.workspace[data-first-run="true"] .details { display: none; }
+.workspace[data-first-run="true"][data-layout="table"] { grid-template-columns: minmax(0, 1fr); }
 .filters,.conversationList,.thread,.details { min-width: 0; min-height: 0; }
 .conversationList,.thread,.details { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); overflow: hidden; }
 .conversationList { display: flex; flex-direction: column; }
@@ -93,7 +92,7 @@
   .queueSidebar section h3 { display: none; }
   .queueSidebar section a { white-space: nowrap; }
   .workspace { flex: 1; }
-  .workspace, .workspace[data-has-selection="false"],.workspace[data-layout="table"],.workspace[data-layout="table"][data-preview-open="true"] { grid-template-columns: 1fr; }
+  .workspace, .workspace[data-has-selection="false"],.workspace[data-layout="table"],.workspace[data-layout="table"][data-preview-open="true"],.workspace[data-first-run="true"] { grid-template-columns: 1fr; }
   .workspace[data-mobile-view="list"] .thread { display: none; }
   .workspace[data-mobile-view="thread"] .conversationList { display: none; }
   .workspace[data-layout="table"][data-mobile-view="thread"] .thread { display: flex; }
