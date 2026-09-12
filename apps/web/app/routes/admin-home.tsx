@@ -14,7 +14,7 @@ interface AdminArea {
 }
 
 const sections: { title: string; areas: AdminArea[] }[] = [
-  { title: "Equipe e acesso", areas: [
+  { title: "Área de trabalho", areas: [
     { title: "Usuários", to: "/admin/users", icon: "user", description: "Convide pessoas e gerencie o acesso.", capability: "users:manage" },
     { title: "Times", to: "/admin/teams", icon: "team", description: "Organize as equipes de trabalho.", capability: "users:manage" },
     { title: "Grupos de permissões", to: "/admin/permission-groups", icon: "settings", description: "Defina o que cada grupo pode fazer.", capability: "permission_groups:manage" },
@@ -34,7 +34,7 @@ export default function AdminHome({ loaderData }: Route.ComponentProps) {
   const allowed = (capability: Capability) => loaderData.session.capabilities.includes(capability);
 
   return <div className={styles.page}>
-    <div className={styles.pageHeader}><PageHeader title="Visão geral" description="Gerencie o acesso da equipe, os dados e as conexões do espaço de trabalho." /></div>
+    <div className={styles.pageHeader}><PageHeader icon="grid" title="Início" /></div>
     <div className={styles.sections}>{sections.map((section) => {
       const visible = section.areas.filter((area) => allowed(area.capability));
       if (visible.length === 0) return null;

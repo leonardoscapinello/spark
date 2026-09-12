@@ -33,11 +33,10 @@
   border-radius: var(--radius-md);
   color: var(--color-ink);
   text-decoration: none;
+  transition: background-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out);
 }
 
-.card:hover {
-  background: var(--color-surface2);
-}
+.card:hover { background: var(--color-surface2); box-shadow: var(--ui-selectionShadow); }
 
 .card:focus-visible {
   outline: var(--ui-focusWidth) solid var(--color-focusRing);
@@ -47,9 +46,9 @@
 .icon {
   display: grid;
   place-items: center;
-  flex: 0 0 var(--space-8);
-  width: var(--space-8);
-  height: var(--space-8);
+  flex: 0 0 var(--space-10);
+  width: var(--space-10);
+  height: var(--space-10);
   border-radius: var(--radius-md);
   background: var(--color-accentWash);
   color: var(--color-accent);
@@ -71,6 +70,8 @@
   font-size: var(--typography-size-compact);
   line-height: var(--ui-bodyLine);
 }
+
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 
 @media (max-width: 760px) {
   .sections { gap: var(--space-8); }
