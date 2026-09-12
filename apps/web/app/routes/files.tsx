@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { filesControllerComplete, filesControllerDownload, filesControllerRemove, filesControllerUpload } from "@spark/api-client";
 import { fileId, type StoredFile } from "@spark/core";
-import { Badge, Card, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, Input, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { Badge, Card, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, Input, PageFrame, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getFilesCollection } from "../lib/files-collection.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -32,7 +32,7 @@ export default function Files() {
   async function download(item: StoredFile) { setBusyId(item.id); try { const target = await filesControllerDownload(item.id); window.open(target.downloadUrl, "_blank", "noopener,noreferrer"); } finally { setBusyId(null); } }
   async function remove(item: StoredFile) { setBusyId(item.id); try { await filesControllerRemove(item.id); notify({ title: "Arquivo excluído", description: item.name, tone: "success" }); } catch { notify({ title: "Não foi possível excluir", description: item.name, tone: "error" }); } finally { setBusyId(null); } }
   function fileActions(item: StoredFile) { return <><TableIconAction label={`Baixar ${item.name}`} icon={<Icon name="download" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void download(item)} />{canWrite && <TableIconAction label={`Excluir ${item.name}`} icon={<Icon name="trash" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void remove(item)} />}</>; }
-  return <div className={styles.page}>
+  return <PageFrame className={styles.page}>
     <PageHeader icon="folder" title="Arquivos" description="Use o mesmo arquivo em contatos, campanhas, conversas e automações." actions={canWrite && hasFiles ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="folder" title="Envie seu primeiro arquivo" description="Organize imagens e documentos para reutilizá-los em toda a equipe." action={canWrite ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />}
       {!firstRun && <><CollectionToolbar
@@ -46,7 +46,7 @@ export default function Files() {
         {!isLoading && files.length === 0 && <p className={styles.empty}>{emptyText}</p>}
         {files.map((item) => <Card key={item.id} title={item.name} description={`${item.folder ?? "Geral"} · ${formatBytes(item.sizeBytes)}`} actions={fileStatusBadge(item)} footer={<div className={styles.cardFooter}><span>{formatDate(item.createdAt)}</span><div>{fileActions(item)}</div></div>}><div className={styles.cardBody}><span className={styles.fileIcon}><Icon name={fileKind(item.mimeType) === "image" ? "image" : "file"} /></span><span>{fileTypeLabel(item.mimeType)}</span></div></Card>)}
       </div>}</>}
-  </div>;
+  </PageFrame>;
 }
 function fileKind(mime: string): string { if (mime.startsWith("image/")) return "image"; if (mime.startsWith("video/")) return "video"; if (mime.includes("pdf") || mime.includes("document") || mime.includes("sheet") || mime.startsWith("text/")) return "document"; return "other"; }
 function fileTypeLabel(mime: string): string { return ({ image: "Imagem", video: "Vídeo", document: "Documento", other: "Arquivo" } as Record<string, string>)[fileKind(mime)] ?? "Arquivo"; }
