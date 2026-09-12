@@ -5,7 +5,4 @@
 .checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
 .preview { display: flex; align-items: baseline; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-accentSubtle); color: var(--color-inkMuted); }
 .preview strong { color: var(--color-accent); font-size: var(--typography-size-xl); }
-.starter { display: grid; justify-items: center; gap: var(--space-6); padding: var(--space-12) var(--space-4); }
-.starter h2 { margin: 0; font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); text-align: center; }
-.starterGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); gap: var(--space-3); width: min(100%, calc(var(--ui-settingsCardWidth) * 3 + var(--space-6))); }
-@media (max-width: 760px) { .page { padding: var(--space-4); } .checks { grid-template-columns: minmax(0, 1fr); } .preview { flex-wrap: wrap; } .starter { padding: var(--space-8) 0; } }
+@media (max-width: 760px) { .page { padding: var(--space-4); } .checks { grid-template-columns: minmax(0, 1fr); } .preview { flex-wrap: wrap; } }

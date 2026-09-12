@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
-import { ActionCard, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client"; import { requireCapability } from "../lib/route-access.client"; import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getAudiencesCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
 
@@ -52,14 +52,11 @@ export default function Campaigns() {
     {firstRun && (audienceView
       ? <EmptyState variant="featured" icon="team" title="Crie seu primeiro público" description="Defina quem deve receber suas campanhas. Os contatos entram automaticamente quando correspondem aos filtros." action={canWrite ? <Button onClick={() => setAudienceOpen(true)}>Criar público</Button> : undefined} />
       : <EmptyState variant="featured" icon="mail" title={audiences.length ? "Prepare sua primeira campanha" : "Comece criando um público"} description={audiences.length ? "Escreva a mensagem e escolha quem deve recebê-la. Você poderá revisar o rascunho antes de enviar." : "Um público organiza os contatos por regras e permite criar sua primeira campanha de e-mail."} action={canWrite ? audiences.length ? <Button onClick={openCampaign}>Nova campanha</Button> : <Button onClick={() => setAudienceOpen(true)}>Criar público</Button> : undefined} />)}
-    {!audienceView && firstRun && (canWrite || canImportContacts || canConfigureEmail) && <section className={styles.starter} aria-label="Primeiros passos para campanhas">
-      <h2>Prepare seu primeiro envio</h2>
-      <div className={styles.starterGrid}>
+    {!audienceView && firstRun && (canWrite || canImportContacts || canConfigureEmail) && <ActionCardGroup title="Prepare seu primeiro envio">
         {canWrite && <ActionCard icon={audiences.length ? "mail" : "team"} title={audiences.length ? "Escreva a mensagem" : "Escolha o público"} description={audiences.length ? "Crie um rascunho para revisar antes do envio." : "Defina os contatos que devem receber a campanha."} action={<Button variant="secondary" onClick={audiences.length ? openCampaign : () => setAudienceOpen(true)}>{audiences.length ? "Nova campanha" : "Criar público"}</Button>} />}
         {canImportContacts && <ActionCard icon="upload" title="Traga seus contatos" description="Importe sua base para enviar mensagens às pessoas certas." action={<Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar contatos</Button>} />}
         {canConfigureEmail && <ActionCard icon="mail" title="Conecte o e-mail" description="Prepare o canal que enviará as mensagens da equipe." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Configurar e-mail</Button>} />}
-      </div>
-    </section>}
+    </ActionCardGroup>}
     {!firstRun && <><CollectionToolbar
       search={<Input aria-label={audienceView ? "Buscar públicos" : "Buscar campanhas"} placeholder={audienceView ? "Buscar público" : "Buscar campanha, assunto ou público"} value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
       filters={!audienceView ? <Select appearance="filter" label="Filtrar campanhas por situação" value={statusFilter} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "sending", label: "Em envio" }, { value: "sent", label: "Enviadas" }, { value: "partial", label: "Parciais" }, { value: "failed", label: "Com falha" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} /> : undefined}
