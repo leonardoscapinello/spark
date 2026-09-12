@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { redirect, useNavigate } from "react-router";
+import { redirect } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { buildCrmDashboard, formatBRL } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { Button, DashboardGrid, DashboardToolbar, DataChart, DonutChart, MetricCard, PageHeader } from "@spark/ui-web";
+import { DashboardGrid, DashboardToolbar, DataChart, DonutChart, MetricCard, PageHeader } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -27,7 +27,6 @@ export async function clientLoader() {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
@@ -58,7 +57,7 @@ export default function Dashboard() {
   ];
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Visão geral" title="Dashboard" description="Acompanhe o trabalho comercial com os dados atuais da sua organização." />
+    <PageHeader title="Visão geral" description="Acompanhe o desempenho comercial e identifique o que precisa de atenção." />
     <DashboardToolbar title="Desempenho comercial" period={period} periods={PERIODS} onPeriodChange={setPeriod} />
     <DashboardGrid metrics>
       {canReadContacts && <MetricCard title="Contatos ativos" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} />}
@@ -68,6 +67,8 @@ export default function Dashboard() {
     </DashboardGrid>
     <DashboardGrid>
       <DataChart title="Movimento no período" description="Novos registros e atividades agendadas por dia" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : "ready"} />
+    </DashboardGrid>
+    <DashboardGrid>
       {canReadDeals && <DonutChart title="Negócios por situação" state={loadingDeals ? "loading" : "ready"} data={[
         { id: "open", label: "Em aberto", value: snapshot.dealsByStatus.open, color: 1 },
         { id: "won", label: "Ganhos", value: snapshot.dealsByStatus.won, color: 2 },
@@ -81,11 +82,6 @@ export default function Dashboard() {
         { id: "unqualified", label: "Desqualificados", value: snapshot.contactsByStatus.unqualified, color: 4 },
       ]} />}
     </DashboardGrid>
-    <div className={styles.shortcuts}>
-      {canReadContacts && <Button variant="secondary" onClick={() => navigate("/")}>Abrir contatos</Button>}
-      {canReadDeals && <Button variant="secondary" onClick={() => navigate("/deals")}>Abrir negócios</Button>}
-      {canReadActivities && <Button variant="secondary" onClick={() => navigate("/activities")}>Abrir atividades</Button>}
-    </div>
   </div>;
 }
 
