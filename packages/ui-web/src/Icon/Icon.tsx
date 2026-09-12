@@ -22,6 +22,8 @@ const paths = {
   download: "M8 2v9m0 0 3.5-3.5M8 11 4.5 7.5M2 14h12",
   trash: "M3 4h10M6 4V2h4v2m2 0-.6 10H4.6L4 4m3 3v4m2-4v4",
   file: "M4 1h5l3 3v11H4V1Zm5 0v3h3",
+  image: "M2 2h12v12H2V2Zm2 9 3-3 2 2 2-3 2 4H4Zm2-6h.01",
+  text: "M2 3h12M2 7h12M2 11h9M2 14h7",
   grid: "M2 2h5v5H2V2Zm7 0h5v5H9V2ZM2 9h5v5H2V9Zm7 0h5v5H9V9Z",
   building: "M2.5 14V3l5.5-2 5.5 2v11M1 14h14M5 5h1m4 0h1M5 8h1m4 0h1M5 11h1m4 0h1M7 14v-3h2v3",
   briefcase: "M2 5h12v9H2V5Zm3 0V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M2 9h12M7 8v2h2V8",
