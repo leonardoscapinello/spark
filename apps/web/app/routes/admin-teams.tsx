@@ -110,10 +110,10 @@ export default function AdminTeams() {
   return <div className={styles.page}>
     <PageHeader icon="team" eyebrow="Administração" title={showArchived ? "Times arquivados" : "Times"} description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={teams.length > 0 ? <Button onClick={openCreate}>Novo time</Button> : undefined} />
     {loadError ? <EmptyState icon="team" title="Não foi possível carregar os times" description="Tente novamente para consultar a equipe." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} /> : <>
-    {firstRun && <EmptyState variant="onboarding" icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} />}
+    {firstRun && <EmptyState variant="featured" icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} />}
     <CollectionToolbar
       search={<Input aria-label="Buscar times" placeholder="Buscar por nome ou descrição" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
-      filters={<Select label="Situação dos times" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativos" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
+      filters={<Select appearance="filter" label="Situação dos times" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativos" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
       count={`${visibleTeams.length} ${visibleTeams.length === 1 ? "time" : "times"}`}
     />
     <DataTable
