@@ -219,8 +219,9 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       metrics={[{ label: "Valor", value: formatBRL(syncedAmount(deal.amount)) }, { label: "Situação", value: statusLabel(deal.status), ...(deal.status === "won" ? { tone: "success" as const } : deal.status === "lost" ? { tone: "danger" as const } : {}) }, { label: "Previsão", value: deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão" }]}
     />
 
-    <main className={styles.contentGrid}>
-        {editing ? <form className={styles.editForm} onSubmit={saveDeal}>
+    <div className={styles.contentGrid}>
+        {editing ? <form className={`${styles.editForm} ${styles.profile}`} onSubmit={saveDeal}>
+          <h2>Editar negócio</h2>
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
           <Field><Label>Contato</Label><SearchSelect label="Contato do negócio" searchPlacement="dropdown" placeholder="Sem contato" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
@@ -228,7 +229,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
           <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
-        </form> : <section className={styles.details}>
+        </form> : <section className={`${styles.details} ${styles.profile}`}><h2>Detalhes do negócio</h2>
           <div><span>Contato</span>{linkedContact ? <Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link> : <strong>Não vinculado</strong>}</div>
           <div><span>Empresa</span>{linkedCompany ? <Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link> : <strong>Não vinculada</strong>}</div>
           <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
@@ -244,11 +245,11 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>}
           </li>)}</ul>}
         </section>
-        <section className={styles.activities}>
+        <section className={`${styles.activities} ${styles.history}`}>
           <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas neste negócio.</p></div></div>
           <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />
         </section>
-    </main>
+    </div>
 
     <ActionModal open={activityModalOpen} onOpenChange={(open) => setActivityModalOpen(open)} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha título, tipo, data e hora." onConfirm={createActivity}>
       <div className={styles.modalFields}>
