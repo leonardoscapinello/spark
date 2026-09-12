@@ -30,6 +30,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
+  const canImportContacts = session?.capabilities.includes("contacts:write") ?? false;
   const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
   const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
   const { data: contacts = [], isLoading: loadingContacts } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: getContactsCollection() }) : undefined });
@@ -48,8 +49,6 @@ export default function Dashboard() {
   const hasRecords = contacts.length > 0 || deals.length > 0 || activities.length > 0;
   const hasMetrics = canReadContacts || canReadDeals || canReadActivities;
   const firstRun = hasMetrics && !loading && !hasRecords;
-  const firstRoute = canReadContacts ? "/" : canReadDeals ? "/deals" : "/activities";
-  const firstLabel = canReadContacts ? "Abrir Leads" : canReadDeals ? "Abrir CRM" : "Abrir Agenda";
   const chartData = snapshot.days.map((day) => ({
     label: formatDay(day.date, periodDays),
     contatos: canReadContacts ? day.newContacts : null,
@@ -63,7 +62,7 @@ export default function Dashboard() {
   ];
 
   return <div className={styles.page}>
-    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={<Button onClick={() => void navigate(firstRoute)}>{firstLabel}</Button>} />}
+    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar contatos</Button> : undefined} />}
     <PageHeader icon="chart" title="Visão geral" />
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar contatos, negócios ou atividades." />}
     {firstRun && <ActionCardGroup title="Acompanhe o trabalho da equipe">
