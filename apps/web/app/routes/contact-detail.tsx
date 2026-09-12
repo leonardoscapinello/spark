@@ -14,7 +14,7 @@ import {
   type CustomFieldDefinition,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity } from "@spark/data";
-import { Button, Checkbox, DatePicker, DateTimePicker, ErrorText, Field, Input, Label, Select, Timeline, notify } from "@spark/ui-web";
+import { Button, Checkbox, DatePicker, DateTimePicker, ErrorText, Field, Input, Label, Select, Timeline, RecordHero, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -27,6 +27,7 @@ import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./contact-detail.module.css";
+import layout from "./contact-profile-layout.module.css";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 
 export async function clientLoader() {
@@ -249,12 +250,13 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   }
 
   return (
-    <div className={styles.pagina}>
+    <div className={layout.page}>
       <Link to="/" className={styles.voltar}>
         ← Contatos
       </Link>
-      <h1 className={styles.titulo}>{data.name}</h1>
-
+      <RecordHero icon="user" eyebrow="Contato" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite && !isEditing ? <Button variant="secondary" onClick={startEditing}>Editar contato</Button> : undefined} metrics={[{ label: "Pontuação", value: data.score }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada" }]} />
+      <div className={layout.contentGrid}>
+        <div className={layout.profileColumn}>
       {isEditing ? (
         <form className={styles.camposEdicao} onSubmit={saveEdit}>
           <Field>
@@ -308,7 +310,6 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
             <span className={styles.rotulo}>Pontuação</span>
             <span className={styles.valor}>{data.score}</span>
           </div>
-          {canWrite && <Button variant="secondary" size="sm" onClick={startEditing} className={styles.botaoEditar}>Editar</Button>}
         </div>
       )}
 
@@ -338,26 +339,8 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         </div>
       </section>}
 
-      <section className={styles.atividades}>
-        <h2 className={styles.subtitulo}>Canais e identidades</h2>
-        <div className={styles.campos}>
-          {identities.length === 0 ? <span className={styles.valor}>Nenhum canal adicional.</span> : identities.map((identity) => (
-            <div key={identity.id} className={styles.campo}>
-              <span className={styles.rotulo}>{IDENTITY_CHANNEL_OPTIONS.find((option) => option.value === identity.channel)?.label ?? identity.channel}</span>
-              <span className={styles.valor}>{identity.channel === "instagram" ? `@${identity.externalValue}` : identity.externalValue}</span>
-            </div>
-          ))}
-          {canWrite && <form className={styles.formAtividade} onSubmit={addIdentity}>
-            <Select label="Tipo de canal" value={identityChannel} options={IDENTITY_CHANNEL_OPTIONS} onValueChange={(value) => { if (value) setIdentityChannel(value as IdentityChannel); }} />
-            <Field>
-              <Label>Identificador</Label>
-              <Input value={identityValue} onChange={(event) => setIdentityValue(event.target.value)} placeholder={identityChannel === "email" ? "nome@empresa.com" : identityChannel === "instagram" ? "@usuario" : "DDD + número"} />
-            </Field>
-            <Button type="submit" size="sm" loading={identityPending} disabled={!identityValue.trim()}>Adicionar canal</Button>
-          </form>}
         </div>
-      </section>
-
+        <div className={layout.workColumn}>
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Histórico</h2>
         <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste contato aparecerão aqui." />
@@ -419,6 +402,30 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
           </Button>
         </form>}
       </section>}
+        </div>
+        <div className={layout.identityColumn}>
+      <section className={styles.atividades}>
+        <h2 className={styles.subtitulo}>Canais e identidades</h2>
+        <div className={styles.campos}>
+          {identities.length === 0 ? <span className={styles.valor}>Nenhum canal adicional.</span> : identities.map((identity) => (
+            <div key={identity.id} className={styles.campo}>
+              <span className={styles.rotulo}>{IDENTITY_CHANNEL_OPTIONS.find((option) => option.value === identity.channel)?.label ?? identity.channel}</span>
+              <span className={styles.valor}>{identity.channel === "instagram" ? `@${identity.externalValue}` : identity.externalValue}</span>
+            </div>
+          ))}
+          {canWrite && <form className={styles.formAtividade} onSubmit={addIdentity}>
+            <Select label="Tipo de canal" value={identityChannel} options={IDENTITY_CHANNEL_OPTIONS} onValueChange={(value) => { if (value) setIdentityChannel(value as IdentityChannel); }} />
+            <Field>
+              <Label>Identificador</Label>
+              <Input value={identityValue} onChange={(event) => setIdentityValue(event.target.value)} placeholder={identityChannel === "email" ? "nome@empresa.com" : identityChannel === "instagram" ? "@usuario" : "DDD + número"} />
+            </Field>
+            <Button type="submit" size="sm" loading={identityPending} disabled={!identityValue.trim()}>Adicionar canal</Button>
+          </form>}
+        </div>
+      </section>
+
+        </div>
+      </div>
     </div>
   );
 }
