@@ -86,7 +86,7 @@
 
 .accountMenu { display: flex; flex: 0 0 auto; justify-content: center; }
 
-@media (min-width: 761px) {
+@media (min-width: 761px) and (hover: hover) {
   .rail { position: relative; z-index: 20; }
   .rail:is(:hover, :focus-within) {
     width: var(--ui-sidebarWidth);
