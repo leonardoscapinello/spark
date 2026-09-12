@@ -77,6 +77,10 @@
       "$type": "dimension",
       "$value": "420px"
     },
+    "cardMinWidth": {
+      "$type": "dimension",
+      "$value": "320px"
+    },
     "touchTarget": {
       "$type": "dimension",
       "$value": "44px"
