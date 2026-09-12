@@ -48,9 +48,9 @@ export default function PublicForm() {
   }
   return (
     <main className={styles.page}>
-      <a className={styles.brand} href="/" aria-label="Leonardo Scapinello">
+      <div className={styles.brand}>
         <img src="/brand/leonardo-scapinello-ink.svg" alt="Leonardo Scapinello" />
-      </a>
+      </div>
       <div className={styles.honeypot} aria-hidden="true">
         <Field>
           <Label>Website</Label>
