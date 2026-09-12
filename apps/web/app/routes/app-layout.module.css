@@ -46,7 +46,7 @@
 }
 
 .railBrand .brandWordmark { display: none; }
-.railLabel { display: none; }
+.railLabel { display: none; opacity: 0; transform: translateX(calc(var(--space-1) * -1)); transition: opacity var(--motion-duration-instant) var(--motion-ease-out), transform var(--motion-duration-instant) var(--motion-ease-out), display var(--motion-duration-instant) allow-discrete; }
 
 .railLink:hover,
 .railLink[aria-current="page"] {
@@ -98,7 +98,7 @@
 .mobileSecondaryNav { display: none; }
 
 @media (min-width: 761px) and (hover: hover) {
-  .rail { position: relative; z-index: 20; }
+  .rail { position: relative; z-index: 20; overflow: hidden; }
   .railLink svg { transition: transform var(--motion-duration-instant) var(--motion-ease-out); }
   .railLink:hover svg { transform: translateX(var(--space-1)); }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) {
@@ -123,15 +123,19 @@
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .accountMenu { width: 100%; align-items: stretch; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railModules { overflow-y: auto; scrollbar-width: none; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railModules::-webkit-scrollbar { display: none; }
-  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railLabel { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
+  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railLabel { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); opacity: 1; transform: none; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .brandSymbol { display: none; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .brandWordmark { display: block; width: 100%; max-width: 100%; height: var(--space-6); object-fit: contain; object-position: left center; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .accountLink { border-radius: var(--radius-md); }
+  @starting-style {
+    .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railLabel { opacity: 0; transform: translateX(calc(var(--space-1) * -1)); }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .railLink, .railLink svg { transition: none; }
+  .railLink, .railLink svg, .railLabel { transition: none; }
   .railLink:hover svg { transform: none; }
+  .railLabel { transform: none; }
 }
 
 .sidebar {
@@ -219,6 +223,7 @@
   font-weight: var(--typography-weight-medium);
   text-decoration: none;
   white-space: nowrap;
+  transition: color var(--motion-duration-instant) var(--motion-ease-out), border-bottom-color var(--motion-duration-instant) var(--motion-ease-out);
 }
 
 .moduleTab:hover,
