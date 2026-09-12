@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
-import { ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client"; import { requireCapability } from "../lib/route-access.client"; import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getAudiencesCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
 
@@ -55,24 +55,9 @@ export default function Campaigns() {
     {!audienceView && firstRun && (canWrite || canImportContacts || canConfigureEmail) && <section className={styles.starter} aria-label="Primeiros passos para campanhas">
       <h2>Prepare seu primeiro envio</h2>
       <div className={styles.starterGrid}>
-        {canWrite && <div className={styles.starterCard}>
-          <span className={styles.starterIcon}><Icon name={audiences.length ? "mail" : "team"} /></span>
-          <h3>{audiences.length ? "Escreva a mensagem" : "Escolha o público"}</h3>
-          <p>{audiences.length ? "Crie um rascunho para revisar antes do envio." : "Defina os contatos que devem receber a campanha."}</p>
-          <Button variant="secondary" onClick={audiences.length ? openCampaign : () => setAudienceOpen(true)}>{audiences.length ? "Nova campanha" : "Criar público"}</Button>
-        </div>}
-        {canImportContacts && <div className={styles.starterCard}>
-          <span className={styles.starterIcon}><Icon name="upload" /></span>
-          <h3>Traga seus contatos</h3>
-          <p>Importe sua base para enviar mensagens às pessoas certas.</p>
-          <Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar contatos</Button>
-        </div>}
-        {canConfigureEmail && <div className={styles.starterCard}>
-          <span className={styles.starterIcon}><Icon name="mail" /></span>
-          <h3>Conecte o e-mail</h3>
-          <p>Prepare o canal que enviará as mensagens da equipe.</p>
-          <Button variant="secondary" onClick={() => void navigate("/integrations")}>Configurar e-mail</Button>
-        </div>}
+        {canWrite && <ActionCard icon={audiences.length ? "mail" : "team"} title={audiences.length ? "Escreva a mensagem" : "Escolha o público"} description={audiences.length ? "Crie um rascunho para revisar antes do envio." : "Defina os contatos que devem receber a campanha."} action={<Button variant="secondary" onClick={audiences.length ? openCampaign : () => setAudienceOpen(true)}>{audiences.length ? "Nova campanha" : "Criar público"}</Button>} />}
+        {canImportContacts && <ActionCard icon="upload" title="Traga seus contatos" description="Importe sua base para enviar mensagens às pessoas certas." action={<Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar contatos</Button>} />}
+        {canConfigureEmail && <ActionCard icon="mail" title="Conecte o e-mail" description="Prepare o canal que enviará as mensagens da equipe." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Configurar e-mail</Button>} />}
       </div>
     </section>}
     {!firstRun && <><CollectionToolbar
