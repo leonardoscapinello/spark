@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
-import { Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
+import { Avatar, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
-import { restoreSession, signOut } from "../lib/auth.client";
+import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import styles from "./app-layout.module.css";
 
@@ -185,6 +185,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const activeSidebarLink = useRef<HTMLAnchorElement>(null);
   const accountRailLink = useRef<HTMLDivElement>(null);
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
+  const [accountProfile, setAccountProfile] = useState(session);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
   const requestedSearch = pendingLocation?.search ?? (navigationIntent?.fromKey === location.key ? `?${navigationIntent.to.split("?")[1] ?? ""}` : "");
@@ -197,6 +198,13 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
     : [];
   const showSidebar = current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox";
+
+  useEffect(() => {
+    if (session.name) return;
+    let active = true;
+    void refreshSessionProfile().then((profile) => { if (active && profile) setAccountProfile(profile); });
+    return () => { active = false; };
+  }, [session.name]);
 
   useEffect(() => {
     if (!window.requestIdleCallback) return;
@@ -258,7 +266,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         <div className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.railBottom}>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
-          <div ref={accountRailLink} className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} icon={<Icon name="account" />} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label="Minha conta"><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>} /></div>
+          <div ref={accountRailLink} className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} icon={accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>} /></div>
         </div>
       </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>

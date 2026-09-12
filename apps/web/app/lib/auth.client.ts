@@ -15,6 +15,8 @@ export interface AppSession {
   orgId: OrgId;
   userId: string;
   capabilities: Capability[];
+  name?: string;
+  avatarUrl?: string | null;
 }
 
 export type AuthFlowErrorCode = "INVALID_CREDENTIALS" | "AUTH_UNAVAILABLE" | "ACCOUNT_NOT_PROVISIONED" | "MFA_REQUIRED" | "MFA_INVALID";
@@ -75,9 +77,15 @@ function listenForTokenRotation(): void {
 
 async function resolveAppSession(): Promise<AppSession> {
   const user = await meControllerMe();
-  const profile = { orgId: user.orgId as OrgId, userId: user.id, capabilities: user.capabilities };
+  const profile = { orgId: user.orgId as OrgId, userId: user.id, capabilities: user.capabilities, ...(user.name ? { name: user.name } : {}), ...(user.avatarUrl !== undefined ? { avatarUrl: user.avatarUrl } : {}) };
   saveProfile(profile);
   return profile;
+}
+
+export async function refreshSessionProfile(): Promise<AppSession | null> {
+  if (!accessToken) return null;
+  try { return await resolveAppSession(); }
+  catch { return null; }
 }
 
 export function getSession(): AppSession | null {
