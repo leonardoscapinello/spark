@@ -11,6 +11,8 @@
 .actions { white-space: nowrap; }
 .table td.empty { color: var(--color-inkMuted); text-align: center; padding-block: var(--space-10); }
 .hint { font-size: var(--typography-size-compact); color: var(--color-inkMuted); margin: var(--space-2) 0 0; }
+.loadingLine { display: block; width: 100%; max-width: var(--ui-menuWidth); height: var(--space-3); border-radius: var(--radius-full); background: var(--color-surface2); }
+.table td:nth-child(2n) .loadingLine { max-width: var(--space-16); }
 
 .actionGroup { display: flex; align-items: center; gap: var(--space-1); }
 .actionGroup > * { flex-shrink: 0; }
