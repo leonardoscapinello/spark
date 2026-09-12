@@ -174,10 +174,10 @@ export default function Deals() {
   if (!mainPipeline) {
     return (
       <div className={styles.pagina}>
-        <PageHeader title="Negócios" description="Acompanhe as oportunidades do primeiro contato ao fechamento." />
+        <PageHeader title="Negócios" />
         {isLoadingPipelines
           ? <div className={styles.loading} role="status">Carregando funis…</div>
-          : <EmptyState icon="briefcase" title="Crie seu primeiro funil" description="Organize os negócios por etapa e acompanhe o valor de cada oportunidade." action={canManagePipeline ? <Button onClick={() => { setPipelineName("Funil de Vendas"); setPipelineModalOpen(true); }}>Criar funil</Button> : undefined} />}
+          : <EmptyState variant="onboarding" icon="briefcase" title="Organize seu primeiro funil" description="Defina as etapas da venda para acompanhar cada oportunidade e o valor da negociação." action={canManagePipeline ? <Button onClick={() => { setPipelineName("Funil de Vendas"); setPipelineModalOpen(true); }}>Criar funil</Button> : undefined} />}
         <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
           <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
         </ActionModal>
