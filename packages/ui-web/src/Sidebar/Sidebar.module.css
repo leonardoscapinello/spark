@@ -17,9 +17,10 @@
 .sectionToggle:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); }
 .sectionToggle svg { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); transition: transform var(--motion-duration-fast) var(--motion-ease-out); }
 .sectionToggle[aria-expanded="true"] svg { transform: rotate(90deg); }
-.sectionItems { display: grid; gap: var(--space-1); padding-block: var(--space-1); }
-.sectionItems[hidden] { display: none; }
+.sectionItems { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--motion-duration-fast) var(--motion-ease-out), opacity var(--motion-duration-fast) var(--motion-ease-out); }
+.sectionItems[data-open] { grid-template-rows: 1fr; opacity: 1; }
+.sectionItemsInner { display: grid; gap: var(--space-1); min-height: 0; overflow: hidden; }
 .sectionItems .item { padding-inline-start: var(--space-6); }
 .footer { padding: var(--space-2) var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); }
 .rail { box-sizing: border-box; width: var(--ui-railWidth); flex-shrink: 0; display: flex; align-items: center; flex-direction: column; gap: var(--space-1); padding-block: var(--space-3); }
-@media (prefers-reduced-motion: reduce) { .item, .sectionToggle, .sectionToggle svg { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .item, .sectionToggle, .sectionToggle svg, .sectionItems { transition: none; } }

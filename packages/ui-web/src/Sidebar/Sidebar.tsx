@@ -17,7 +17,7 @@ export function SidebarSection({ title, children, collapsible = false, defaultOp
     {collapsible
       ? <button type="button" className={styles.sectionToggle} aria-expanded={open} aria-controls={contentId} onClick={() => setOpen((value) => !value)}><span>{title}</span><Icon name="right" /></button>
       : <h3>{title}</h3>}
-    {collapsible ? <div id={contentId} className={styles.sectionItems} hidden={!open}>{children}</div> : children}
+    {collapsible ? <div id={contentId} className={styles.sectionItems} data-open={open || undefined} aria-hidden={!open} inert={!open}><div className={styles.sectionItemsInner}>{children}</div></div> : children}
   </section>;
 }
 export function NavigationRail({ children, label = "Módulos", className, ...props }: ComponentProps<"nav"> & { children: ReactNode; label?: string; className?: string | undefined }) {
