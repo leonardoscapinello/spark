@@ -63,6 +63,12 @@
 .metadata dd { margin: 0; text-align: right; }
 .empty,.threadEmpty { color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
 .empty { padding: var(--space-5); text-align: center; }
+.listFirstRun { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); min-height: 100%; padding: var(--space-8) var(--space-4); box-sizing: border-box; text-align: center; color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+.listFirstRunIcon { display: flex; align-items: center; justify-content: center; width: var(--space-12); height: var(--space-12); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
+.listFirstRunIcon svg { width: var(--space-6); height: var(--space-6); }
+.listFirstRun strong { color: var(--color-ink); font-size: var(--typography-size-lg); }
+.listFirstRun > span:nth-of-type(2) { max-width: var(--ui-previewColumn); line-height: var(--ui-bodyLine); }
+.listFirstRun button { margin-top: var(--space-2); }
 .threadEmpty { margin: auto; padding: var(--space-8); display: flex; align-items: center; flex-direction: column; gap: var(--space-2); text-align: center; }
 .threadEmpty > svg { width: var(--space-8); height: var(--space-8); color: var(--color-inkMuted); }
 .threadEmpty strong { color: var(--color-ink); font-size: var(--typography-size-lg); }
