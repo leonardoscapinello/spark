@@ -146,14 +146,14 @@ export default function Contacts() {
   return <div className={styles.page}>
     <PageHeader icon="user" title={viewTitle} description={viewDescription} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Novo contato</Button></> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="user" title="Comece com seus contatos" description="Cadastre uma pessoa ou importe sua base para reunir o histórico de relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Novo contato</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button> : undefined} />}
-    <><CollectionToolbar
+    {!firstRun && <><CollectionToolbar
       search={<Input aria-label="Buscar contatos" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}
       filters={<>
         <Select appearance="filter" label="Filtrar por etapa" value={statusFilter} options={[{ value: "all", label: "Todas as etapas" }, ...LEAD_STATUS_OPTIONS]} onValueChange={(value) => setSearchParams(value && value !== "all" ? { status: value } : {})} />
         <Select appearance="filter" label="Filtrar por responsável" value={ownerFilter} options={[{ value: "all", label: "Todos os responsáveis" }, { value: "unassigned", label: "Não atribuídos" }, ...users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))]} onValueChange={(value) => setOwnerFilter(value ?? "all")} />
       </>}
       actions={<Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>}
-      count={<span role="status">{filteredContacts.length} {filteredContacts.length === 1 ? "contato" : "contatos"}</span>}
+      count={<span role="status">{isLoading ? "Carregando contatos…" : `${filteredContacts.length} ${filteredContacts.length === 1 ? "contato" : "contatos"}`}</span>}
     />
     <DataTable
       label="Contatos da organização"
@@ -164,7 +164,7 @@ export default function Contacts() {
       state={isLoading && contacts.length === 0 ? "loading" : "ready"}
       emptyText={archiveView ? "Nenhum contato arquivado." : search ? `Nenhum contato encontrado para “${search}”.` : "Nenhum contato cadastrado."}
       actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>}
-    /></>
+    /></>}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Novo contato" confirmLabel="Criar contato" errorText="Não foi possível criar o contato. Corrija os campos marcados ou tente novamente." onConfirm={addContact}>
       <form className={styles.modalFields} onSubmit={submitFromForm}>
         <Field invalid={Boolean(nameError)}><Label>Nome</Label><Input autoFocus autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setNameError(null); }} placeholder="Nome completo" /><ErrorText>{nameError}</ErrorText></Field>
