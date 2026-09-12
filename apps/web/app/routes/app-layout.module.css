@@ -49,6 +49,12 @@
   box-shadow: var(--ui-selectionShadow);
 }
 
+.railLink[data-pending],
+.sidebar a[data-pending] {
+  color: var(--color-accent);
+  background: var(--color-accentWash);
+}
+
 .railLink:focus-visible,
 .railBrand:focus-visible {
   outline: var(--ui-focusWidth) solid var(--color-focusRing);
@@ -86,12 +92,25 @@
 
 .conteudo {
   box-sizing: border-box;
+  position: relative;
   min-width: 0;
   min-height: 0;
   overflow: auto;
   background: var(--color-surface2);
   border-radius: var(--radius-lg);
   box-shadow: var(--ui-panelShadow);
+}
+
+.shell[data-navigating] .conteudo::before {
+  content: "";
+  position: sticky;
+  z-index: 10;
+  display: block;
+  inset-block-start: 0;
+  width: 100%;
+  height: var(--ui-focusWidth);
+  margin-bottom: calc(var(--ui-focusWidth) * -1);
+  background: var(--color-accent);
 }
 
 .carregando {

@@ -1,4 +1,4 @@
-import { Link, Outlet, redirect, useLocation, useNavigate } from "react-router";
+import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
 import { Button, Icon, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
@@ -139,6 +139,8 @@ export function HydrateFallback() {
 export default function AppLayout({ loaderData: session }: Route.ComponentProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const navigation = useNavigation();
+  const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const allowed = (capability?: Capability) => !capability || session.capabilities.includes(capability);
   const visibleModules = modules.filter((module) => module.id === "admin"
     ? adminCapabilities.some(allowed)
@@ -154,12 +156,13 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
 
   function railLink(module: NavModule) {
     const active = current.id === module.id;
+    const pending = pendingLocation && moduleForPath(pendingLocation.pathname).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
-    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} className={styles.railLink} aria-label={module.title} aria-current={active ? "page" : undefined}><Icon name={module.icon} /></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} className={styles.railLink} aria-label={module.title} aria-current={active ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /></Link></Tooltip>;
   }
 
   return (
-    <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"}>
+    <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={pendingLocation ? "true" : undefined}>
       <NavigationRail className={styles.rail}>
         <Link to="/dashboard" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /></Link>
         <div className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
@@ -172,13 +175,13 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
-          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return current.sections.length === 1
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
         })}
       </Sidebar>}
-      <main className={styles.conteudo}><Outlet /></main>
+      <main className={styles.conteudo} aria-busy={Boolean(pendingLocation)}><Outlet /></main>
     </div>
   );
 }
