@@ -191,7 +191,7 @@ export default function Inbox() {
   }
 
   return <div className={styles.page}>
-    <Sidebar title="Atendimento" className={styles.queueSidebar} actions={canWrite && canReadContacts ? <Button iconOnly size="sm" variant="ghost" aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar contato"} onClick={openConversationOrContact}><Icon name="plus" /></Button> : undefined}>
+    <Sidebar title="Atendimento" className={styles.queueSidebar} actions={canWrite && canReadContacts ? <Button iconOnly size="sm" variant="ghost" aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar contato"} onClick={openConversationOrContact}><Icon name="plus" /></Button> : undefined} footer={firstRun && canReadIntegrations ? <div className={styles.setupCard}><span className={styles.setupCardIcon}><Icon name="bolt" /></span><strong>Prepare seus canais</strong><span>Conecte e-mail ou redes sociais para receber conversas aqui.</span><Button size="sm" variant="secondary" onClick={() => void navigate("/integrations")}>Configurar canais</Button></div> : undefined}>
       <Button variant="ghost" size="sm" shape="rounded" className={styles.queueSearch} icon={<Icon name="search" />} onClick={() => setSearchOpen(true)}>Buscar conversas</Button>
       <SidebarSection title="Caixas">
         {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} onClick={() => setMobileView("list")} />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}

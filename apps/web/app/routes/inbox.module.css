@@ -1,6 +1,11 @@
 .page { height: 100%; min-width: 0; display: grid; grid-template-columns: var(--ui-sidebarWidth) minmax(0, 1fr); gap: var(--space-2); overflow: hidden; }
 .queueSidebar { height: 100%; min-height: 0; }
 .queueSearch { width: 100%; justify-content: flex-start; color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }
+.setupCard { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
+.setupCardIcon { display: inline-flex; align-items: center; justify-content: center; width: var(--ui-controlSmall); height: var(--ui-controlSmall); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
+.setupCard strong { color: var(--color-ink); font-size: var(--typography-size-sm); }
+.setupCard > span:not(.setupCardIcon) { color: var(--color-inkMuted); }
+.setupCard > button { width: 100%; }
 .mobileCreate { display: none; }
 .mobileQueueMenu { display: none; }
 .workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(var(--ui-menuWidth), .9fr) minmax(var(--ui-cardMinWidth), 1.6fr) minmax(var(--ui-sidebarWidth), 1.05fr); gap: var(--space-2); overflow: hidden; }
