@@ -14,8 +14,7 @@ export interface EmptyStateProps {
 export function EmptyState({ icon, title, description, action, secondaryAction, variant = "default" }: EmptyStateProps) {
   return <section className={styles.root} data-variant={variant} aria-label={title}>
     <span className={styles.icon}><Icon name={icon} /></span>
-    <h2>{title}</h2>
-    <p>{description}</p>
+    <div className={styles.copy}><h2>{title}</h2><p>{description}</p></div>
     {(action || secondaryAction) && <div className={styles.actions}>{action}{secondaryAction}</div>}
   </section>;
 }
