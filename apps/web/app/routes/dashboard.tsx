@@ -63,10 +63,8 @@ export default function Dashboard() {
   ];
 
   return <div className={styles.page}>
+    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={<Button onClick={() => void navigate(firstRoute)}>{firstLabel}</Button>} />}
     <PageHeader icon="chart" title="Visão geral" />
-    {firstRun && <>
-      <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={<Button onClick={() => void navigate(firstRoute)}>{firstLabel}</Button>} />
-    </>}
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar contatos, negócios ou atividades." />}
     {hasMetrics && <>
       <div className={styles.reportFilters}>
