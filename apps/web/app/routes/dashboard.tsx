@@ -3,7 +3,7 @@ import { Link, redirect, useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { buildCrmDashboard, formatBRL } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { Button, DashboardGrid, DataChart, DonutChart, EmptyState, Icon, MetricCard, PageHeader, Select } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, Button, DashboardGrid, DataChart, DonutChart, EmptyState, Icon, MetricCard, PageHeader, Select } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -66,7 +66,12 @@ export default function Dashboard() {
     {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={<Button onClick={() => void navigate(firstRoute)}>{firstLabel}</Button>} />}
     <PageHeader icon="chart" title="Visão geral" />
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar contatos, negócios ou atividades." />}
-    {hasMetrics && <>
+    {firstRun && <ActionCardGroup title="Acompanhe o trabalho da equipe">
+      {canReadContacts && <ActionCard icon="team" title="Pessoas" description="Veja quem entrou na base e como o relacionamento evolui." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir Leads</Button>} />}
+      {canReadDeals && <ActionCard icon="briefcase" title="Oportunidades" description="Acompanhe o valor e o andamento dos negócios no funil." action={<Button variant="secondary" onClick={() => void navigate("/deals")}>Abrir CRM</Button>} />}
+      {canReadActivities && <ActionCard icon="calendar" title="Compromissos" description="Veja tarefas, reuniões e ligações da equipe em uma agenda." action={<Button variant="secondary" onClick={() => void navigate("/activities")}>Abrir atividades</Button>} />}
+    </ActionCardGroup>}
+    {hasMetrics && !firstRun && <>
       <div className={styles.reportFilters}>
         <span className={styles.filterLabel}><Icon name="calendar" />Período</span>
         <div className={styles.period}><Select appearance="filter" label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>
@@ -79,7 +84,7 @@ export default function Dashboard() {
       {canReadActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
       </DashboardGrid>
     </>}
-    {hasMetrics && <>
+    {hasMetrics && !firstRun && <>
       <div className={styles.sectionHeading}><h2>Movimento no período</h2><span>Novos registros e atividades por dia</span></div>
       <DashboardGrid>
         <DataChart title="Evolução diária" description="Contatos, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : hasRecords ? "ready" : "empty"} />
