@@ -44,7 +44,7 @@ export default function Pages() {
   }
 
   return <div className={styles.page}>
-    <PageHeader icon="file" title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !isLoading ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
+    <PageHeader icon="file" title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="file" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
       <><CollectionToolbar
         search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} />}
@@ -54,7 +54,7 @@ export default function Pages() {
       />
       {layout === "table" ? <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText={firstRun ? "As páginas criadas aparecerão nesta tabela." : "Nenhuma página encontrada."} actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} /> : <div className={styles.cardGrid} aria-label="Páginas">
         {isLoading && !pages.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
-        {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhuma página encontrada.</p>}
+        {!isLoading && filtered.length === 0 && !firstRun && <p className={styles.empty}>Nenhuma página encontrada.</p>}
         {filtered.map((item) => <Card key={item.id} title={item.name} description={`/${item.slug}`} actions={pageStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizada {formatDate(item.updatedAt)}</span><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} /></div>}><div className={styles.cardMeta}><Icon name="file" /><span>{item.status === "published" ? "Página disponível para visitantes" : item.status === "archived" ? "Página arquivada" : "Página em edição"}</span></div></Card>)}
       </div>}</>
     <ActionModal open={open} onOpenChange={setOpen} title="Nova página" confirmLabel="Criar e editar" errorText="Informe nome e endereço válidos." onConfirm={create}>
