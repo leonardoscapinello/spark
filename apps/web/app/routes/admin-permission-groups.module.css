@@ -7,40 +7,9 @@
   gap: var(--space-6);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
-  gap: var(--space-4);
-  align-items: start;
-}
-
-.capabilityList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
-}
-
-.capabilityList li::before {
-  content: "✓";
-  margin-right: var(--space-2);
-  color: var(--color-accent);
-  font-weight: var(--typography-weight-semibold);
-}
-
-.capabilityList .more {
-  padding-top: var(--space-2);
-  border-top: var(--ui-hairline) solid var(--color-line);
-  font-weight: var(--typography-weight-medium);
-}
-
-.capabilityList .more::before {
-  content: none;
-}
+.groupSummary { display: grid; gap: var(--space-1); min-width: 0; }
+.groupSummary strong { font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
+.groupSummary span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .feedback {
   margin: 0;

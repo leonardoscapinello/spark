@@ -15,12 +15,14 @@ import {
 import {
   ActionModal,
   Button,
-  Card,
   Checkbox,
+  DataTable,
+  EmptyState,
   Field,
   Input,
   Label,
   PageHeader,
+  type TableColumn,
 } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-permission-groups.module.css";
@@ -86,6 +88,10 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
   const [name, setName] = useState("");
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const columns: TableColumn<PermissionGroupDto>[] = [
+    { id: "name", label: "Grupo", cell: (group) => <strong>{group.name}</strong>, sortValue: (group) => group.name },
+    { id: "permissions", label: "Permissões", cell: (group) => <div className={styles.groupSummary}><strong>{group.capabilities.length} {group.capabilities.length === 1 ? "permissão" : "permissões"}</strong><span>{group.capabilities.length ? group.capabilities.slice(0, 3).map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" · ") : "Sem acesso configurado"}</span></div>, sortValue: (group) => group.capabilities.length },
+  ];
 
   function openCreate() {
     setEditingId(null);
@@ -134,7 +140,7 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
     <div className={styles.page}>
       <PageHeader
         eyebrow="Administração"
-        title="Grupos de permissão"
+        title="Grupos de permissões"
         description="Defina o que cada equipe pode consultar, criar e administrar."
         actions={<Button onClick={openCreate}>Novo grupo</Button>}
       />
@@ -145,27 +151,9 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
         </p>
       )}
 
-      <div className={styles.grid} aria-label="Grupos de permissão">
-        {groups.map((group) => (
-          <Card
-            key={group.id}
-            title={group.name}
-            description={`${group.capabilities.length} permissões`}
-            actions={
-              <Button variant="secondary" size="sm" onClick={() => openEdit(group)}>
-                Editar
-              </Button>
-            }
-          >
-            <ul className={styles.capabilityList}>
-              {group.capabilities.slice(0, 4).map((capability) => (
-                <li key={capability}>{CAPABILITY_LABELS[capability as Capability]}</li>
-              ))}
-              {group.capabilities.length > 4 && <li className={styles.more}>Mais {group.capabilities.length - 4} permissões</li>}
-            </ul>
-          </Card>
-        ))}
-      </div>
+      {groups.length === 0
+        ? <EmptyState icon="settings" title="Defina o primeiro grupo" description="Reúna permissões por função para controlar o que cada pessoa pode consultar e alterar." action={<Button onClick={openCreate}>Novo grupo</Button>} />
+        : <DataTable label="Grupos de permissões" rows={groups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} actions={(group) => <Button variant="secondary" size="sm" onClick={() => openEdit(group)}>Editar</Button>} />}
 
       <ActionModal
         open={modalOpen}
