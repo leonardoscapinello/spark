@@ -116,21 +116,18 @@ export default function Inbox() {
   }
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Atendimento" title="Inbox" description="Converse com contexto, atribuição e histórico em uma única área." actions={canWrite && canReadContacts ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button> : undefined} />
+    <PageHeader title="Conversas" description="Acompanhe as conversas com sua equipe." actions={canWrite && canReadContacts ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button> : undefined} />
     <div className={styles.workspace} data-mobile-view={mobileView}>
-      <aside className={styles.filters}>
-        <strong>Caixas</strong>
+      <section className={styles.conversationList} aria-label="Lista de conversas">
+        <div className={styles.filters} aria-label="Filtrar conversas">
         <FilterButton active={filter === "open"} count={conversations.filter((item) => item.status === "open").length} onClick={() => setFilter("open")}>Abertas</FilterButton>
         <FilterButton active={filter === "mine"} count={conversations.filter((item) => item.status === "open" && item.assigneeId === session?.userId).length} onClick={() => setFilter("mine")}>Minhas conversas</FilterButton>
         <FilterButton active={filter === "unassigned"} count={conversations.filter((item) => item.status === "open" && !item.assigneeId).length} onClick={() => setFilter("unassigned")}>Não atribuídas</FilterButton>
         <FilterButton active={filter === "snoozed"} count={conversations.filter((item) => item.status === "snoozed").length} onClick={() => setFilter("snoozed")}>Adiadas</FilterButton>
         <FilterButton active={filter === "closed"} count={conversations.filter((item) => item.status === "closed").length} onClick={() => setFilter("closed")}>Fechadas</FilterButton>
         <FilterButton active={filter === "all"} count={conversations.length} onClick={() => setFilter("all")}>Todas</FilterButton>
-        {teams.filter((team) => !team.archivedAt).length > 0 && <strong>Equipes</strong>}
         {teams.filter((team) => !team.archivedAt).map((team) => <FilterButton key={team.id} active={filter === `team:${team.id}`} count={conversations.filter((item) => item.status === "open" && item.teamId === team.id).length} onClick={() => setFilter(`team:${team.id}`)}>{team.name}</FilterButton>)}
-      </aside>
-
-      <section className={styles.conversationList} aria-label="Lista de conversas">
+        </div>
         <header><strong>{filterLabel(filter)}</strong><span>{filtered.length}</span></header>
         <div className={styles.listBody}>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}

@@ -1,4 +1,5 @@
 .root { box-sizing: border-box; display: flex; flex-direction: column; width: var(--ui-sidebarWidth); flex-shrink: 0; background: var(--color-surface2); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); font-family: var(--typography-fontFamily-body); color: var(--color-ink); min-height: 0; }
+.brand { display: flex; align-items: center; min-height: var(--space-16); padding: var(--space-4) var(--space-6) 0; }
 .header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-3) var(--space-4) var(--space-6); }
 .header h2 { margin: 0; font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); }
 .body { flex: 1; min-height: 0; overflow: auto; padding: var(--space-1) var(--space-3); }

@@ -21,6 +21,15 @@ const paths = {
   download: "M8 2v9m0 0 3.5-3.5M8 11 4.5 7.5M2 14h12",
   trash: "M3 4h10M6 4V2h4v2m2 0-.6 10H4.6L4 4m3 3v4m2-4v4",
   file: "M4 1h5l3 3v11H4V1Zm5 0v3h3",
+  grid: "M2 2h5v5H2V2Zm7 0h5v5H9V2ZM2 9h5v5H2V9Zm7 0h5v5H9V9Z",
+  building: "M2.5 14V3l5.5-2 5.5 2v11M1 14h14M5 5h1m4 0h1M5 8h1m4 0h1M5 11h1m4 0h1M7 14v-3h2v3",
+  briefcase: "M2 5h12v9H2V5Zm3 0V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M2 9h12M7 8v2h2V8",
+  bolt: "M9 1 3.5 8H8l-1 7 5.5-8H8l1-6Z",
+  calendar: "M2 3h12v11H2V3Zm3-2v4m6-4v4M2 7h12",
+  settings: "M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Zm0 3a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z",
+  chart: "M2 13V8m4 5V3m4 10V6m4 7V1M1 14h14",
+  team: "M6 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm6 .5a2 2 0 1 0 0 4M1.5 14v-2a4.5 4.5 0 0 1 9 0v2m1.5-5a3 3 0 0 1 2.5 3v2",
+  exit: "M6 2H2v12h4m4-9 4 3-4 3m4-3H5",
 } as const;
 export type IconName = keyof typeof paths;
 export function Icon({ name, ...props }: { name: IconName } & Omit<ComponentProps<"svg">, "children">) {
