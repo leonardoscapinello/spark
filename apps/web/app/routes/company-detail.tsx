@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionModal, BackLink, Button, Card, Field, Input, Label, RecordHero, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, BackLink, Button, Card, Field, Input, Label, PageFrame, RecordHero, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -111,9 +111,9 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 
-  if (!company) return <div className={styles.page}><BackLink render={<Link to="/companies" />}>Empresas</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</div>;
+  if (!company) return <PageFrame><BackLink render={<Link to="/companies" />}>Empresas</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</PageFrame>;
 
-  return <div className={styles.page}>
+  return <PageFrame>
     <BackLink render={<Link to="/companies" />}>Empresas</BackLink>
     <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Contatos", value: linkedContacts.length }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }] : [])]} />
 
@@ -152,7 +152,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
     <ActionModal open={linkDealOpen} onOpenChange={setLinkDealOpen} title="Vincular negócio" confirmLabel="Vincular" errorText="Selecione um negócio." onConfirm={linkDeal}>
       <Field><Label>Negócio</Label><SearchSelect label="Buscar negócio" searchPlacement="dropdown" placeholder="Selecionar negócio" options={deals.filter((item) => !item.deletedAt && item.companyId !== company.id).map((item) => ({ value: item.id, label: item.name, description: formatBRL(syncedAmount(item.amount)) }))} value={selectedDeal} onValueChange={setSelectedDeal} /></Field>
     </ActionModal>
-  </div>;
+  </PageFrame>;
 }
 
 function Info({ label, value, link, wide = false }: { label: string; value: string; link?: string | null; wide?: boolean }) { return <div className={wide ? styles.wide : undefined}><span>{label}</span>{link ? <a href={link} target="_blank" rel="noreferrer">{value}</a> : <strong>{value}</strong>}</div>; }

@@ -1,23 +1,17 @@
-.page {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  padding: var(--space-8);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
 
 .details span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 
-.contentGrid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.6fr) minmax(0, .95fr); grid-template-areas: "profile history relations"; align-items: start; min-width: 0; }
+.contentGrid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.6fr) minmax(0, .95fr); grid-template-areas: "profile history relations"; align-items: stretch; min-width: 0; border-top: var(--ui-hairline) solid var(--color-line); }
 .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); grid-template-areas: "profile history"; }
-.profileColumn { grid-area: profile; min-width: 0; padding: var(--space-4) var(--space-4) var(--space-4) 0; }
-.history { grid-area: history; min-width: 0; padding: var(--space-4); }
-.relations { grid-area: relations; min-width: 0; padding: var(--space-4) 0 var(--space-4) var(--space-4); }
+.profileColumn { grid-area: profile; min-width: 0; padding-inline-end: var(--space-4); border-inline-end: var(--ui-hairline) solid var(--color-line); }
+.history { grid-area: history; min-width: 0; padding-inline: var(--space-4); border-inline-end: var(--ui-hairline) solid var(--color-line); }
+.contentGrid[data-relations="hidden"] .history { border-inline-end: 0; }
+.relations { grid-area: relations; min-width: 0; padding-inline-start: var(--space-4); }
+.profileColumn > section, .history > section, .relations > .relationCard > section { border: 0; border-radius: 0; background: transparent; }
+.profileColumn > section > header, .history > section > header, .relations > .relationCard > section > header { padding-inline: 0; }
+.profileColumn > section > div, .history > section > div, .relations > .relationCard > section > div { padding-inline: 0; }
 .details, .editForm, .relationCard { min-width: 0; }
 .details { display: grid; }
 .details > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-2); padding-block: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
@@ -27,7 +21,8 @@
 .wide { grid-column: 1 / -1; }
 .editForm { display: grid; gap: var(--space-4); }
 .formActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.relations { display: grid; align-content: start; gap: var(--space-4); }
+.relations { display: grid; align-content: start; gap: 0; }
+.relations > .relationCard + .relationCard { border-top: var(--ui-hairline) solid var(--color-line); }
 .relationCard ul { list-style: none; padding: 0; margin: 0; }
 .relationCard li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-top: var(--ui-hairline) solid var(--color-line); }
 .relationCard li > div { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
@@ -37,16 +32,14 @@
 
 @media (max-width: 1200px) {
   .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile history" "relations history"; }
-  .profileColumn { padding-bottom: 0; }
-  .history { padding-right: 0; }
-  .relations { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); padding: 0 var(--space-4) var(--space-4) 0; }
+  .history { border-inline-end: 0; }
+  .relations { grid-template-columns: minmax(0, 1fr); padding-inline: 0 var(--space-4); border-inline-end: var(--ui-hairline) solid var(--color-line); }
 }
 
 @media (max-width: 760px) {
-  .page { padding: var(--space-4); }
   .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history" "relations"; }
   .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history"; }
-  .profileColumn, .history, .relations { padding: var(--space-4) 0; }
-  .relations { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .relations { gap: var(--space-4); }
+  .profileColumn, .history, .relations { padding-inline: 0; border-inline-end: 0; }
+  .history, .relations { border-top: var(--ui-hairline) solid var(--color-line); }
+  .relations { grid-template-columns: minmax(0, 1fr); }
 }
