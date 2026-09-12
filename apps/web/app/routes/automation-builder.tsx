@@ -34,7 +34,7 @@ export default function AutomationBuilder() {
   const [graph, setGraph] = useState<AutomationGraph>({ nodes: [], edges: [] });
   const [zoom, setZoom] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [panelMode, setPanelMode] = useState<"closed" | "palette" | "inspector">("palette");
+  const [panelMode, setPanelMode] = useState<"closed" | "palette" | "inspector">("closed");
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [runModalOpen, setRunModalOpen] = useState(false);
