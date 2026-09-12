@@ -192,6 +192,15 @@ export default function Integrations() {
                 <span className={styles.providerIcon}><Icon name={definition.icon} /></span>
                 <div><h3>{definition.name}</h3><p>{definition.description}</p></div>
               </div>
+              {connection && (
+                <div className={styles.connectionInfo}>
+                  <span>{connection.credentialsConfigured ? `Credencial ${connection.credentialHint ?? "configurada"}` : "Credencial pendente"}</span>
+                  <span>{connection.lastCheckedAt ? `Verificada em ${formatDate(connection.lastCheckedAt)}` : "Ainda não verificada"}</span>
+                  {connection.lastError && <small>{connection.lastError}</small>}
+                  {definition.provider === "instagram" && <span className={styles.callbackUrl}>Webhook: {instagramCallbackUrl(connection.id)}</span>}
+                </div>
+              )}
+              <div className={styles.providerFooter}>
                 <div className={styles.providerMeta}>
                   <Badge
                     tone={
@@ -207,22 +216,6 @@ export default function Integrations() {
                     {statusLabel(connection?.status)}
                   </Badge>
                 </div>
-                {connection && (
-                  <div className={styles.connectionInfo}>
-                    <span>
-                      {connection.credentialsConfigured
-                        ? `Credencial ${connection.credentialHint ?? "configurada"}`
-                        : "Credencial pendente"}
-                    </span>
-                    <span>
-                      {connection.lastCheckedAt
-                        ? `Verificada em ${formatDate(connection.lastCheckedAt)}`
-                        : "Ainda não verificada"}
-                    </span>
-                    {connection.lastError && <small>{connection.lastError}</small>}
-                    {definition.provider === "instagram" && <span className={styles.callbackUrl}>Webhook: {instagramCallbackUrl(connection.id)}</span>}
-                  </div>
-                )}
                 {canManage && (
                   <div className={styles.actions}>
                     <Button variant="secondary" onClick={() => open(definition, connection)}>
@@ -243,6 +236,7 @@ export default function Integrations() {
                     )}
                   </div>
                 )}
+              </div>
             </div>
           );
         })}</div>
