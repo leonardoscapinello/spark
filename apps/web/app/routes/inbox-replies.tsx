@@ -67,10 +67,10 @@ export default function InboxReplies() {
 
   return <div className={styles.page}>
     <PageHeader icon="message" title={showArchived ? "Respostas arquivadas" : "Respostas prontas"} description="Mantenha mensagens consistentes e disponíveis para a equipe certa." actions={canWrite && !firstRun ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />
-    {firstRun && <EmptyState variant="onboarding" icon="message" title="Crie sua primeira resposta pronta" description="Salve mensagens recorrentes para que a equipe responda com rapidez e consistência." action={canWrite ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />}
+    {firstRun && <EmptyState variant="featured" icon="message" title="Crie sua primeira resposta pronta" description="Salve mensagens recorrentes para que a equipe responda com rapidez e consistência." action={canWrite ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />}
     <CollectionToolbar
       search={<Input aria-label="Buscar respostas" value={query} startAdornment={<Icon name="search" />} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar resposta ou atalho" />}
-      filters={<Select label="Situação das respostas" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
+      filters={<Select appearance="filter" label="Situação das respostas" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
       count={`${visible.length} ${visible.length === 1 ? "resposta" : "respostas"}`}
     />
     <DataTable label="Respostas prontas" rows={visible} columns={columns} rowKey={(reply) => reply.id} rowLabel={(reply) => reply.title} state={isLoading && !replies.length ? "loading" : "ready"} emptyText={firstRun ? "As respostas aparecerão aqui depois da primeira criação." : showArchived ? "Nenhuma resposta arquivada." : "Nenhuma resposta pronta."} {...(canWrite ? { actions: (reply: CannedReply) => <div className={styles.actions}><TableIconAction label={`Editar ${reply.title}`} icon={<Icon name="right" />} onClick={() => openEdit(reply)} /><Button size="sm" variant="ghost" loading={busyId === reply.id} onClick={() => void toggleArchive(reply)}>{reply.archivedAt ? "Restaurar" : "Arquivar"}</Button></div> } : {})} />
