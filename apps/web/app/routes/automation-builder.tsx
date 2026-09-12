@@ -174,9 +174,9 @@ export default function AutomationBuilder() {
         </div>
       </main>
       <div className={styles.zoomControls} role="group" aria-label="Zoom do fluxo">
-        <Button iconOnly size="sm" variant="ghost" aria-label="Reduzir zoom" disabled={zoom <= 0.5} onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}><Icon name="minus" /></Button>
-        <Button size="sm" variant="ghost" aria-label="Voltar ao zoom de 100%" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</Button>
         <Button iconOnly size="sm" variant="ghost" aria-label="Ampliar zoom" disabled={zoom >= 1.5} onClick={() => setZoom((value) => Math.min(1.5, value + 0.25))}><Icon name="plus" /></Button>
+        <Button size="sm" variant="ghost" aria-label="Voltar ao zoom de 100%" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</Button>
+        <Button iconOnly size="sm" variant="ghost" aria-label="Reduzir zoom" disabled={zoom <= 0.5} onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}><Icon name="minus" /></Button>
       </div>
       </div>
     </div>

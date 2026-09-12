@@ -29,9 +29,10 @@
 .canvasViewport { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
 .canvas { position: relative; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: auto; background: var(--ui-automationCanvas); }
 .canvasStage { position: relative; width: 100%; height: 100%; transform-origin: top left; }
-.zoomControls { position: absolute; z-index: 4; inset-block-end: var(--space-3); inset-inline-end: var(--space-3); display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
-.zoomControls > :nth-child(2) { min-width: var(--space-12); font-variant-numeric: tabular-nums; }
-.canvasAdd { position: sticky; z-index: 3; inset-block-start: var(--space-5); inset-inline-start: calc(100% - var(--space-16)); width: var(--space-12); height: var(--space-12); background: var(--color-accent); color: var(--ui-buttonInk); box-shadow: var(--ui-panelShadow); }
+.zoomControls { position: absolute; z-index: 4; inset-block-start: 50%; inset-inline-end: var(--space-3); display: flex; flex-direction: column; align-items: center; gap: var(--space-2); transform: translateY(-50%); }
+.zoomControls > button { width: var(--ui-touchTarget); height: var(--ui-touchTarget); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
+.zoomControls > :nth-child(2) { min-width: var(--ui-touchTarget); font-variant-numeric: tabular-nums; }
+.canvasAdd { position: sticky; z-index: 3; inset-block-start: var(--space-5); inset-inline-start: calc(100% - var(--space-16)); width: var(--space-12); height: var(--space-12); border-radius: var(--radius-full); background: var(--color-accent); color: var(--ui-buttonInk); box-shadow: var(--ui-panelShadow); }
 .canvasAdd:hover:not([data-disabled]) { background: var(--color-accent); }
 .edges { position: absolute; inset: var(--space-0); width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .edges path { fill: none; stroke: var(--color-lineStrong); stroke-width: calc(var(--ui-hairline) * 2); }
@@ -64,4 +65,5 @@
   .canvas { height: 100%; min-height: 0; }
   .panel { position: absolute; inset-inline: 0; inset-block-end: 0; width: 100%; height: calc(100% - var(--space-16)); max-height: var(--ui-modalWidth); overflow: hidden; border-radius: var(--radius-lg) var(--radius-lg) 0 0; box-shadow: var(--ui-popupShadow); }
   .palette, .inspector { min-height: 0; }
+  .zoomControls { inset-block-start: auto; inset-block-end: var(--space-3); transform: none; }
 }
