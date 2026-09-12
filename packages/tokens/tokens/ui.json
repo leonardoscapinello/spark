@@ -101,6 +101,14 @@
       "$type": "color",
       "$value": "#f5f5f5"
     },
+    "automationNodeWidth": {
+      "$type": "dimension",
+      "$value": "256px"
+    },
+    "automationNodeHeight": {
+      "$type": "dimension",
+      "$value": "144px"
+    },
     "automationTrigger": {
       "$type": "color",
       "$value": "#ddf8e8"

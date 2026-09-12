@@ -7,6 +7,8 @@ export default mergeConfig(
     test: {
       // jsdom, não node — auth.client.ts usa localStorage de verdade.
       environment: "jsdom",
+      pool: "threads",
+      maxWorkers: 1,
     },
   }),
 );

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { Link, useNavigate, useParams } from "react-router";
+import { lightTheme } from "@spark/tokens/native-theme";
 import { automationsControllerPublish, automationsControllerRun } from "@spark/api-client";
 import { validateAutomationGraph, type AutomationEdge, type AutomationGraph, type AutomationNode, type AutomationNodeType } from "@spark/core";
 import { ActionModal, BackLink, Badge, Button, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type IconName, type SelectOption } from "@spark/ui-web";
@@ -17,6 +18,12 @@ const NODE_DEFAULTS: Record<AutomationNodeType, { label: string; description: st
   wait: { label: "Nova espera", description: "Aguarda um período ou evento" },
 };
 const NODE_ICONS: Record<AutomationNodeType, IconName> = { trigger: "bolt", action: "plus", condition: "grid", wait: "calendar" };
+const NODE_WIDTH = Number.parseFloat(lightTheme["ui-automationNodeWidth"]);
+const NODE_HEIGHT = Number.parseFloat(lightTheme["ui-automationNodeHeight"]);
+const NODE_ORIGIN_X = Number.parseFloat(lightTheme["space-16"]) - Number.parseFloat(lightTheme["space-2"]);
+const NODE_ORIGIN_Y = Number.parseFloat(lightTheme["space-16"]);
+const NODE_STEP_X = NODE_WIDTH + Number.parseFloat(lightTheme["space-8"]) + Number.parseFloat(lightTheme["space-1"]);
+const NODE_STEP_Y = NODE_HEIGHT + Number.parseFloat(lightTheme["space-10"]);
 
 export async function clientLoader() { const session = await requireCapability("automations:read"); void Promise.allSettled([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload(), getAutomationRunsCollection().preload(), getAutomationRunStepsCollection().preload(), ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : [])]); return null; }
 
@@ -71,7 +78,7 @@ export default function AutomationBuilder() {
   function addNode(type: AutomationNodeType) {
     const id = `${type}-${crypto.randomUUID()}`;
     const count = graph.nodes.length;
-    const node: AutomationNode = { id, type, position: { x: 56 + (count % 3) * 292, y: 64 + Math.floor(count / 3) * 184 }, data: { ...NODE_DEFAULTS[type], config: {} } };
+    const node: AutomationNode = { id, type, position: { x: NODE_ORIGIN_X + (count % 3) * NODE_STEP_X, y: NODE_ORIGIN_Y + Math.floor(count / 3) * NODE_STEP_Y }, data: { ...NODE_DEFAULTS[type], config: {} } };
     setGraph((value) => ({ ...value, nodes: [...value.nodes, node] }));
     setSelectedId(id);
     setPanelMode("inspector");
@@ -212,7 +219,7 @@ function NodeConfiguration({ node, disabled, onChange }: { node: AutomationNode;
 function EdgeLine({ edge, nodes }: { edge: AutomationEdge; nodes: AutomationNode[] }) {
   const source = nodes.find((node) => node.id === edge.source); const target = nodes.find((node) => node.id === edge.target);
   if (!source || !target) return null;
-  const x1 = source.position.x + 256; const y1 = source.position.y + 72; const x2 = target.position.x; const y2 = target.position.y + 72;
+  const x1 = source.position.x + NODE_WIDTH; const y1 = source.position.y + NODE_HEIGHT / 2; const x2 = target.position.x; const y2 = target.position.y + NODE_HEIGHT / 2;
   const middle = (x1 + x2) / 2;
   return <path d={`M ${x1} ${y1} C ${middle} ${y1}, ${middle} ${y2}, ${x2} ${y2}`} />;
 }
