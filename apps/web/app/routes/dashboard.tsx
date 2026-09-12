@@ -47,6 +47,9 @@ export default function Dashboard() {
   const loading = loadingContacts || loadingDeals || loadingActivities;
   const hasRecords = contacts.length > 0 || deals.length > 0 || activities.length > 0;
   const hasMetrics = canReadContacts || canReadDeals || canReadActivities;
+  const firstRun = hasMetrics && !loading && !hasRecords;
+  const firstRoute = canReadContacts ? "/" : canReadDeals ? "/deals" : "/activities";
+  const firstLabel = canReadContacts ? "Abrir Leads" : canReadDeals ? "Abrir CRM" : "Abrir Agenda";
   const chartData = snapshot.days.map((day) => ({
     label: formatDay(day.date, periodDays),
     contatos: canReadContacts ? day.newContacts : null,
@@ -61,9 +64,17 @@ export default function Dashboard() {
 
   return <div className={styles.page}>
     <PageHeader icon="chart" title="Visão geral" />
-    {!loading && !hasRecords && hasMetrics && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canReadContacts ? <Button onClick={() => void navigate("/")}>Ir para Leads</Button> : undefined} />}
+    {firstRun && <>
+      <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={<Button onClick={() => void navigate(firstRoute)}>{firstLabel}</Button>} />
+      <div className={styles.startHeading}>Comece por uma área</div>
+      <div className={styles.startGrid}>
+        {canReadContacts && <Link to="/" className={styles.startCard}><span className={styles.startIcon}><Icon name="user" /></span><span><strong>Leads</strong><small>Organize pessoas e oportunidades.</small></span><Icon name="right" /></Link>}
+        {canReadDeals && <Link to="/deals" className={styles.startCard}><span className={styles.startIcon}><Icon name="briefcase" /></span><span><strong>CRM</strong><small>Acompanhe cada negócio no funil.</small></span><Icon name="right" /></Link>}
+        {canReadActivities && <Link to="/activities" className={styles.startCard}><span className={styles.startIcon}><Icon name="calendar" /></span><span><strong>Agenda</strong><small>Planeje tarefas, ligações e reuniões.</small></span><Icon name="right" /></Link>}
+      </div>
+    </>}
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar contatos, negócios ou atividades." />}
-    {hasMetrics && <>
+    {hasMetrics && !firstRun && <>
       <div className={styles.reportFilters}>
         <span className={styles.filterLabel}><Icon name="calendar" />Período</span>
         <div className={styles.period}><Select appearance="filter" label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>
@@ -76,7 +87,7 @@ export default function Dashboard() {
       {canReadActivities && <Link className={styles.metricLink} to="/activities" prefetch="intent"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
       </DashboardGrid>
     </>}
-    {hasMetrics && <>
+    {hasMetrics && !firstRun && <>
       <div className={styles.sectionHeading}><h2>Movimento no período</h2><span>Novos registros e atividades por dia</span></div>
       <DashboardGrid>
         <DataChart title="Evolução diária" description="Contatos, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : hasRecords ? "ready" : "empty"} />
