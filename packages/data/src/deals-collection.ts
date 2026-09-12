@@ -1,3 +1,4 @@
+import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 /**
  * Local-first deals collection — same pattern as contacts-collection.ts
  * (docs/adr/0018, docs/adr/0026). `onUpdate` covers the two mutations the
@@ -105,7 +106,7 @@ const DealCollectionSchema = DealSchema.extend({
 
 export function createDealsCollection() {
   return createCollection(
-    electricCollectionOptions({
+    electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "deals",
       schema: DealCollectionSchema,
       getKey: (deal) => deal.id,

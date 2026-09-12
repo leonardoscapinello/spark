@@ -1,3 +1,4 @@
+import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 /**
  * Local-first activities collection — same pattern as
  * deals-collection.ts (docs/adr/0018, docs/adr/0026). `onUpdate` only
@@ -31,7 +32,7 @@ export function optimisticActivity(input: Omit<CreateActivityInput, "id">, orgId
 
 export function createActivitiesCollection() {
   return createCollection(
-    electricCollectionOptions({
+    electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "activities",
       schema: ActivitySchema,
       getKey: (activity) => activity.id,

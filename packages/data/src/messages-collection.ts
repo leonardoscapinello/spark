@@ -1,3 +1,4 @@
+import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
@@ -9,7 +10,7 @@ export function optimisticInternalNote(input: { conversationId: ConversationId; 
 }
 
 export function createMessagesCollection() {
-  return createCollection(electricCollectionOptions({
+  return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
     id: "messages",
     schema: MessageSchema,
     getKey: (message) => message.id,

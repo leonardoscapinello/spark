@@ -1,3 +1,4 @@
+import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
@@ -19,7 +20,7 @@ function shape(id: string) {
 
 export function createSocialChannelsCollection() {
   return createCollection(
-    electricCollectionOptions({
+    electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "social_channels",
       schema: SocialChannelSchema,
       getKey: (item) => item.id,
@@ -29,7 +30,7 @@ export function createSocialChannelsCollection() {
 }
 export function createSocialPostsCollection() {
   return createCollection(
-    electricCollectionOptions({
+    electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "social_posts",
       schema: SocialPostSchema,
       getKey: (item) => item.id,

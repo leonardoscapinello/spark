@@ -1,3 +1,4 @@
+import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
@@ -17,7 +18,7 @@ export function optimisticIdentity(input: { contactId: ContactId; channel: Ident
 }
 
 export function createIdentitiesCollection() {
-  return createCollection(electricCollectionOptions({
+  return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
     id: "identities",
     schema: IdentitySchema,
     getKey: (identity) => identity.id,

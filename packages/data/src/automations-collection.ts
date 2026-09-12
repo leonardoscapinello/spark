@@ -1,3 +1,4 @@
+import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
@@ -10,7 +11,7 @@ export function optimisticAutomation(name: string, orgId: OrgId): Automation {
 }
 
 export function createAutomationsCollection() {
-  return createCollection(electricCollectionOptions({
+  return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
     id: "automations",
     schema: AutomationSchema,
     getKey: (automation) => automation.id,
