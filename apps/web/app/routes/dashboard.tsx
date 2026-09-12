@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { redirect } from "react-router";
+import { Link, redirect, useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { buildCrmDashboard, formatBRL } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { DashboardGrid, DashboardToolbar, DataChart, DonutChart, MetricCard, PageHeader } from "@spark/ui-web";
+import { Button, DashboardGrid, DataChart, DonutChart, EmptyState, MetricCard, PageHeader, Select } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -27,6 +27,7 @@ export async function clientLoader() {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
@@ -44,6 +45,7 @@ export default function Dashboard() {
     periodDays,
   }), [activities, contacts, deals, periodDays]);
   const loading = loadingContacts || loadingDeals || loadingActivities;
+  const hasRecords = contacts.length > 0 || deals.length > 0 || activities.length > 0;
   const chartData = snapshot.days.map((day) => ({
     label: formatDay(day.date, periodDays),
     contatos: canReadContacts ? day.newContacts : null,
@@ -57,31 +59,35 @@ export default function Dashboard() {
   ];
 
   return <div className={styles.page}>
-    <PageHeader title="Visão geral" description="Acompanhe o desempenho comercial e identifique o que precisa de atenção." />
-    <DashboardToolbar title="Desempenho comercial" period={period} periods={PERIODS} onPeriodChange={setPeriod} />
+    <PageHeader title="Visão geral" description="Acompanhe o desempenho comercial e identifique o que precisa de atenção." actions={<div className={styles.period}><Select label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>} />
+    <div className={styles.sectionHeading}><h2>Desempenho comercial</h2><span>Indicadores do período selecionado</span></div>
     <DashboardGrid metrics>
-      {canReadContacts && <MetricCard title="Contatos ativos" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} />}
-      {canReadDeals && <MetricCard title="Negócios em aberto" value={snapshot.openDeals} comparison={formatBRL(snapshot.openPipelineAmount)} state={loadingDeals ? "loading" : "ready"} />}
-      {canReadActivities && <MetricCard title="Atividades atrasadas" value={snapshot.overdueActivities} comparison="Pendências anteriores a hoje" sentiment={snapshot.overdueActivities > 0 ? "negative" : "positive"} state={loadingActivities ? "loading" : "ready"} />}
-      {canReadActivities && <MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} />}
+      {canReadContacts && <Link className={styles.metricLink} to="/" prefetch="intent"><MetricCard title="Contatos ativos" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} /></Link>}
+      {canReadDeals && <Link className={styles.metricLink} to="/deals" prefetch="intent"><MetricCard title="Negócios em aberto" value={snapshot.openDeals} comparison={formatBRL(snapshot.openPipelineAmount)} state={loadingDeals ? "loading" : "ready"} /></Link>}
+      {canReadActivities && <Link className={styles.metricLink} to="/activities" prefetch="intent"><MetricCard title="Atividades atrasadas" value={snapshot.overdueActivities} comparison="Pendências anteriores a hoje" sentiment={snapshot.overdueActivities > 0 ? "negative" : "positive"} state={loadingActivities ? "loading" : "ready"} /></Link>}
+      {canReadActivities && <Link className={styles.metricLink} to="/activities" prefetch="intent"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
     </DashboardGrid>
-    <DashboardGrid>
-      <DataChart title="Movimento no período" description="Novos registros e atividades agendadas por dia" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : "ready"} />
-    </DashboardGrid>
-    <DashboardGrid>
-      {canReadDeals && <DonutChart title="Negócios por situação" state={loadingDeals ? "loading" : "ready"} data={[
+    {!loading && !hasRecords ? <EmptyState icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canReadContacts ? <Button onClick={() => void navigate("/")}>Ir para Leads</Button> : undefined} /> : <>
+      <div className={styles.sectionHeading}><h2>Movimento no período</h2><span>Novos registros e atividades por dia</span></div>
+      <DashboardGrid>
+        <DataChart title="Evolução diária" description="Contatos, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : "ready"} />
+      </DashboardGrid>
+      <div className={styles.sectionHeading}><h2>Distribuição</h2><span>Como os registros estão organizados agora</span></div>
+      <DashboardGrid>
+        {canReadDeals && <DonutChart title="Negócios por situação" state={loadingDeals ? "loading" : "ready"} data={[
         { id: "open", label: "Em aberto", value: snapshot.dealsByStatus.open, color: 1 },
         { id: "won", label: "Ganhos", value: snapshot.dealsByStatus.won, color: 2 },
         { id: "lost", label: "Perdidos", value: snapshot.dealsByStatus.lost, color: 4 },
-      ]} />}
-      {canReadContacts && <DonutChart title="Contatos por etapa" state={loadingContacts ? "loading" : "ready"} data={[
+        ]} />}
+        {canReadContacts && <DonutChart title="Contatos por etapa" state={loadingContacts ? "loading" : "ready"} data={[
         { id: "new", label: "Novos", value: snapshot.contactsByStatus.new, color: 1 },
         { id: "qualified", label: "Qualificados", value: snapshot.contactsByStatus.qualified, color: 2 },
         { id: "nurturing", label: "Em nutrição", value: snapshot.contactsByStatus.nurturing, color: 3 },
         { id: "customer", label: "Clientes", value: snapshot.contactsByStatus.customer, color: 5 },
         { id: "unqualified", label: "Desqualificados", value: snapshot.contactsByStatus.unqualified, color: 4 },
-      ]} />}
-    </DashboardGrid>
+        ]} />}
+      </DashboardGrid>
+    </>}
   </div>;
 }
 
