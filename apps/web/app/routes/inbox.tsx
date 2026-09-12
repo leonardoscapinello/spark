@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Badge, Button, Field, Icon, Input, Label, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Icon, Input, Label, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -37,7 +37,7 @@ export async function clientLoader() {
 
 export default function Inbox() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const session = getSession();
   const canWrite = session?.capabilities.includes("inbox:write") ?? false;
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
@@ -70,6 +70,15 @@ export default function Inbox() {
       .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm))));
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
+  const queueCount = (box: InboxFilter) => conversations.filter((item) => matchesFilter(item, box, session?.userId ?? null)).length;
+  const queues = [
+    { label: "Abertas", box: "open" as const, to: "/inbox", icon: "inbox" as const },
+    { label: "Minhas conversas", box: "mine" as const, to: "/inbox?box=mine", icon: "user" as const },
+    { label: "Não atribuídas", box: "unassigned" as const, to: "/inbox?box=unassigned", icon: "team" as const },
+    { label: "Adiadas", box: "snoozed" as const, to: "/inbox?box=snoozed", icon: "calendar" as const },
+    { label: "Fechadas", box: "closed" as const, to: "/inbox?box=closed", icon: "check" as const },
+    { label: "Todas", box: "all" as const, to: "/inbox?box=all", icon: "grid" as const },
+  ];
   const { data: messages = [] } = useLiveQuery({ query: (q) => selected ? q.from({ messages: messagesCollection }).where(({ messages: item }) => eq(item.conversationId, selected.id)).orderBy(({ messages: item }) => item.createdAt, "asc") : undefined });
 
   useEffect(() => {
@@ -122,12 +131,18 @@ export default function Inbox() {
   }
 
   return <div className={styles.page}>
+    <Sidebar title="Atendimento" className={styles.queueSidebar}>
+      <SidebarSection title="Caixas">
+        {queues.map((queue) => <SidebarItem key={queue.box} render={<Link to={queue.to} prefetch="intent" />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
+      </SidebarSection>
+      {teams.some((team) => !team.archivedAt) && <SidebarSection title="Equipes">
+        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link to={`/inbox?box=team:${team.id}`} prefetch="intent" />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
+      </SidebarSection>}
+      <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" prefetch="intent" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
+    </Sidebar>
     <div className={styles.workspace} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
-        {teams.some((team) => !team.archivedAt) && <div className={styles.filters} aria-label="Filtrar por equipe">
-          {teams.filter((team) => !team.archivedAt).map((team) => <FilterButton key={team.id} active={filter === `team:${team.id}`} count={conversations.filter((item) => item.status === "open" && item.teamId === team.id).length} onClick={() => setSearchParams({ box: `team:${team.id}` })}>{team.name}</FilterButton>)}
-        </div>}
-        <header><strong>{filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</div></header>
+        <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</div></header>
         {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
         <div className={styles.listBody}>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
@@ -196,9 +211,6 @@ export default function Inbox() {
   </div>;
 }
 
-function FilterButton({ active, count, children, onClick }: { active: boolean; count: number; children: string; onClick: () => void }) {
-  return <Button variant="ghost" shape="rounded" className={styles.filterButton} data-selected={active || undefined} onClick={onClick}><span>{children}</span><b>{count}</b></Button>;
-}
 type InboxFilter = ConversationStatus | "all" | "mine" | "unassigned" | `team:${string}`;
 function parseInboxFilter(value: string | null): InboxFilter {
   if (value === "all" || value === "mine" || value === "unassigned" || value === "closed" || value === "snoozed") return value;
