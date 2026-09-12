@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
-import { useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { formsControllerStatus, formsControllerUpdate } from "@spark/api-client";
 import type { LeadFormField } from "@spark/core";
 import {
   Button,
+  BackLink,
   EmptyState,
   Field,
   Icon,
@@ -58,6 +59,7 @@ export default function FormBuilder() {
   if (!form)
     return (
       <div className={styles.page}>
+        <BackLink render={<Link to="/forms" />}>Formulários</BackLink>
         <PageHeader eyebrow="Formulários" title="Editor de formulário" />
         {isLoading ? <div className={styles.loading} role="status" aria-label="Carregando formulário"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="file" title="Formulário não encontrado" description="Este formulário não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/forms")}>Ver formulários</Button>} />}
       </div>
@@ -129,15 +131,12 @@ export default function FormBuilder() {
   const publicUrl = `/f/${form.publicKey}`;
   return (
     <div className={styles.page}>
+      <BackLink render={<Link to="/forms" />}>Formulários</BackLink>
       <PageHeader
-        eyebrow="Formulários"
         title={form.name}
-        description="Edite campos, mapeamentos e textos. A prévia usa o mesmo componente publicado."
+        description="Organize os campos e acompanhe como o formulário ficará para quem responder."
         actions={
           <div className={styles.headerActions}>
-            <Button variant="ghost" onClick={() => navigate("/forms")}>
-              Voltar
-            </Button>
             {form.status === "published" && (
               <Button
                 variant="secondary"
