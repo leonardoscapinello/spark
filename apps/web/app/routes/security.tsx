@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { redirect, useNavigate } from "react-router";
-import type { Route } from "./+types/security";
 import { ActionModal, Badge, Button, Field, Input, Label, PageHeader, notify } from "@spark/ui-web";
 import {
   beginMfaEnrollment,
@@ -12,25 +11,41 @@ import {
   signOutEverywhere,
   signOutOtherSessions,
   verifyMfaEnrollment,
+  type AuthSessionDetails,
   type MfaEnrollment,
+  type MfaStatus,
 } from "../lib/auth.client";
 import styles from "./security.module.css";
 
 export async function clientLoader() {
   const session = await restoreSession();
   if (!session) throw redirect("/login");
-  const [mfa, currentSession] = await Promise.all([getMfaStatus(), getAuthSessionDetails()]);
-  return { ...mfa, currentSession };
+  return null;
 }
 
-export default function Security({ loaderData }: Route.ComponentProps) {
+export default function Security() {
   const navigate = useNavigate();
-  const [factors, setFactors] = useState(loaderData.factors);
+  const [factors, setFactors] = useState<MfaStatus["factors"]>([]);
+  const [currentSession, setCurrentSession] = useState<AuthSessionDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [enrollment, setEnrollment] = useState<MfaEnrollment | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [removeId, setRemoveId] = useState<string | null>(null);
   const [sessionAction, setSessionAction] = useState<"others" | "global" | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.all([getMfaStatus(), getAuthSessionDetails()]).then(([mfa, details]) => {
+      if (!active) return;
+      setFactors(mfa.factors);
+      setCurrentSession(details);
+      setLoadError(false);
+    }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [reloadKey]);
 
   async function leaveAccount() {
     await signOut();
@@ -97,17 +112,19 @@ export default function Security({ loaderData }: Route.ComponentProps) {
             <h2>Autenticação em dois fatores</h2>
             <p>Além da senha, o acesso exige um código de seis dígitos do aplicativo autenticador.</p>
           </div>
-          <Badge tone={factors.length > 0 ? "success" : "warning"}>{factors.length > 0 ? "Ativada" : "Desativada"}</Badge>
+          <Badge tone={loading || loadError ? "neutral" : factors.length > 0 ? "success" : "warning"}>{loading ? "Carregando" : loadError ? "Indisponível" : factors.length > 0 ? "Ativada" : "Desativada"}</Badge>
         </div>
+
+        {loadError && <div className={styles.loadError} role="alert"><span>Não foi possível consultar a segurança da conta.</span><Button size="sm" variant="secondary" onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button></div>}
 
         {factors.length > 0 ? factors.map((factor) => (
           <div className={styles.factor} key={factor.id}>
             <div><strong>{factor.name}</strong><span>Ativado em {new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(factor.createdAt))}</span></div>
             <Button size="sm" variant="ghost" onClick={() => setRemoveId(factor.id)}>Remover</Button>
           </div>
-        )) : !enrollment && <p className={styles.explanation}>Sua conta usa somente senha. Ative a segunda etapa para impedir acesso quando uma senha for descoberta.</p>}
+        )) : !enrollment && !loading && !loadError && <p className={styles.explanation}>Sua conta usa somente senha. Ative a segunda etapa para impedir acesso quando uma senha for descoberta.</p>}
 
-        {!enrollment && <Button onClick={() => void startEnrollment()} loading={busy}>Ativar com aplicativo autenticador</Button>}
+        {!enrollment && !loading && !loadError && factors.length === 0 && <Button onClick={() => void startEnrollment()} loading={busy}>Ativar com aplicativo autenticador</Button>}
 
         {enrollment && (
           <div className={styles.enrollment}>
@@ -144,9 +161,9 @@ export default function Security({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className={styles.sessionDetails}>
-          <div><span>Conta</span><strong>{loaderData.currentSession.email}</strong></div>
-          <div><span>Último acesso</span><strong>{formatDateTime(loaderData.currentSession.lastSignInAt)}</strong></div>
-          <div><span>Renovação da sessão</span><strong>{formatDateTime(loaderData.currentSession.expiresAt)}</strong></div>
+          <div><span>Conta</span><strong>{currentSession?.email ?? "—"}</strong></div>
+          <div><span>Último acesso</span><strong>{currentSession ? formatDateTime(currentSession.lastSignInAt) : "—"}</strong></div>
+          <div><span>Renovação da sessão</span><strong>{currentSession ? formatDateTime(currentSession.expiresAt) : "—"}</strong></div>
         </div>
 
         <div className={styles.sessionActions}>

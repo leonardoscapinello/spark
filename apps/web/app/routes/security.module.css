@@ -21,6 +21,8 @@
 
 .explanation { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
 
+.loadError { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); color: var(--color-statusDanger); font-size: var(--typography-size-sm); }
+
 .cardHeader,
 .factor,
 .actions,
