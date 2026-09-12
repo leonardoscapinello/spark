@@ -100,7 +100,7 @@ export default function Companies() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title="Empresas" description="Organize os contatos por empresa e acompanhe seus negócios." actions={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
+    <PageHeader title="Empresas" description="Organize os contatos por empresa e acompanhe seus negócios." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
     {!firstRun && <div className={styles.toolbar}>
       <Input aria-label="Buscar empresas" placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />
       <div className={styles.visibility}><Select label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} /></div>
