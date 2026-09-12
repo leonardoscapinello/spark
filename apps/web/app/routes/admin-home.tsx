@@ -34,16 +34,15 @@ export default function AdminHome({ loaderData }: Route.ComponentProps) {
   const allowed = (capability: Capability) => loaderData.session.capabilities.includes(capability);
 
   return <div className={styles.page}>
-    <PageHeader title="Administração" description="Acesso da equipe, integrações e estrutura dos dados." />
+    <PageHeader title="Início" description="Gerencie equipe, acessos, integrações e dados do espaço de trabalho." />
     <div className={styles.sections}>{sections.map((section) => {
       const visible = section.areas.filter((area) => allowed(area.capability));
       if (visible.length === 0) return null;
       return <section key={section.title} className={styles.section} aria-label={section.title}>
         <h2>{section.title}</h2>
-        <div className={styles.grid}>{visible.map((area) => <Link key={area.to} to={area.to} className={styles.card}>
+        <div className={styles.grid}>{visible.map((area) => <Link key={area.to} to={area.to} prefetch="intent" className={styles.card}>
           <span className={styles.icon}><Icon name={area.icon} /></span>
           <span className={styles.copy}><strong>{area.title}</strong><span>{area.description}</span></span>
-          <Icon name="right" />
         </Link>)}</div>
       </section>;
     })}</div>
