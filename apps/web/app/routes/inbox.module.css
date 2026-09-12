@@ -18,10 +18,13 @@
 .listControls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--ui-touchTarget); padding-inline: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 .listControlActions,.layoutSwitch { display: flex; align-items: center; gap: var(--space-1); }
 .layoutSwitch { padding-inline-end: var(--space-2); border-inline-end: var(--ui-hairline) solid var(--color-line); }
-.listBody { flex: 1; min-height: 0; overflow-y: auto; }
+.listBody { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-2); }
+.workspace[data-layout="table"] .listBody { padding: 0; }
 .tableSubject { max-width: var(--ui-popoverWidth); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: start; }
-.conversationButton { width: 100%; height: auto; min-height: var(--ui-touchTarget); padding: var(--space-3); display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: start; gap: var(--space-3); border-radius: 0; border-bottom: var(--ui-hairline) solid var(--color-line); text-align: left; white-space: normal; }
-.conversationButton[data-selected] { background: var(--ui-selected); box-shadow: inset var(--ui-focusWidth) 0 0 var(--color-accent); }
+.conversationButton { width: 100%; height: auto; min-height: var(--ui-touchTarget); padding: var(--space-3); display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: start; gap: var(--space-3); border-radius: var(--radius-md); border: var(--ui-hairline) solid transparent; text-align: left; white-space: normal; }
+.conversationButton + .conversationButton { margin-top: var(--space-1); }
+.conversationButton:hover { background: var(--color-surface2); }
+.conversationButton[data-selected] { border-color: var(--color-line); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
 .avatar,.avatarLarge { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border-radius: var(--radius-full); background: var(--color-accentWash); color: var(--color-accent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); }
 .avatar { width: var(--ui-controlMedium); height: var(--ui-controlMedium); }
 .avatarLarge { width: var(--ui-controlLarge); height: var(--ui-controlLarge); }
