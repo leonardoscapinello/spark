@@ -10,7 +10,7 @@ import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./catalog.module.css";
 
-export async function clientLoader() { await requireCapability("catalog:read"); await Promise.all([getProductsCollection().preload(), getProductVariantsCollection().preload(), getDiscountRulesCollection().preload()]); return null; }
+export async function clientLoader() { await requireCapability("catalog:read"); void Promise.allSettled([getProductsCollection().preload(), getProductVariantsCollection().preload(), getDiscountRulesCollection().preload()]); return null; }
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("view") === "discounts" ? "discounts" : "products";

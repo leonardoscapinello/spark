@@ -12,7 +12,7 @@ import styles from "./inbox-replies.module.css";
 
 export async function clientLoader() {
   await requireCapability("inbox:read");
-  await Promise.all([getCannedRepliesCollection().preload(), getTeamsCollection().preload()]);
+  void Promise.allSettled([getCannedRepliesCollection().preload(), getTeamsCollection().preload()]);
   return null;
 }
 

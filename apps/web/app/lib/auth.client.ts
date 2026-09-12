@@ -89,6 +89,8 @@ export function getToken(): string | null {
 
 export async function restoreSession(): Promise<AppSession | null> {
   listenForTokenRotation();
+  const activeProfile = getSession();
+  if (activeProfile) return activeProfile;
   const { data, error } = await getSupabaseClient().auth.getSession();
   if (error || !data.session) {
     accessToken = null;

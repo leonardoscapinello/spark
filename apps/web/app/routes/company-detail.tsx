@@ -17,7 +17,7 @@ import styles from "./company-detail.module.css";
 
 export async function clientLoader() {
   const session = await requireCapability("companies:read");
-  await Promise.all([
+  void Promise.allSettled([
     getCompaniesCollection().preload(),
     getUsersCollection().preload(),
     getEventsCollection().preload(),

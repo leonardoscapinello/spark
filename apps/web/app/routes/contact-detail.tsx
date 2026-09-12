@@ -31,7 +31,7 @@ import { getCustomFieldsCollection } from "../lib/custom-fields-collection.clien
 
 export async function clientLoader() {
   const session = await requireCapability("contacts:read");
-  await Promise.all([
+  void Promise.allSettled([
     getContactsCollection().preload(),
     getUsersCollection().preload(),
     getEventsCollection().preload(),

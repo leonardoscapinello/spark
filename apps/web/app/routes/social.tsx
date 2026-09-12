@@ -33,7 +33,7 @@ import styles from "./social.module.css";
 
 export async function clientLoader() {
   await requireCapability("social:read");
-  await Promise.all([
+  void Promise.allSettled([
     getSocialChannelsCollection().preload(),
     getSocialPostsCollection().preload(),
   ]);

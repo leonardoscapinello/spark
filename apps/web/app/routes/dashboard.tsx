@@ -18,7 +18,7 @@ const PERIODS = [
 export async function clientLoader() {
   const session = await restoreSession();
   if (!session) throw redirect("/login");
-  await Promise.all([
+  void Promise.allSettled([
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),

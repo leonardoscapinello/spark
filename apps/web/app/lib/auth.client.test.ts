@@ -75,6 +75,18 @@ describe("auth.client — Supabase Auth session", () => {
     expect(getSession()).toBeNull();
   });
 
+  it("reuses the active profile when navigating between app pages", async () => {
+    const orgId = orgIdFactory.create();
+    mocks.signInWithPassword.mockResolvedValue({ data: { session: { access_token: "real-jwt" } }, error: null });
+    mocks.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: "aal1", nextLevel: "aal1" }, error: null });
+    mocks.me.mockResolvedValue({ id: "local-user", orgId, capabilities: ["contacts:read"] });
+
+    const profile = await signIn("person@company.com", "strong-password");
+    await expect(restoreSession()).resolves.toEqual(profile);
+    expect(mocks.getSession).not.toHaveBeenCalled();
+    expect(mocks.me).toHaveBeenCalledTimes(1);
+  });
+
   it("revokes other sessions without clearing the current device", async () => {
     const orgId = orgIdFactory.create();
     mocks.signInWithPassword.mockResolvedValue({ data: { session: { access_token: "real-jwt" } }, error: null });

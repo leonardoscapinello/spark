@@ -14,7 +14,7 @@ import styles from "./deals.module.css";
 
 export async function clientLoader() {
   const session = await requireCapability("deals:read");
-  await Promise.all([
+  void Promise.allSettled([
     getPipelinesCollection().preload(),
     getStagesCollection().preload(),
     getDealsCollection().preload(),

@@ -53,7 +53,7 @@ const ACTIVITY_TYPES: ReadonlyArray<{ value: ActivityType; label: string }> = [
 
 export async function clientLoader() {
   const session = await requireCapability("deals:read");
-  await Promise.all([
+  void Promise.allSettled([
     getDealsCollection().preload(),
     getPipelinesCollection().preload(),
     getStagesCollection().preload(),

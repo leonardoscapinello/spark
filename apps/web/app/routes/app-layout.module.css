@@ -10,6 +10,10 @@
   color: var(--color-ink);
 }
 
+.shell[data-sidebar="hidden"] {
+  grid-template-columns: var(--ui-railWidth) minmax(0, 1fr);
+}
+
 .rail {
   height: 100%;
   padding-top: var(--space-2);

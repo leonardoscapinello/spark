@@ -144,6 +144,8 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     ? adminCapabilities.some(allowed)
     : module.sections.some((section) => section.items.some((item) => allowed(item.capability))));
   const current = moduleForPath(location.pathname);
+  const showSidebar = current.id !== "overview"
+    && !["/automations/", "/pages/", "/forms/"].some((prefix) => location.pathname.startsWith(prefix));
 
   async function handleSignOut() {
     await signOut();
@@ -157,7 +159,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   }
 
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"}>
       <NavigationRail className={styles.rail}>
         <Link to="/dashboard" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /></Link>
         <div className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
@@ -166,7 +168,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {railLink(accountModule)}
         </div>
       </NavigationRail>
-      <Sidebar title={current.title} className={styles.sidebar} footer={current.id === "account" ? <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}><Icon name="exit" /> Sair da conta</Button> : null}>
+      {showSidebar && <Sidebar title={current.title} className={styles.sidebar} footer={current.id === "account" ? <Button variant="ghost" size="sm" onClick={handleSignOut} className={styles.sair}><Icon name="exit" /> Sair da conta</Button> : null}>
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
@@ -175,7 +177,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
         })}
-      </Sidebar>
+      </Sidebar>}
       <main className={styles.conteudo}><Outlet /></main>
     </div>
   );

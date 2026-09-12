@@ -17,7 +17,7 @@ const NODE_DEFAULTS: Record<AutomationNodeType, { label: string; description: st
   wait: { label: "Nova espera", description: "Aguarda um período ou evento" },
 };
 
-export async function clientLoader() { const session = await requireCapability("automations:read"); await Promise.all([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload(), getAutomationRunsCollection().preload(), getAutomationRunStepsCollection().preload(), ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : [])]); return null; }
+export async function clientLoader() { const session = await requireCapability("automations:read"); void Promise.allSettled([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload(), getAutomationRunsCollection().preload(), getAutomationRunStepsCollection().preload(), ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : [])]); return null; }
 
 export default function AutomationBuilder() {
   const navigate = useNavigate();

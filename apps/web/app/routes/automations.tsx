@@ -8,7 +8,7 @@ import { getAutomationsCollection } from "../lib/automations-collections.client"
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./automations.module.css";
 
-export async function clientLoader() { await requireCapability("automations:read"); await getAutomationsCollection().preload(); return null; }
+export async function clientLoader() { await requireCapability("automations:read"); void getAutomationsCollection().preload().catch(() => undefined); return null; }
 
 export default function Automations() {
   const navigate = useNavigate();

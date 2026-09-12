@@ -75,7 +75,7 @@ const PROVIDERS: ProviderDefinition[] = [
 
 export async function clientLoader() {
   await requireCapability("integrations:read");
-  await getIntegrationConnectionsCollection().preload();
+  void getIntegrationConnectionsCollection().preload().catch(() => undefined);
   return null;
 }
 

@@ -24,7 +24,7 @@ const CHANNELS: ReadonlyArray<{ value: ConversationChannel; label: string }> = [
 
 export async function clientLoader() {
   const session = await requireCapability("inbox:read");
-  await Promise.all([
+  void Promise.allSettled([
     getConversationsCollection().preload(),
     getMessagesCollection().preload(),
     getUsersCollection().preload(),

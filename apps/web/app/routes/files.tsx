@@ -8,7 +8,7 @@ import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./files.module.css";
 
-export async function clientLoader() { await requireCapability("files:read"); await getFilesCollection().preload(); return null; }
+export async function clientLoader() { await requireCapability("files:read"); void getFilesCollection().preload().catch(() => undefined); return null; }
 
 export default function Files() {
   const session = getSession(); const canWrite = session?.capabilities.includes("files:write") ?? false;

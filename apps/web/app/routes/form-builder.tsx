@@ -24,7 +24,7 @@ import { requireCapability } from "../lib/route-access.client";
 import styles from "./form-builder.module.css";
 export async function clientLoader() {
   await requireCapability("forms:read");
-  await getLeadFormsCollection().preload();
+  void getLeadFormsCollection().preload().catch(() => undefined);
   return null;
 }
 export default function FormBuilder() {

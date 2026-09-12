@@ -19,7 +19,7 @@ const TYPE_OPTIONS: ReadonlyArray<{ value: ActivityType; label: string }> = [
 
 export async function clientLoader() {
   const session = await requireCapability("activities:read");
-  await Promise.all([
+  void Promise.allSettled([
     getActivitiesCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
   ]);

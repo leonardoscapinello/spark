@@ -8,7 +8,7 @@ import { getSession } from "../lib/auth.client"; import { requireCapability } fr
 import { getAudiencesCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
 
 const LEAD_STATUSES = [{ value: "new", label: "Novo" }, { value: "qualified", label: "Qualificado" }, { value: "customer", label: "Cliente" }, { value: "lost", label: "Perdido" }];
-export async function clientLoader() { await requireCapability("campaigns:read"); await Promise.all([getAudiencesCollection().preload(), getCampaignsCollection().preload(), getCampaignRecipientsCollection().preload(), getContactsCollection().preload()]); return null; }
+export async function clientLoader() { await requireCapability("campaigns:read"); void Promise.allSettled([getAudiencesCollection().preload(), getCampaignsCollection().preload(), getCampaignRecipientsCollection().preload(), getContactsCollection().preload()]); return null; }
 export default function Campaigns() {
   const [searchParams] = useSearchParams();
   const audienceView = searchParams.get("view") === "audiences";
