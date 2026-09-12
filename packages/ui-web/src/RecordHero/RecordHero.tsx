@@ -35,3 +35,10 @@ export function RecordHero({ icon, avatarName, eyebrow, title, description, acti
     </div>
   </section>;
 }
+
+export function RecordPageHeader({ back, ...hero }: RecordHeroProps & { back: ReactNode }) {
+  return <div className={styles.pageHeader}>
+    <div className={styles.back}>{back}</div>
+    <RecordHero {...hero} />
+  </div>;
+}

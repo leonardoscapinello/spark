@@ -1,7 +1,7 @@
 .page { gap: var(--space-4); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
-.contentGrid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, .95fr); grid-template-areas: "profile activities history"; align-items: stretch; min-width: 0; border-top: var(--ui-hairline) solid var(--color-line); }
+.contentGrid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, .95fr); grid-template-areas: "profile activities history"; align-items: stretch; min-width: 0; }
 .contentGrid[data-activities="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); grid-template-areas: "profile history"; }
 .contentGrid > * { min-width: 0; }
 .profile { grid-area: profile; display: flex; flex-direction: column; gap: 0; padding-inline-end: var(--space-4); border-inline-end: var(--ui-hairline) solid var(--color-line); }

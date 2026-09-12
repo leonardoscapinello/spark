@@ -27,7 +27,7 @@ import {
   Label,
   MoneyInput,
   PageFrame,
-  RecordHero,
+  RecordPageHeader,
   SearchSelect,
   Select,
   Skeleton,
@@ -217,8 +217,8 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   }
 
   return <PageFrame className={styles.page}>
-    <BackLink render={<Link to="/deals" />}>Negócios</BackLink>
-    <RecordHero
+    <RecordPageHeader
+      back={<BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
       icon="briefcase"
       eyebrow={`${pipeline?.name ?? "Funil"} · ${stage?.name ?? "Etapa"}`}
       title={deal.name}

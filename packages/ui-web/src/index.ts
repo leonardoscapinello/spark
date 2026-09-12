@@ -59,7 +59,7 @@ export { BackLink, type BackLinkProps } from "./BackLink/BackLink.js";
 export { PublicationStatus, type PublicationStatusProps } from "./PublicationStatus/PublicationStatus.js";
 export { PageFrame, type PageFrameProps } from "./PageFrame/PageFrame.js";
 export { CollectionToolbar, type CollectionToolbarProps } from "./CollectionToolbar/CollectionToolbar.js";
-export { RecordHero, type RecordHeroProps, type RecordMetric } from "./RecordHero/RecordHero.js";
+export { RecordHero, RecordPageHeader, type RecordHeroProps, type RecordMetric } from "./RecordHero/RecordHero.js";
 export { EmptyState, type EmptyStateProps } from "./EmptyState/EmptyState.js";
 export { ViewSwitcher, type ViewSwitcherProps, type ViewMode } from "./ViewSwitcher/ViewSwitcher.js";
 export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from "./SegmentedControl/SegmentedControl.js";

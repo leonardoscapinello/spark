@@ -3,7 +3,7 @@
 
 .details span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 
-.contentGrid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.6fr) minmax(0, .95fr); grid-template-areas: "profile history relations"; align-items: stretch; min-width: 0; border-top: var(--ui-hairline) solid var(--color-line); }
+.contentGrid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.6fr) minmax(0, .95fr); grid-template-areas: "profile history relations"; align-items: stretch; min-width: 0; }
 .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); grid-template-areas: "profile history"; }
 .profileColumn { grid-area: profile; min-width: 0; padding-inline-end: var(--space-4); border-inline-end: var(--ui-hairline) solid var(--color-line); }
 .history { grid-area: history; min-width: 0; padding-inline: var(--space-4); border-inline-end: var(--ui-hairline) solid var(--color-line); }
