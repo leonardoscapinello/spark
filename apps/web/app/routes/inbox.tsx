@@ -4,7 +4,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Badge, Button, Field, Icon, Label, PageHeader, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Icon, Label, SearchSelect, Select, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -117,13 +117,12 @@ export default function Inbox() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title="Conversas" description="Acompanhe as conversas com sua equipe." actions={canWrite && canReadContacts ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button> : undefined} />
     <div className={styles.workspace} data-mobile-view={mobileView}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
         {teams.some((team) => !team.archivedAt) && <div className={styles.filters} aria-label="Filtrar por equipe">
           {teams.filter((team) => !team.archivedAt).map((team) => <FilterButton key={team.id} active={filter === `team:${team.id}`} count={conversations.filter((item) => item.status === "open" && item.teamId === team.id).length} onClick={() => setSearchParams({ box: `team:${team.id}` })}>{team.name}</FilterButton>)}
         </div>}
-        <header><strong>{filterLabel(filter)}</strong><span>{filtered.length}</span></header>
+        <header><strong>{filterLabel(filter)}</strong><span>{filtered.length}</span>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" aria-label="Nova conversa" onClick={() => setNewConversationOpen(true)}><Icon name="plus" /></Button>}</header>
         <div className={styles.listBody}>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
           {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhuma conversa nesta caixa.</p>}
@@ -163,6 +162,7 @@ export default function Inbox() {
       </section>
 
       <aside className={styles.details}>
+        <h2>Detalhes</h2>
         {selected ? <>
           <div className={styles.contactCard}><span className={styles.avatarLarge}>{initials(contactNames.get(selected.contactId) ?? "Contato")}</span><strong>{contactNames.get(selected.contactId) ?? "Contato"}</strong><span>{channelLabel(selected.channel)}</span></div>
           <Field><Label>Responsável</Label><Select label="Responsável pela conversa" value={selected.assigneeId} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => void updateConversation({ assigneeId: value ? userId.from(value) : null })} disabled={!canWrite || saving} /></Field>

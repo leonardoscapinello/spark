@@ -177,7 +177,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
         })}
       </Sidebar>}
-      <main className={styles.conteudo} aria-busy={Boolean(pendingLocation)}>
+      <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(pendingLocation)}>
         {showModuleTabs && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability)).map((item) =>
             <Link key={item.to} to={item.to} className={styles.moduleTab} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>

@@ -93,6 +93,13 @@
   box-shadow: var(--ui-panelShadow);
 }
 
+.conteudo[data-surface="workspace"] {
+  overflow: hidden;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .shell[data-navigating] .conteudo::before {
   content: "";
   position: sticky;
