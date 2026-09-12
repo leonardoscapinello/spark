@@ -89,6 +89,26 @@
       "$type": "dimension",
       "$value": "1048px"
     },
+    "automationCanvas": {
+      "$type": "color",
+      "$value": "#f5f5f5"
+    },
+    "automationTrigger": {
+      "$type": "color",
+      "$value": "#ddf8e8"
+    },
+    "automationCondition": {
+      "$type": "color",
+      "$value": "#9defe1"
+    },
+    "automationAction": {
+      "$type": "color",
+      "$value": "#fff0ad"
+    },
+    "automationWait": {
+      "$type": "color",
+      "$value": "#fbd9d5"
+    },
     "touchTarget": {
       "$type": "dimension",
       "$value": "44px"
