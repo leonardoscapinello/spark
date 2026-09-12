@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { inboxControllerArchiveCannedReply, inboxControllerCreateCannedReply, inboxControllerUpdateCannedReply } from "@spark/api-client";
 import { cannedReplyId, type CannedReply } from "@spark/core";
-import { ActionModal, Badge, Button, DataTable, Field, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, DataTable, EmptyState, Field, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getCannedRepliesCollection } from "../lib/canned-replies-collection.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -32,6 +32,7 @@ export default function InboxReplies() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const teamNames = useMemo(() => new Map(teams.map((team) => [team.id, team.name])), [teams]);
   const visible = replies.filter((reply) => Boolean(reply.archivedAt) === showArchived && `${reply.title} ${reply.shortcut} ${reply.body}`.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")));
+  const firstRun = !isLoading && replies.length === 0 && !showArchived && !query;
 
   const columns: TableColumn<CannedReply>[] = [
     { id: "title", label: "Resposta", cell: (reply) => <div className={styles.primary}><strong>{reply.title}</strong><span>/{reply.shortcut}</span></div>, sortValue: (reply) => reply.title },
@@ -68,8 +69,8 @@ export default function InboxReplies() {
 
   return <div className={styles.page}>
     <PageHeader eyebrow="Atendimento" title="Respostas prontas" description="Mantenha mensagens consistentes e disponíveis para a equipe certa." actions={canWrite ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />
-    <div className={styles.toolbar}><Button variant="ghost" onClick={() => navigate("/inbox")}>Voltar às conversas</Button><Input aria-label="Buscar respostas" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar resposta ou atalho" /><Button variant="secondary" onClick={() => setShowArchived((current) => !current)}>{showArchived ? "Ver ativas" : "Ver arquivadas"}</Button></div>
-    <DataTable label="Respostas prontas" rows={visible} columns={columns} rowKey={(reply) => reply.id} rowLabel={(reply) => reply.title} state={isLoading && !replies.length ? "loading" : "ready"} emptyText={showArchived ? "Nenhuma resposta arquivada." : "Nenhuma resposta pronta."} {...(canWrite ? { actions: (reply: CannedReply) => <div className={styles.actions}><Button size="sm" variant="ghost" onClick={() => openEdit(reply)}>Editar</Button><Button size="sm" variant="ghost" loading={busyId === reply.id} onClick={() => void toggleArchive(reply)}>{reply.archivedAt ? "Restaurar" : "Arquivar"}</Button></div> } : {})} />
+    {!firstRun && <div className={styles.toolbar}><Button variant="ghost" onClick={() => navigate("/inbox")}>Voltar às conversas</Button><Input aria-label="Buscar respostas" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar resposta ou atalho" /><Button variant="secondary" onClick={() => setShowArchived((current) => !current)}>{showArchived ? "Ver ativas" : "Ver arquivadas"}</Button></div>}
+    {firstRun ? <EmptyState icon="message" title="Crie sua primeira resposta pronta" description="Salve mensagens recorrentes para que a equipe responda com rapidez e consistência." action={canWrite ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} /> : <DataTable label="Respostas prontas" rows={visible} columns={columns} rowKey={(reply) => reply.id} rowLabel={(reply) => reply.title} state={isLoading && !replies.length ? "loading" : "ready"} emptyText={showArchived ? "Nenhuma resposta arquivada." : "Nenhuma resposta pronta."} {...(canWrite ? { actions: (reply: CannedReply) => <div className={styles.actions}><Button size="sm" variant="ghost" onClick={() => openEdit(reply)}>Editar</Button><Button size="sm" variant="ghost" loading={busyId === reply.id} onClick={() => void toggleArchive(reply)}>{reply.archivedAt ? "Restaurar" : "Arquivar"}</Button></div> } : {})} />}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar resposta pronta" : "Nova resposta pronta"} confirmLabel={editingId ? "Salvar alterações" : "Criar resposta"} errorText="Revise o título, o atalho e o conteúdo. O atalho deve ser único." onConfirm={save}>
       <div className={styles.form}><Field><Label>Título</Label><Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Boas-vindas" maxLength={120} /></Field><Field><Label>Atalho</Label><Input value={shortcut} onChange={(event) => setShortcut(event.target.value)} placeholder="boas-vindas" maxLength={50} /></Field><Field><Label>Equipe</Label><Select label="Equipe que pode usar a resposta" value={teamId} options={[{ value: "", label: "Todas as equipes" }, ...teams.filter((team) => !team.archivedAt).map((team) => ({ value: team.id, label: team.name }))]} onValueChange={(value) => setTeamId(value || null)} /></Field><Field><Label>Mensagem</Label><Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={8} maxLength={20_000} placeholder="Olá! Como posso ajudar?" /></Field></div>
     </ActionModal>
