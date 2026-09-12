@@ -3,7 +3,7 @@ import { Link, redirect, useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { buildCrmDashboard, formatBRL } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionCard, ActionCardGroup, Button, DashboardGrid, DataChart, DonutChart, EmptyState, Icon, MetricCard, PageHeader, Select } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, Button, DashboardGrid, DataChart, DonutChart, EmptyState, Icon, MetricCard, PageFrame, PageHeader, Select } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -61,9 +61,9 @@ export default function Dashboard() {
     ...(canReadActivities ? [{ key: "atividades", label: "Atividades", color: 3 as const }] : []),
   ];
 
-  return <div className={styles.page}>
-    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar contatos</Button> : undefined} />}
+  return <PageFrame className={styles.page}>
     <PageHeader icon="chart" title="Visão geral" />
+    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar contatos</Button> : undefined} />}
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar contatos, negócios ou atividades." />}
     {firstRun && <ActionCardGroup title="Acompanhe o trabalho da equipe">
       {canReadContacts && <ActionCard icon="team" title="Pessoas" description="Veja quem entrou na base e como o relacionamento evolui." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir Leads</Button>} />}
@@ -104,7 +104,7 @@ export default function Dashboard() {
         ]} />}
       </DashboardGrid>
     </>}
-  </div>;
+  </PageFrame>;
 }
 
 function formatDay(value: string, periodDays: number): string {
