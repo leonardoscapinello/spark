@@ -175,6 +175,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const [accountProfile, setAccountProfile] = useState(session);
   const [quickNavigationOpen, setQuickNavigationOpen] = useState(false);
+  const [railCollapsed, setRailCollapsed] = useState(false);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
   const requestedSearch = pendingLocation?.search ?? (navigationIntent?.fromKey === location.key ? `?${navigationIntent.to.split("?")[1] ?? ""}` : "");
@@ -254,13 +255,13 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
     const target = first?.to ?? module.to;
-    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="render" onPointerDown={() => markNavigation(target)} onClick={() => markNavigation(target)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="render" onPointerDown={() => markNavigation(target)} onClick={() => setRailCollapsed(true)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
     <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
-      <NavigationRail className={styles.rail}>
-        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><span className={styles.brandLabel}>Leonardo Scapinello</span></Link>
+      <NavigationRail className={styles.rail} data-collapsed={railCollapsed || undefined} onPointerEnter={() => setRailCollapsed(false)}>
+        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início" onClick={() => setRailCollapsed(true)}><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><span className={styles.brandLabel}>Leonardo Scapinello</span></Link>
         <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.mobileModuleMenu}>
           <MenuButton variant="ghost" shape="rounded" className={styles.mobileModuleTrigger} icon={<Icon name={current.icon} />} aria-label={`Módulo atual: ${current.title}. Mudar módulo`} menu={<MenuGroup label="Módulos">{visibleModules.filter((module) => module.id !== "admin").map((module) => {

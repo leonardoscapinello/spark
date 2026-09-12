@@ -12,6 +12,6 @@ export function SidebarItem({ active, icon, count, children, className, render, 
 export function SidebarSection({ title, children }: { title: string; children: ReactNode }) {
   return <section className={styles.section}><h3>{title}</h3>{children}</section>;
 }
-export function NavigationRail({ children, label = "Módulos", className }: { children: ReactNode; label?: string; className?: string | undefined }) {
-  return <nav className={[styles.rail, className].filter(Boolean).join(" ")} aria-label={label}>{children}</nav>;
+export function NavigationRail({ children, label = "Módulos", className, ...props }: ComponentProps<"nav"> & { children: ReactNode; label?: string; className?: string | undefined }) {
+  return <nav {...props} className={[styles.rail, className].filter(Boolean).join(" ")} aria-label={label}>{children}</nav>;
 }
