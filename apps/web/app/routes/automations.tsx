@@ -22,6 +22,7 @@ export default function Automations() {
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
+  const firstRun = automations.length === 0 && !isLoading && !selectedStatus;
   const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
   const visibleAutomations = selectedStatus === "active" || selectedStatus === "draft" || selectedStatus === "paused"
     ? automations.filter((item) => item.status === selectedStatus && item.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch))
@@ -43,9 +44,9 @@ export default function Automations() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} description="Crie e acompanhe fluxos com vários gatilhos e etapas." actions={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
+    <PageHeader title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} description="Crie e acompanhe fluxos com vários gatilhos e etapas." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
     {automations.length > 0 && <div className={styles.toolbar}><Input aria-label="Buscar automações" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" /><span className={styles.count}>{visibleAutomations.length} {visibleAutomations.length === 1 ? "automação" : "automações"}</span></div>}
-    {automations.length === 0 && !isLoading && !selectedStatus
+    {firstRun
       ? <EmptyState icon="bolt" title="Crie sua primeira automação" description="Desenhe gatilhos e etapas para acompanhar cada contato sem repetir tarefas manuais." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
       : <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <Button variant="secondary" size="sm" onClick={() => navigate(`/automations/${item.id}`)}>{canWrite ? "Editar fluxo" : "Abrir fluxo"}</Button>} />}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>
