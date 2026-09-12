@@ -80,6 +80,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
   const canWriteDeals = session?.capabilities.includes("deals:write") ?? false;
   const canReadInbox = session?.capabilities.includes("inbox:read") ?? false;
+  const canWriteInbox = session?.capabilities.includes("inbox:write") ?? false;
   const [selectedType, setSelectedType] = useState<ActivityType>("task");
   const [activityTitle, setActivityTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -352,12 +353,12 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         {deals.length === 0 ? <span className={styles.valor}>Nenhum negócio desta pessoa.</span> : <ul className={styles.listaAtividades}>{deals.map((deal) => <li key={deal.id} className={styles.atividade}><Link className={layout.recordLink} to={`/deals/${deal.id}`}>{deal.name}<span>{deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></Link></li>)}</ul>}
       </section>}
       {canReadInbox && <section className={styles.atividades}>
-        <h2 className={styles.subtitulo}>Conversas</h2>
+        <div className={styles.sectionHeading}><h2 className={styles.subtitulo}>Conversas</h2>{canWriteInbox && <Button size="sm" variant="secondary" onClick={() => void navigate(`/inbox?box=all&createFor=${params.contactId}`)}>Nova conversa</Button>}</div>
         {conversations.length === 0 ? <span className={styles.valor}>Nenhuma conversa desta pessoa.</span> : <ul className={styles.listaAtividades}>{conversations.map((conversation) => <li key={conversation.id} className={styles.atividade}><Link className={layout.recordLink} to={`/inbox?box=all&conversation=${conversation.id}`}>{conversation.subject}<span>{conversation.channel === "email" ? "E-mail" : conversation.channel === "instagram" ? "Instagram" : conversation.channel === "whatsapp" ? "WhatsApp" : conversation.channel === "messenger" ? "Messenger" : "Interno"}</span></Link></li>)}</ul>}
       </section>}
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Histórico</h2>
-        <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste contato aparecerão aqui." />
+        <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
       </section>
 
       {canReadActivities && <section className={styles.atividades}>

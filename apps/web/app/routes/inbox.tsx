@@ -37,7 +37,7 @@ export async function clientLoader() {
 
 export default function Inbox() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const session = getSession();
   const canWrite = session?.capabilities.includes("inbox:write") ?? false;
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
@@ -116,6 +116,17 @@ export default function Inbox() {
     const linkedConversation = searchParams.get("conversation");
     if (linkedConversation) { setSelectedId(linkedConversation); setMobileView("thread"); }
   }, [searchParams]);
+  useEffect(() => {
+    const personId = searchParams.get("createFor");
+    if (!personId || !canWrite || !canReadContacts) return;
+    const person = contacts.find((item) => item.id === personId && !item.deletedAt);
+    if (!person) return;
+    setNewContact({ value: person.id, label: person.name, ...(person.email ? { description: person.email } : {}) });
+    setNewConversationOpen(true);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("createFor");
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams, contacts, canWrite, canReadContacts]);
   useEffect(() => { if (selected && selected.channel !== "email" && selected.channel !== "instagram" && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60_000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
