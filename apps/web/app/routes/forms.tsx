@@ -26,7 +26,7 @@ export default function Forms() {
   const [busy, setBusy] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const [layout, setLayout] = useState<"cards" | "table">("cards");
+  const [layout, setLayout] = useState<"cards" | "table">("table");
   const firstRun = !isLoading && forms.length === 0 && !search && status === "all";
   const term = search.trim().toLocaleLowerCase("pt-BR");
   const filtered = forms.filter((form) => (status === "all" || form.status === status)
@@ -69,7 +69,7 @@ export default function Forms() {
         count={`${filtered.length} ${filtered.length === 1 ? "formulário" : "formulários"}`}
         actions={<ViewSwitcher label="Visualização dos formulários" value={layout} onValueChange={setLayout} />}
       />
-      {layout === "table" ? <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText="Nenhum formulário encontrado." actions={formActions} /> : <div className={styles.cardGrid} aria-label="Formulários">
+      {layout === "table" ? <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText={firstRun ? "Os formulários criados aparecerão nesta tabela." : "Nenhum formulário encontrado."} actions={formActions} /> : <div className={styles.cardGrid} aria-label="Formulários">
         {isLoading && !forms.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhum formulário encontrado.</p>}
         {filtered.map((item) => <Card key={item.id} title={item.name} description={item.title} actions={formStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizado {formatDate(item.updatedAt)}</span><div>{formActions(item)}</div></div>}><div className={styles.cardMeta}><span><Icon name="file" />{item.fields.length} {item.fields.length === 1 ? "campo" : "campos"}</span><span>{counts.get(item.id) ?? 0} {counts.get(item.id) === 1 ? "resposta" : "respostas"}</span></div></Card>)}
