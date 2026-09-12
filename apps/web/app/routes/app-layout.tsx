@@ -1,4 +1,4 @@
-import { type MouseEvent, type PointerEvent, useEffect, useRef, useState } from "react";
+import { type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
 import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, Tooltip, TooltipProvider, type IconName, type QuickNavigationItem } from "@spark/ui-web";
@@ -167,12 +167,14 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
   const railModulesRef = useRef<HTMLDivElement>(null);
+  const moduleTabsRef = useRef<HTMLElement>(null);
   const activeTopTab = useRef<HTMLAnchorElement>(null);
   const activeSidebarLink = useRef<HTMLAnchorElement>(null);
   const pointerNavigation = useRef<string | null>(null);
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const [accountProfile, setAccountProfile] = useState(session);
   const [quickNavigationOpen, setQuickNavigationOpen] = useState(false);
+  const [tabIndicator, setTabIndicator] = useState<{ left: number; width: number } | null>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
   const requestedSearch = pendingLocation?.search ?? (navigationIntent?.fromKey === location.key ? `?${navigationIntent.to.split("?")[1] ?? ""}` : "");
@@ -192,6 +194,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     (item.to === "/" && location.pathname === "/") ||
     (item.to === "/deals" && location.pathname === "/deals") ||
     pathMatches(location.pathname, item.to, location.search);
+  const displayedTopTabActive = (item: NavItem) => requestedPath
+    ? pathMatches(requestedPath, item.to, requestedSearch)
+    : topTabActive(item);
   const showSidebar = current.id === "admin" || current.id === "leads";
   const visibleSections = current.sections.map((section) => ({
     title: section.title,
@@ -249,7 +254,19 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const active = activeTopTab.current;
     const tabs = active?.closest("nav");
     if (active && tabs && tabs.scrollWidth > tabs.clientWidth) active.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, requestedPath, requestedSearch]);
+
+  useLayoutEffect(() => {
+    const tabs = moduleTabsRef.current;
+    const active = activeTopTab.current;
+    if (!tabs || !active) { setTabIndicator(null); return; }
+    const measure = () => setTabIndicator({ left: active.offsetLeft, width: active.offsetWidth });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(tabs);
+    observer.observe(active);
+    return () => observer.disconnect();
+  }, [location.pathname, location.search, requestedPath, requestedSearch, current.id]);
 
   useEffect(() => {
     const active = activeSidebarLink.current;
@@ -305,10 +322,11 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         </>}>{activeSecondaryItem.label}</MenuButton>
       </nav>}
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
-        {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
+        {topNavigation.length > 0 && <nav ref={moduleTabsRef} className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} ref={topTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
+            <Link key={item.to} ref={displayedTopTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
+          {tabIndicator && <span className={styles.moduleIndicator} style={{ left: tabIndicator.left, width: tabIndicator.width }} aria-hidden="true" />}
         </nav>}
         <Outlet />
       </main>

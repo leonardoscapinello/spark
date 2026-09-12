@@ -163,7 +163,16 @@
   font-weight: var(--typography-weight-medium);
   text-decoration: none;
   white-space: nowrap;
-  transition: color var(--motion-duration-instant) var(--motion-ease-out), border-bottom-color var(--motion-duration-instant) var(--motion-ease-out);
+  transition: color var(--motion-duration-instant) var(--motion-ease-out);
+}
+
+.moduleIndicator {
+  position: absolute;
+  inset-block-end: 0;
+  height: var(--ui-focusWidth);
+  background: var(--color-accent);
+  pointer-events: none;
+  transition: left var(--motion-duration-fast) var(--motion-ease-out), width var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .moduleTab:hover,
@@ -174,9 +183,10 @@
 .moduleTab[aria-current="page"],
 .moduleTab[data-pending],
 .moduleTab:active {
-  border-bottom-color: var(--color-accent);
   color: var(--color-ink);
 }
+
+@media (prefers-reduced-motion: reduce) { .moduleIndicator { transition: none; } }
 
 .moduleTab:focus-visible {
   outline: var(--ui-focusWidth) solid var(--color-focusRing);
