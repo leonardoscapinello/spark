@@ -1,5 +1,4 @@
-import { useId, useMemo, useState } from "react";
-import type { Route } from "./+types/admin-teams";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   teamsControllerArchive,
   teamsControllerCreate,
@@ -7,6 +6,7 @@ import {
   teamsControllerMembers,
   teamsControllerUpdate,
   usersControllerList,
+  type AdminUserDto,
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
@@ -16,13 +16,16 @@ import styles from "./admin-teams.module.css";
 
 export async function clientLoader() {
   await requireCapability("users:manage");
-  const [teams, users] = await Promise.all([teamsControllerList(), usersControllerList()]);
-  return { teams, users };
+  return null;
 }
 
-export default function AdminTeams({ loaderData }: Route.ComponentProps) {
+export default function AdminTeams() {
   const membersLabelId = useId();
-  const [teams, setTeams] = useState(loaderData.teams);
+  const [teams, setTeams] = useState<TeamDto[]>([]);
+  const [users, setUsers] = useState<AdminUserDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,7 +34,17 @@ export default function AdminTeams({ loaderData }: Route.ComponentProps) {
   const [description, setDescription] = useState("");
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const userNames = useMemo(() => new Map(loaderData.users.map((user) => [user.id, user.name])), [loaderData.users]);
+  useEffect(() => {
+    let active = true;
+    void Promise.all([teamsControllerList(), usersControllerList()]).then(([nextTeams, nextUsers]) => {
+      if (!active) return;
+      setTeams(nextTeams);
+      setUsers(nextUsers);
+      setLoadError(false);
+    }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [reloadKey]);
+  const userNames = useMemo(() => new Map(users.map((user) => [user.id, user.name])), [users]);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const visibleTeams = teams.filter((team) =>
     (showArchived ? team.archivedAt !== null : team.archivedAt === null) &&
@@ -99,10 +112,11 @@ export default function AdminTeams({ loaderData }: Route.ComponentProps) {
       filters={<Select label="Situação dos times" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativos" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
       count={`${visibleTeams.length} ${visibleTeams.length === 1 ? "time" : "times"}`}
     />}
-    {teams.length === 0 ? <EmptyState icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} /> : <DataTable
+    {loadError ? <EmptyState icon="team" title="Não foi possível carregar os times" description="Tente novamente para consultar a equipe." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} /> : !loading && teams.length === 0 ? <EmptyState variant="onboarding" icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} /> : <DataTable
       label="Times da organização"
       rows={visibleTeams}
       columns={columns}
+      state={loading ? "loading" : "ready"}
       rowKey={(team) => team.id}
       rowLabel={(team) => team.name}
       emptyText={showArchived ? "Nenhum time arquivado." : "Nenhum time criado."}
@@ -114,7 +128,7 @@ export default function AdminTeams({ loaderData }: Route.ComponentProps) {
         <Field><Label>Descrição</Label><Textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Responsabilidade principal deste time" /></Field>
         <div className={styles.members} role="group" aria-labelledby={membersLabelId}>
           <p id={membersLabelId}>Membros</p>
-          {loaderData.users.filter((user) => !user.deactivatedAt).map((user) => <Checkbox key={user.id} checked={memberIds.includes(user.id)} onCheckedChange={(checked) => toggleMember(user.id, checked)}><span>{user.name}<small>{user.email}</small></span></Checkbox>)}
+          {users.filter((user) => !user.deactivatedAt).map((user) => <Checkbox key={user.id} checked={memberIds.includes(user.id)} onCheckedChange={(checked) => toggleMember(user.id, checked)}><span>{user.name}<small>{user.email}</small></span></Checkbox>)}
         </div>
       </div>
     </ActionModal>
