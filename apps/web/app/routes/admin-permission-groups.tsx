@@ -1,6 +1,5 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { redirect } from "react-router";
-import type { Route } from "./+types/admin-permission-groups";
 import {
   permissionGroupsControllerCreate,
   permissionGroupsControllerList,
@@ -80,18 +79,30 @@ export async function clientLoader() {
   const session = await restoreSession();
   if (!session) throw redirect("/login");
   if (!session.capabilities.includes("permission_groups:manage")) throw redirect("/");
-  return { groups: await permissionGroupsControllerList() };
+  return null;
 }
 
-export default function AdminPermissionGroups({ loaderData }: Route.ComponentProps) {
+export default function AdminPermissionGroups() {
   const capabilityLabelId = useId();
-  const [groups, setGroups] = useState(loaderData.groups);
+  const [groups, setGroups] = useState<PermissionGroupDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  useEffect(() => {
+    let active = true;
+    void permissionGroupsControllerList().then((nextGroups) => {
+      if (!active) return;
+      setGroups(nextGroups);
+      setLoadError(false);
+    }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [reloadKey]);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const filteredGroups = groups.filter((group) =>
     !searchTerm || `${group.name} ${group.capabilities.map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" ")}`.toLocaleLowerCase("pt-BR").includes(searchTerm),
@@ -164,9 +175,11 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
         count={`${filteredGroups.length} ${filteredGroups.length === 1 ? "grupo" : "grupos"}`}
       />}
 
-      {groups.length === 0
-        ? <EmptyState icon="settings" title="Defina o primeiro grupo" description="Reúna permissões por função para controlar o que cada pessoa pode consultar e alterar." action={<Button onClick={openCreate}>Novo grupo</Button>} />
-        : <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} emptyText="Nenhum grupo encontrado." actions={(group) => <TableIconAction label={`Editar ${group.name}`} icon={<Icon name="right" />} onClick={() => openEdit(group)} />} />}
+      {loadError
+        ? <EmptyState icon="settings" title="Não foi possível carregar os grupos" description="Tente novamente para consultar as permissões." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} />
+        : !loading && groups.length === 0
+          ? <EmptyState variant="onboarding" icon="settings" title="Defina o primeiro grupo" description="Reúna permissões por função para controlar o que cada pessoa pode consultar e alterar." action={<Button onClick={openCreate}>Novo grupo</Button>} />
+          : <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} state={loading ? "loading" : "ready"} emptyText="Nenhum grupo encontrado." actions={(group) => <TableIconAction label={`Editar ${group.name}`} icon={<Icon name="right" />} onClick={() => openEdit(group)} />} />}
 
       <ActionModal
         open={modalOpen}
