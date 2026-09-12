@@ -101,6 +101,19 @@ const accountModule: NavModule = { id: "account", title: "Minha conta", icon: "a
   { title: "Conta", items: [{ label: "Segurança", to: "/security", icon: "settings" }] },
 ] };
 
+// Aquece apenas o código da tela. Os clientLoaders iniciam a sincronização
+// quando a rota abre; prefetch de dados em todos os links sobrecarrega a entrada.
+const moduleEntry: Record<string, () => Promise<unknown>> = {
+  overview: () => import("./dashboard"),
+  leads: () => import("./contacts"),
+  crm: () => import("./deals"),
+  inbox: () => import("./inbox"),
+  automations: () => import("./automations"),
+  content: () => import("./campaigns"),
+  social: () => import("./social"),
+  admin: () => import("./admin-home"),
+};
+
 function pathMatches(pathname: string, to: string, search = "") {
   const [route, query] = to.split("?");
   const routeMatches = route === "/"
@@ -217,8 +230,8 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
     const target = first?.to ?? module.to;
-    const prefetch = module.id === "leads" || module.id === "crm" || module.id === "inbox" ? "render" : "intent";
-    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch={prefetch} onPointerDown={() => markNavigation(target)} onClick={() => markNavigation(target)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    const warm = () => void moduleEntry[module.id]?.().catch(() => undefined);
+    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="none" onPointerEnter={warm} onFocus={warm} onTouchStart={warm} onPointerDown={() => { warm(); markNavigation(target); }} onClick={() => markNavigation(target)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
