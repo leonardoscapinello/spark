@@ -6,7 +6,6 @@ import type { LeadFormField } from "@spark/core";
 import {
   Badge,
   Button,
-  Card,
   Field,
   Icon,
   Input,
@@ -163,7 +162,8 @@ export default function FormBuilder() {
       </div>
       <div className={styles.workspace}>
         <div className={styles.editor}>
-          <Card title="Conteúdo" description="Textos que aparecem no topo e após o envio.">
+          <section className={styles.editorSection}>
+            <div className={styles.sectionHeading}><h2>Conteúdo</h2><p>Textos que aparecem no topo e após o envio.</p></div>
             <div className={styles.form}>
               <Field>
                 <Label>Nome interno</Label>
@@ -208,11 +208,9 @@ export default function FormBuilder() {
                 </Field>
               </div>
             </div>
-          </Card>
-          <Card
-            title="Campos"
-            description="O mapeamento define qual propriedade do lead recebe o valor."
-          >
+          </section>
+          <section className={styles.editorSection}>
+            <div className={styles.sectionHeading}><h2>Campos</h2><p>O mapeamento define qual propriedade do lead recebe o valor.</p></div>
             <div className={styles.fieldList}>
               {fields.map((item, index) => (
                 <div className={styles.fieldCard} key={item.id}>
@@ -337,7 +335,7 @@ export default function FormBuilder() {
                 </Button>
               )}
             </div>
-          </Card>
+          </section>
         </div>
         <aside className={styles.preview}>
           <span>Prévia</span>
