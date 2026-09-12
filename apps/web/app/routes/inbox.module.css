@@ -50,6 +50,8 @@
 .message time,.message small { color: var(--color-inkMuted); }
 .message p { margin: var(--space-2) 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--typography-size-sm); line-height: var(--typography-lineHeight-body); }
 .composer { padding: var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); display: flex; flex-direction: column; gap: var(--space-2); }
+.composer[data-mode="note"] { background: var(--color-internalNoteSurface); }
+.composer[data-mode="note"] .composerInput { background: transparent; }
 .composerMode,.composerFooter { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .modeButtons { display: flex; align-items: center; gap: var(--space-1); }
 .replyTools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }

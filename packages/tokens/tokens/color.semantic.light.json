@@ -52,6 +52,10 @@
       "$type": "color",
       "$value": "{color.status.warning}"
     },
+    "internalNoteSurface": {
+      "$type": "color",
+      "$value": "#fff8e6"
+    },
     "statusDanger": {
       "$type": "color",
       "$value": "{color.status.danger}"

@@ -62,6 +62,11 @@
       "$value": "#D99A3E",
       "$description": "Interpolado — mesmo motivo de statusSuccess."
     },
+    "internalNoteSurface": {
+      "$type": "color",
+      "$value": "rgba(217, 154, 62, 0.12)",
+      "$description": "Superfície de nota interna com a mesma distinção semântica do tema claro."
+    },
     "statusDanger": {
       "$type": "color",
       "$value": "#E0808C",

@@ -220,9 +220,9 @@ export default function Inbox() {
               <small>{message.direction === "internal" ? "Nota interna" : message.status}</small>
             </article>)}
           </div>
-          {canWrite && <form className={styles.composer} onSubmit={submitMessage}>
+          {canWrite && <form className={styles.composer} data-mode={composerMode} onSubmit={submitMessage}>
             <div className={styles.composerMode}><div className={styles.modeButtons}>{(selected.channel === "email" || selected.channel === "instagram") && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
-            <Textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />
+            <Textarea className={styles.composerInput} value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />
             <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Respostas prontas" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) setNote((current) => current ? `${current}\n${reply.body}` : reply.body); }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar respostas</Button></div>
             <div className={styles.composerFooter}><span>{note.length}/20.000</span><Button type="submit" loading={saving} disabled={!note.trim()}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button></div>
           </form>}
