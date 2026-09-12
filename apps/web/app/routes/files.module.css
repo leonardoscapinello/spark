@@ -3,7 +3,7 @@
 .fileName > span:last-child { display: grid; min-width: 0; }
 .fileName strong, .fileName small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fileName small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.fileIcon { display: grid; place-items: center; flex: 0 0 var(--space-9); width: var(--space-9); height: var(--space-9); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
+.fileIcon { display: grid; place-items: center; flex: 0 0 var(--ui-controlMedium); width: var(--ui-controlMedium); height: var(--ui-controlMedium); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
 .fileIcon svg { width: var(--space-4); height: var(--space-4); }
 .fileGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-cardMinWidth)), 1fr)); align-content: start; gap: var(--space-3); min-width: 0; }
 .fileGrid > section { min-width: 0; }
