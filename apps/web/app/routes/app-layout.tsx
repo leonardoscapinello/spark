@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
-import { Avatar, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
+import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName, type QuickNavigationItem } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
@@ -174,6 +174,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const accountRailLink = useRef<HTMLDivElement>(null);
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const [accountProfile, setAccountProfile] = useState(session);
+  const [quickNavigationOpen, setQuickNavigationOpen] = useState(false);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
   const requestedSearch = pendingLocation?.search ?? (navigationIntent?.fromKey === location.key ? `?${navigationIntent.to.split("?")[1] ?? ""}` : "");
@@ -183,6 +184,10 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const visibleModules = modules.filter((module) => module.id === "admin"
     ? ADMIN_CAPABILITIES.some(allowed)
     : module.sections.some((section) => section.items.some((item) => allowed(item.capability))));
+  const quickNavigationItems: QuickNavigationItem[] = [
+    ...visibleModules.flatMap((module) => module.sections.flatMap((section) => section.items.filter((item) => allowed(item.capability)).map((item) => ({ id: item.to, label: item.label, group: module.title, icon: item.icon })))),
+    { id: "/security", label: "Segurança da conta", group: "Minha conta", icon: "account" },
+  ];
   const current = moduleForPath(location.pathname);
   const topNavigation = usesTopNavigation(current.id, location.pathname)
     ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
@@ -205,6 +210,17 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     void refreshSessionProfile().then((profile) => { if (active && profile) setAccountProfile(profile); });
     return () => { active = false; };
   }, [session.name]);
+
+  useEffect(() => {
+    function openQuickNavigation(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") {
+        event.preventDefault();
+        setQuickNavigationOpen(true);
+      }
+    }
+    window.addEventListener("keydown", openQuickNavigation);
+    return () => window.removeEventListener("keydown", openQuickNavigation);
+  }, []);
 
   function markNavigation(to: string) {
     if (`${location.pathname}${location.search}` !== to) setNavigationIntent({ to, fromKey: location.key });
@@ -253,6 +269,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           })}</MenuGroup>}><span className={styles.mobileModuleTitle}>{current.title}</span></MenuButton>
         </div>
         <div className={styles.railBottom}>
+          <Tooltip content="Pesquisar áreas" pinOnClick={false}><Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railLink} aria-label="Pesquisar áreas" onClick={() => setQuickNavigationOpen(true)} icon={<Icon name="search" />}><span className={styles.railLabel}>Pesquisar</span></Button></Tooltip>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
           <div ref={accountRailLink} className={styles.accountMenu}><Tooltip content="Minha conta" pinOnClick={false}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}>
             {accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />}
@@ -284,6 +301,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         <Outlet />
         {changingModule && <div className={styles.navigationFeedback} role="status" aria-live="polite"><Icon name={requestedModule.icon} /><span>Abrindo {requestedModule.title}…</span></div>}
       </main>
+      <QuickNavigation open={quickNavigationOpen} onOpenChange={setQuickNavigationOpen} items={quickNavigationItems} onSelect={(to) => { markNavigation(to); void navigate(to); }} />
     </div>
   );
 }
