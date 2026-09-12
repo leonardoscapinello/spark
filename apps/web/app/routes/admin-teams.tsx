@@ -111,7 +111,7 @@ export default function AdminTeams() {
     <PageHeader icon="team" eyebrow="Administração" title={showArchived ? "Times arquivados" : "Times"} description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={teams.length > 0 ? <Button onClick={openCreate}>Novo time</Button> : undefined} />
     {loadError ? <EmptyState icon="team" title="Não foi possível carregar os times" description="Tente novamente para consultar a equipe." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} /> : <>
     {firstRun && <EmptyState variant="featured" icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} />}
-    {!firstRun && <><CollectionToolbar
+    <CollectionToolbar
       search={<Input aria-label="Buscar times" placeholder="Buscar por nome ou descrição" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
       filters={<Select appearance="filter" label="Situação dos times" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativos" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
       count={loading ? "Carregando times…" : `${visibleTeams.length} ${visibleTeams.length === 1 ? "time" : "times"}`}
@@ -123,9 +123,9 @@ export default function AdminTeams() {
       state={loading ? "loading" : "ready"}
       rowKey={(team) => team.id}
       rowLabel={(team) => team.name}
-      emptyText={showArchived ? "Nenhum time arquivado." : "Nenhum time criado."}
+      emptyText={showArchived ? "Nenhum time arquivado." : firstRun ? "Os times criados aparecerão nesta tabela." : "Nenhum time criado."}
       actions={(team) => <div className={styles.actions}><Button size="sm" variant="ghost" onClick={() => openEdit(team)}>Editar</Button><Button size="sm" variant="ghost" loading={busyId === team.id} onClick={() => void toggleArchive(team)}>{team.archivedAt ? "Restaurar" : "Arquivar"}</Button></div>}
-    /></>}</>}
+    /></>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar time" : "Novo time"} confirmLabel={editingId ? "Salvar alterações" : "Criar time"} errorText="Não foi possível salvar o time. Revise os dados e tente novamente." onConfirm={save}>
       <div className={styles.modalFields}>
         <Field><Label>Nome</Label><Input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Vendas" /></Field>
