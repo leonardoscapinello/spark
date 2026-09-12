@@ -10,7 +10,7 @@ import {
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
-import { ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
 
@@ -124,7 +124,7 @@ export default function AdminTeams() {
       rowKey={(team) => team.id}
       rowLabel={(team) => team.name}
       emptyText={showArchived ? "Nenhum time arquivado." : firstRun ? "Os times criados aparecerão nesta tabela." : "Nenhum time criado."}
-      actions={(team) => <div className={styles.actions}><Button size="sm" variant="ghost" onClick={() => openEdit(team)}>Editar</Button><Button size="sm" variant="ghost" loading={busyId === team.id} onClick={() => void toggleArchive(team)}>{team.archivedAt ? "Restaurar" : "Arquivar"}</Button></div>}
+      actions={(team) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Ações de ${team.name}`} loading={busyId === team.id} menu={<><MenuItem onClick={() => openEdit(team)}>Editar time</MenuItem><MenuItem onClick={() => void toggleArchive(team)}>{team.archivedAt ? "Restaurar time" : "Arquivar time"}</MenuItem></>} />}
     /></>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar time" : "Novo time"} confirmLabel={editingId ? "Salvar alterações" : "Criar time"} errorText="Não foi possível salvar o time. Revise os dados e tente novamente." onConfirm={save}>
       <div className={styles.modalFields}>

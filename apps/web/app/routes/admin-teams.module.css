@@ -1,18 +1,8 @@
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.secondary {
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
-}
-
 .secondary {
   display: block;
   margin-top: var(--space-1);
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-sm);
 }
 
 .modalFields,
@@ -36,8 +26,4 @@
   display: block;
   color: var(--color-inkMuted);
   font-size: var(--typography-size-xs);
-}
-
-@media (max-width: 48rem) {
-  .actions { flex-wrap: wrap; }
 }
