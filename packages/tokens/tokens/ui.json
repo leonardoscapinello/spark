@@ -81,6 +81,14 @@
       "$type": "dimension",
       "$value": "320px"
     },
+    "settingsCardWidth": {
+      "$type": "dimension",
+      "$value": "290px"
+    },
+    "settingsContentWidth": {
+      "$type": "dimension",
+      "$value": "1048px"
+    },
     "touchTarget": {
       "$type": "dimension",
       "$value": "44px"
