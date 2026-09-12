@@ -13,7 +13,13 @@ export interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action, secondaryAction, variant = "default" }: EmptyStateProps) {
   return <section className={styles.root} data-variant={variant} aria-label={title}>
-    <span className={styles.icon}><Icon name={icon} /></span>
+    <span className={styles.icon} aria-hidden="true">
+      {variant === "featured" ? <span className={styles.artCard}>
+        <span className={styles.artSymbol}><Icon name={icon} /></span>
+        <span className={styles.artLines}><span /><span /><span /></span>
+        <span className={styles.artFoot}><span /><span /></span>
+      </span> : <Icon name={icon} />}
+    </span>
     <h2>{title}</h2>
     <p>{description}</p>
     {(action || secondaryAction) && <div className={styles.actions}>{action}{secondaryAction}</div>}
