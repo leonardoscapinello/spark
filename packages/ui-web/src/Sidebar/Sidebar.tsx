@@ -1,4 +1,4 @@
-import { cloneElement, useId, useState, type ComponentProps, type ReactElement, type ReactNode } from "react";
+import { cloneElement, useEffect, useId, useState, type ComponentProps, type ReactElement, type ReactNode } from "react";
 import { Icon } from "../Icon/Icon.js";
 import styles from "./Sidebar.module.css";
 export interface SidebarProps { title: string; children: ReactNode; actions?: ReactNode; footer?: ReactNode; brand?: ReactNode; className?: string | undefined }
@@ -13,6 +13,7 @@ export function SidebarItem({ active, icon, count, children, className, render, 
 export function SidebarSection({ title, children, collapsible = false, defaultOpen = false }: { title: string; children: ReactNode; collapsible?: boolean; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   const contentId = useId();
+  useEffect(() => { if (defaultOpen) setOpen(true); }, [defaultOpen]);
   return <section className={styles.section} data-collapsible={collapsible || undefined}>
     {collapsible
       ? <button type="button" className={styles.sectionToggle} aria-expanded={open} aria-controls={contentId} onClick={() => setOpen((value) => !value)}><span>{title}</span><Icon name="right" /></button>
