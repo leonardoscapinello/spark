@@ -16,6 +16,7 @@ export default function Files() {
   const [search, setSearch] = useState(""); const [kind, setKind] = useState("all"); const [status, setStatus] = useState("all"); const [layout, setLayout] = useState<"cards" | "table">("table"); const [uploading, setUploading] = useState<string | null>(null); const [busyId, setBusyId] = useState<string | null>(null);
   const hasFiles = allFiles.some((item) => !item.deletedAt);
   const firstRun = !hasFiles && !isLoading && !search && kind === "all" && status === "all";
+  const emptyText = firstRun ? "Os arquivos enviados aparecerão nesta tabela." : "Nenhum arquivo corresponde aos filtros.";
   const files = useMemo(() => allFiles.filter((item) => !item.deletedAt && (kind === "all" || fileKind(item.mimeType) === kind) && (status === "all" || item.status === status) && (!search.trim() || item.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")))), [allFiles, kind, search, status]);
   const columns: TableColumn<StoredFile>[] = [
     { id: "name", label: "Arquivo", cell: (item) => <div className={styles.fileName}><span className={styles.fileIcon}><Icon name={fileKind(item.mimeType) === "image" ? "image" : "file"} /></span><span><strong>{item.name}</strong><small>{item.mimeType}</small></span></div>, sortValue: (item) => item.name },
@@ -40,9 +41,9 @@ export default function Files() {
         count={`${files.length} ${files.length === 1 ? "arquivo" : "arquivos"}`}
         actions={<ViewSwitcher label="Visualização dos arquivos" value={layout} onValueChange={setLayout} />}
       />
-      {layout === "table" ? <DataTable label="Biblioteca de arquivos" rows={files} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !allFiles.length ? "loading" : "ready"} emptyText="Nenhum arquivo neste filtro." actions={fileActions} /> : <div className={styles.fileGrid} aria-label="Biblioteca de arquivos">
+      {layout === "table" ? <DataTable label="Biblioteca de arquivos" rows={files} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !allFiles.length ? "loading" : "ready"} emptyText={emptyText} actions={fileActions} /> : <div className={styles.fileGrid} aria-label="Biblioteca de arquivos">
         {isLoading && !allFiles.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
-        {!isLoading && files.length === 0 && <p className={styles.empty}>Nenhum arquivo neste filtro.</p>}
+        {!isLoading && files.length === 0 && <p className={styles.empty}>{firstRun ? "Os arquivos enviados aparecerão aqui." : emptyText}</p>}
         {files.map((item) => <Card key={item.id} title={item.name} description={`${item.folder ?? "Geral"} · ${formatBytes(item.sizeBytes)}`} actions={fileStatusBadge(item)} footer={<div className={styles.cardFooter}><span>{formatDate(item.createdAt)}</span><div>{fileActions(item)}</div></div>}><div className={styles.cardBody}><span className={styles.fileIcon}><Icon name={fileKind(item.mimeType) === "image" ? "image" : "file"} /></span><span>{fileTypeLabel(item.mimeType)}</span></div></Card>)}
       </div>}</>
   </div>;
