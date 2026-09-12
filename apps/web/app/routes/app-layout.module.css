@@ -169,11 +169,19 @@
   outline-offset: calc(var(--ui-focusWidth) * -1);
 }
 
-.carregando {
+.railPlaceholder {
+  width: var(--ui-controlLarge);
+  height: var(--ui-controlLarge);
+  border-radius: var(--radius-md);
+  background: var(--color-inkSubtle);
+  opacity: var(--ui-disabledOpacity);
+}
+
+.loadingContent {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100%;
   color: var(--color-inkMuted);
   font-size: var(--typography-size-sm);
 }

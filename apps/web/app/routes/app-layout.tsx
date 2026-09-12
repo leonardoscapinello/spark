@@ -149,7 +149,15 @@ export async function clientLoader() {
 }
 
 export function HydrateFallback() {
-  return <div className={styles.carregando}>Carregando…</div>;
+  return <div className={styles.shell} data-sidebar="hidden" aria-busy="true">
+    <NavigationRail className={styles.rail}>
+      <div className={styles.railBrand}><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="Leonardo Scapinello" /></div>
+      <div className={styles.railModules} aria-hidden="true">{modules.filter((module) => module.id !== "admin").map((module) => <div key={module.id} className={styles.railPlaceholder} />)}</div>
+    </NavigationRail>
+    <main className={styles.conteudo}>
+      <div className={styles.loadingContent} role="status">Preparando a área de trabalho…</div>
+    </main>
+  </div>;
 }
 
 export default function AppLayout({ loaderData: session }: Route.ComponentProps) {
