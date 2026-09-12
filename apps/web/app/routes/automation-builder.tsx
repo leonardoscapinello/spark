@@ -34,7 +34,7 @@ export default function AutomationBuilder() {
   const [graph, setGraph] = useState<AutomationGraph>({ nodes: [], edges: [] });
   const [zoom, setZoom] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [panelMode, setPanelMode] = useState<"closed" | "palette" | "inspector">("closed");
+  const [panelMode, setPanelMode] = useState<"closed" | "palette" | "inspector">("palette");
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [runModalOpen, setRunModalOpen] = useState(false);
@@ -159,8 +159,13 @@ export default function AutomationBuilder() {
       {panelMode !== "closed" && <aside className={styles.panel} aria-label={panelMode === "palette" || !selected ? "Adicionar blocos" : "Configurar bloco"}>
         <Button iconOnly size="sm" variant="ghost" className={styles.panelClose} aria-label="Fechar painel" onClick={() => { setPanelMode("closed"); setSelectedId(null); }}><Icon name="close" /></Button>
         {panelMode === "palette" || !selected ? <div className={styles.palette}>
-          <header><strong>Blocos</strong><span>Escolha a próxima etapa do fluxo.</span></header>
-          {(["trigger", "action", "condition", "wait"] as const).map((type) => <Button key={type} variant="ghost" shape="rounded" className={styles.paletteButton} data-type={type} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeIcon}><Icon name={NODE_ICONS[type]} /></span><span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
+          <header><strong>Adicionar etapa</strong><span>Escolha o que acontece neste ponto do fluxo.</span></header>
+          <div className={styles.paletteGroup}><strong>Passo inicial</strong><div className={styles.paletteGrid}>
+            <Button variant="ghost" shape="rounded" className={styles.paletteButton} data-type="trigger" disabled={!canWrite} onClick={() => addNode("trigger")}><span className={styles.nodeIcon}><Icon name={NODE_ICONS.trigger} /></span><span><strong>Gatilho</strong><small>{NODE_DEFAULTS.trigger.description}</small></span></Button>
+          </div></div>
+          <div className={styles.paletteGroup}><strong>Lógica e execução</strong><div className={styles.paletteGrid}>
+            {(["action", "condition", "wait"] as const).map((type) => <Button key={type} variant="ghost" shape="rounded" className={styles.paletteButton} data-type={type} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeIcon}><Icon name={NODE_ICONS[type]} /></span><span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
+          </div></div>
           <div className={styles.validation}><strong>Pronto para publicar</strong>{issues.length ? issues.map((issue) => <span key={`${issue.code}-${issue.nodeId ?? issue.edgeId ?? "graph"}`}>{issue.message}</span>) : <span data-valid="true">Fluxo válido e conectado.</span>}</div>
         </div> : <div className={styles.inspector}>
           <header><div><Badge tone="neutral">{typeLabel(selected.type)}</Badge><strong>Configuração</strong></div></header>

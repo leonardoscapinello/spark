@@ -7,12 +7,18 @@
 .runList > span { display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
 .workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: calc(var(--space-16) * 6) minmax(0, 1fr); overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); }
 .workspace[data-panel="closed"] { grid-template-columns: minmax(0, 1fr); }
+.workspace[data-panel="palette"] { grid-template-columns: minmax(0, 1fr) calc(var(--space-16) * 6); }
+.workspace[data-panel="palette"] .panel { grid-column: 2; grid-row: 1; }
+.workspace[data-panel="palette"] .canvasViewport { grid-column: 1; grid-row: 1; }
 .panel { position: relative; z-index: 2; min-width: 0; min-height: 0; background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
 .panelClose { position: absolute; z-index: 3; inset-block-start: var(--space-3); inset-inline-end: var(--space-3); }
 .palette, .inspector { box-sizing: border-box; height: 100%; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); overflow-y: auto; background: var(--color-surface); }
 .palette > header, .palette > header span { display: grid; gap: var(--space-1); padding-inline-end: var(--space-8); }
 .palette > header span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--typography-lineHeight-body); }
-.palette .paletteButton { height: auto; min-height: var(--space-16); justify-content: flex-start; padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); text-align: left; white-space: normal; }
+.paletteGroup { display: grid; gap: var(--space-3); }
+.paletteGroup > strong { color: var(--color-ink); font-size: var(--typography-size-sm); }
+.paletteGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.palette .paletteButton { height: auto; min-height: calc(var(--space-16) + var(--space-4)); flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: var(--space-2); padding: var(--space-3); border: var(--ui-hairline) dashed var(--color-lineStrong); border-radius: var(--radius-md); background: var(--color-surface); text-align: left; white-space: normal; }
 .palette .paletteButton:hover:not([data-disabled]) { border-color: var(--color-lineStrong); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
 .paletteButton > span:last-child { display: grid; gap: var(--space-1); }
 .paletteButton small { color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); white-space: normal; }
@@ -58,7 +64,7 @@
 .configGrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
-@media (max-width: 1000px) { .workspace { grid-template-columns: calc(var(--space-16) * 5) minmax(0, 1fr); } }
+@media (max-width: 1000px) { .workspace { grid-template-columns: calc(var(--space-16) * 5) minmax(0, 1fr); } .workspace[data-panel="palette"] { grid-template-columns: minmax(0, 1fr) calc(var(--space-16) * 5); } }
 @media (max-width: 760px) {
   .page { padding: var(--space-3); }
   .workspace, .workspace[data-panel="closed"] { display: block; position: relative; }
