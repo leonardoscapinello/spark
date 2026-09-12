@@ -9,13 +9,13 @@
 .mobileCreate { display: none; }
 .mobileQueueMenu { display: none; }
 .workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(var(--ui-menuWidth), .9fr) minmax(var(--ui-cardMinWidth), 1.6fr) minmax(var(--ui-sidebarWidth), 1.05fr); gap: var(--space-2); overflow: hidden; }
-.workspace[data-has-selection="false"] { grid-template-columns: minmax(var(--ui-menuWidth), var(--ui-previewColumn)) minmax(0, 1fr); }
+.workspace[data-has-selection="false"] { grid-template-columns: minmax(var(--ui-menuWidth), var(--ui-inboxListWidth)) minmax(0, 1fr); }
 .workspace[data-has-selection="false"] .details { display: none; }
 .workspace[data-layout="table"] { grid-template-columns: minmax(0, 1fr); }
 .workspace[data-layout="table"] .thread,.workspace[data-layout="table"] .details { display: none; }
 .workspace[data-layout="table"][data-preview-open="true"] { grid-template-columns: minmax(0, 1.3fr) minmax(var(--ui-cardMinWidth), .7fr); }
 .workspace[data-layout="table"][data-preview-open="true"] .thread { display: flex; }
-.workspace[data-first-run="true"] { grid-template-columns: minmax(var(--ui-menuWidth), var(--ui-previewColumn)) minmax(0, 1fr); }
+.workspace[data-first-run="true"] { grid-template-columns: minmax(var(--ui-menuWidth), var(--ui-inboxListWidth)) minmax(0, 1fr); }
 .workspace[data-first-run="true"] .details { display: none; }
 .workspace[data-first-run="true"][data-layout="table"] { grid-template-columns: minmax(0, 1fr); }
 .filters,.conversationList,.thread,.details { min-width: 0; min-height: 0; }

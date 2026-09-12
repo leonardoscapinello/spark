@@ -77,6 +77,10 @@
       "$type": "dimension",
       "$value": "420px"
     },
+    "inboxListWidth": {
+      "$type": "dimension",
+      "$value": "369px"
+    },
     "cardMinWidth": {
       "$type": "dimension",
       "$value": "320px"
