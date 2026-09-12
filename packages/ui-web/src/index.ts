@@ -55,6 +55,7 @@ export { FeedbackButton, type FeedbackButtonProps, type FeedbackState } from "./
 export { CashPiece, type CashPieceProps } from "./ChangeCalculator/CashPiece.js";
 export { PageHeader, type PageHeaderProps } from "./PageHeader/PageHeader.js";
 export { RecordHero, type RecordHeroProps, type RecordMetric } from "./RecordHero/RecordHero.js";
+export { EmptyState, type EmptyStateProps } from "./EmptyState/EmptyState.js";
 export { Timeline, type TimelineItem } from "./Timeline/Timeline.js";
 export { FilePicker, type FilePickerProps } from "./FilePicker/FilePicker.js";
 export { LeadFormRenderer, type LeadFormRendererProps } from "./LeadForm/LeadForm.js";
