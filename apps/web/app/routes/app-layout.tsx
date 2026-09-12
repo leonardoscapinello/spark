@@ -206,6 +206,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const navigate = useNavigate();
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
+  const railModulesRef = useRef<HTMLDivElement>(null);
   const activeTopTab = useRef<HTMLAnchorElement>(null);
   const activeSidebarLink = useRef<HTMLAnchorElement>(null);
   const accountRailLink = useRef<HTMLDivElement>(null);
@@ -270,9 +271,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   }
 
   useEffect(() => {
-    const active = current.id === "account" ? accountRailLink.current : activeRailLink.current;
-    const rail = active?.closest("nav");
-    if (active && rail && rail.scrollWidth > rail.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
+    const active = activeRailLink.current;
+    const modulesRail = railModulesRef.current;
+    if (active && modulesRail && modulesRail.scrollWidth > modulesRail.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
   }, [current.id]);
 
   useEffect(() => {
@@ -305,7 +306,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
       <NavigationRail className={styles.rail}>
         <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /></Link>
-        <div className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
+        <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.railBottom}>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
           <div ref={accountRailLink} className={styles.accountMenu}><Tooltip content="Minha conta" pinOnClick={false}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} icon={accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} /> : <Icon name="account" />} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>} /></Tooltip></div>

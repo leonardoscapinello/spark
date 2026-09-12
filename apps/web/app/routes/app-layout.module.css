@@ -214,14 +214,13 @@
     height: var(--ui-touchTarget);
     flex-shrink: 0;
     padding: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
+    overflow: hidden;
   }
-  .rail::-webkit-scrollbar { display: none; }
 
   .railBrand { margin: 0 var(--space-2) 0 0; flex-shrink: 0; }
-  .railModules, .railBottom { flex-direction: row; flex-shrink: 0; }
-  .railBottom { width: auto; margin-top: 0; margin-left: auto; padding-top: 0; padding-left: var(--space-2); border-top: 0; border-left: var(--ui-hairline) solid var(--color-line); }
+  .railModules { flex: 1 1 auto; flex-direction: row; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .railModules::-webkit-scrollbar { display: none; }
+  .railBottom { flex-direction: row; flex-shrink: 0; width: auto; margin-top: 0; margin-left: 0; padding-top: 0; padding-left: var(--space-2); border-top: 0; border-left: var(--ui-hairline) solid var(--color-line); }
   .railLink { flex-shrink: 0; }
   .railLink[aria-current="page"] { width: auto; padding-inline: var(--space-3); gap: var(--space-2); }
   .railLink[aria-current="page"] .railLabel { display: inline; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); white-space: nowrap; }
