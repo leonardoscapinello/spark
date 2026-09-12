@@ -1,11 +1,16 @@
 .page { box-sizing: border-box; height: 100%; min-height: 0; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6); overflow: hidden; }
+.editorPage { gap: 0; padding: 0; background: var(--color-surface); }
+.editorHeader { display: flex; align-items: center; gap: var(--space-3); min-width: 0; padding: var(--space-3) var(--space-6); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.editorHeader > header { flex: 1; min-width: 0; }
 .headerActions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
 .runBar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-width: 0; padding: var(--space-3) var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+.editorPage .runBar { margin: var(--space-3) var(--space-6); }
 .runBar > div:first-child { display: grid; gap: var(--space-1); }
 .runBar > div:first-child span, .runList small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .runList { display: flex; align-items: center; gap: var(--space-3); overflow-x: auto; }
 .runList > span { display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
 .workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: calc(var(--space-16) * 6) minmax(0, 1fr); overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); }
+.editorPage .workspace { border: 0; border-radius: 0; box-shadow: none; }
 .workspace[data-panel="closed"] { grid-template-columns: minmax(0, 1fr); }
 .workspace[data-panel="palette"] { grid-template-columns: minmax(0, 1fr) calc(var(--space-16) * 6); }
 .workspace[data-panel="palette"] .panel { grid-column: 2; grid-row: 1; }
@@ -76,6 +81,10 @@
 @media (max-width: 1000px) { .workspace { grid-template-columns: calc(var(--space-16) * 5) minmax(0, 1fr); } .workspace[data-panel="palette"] { grid-template-columns: minmax(0, 1fr) calc(var(--space-16) * 5); } }
 @media (max-width: 760px) {
   .page { padding: var(--space-3); }
+  .editorPage { padding: 0; }
+  .editorHeader { flex-wrap: wrap; padding: var(--space-3) var(--space-4); }
+  .editorHeader > header { flex: 1 1 100%; }
+  .editorPage .runBar { margin: var(--space-3) var(--space-4); }
   .workspace, .workspace[data-panel="closed"] { display: block; position: relative; }
   .canvasViewport { height: 100%; }
   .canvas { height: 100%; min-height: 0; }

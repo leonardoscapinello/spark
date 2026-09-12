@@ -142,7 +142,8 @@ export default function AutomationBuilder() {
 
   if (!automation) return <div className={styles.page}><BackLink render={<Link to="/automations" />}>Automações</BackLink><PageHeader title="Editor de automação" />{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando automação"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="bolt" title="Automação não encontrada" description="Este fluxo não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/automations")}>Ver automações</Button>} />}</div>;
 
-  return <div className={styles.page}>
+  return <div className={`${styles.page} ${styles.editorPage}`}>
+    <div className={styles.editorHeader}>
     <BackLink render={<Link to="/automations" />}>Automações</BackLink>
     <PageHeader title={automation.name} actions={<div className={styles.headerActions}>
       <Badge tone={automation.status === "active" ? "success" : automation.status === "paused" ? "warning" : "neutral"}>{automation.status === "active" ? "Ativa" : automation.status === "paused" ? "Pausada" : "Rascunho"}</Badge>
@@ -154,6 +155,7 @@ export default function AutomationBuilder() {
       {canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}
       {canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}
     </div>} />
+    </div>
     {runsOpen && <section className={styles.runBar} aria-label="Execuções recentes"><div><strong>Execuções recentes</strong><span>{runs.length ? `${runs.length} registradas nesta automação` : "Nenhuma execução iniciada"}</span></div><div className={styles.runList}>{runs.slice(0, 5).map((run) => <span key={run.id}><Badge tone={run.status === "completed" ? "success" : run.status === "failed" ? "danger" : run.status === "waiting" ? "warning" : "neutral"}>{runStatusLabel(run.status)}</Badge><small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(run.startedAt))}</small></span>)}</div></section>}
     <div className={styles.workspace} data-panel={panelMode}>
       {panelMode !== "closed" && <aside className={styles.panel} aria-label={panelMode === "palette" || !selected ? "Adicionar blocos" : "Configurar bloco"}>
