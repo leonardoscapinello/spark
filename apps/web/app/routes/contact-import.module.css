@@ -15,10 +15,12 @@
 .uploadSection {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
-.uploadSection h2, .previewTitle { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+.sectionTitle { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding-bottom: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.sectionTitle h2 { margin: 0; font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
+.sectionTitle > span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); white-space: nowrap; }
 
 .uploadSection p,
 .fileName,
@@ -33,11 +35,13 @@
 .summary span { display: block; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .summary strong { display: block; margin-top: var(--space-1); font-size: var(--typography-size-xl); }
 
-.status { color: var(--color-statusDanger); font-size: var(--typography-size-xs); }
-.status[data-valid="true"] { color: var(--color-statusSuccess); }
+.rowIssue { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .footerActions { display: flex; justify-content: flex-end; gap: var(--space-2); }
 
 @media (max-width: 48rem) {
   .page { padding: var(--space-4); }
+  .summary { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .summary div, .summary div:first-child { padding-inline: 0; }
+  .summary div + div { padding-block-start: var(--space-3); border-inline-start: 0; border-block-start: var(--ui-hairline) solid var(--color-line); }
   .footerActions { flex-direction: column-reverse; }
 }

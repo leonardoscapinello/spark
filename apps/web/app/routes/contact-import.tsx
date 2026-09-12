@@ -3,7 +3,7 @@ import { Link, redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/contact-import";
 import { contactsControllerImportCsv } from "@spark/api-client";
 import { contactId as contactIdFactory, parseContactCsv, type ParsedContactCsvRow } from "@spark/core";
-import { Button, DataTable, FilePicker, PageHeader, notify, type TableColumn } from "@spark/ui-web";
+import { Badge, Button, DataTable, FilePicker, PageHeader, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./contact-import.module.css";
 
@@ -31,7 +31,7 @@ export default function ContactImport(_props: Route.ComponentProps) {
     { id: "name", label: "Nome", cell: (row) => row.name || "—", sortValue: (row) => row.name },
     { id: "email", label: "E-mail", cell: (row) => row.email ?? "—", sortValue: (row) => row.email ?? "" },
     { id: "phone", label: "Telefone", cell: (row) => row.phone ?? "—", sortValue: (row) => row.phone ?? "" },
-    { id: "status", label: "Situação", cell: (row) => <span className={styles.status} data-valid={row.errors.length === 0}>{row.errors.length ? row.errors.join(" · ") : "Pronto"}</span>, sortValue: (row) => row.errors.join(" ") },
+    { id: "status", label: "Situação", cell: (row) => row.errors.length ? <span className={styles.rowIssue}><Badge tone="danger">Revisar</Badge><span>{row.errors.join(" · ")}</span></span> : <Badge tone="success">Pronto</Badge>, sortValue: (row) => row.errors.join(" ") },
   ];
 
   async function selectFile(file: File | undefined) {
@@ -78,10 +78,10 @@ export default function ContactImport(_props: Route.ComponentProps) {
 
   return <div className={styles.page}>
     <Link to="/" className={styles.back}>← Contatos</Link>
-    <PageHeader eyebrow="Gestão de leads" title="Importar contatos" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
+    <PageHeader title="Importar contatos" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
 
     <section className={styles.uploadSection} aria-label="Selecionar arquivo CSV">
-      <h2>Selecione o arquivo</h2>
+      <div className={styles.sectionTitle}><h2>Selecione o arquivo</h2><span>1 de 2</span></div>
       <FilePicker accept=".csv,text/csv" multiple={false} label="Solte o CSV aqui ou escolha no computador" hint="Até 5 MB · até 2.000 contatos" onFiles={(files) => void selectFile(files[0])} />
       <p>Coluna obrigatória: <strong>Nome</strong>. Também reconhecemos E-mail, Telefone, Origem e Tags. Use vírgula ou ponto e vírgula.</p>
       {fileName && <span className={styles.fileName}>{fileName}</span>}
@@ -89,7 +89,7 @@ export default function ContactImport(_props: Route.ComponentProps) {
     </section>
 
     {rows.length > 0 && <>
-      <h2 className={styles.previewTitle}>Revise as linhas</h2>
+      <div className={styles.sectionTitle}><h2>Revise as linhas</h2><span>2 de 2</span></div>
       <div className={styles.summary}>
         <div><span>Linhas lidas</span><strong>{rows.length}</strong></div>
         <div><span>Prontas</span><strong>{validRows.length}</strong></div>
