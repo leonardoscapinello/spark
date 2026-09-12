@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { formsControllerCreate, formsControllerStatus } from "@spark/api-client";
 import { leadFormId, type LeadForm } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getFormSubmissionsCollection, getLeadFormsCollection } from "../lib/forms-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -65,7 +65,7 @@ export default function Forms() {
     ? <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${item.name}`} loading={busy === item.id} menu={<><MenuItem onClick={() => void navigate(`/forms/${item.id}`)}>Abrir editor</MenuItem><MenuItem onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar formulário" : "Publicar formulário"}</MenuItem></>} />
     : <TableIconAction label={`Abrir ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />; }
 
-  return <div className={styles.page}>
+  return <PageFrame className={styles.page}>
     <PageHeader icon="form" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="form" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
     {firstRun && (canReadPages || canReadContacts) && <ActionCardGroup title="Prepare a captação">
@@ -89,7 +89,7 @@ export default function Forms() {
         <Field><Label>Título público</Label><Input value={title} placeholder="Fale com nossa equipe" onChange={(event) => setTitle(event.target.value)} /></Field>
       </div>
     </ActionModal>
-  </div>;
+  </PageFrame>;
 }
 
 function formatDate(value: string): string {
