@@ -4,7 +4,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Badge, Button, Field, Icon, Input, Label, MenuButton, MenuItem, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -55,6 +55,7 @@ export default function Inbox() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">("recent");
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const [newContact, setNewContact] = useState<SelectOption | null>(null);
   const [newSubject, setNewSubject] = useState("");
@@ -145,6 +146,17 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
+  function renderDetails() {
+    if (!selected) return null;
+    return <>
+      <div className={styles.contactCard}><span className={styles.avatarLarge}>{initials(contactNames.get(selected.contactId) ?? "Contato")}</span><strong>{contactNames.get(selected.contactId) ?? "Contato"}</strong><span>{channelLabel(selected.channel)}</span></div>
+      <Field><Label>Responsável</Label><Select label="Responsável pela conversa" value={selected.assigneeId} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => void updateConversation({ assigneeId: value ? userId.from(value) : null })} disabled={!canWrite || saving} /></Field>
+      <Field><Label>Equipe</Label><Select label="Equipe responsável" value={selected.teamId} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => void updateConversation({ teamId: value ? teamId.from(value) : null })} disabled={!canWrite || saving} /></Field>
+      <dl className={styles.metadata}><div><dt>Situação</dt><dd>{statusLabel(selected.status)}</dd></div><div><dt>Prioridade</dt><dd>{selected.priority === "priority" ? "Prioritária" : "Normal"}</dd></div><div><dt>Primeira resposta</dt><dd><SlaBadge conversation={selected} now={now} /></dd></div><div><dt>Criada em</dt><dd>{formatDateTime(selected.createdAt)}</dd></div></dl>
+      {canReadContacts && <Button variant="secondary" onClick={() => navigate(`/contacts/${selected.contactId}`)}>Abrir contato</Button>}
+    </>;
+  }
+
   return <div className={styles.page}>
     <Sidebar title="Atendimento" className={styles.queueSidebar}>
       <SidebarSection title="Caixas">
@@ -177,6 +189,7 @@ export default function Inbox() {
             <Button type="button" size="sm" variant="ghost" className={styles.mobileBack} onClick={() => setMobileView("list")}>Conversas</Button>
             <div><strong>{selected.subject}</strong><span>{contactNames.get(selected.contactId) ?? "Contato"} · {channelLabel(selected.channel)}</span></div>
             <div className={styles.threadActions}>
+              <Button iconOnly size="sm" variant="ghost" className={styles.detailsTrigger} aria-label="Abrir detalhes da conversa" onClick={() => setDetailsOpen(true)}><Icon name="user" /></Button>
               <Button iconOnly size="sm" variant={selected.priority === "priority" ? "raised" : "ghost"} aria-label={selected.priority === "priority" ? "Remover prioridade" : "Marcar como prioridade"} disabled={!canWrite || saving} onClick={() => void updateConversation({ priority: selected.priority === "priority" ? "normal" : "priority" })}><Icon name="star" /></Button>
               <Button size="sm" variant="secondary" disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
             </div>
@@ -207,15 +220,11 @@ export default function Inbox() {
 
       <aside className={styles.details}>
         <h2>Detalhes</h2>
-        {selected ? <>
-          <div className={styles.contactCard}><span className={styles.avatarLarge}>{initials(contactNames.get(selected.contactId) ?? "Contato")}</span><strong>{contactNames.get(selected.contactId) ?? "Contato"}</strong><span>{channelLabel(selected.channel)}</span></div>
-          <Field><Label>Responsável</Label><Select label="Responsável pela conversa" value={selected.assigneeId} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => void updateConversation({ assigneeId: value ? userId.from(value) : null })} disabled={!canWrite || saving} /></Field>
-          <Field><Label>Equipe</Label><Select label="Equipe responsável" value={selected.teamId} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => void updateConversation({ teamId: value ? teamId.from(value) : null })} disabled={!canWrite || saving} /></Field>
-          <dl className={styles.metadata}><div><dt>Situação</dt><dd>{statusLabel(selected.status)}</dd></div><div><dt>Prioridade</dt><dd>{selected.priority === "priority" ? "Prioritária" : "Normal"}</dd></div><div><dt>Primeira resposta</dt><dd><SlaBadge conversation={selected} now={now} /></dd></div><div><dt>Criada em</dt><dd>{formatDateTime(selected.createdAt)}</dd></div></dl>
-          {canReadContacts && <Button variant="secondary" onClick={() => navigate(`/contacts/${selected.contactId}`)}>Abrir contato</Button>}
-        </> : null}
+        <div className={styles.detailContent}>{renderDetails()}</div>
       </aside>
     </div>
+
+    <Modal open={detailsOpen && selected !== null} onOpenChange={setDetailsOpen}><ModalContent title="Detalhes da conversa" placement="right"><div className={styles.detailContent}>{renderDetails()}</div></ModalContent></Modal>
 
     <ActionModal open={newConversationOpen} onOpenChange={setNewConversationOpen} title="Nova conversa" confirmLabel="Criar conversa" errorText="Selecione um contato e informe o assunto." onConfirm={createConversation}>
       <div className={styles.modalFields}>

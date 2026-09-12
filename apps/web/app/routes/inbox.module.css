@@ -29,6 +29,7 @@
 .threadHeader strong,.threadHeader span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .threadHeader span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .threadActions { display: flex; gap: var(--space-2); }
+.detailsTrigger { display: none; }
 .mobileBack { display: none; }
 .messages { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-6); display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-3); background: var(--color-surface); }
 .message { align-self: flex-start; width: min(82%, var(--ui-modalWidth)); padding: var(--space-3) var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface2); }
@@ -42,6 +43,7 @@
 .modeButtons { display: flex; align-items: center; gap: var(--space-1); }
 .replyTools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }
 .details { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-5); overflow-y: auto; }
+.detailContent { min-width: 0; display: flex; flex-direction: column; gap: var(--space-5); }
 .details h2 { margin: 0; padding-bottom: var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 .contactCard { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding-bottom: var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .contactCard span:last-child { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
@@ -57,7 +59,7 @@
 .threadEmpty span { max-width: var(--ui-previewColumn); line-height: var(--ui-bodyLine); }
 .threadEmpty button { margin-top: var(--space-4); }
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
-@media (max-width: 1100px) { .workspace, .workspace[data-has-selection="false"] { grid-template-columns: minmax(var(--ui-menuWidth), .85fr) minmax(0, 1.4fr); } .details { display: none; } }
+@media (max-width: 1100px) { .workspace, .workspace[data-has-selection="false"] { grid-template-columns: minmax(var(--ui-menuWidth), .85fr) minmax(0, 1.4fr); } .details { display: none; } .detailsTrigger { display: inline-flex; } }
 @media (max-width: 760px) {
   .page { display: flex; flex-direction: column; }
   .queueSidebar { width: 100%; height: var(--ui-touchTarget); max-height: var(--ui-touchTarget); flex-shrink: 0; }
