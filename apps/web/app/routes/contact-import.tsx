@@ -3,7 +3,7 @@ import { Link, redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/contact-import";
 import { contactsControllerImportCsv } from "@spark/api-client";
 import { contactId as contactIdFactory, parseContactCsv, type ParsedContactCsvRow } from "@spark/core";
-import { BackLink, Badge, Button, DataTable, FilePicker, PageHeader, notify, type TableColumn } from "@spark/ui-web";
+import { BackLink, Badge, Button, DataTable, FilePicker, PageFrame, PageHeader, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./contact-import.module.css";
 
@@ -76,9 +76,8 @@ export default function ContactImport(_props: Route.ComponentProps) {
     }
   }
 
-  return <div className={styles.page}>
-    <BackLink render={<Link to="/" />}>Pessoas</BackLink>
-    <PageHeader icon="upload" title="Importar pessoas" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
+  return <PageFrame className={styles.page}>
+    <PageHeader back={<BackLink render={<Link to="/" />}>Pessoas</BackLink>} icon="upload" title="Importar pessoas" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
 
     <section className={styles.uploadSection} aria-label="Selecionar arquivo CSV">
       <div className={styles.sectionTitle}><h2>Selecione o arquivo</h2><span>1 de 2</span></div>
@@ -102,5 +101,5 @@ export default function ContactImport(_props: Route.ComponentProps) {
         <Button loading={importing} disabled={!validRows.length || fileErrors.length > 0} onClick={() => void importContacts()}>Importar {validRows.length} {validRows.length === 1 ? "pessoa" : "pessoas"}</Button>
       </div>
     </>}
-  </div>;
+  </PageFrame>;
 }

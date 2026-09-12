@@ -9,8 +9,7 @@ export default function PageBuilder() { const { pageId } = useParams(); const na
   async function publish() { setSaving(true); try { await pagesControllerUpdate(page!.id, { name: name.trim(), slug: slug.trim(), draftTree: tree }); const response = await pagesControllerPublish(page!.id); notify({ title: "Página publicada", description: `Versão disponível em /p/${response.page.publicKey}`, tone: "success" }); } finally { setSaving(false); } }
   return <div className={styles.page}>
     <div className={styles.editorHeader}>
-    <BackLink render={<Link to="/pages" />}>Páginas</BackLink>
-    <PageHeader title={page.name} description="Organize os blocos da página e acompanhe a prévia enquanto edita." actions={<div className={styles.actions}>
+    <PageHeader back={<BackLink render={<Link to="/pages" />}>Páginas</BackLink>} title={page.name} description="Organize os blocos da página e acompanhe a prévia enquanto edita." actions={<div className={styles.actions}>
       {page.status === "published" && <Button variant="secondary" onClick={() => window.open(`/p/${page.publicKey}`, "_blank", "noopener,noreferrer")}>Abrir publicada</Button>}
       {canWrite && <Button variant="secondary" loading={saving} onClick={() => void save()}>Salvar</Button>}
       {canWrite && <Button loading={saving} onClick={() => void publish()}>Publicar</Button>}

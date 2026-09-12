@@ -140,12 +140,11 @@ export default function AutomationBuilder() {
     setRunContact(null);
   }
 
-  if (!automation) return <div className={styles.page}><BackLink render={<Link to="/automations" />}>Automações</BackLink><PageHeader title="Editor de automação" />{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando automação"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="bolt" title="Automação não encontrada" description="Este fluxo não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/automations")}>Ver automações</Button>} />}</div>;
+  if (!automation) return <div className={styles.page}><PageHeader back={<BackLink render={<Link to="/automations" />}>Automações</BackLink>} title="Editor de automação" />{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando automação"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="bolt" title="Automação não encontrada" description="Este fluxo não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/automations")}>Ver automações</Button>} />}</div>;
 
   return <div className={`${styles.page} ${styles.editorPage}`}>
     <div className={styles.editorHeader}>
-    <BackLink render={<Link to="/automations" />}>Automações</BackLink>
-    <PageHeader title={automation.name} actions={<div className={styles.headerActions}>
+    <PageHeader back={<BackLink render={<Link to="/automations" />}>Automações</BackLink>} title={automation.name} actions={<div className={styles.headerActions}>
       <Badge tone={automation.status === "active" ? "success" : automation.status === "paused" ? "warning" : "neutral"}>{automation.status === "active" ? "Ativa" : automation.status === "paused" ? "Pausada" : "Rascunho"}</Badge>
       <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label="Mais ações do fluxo" menu={<>
         <MenuItem onClick={() => setRunsOpen((open) => !open)}>{runsOpen ? "Ocultar execuções" : `Ver execuções (${runs.length})`}</MenuItem>

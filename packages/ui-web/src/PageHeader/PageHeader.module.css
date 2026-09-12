@@ -8,7 +8,10 @@
 
 .copy {
   min-width: 0;
+  flex: 1 1 auto;
 }
+
+.back { display: flex; align-items: center; flex: 0 0 auto; margin-inline-end: var(--space-2); }
 
 .titleRow { display: flex; align-items: center; gap: var(--space-3); }
 .titleIcon { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); color: var(--color-ink); }
@@ -47,6 +50,7 @@
 
 @media (max-width: 640px) {
   .header { align-items: stretch; }
+  .back { margin-inline-end: 0; }
   .copy, .actions { width: 100%; }
   .actions > * { flex: 1 1 auto; }
   .eyebrow {

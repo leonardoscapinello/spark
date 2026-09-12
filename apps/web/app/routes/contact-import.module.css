@@ -1,14 +1,8 @@
 .page {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: var(--ui-previewWidth);
-  min-width: 0;
-  margin: 0 auto;
-  padding: var(--space-8);
-  display: flex;
-  flex-direction: column;
   gap: var(--space-6);
 }
+
+.page > :not(header:first-child) { box-sizing: border-box; width: 100%; max-width: var(--ui-previewWidth); margin-inline: auto; }
 
 .uploadSection {
   display: flex;
@@ -40,7 +34,6 @@
 .footerActions { display: flex; justify-content: flex-end; gap: var(--space-2); }
 
 @media (max-width: 48rem) {
-  .page { padding: var(--space-4); }
   .summary { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   .summary div, .summary div:first-child { padding-inline: 0; }
   .summary div + div { padding-block-start: var(--space-3); border-inline-start: 0; border-block-start: var(--ui-hairline) solid var(--color-line); }

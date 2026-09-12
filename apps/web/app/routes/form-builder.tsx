@@ -61,8 +61,7 @@ export default function FormBuilder() {
   if (!form)
     return (
       <div className={styles.page}>
-        <BackLink render={<Link to="/forms" />}>Formulários</BackLink>
-        <PageHeader eyebrow="Formulários" title="Editor de formulário" />
+        <PageHeader back={<BackLink render={<Link to="/forms" />}>Formulários</BackLink>} eyebrow="Formulários" title="Editor de formulário" />
         {isLoading ? <div className={styles.loading} role="status" aria-label="Carregando formulário"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="file" title="Formulário não encontrado" description="Este formulário não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/forms")}>Ver formulários</Button>} />}
       </div>
     );
@@ -137,8 +136,8 @@ export default function FormBuilder() {
   }
   return (
     <div className={styles.page}>
-      <BackLink render={<Link to="/forms" />}>Formulários</BackLink>
       <PageHeader
+        back={<BackLink render={<Link to="/forms" />}>Formulários</BackLink>}
         title={form.name}
         description="Organize os campos e acompanhe como o formulário ficará para quem responder."
         actions={
