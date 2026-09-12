@@ -18,6 +18,13 @@ export function ActionCard({ icon, title, description, action }: ActionCardProps
     <div className={s.actionControl}>{action}</div>
   </article>;
 }
+export function ActionCardGroup({ title, children }: { title: string; children: ReactNode }) {
+  const id = useId();
+  return <section className={s.actionGroup} aria-labelledby={id}>
+    <h2 id={id}>{title}</h2>
+    <div className={s.actionGrid}>{children}</div>
+  </section>;
+}
 export type CardState = "ready" | "loading" | "empty" | "error";
 export function CardContentState({ state, children, emptyText = "Nenhum dado neste período", errorText = "Não foi possível carregar os dados", onRetry, loadingVariant = "metric" }: { state: CardState; children: ReactNode; emptyText?: string; errorText?: string; onRetry?: (() => void) | undefined; loadingVariant?: "metric" | "chart" | "donut" }) {
   if(state === "loading") return <div role="status" aria-label="Carregando dados" className={s.loading} data-variant={loadingVariant}>{loadingVariant === "chart" ? <div className={s.chartBars}>{[0,1,2,3,4,5,6].map(index=><Skeleton key={index} />)}</div> : loadingVariant === "donut" ? <Skeleton className={s.donutPlaceholder} /> : <><Skeleton className={s.valuePlaceholder} /><Skeleton className={s.comparisonPlaceholder} /></>}</div>;
