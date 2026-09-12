@@ -171,7 +171,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const active = current.id === module.id;
     const pending = pendingLocation && moduleForPath(pendingLocation.pathname).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
-    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} prefetch="render" className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} prefetch="intent" className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
@@ -188,7 +188,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
-          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} prefetch="render" data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} prefetch="intent" data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return current.sections.length === 1
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
@@ -197,7 +197,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(pendingLocation)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} to={item.to} prefetch="render" className={styles.moduleTab} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
+            <Link key={item.to} to={item.to} prefetch="intent" className={styles.moduleTab} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
