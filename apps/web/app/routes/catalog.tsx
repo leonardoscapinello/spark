@@ -4,7 +4,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { catalogControllerArchiveProduct, catalogControllerCreateDiscount, catalogControllerCreateProduct, catalogControllerCreateVariant, catalogControllerRestoreProduct, catalogControllerUpdateDiscount, catalogControllerUpdateProduct } from "@spark/api-client";
 import { discountRuleId, formatBRL, money, productId, productVariantId, toCents, toDecimal, type DiscountRule, type Money, type Product } from "@spark/core";
 import { catalogMoney } from "@spark/data";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Icon, Input, Label, MoneyInput, PageHeader, Select, Switch, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageHeader, Select, Switch, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getDiscountRulesCollection, getProductsCollection, getProductVariantsCollection } from "../lib/catalog-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -50,17 +50,17 @@ export default function Catalog() {
   const firstDiscount = discounts.length === 0 && !discountsLoading && !discountSearch;
   const productsPanel = <div className={styles.panel}>
     {firstProduct && <EmptyState variant="featured" icon="file" title="Adicione seu primeiro produto" description="Cadastre preço, unidade e estoque para usar o produto nos negócios." action={canWrite ? <Button onClick={() => openProduct()}>Novo produto</Button> : undefined} />}
-    <><CollectionToolbar
+    {!firstProduct && <CollectionToolbar
       search={<Input aria-label="Buscar produtos" placeholder="Buscar por nome ou SKU" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
       filters={<Select appearance="filter" label="Visibilidade" value={visibility} options={[{ value: "active", label: "Ativos" }, { value: "archived", label: "Arquivados" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
       count={`${shownProducts.length} ${shownProducts.length === 1 ? "produto" : "produtos"}`}
-    />
-    <DataTable label="Produtos" rows={shownProducts} columns={productColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !products.length ? "loading" : "ready"} emptyText="Nenhum produto neste filtro." actions={(item) => canWrite ? <><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => openProduct(item)} /><TableIconAction label={`Adicionar variação a ${item.name}`} icon={<Icon name="plus" />} onClick={() => setVariantProduct(item)} /><Button size="sm" variant="ghost" loading={busyId === item.id} onClick={() => void toggleProduct(item)}>{item.deletedAt ? "Restaurar" : "Arquivar"}</Button></> : undefined} /></>
+    />}
+    {!firstProduct && <DataTable label="Produtos" rows={shownProducts} columns={productColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !products.length ? "loading" : "ready"} emptyText="Nenhum produto neste filtro." actions={(item) => canWrite ? <><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => openProduct(item)} /><MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${item.name}`} loading={busyId === item.id} menu={<><MenuItem onClick={() => setVariantProduct(item)}>Adicionar variação</MenuItem><MenuItem onClick={() => void toggleProduct(item)}>{item.deletedAt ? "Restaurar" : "Arquivar"}</MenuItem></>} /></> : undefined} />}
   </div>;
   const discountsPanel = <div className={styles.panel}>
     {firstDiscount && <EmptyState variant="featured" icon="bolt" title="Crie sua primeira oferta" description="Defina descontos por valor ou percentual, com período e pedido mínimo." action={canWrite ? <Button onClick={() => setDiscountModal(true)}>Nova regra</Button> : undefined} />}
-    <><CollectionToolbar search={<Input aria-label="Buscar ofertas" placeholder="Buscar regra de desconto" value={discountSearch} startAdornment={<Icon name="search" />} onChange={(event) => setDiscountSearch(event.target.value)} />} count={`${shownDiscounts.length} ${shownDiscounts.length === 1 ? "regra" : "regras"}`} />
-    <DataTable label="Regras de desconto" rows={shownDiscounts} columns={discountColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={discountsLoading && !discounts.length ? "loading" : "ready"} emptyText="Nenhuma regra encontrada." actions={(item) => canWrite ? <Switch checked={item.active} disabled={busyId === item.id} onCheckedChange={() => void toggleDiscount(item)}>Ativa</Switch> : undefined} /></>
+    {!firstDiscount && <CollectionToolbar search={<Input aria-label="Buscar ofertas" placeholder="Buscar regra de desconto" value={discountSearch} startAdornment={<Icon name="search" />} onChange={(event) => setDiscountSearch(event.target.value)} />} count={`${shownDiscounts.length} ${shownDiscounts.length === 1 ? "regra" : "regras"}`} />}
+    {!firstDiscount && <DataTable label="Regras de desconto" rows={shownDiscounts} columns={discountColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={discountsLoading && !discounts.length ? "loading" : "ready"} emptyText="Nenhuma regra encontrada." actions={(item) => canWrite ? <Switch checked={item.active} disabled={busyId === item.id} onCheckedChange={() => void toggleDiscount(item)}>Ativa</Switch> : undefined} />}
   </div>;
   const activeLoading = activeTab === "discounts" ? discountsLoading : isLoading;
   const activeEmpty = activeTab === "discounts" ? discounts.length === 0 : products.length === 0;
