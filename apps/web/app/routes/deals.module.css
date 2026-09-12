@@ -1,4 +1,6 @@
 .pagina {
+  box-sizing: border-box;
+  min-width: 0;
   padding: var(--space-8);
   display: flex;
   flex-direction: column;
@@ -36,7 +38,8 @@
 }
 
 .coluna {
-  flex: 0 0 280px;
+  box-sizing: border-box;
+  flex: 0 0 var(--ui-cardMinWidth);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -47,12 +50,13 @@
 }
 
 .colunaNova {
-  flex: 0 0 280px;
+  box-sizing: border-box;
+  flex: 0 0 var(--ui-cardMinWidth);
   align-self: flex-start;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  border: 1px dashed var(--color-line);
+  border: var(--ui-hairline) dashed var(--color-line);
   border-radius: var(--radius-md);
   padding: var(--space-4);
 }
@@ -66,8 +70,8 @@
 
 .colunaNome {
   height: auto;
-  padding: 2px var(--space-1);
-  margin: -2px calc(var(--space-1) * -1);
+  padding: var(--ui-focusWidth) var(--space-1);
+  margin: calc(var(--ui-focusWidth) * -1) calc(var(--space-1) * -1);
   font-weight: var(--typography-weight-medium);
   font-size: var(--typography-size-sm);
 }
@@ -88,12 +92,12 @@
   flex-direction: column;
   gap: var(--space-2);
   overflow-y: auto;
-  min-height: 40px;
+  min-height: var(--ui-controlLarge);
 }
 
 .cartao {
   background: var(--color-surface);
-  border: 1px solid var(--color-line);
+  border: var(--ui-hairline) solid var(--color-line);
   border-radius: var(--radius-sm);
   padding: var(--space-3);
   cursor: grab;
@@ -114,8 +118,8 @@
 }
 
 .colunaSobreArraste {
-  outline: 2px dashed var(--color-accent);
-  outline-offset: -2px;
+  outline: var(--ui-focusWidth) dashed var(--color-accent);
+  outline-offset: calc(var(--ui-focusWidth) * -1);
   transition: outline-color var(--motion-duration-instant) var(--motion-ease-out);
 }
 
@@ -157,7 +161,7 @@
   align-self: flex-start;
   font-size: var(--typography-size-xs);
   font-weight: var(--typography-weight-medium);
-  padding: 2px var(--space-2);
+  padding: var(--ui-focusWidth) var(--space-2);
   border-radius: var(--radius-full);
 }
 
