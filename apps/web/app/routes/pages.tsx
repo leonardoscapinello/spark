@@ -24,7 +24,7 @@ export default function Pages() {
   const [slug, setSlug] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const [layout, setLayout] = useState<"cards" | "table">("cards");
+  const [layout, setLayout] = useState<"cards" | "table">("table");
   const firstRun = !isLoading && pages.length === 0 && !search && status === "all";
   const term = search.trim().toLocaleLowerCase("pt-BR");
   const filtered = pages.filter((page) => (status === "all" || page.status === status)
@@ -52,7 +52,7 @@ export default function Pages() {
         count={`${filtered.length} ${filtered.length === 1 ? "página" : "páginas"}`}
         actions={<ViewSwitcher label="Visualização das páginas" value={layout} onValueChange={setLayout} />}
       />
-      {layout === "table" ? <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText="Nenhuma página encontrada." actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} /> : <div className={styles.cardGrid} aria-label="Páginas">
+      {layout === "table" ? <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText={firstRun ? "As páginas criadas aparecerão nesta tabela." : "Nenhuma página encontrada."} actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} /> : <div className={styles.cardGrid} aria-label="Páginas">
         {isLoading && !pages.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhuma página encontrada.</p>}
         {filtered.map((item) => <Card key={item.id} title={item.name} description={`/${item.slug}`} actions={pageStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizada {formatDate(item.updatedAt)}</span><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} /></div>}><div className={styles.cardMeta}><Icon name="file" /><span>{item.status === "published" ? "Página disponível para visitantes" : item.status === "archived" ? "Página arquivada" : "Página em edição"}</span></div></Card>)}
