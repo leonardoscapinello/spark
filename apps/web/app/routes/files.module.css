@@ -1,8 +1,19 @@
-.page { display: grid; gap: var(--space-6); padding: var(--space-8); }
+.page { display: grid; gap: var(--space-4); min-width: 0; padding: var(--space-6); }
 .fileName { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 .fileName > span:last-child { display: grid; min-width: 0; }
 .fileName strong, .fileName small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fileName small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .fileIcon { display: grid; place-items: center; flex: 0 0 var(--space-9); width: var(--space-9); height: var(--space-9); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
 .fileIcon svg { width: var(--space-4); height: var(--space-4); }
+.layoutSwitch { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); }
+.fileGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-cardMinWidth)), 1fr)); align-content: start; gap: var(--space-3); min-width: 0; }
+.fileGrid > section { min-width: 0; }
+.fileGrid > section h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cardBody { display: flex; align-items: center; gap: var(--space-3); color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+.cardBody .fileIcon { flex-basis: var(--space-10); width: var(--space-10); height: var(--space-10); }
+.cardFooter { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; }
+.cardFooter > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cardFooter > div { display: flex; flex-shrink: 0; gap: var(--space-1); }
+.cardLoading { display: block; height: var(--ui-textareaHeight); border-radius: var(--radius-md); }
+.empty { grid-column: 1 / -1; margin: 0; padding: var(--space-8); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }
 @media (max-width: 720px) { .page { padding: var(--space-4); } }
