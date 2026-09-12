@@ -10,9 +10,13 @@ export interface CollectionToolbarProps {
 
 export function CollectionToolbar({ search, filters, actions, count }: CollectionToolbarProps) {
   return <div className={styles.root}>
-    {search && <div className={styles.search}>{search}</div>}
-    {filters && <div className={styles.filters}>{filters}</div>}
-    {actions && <div className={styles.actions}>{actions}</div>}
-    {count && <span className={styles.count}>{count}</span>}
+    {(search || filters) && <div className={styles.filterRow}>
+      {search && <div className={styles.search}>{search}</div>}
+      {filters && <div className={styles.filters}>{filters}</div>}
+    </div>}
+    {(count || actions) && <div className={styles.summaryRow}>
+      {count && <span className={styles.count}>{count}</span>}
+      {actions && <div className={styles.actions}>{actions}</div>}
+    </div>}
   </div>;
 }
