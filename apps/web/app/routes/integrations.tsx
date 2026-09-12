@@ -15,13 +15,14 @@ import {
   ActionModal,
   Badge,
   Button,
-  Card,
   Field,
+  Icon,
   Input,
   Label,
   PageHeader,
   Switch,
   notify,
+  type IconName,
 } from "@spark/ui-web";
 import { getIntegrationConnectionsCollection } from "../lib/integration-connections.client";
 import { getSession } from "../lib/auth.client";
@@ -31,6 +32,7 @@ import styles from "./integrations.module.css";
 interface ProviderDefinition {
   provider: IntegrationProvider;
   name: string;
+  icon: IconName;
   description: string;
   category: "Comunicação" | "Redes sociais" | "Dados e arquivos";
 }
@@ -39,36 +41,42 @@ const PROVIDERS: ProviderDefinition[] = [
   {
     provider: "google_workspace",
     name: "Google Workspace",
+    icon: "mail",
     description: "Gmail, caixa de entrada e documentos com identidade Google.",
     category: "Comunicação",
   },
   {
     provider: "smtp",
     name: "E-mail SMTP",
+    icon: "mail",
     description: "Servidor próprio para envio autenticado de mensagens.",
     category: "Comunicação",
   },
   {
     provider: "instagram",
     name: "Instagram",
+    icon: "message",
     description: "Direct, comentários, menções, stories e gatilhos da Meta.",
     category: "Redes sociais",
   },
   {
     provider: "buffer",
     name: "Buffer",
+    icon: "calendar",
     description: "Publicação social, calendário, engajamento e métricas.",
     category: "Redes sociais",
   },
   {
     provider: "s3",
     name: "Armazenamento de arquivos",
+    icon: "file",
     description: "Escolha onde o sistema guarda e encontra seus arquivos.",
     category: "Dados e arquivos",
   },
   {
     provider: "reoon",
     name: "Reoon Email Verifier",
+    icon: "check",
     description: "Validação de e-mail com cache operacional de três meses.",
     category: "Dados e arquivos",
   },
@@ -158,7 +166,10 @@ export default function Integrations() {
           const connection = connections.find((item) => item.provider === definition.provider);
           return (
             <div key={definition.provider} className={styles.providerCard}>
-              <Card title={definition.name} description={definition.description}>
+              <div className={styles.providerHeading}>
+                <span className={styles.providerIcon}><Icon name={definition.icon} /></span>
+                <div><h3>{definition.name}</h3><p>{definition.description}</p></div>
+              </div>
                 <div className={styles.providerMeta}>
                   <Badge
                     tone={
@@ -210,7 +221,6 @@ export default function Integrations() {
                     )}
                   </div>
                 )}
-              </Card>
             </div>
           );
         })}</div>
