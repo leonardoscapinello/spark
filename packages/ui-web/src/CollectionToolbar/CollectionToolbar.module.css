@@ -10,8 +10,11 @@
 .count { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); white-space: nowrap; }
 @media (max-width: 720px) {
   .filterRow { align-items: stretch; flex-direction: column; }
-  .search, .filters, .filters > * { width: 100%; min-width: 0; }
-  .filters > [data-appearance="filter"] { width: 100%; }
+  .search { width: 100%; min-width: 0; }
+  .filters { width: 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding-block: var(--space-1); scrollbar-width: none; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filters > * { flex: 0 0 auto; width: var(--ui-menuWidth); }
+  .filters > [data-appearance="filter"] { width: auto; min-width: 0; }
   .search { flex: none; }
   .actions { margin-inline-start: 0; }
 }
