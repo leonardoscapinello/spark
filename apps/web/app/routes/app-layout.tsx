@@ -154,7 +154,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const active = current.id === module.id;
     const pending = pendingLocation && moduleForPath(pendingLocation.pathname).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
-    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} prefetch="intent" className={styles.railLink} aria-label={module.title} aria-current={active ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} prefetch="intent" className={styles.railLink} aria-label={module.title} aria-current={active ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
