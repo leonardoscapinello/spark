@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { pagesControllerCreate } from "@spark/api-client";
 import { pageId, type Page } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getPagesCollection } from "../lib/pages-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -46,7 +46,7 @@ export default function Pages() {
     void navigate(`/pages/${response.page.id}`);
   }
 
-  return <div className={styles.page}>
+  return <PageFrame className={styles.page}>
     <PageHeader icon="page" title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="page" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
     {firstRun && (canReadForms || canReadFiles) && <ActionCardGroup title="Prepare sua página">
@@ -70,7 +70,7 @@ export default function Pages() {
         <Field><Label>Identificador interno</Label><Input value={slug} placeholder="landing-de-campanha" onChange={(event) => setSlug(toSlug(event.target.value))} /></Field>
       </div>
     </ActionModal>
-  </div>;
+  </PageFrame>;
 }
 
 function toSlug(value: string) {
