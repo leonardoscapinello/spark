@@ -21,6 +21,8 @@ import {
   Icon,
   Input,
   Label,
+  MenuButton,
+  MenuItem,
   PageFrame,
   PageHeader,
   Select,
@@ -221,18 +223,11 @@ export default function Integrations() {
                     <Button variant="secondary" onClick={() => open(definition, connection)}>
                       {connection ? "Configurar" : "Conectar"}
                     </Button>
-                    {connection?.credentialsConfigured && connection.status !== "disabled" && (
-                      <Button
-                        loading={checkingId === connection.id}
-                        onClick={() => void check(connection)}
-                      >
-                        Testar conexão
-                      </Button>
-                    )}
                     {connection && (
-                      <Button variant="ghost" onClick={() => void toggle(connection)}>
-                        {connection.status === "disabled" ? "Habilitar" : "Desabilitar"}
-                      </Button>
+                      <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="menu" />} aria-label={`Ações de ${definition.name}`} loading={checkingId === connection.id} menu={<>
+                        {connection.credentialsConfigured && connection.status !== "disabled" && <MenuItem icon={<Icon name="check" />} onClick={() => void check(connection)}>Testar conexão</MenuItem>}
+                        <MenuItem icon={<Icon name={connection.status === "disabled" ? "check" : "close"} />} onClick={() => void toggle(connection)}>{connection.status === "disabled" ? "Habilitar" : "Desabilitar"}</MenuItem>
+                      </>} />
                     )}
                   </div>
                 )}
