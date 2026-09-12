@@ -8,10 +8,11 @@ export interface EmptyStateProps {
   description: string;
   action?: ReactNode;
   secondaryAction?: ReactNode;
+  variant?: "default" | "onboarding";
 }
 
-export function EmptyState({ icon, title, description, action, secondaryAction }: EmptyStateProps) {
-  return <section className={styles.root} aria-label={title}>
+export function EmptyState({ icon, title, description, action, secondaryAction, variant = "default" }: EmptyStateProps) {
+  return <section className={styles.root} data-variant={variant} aria-label={title}>
     <span className={styles.icon}><Icon name={icon} /></span>
     <h2>{title}</h2>
     <p>{description}</p>

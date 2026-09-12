@@ -4,6 +4,11 @@
 .root h2 { margin: var(--space-5) 0 0; color: var(--color-ink); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); }
 .root p { max-width: var(--ui-popupMaxWidth); margin: var(--space-2) 0 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
 .actions { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
+.root[data-variant="onboarding"] { align-items: flex-start; min-height: var(--ui-modalColumn); padding: var(--space-8); background: var(--color-surface2); text-align: left; }
+.root[data-variant="onboarding"] h2 { margin-top: var(--space-4); }
+.root[data-variant="onboarding"] p { max-width: var(--ui-modalWide); }
+.root[data-variant="onboarding"] .actions { justify-content: flex-start; }
 @media (max-width: 760px) {
   .root { min-height: var(--ui-modalColumn); padding: var(--space-6); }
+  .root[data-variant="onboarding"] { padding: var(--space-6); }
 }
