@@ -8,5 +8,5 @@ export function TableActions({label="Ações",children}:{label?:string;children:
 }
 export type TableIconActionProps = Omit<ButtonProps,"children"|"iconOnly"|"aria-label"> & {label:string;icon:ReactNode};
 export function TableIconAction({label,...props}:TableIconActionProps) {
- return <Tooltip content={label}><Button size="sm" variant="ghost" shape="rounded" {...props} iconOnly aria-label={label}/></Tooltip>;
+ return <Tooltip content={label} size="compact" pinOnClick={false}><Button size="sm" variant="ghost" shape="rounded" {...props} iconOnly aria-label={label}/></Tooltip>;
 }

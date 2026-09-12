@@ -17,6 +17,16 @@
 .actionGroup { display: flex; align-items: center; gap: var(--space-1); }
 .actionGroup > * { flex-shrink: 0; }
 
+@media (hover: hover) and (pointer: fine) {
+  .table tbody tr .actionGroup { opacity: 0; transition: opacity var(--motion-duration-instant) var(--motion-ease-out); }
+  .table tbody tr:hover .actionGroup,
+  .table tbody tr:focus-within .actionGroup { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table tbody tr .actionGroup { transition: none; }
+}
+
 @media (max-width: 720px) {
   .table th:first-child,
   .table tbody tr > td:first-child:not([colspan]) {
