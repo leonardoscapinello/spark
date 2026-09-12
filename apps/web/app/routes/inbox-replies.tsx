@@ -67,8 +67,7 @@ export default function InboxReplies() {
   }
 
   return <PageFrame width="content">
-    <BackLink render={<Link to="/inbox" />}>Atendimento</BackLink>
-    <PageHeader icon="message" title={showArchived ? "Respostas arquivadas" : "Respostas prontas"} actions={canWrite && !firstRun ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />
+    <PageHeader back={<BackLink render={<Link to="/inbox" />}>Atendimento</BackLink>} icon="message" title={showArchived ? "Respostas arquivadas" : "Respostas prontas"} actions={canWrite && !firstRun ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="message" title="Crie sua primeira resposta pronta" description="Salve mensagens recorrentes para que a equipe responda com rapidez e consistência." action={canWrite ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />}
     {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar respostas" value={query} startAdornment={<Icon name="search" />} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar resposta ou atalho" />}
