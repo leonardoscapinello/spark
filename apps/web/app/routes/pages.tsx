@@ -31,7 +31,7 @@ export default function Pages() {
     && (!term || page.name.toLocaleLowerCase("pt-BR").includes(term) || page.slug.toLocaleLowerCase("pt-BR").includes(term)));
 
   const columns: TableColumn<Page>[] = [
-    { id: "name", label: "Página", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><span>/{item.slug}</span></div>, sortValue: (item) => item.name },
+    { id: "name", label: "Página", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><span>Identificador: {item.slug}</span></div>, sortValue: (item) => item.name },
     { id: "status", label: "Situação", cell: (item) => pageStatusBadge(item), sortValue: (item) => item.status },
     { id: "updated", label: "Atualizada", cell: (item) => formatDate(item.updatedAt), sortValue: (item) => item.updatedAt },
   ];
@@ -55,12 +55,12 @@ export default function Pages() {
       {layout === "table" ? <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText={firstRun ? "As páginas criadas aparecerão nesta tabela." : "Nenhuma página encontrada."} actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} /> : <div className={styles.cardGrid} aria-label="Páginas">
         {isLoading && !pages.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && filtered.length === 0 && !firstRun && <p className={styles.empty}>Nenhuma página encontrada.</p>}
-        {filtered.map((item) => <Card key={item.id} title={item.name} description={`/${item.slug}`} actions={pageStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizada {formatDate(item.updatedAt)}</span><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} /></div>}><div className={styles.cardMeta}><Icon name="page" /><span>{item.status === "published" ? "Página disponível para visitantes" : item.status === "archived" ? "Página arquivada" : "Página em edição"}</span></div></Card>)}
+        {filtered.map((item) => <Card key={item.id} title={item.name} description={`Identificador: ${item.slug}`} actions={pageStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizada {formatDate(item.updatedAt)}</span><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} /></div>}><div className={styles.cardMeta}><Icon name="page" /><span>{item.status === "published" ? "Página disponível para visitantes" : item.status === "archived" ? "Página arquivada" : "Página em edição"}</span></div></Card>)}
       </div>}</>
     <ActionModal open={open} onOpenChange={setOpen} title="Nova página" confirmLabel="Criar e editar" errorText="Informe nome e endereço válidos." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Landing de campanha" onChange={(event) => { setName(event.target.value); if (!slug) setSlug(toSlug(event.target.value)); }} /></Field>
-        <Field><Label>Endereço</Label><Input value={slug} placeholder="landing-de-campanha" onChange={(event) => setSlug(toSlug(event.target.value))} /></Field>
+        <Field><Label>Identificador interno</Label><Input value={slug} placeholder="landing-de-campanha" onChange={(event) => setSlug(toSlug(event.target.value))} /></Field>
       </div>
     </ActionModal>
   </div>;

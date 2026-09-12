@@ -17,6 +17,7 @@
 .catalogCopy strong { color: var(--color-ink); font-size: var(--typography-size-sm); }
 .catalogCopy small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); line-height: var(--ui-bodyLine); }
 .blockList, .fields { display: grid; gap: var(--space-3); }
+.copyLink { justify-self: start; }
 .block, .blockActive { display: flex; align-items: center; justify-content: space-between; min-width: 0; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); }
 .blockActive { border-color: var(--color-accent); background: var(--color-accentWash); }
 .block > button, .blockActive > button { min-width: 0; overflow: hidden; text-overflow: ellipsis; }

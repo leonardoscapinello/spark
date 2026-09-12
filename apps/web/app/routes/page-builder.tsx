@@ -7,6 +7,7 @@ export default function PageBuilder() { const { pageId } = useParams(); const na
   function move(index: number, offset: number) { setTree((current) => { const target = index + offset; if (target < 0 || target >= current.blocks.length) return current; const blocks = [...current.blocks]; const [block] = blocks.splice(index, 1); if (!block) return current; blocks.splice(target, 0, block); return { blocks }; }); }
   async function save() { setSaving(true); try { await pagesControllerUpdate(page!.id, { name: name.trim(), slug: slug.trim(), draftTree: tree }); notify({ title: "Rascunho salvo", tone: "success" }); } finally { setSaving(false); } }
   async function publish() { setSaving(true); try { await pagesControllerUpdate(page!.id, { name: name.trim(), slug: slug.trim(), draftTree: tree }); const response = await pagesControllerPublish(page!.id); notify({ title: "Página publicada", description: `Versão disponível em /p/${response.page.publicKey}`, tone: "success" }); } finally { setSaving(false); } }
+  async function copyPublicLink() { try { await navigator.clipboard.writeText(`${window.location.origin}/p/${page!.publicKey}`); notify({ title: "Link copiado", tone: "success" }); } catch { notify({ title: "Não foi possível copiar o link", tone: "error" }); } }
   return <div className={styles.page}>
     <PageHeader title={page.name} actions={<div className={styles.actions}>
       <Button variant="ghost" onClick={() => navigate("/pages")}>Voltar</Button>
@@ -37,8 +38,8 @@ export default function PageBuilder() { const { pageId } = useParams(); const na
           {selected ? <BlockFields block={selected} onChange={patchSelected} /> : <span className={styles.empty}>Nenhum bloco selecionado.</span>}
         </section>}
         {panelMode === "page" && <section className={styles.panelSection}>
-          <h2>Dados da página</h2><p>Defina o nome interno e o endereço público.</p>
-          <div className={styles.fields}><Field><Label>Nome</Label><Input value={name} disabled={!canWrite} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Endereço</Label><Input value={slug} disabled={!canWrite} onChange={(event) => setSlug(event.target.value)} /></Field></div>
+          <h2>Dados da página</h2><p>Organize a página aqui. O link para visitantes fica disponível depois da publicação.</p>
+          <div className={styles.fields}><Field><Label>Nome</Label><Input value={name} disabled={!canWrite} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Identificador interno</Label><Input value={slug} disabled={!canWrite} onChange={(event) => setSlug(event.target.value)} /></Field>{page.status === "published" && <><Field><Label>Link público</Label><Input value={`${typeof window === "undefined" ? "" : window.location.origin}/p/${page.publicKey}`} readOnly /></Field><Button className={styles.copyLink} variant="secondary" size="sm" onClick={() => void copyPublicLink()}>Copiar link</Button></>}</div>
         </section>}
       </aside>
       <section className={styles.preview} aria-label="Prévia da página">
