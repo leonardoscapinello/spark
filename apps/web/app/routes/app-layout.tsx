@@ -182,6 +182,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const requestedSearch = pendingLocation?.search ?? (navigationIntent?.fromKey === location.key ? `?${navigationIntent.to.split("?")[1] ?? ""}` : "");
   const requestedModule = requestedPath ? moduleForPath(requestedPath) : null;
   const changingModule = requestedModule !== null && requestedModule.id !== moduleForPath(location.pathname).id;
+  const requestedUrl = requestedPath ? `${requestedPath}${requestedSearch === "?" ? "" : requestedSearch}` : null;
+  const changingPage = requestedUrl !== null && requestedUrl !== `${location.pathname}${location.search}`;
+  const requestedItem = requestedModule?.sections.flatMap((section) => section.items).find((item) => requestedPath && pathMatches(requestedPath, item.to, requestedSearch));
   const allowed = (capability?: Capability) => !capability || session.capabilities.includes(capability);
   const visibleModules = modules.filter((module) => module.id === "admin"
     ? ADMIN_CAPABILITIES.some(allowed)
@@ -311,14 +314,14 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           </MenuGroup>)}
         </>}>{activeSecondaryItem.label}</MenuButton>
       </nav>}
-      <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} data-switching-module={changingModule || undefined} aria-busy={Boolean(requestedPath)}>
+      <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} data-switching-page={changingPage || undefined} data-switching-module={changingModule || undefined} data-has-tabs={topNavigation.length > 0 || undefined} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
             <Link key={item.to} ref={topTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
-        {changingModule && <div className={styles.navigationFeedback} role="status" aria-live="polite"><Icon name={requestedModule.icon} /><span>Abrindo {requestedModule.title}…</span></div>}
+        {changingPage && requestedModule && <div className={styles.navigationFeedback} role="status" aria-live="polite"><Icon name={requestedModule.icon} /><span>Abrindo {changingModule ? requestedModule.title : requestedItem?.label ?? requestedModule.title}…</span></div>}
       </main>
       <QuickNavigation open={quickNavigationOpen} onOpenChange={setQuickNavigationOpen} items={quickNavigationItems} onSelect={(to) => { markNavigation(to); void navigate(to); }} />
     </div>

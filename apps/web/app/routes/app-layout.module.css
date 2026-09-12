@@ -175,7 +175,9 @@
   pointer-events: none;
 }
 
-.conteudo[data-switching-module] > :not(.navigationFeedback) { visibility: hidden; }
+.conteudo[data-switching-page] > :not(.moduleTabs):not(.navigationFeedback) { visibility: hidden; }
+.conteudo[data-switching-module] > .moduleTabs { visibility: hidden; }
+.conteudo[data-switching-page]:not([data-switching-module])[data-has-tabs] .navigationFeedback { inset-block-start: var(--ui-touchTarget); }
 
 .navigationFeedback svg { color: var(--color-accent); }
 
