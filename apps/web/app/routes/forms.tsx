@@ -26,7 +26,7 @@ export default function Forms() {
   const [busy, setBusy] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const firstRun = !isLoading && forms.length === 0;
+  const firstRun = !isLoading && forms.length === 0 && !search && status === "all";
   const term = search.trim().toLocaleLowerCase("pt-BR");
   const filtered = forms.filter((form) => (status === "all" || form.status === status)
     && (!term || form.name.toLocaleLowerCase("pt-BR").includes(term) || form.title.toLocaleLowerCase("pt-BR").includes(term)));
@@ -59,14 +59,13 @@ export default function Forms() {
 
   return <div className={styles.page}>
     <PageHeader title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
-    {firstRun ? <EmptyState variant="onboarding" icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} /> : <>
+    {firstRun && <EmptyState variant="onboarding" icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
       <CollectionToolbar
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select label="Filtrar formulários por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicados" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "formulário" : "formulários"}`}
       />
-      <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText="Nenhum formulário encontrado." actions={(item) => <><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busy === item.id} onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar" : "Publicar"}</Button>}</>} />
-    </>}
+      <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText={firstRun ? "Os formulários aparecerão aqui após a primeira criação." : "Nenhum formulário encontrado."} actions={(item) => <><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busy === item.id} onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar" : "Publicar"}</Button>}</>} />
     <ActionModal open={open} onOpenChange={setOpen} title="Novo formulário" confirmLabel="Criar e editar" errorText="Informe o nome interno e o título público." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Captação do site" onChange={(event) => setName(event.target.value)} /></Field>
