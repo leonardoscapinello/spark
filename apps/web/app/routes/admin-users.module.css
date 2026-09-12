@@ -31,6 +31,19 @@
   font-size: var(--typography-size-sm);
 }
 
+.loadError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--ui-hairline) solid var(--color-line);
+  border-radius: var(--radius-md);
+  color: var(--color-statusDanger);
+  font-size: var(--typography-size-sm);
+}
+
 .modalFields {
   display: flex;
   flex-direction: column;

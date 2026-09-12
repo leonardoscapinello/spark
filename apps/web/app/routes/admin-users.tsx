@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
-import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto } from "@spark/api-client";
+import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto, type PermissionGroupDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
 import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, Field, Icon, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
@@ -12,26 +12,37 @@ export async function clientLoader() {
   if (!session) throw redirect("/login");
   if (!session.capabilities.includes("users:manage")) throw redirect("/");
 
-  const [users, groups] = await Promise.all([
-    usersControllerList(),
-    permissionGroupsControllerList(),
-  ]);
-  return { users, groups, session };
+  return { session };
 }
 
 export default function AdminUsers({ loaderData }: Route.ComponentProps) {
-  const [users, setUsers] = useState(loaderData.users);
+  const [users, setUsers] = useState<AdminUserDto[]>([]);
+  const [groups, setGroups] = useState<PermissionGroupDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [emailCheck, setEmailCheck] = useState<{ accepted: boolean; message: string; cacheHit: boolean } | null>(null);
   const [checkingEmail, setCheckingEmail] = useState(false);
-  const [groupId, setGroupId] = useState(loaderData.groups[0]?.id ?? "");
+  const [groupId, setGroupId] = useState("");
   const [lastInvited, setLastInvited] = useState<string | null>(null);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  useEffect(() => {
+    let active = true;
+    void Promise.all([usersControllerList(), permissionGroupsControllerList()]).then(([nextUsers, nextGroups]) => {
+      if (!active) return;
+      setUsers(nextUsers);
+      setGroups(nextGroups);
+      setGroupId((current) => current || nextGroups[0]?.id || "");
+      setLoadError(false);
+    }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [reloadKey]);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const filteredUsers = users.filter((user) =>
     (statusFilter === "all" || accessStatus(user) === statusFilter) &&
@@ -44,7 +55,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
         label={`Grupo de ${user.name}`}
         value={user.groupIds[0] ?? null}
         onValueChange={(value) => { if (value) void replaceGroup(user, value); }}
-        options={loaderData.groups.map((group) => ({ value: group.id, label: group.name }))}
+        options={groups.map((group) => ({ value: group.id, label: group.name }))}
         disabled={busyUserId === user.id || user.id === loaderData.session.userId}
       />
     ) },
@@ -55,7 +66,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
     setName("");
     setEmail("");
     setEmailCheck(null);
-    setGroupId(loaderData.groups[0]?.id ?? "");
+    setGroupId(groups[0]?.id ?? "");
   }
 
   async function invite() {
@@ -123,11 +134,12 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
         eyebrow="Administração"
         title="Usuários"
         description="Controle quem acessa o sistema e quais permissões cada pessoa recebe."
-        actions={<Button onClick={() => setModalOpen(true)}>Convidar usuário</Button>}
+        actions={<Button disabled={loading || groups.length === 0} onClick={() => setModalOpen(true)}>Convidar usuário</Button>}
       />
 
       {lastInvited && <p className={styles.feedback} role="status">Convite enviado para {lastInvited}.</p>}
       {actionError && <p className={styles.error} role="alert">{actionError}</p>}
+      {loadError && <div className={styles.loadError} role="alert"><span>Não foi possível carregar os usuários.</span><Button size="sm" variant="secondary" onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button></div>}
 
       <CollectionToolbar
         search={<Input aria-label="Buscar usuários" placeholder="Buscar por nome ou e-mail" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
@@ -139,6 +151,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
         label="Usuários da organização"
         rows={filteredUsers}
         columns={columns}
+        state={loading ? "loading" : "ready"}
         rowKey={(user) => user.id}
         rowLabel={(user) => user.name}
         actions={(user) => (
@@ -195,7 +208,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
               label="Grupo de permissão"
               value={groupId}
               onValueChange={(value) => setGroupId(value ?? "")}
-              options={loaderData.groups.map((group) => ({ value: group.id, label: group.name }))}
+              options={groups.map((group) => ({ value: group.id, label: group.name }))}
             />
           </Field>
         </div>
