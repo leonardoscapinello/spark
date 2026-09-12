@@ -1,8 +1,8 @@
-.root { box-sizing: border-box; display: flex; align-items: center; min-width: 0; min-height: calc(var(--space-16) * 2 + var(--space-8)); padding-block: var(--space-5) var(--space-6); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.root { box-sizing: border-box; display: flex; align-items: center; min-width: 0; min-height: calc(var(--space-16) * 2 + var(--space-8)); padding-block: var(--space-5) var(--space-6); border-bottom: var(--ui-hairline) solid var(--color-line); color: var(--color-ink); font-family: var(--typography-fontFamily-body); }
 .pageHeader { box-sizing: border-box; min-width: 0; margin: calc(var(--space-8) * -1) calc(var(--space-8) * -1) 0; padding: var(--space-5) var(--space-8) 0; border-bottom: var(--ui-hairline) solid var(--color-line); }
 .back { display: flex; align-items: center; min-height: var(--ui-controlMedium); }
 .pageHeader .root { min-height: calc(var(--space-16) * 2); padding-block: var(--space-3) var(--space-5); border-bottom: 0; }
-.identity { display: flex; align-items: center; gap: var(--space-4); min-width: 0; }
+.identity { display: flex; align-items: center; gap: var(--space-4); width: 100%; min-width: 0; }
 .copy { flex: 1; min-width: 0; display: grid; gap: var(--space-1); }
 .copy > header { min-width: 0; padding: 0; border: 0; }
 .context { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); }

@@ -9,6 +9,7 @@
   margin-inline-start: calc(var(--space-2) * -1);
   border-radius: var(--radius-md);
   color: var(--color-inkMuted);
+  font-family: var(--typography-fontFamily-body);
   font-size: var(--typography-size-sm);
   font-weight: var(--typography-weight-medium);
   text-decoration: none;
