@@ -50,8 +50,8 @@ export default function Contacts() {
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [archiveView, setArchiveView] = useState(false);
   const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && ownerFilter === "all";
-  const viewTitle = archiveView ? "Contatos arquivados" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Base de contatos";
-  const viewDescription = archiveView ? "Registros fora da base ativa que você pode restaurar." : statusFilter === "all" ? "Pessoas e leads da organização, reunidos em uma só lista." : "Acompanhe os contatos desta etapa e abra cada perfil para ver o histórico.";
+  const viewTitle = archiveView ? "Contatos arquivados" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Contatos";
+  const viewDescription = archiveView ? "Registros fora da base ativa que você pode restaurar." : statusFilter === "all" ? "" : "Acompanhe os contatos desta etapa e abra cada perfil para ver o histórico.";
   const filteredContacts = contacts.filter((contact) =>
     (archiveView ? contact.deletedAt !== null : contact.deletedAt === null) &&
     contactMatches(contact, search) &&
@@ -154,7 +154,7 @@ export default function Contacts() {
       actions={<Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>}
       count={<span role="status">{filteredContacts.length} {filteredContacts.length === 1 ? "contato" : "contatos"}</span>}
     />}
-    {firstRun ? <EmptyState icon="user" title="Seus contatos começam aqui" description="Cadastre um contato ou importe sua base para organizar os leads e acompanhar cada relacionamento." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Novo contato</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button> : undefined} /> : <DataTable
+    {firstRun ? <EmptyState variant="onboarding" icon="user" title="Comece com seus contatos" description="Cadastre uma pessoa ou importe sua base para reunir o histórico de relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Novo contato</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button> : undefined} /> : <DataTable
       label="Contatos da organização"
       rows={filteredContacts}
       columns={columns}
