@@ -48,7 +48,7 @@ export default function Pages() {
     {firstRun && <EmptyState variant="featured" icon="file" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
       <><CollectionToolbar
         search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} />}
-        filters={<Select label="Filtrar páginas por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
+        filters={<Select appearance="filter" label="Filtrar páginas por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "página" : "páginas"}`}
         actions={<ViewSwitcher label="Visualização das páginas" value={layout} onValueChange={setLayout} />}
       />
