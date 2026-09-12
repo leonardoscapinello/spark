@@ -9,6 +9,8 @@ import {
   type SocialPublishMode,
 } from "@spark/core";
 import {
+  ActionCard,
+  ActionCardGroup,
   ActionModal,
   Avatar,
   Badge,
@@ -190,8 +192,13 @@ export default function Social() {
       />
       {firstRun && (channelView
         ? <EmptyState variant="featured" icon="message" title="Conecte suas redes sociais" description="Conecte um provedor em Integrações e sincronize suas contas para publicar aqui." action={canReadIntegrations ? <Button onClick={() => void navigate("/integrations")}>Abrir integrações</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" loading={syncing} onClick={() => void syncChannels()}>Sincronizar canais</Button> : undefined} />
-        : <EmptyState variant="featured" icon="calendar" title={activeChannels.length ? "Planeje sua primeira publicação" : "Conecte um canal para começar"} description={activeChannels.length ? "Escreva uma publicação, escolha um canal e defina quando ela deve sair." : "Depois de conectar uma conta social, você poderá agendar e acompanhar as publicações aqui."} action={activeChannels.length && canWrite ? <Button onClick={() => setComposerOpen(true)}>Nova publicação</Button> : canReadIntegrations ? <Button onClick={() => void navigate("/integrations")}>Abrir integrações</Button> : <Button variant="secondary" onClick={() => setSearchParams({ view: "channels" })}>Ver canais</Button>} />)}
-      <><CollectionToolbar
+        : <EmptyState variant="featured" icon="calendar" title={activeChannels.length ? "Planeje sua primeira publicação" : "Conecte um canal para começar"} description={activeChannels.length ? "Escreva uma publicação, escolha um canal e defina quando ela deve sair." : "Depois de conectar uma conta social, você poderá agendar e acompanhar as publicações aqui."} action={!canReadIntegrations && !canWrite ? <Button variant="secondary" onClick={() => setSearchParams({ view: "channels" })}>Ver canais</Button> : undefined} />)}
+      {!channelView && firstRun && (canReadIntegrations || canWrite) && <ActionCardGroup title="Prepare suas publicações">
+        {canReadIntegrations && <ActionCard icon="message" title="Conecte suas redes" description="Vincule as contas que sua equipe usa para publicar." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Abrir integrações</Button>} />}
+        {canWrite && <ActionCard icon="team" title="Sincronize os canais" description="Atualize as contas disponíveis para a equipe." action={<Button variant="secondary" loading={syncing} onClick={() => void syncChannels()}>Sincronizar canais</Button>} />}
+        {canWrite && activeChannels.length > 0 && <ActionCard icon="calendar" title="Planeje o conteúdo" description="Escreva uma publicação e escolha quando enviá-la." action={<Button variant="secondary" onClick={() => setComposerOpen(true)}>Nova publicação</Button>} />}
+      </ActionCardGroup>}
+      {!firstRun && <><CollectionToolbar
         search={<Input aria-label={channelView ? "Buscar canais" : "Buscar publicações"} placeholder={channelView ? "Buscar canal ou rede" : "Buscar texto ou canal"} value={channelView ? channelSearch : postSearch} startAdornment={<Icon name="search" />} onChange={(event) => channelView ? setChannelSearch(event.target.value) : setPostSearch(event.target.value)} />}
         filters={<>
           <Select appearance="filter" label="Filtrar por situação" value={channelView ? channelStatusFilter : postStatusFilter} options={channelView ? [{ value: "all", label: "Todas as situações" }, { value: "active", label: "Conectados" }, { value: "inactive", label: "Indisponíveis" }] : [{ value: "all", label: "Todas as situações" }, ...(["draft", "scheduled", "publishing", "published", "failed", "cancelled"] as const).map((value) => ({ value, label: statusLabel(value) }))]} onValueChange={(value) => channelView ? setChannelStatusFilter(value ?? "all") : setPostStatusFilter(value ?? "all")} />
@@ -207,7 +214,7 @@ export default function Social() {
         rowLabel={(post) => post.text}
         state={isLoading && !posts.length ? "loading" : "ready"}
         emptyText={firstRun ? "As publicações criadas aparecerão nesta tabela." : "Nenhuma publicação encontrada."}
-      />}</>
+      />}</>}
       <ActionModal
         open={composerOpen}
         onOpenChange={setComposerOpen}
