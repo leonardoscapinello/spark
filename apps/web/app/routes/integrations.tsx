@@ -179,7 +179,7 @@ export default function Integrations() {
       />
       <CollectionToolbar
         search={<Input aria-label="Buscar integrações" placeholder="Buscar serviço ou canal" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
-        filters={<Select label="Filtrar integrações por situação" value={statusFilter} options={[{ value: "all", label: "Todas as situações" }, { value: "connected", label: "Conectadas" }, { value: "not_configured", label: "Não configuradas" }, { value: "error", label: "Com erro" }, { value: "disabled", label: "Desabilitadas" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
+        filters={<Select appearance="filter" label="Filtrar integrações por situação" value={statusFilter} options={[{ value: "all", label: "Todas as situações" }, { value: "connected", label: "Conectadas" }, { value: "not_configured", label: "Não configuradas" }, { value: "error", label: "Com erro" }, { value: "disabled", label: "Desabilitadas" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
         count={`${visibleProviders.length} ${visibleProviders.length === 1 ? "integração" : "integrações"}`}
       />
       {visibleProviders.length === 0 && <EmptyState icon="search" title="Nenhuma integração encontrada" description="Tente outro nome ou situação para encontrar o serviço." />}
@@ -198,7 +198,6 @@ export default function Integrations() {
                   <span>{connection.credentialsConfigured ? `Credencial ${connection.credentialHint ?? "configurada"}` : "Credencial pendente"}</span>
                   <span>{connection.lastCheckedAt ? `Verificada em ${formatDate(connection.lastCheckedAt)}` : "Ainda não verificada"}</span>
                   {connection.lastError && <small>{connection.lastError}</small>}
-                  {definition.provider === "instagram" && <span className={styles.callbackUrl}>Webhook: {instagramCallbackUrl(connection.id)}</span>}
                 </div>
               )}
               <div className={styles.providerFooter}>
