@@ -19,7 +19,7 @@
   font-weight: var(--typography-weight-semibold);
 }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fit, var(--ui-settingsCardWidth)); align-items: stretch; gap: var(--space-6); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); align-items: stretch; gap: var(--space-6); width: 100%; max-width: calc(3 * var(--ui-settingsCardWidth) + 2 * var(--space-6)); }
 
 .card {
   box-sizing: border-box;

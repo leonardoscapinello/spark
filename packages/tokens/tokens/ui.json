@@ -85,6 +85,10 @@
       "$type": "dimension",
       "$value": "290px"
     },
+    "settingsCardMinWidth": {
+      "$type": "dimension",
+      "$value": "250px"
+    },
     "settingsContentWidth": {
       "$type": "dimension",
       "$value": "1048px"
