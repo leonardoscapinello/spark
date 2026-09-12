@@ -25,26 +25,6 @@ export async function clientLoader() {
   return null;
 }
 
-/** Minimal funnel to start using the board — no settings screen yet. */
-async function createDefaultPipeline() {
-  const session = getSession();
-  if (!session) return;
-
-  const pipeline = optimisticPipeline({ name: "Funil de Vendas", isDefault: true }, session.orgId);
-  const pipelineTx = getPipelinesCollection().insert(pipeline);
-  // wait for the pipeline to really exist on the server before creating
-  // any stage — stages.pipeline_id is a FK; without this, the stage
-  // insert can reach the API before the pipeline committed, and fails
-  // with "violates foreign key constraint" (found testing in the browser).
-  await pipelineTx.isPersisted.promise;
-
-  const names = ["Novo", "Em negociação", "Fechado"];
-  for (const [sortOrder, name] of names.entries()) {
-    const stage = optimisticStage({ pipelineId: pipeline.id, name, sortOrder }, session.orgId);
-    getStagesCollection().insert(stage);
-  }
-}
-
 export default function Deals() {
   const [searchParams, setSearchParams] = useSearchParams();
   const pipelinesCollection = getPipelinesCollection();
@@ -72,6 +52,8 @@ export default function Deals() {
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [renamingStage, setRenamingStage] = useState<string | null>(null);
   const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
+  const [pipelineModalOpen, setPipelineModalOpen] = useState(false);
+  const [pipelineName, setPipelineName] = useState("");
   const statusFilter = searchParams.get("status") ?? "open";
   const [dealModalOpen, setDealModalOpen] = useState(false);
   const [targetStageId, setTargetStageId] = useState<string | null>(null);
@@ -94,6 +76,22 @@ export default function Deals() {
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
   const canMove = session?.capabilities.includes("deals:move") ?? false;
   const canManagePipeline = session?.capabilities.includes("pipelines:manage") ?? false;
+
+  async function createPipeline() {
+    if (!session || !pipelineName.trim()) throw new Error("MISSING_PIPELINE_NAME");
+    const pipeline = optimisticPipeline({ name: pipelineName.trim(), isDefault: pipelines.length === 0 }, session.orgId);
+    const pipelineTx = pipelinesCollection.insert(pipeline);
+    // The pipeline must exist on the server before its stages are written (FK).
+    await pipelineTx.isPersisted.promise;
+    const stageWrites = ["Novo", "Em negociação", "Fechado"].map((name, sortOrder) => {
+      const stage = optimisticStage({ pipelineId: pipeline.id, name, sortOrder }, session.orgId);
+      return stagesCollection.insert(stage).isPersisted.promise;
+    });
+    await Promise.all(stageWrites);
+    setSelectedPipelineId(pipeline.id);
+    setPipelineName("");
+    notify({ title: "Funil criado", description: pipeline.name, tone: "success" });
+  }
 
   function openDealModal(stageId?: string) {
     setTargetStageId(stageId ?? stages[0]?.id ?? null);
@@ -177,14 +175,17 @@ export default function Deals() {
     return (
       <div className={styles.pagina}>
         <PageHeader title="Negócios" description="Acompanhe as oportunidades do primeiro contato ao fechamento." />
-        <EmptyState icon="briefcase" title="Crie seu primeiro funil" description="Organize os negócios por etapa e acompanhe o valor de cada oportunidade." action={canManagePipeline ? <Button onClick={() => void createDefaultPipeline()}>Criar funil de vendas</Button> : undefined} />
+        <EmptyState icon="briefcase" title="Crie seu primeiro funil" description="Organize os negócios por etapa e acompanhe o valor de cada oportunidade." action={canManagePipeline ? <Button onClick={() => { setPipelineName("Funil de Vendas"); setPipelineModalOpen(true); }}>Criar funil</Button> : undefined} />
+        <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
+          <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
+        </ActionModal>
       </div>
     );
   }
 
   return (
     <div className={styles.pagina}>
-      <PageHeader title={mainPipeline?.name ?? "Negócios"} description="Acompanhe valor, contato, responsável e avanço de cada oportunidade." actions={canWrite ? <Button onClick={() => openDealModal()}>Novo negócio</Button> : undefined} />
+      <PageHeader title={mainPipeline?.name ?? "Negócios"} description="Acompanhe valor, contato, responsável e avanço de cada oportunidade." actions={<>{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
       <div className={styles.toolbar}>
         <Select label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
         <Select label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value && value !== "open" ? { status: value } : {})} />
@@ -311,6 +312,9 @@ export default function Deals() {
           </Button>
         </form>}
       </div>
+      <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
+        <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
+      </ActionModal>
       <ActionModal open={dealModalOpen} onOpenChange={(open) => { setDealModalOpen(open); if (!open) resetDealForm(); }} title="Novo negócio" confirmLabel="Criar negócio" errorText="Preencha nome, valor e etapa para criar o negócio." onConfirm={addDeal}>
         <div className={styles.modalFields}>
           <Field><Label>Nome</Label><Input value={dealName} onChange={(event) => setDealName(event.target.value)} placeholder="Ex.: Contrato anual Acme" /></Field>
