@@ -176,7 +176,7 @@ export async function beginMfaEnrollment(): Promise<MfaEnrollment> {
   const { data: listed } = await client.auth.mfa.listFactors();
   await Promise.all((listed?.all ?? []).filter((factor) => factor.factor_type === "totp" && factor.status === "unverified").map((factor) => client.auth.mfa.unenroll({ factorId: factor.id })));
 
-  const { data, error } = await client.auth.mfa.enroll({ factorType: "totp", friendlyName: "Spark" });
+  const { data, error } = await client.auth.mfa.enroll({ factorType: "totp", friendlyName: "Leonardo Scapinello" });
   if (error || !data) throw new Error("MFA_ENROLL_FAILED");
   return {
     factorId: data.id,
