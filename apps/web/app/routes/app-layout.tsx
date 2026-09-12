@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
 import { Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName } from "@spark/ui-web";
@@ -131,14 +131,18 @@ const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
   leads: ["Todos os contatos", "Empresas"],
   crm: ["Funil em aberto", "Atividades", "Produtos", "Ofertas e descontos"],
   automations: ["Todos os fluxos", "Ativos", "Rascunhos", "Pausados"],
+  content: ["Campanhas", "Públicos", "Páginas", "Formulários", "Arquivos"],
   social: ["Publicações", "Canais conectados"],
+  admin: ["Início", "Usuários", "Times", "Grupos de permissões", "Integrações", "Auditoria", "Campos personalizados"],
 };
 
 function usesTopNavigation(moduleId: string, pathname: string) {
   if (moduleId === "leads") return pathname === "/" || pathname === "/companies";
   if (moduleId === "crm") return pathname === "/deals" || pathname === "/activities" || pathname === "/catalog";
   if (moduleId === "automations") return pathname === "/automations";
+  if (moduleId === "content") return ["/campaigns", "/pages", "/forms", "/files"].includes(pathname);
   if (moduleId === "social") return pathname === "/social";
+  if (moduleId === "admin") return pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/integrations" || pathname === "/settings";
   return false;
 }
 
@@ -167,7 +171,10 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
   const accountRailLink = useRef<HTMLDivElement>(null);
+  const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
+  const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
+  const requestedSearch = pendingLocation?.search ?? (navigationIntent?.fromKey === location.key ? `?${navigationIntent.to.split("?")[1] ?? ""}` : "");
   const allowed = (capability?: Capability) => !capability || session.capabilities.includes(capability);
   const visibleModules = modules.filter((module) => module.id === "admin"
     ? ADMIN_CAPABILITIES.some(allowed)
@@ -176,8 +183,11 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const topNavigation = usesTopNavigation(current.id, location.pathname)
     ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
     : [];
-  const showSidebar = (current.id === "content" || current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox")
-    && !["/automations/", "/pages/", "/forms/"].some((prefix) => location.pathname.startsWith(prefix));
+  const showSidebar = current.id === "inbox" && location.pathname !== "/inbox";
+
+  function markNavigation(to: string) {
+    if (`${location.pathname}${location.search}` !== to) setNavigationIntent({ to, fromKey: location.key });
+  }
 
   useEffect(() => {
     const active = current.id === "account" ? accountRailLink.current : activeRailLink.current;
@@ -192,13 +202,14 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
 
   function railLink(module: NavModule) {
     const active = current.id === module.id;
-    const pending = pendingLocation && moduleForPath(pendingLocation.pathname).id === module.id;
+    const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
-    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={first?.to ?? module.to} prefetch="intent" className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !pendingLocation ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    const target = first?.to ?? module.to;
+    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={() => markNavigation(target)} onClick={() => markNavigation(target)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
-    <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={pendingLocation ? "true" : undefined}>
+    <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
       <NavigationRail className={styles.rail}>
         <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /></Link>
         <div className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
@@ -211,16 +222,16 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
-          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} prefetch="intent" data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return current.sections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
         })}
       </Sidebar>}
-      <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(pendingLocation)}>
+      <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} to={item.to} prefetch="intent" className={styles.moduleTab} aria-current={!pendingLocation && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
+            <Link key={item.to} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
