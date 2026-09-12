@@ -6,7 +6,7 @@
   padding: var(--space-8);
 }
 
-.sections { display: grid; gap: var(--space-10); width: 100%; max-width: calc(var(--ui-drawerWidth) * 3); }
+.sections { display: grid; gap: var(--space-10); width: 100%; max-width: calc(var(--ui-cardMinWidth) * 3); margin-inline: auto; }
 
 .section {
   display: grid;
@@ -20,7 +20,7 @@
   font-weight: var(--typography-weight-semibold);
 }
 
-.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: var(--space-4); }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: var(--space-6); }
 
 .card {
   box-sizing: border-box;
@@ -31,7 +31,7 @@
   min-height: var(--space-16);
   padding: var(--space-5);
   border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-ink);
   text-decoration: none;

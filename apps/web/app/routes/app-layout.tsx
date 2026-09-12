@@ -197,7 +197,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
           const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} prefetch="intent" data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
-          return current.sections.length === 1
+          return current.sections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
         })}
