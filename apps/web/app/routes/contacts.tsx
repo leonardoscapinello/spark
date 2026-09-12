@@ -149,8 +149,8 @@ export default function Contacts() {
     {!firstRun && <><CollectionToolbar
       search={<Input aria-label="Buscar contatos" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}
       filters={<>
-        <Select label="Filtrar por etapa" value={statusFilter} options={[{ value: "all", label: "Todas as etapas" }, ...LEAD_STATUS_OPTIONS]} onValueChange={(value) => setSearchParams(value && value !== "all" ? { status: value } : {})} />
-        <Select label="Filtrar por responsável" value={ownerFilter} options={[{ value: "all", label: "Todos os responsáveis" }, { value: "unassigned", label: "Não atribuídos" }, ...users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))]} onValueChange={(value) => setOwnerFilter(value ?? "all")} />
+        <Select appearance="filter" label="Filtrar por etapa" value={statusFilter} options={[{ value: "all", label: "Todas as etapas" }, ...LEAD_STATUS_OPTIONS]} onValueChange={(value) => setSearchParams(value && value !== "all" ? { status: value } : {})} />
+        <Select appearance="filter" label="Filtrar por responsável" value={ownerFilter} options={[{ value: "all", label: "Todos os responsáveis" }, { value: "unassigned", label: "Não atribuídos" }, ...users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))]} onValueChange={(value) => setOwnerFilter(value ?? "all")} />
       </>}
       actions={<Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>}
       count={<span role="status">{filteredContacts.length} {filteredContacts.length === 1 ? "contato" : "contatos"}</span>}
