@@ -149,7 +149,6 @@ export default function Integrations() {
   return (
     <div className={styles.page}>
       <PageHeader
-        eyebrow="Configurações"
         title="Integrações"
         description="Conecte os canais e serviços usados pela sua equipe. Gerencie cada conexão em um só lugar."
       />

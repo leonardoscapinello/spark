@@ -1,8 +1,8 @@
 .page { display: grid; gap: var(--space-6); padding: var(--space-8); }
 .category { display: grid; gap: var(--space-3); }
 .category h2 { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-.providerCard { min-height: calc(var(--space-16) * 3.5); }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.providerCard { min-width: 0; }
 .providerCard > section { height: 100%; }
 .providerMeta { display: flex; justify-content: flex-start; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .connectionInfo { display: grid; gap: var(--space-1); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
@@ -12,4 +12,5 @@
 .actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: auto; }
 .fields { display: grid; gap: var(--space-4); }
 .columns { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: var(--space-3); }
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .page { padding: var(--space-4); } .grid { grid-template-columns: 1fr; } }
