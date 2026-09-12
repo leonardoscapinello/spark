@@ -1,8 +1,5 @@
-.page { padding: var(--space-8); display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
-.toolbar { display: grid; grid-template-columns: minmax(0, 1fr) var(--ui-menuWidth) auto; align-items: center; gap: var(--space-3); }
-.visibility { min-width: 0; }
-.toolbar > span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); white-space: nowrap; }
+.page { padding: var(--space-8); display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .secondary { display: block; margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
 .form { display: flex; flex-direction: column; gap: var(--space-4); }
 .formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-@media (max-width: 720px) { .page { padding: var(--space-4); } .toolbar, .formGrid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .page { padding: var(--space-4); } .formGrid { grid-template-columns: 1fr; } }

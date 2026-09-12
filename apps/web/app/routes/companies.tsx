@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, phone as buildPhone, userId as userIdFactory, type Company } from "@spark/core";
 import { optimisticCompany } from "@spark/data";
-import { ActionModal, Button, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -100,12 +100,12 @@ export default function Companies() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title="Empresas" description="Organize os contatos por empresa e acompanhe seus negócios." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
-    {!firstRun && <div className={styles.toolbar}>
-      <Input aria-label="Buscar empresas" placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />
-      <div className={styles.visibility}><Select label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} /></div>
-      <span>{filtered.length} {filtered.length === 1 ? "empresa" : "empresas"}</span>
-    </div>}
+    <PageHeader title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} description={visibility === "archived" ? "Organizações fora da base ativa que você pode restaurar." : "Organize os contatos por empresa e acompanhe seus negócios."} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
+    {!firstRun && <CollectionToolbar
+      search={<Input aria-label="Buscar empresas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />}
+      filters={<Select label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
+      count={`${filtered.length} ${filtered.length === 1 ? "empresa" : "empresas"}`}
+    />}
     {firstRun ? <EmptyState icon="building" title="Cadastre sua primeira empresa" description="Vincule contatos e negócios à organização para acompanhar o relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} /> : <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} emptyText="Nenhuma empresa neste filtro." actions={(company) => <><TableIconAction label="Abrir empresa" icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busyId === company.id} onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</Button>}</>} />}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova empresa" confirmLabel="Criar empresa" errorText="Revise os dados da empresa." onConfirm={createCompany}>
       <div className={styles.form}>
