@@ -238,6 +238,7 @@ export default function Inbox() {
             <Button type="button" size="sm" variant="ghost" className={styles.mobileBack} onClick={() => setMobileView("list")}>Conversas</Button>
             <div><strong>{selected.subject}</strong><span>{contactNames.get(selected.contactId) ?? "Contato"} · {channelLabel(selected.channel)}</span></div>
             <div className={styles.threadActions}>
+              <Button iconOnly size="sm" variant="ghost" className={styles.tablePreviewClose} aria-label="Fechar prévia da conversa" onClick={() => { setSelectedId(null); setMobileView("list"); }}><Icon name="close" /></Button>
               <Button iconOnly size="sm" variant="ghost" className={styles.detailsTrigger} aria-label="Abrir detalhes da conversa" onClick={() => setDetailsOpen(true)}><Icon name="user" /></Button>
               <Button iconOnly size="sm" variant={selected.priority === "priority" ? "raised" : "ghost"} aria-label={selected.priority === "priority" ? "Remover prioridade" : "Marcar como prioridade"} disabled={!canWrite || saving} onClick={() => void updateConversation({ priority: selected.priority === "priority" ? "normal" : "priority" })}><Icon name="star" /></Button>
               <Button size="sm" variant="secondary" disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
