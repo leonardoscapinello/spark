@@ -224,7 +224,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const topNavigation = usesTopNavigation(current.id, location.pathname)
     ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
     : [];
-  const showSidebar = current.id === "admin" && location.pathname !== "/admin" || current.id === "inbox" && location.pathname !== "/inbox";
+  const showSidebar = current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox";
 
   useEffect(() => {
     if (session.name) return;
