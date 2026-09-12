@@ -1,6 +1,6 @@
 .page { height: 100%; min-width: 0; display: grid; grid-template-columns: var(--ui-sidebarWidth) minmax(0, 1fr); gap: var(--space-2); overflow: hidden; }
 .queueSidebar { height: 100%; min-height: 0; }
-.workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(var(--ui-menuWidth), .85fr) minmax(var(--ui-drawerWidth), 1.4fr) minmax(var(--ui-menuWidth), .8fr); gap: var(--space-2); overflow: hidden; }
+.workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(var(--ui-menuWidth), .75fr) minmax(var(--ui-drawerWidth), 1.35fr) minmax(var(--ui-drawerWidth), .9fr); gap: var(--space-2); overflow: hidden; }
 .workspace[data-has-selection="false"] { grid-template-columns: minmax(var(--ui-menuWidth), var(--ui-previewColumn)) minmax(0, 1fr); }
 .workspace[data-has-selection="false"] .details { display: none; }
 .filters,.conversationList,.thread,.details { min-width: 0; min-height: 0; }
