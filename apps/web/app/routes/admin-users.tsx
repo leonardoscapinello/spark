@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto, type PermissionGroupDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, Field, Icon, InlineEdit, Input, Label, PageFrame, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, Field, Icon, InlineEdit, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -156,17 +156,17 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
         onRetry={() => { setLoading(true); setReloadKey((value) => value + 1); }}
         rowKey={(user) => user.id}
         rowLabel={(user) => user.name}
-        actions={(user) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            loading={busyUserId === user.id}
-            disabled={user.id === loaderData.session.userId && !user.deactivatedAt}
-            onClick={() => void toggleAccess(user)}
-          >
-            {user.deactivatedAt ? "Reativar" : "Desativar"}
-          </Button>
-        )}
+        actions={(user) => user.id === loaderData.session.userId ? null : <MenuButton
+          variant="ghost"
+          size="sm"
+          shape="rounded"
+          iconOnly
+          indicator={false}
+          icon={<Icon name="more" />}
+          aria-label={`Ações de ${user.name}`}
+          loading={busyUserId === user.id}
+          menu={<MenuItem onClick={() => void toggleAccess(user)}>{user.deactivatedAt ? "Reativar" : "Desativar"}</MenuItem>}
+        />}
         emptyText="Nenhum usuário encontrado."
       />
 
