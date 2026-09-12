@@ -42,7 +42,8 @@
   object-fit: contain;
 }
 
-.railLabel { display: none; }
+.railLabel,
+.brandLabel { display: none; }
 
 .railLink:hover,
 .railLink[aria-current="page"] {
@@ -84,6 +85,35 @@
 }
 
 .accountMenu { display: flex; flex: 0 0 auto; justify-content: center; }
+
+@media (min-width: 761px) {
+  .rail { position: relative; z-index: 20; }
+  .rail:is(:hover, :focus-within) {
+    width: var(--ui-sidebarWidth);
+    align-items: stretch;
+    padding-inline: var(--space-2);
+    background: var(--color-surface2);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--ui-panelShadow);
+  }
+  .rail:is(:hover, :focus-within) .railBrand,
+  .rail:is(:hover, :focus-within) .railLink {
+    width: 100%;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding-inline: var(--space-2);
+  }
+  .rail:is(:hover, :focus-within) .railModules,
+  .rail:is(:hover, :focus-within) .railBottom,
+  .rail:is(:hover, :focus-within) .accountMenu { width: 100%; align-items: stretch; }
+  .rail:is(:hover, :focus-within) .railModules { overflow-y: auto; scrollbar-width: none; }
+  .rail:is(:hover, :focus-within) .railModules::-webkit-scrollbar { display: none; }
+  .rail:is(:hover, :focus-within) .railBottom { border-top: var(--ui-hairline) solid var(--color-line); }
+  .rail:is(:hover, :focus-within) .railLabel,
+  .rail:is(:hover, :focus-within) .brandLabel { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
+  .rail:is(:hover, :focus-within) .brandLabel { font-weight: var(--typography-weight-semibold); }
+  .rail:is(:hover, :focus-within) .accountLink { border-radius: var(--radius-md); }
+}
 
 .sidebar {
   height: 100%;
@@ -222,8 +252,8 @@
   .railModules::-webkit-scrollbar { display: none; }
   .railBottom { flex-direction: row; flex-shrink: 0; width: auto; margin-top: 0; margin-left: 0; padding-top: 0; padding-left: var(--space-2); border-top: 0; border-left: var(--ui-hairline) solid var(--color-line); }
   .railLink { flex-shrink: 0; }
-  .railLink[aria-current="page"] { width: auto; padding-inline: var(--space-3); gap: var(--space-2); }
-  .railLink[aria-current="page"] .railLabel { display: inline; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); white-space: nowrap; }
+  .railModules .railLink[aria-current="page"] { width: auto; padding-inline: var(--space-3); gap: var(--space-2); }
+  .railModules .railLink[aria-current="page"] .railLabel { display: inline; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); white-space: nowrap; }
 
   .sidebar {
     width: 100%;
