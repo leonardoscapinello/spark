@@ -54,7 +54,7 @@ export default function Inbox() {
   const [layout, setLayout] = useState<"chat" | "table">("chat");
   const activeQueueLink = useRef<HTMLAnchorElement>(null);
   const [now, setNow] = useState(() => new Date());
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get("conversation"));
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">("recent");
@@ -112,6 +112,10 @@ export default function Inbox() {
   useEffect(() => {
     if (selected && selected.id !== selectedId) setSelectedId(selected.id);
   }, [selected, selectedId]);
+  useEffect(() => {
+    const linkedConversation = searchParams.get("conversation");
+    if (linkedConversation) { setSelectedId(linkedConversation); setMobileView("thread"); }
+  }, [searchParams]);
   useEffect(() => { if (selected && selected.channel !== "email" && selected.channel !== "instagram" && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60_000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {

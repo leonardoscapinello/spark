@@ -43,6 +43,7 @@ import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getEventsCollection } from "../lib/events-collection.client";
+import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./deal-detail.module.css";
@@ -65,6 +66,7 @@ export async function clientLoader() {
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
+    ...(session.capabilities.includes("inbox:read") ? [getConversationsCollection().preload()] : []),
   ]);
   return null;
 }
@@ -83,6 +85,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
   const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
+  const canReadInbox = session?.capabilities.includes("inbox:read") ?? false;
   const canWriteActivities = canReadActivities && (session?.capabilities.includes("activities:write") ?? false);
 
   const { data: deal, isLoading } = useLiveQuery({
@@ -97,6 +100,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     query: (q) => canReadActivities ? q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc") : undefined,
   });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
+  const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox && deal?.contactId ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, deal.contactId!)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
@@ -223,7 +227,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     />
 
     <div className={styles.contentGrid} data-activities={canReadActivities ? "visible" : "hidden"}>
-        {editing ? <div className={styles.profile}><Card title="Editar negócio"><form className={styles.editForm} onSubmit={saveDeal}>
+        <div className={styles.profile}>{editing ? <Card title="Editar negócio"><form className={styles.editForm} onSubmit={saveDeal}>
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
           <Field><Label>Contato</Label><SearchSelect label="Contato do negócio" searchPlacement="dropdown" placeholder="Sem contato" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
@@ -231,14 +235,18 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
           <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
-        </form></Card></div> : <div className={styles.profile}><Card title="Detalhes do negócio"><div className={styles.details}>
+        </form></Card> : <Card title="Detalhes do negócio"><div className={styles.details}>
           <div><span>Contato</span>{linkedContact ? <Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link> : <strong>Não vinculado</strong>}</div>
           <div><span>Empresa</span>{linkedCompany ? <Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link> : <strong>Não vinculada</strong>}</div>
           <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
           <div><span>Etapa do funil</span><Select label="Etapa do funil" value={deal.stageId} options={pipelineStages.map((item) => ({ value: item.id, label: item.name }))} disabled={!canMove || deal.status !== "open"} onValueChange={(value) => void moveDeal(value)} /></div>
           {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           {deal.status === "open" && canMove && <div className={styles.closeActions}><Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Marcar como ganho</Button><Button variant="secondary" onClick={() => setLossModalOpen(true)}>Marcar como perdido</Button></div>}
-        </div></Card></div>}
+        </div></Card>}
+        {canReadInbox && <Card title="Atendimento da pessoa" description="Conversas desta pessoa em todos os canais.">
+          {!deal.contactId ? <div className={styles.empty}>Vincule uma pessoa para ver o atendimento.</div> : conversations.length === 0 ? <div className={styles.empty}>Nenhuma conversa desta pessoa ainda.</div> : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?box=all&conversation=${conversation.id}`}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {conversation.status === "open" ? "Aberta" : conversation.status === "snoozed" ? "Adiada" : "Fechada"}</span></Link></li>)}</ul>}
+        </Card>}
+        </div>
 
         {canReadActivities && <div className={styles.activities}><Card title="Atividades" description="Próximos passos e histórico operacional deste negócio." actions={canWriteActivities ? <Button size="sm" onClick={() => setActivityModalOpen(true)}>Nova atividade</Button> : undefined}>
           {orderedActivities.length === 0 ? <div className={styles.empty}>Nenhuma atividade vinculada a este negócio.</div> : <ul className={styles.activityList}>{orderedActivities.map((activity) => <li key={activity.id} data-completed={activity.completed}>
@@ -267,5 +275,6 @@ export default function DealDetail({ params }: Route.ComponentProps) {
 
 function statusLabel(status: DealStatus): string { return status === "open" ? "Em aberto" : status === "won" ? "Ganho" : "Perdido"; }
 function activityTypeLabel(type: ActivityType): string { return ACTIVITY_TYPES.find((item) => item.value === type)?.label ?? type; }
+function conversationChannelLabel(channel: string): string { return ({ manual: "Interno", email: "E-mail", instagram: "Instagram", whatsapp: "WhatsApp", messenger: "Messenger" } as Record<string, string>)[channel] ?? channel; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value)); }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
