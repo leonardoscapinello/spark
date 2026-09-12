@@ -25,7 +25,7 @@ const modules: NavModule[] = [
       { label: "Empresas", to: "/companies", icon: "building", capability: "companies:read" },
     ] },
     { title: "Dados", items: [
-      { label: "Importar contatos", to: "/contacts/import", icon: "upload", capability: "contacts:write" },
+      { label: "Importar pessoas", to: "/contacts/import", icon: "upload", capability: "contacts:write" },
     ] },
   ] },
   { id: "crm", title: "CRM", icon: "briefcase", to: "/deals", sections: [

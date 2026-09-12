@@ -93,7 +93,7 @@ export default function Inbox() {
   const queueCount = (box: InboxFilter) => queueCounts.get(box) ?? 0;
   const tableColumns: TableColumn<Conversation>[] = [
     { id: "subject", label: "Conversa", cell: (item) => <Button size="sm" variant="ghost" className={styles.tableSubject} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>{item.subject}</Button>, sortValue: (item) => item.subject },
-    { id: "contact", label: "Contato", cell: (item) => contactNames.get(item.contactId) ?? "Contato", sortValue: (item) => contactNames.get(item.contactId) ?? "" },
+    { id: "contact", label: "Pessoa", cell: (item) => contactNames.get(item.contactId) ?? "Pessoa", sortValue: (item) => contactNames.get(item.contactId) ?? "" },
     { id: "channel", label: "Canal", cell: (item) => channelLabel(item.channel), sortValue: (item) => channelLabel(item.channel) },
     { id: "assignee", label: "Responsável", cell: (item) => item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída", sortValue: (item) => item.assigneeId ? userNames.get(item.assigneeId) ?? "" : "" },
     { id: "status", label: "Situação", cell: (item) => statusLabel(item.status), sortValue: (item) => statusLabel(item.status) },
@@ -171,7 +171,7 @@ export default function Inbox() {
     if (!canWrite || !canReadContacts) return null;
     return contacts.length > 0
       ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button>
-      : <Button onClick={() => navigate("/")}>Adicionar contato</Button>;
+      : <Button onClick={() => navigate("/")}>Adicionar pessoa</Button>;
   }
 
   function openConversationOrContact() {
@@ -190,14 +190,14 @@ export default function Inbox() {
       </div>
       <Accordion defaultValue={["conversation", "contact"]} items={[
         { value: "conversation", title: "Atributos da conversa", icon: <Icon name="message" />, content: <dl className={styles.metadata}><div><dt>Situação</dt><dd>{statusLabel(selected.status)}</dd></div><div><dt>Prioridade</dt><dd>{selected.priority === "priority" ? "Prioritária" : "Normal"}</dd></div><div><dt>Canal</dt><dd>{channelLabel(selected.channel)}</dd></div><div><dt>Primeira resposta</dt><dd><SlaBadge conversation={selected} now={now} /></dd></div><div><dt>Criada em</dt><dd>{formatDateTime(selected.createdAt)}</dd></div></dl> },
-        { value: "contact", title: "Dados do contato", icon: <Icon name="user" />, content: <div className={styles.contactDetails}><div className={styles.contactCard}><span className={styles.avatarLarge}>{initials(contactNames.get(selected.contactId) ?? "Contato")}</span><div><strong>{contactNames.get(selected.contactId) ?? "Contato"}</strong><span>{contact?.email ?? "Sem e-mail"}</span></div></div><dl className={styles.metadata}><div><dt>Telefone</dt><dd>{contact?.phone ? formatPhone(contact.phone) : "Não informado"}</dd></div></dl>{canReadContacts && <Button variant="secondary" size="sm" onClick={() => navigate(`/contacts/${selected.contactId}`)}>Abrir perfil</Button>}</div> },
+        { value: "contact", title: "Dados da pessoa", icon: <Icon name="user" />, content: <div className={styles.contactDetails}><div className={styles.contactCard}><span className={styles.avatarLarge}>{initials(contactNames.get(selected.contactId) ?? "Pessoa")}</span><div><strong>{contactNames.get(selected.contactId) ?? "Pessoa"}</strong><span>{contact?.email ?? "Sem e-mail"}</span></div></div><dl className={styles.metadata}><div><dt>Telefone</dt><dd>{contact?.phone ? formatPhone(contact.phone) : "Não informado"}</dd></div></dl>{canReadContacts && <Button variant="secondary" size="sm" onClick={() => navigate(`/contacts/${selected.contactId}`)}>Abrir perfil</Button>}</div> },
         { value: "recent", title: "Conversas recentes", icon: <Icon name="message" />, content: recentConversations.length ? <div className={styles.recentConversations}>{recentConversations.map((conversation) => <Button key={conversation.id} variant="ghost" shape="rounded" className={styles.recentConversation} onClick={() => { setDetailsOpen(false); void navigate(`/inbox?box=all&conversation=${conversation.id}`); }}><strong>{conversation.subject}</strong><span>{channelLabel(conversation.channel)} · {statusLabel(conversation.status)}</span></Button>)}</div> : <p className={styles.recentEmpty}>Nenhuma outra conversa desta pessoa.</p> },
       ]} />
     </>;
   }
 
   return <div className={styles.page}>
-    <Sidebar title="Atendimento" className={styles.queueSidebar} actions={canWrite && canReadContacts ? <Button iconOnly size="sm" variant="ghost" aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar contato"} onClick={openConversationOrContact}><Icon name="plus" /></Button> : undefined} footer={firstRun && canReadIntegrations ? <div className={styles.setupCard}><span className={styles.setupCardIcon}><Icon name="bolt" /></span><strong>Prepare seus canais</strong><span>Conecte e-mail ou redes sociais para receber conversas aqui.</span><Button size="sm" variant="secondary" onClick={() => void navigate("/integrations")}>Configurar canais</Button></div> : undefined}>
+    <Sidebar title="Atendimento" className={styles.queueSidebar} actions={canWrite && canReadContacts ? <Button iconOnly size="sm" variant="ghost" aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar pessoa"} onClick={openConversationOrContact}><Icon name="plus" /></Button> : undefined} footer={firstRun && canReadIntegrations ? <div className={styles.setupCard}><span className={styles.setupCardIcon}><Icon name="bolt" /></span><strong>Prepare seus canais</strong><span>Conecte e-mail ou redes sociais para receber conversas aqui.</span><Button size="sm" variant="secondary" onClick={() => void navigate("/integrations")}>Configurar canais</Button></div> : undefined}>
       <Button variant="ghost" size="sm" shape="rounded" className={styles.queueSearch} icon={<Icon name="search" />} onClick={() => setSearchOpen(true)}>Buscar conversas</Button>
       <SidebarSection title="Caixas">
         {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} onClick={() => setMobileView("list")} />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
@@ -216,7 +216,7 @@ export default function Inbox() {
     </div>
     <div className={styles.workspace} data-layout={layout} data-preview-open={layout === "table" && selectedId && selected ? "true" : "false"} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"} data-first-run={firstRun ? "true" : undefined}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
-        <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" className={styles.mobileCreate} aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar contato"} onClick={openConversationOrContact}><Icon name="plus" /></Button>}</div></header>
+        <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" className={styles.mobileCreate} aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar pessoa"} onClick={openConversationOrContact}><Icon name="plus" /></Button>}</div></header>
         {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
         {(!firstRun || layout === "table") && <div className={styles.listControls}><span>{filtered.length} {filtered.length === 1 ? "conversa" : "conversas"}</span><div className={styles.listControlActions}><div className={styles.layoutSwitch} role="group" aria-label="Formato das conversas"><Button iconOnly size="sm" variant={layout === "chat" ? "raised" : "ghost"} aria-label="Visualização de conversa" aria-pressed={layout === "chat"} onClick={() => setLayout("chat")}><Icon name="message" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>{layout === "chat" && <MenuButton size="sm" variant="ghost" shape="rounded" menu={<><MenuItem onClick={() => setSortOrder("recent")}>Mais recentes</MenuItem><MenuItem onClick={() => setSortOrder("oldest")}>Mais antigas</MenuItem></>}>{sortOrder === "recent" ? "Mais recentes" : "Mais antigas"}</MenuButton>}</div></div>}
         <div className={styles.listBody}>
@@ -224,8 +224,8 @@ export default function Inbox() {
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
           {!isLoading && filtered.length === 0 && <p className={styles.empty}>{searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."}</p>}
           {filtered.map((item) => <Button key={item.id} variant="ghost" shape="rounded" className={styles.conversationButton} data-selected={selected?.id === item.id || undefined} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>
-            <span className={styles.avatar}>{initials(contactNames.get(item.contactId) ?? "Contato")}</span>
-            <span className={styles.preview}><span><strong>{contactNames.get(item.contactId) ?? "Contato"}</strong><time>{relativeTime(item.lastMessageAt)}</time></span><b>{item.subject}</b><small>{channelLabel(item.channel)} · {item.teamId ? teamNames.get(item.teamId) ?? "Equipe" : item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída"}</small><SlaBadge conversation={item} now={now} /></span>
+            <span className={styles.avatar}>{initials(contactNames.get(item.contactId) ?? "Pessoa")}</span>
+            <span className={styles.preview}><span><strong>{contactNames.get(item.contactId) ?? "Pessoa"}</strong><time>{relativeTime(item.lastMessageAt)}</time></span><b>{item.subject}</b><small>{channelLabel(item.channel)} · {item.teamId ? teamNames.get(item.teamId) ?? "Equipe" : item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída"}</small><SlaBadge conversation={item} now={now} /></span>
             {item.priority === "priority" && <Icon name="star" />}
           </Button>)}
           </>}
@@ -236,7 +236,7 @@ export default function Inbox() {
         {selected ? <>
           <header className={styles.threadHeader}>
             <Button type="button" size="sm" variant="ghost" className={styles.mobileBack} onClick={() => setMobileView("list")}>Conversas</Button>
-            <div><strong>{selected.subject}</strong><span>{contactNames.get(selected.contactId) ?? "Contato"} · {channelLabel(selected.channel)}</span></div>
+            <div><strong>{selected.subject}</strong><span>{contactNames.get(selected.contactId) ?? "Pessoa"} · {channelLabel(selected.channel)}</span></div>
             <div className={styles.threadActions}>
               <Button iconOnly size="sm" variant="ghost" className={styles.tablePreviewClose} aria-label="Fechar prévia da conversa" onClick={() => { setSelectedId(null); setMobileView("list"); }}><Icon name="close" /></Button>
               <Button iconOnly size="sm" variant="ghost" className={styles.detailsTrigger} aria-label="Abrir detalhes da conversa" onClick={() => setDetailsOpen(true)}><Icon name="user" /></Button>
@@ -247,7 +247,7 @@ export default function Inbox() {
           <div className={styles.messages}>
             {messages.length === 0 && <div className={styles.threadEmpty}><Icon name="message" /><strong>Conversa iniciada</strong><span>Adicione uma nota interna para registrar o contexto do atendimento.</span></div>}
             {messages.map((message) => <article key={message.id} className={styles.message} data-direction={message.direction}>
-              <header><strong>{message.direction === "internal" ? (message.authorUserId ? userNames.get(message.authorUserId) : null) ?? "Equipe" : message.direction === "inbound" ? contactNames.get(message.contactId) ?? "Contato" : "Equipe"}</strong><time>{formatDateTime(message.createdAt)}</time></header>
+              <header><strong>{message.direction === "internal" ? (message.authorUserId ? userNames.get(message.authorUserId) : null) ?? "Equipe" : message.direction === "inbound" ? contactNames.get(message.contactId) ?? "Pessoa" : "Equipe"}</strong><time>{formatDateTime(message.createdAt)}</time></header>
               <p>{message.body}</p>
               <small>{message.direction === "internal" ? "Nota interna" : message.status}</small>
             </article>)}
@@ -265,7 +265,7 @@ export default function Inbox() {
             <span className={styles.threadEmptyArtInbox}><Icon name="inbox" /></span>
           </span> : <Icon name="message" />}
           <strong>{isLoading ? "Preparando atendimento" : searchTerm ? "Nenhuma conversa encontrada" : conversations.length === 0 ? "Sua caixa de atendimento está pronta" : "Nenhuma conversa nesta caixa"}</strong>
-          <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou canal." : conversations.length === 0 ? "Comece uma conversa ou conecte um canal para receber mensagens da sua equipe e dos seus contatos." : "Escolha outra caixa para continuar o atendimento."}</span>
+          <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou canal." : conversations.length === 0 ? "Comece uma conversa ou conecte um canal para receber mensagens da sua equipe e das pessoas da sua base." : "Escolha outra caixa para continuar o atendimento."}</span>
           {!isLoading && conversations.length === 0 && <div className={styles.threadEmptyActions}>{startConversationAction()}{canReadIntegrations && <Button variant="secondary" onClick={() => navigate("/integrations")}>Conectar canal</Button>}</div>}
         </div>}
       </section>
@@ -278,9 +278,9 @@ export default function Inbox() {
 
     <Modal open={detailsOpen && selected !== null} onOpenChange={setDetailsOpen}><ModalContent title="Detalhes da conversa" placement="right"><div className={styles.detailContent}>{renderDetails()}</div></ModalContent></Modal>
 
-    <ActionModal open={newConversationOpen} onOpenChange={setNewConversationOpen} title="Nova conversa" confirmLabel="Criar conversa" errorText="Selecione um contato e informe o assunto." onConfirm={createConversation}>
+    <ActionModal open={newConversationOpen} onOpenChange={setNewConversationOpen} title="Nova conversa" confirmLabel="Criar conversa" errorText="Selecione uma pessoa e informe o assunto." onConfirm={createConversation}>
       <div className={styles.modalFields}>
-        <Field><Label>Contato</Label><SearchSelect label="Buscar contato" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={newContact} onValueChange={setNewContact} /></Field>
+        <Field><Label>Pessoa</Label><SearchSelect label="Buscar pessoa" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={newContact} onValueChange={setNewContact} /></Field>
         <Field><Label>Canal de origem</Label><Select label="Canal de origem" value={newChannel} options={CHANNELS} onValueChange={(value) => { if (value) setNewChannel(value as ConversationChannel); }} /></Field>
         <Field><Label>Assunto</Label><Textarea value={newSubject} onChange={(event) => setNewSubject(event.target.value)} placeholder="Descreva o motivo do contato" rows={2} maxLength={300} /></Field>
       </div>

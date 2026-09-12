@@ -56,14 +56,14 @@ export default function Dashboard() {
     atividades: canReadActivities ? day.activities : null,
   }));
   const chartSeries = [
-    ...(canReadContacts ? [{ key: "contatos", label: "Novos contatos", color: 1 as const }] : []),
+    ...(canReadContacts ? [{ key: "contatos", label: "Novas pessoas", color: 1 as const }] : []),
     ...(canReadDeals ? [{ key: "negocios", label: "Novos negócios", color: 2 as const }] : []),
     ...(canReadActivities ? [{ key: "atividades", label: "Atividades", color: 3 as const }] : []),
   ];
 
   return <PageFrame className={styles.page}>
     <PageHeader icon="chart" title="Visão geral" />
-    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar contatos</Button> : undefined} />}
+    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre pessoas, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar pessoas</Button> : undefined} />}
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar contatos, negócios ou atividades." />}
     {firstRun && <ActionCardGroup title="Acompanhe o trabalho da equipe">
       {canReadContacts && <ActionCard icon="team" title="Pessoas" description="Veja quem entrou na base e como o relacionamento evolui." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir Leads</Button>} />}
@@ -77,7 +77,7 @@ export default function Dashboard() {
       </div>
       <div className={styles.sectionHeading}><h2>Desempenho comercial</h2><span>Indicadores do período selecionado</span></div>
       <DashboardGrid metrics>
-      {canReadContacts && <Link className={styles.metricLink} to="/"><MetricCard title="Contatos ativos" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} /></Link>}
+      {canReadContacts && <Link className={styles.metricLink} to="/"><MetricCard title="Pessoas na base" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} /></Link>}
       {canReadDeals && <Link className={styles.metricLink} to="/deals"><MetricCard title="Negócios em aberto" value={snapshot.openDeals} comparison={formatBRL(snapshot.openPipelineAmount)} state={loadingDeals ? "loading" : "ready"} /></Link>}
       {canReadActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Atividades atrasadas" value={snapshot.overdueActivities} comparison="Pendências anteriores a hoje" sentiment={snapshot.overdueActivities > 0 ? "negative" : "positive"} state={loadingActivities ? "loading" : "ready"} /></Link>}
       {canReadActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
@@ -95,7 +95,7 @@ export default function Dashboard() {
         { id: "won", label: "Ganhos", value: snapshot.dealsByStatus.won, color: 2 },
         { id: "lost", label: "Perdidos", value: snapshot.dealsByStatus.lost, color: 4 },
         ]} />}
-        {canReadContacts && <DonutChart title="Contatos por etapa" state={loadingContacts ? "loading" : contacts.length ? "ready" : "empty"} data={[
+        {canReadContacts && <DonutChart title="Pessoas por etapa" state={loadingContacts ? "loading" : contacts.length ? "ready" : "empty"} data={[
         { id: "new", label: "Novos", value: snapshot.contactsByStatus.new, color: 1 },
         { id: "qualified", label: "Qualificados", value: snapshot.contactsByStatus.qualified, color: 2 },
         { id: "nurturing", label: "Em nutrição", value: snapshot.contactsByStatus.nurturing, color: 3 },
@@ -112,7 +112,7 @@ function formatDay(value: string, periodDays: number): string {
 }
 
 function newContactsComparison(count: number, change: number | null, days: number): string {
-  if (change === null) return `${count} novos nos últimos ${days} dias`;
-  if (change === 0) return `${count} novos · igual ao período anterior`;
-  return `${count} novos · ${change > 0 ? "+" : ""}${change}% ante o período anterior`;
+  if (change === null) return `${count} novas nos últimos ${days} dias`;
+  if (change === 0) return `${count} novas · igual ao período anterior`;
+  return `${count} novas · ${change > 0 ? "+" : ""}${change}% ante o período anterior`;
 }

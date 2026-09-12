@@ -39,7 +39,7 @@ export default function Campaigns() {
   ];
   const audienceColumns: TableColumn<Audience>[] = [
     { id: "name", label: "Público", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><span>{item.description || "Sem descrição"}</span></div>, sortValue: (item) => item.name },
-    { id: "contacts", label: "Contatos agora", cell: (item) => contacts.filter((contact) => matchesAudience({ ...contact, tags: contact.tags }, item.filter)).length, sortValue: (item) => contacts.filter((contact) => matchesAudience({ ...contact, tags: contact.tags }, item.filter)).length },
+    { id: "contacts", label: "Pessoas agora", cell: (item) => contacts.filter((contact) => matchesAudience({ ...contact, tags: contact.tags }, item.filter)).length, sortValue: (item) => contacts.filter((contact) => matchesAudience({ ...contact, tags: contact.tags }, item.filter)).length },
     { id: "updated", label: "Atualizado", cell: (item) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(item.updatedAt)), sortValue: (item) => item.updatedAt },
   ];
   async function createAudience() { const response = await campaignsControllerCreateAudience({ id: audienceId.create(), name: audienceName.trim(), description: description.trim() || null, filter }); notify({ title: "Público criado", description: `${previewCount} contato(s) correspondem agora.`, tone: "success" }); setAudienceIdValue(response.audience.id); setAudienceName(""); setDescription(""); }
@@ -53,7 +53,7 @@ export default function Campaigns() {
       ? <EmptyState variant="featured" icon="team" title="Crie seu primeiro público" description="Defina quem deve receber suas campanhas. Os contatos entram automaticamente quando correspondem aos filtros." action={canWrite ? <Button onClick={() => setAudienceOpen(true)}>Criar público</Button> : undefined} />
       : <EmptyState variant="featured" icon="mail" title={audiences.length ? "Prepare sua primeira campanha" : "Comece criando um público"} description={audiences.length ? "Escreva a mensagem e escolha quem deve recebê-la. Você poderá revisar o rascunho antes de enviar." : "Um público organiza os contatos por regras e permite criar sua primeira campanha de e-mail."} action={canWrite ? <Button onClick={audiences.length ? openCampaign : () => setAudienceOpen(true)}>{audiences.length ? "Nova campanha" : "Criar público"}</Button> : undefined} />)}
     {!audienceView && firstRun && (canImportContacts || canConfigureEmail) && <ActionCardGroup title="Prepare seu primeiro envio">
-        {canImportContacts && <ActionCard icon="upload" title="Traga seus contatos" description="Importe sua base para enviar mensagens às pessoas certas." action={<Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar contatos</Button>} />}
+        {canImportContacts && <ActionCard icon="upload" title="Traga sua base de pessoas" description="Importe sua base para enviar mensagens às pessoas certas." action={<Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar pessoas</Button>} />}
         {canConfigureEmail && <ActionCard icon="mail" title="Conecte o e-mail" description="Prepare o canal que enviará as mensagens da equipe." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Configurar e-mail</Button>} />}
     </ActionCardGroup>}
     {!firstRun && <><CollectionToolbar
