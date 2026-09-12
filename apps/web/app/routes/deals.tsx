@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
-import { ActionModal, Button, DatePicker, EmptyState, Field, Input, Label, MoneyInput, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Input, Label, MoneyInput, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getPipelinesCollection, getStagesCollection, getDealsCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -188,10 +188,10 @@ export default function Deals() {
   return (
     <div className={styles.pagina}>
       <PageHeader icon="briefcase" title="Negócios" actions={<>{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
-      <div className={styles.toolbar}>
+      <div className={styles.toolbar}><CollectionToolbar filters={<>
         <Select appearance="filter" label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
         <Select appearance="filter" label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value && value !== "open" ? { status: value } : {})} />
-      </div>
+      </>} /></div>
 
       <div className={styles.board}>
         {stages.map((stage) => {
