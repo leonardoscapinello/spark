@@ -124,6 +124,22 @@
   background: var(--color-accent);
 }
 
+.navigationFeedback {
+  box-sizing: border-box;
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  background: var(--color-surface);
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-sm);
+}
+
+.navigationFeedback svg { color: var(--color-accent); }
+
 .moduleTabs {
   position: sticky;
   z-index: 2;

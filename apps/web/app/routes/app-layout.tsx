@@ -209,11 +209,14 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const activeTopTab = useRef<HTMLAnchorElement>(null);
   const activeSidebarLink = useRef<HTMLAnchorElement>(null);
   const accountRailLink = useRef<HTMLDivElement>(null);
+  const warmIndex = useRef(0);
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const [accountProfile, setAccountProfile] = useState(session);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
   const requestedSearch = pendingLocation?.search ?? (navigationIntent?.fromKey === location.key ? `?${navigationIntent.to.split("?")[1] ?? ""}` : "");
+  const requestedModule = requestedPath ? moduleForPath(requestedPath) : null;
+  const changingModule = requestedModule !== null && requestedModule.id !== moduleForPath(location.pathname).id;
   const allowed = (capability?: Capability) => !capability || session.capabilities.includes(capability);
   const visibleModules = modules.filter((module) => module.id === "admin"
     ? ADMIN_CAPABILITIES.some(allowed)
@@ -232,20 +235,20 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   }, [session.name]);
 
   useEffect(() => {
+    if (navigation.state !== "idle" || navigationIntent?.fromKey === location.key) return;
     const order = ["leads", "crm", "inbox", "automations", "content", "social", "admin", "overview"];
     let canceled = false;
     let cancelPending: (() => void) | undefined;
-    let index = 0;
     function schedule() {
-      if (canceled || index >= order.length) return;
+      if (canceled || warmIndex.current >= order.length) return;
       cancelPending = whenIdle(() => {
-        const entry = moduleEntry[order[index++]!];
+        const entry = moduleEntry[order[warmIndex.current++]!];
         if (entry) void entry().catch(() => undefined).finally(schedule);
       });
     }
     schedule();
     return () => { canceled = true; cancelPending?.(); };
-  }, []);
+  }, [location.key, navigation.state, navigationIntent]);
 
   useEffect(() => {
     const targets = current.sections.flatMap((section) => section.items)
@@ -325,6 +328,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           )}
         </nav>}
         <Outlet />
+        {changingModule && <div className={styles.navigationFeedback} role="status" aria-live="polite"><Icon name={requestedModule.icon} /><span>Abrindo {requestedModule.title}…</span></div>}
       </main>
     </div>
   );
