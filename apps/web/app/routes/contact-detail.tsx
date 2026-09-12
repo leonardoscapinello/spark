@@ -14,7 +14,7 @@ import {
   type CustomFieldDefinition,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity } from "@spark/data";
-import { Button, Checkbox, DatePicker, DateTimePicker, ErrorText, Field, Input, Label, Select, Skeleton, Timeline, RecordHero, notify } from "@spark/ui-web";
+import { BackLink, Button, Checkbox, DatePicker, DateTimePicker, ErrorText, Field, Input, Label, Select, Skeleton, Timeline, RecordHero, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -241,9 +241,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   if (!data) {
     return (
       <div className={layout.page}>
-        <Link to="/" className={styles.voltar}>
-          ← Contatos
-        </Link>
+        <BackLink render={<Link to="/" />}>Contatos</BackLink>
         {isLoading ? <div className={layout.loading} role="status" aria-label="Carregando contato"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Contato não encontrado.</p>}
       </div>
     );
@@ -251,9 +249,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
 
   return (
     <div className={layout.page}>
-      <Link to="/" className={styles.voltar}>
-        ← Contatos
-      </Link>
+      <BackLink render={<Link to="/" />}>Contatos</BackLink>
       <RecordHero icon="user" avatarName={data.name} eyebrow="Contato" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite && !isEditing ? <Button variant="secondary" onClick={startEditing}>Editar contato</Button> : undefined} metrics={[{ label: "Pontuação", value: data.score }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada" }]} />
       <div className={layout.contentGrid}>
         <div className={layout.profileColumn}>
