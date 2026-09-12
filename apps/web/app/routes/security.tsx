@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/security";
-import { ActionModal, Alert, Badge, Button, Field, Input, Label, PageHeader, notify } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Field, Input, Label, PageHeader, notify } from "@spark/ui-web";
 import {
   beginMfaEnrollment,
   getAuthSessionDetails,
@@ -105,9 +105,7 @@ export default function Security({ loaderData }: Route.ComponentProps) {
             <div><strong>{factor.name}</strong><span>Ativado em {new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(factor.createdAt))}</span></div>
             <Button size="sm" variant="ghost" onClick={() => setRemoveId(factor.id)}>Remover</Button>
           </div>
-        )) : !enrollment && (
-          <Alert title="Sua conta usa somente senha">Ative a segunda etapa para impedir acesso quando uma senha for descoberta.</Alert>
-        )}
+        )) : !enrollment && <p className={styles.explanation}>Sua conta usa somente senha. Ative a segunda etapa para impedir acesso quando uma senha for descoberta.</p>}
 
         {!enrollment && <Button onClick={() => void startEnrollment()} loading={busy}>Ativar com aplicativo autenticador</Button>}
 
@@ -163,7 +161,7 @@ export default function Security({ loaderData }: Route.ComponentProps) {
             <strong>Todos os dispositivos</strong>
             <p>Revoga todas as sessões, inclusive esta, e volta para o login.</p>
           </div>
-          <Button onClick={() => setSessionAction("global")}>Sair de todos</Button>
+          <Button variant="secondary" onClick={() => setSessionAction("global")}>Sair de todos</Button>
         </div>
       </section>
 
