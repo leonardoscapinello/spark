@@ -6,9 +6,11 @@
 .runList { display: flex; align-items: center; gap: var(--space-3); overflow-x: auto; }
 .runList > span { display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
 .workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: calc(var(--space-16) * 6) minmax(0, 1fr); overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); }
+.workspace[data-panel="closed"] { grid-template-columns: minmax(0, 1fr); }
 .panel { position: relative; z-index: 2; min-width: 0; min-height: 0; background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
+.panelClose { position: absolute; z-index: 3; inset-block-start: var(--space-3); inset-inline-end: var(--space-3); }
 .palette, .inspector { box-sizing: border-box; height: 100%; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); overflow-y: auto; background: var(--color-surface); }
-.palette > header, .palette > header span { display: grid; gap: var(--space-1); }
+.palette > header, .palette > header span { display: grid; gap: var(--space-1); padding-inline-end: var(--space-8); }
 .palette > header span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--typography-lineHeight-body); }
 .paletteButton { height: auto; justify-content: flex-start; padding: var(--space-3); text-align: left; }
 .paletteButton > span:last-child { display: grid; gap: var(--space-1); }
@@ -22,6 +24,8 @@
 .validation span { color: var(--color-statusDanger); font-size: var(--typography-size-xs); line-height: var(--typography-lineHeight-body); }
 .validation span[data-valid="true"] { color: var(--color-statusSuccess); }
 .canvas { position: relative; min-width: 0; min-height: calc(var(--space-16) * 8); overflow: auto; background-color: var(--color-surface2); background-image: radial-gradient(var(--color-lineStrong) var(--ui-hairline), transparent var(--ui-hairline)); background-size: var(--space-5) var(--space-5); }
+.canvasAdd { position: sticky; z-index: 3; inset-block-start: var(--space-5); inset-inline-start: calc(100% - var(--space-16)); width: var(--space-12); height: var(--space-12); background: var(--color-accent); color: var(--ui-buttonInk); box-shadow: var(--ui-panelShadow); }
+.canvasAdd:hover:not([data-disabled]) { background: var(--color-accent); }
 .edges { position: absolute; inset: var(--space-0); width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .edges path { fill: none; stroke: var(--color-lineStrong); stroke-width: calc(var(--ui-hairline) * 2); }
 .node { position: absolute; top: var(--space-0); left: var(--space-0); width: calc(var(--space-16) * 4); padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); cursor: grab; user-select: none; transition: border-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out); }
@@ -39,4 +43,4 @@
 .configGrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .loading { padding: var(--space-10); color: var(--color-inkMuted); }
 @media (max-width: 1000px) { .workspace { grid-template-columns: calc(var(--space-16) * 5) minmax(0, 1fr); } }
-@media (max-width: 760px) { .page { padding: var(--space-3); } .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(0, calc(var(--space-16) * 4)) minmax(0, 1fr); } .canvas { min-height: 0; } }
+@media (max-width: 760px) { .page { padding: var(--space-3); } .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(0, calc(var(--space-16) * 4)) minmax(0, 1fr); } .workspace[data-panel="closed"] { grid-template-rows: minmax(0, 1fr); } .canvas { min-height: 0; } }
