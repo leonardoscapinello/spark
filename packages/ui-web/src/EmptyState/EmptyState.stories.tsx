@@ -12,3 +12,4 @@ type Story = StoryObj<typeof EmptyState>;
 export const ComAcao: Story = {};
 export const SemAcao: Story = { args: { icon: "file", title: "Nenhum arquivo", description: "Os arquivos enviados aparecerão aqui.", action: undefined } };
 export const PrimeiroUso: Story = { args: { variant: "onboarding", icon: "user", title: "Comece com seus contatos", description: "Cadastre uma pessoa ou importe sua base para reunir o histórico de relacionamento em um só lugar.", action: <Button>Novo contato</Button>, secondaryAction: <Button variant="secondary">Importar CSV</Button> } };
+export const PrimeiroUsoEmDestaque: Story = { args: { variant: "featured", icon: "user", title: "Comece com seus contatos", description: "Cadastre uma pessoa ou importe sua base para reunir o histórico de relacionamento em um só lugar.", action: <Button>Novo contato</Button>, secondaryAction: <Button variant="secondary">Importar CSV</Button> } };

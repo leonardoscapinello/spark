@@ -8,7 +8,7 @@ export interface EmptyStateProps {
   description: string;
   action?: ReactNode;
   secondaryAction?: ReactNode;
-  variant?: "default" | "onboarding";
+  variant?: "default" | "onboarding" | "featured";
 }
 
 export function EmptyState({ icon, title, description, action, secondaryAction, variant = "default" }: EmptyStateProps) {
