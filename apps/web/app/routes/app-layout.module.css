@@ -98,7 +98,8 @@
 .mobileSecondaryNav { display: none; }
 
 @media (min-width: 761px) and (hover: hover) {
-  .rail { position: relative; z-index: 20; overflow: hidden; }
+  .rail { position: relative; z-index: 20; overflow: hidden; transition: width var(--motion-duration-fast) var(--motion-ease-out), padding-inline var(--motion-duration-fast) var(--motion-ease-out), background-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out); }
+  .sidebar { transition: opacity var(--motion-duration-fast) var(--motion-ease-out); }
   .railLink svg { transition: transform var(--motion-duration-instant) var(--motion-ease-out); }
   .railLink:hover svg { transform: translateX(var(--space-1)); }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) {
@@ -110,7 +111,7 @@
     box-shadow: var(--ui-panelShadow);
   }
   .shell[data-sidebar="visible"] .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) { width: calc(var(--ui-railWidth) + var(--space-2) + var(--ui-sidebarWidth)); }
-  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) + .sidebar { visibility: hidden; }
+  .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) + .sidebar { opacity: 0; pointer-events: none; }
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railBrand,
   .rail:not([data-collapsed]):is(:hover, :has(:focus-visible)) .railLink {
     width: 100%;
@@ -133,7 +134,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .railLink, .railLink svg, .railLabel { transition: none; }
+  .rail, .sidebar, .railLink, .railLink svg, .railLabel { transition: none; }
   .railLink:hover svg { transform: none; }
   .railLabel { transform: none; }
 }
