@@ -17,7 +17,7 @@ export function DataChart({ title, description, data, series, kind = "line", sta
   const tableId = useId();
   const effectiveState = state === "ready" && (!data.length || !series.some(v=>data.some(row=>typeof row[v.key] === "number" && Number.isFinite(row[v.key])))) ? "empty" : state;
   return <Card title={title} {...(description !== undefined ? {description} : {})} actions={actions}>
-    <CardContentState state={effectiveState} onRetry={onRetry}>
+    <CardContentState state={effectiveState} onRetry={onRetry} loadingVariant="chart">
       <div className={s.chart}>
         <ResponsiveContainer width="100%" height="100%"><ComposedChart data={data} accessibilityLayer margin={{right:parseFloat(lightTheme["space-8"])}}>
           <CartesianGrid vertical={false} stroke="var(--color-line)" />
@@ -36,7 +36,7 @@ export function DataChart({ title, description, data, series, kind = "line", sta
 export interface DonutDatum { id: string; label: string; value: number; color: ChartColor }
 export function DonutChart({ title, data, state = "ready", onRetry, formatValue = defaultFormat }: { title: string; data: DonutDatum[]; state?: CardState; onRetry?: () => void; formatValue?: (value:number)=>string }) {
   const hasValues = data.some(d=>d.value>0);
-  return <Card title={title}><CardContentState state={state === "ready" && !data.length ? "empty" : state} onRetry={onRetry}>
+  return <Card title={title}><CardContentState state={state === "ready" && !data.length ? "empty" : state} onRetry={onRetry} loadingVariant="donut">
     {hasValues ? <div className={s.chart}><ResponsiveContainer width="100%" height="100%"><PieChart accessibilityLayer><Pie data={data} dataKey="value" nameKey="label" innerRadius="60%" outerRadius="85%" isAnimationActive={false}>{data.map(d=><Cell key={d.id} fill={color(d.color)} stroke="var(--color-surface)" />)}</Pie><Tooltip formatter={value=>typeof value === "number" ? formatValue(value) : "—"} /></PieChart></ResponsiveContainer></div> : <p className={s.zero}>Nenhuma ocorrência registrada</p>}
     <ul className={s.donutLegend} aria-label={title}>{data.map(d=><li key={d.id}><span className={s.swatch} style={{background:color(d.color)}} /><span>{d.label}</span><strong>{formatValue(d.value)}</strong></li>)}</ul>
   </CardContentState></Card>;

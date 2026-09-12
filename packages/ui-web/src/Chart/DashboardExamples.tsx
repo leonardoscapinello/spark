@@ -24,6 +24,8 @@ export default function DashboardExamples() {
       <Card title="Desempenho por equipe" description="Valores recebidos do módulo de relatórios"><SummaryList label="Equipes" items={[{id:"support",label:"Atendimento",detail:"Conversas resolvidas",value:"204"},{id:"sales",label:"Vendas",detail:"Conversas resolvidas",value:"86"},{id:"success",label:"Sucesso do cliente",detail:"Conversas resolvidas",value:"50"}]} /></Card>
       <ProgressCard title="Meta de atendimento" value={84} label="84% da meta concluída" footer="Meta e progresso fornecidos pela aplicação" />
       <MetricCard title="Carregando indicador" value="" state="loading" />
+      <DataChart title="Carregando gráfico" data={[]} series={series} state="loading" />
+      <DonutChart title="Carregando distribuição" data={[]} state="loading" />
       <DataChart title="Sem dados no período" data={[]} series={series} />
       <MetricCard title="Recuperação de falha" value="340" state={recovered?"ready":"error"} onRetry={()=>setRecovered(true)} />
     </DashboardGrid>

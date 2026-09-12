@@ -8,8 +8,8 @@ export function Card({ title, description, actions, footer, children, appearance
   return <section aria-labelledby={id} className={s.card} data-appearance={appearance}><header className={s.header}><div><h2 id={id}>{title}</h2>{description && <p>{description}</p>}</div>{actions && <div className={s.actions}>{actions}</div>}</header>{children !== undefined && <div className={s.body}>{children}</div>}{footer && <footer className={s.footer}>{footer}</footer>}</section>;
 }
 export type CardState = "ready" | "loading" | "empty" | "error";
-export function CardContentState({ state, children, emptyText = "Nenhum dado neste período", errorText = "Não foi possível carregar os dados", onRetry }: { state: CardState; children: ReactNode; emptyText?: string; errorText?: string; onRetry?: (() => void) | undefined }) {
-  if(state === "loading") return <div role="status" aria-label="Carregando dados" className={s.state}><Skeleton /><span>Carregando dados…</span></div>;
+export function CardContentState({ state, children, emptyText = "Nenhum dado neste período", errorText = "Não foi possível carregar os dados", onRetry, loadingVariant = "metric" }: { state: CardState; children: ReactNode; emptyText?: string; errorText?: string; onRetry?: (() => void) | undefined; loadingVariant?: "metric" | "chart" | "donut" }) {
+  if(state === "loading") return <div role="status" aria-label="Carregando dados" className={s.loading} data-variant={loadingVariant}>{loadingVariant === "chart" ? <div className={s.chartBars}>{[0,1,2,3,4,5,6].map(index=><Skeleton key={index} />)}</div> : loadingVariant === "donut" ? <Skeleton className={s.donutPlaceholder} /> : <><Skeleton className={s.valuePlaceholder} /><Skeleton className={s.comparisonPlaceholder} /></>}</div>;
   if(state === "error") return <div role="alert" className={s.state}><p>{errorText}</p>{onRetry && <Button variant="secondary" onClick={onRetry}>Tentar novamente</Button>}</div>;
   if(state === "empty") return <div className={s.state}><p>{emptyText}</p></div>;
   return children;

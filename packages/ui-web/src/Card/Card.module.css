@@ -13,6 +13,15 @@
 .state { display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: var(--space-3); min-height: var(--ui-textareaHeight); color: var(--color-inkMuted); font-size: var(--typography-size-sm); text-align: center; }
 .state p { margin: 0; }
 .state > button { align-self: center; }
+.loading { display: flex; flex-direction: column; justify-content: center; gap: var(--space-3); min-height: var(--ui-textareaHeight); }
+.loading[data-variant="chart"], .loading[data-variant="donut"] { min-height: var(--ui-chartHeight); }
+.valuePlaceholder { width: var(--space-16); height: var(--space-8); }
+.comparisonPlaceholder { width: min(100%, var(--ui-menuWidth)); height: var(--space-3); }
+.chartBars { display: flex; align-items: end; gap: var(--space-3); min-height: var(--ui-chartHeight); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.chartBars > * { flex: 1; min-width: 0; height: var(--space-16); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.chartBars > :nth-child(2n) { height: var(--space-10); }
+.chartBars > :nth-child(3n) { height: var(--ui-textareaHeight); }
+.donutPlaceholder { align-self: center; width: var(--ui-textareaHeight); height: var(--ui-textareaHeight); border-radius: var(--radius-full); }
 .progressLabel { font-size: var(--typography-size-sm); margin-bottom: var(--space-3); }
 .progress { width: 100%; height: var(--space-2); appearance: none; border: 0; background: var(--color-line); border-radius: var(--radius-full); overflow: hidden; }
 .progress::-webkit-progress-bar { background: var(--color-line); }
