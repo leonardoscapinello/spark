@@ -1,13 +1,16 @@
 .page {
   width: 100%;
   margin: 0 auto;
-  padding: var(--space-8);
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-.period { width: var(--ui-menuWidth); }
+.reportFilters { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding-block: var(--space-3); border-block: var(--ui-hairline) solid var(--color-line); }
+.filterLabel { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.filterLabel svg { width: var(--ui-icon); height: var(--ui-icon); }
+.period { min-width: 0; }
 
 .sectionHeading {
   display: flex;
@@ -43,5 +46,6 @@
 
 @media (max-width: 640px) {
   .page { padding: var(--space-4); }
-  .period { width: 100%; }
+  .period { flex: 1 1 100%; }
+  .period > * { width: 100%; }
 }

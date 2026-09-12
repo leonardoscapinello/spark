@@ -3,7 +3,7 @@ import { Link, redirect, useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { buildCrmDashboard, formatBRL } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { Button, DashboardGrid, DataChart, DonutChart, EmptyState, MetricCard, PageHeader, Select } from "@spark/ui-web";
+import { Button, DashboardGrid, DataChart, DonutChart, EmptyState, Icon, MetricCard, PageHeader, Select } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -59,9 +59,13 @@ export default function Dashboard() {
   ];
 
   return <div className={styles.page}>
-    <PageHeader icon="chart" title="Visão geral" actions={<div className={styles.period}><Select label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>} />
+    <PageHeader icon="chart" title="Visão geral" />
     {!loading && !hasRecords && <EmptyState variant="onboarding" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canReadContacts ? <Button onClick={() => void navigate("/")}>Ir para Leads</Button> : undefined} />}
     {(loading || hasRecords) && <>
+      <div className={styles.reportFilters}>
+        <span className={styles.filterLabel}><Icon name="calendar" />Período</span>
+        <div className={styles.period}><Select appearance="filter" label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>
+      </div>
       <div className={styles.sectionHeading}><h2>Desempenho comercial</h2><span>Indicadores do período selecionado</span></div>
       <DashboardGrid metrics>
       {canReadContacts && <Link className={styles.metricLink} to="/" prefetch="intent"><MetricCard title="Contatos ativos" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} /></Link>}
