@@ -71,10 +71,10 @@ export default function AdminAuditLog() {
         title="Auditoria"
         description="Acompanhe alterações de acesso, usuários, times e grupos de permissão."
       />
-      {logs.length > 0 && <CollectionToolbar
+      {!loadError && <CollectionToolbar
         search={<Input aria-label="Buscar auditoria" placeholder="Buscar pessoa, registro ou ação" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
-        filters={<Select label="Filtrar auditoria por ação" value={actionFilter} options={[{ value: "all", label: "Todas as ações" }, ...actionOptions]} onValueChange={(value) => setActionFilter(value ?? "all")} />}
-        count={`${filteredLogs.length} ${filteredLogs.length === 1 ? "registro" : "registros"}`}
+        filters={<Select appearance="filter" label="Filtrar auditoria por ação" value={actionFilter} options={[{ value: "all", label: "Todas as ações" }, ...actionOptions]} onValueChange={(value) => setActionFilter(value ?? "all")} />}
+        count={loading ? "Carregando auditoria…" : `${filteredLogs.length} ${filteredLogs.length === 1 ? "registro" : "registros"}`}
       />}
       {loadError ? <EmptyState icon="file" title="Não foi possível carregar a auditoria" description="Tente novamente para consultar o histórico." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} /> : <DataTable
         label="Histórico de auditoria"
