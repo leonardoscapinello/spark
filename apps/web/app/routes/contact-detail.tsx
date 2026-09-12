@@ -14,7 +14,7 @@ import {
   type CustomFieldDefinition,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity } from "@spark/data";
-import { Button, Checkbox, DatePicker, DateTimePicker, ErrorText, Field, Input, Label, Select, Timeline, RecordHero, notify } from "@spark/ui-web";
+import { Button, Checkbox, DatePicker, DateTimePicker, ErrorText, Field, Input, Label, Select, Skeleton, Timeline, RecordHero, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -88,7 +88,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const [emailEditError, setEmailEditError] = useState<string | null>(null);
   const [phoneEditError, setPhoneEditError] = useState<string | null>(null);
 
-  const { data } = useLiveQuery({
+  const { data, isLoading } = useLiveQuery({
     query: (q) =>
       q
         .from({ contacts: collection })
@@ -240,11 +240,11 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
 
   if (!data) {
     return (
-      <div className={styles.pagina}>
+      <div className={layout.page}>
         <Link to="/" className={styles.voltar}>
           ← Contatos
         </Link>
-        <p>Contato não encontrado.</p>
+        {isLoading ? <div className={layout.loading} role="status" aria-label="Carregando contato"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Contato não encontrado.</p>}
       </div>
     );
   }
