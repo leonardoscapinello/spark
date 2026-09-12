@@ -91,7 +91,7 @@
 
 @media (min-width: 761px) and (hover: hover) {
   .rail { position: relative; z-index: 20; }
-  .rail:is(:hover, :focus-within) {
+  .rail:is(:hover, :has(:focus-visible)) {
     width: var(--ui-sidebarWidth);
     align-items: stretch;
     padding-inline: var(--space-2);
@@ -99,24 +99,24 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--ui-panelShadow);
   }
-  .shell[data-sidebar="visible"] .rail:is(:hover, :focus-within) { width: calc(var(--ui-railWidth) + var(--space-2) + var(--ui-sidebarWidth)); }
-  .rail:is(:hover, :focus-within) + .sidebar { visibility: hidden; }
-  .rail:is(:hover, :focus-within) .railBrand,
-  .rail:is(:hover, :focus-within) .railLink {
+  .shell[data-sidebar="visible"] .rail:is(:hover, :has(:focus-visible)) { width: calc(var(--ui-railWidth) + var(--space-2) + var(--ui-sidebarWidth)); }
+  .rail:is(:hover, :has(:focus-visible)) + .sidebar { visibility: hidden; }
+  .rail:is(:hover, :has(:focus-visible)) .railBrand,
+  .rail:is(:hover, :has(:focus-visible)) .railLink {
     width: 100%;
     justify-content: flex-start;
     gap: var(--space-3);
     padding-inline: var(--space-2);
   }
-  .rail:is(:hover, :focus-within) .railModules,
-  .rail:is(:hover, :focus-within) .railBottom,
-  .rail:is(:hover, :focus-within) .accountMenu { width: 100%; align-items: stretch; }
-  .rail:is(:hover, :focus-within) .railModules { overflow-y: auto; scrollbar-width: none; }
-  .rail:is(:hover, :focus-within) .railModules::-webkit-scrollbar { display: none; }
-  .rail:is(:hover, :focus-within) .railLabel,
-  .rail:is(:hover, :focus-within) .brandLabel { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
-  .rail:is(:hover, :focus-within) .brandLabel { font-weight: var(--typography-weight-semibold); }
-  .rail:is(:hover, :focus-within) .accountLink { border-radius: var(--radius-md); }
+  .rail:is(:hover, :has(:focus-visible)) .railModules,
+  .rail:is(:hover, :has(:focus-visible)) .railBottom,
+  .rail:is(:hover, :has(:focus-visible)) .accountMenu { width: 100%; align-items: stretch; }
+  .rail:is(:hover, :has(:focus-visible)) .railModules { overflow-y: auto; scrollbar-width: none; }
+  .rail:is(:hover, :has(:focus-visible)) .railModules::-webkit-scrollbar { display: none; }
+  .rail:is(:hover, :has(:focus-visible)) .railLabel,
+  .rail:is(:hover, :has(:focus-visible)) .brandLabel { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
+  .rail:is(:hover, :has(:focus-visible)) .brandLabel { font-weight: var(--typography-weight-semibold); }
+  .rail:is(:hover, :has(:focus-visible)) .accountLink { border-radius: var(--radius-md); }
 }
 
 .sidebar {
