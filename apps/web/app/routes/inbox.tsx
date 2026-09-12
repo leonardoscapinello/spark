@@ -182,6 +182,7 @@ export default function Inbox() {
   function renderDetails() {
     if (!selected) return null;
     const contact = contacts.find((item) => item.id === selected.contactId);
+    const recentConversations = conversations.filter((item) => item.contactId === selected.contactId && item.id !== selected.id).slice(0, 5);
     return <>
       <div className={styles.assignment}>
         <div className={styles.assignmentRow}><span>Responsável</span><Select appearance="filter" label="Responsável pela conversa" value={selected.assigneeId} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))]} onValueChange={(value) => void updateConversation({ assigneeId: value ? userId.from(value) : null })} disabled={!canWrite || saving} /></div>
@@ -190,6 +191,7 @@ export default function Inbox() {
       <Accordion defaultValue={["conversation", "contact"]} items={[
         { value: "conversation", title: "Atributos da conversa", icon: <Icon name="message" />, content: <dl className={styles.metadata}><div><dt>Situação</dt><dd>{statusLabel(selected.status)}</dd></div><div><dt>Prioridade</dt><dd>{selected.priority === "priority" ? "Prioritária" : "Normal"}</dd></div><div><dt>Canal</dt><dd>{channelLabel(selected.channel)}</dd></div><div><dt>Primeira resposta</dt><dd><SlaBadge conversation={selected} now={now} /></dd></div><div><dt>Criada em</dt><dd>{formatDateTime(selected.createdAt)}</dd></div></dl> },
         { value: "contact", title: "Dados do contato", icon: <Icon name="user" />, content: <div className={styles.contactDetails}><div className={styles.contactCard}><span className={styles.avatarLarge}>{initials(contactNames.get(selected.contactId) ?? "Contato")}</span><div><strong>{contactNames.get(selected.contactId) ?? "Contato"}</strong><span>{contact?.email ?? "Sem e-mail"}</span></div></div><dl className={styles.metadata}><div><dt>Telefone</dt><dd>{contact?.phone ? formatPhone(contact.phone) : "Não informado"}</dd></div></dl>{canReadContacts && <Button variant="secondary" size="sm" onClick={() => navigate(`/contacts/${selected.contactId}`)}>Abrir perfil</Button>}</div> },
+        { value: "recent", title: "Conversas recentes", icon: <Icon name="message" />, content: recentConversations.length ? <div className={styles.recentConversations}>{recentConversations.map((conversation) => <Button key={conversation.id} variant="ghost" shape="rounded" className={styles.recentConversation} onClick={() => { setDetailsOpen(false); void navigate(`/inbox?box=all&conversation=${conversation.id}`); }}><strong>{conversation.subject}</strong><span>{channelLabel(conversation.channel)} · {statusLabel(conversation.status)}</span></Button>)}</div> : <p className={styles.recentEmpty}>Nenhuma outra conversa desta pessoa.</p> },
       ]} />
     </>;
   }

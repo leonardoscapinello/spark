@@ -80,6 +80,11 @@
 .contactCard > div { display: flex; flex-direction: column; min-width: 0; }
 .contactCard strong,.contactCard > div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .contactCard > div span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.recentConversations { display: grid; gap: var(--space-1); }
+.recentConversation { width: 100%; height: auto; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); padding: var(--space-2); text-align: left; white-space: normal; }
+.recentConversation strong { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
+.recentConversation span,.recentEmpty { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.recentEmpty { margin: 0; }
 .metadata { margin: 0; display: flex; flex-direction: column; gap: var(--space-3); }
 .metadata div { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--typography-size-sm); }
 .metadata dt { color: var(--color-inkMuted); }
