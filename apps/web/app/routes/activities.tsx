@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { contactId as contactIdFactory, type Activity, type ActivityType } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { ActionModal, Button, DataTable, DateTimePicker, Field, Input, Label, PageHeader, SearchSelect, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Button, DataTable, DateTimePicker, EmptyState, Field, Input, Label, PageHeader, SearchSelect, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getSession } from "../lib/auth.client";
@@ -44,7 +44,8 @@ export default function Activities() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const session = getSession();
   const canWrite = session?.capabilities.includes("activities:write") ?? false;
-  const canCreate = canReadContacts && canWrite;
+  const canCreate = canReadContacts && canWrite && contacts.length > 0;
+  const firstRun = !isLoading && activities.length === 0;
   const contactNames = useMemo(() => new Map(contacts.map((contact) => [contact.id, contact.name])), [contacts]);
   const now = new Date();
   const filtered = activities.filter((activity) => {
@@ -98,12 +99,12 @@ export default function Activities() {
 
   return <div className={styles.page}>
     <PageHeader eyebrow="Agenda comercial" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canCreate ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
-    <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="ghost" shape="rounded" className={styles.periodOption} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<strong>{option.count}</strong></Button>)}</div>
-    <div className={styles.toolbar}>
-      <Select label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} />
+    {!firstRun && <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="ghost" shape="rounded" className={styles.periodOption} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<strong>{option.count}</strong></Button>)}</div>}
+    {!firstRun && <div className={styles.toolbar}>
+      <div className={styles.typeFilter}><Select label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} /></div>
       <span className={styles.count}>{filtered.length} {filtered.length === 1 ? "atividade" : "atividades"}</span>
-    </div>
-    <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText="Nenhuma atividade neste filtro." actions={(activity) => <><Button size="sm" variant="ghost" loading={busyId === activity.id} disabled={!canWrite} onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>{canReadContacts && activity.contactId && <TableIconAction label="Abrir contato" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}</>} />
+    </div>}
+    {firstRun ? <EmptyState icon="calendar" title={contacts.length > 0 ? "Planeje a primeira atividade" : "Comece com um contato"} description={contacts.length > 0 ? "Agende uma tarefa, ligação ou reunião e acompanhe o que sua equipe precisa fazer." : "Cadastre um contato para poder agendar tarefas, ligações e reuniões."} action={canCreate ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : canReadContacts ? <Button variant="secondary" onClick={() => void navigate("/")}>Ver contatos</Button> : undefined} /> : <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText="Nenhuma atividade neste filtro." actions={(activity) => <><Button size="sm" variant="ghost" loading={busyId === activity.id} disabled={!canWrite} onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>{canReadContacts && activity.contactId && <TableIconAction label="Abrir contato" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}</>} />}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha contato, título e data para agendar." onConfirm={createActivity}>
       <form className={styles.form} onSubmit={submit}>
         <Field><Label>Contato</Label><SearchSelect label="Buscar contato" searchPlacement="dropdown" placeholder="Selecionar contato" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>
