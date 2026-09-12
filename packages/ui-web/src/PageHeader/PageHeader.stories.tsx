@@ -11,3 +11,4 @@ export default meta;
 type Story = StoryObj<typeof PageHeader>;
 export const ComIcone: Story = {};
 export const SemIcone: Story = { render: () => <PageHeader title="Segurança da conta" description="Proteja seu acesso e seus dispositivos." /> };
+export const ComContexto: Story = { render: () => <PageHeader eyebrow="Minha conta" title="Segurança da conta" description="Proteja seu acesso e seus dispositivos." /> };

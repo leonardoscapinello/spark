@@ -48,4 +48,16 @@
   .header { align-items: stretch; }
   .copy, .actions { width: 100%; }
   .actions > * { flex: 1 1 auto; }
+  .eyebrow {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 0 var(--space-1);
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    color: var(--color-inkMuted);
+    font-size: var(--typography-size-compact);
+    font-weight: var(--typography-weight-medium);
+  }
 }
