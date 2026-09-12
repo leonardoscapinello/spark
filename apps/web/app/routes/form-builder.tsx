@@ -126,7 +126,7 @@ export default function FormBuilder() {
       setSaving(false);
     }
   }
-  const publicUrl = `${window.location.origin}/f/${form.publicKey}`;
+  const publicUrl = `/f/${form.publicKey}`;
   return (
     <div className={styles.page}>
       <PageHeader

@@ -14,7 +14,7 @@ export function PublicationStatus({ published, publishedLabel = "Publicado", pub
   async function copyPublicLink() {
     if (!publicUrl) return;
     try {
-      await navigator.clipboard.writeText(publicUrl);
+      await navigator.clipboard.writeText(new URL(publicUrl, window.location.origin).href);
       notify({ title: "Link copiado", tone: "success" });
     } catch {
       notify({ title: "Não foi possível copiar o link", tone: "error" });

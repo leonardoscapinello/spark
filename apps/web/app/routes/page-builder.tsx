@@ -14,7 +14,7 @@ export default function PageBuilder() { const { pageId } = useParams(); const na
       {canWrite && <Button variant="secondary" loading={saving} onClick={() => void save()}>Salvar</Button>}
       {canWrite && <Button loading={saving} onClick={() => void publish()}>Publicar</Button>}
     </div>} />
-    <PublicationStatus published={page.status === "published"} publishedLabel="Publicada" publicUrl={`${window.location.origin}/p/${page.publicKey}`} />
+    <PublicationStatus published={page.status === "published"} publishedLabel="Publicada" publicUrl={`/p/${page.publicKey}`} />
     <SegmentedControl className={styles.mobileViewSwitch} label="Visualização da página" value={mobileView} options={[{ value: "editor", label: "Editar" }, { value: "preview", label: "Prévia" }]} onValueChange={setMobileView} />
     <div className={styles.workspace} data-mobile-view={mobileView}>
       <aside className={styles.toolPanel} aria-label="Ferramentas da página">
