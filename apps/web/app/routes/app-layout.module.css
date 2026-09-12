@@ -173,8 +173,7 @@
   width: var(--ui-controlLarge);
   height: var(--ui-controlLarge);
   border-radius: var(--radius-md);
-  background: var(--color-inkSubtle);
-  opacity: var(--ui-disabledOpacity);
+  background: var(--color-line);
 }
 
 .loadingContent {
