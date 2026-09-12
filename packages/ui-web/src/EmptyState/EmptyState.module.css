@@ -22,6 +22,32 @@
 .artFoot { grid-column: 1 / -1; display: flex; gap: var(--space-2); margin-top: var(--space-4); padding-top: var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); }
 .artFoot span:first-child { width: var(--space-10); background: var(--color-accentWash); }
 .artFoot span:last-child { width: var(--space-6); }
+.mobileArtSymbol { display: none; }
+.artCard[data-art="chart"], .artCard[data-art="flow"], .artCard[data-art="calendar"], .artCard[data-art="conversation"] { display: flex; align-items: center; justify-content: center; }
+.artChart { display: flex; align-items: flex-end; gap: var(--space-2); width: 100%; height: var(--space-16); padding: var(--space-3) var(--space-2) 0; border-bottom: var(--ui-hairline) solid var(--color-line); }
+.artChart span { flex: 1; height: 40%; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: var(--color-accentWash); }
+.artChart span:nth-child(2) { height: 66%; }
+.artChart span:nth-child(3) { height: 52%; }
+.artChart span:nth-child(4) { height: 84%; background: var(--color-accent); }
+.artChart span:nth-child(5) { height: 72%; }
+.artFlow { display: flex; align-items: center; justify-content: center; width: 100%; }
+.artFlowNode { display: grid; place-items: center; flex: 0 0 var(--space-12); width: var(--space-12); height: var(--space-12); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-accent); box-shadow: var(--ui-panelShadow); }
+.artFlowNode:last-child { background: var(--color-accentWash); }
+.artFlowConnector { flex: 1; min-width: var(--space-4); border-top: var(--ui-hairline) dashed var(--color-accent); }
+.artCalendar { display: grid; gap: var(--space-4); width: 100%; }
+.artCalendarHeader { display: flex; align-items: center; gap: var(--space-2); padding-bottom: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); color: var(--color-accent); }
+.artCalendarHeader span { width: var(--space-8); height: var(--space-2); border-radius: var(--radius-full); background: var(--color-line); }
+.artCalendarHeader span:last-child { width: var(--space-4); margin-left: auto; }
+.artCalendarDays { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+.artCalendarDays span { height: var(--space-3); border-radius: var(--radius-sm); background: var(--color-surface2); }
+.artCalendarDays span[data-active] { background: var(--color-accentWash); box-shadow: inset 0 0 0 var(--ui-hairline) var(--color-accent); }
+.artConversation { display: grid; gap: var(--space-3); width: 100%; }
+.artConversation > span { display: flex; align-items: center; gap: var(--space-3); width: 85%; padding: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+.artConversation > span:last-child { justify-self: end; background: var(--color-accentWash); }
+.artConversation svg { flex: 0 0 var(--space-5); width: var(--space-5); height: var(--space-5); color: var(--color-accent); }
+.artConversation > span > span { display: grid; gap: var(--space-1); flex: 1; }
+.artConversation > span > span > span { height: var(--space-1); border-radius: var(--radius-full); background: var(--color-line); }
+.artConversation > span > span > span:last-child { width: 65%; }
 .root[data-variant="featured"] h2 { grid-column: 1; grid-row: 1; margin-top: 0; }
 .root[data-variant="featured"] p { grid-column: 1; grid-row: 2; max-width: var(--ui-popupMaxWidth); }
 .root[data-variant="featured"] .actions { grid-column: 1; grid-row: 3; justify-content: flex-start; }
@@ -33,7 +59,8 @@
   .root[data-variant="featured"] .icon { grid-column: 1; grid-row: 1; justify-self: start; width: var(--space-12); height: var(--space-12); padding: 0; }
   .root[data-variant="featured"] .artCard { display: grid; place-items: center; width: var(--space-12); min-height: var(--space-12); padding: 0; border: 0; background: transparent; box-shadow: none; }
   .root[data-variant="featured"] .artSymbol { background: transparent; }
-  .root[data-variant="featured"] .artLines, .root[data-variant="featured"] .artFoot { display: none; }
+  .root[data-variant="featured"] .artLines, .root[data-variant="featured"] .artFoot, .root[data-variant="featured"] .artChart, .root[data-variant="featured"] .artFlow, .root[data-variant="featured"] .artCalendar, .root[data-variant="featured"] .artConversation { display: none; }
+  .root[data-variant="featured"] .mobileArtSymbol { display: grid; place-items: center; }
   .root[data-variant="featured"] h2 { grid-column: 1; grid-row: 2; }
   .root[data-variant="featured"] p { grid-column: 1; grid-row: 3; margin-top: 0; }
   .root[data-variant="featured"] .actions { grid-column: 1; grid-row: 4; margin-top: var(--space-2); }
