@@ -1,4 +1,8 @@
-.page { width: 100%; min-width: 0; padding: var(--space-8); display: flex; flex-direction: column; gap: var(--space-6); }
+.page { width: 100%; min-width: 0; padding: var(--space-8); display: flex; flex-direction: column; gap: var(--space-4); }
+.periods { display: flex; align-items: center; gap: var(--space-2); overflow-x: auto; }
+.periodOption { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding-inline: var(--space-3); white-space: nowrap; }
+.periodOption[data-selected] { background: var(--ui-selected); box-shadow: var(--ui-selectionShadow); }
+.periodOption strong { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
 .toolbar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .count { margin-inline-start: auto; color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
 .secondary { display: block; margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }

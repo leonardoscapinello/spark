@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { contactId as contactIdFactory, type Activity, type ActivityType } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { ActionModal, Button, DashboardGrid, DataTable, DateTimePicker, Field, Input, Label, MetricCard, PageHeader, SearchSelect, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Button, DataTable, DateTimePicker, Field, Input, Label, PageHeader, SearchSelect, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getSession } from "../lib/auth.client";
@@ -55,6 +55,14 @@ export default function Activities() {
   const overdue = activities.filter((activity) => !activity.completed && new Date(activity.scheduledAt) < startOfToday(now)).length;
   const today = activities.filter((activity) => !activity.completed && isSameDay(new Date(activity.scheduledAt), now)).length;
   const completed = activities.filter((activity) => activity.completed).length;
+  const periods = [
+    { value: "open", label: "Pendentes", count: activities.length - completed },
+    { value: "overdue", label: "Atrasadas", count: overdue },
+    { value: "today", label: "Hoje", count: today },
+    { value: "upcoming", label: "Próximas", count: activities.filter((activity) => !activity.completed && new Date(activity.scheduledAt) >= endOfToday(now)).length },
+    { value: "completed", label: "Concluídas", count: completed },
+    { value: "all", label: "Todas", count: activities.length },
+  ];
   const columns: TableColumn<Activity>[] = [
     { id: "title", label: "Atividade", cell: (activity) => <div><strong>{activity.title}</strong><span className={styles.secondary}>{typeLabel(activity.type)}</span></div>, sortValue: (activity) => activity.title },
     { id: "contact", label: "Contato", cell: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "Contato indisponível" : "—", sortValue: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "" : "" },
@@ -90,13 +98,8 @@ export default function Activities() {
 
   return <div className={styles.page}>
     <PageHeader eyebrow="Agenda comercial" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canCreate ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
-    <DashboardGrid metrics>
-      <MetricCard title="Atrasadas" value={overdue} sentiment={overdue > 0 ? "negative" : "neutral"} />
-      <MetricCard title="Para hoje" value={today} />
-      <MetricCard title="Concluídas" value={completed} sentiment="positive" />
-    </DashboardGrid>
+    <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="ghost" shape="rounded" className={styles.periodOption} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<strong>{option.count}</strong></Button>)}</div>
     <div className={styles.toolbar}>
-      <Select label="Período das atividades" value={period} options={[{ value: "open", label: "Todas pendentes" }, { value: "overdue", label: "Atrasadas" }, { value: "today", label: "Hoje" }, { value: "upcoming", label: "Próximas" }, { value: "completed", label: "Concluídas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setPeriod(value ?? "open")} />
       <Select label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} />
       <span className={styles.count}>{filtered.length} {filtered.length === 1 ? "atividade" : "atividades"}</span>
     </div>
