@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
@@ -51,6 +51,7 @@ export default function Inbox() {
   const filter = parseInboxFilter(searchParams.get("box"));
   const [mobileView, setMobileView] = useState<"list" | "thread">("list");
   const [layout, setLayout] = useState<"chat" | "table">("chat");
+  const activeQueueLink = useRef<HTMLAnchorElement>(null);
   const [now, setNow] = useState(() => new Date());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -111,6 +112,11 @@ export default function Inbox() {
   }, [selected, selectedId]);
   useEffect(() => { if (selected && selected.channel !== "email" && selected.channel !== "instagram" && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60_000); return () => window.clearInterval(timer); }, []);
+  useEffect(() => {
+    const active = activeQueueLink.current;
+    const strip = active?.parentElement?.parentElement;
+    if (active && strip && strip.scrollWidth > strip.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [filter, teams.length]);
 
   async function createConversation() {
     if (!session || !newContact || !newSubject.trim()) throw new Error("MISSING_FIELDS");
@@ -169,10 +175,10 @@ export default function Inbox() {
   return <div className={styles.page}>
     <Sidebar title="Atendimento" className={styles.queueSidebar}>
       <SidebarSection title="Caixas">
-        {queues.map((queue) => <SidebarItem key={queue.box} render={<Link to={queue.to} prefetch="intent" />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
+        {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} prefetch="intent" />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
       </SidebarSection>
       {teams.some((team) => !team.archivedAt) && <SidebarSection title="Equipes">
-        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link to={`/inbox?box=team:${team.id}`} prefetch="intent" />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
+        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link ref={filter === `team:${team.id}` ? activeQueueLink : undefined} to={`/inbox?box=team:${team.id}`} prefetch="intent" />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
       </SidebarSection>}
       <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" prefetch="intent" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
     </Sidebar>
