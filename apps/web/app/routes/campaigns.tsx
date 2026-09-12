@@ -3,14 +3,14 @@ import { useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
-import { ActionModal, Badge, Button, Card, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client"; import { requireCapability } from "../lib/route-access.client"; import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getAudiencesCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
 
 const LEAD_STATUSES = [{ value: "new", label: "Novo" }, { value: "qualified", label: "Qualificado" }, { value: "customer", label: "Cliente" }, { value: "lost", label: "Perdido" }];
 export async function clientLoader() { await requireCapability("campaigns:read"); void Promise.allSettled([getAudiencesCollection().preload(), getCampaignsCollection().preload(), getCampaignRecipientsCollection().preload(), getContactsCollection().preload()]); return null; }
 export default function Campaigns() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const audienceView = searchParams.get("view") === "audiences";
   const canWrite = getSession()?.capabilities.includes("campaigns:write") ?? false;
   const { data: audiences, isLoading: audiencesLoading } = useLiveQuery({ query: (q) => q.from({ audiences: getAudiencesCollection() }).orderBy(({ audiences: item }) => item.updatedAt, "desc") });
@@ -47,11 +47,7 @@ export default function Campaigns() {
     <PageHeader icon={audienceView ? "team" : "mail"} title={audienceView ? "Públicos" : "Campanhas"} actions={canWrite && !firstRun && !(audienceView ? audiencesLoading : isLoading) ? audienceView ? <Button onClick={() => setAudienceOpen(true)}>Novo público</Button> : audiences.length > 0 ? <Button onClick={openCampaign}>Nova campanha</Button> : undefined : undefined} />
     {firstRun && (audienceView
       ? <EmptyState variant="featured" icon="team" title="Crie seu primeiro público" description="Defina quem deve receber suas campanhas. Os contatos entram automaticamente quando correspondem aos filtros." action={canWrite ? <Button onClick={() => setAudienceOpen(true)}>Criar público</Button> : undefined} />
-      : <><EmptyState variant="featured" icon="mail" title={audiences.length ? "Prepare sua primeira campanha" : "Comece criando um público"} description={audiences.length ? "Escreva a mensagem e escolha quem deve recebê-la. Você poderá revisar o rascunho antes de enviar." : "Um público organiza os contatos por regras e permite criar sua primeira campanha de e-mail."} action={canWrite ? audiences.length ? <Button onClick={openCampaign}>Nova campanha</Button> : <Button onClick={() => setAudienceOpen(true)}>Criar público</Button> : undefined} />
-        <div className={styles.startGrid} aria-label="Etapas para enviar uma campanha">
-          <Card title="1. Defina quem vai receber" description="Organize os contatos por etapa, tags e pontuação." actions={<Badge tone={audiences.length ? "success" : "neutral"}>{audiences.length ? "Público pronto" : "Primeiro passo"}</Badge>}><Button variant="secondary" onClick={() => setSearchParams({ view: "audiences" })}>{audiences.length ? "Ver públicos" : "Criar público"}</Button></Card>
-          <Card title="2. Prepare a mensagem" description="Escolha o público, escreva o assunto e revise o rascunho." actions={<Badge tone="neutral">Depois do público</Badge>}>{canWrite && audiences.length > 0 && <Button variant="secondary" onClick={openCampaign}>Nova campanha</Button>}</Card>
-        </div></>)}
+      : <EmptyState variant="featured" icon="mail" title={audiences.length ? "Prepare sua primeira campanha" : "Comece criando um público"} description={audiences.length ? "Escreva a mensagem e escolha quem deve recebê-la. Você poderá revisar o rascunho antes de enviar." : "Um público organiza os contatos por regras e permite criar sua primeira campanha de e-mail."} action={canWrite ? audiences.length ? <Button onClick={openCampaign}>Nova campanha</Button> : <Button onClick={() => setAudienceOpen(true)}>Criar público</Button> : undefined} />)}
     <><CollectionToolbar
       search={<Input aria-label={audienceView ? "Buscar públicos" : "Buscar campanhas"} placeholder={audienceView ? "Buscar público" : "Buscar campanha, assunto ou público"} value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
       filters={!audienceView ? <Select appearance="filter" label="Filtrar campanhas por situação" value={statusFilter} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "sending", label: "Em envio" }, { value: "sent", label: "Enviadas" }, { value: "partial", label: "Parciais" }, { value: "failed", label: "Com falha" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} /> : undefined}
