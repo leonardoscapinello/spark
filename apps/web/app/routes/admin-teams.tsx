@@ -10,7 +10,7 @@ import {
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
-import { ActionModal, Button, Checkbox, DataTable, Field, Input, Label, PageHeader, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Button, Checkbox, DataTable, EmptyState, Field, Input, Label, PageHeader, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
 
@@ -89,11 +89,11 @@ export default function AdminTeams({ loaderData }: Route.ComponentProps) {
 
   return <div className={styles.page}>
     <PageHeader eyebrow="Administração" title="Times" description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={<Button onClick={openCreate}>Novo time</Button>} />
-    <div className={styles.toolbar}>
+    {(teams.length > 0 || showArchived) && <div className={styles.toolbar}>
       <span>{visibleTeams.length} {visibleTeams.length === 1 ? "time" : "times"}</span>
       <Button variant="secondary" onClick={() => setShowArchived((current) => !current)}>{showArchived ? "Ver ativos" : "Ver arquivados"}</Button>
-    </div>
-    <DataTable
+    </div>}
+    {teams.length === 0 ? <EmptyState icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} /> : <DataTable
       label="Times da organização"
       rows={visibleTeams}
       columns={columns}
@@ -101,7 +101,7 @@ export default function AdminTeams({ loaderData }: Route.ComponentProps) {
       rowLabel={(team) => team.name}
       emptyText={showArchived ? "Nenhum time arquivado." : "Nenhum time criado."}
       actions={(team) => <div className={styles.actions}><Button size="sm" variant="ghost" onClick={() => openEdit(team)}>Editar</Button><Button size="sm" variant="ghost" loading={busyId === team.id} onClick={() => void toggleArchive(team)}>{team.archivedAt ? "Restaurar" : "Arquivar"}</Button></div>}
-    />
+    />}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar time" : "Novo time"} confirmLabel={editingId ? "Salvar alterações" : "Criar time"} errorText="Não foi possível salvar o time. Revise os dados e tente novamente." onConfirm={save}>
       <div className={styles.modalFields}>
         <Field><Label>Nome</Label><Input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Vendas" /></Field>
