@@ -15,6 +15,7 @@ export default function PageBuilder() { const { pageId } = useParams(); const na
       {canWrite && <Button variant="secondary" loading={saving} onClick={() => void save()}>Salvar</Button>}
       {canWrite && <Button loading={saving} onClick={() => void publish()}>Publicar</Button>}
     </div>} />
+    <div className={styles.status}><Badge tone={page.status === "published" ? "success" : "neutral"}>{page.status === "published" ? "Publicada" : "Rascunho"}</Badge><span>{page.status === "published" ? "Disponível para visitantes" : "Visível apenas para sua equipe"}</span>{page.status === "published" && <Button size="sm" variant="ghost" onClick={() => void copyPublicLink()}>Copiar link</Button>}</div>
     <SegmentedControl className={styles.mobileViewSwitch} label="Visualização da página" value={mobileView} options={[{ value: "editor", label: "Editar" }, { value: "preview", label: "Prévia" }]} onValueChange={setMobileView} />
     <div className={styles.workspace} data-mobile-view={mobileView}>
       <aside className={styles.toolPanel} aria-label="Ferramentas da página">
@@ -39,11 +40,11 @@ export default function PageBuilder() { const { pageId } = useParams(); const na
         </section>}
         {panelMode === "page" && <section className={styles.panelSection}>
           <h2>Dados da página</h2><p>Organize a página aqui. O link para visitantes fica disponível depois da publicação.</p>
-          <div className={styles.fields}><Field><Label>Nome</Label><Input value={name} disabled={!canWrite} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Identificador interno</Label><Input value={slug} disabled={!canWrite} onChange={(event) => setSlug(event.target.value)} /></Field>{page.status === "published" && <><Field><Label>Link público</Label><Input value={`${typeof window === "undefined" ? "" : window.location.origin}/p/${page.publicKey}`} readOnly /></Field><Button className={styles.copyLink} variant="secondary" size="sm" onClick={() => void copyPublicLink()}>Copiar link</Button></>}</div>
+          <div className={styles.fields}><Field><Label>Nome</Label><Input value={name} disabled={!canWrite} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Identificador interno</Label><Input value={slug} disabled={!canWrite} onChange={(event) => setSlug(event.target.value)} /></Field></div>
         </section>}
       </aside>
       <section className={styles.preview} aria-label="Prévia da página">
-        <div className={styles.previewHeader}><span>Prévia</span><Badge tone={page.status === "published" ? "success" : "neutral"}>{page.status === "published" ? "Publicada" : "Rascunho"}</Badge></div>
+        <div className={styles.previewHeader}><span>Prévia</span></div>
         <iframe title="Prévia da página" srcDoc={renderPageDocument(tree, name || page.name)} />
       </section>
     </div>
