@@ -107,6 +107,7 @@ export default function AdminPermissionGroups() {
   const filteredGroups = groups.filter((group) =>
     !searchTerm || `${group.name} ${group.capabilities.map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" ")}`.toLocaleLowerCase("pt-BR").includes(searchTerm),
   );
+  const firstRun = !loading && groups.length === 0 && !search;
   const columns: TableColumn<PermissionGroupDto>[] = [
     { id: "name", label: "Grupo", cell: (group) => <strong>{group.name}</strong>, sortValue: (group) => group.name },
     { id: "permissions", label: "Permissões", cell: (group) => <div className={styles.groupSummary}><strong>{group.capabilities.length} {group.capabilities.length === 1 ? "permissão" : "permissões"}</strong><span>{group.capabilities.length ? group.capabilities.slice(0, 3).map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" · ") : "Sem acesso configurado"}</span></div>, sortValue: (group) => group.capabilities.length },
@@ -174,12 +175,12 @@ export default function AdminPermissionGroups() {
       {loadError
         ? <EmptyState icon="settings" title="Não foi possível carregar os grupos" description="Tente novamente para consultar as permissões." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} />
         : <>
-          {!loading && groups.length === 0 && <EmptyState variant="featured" icon="settings" title="Defina o primeiro grupo" description="Reúna permissões por função para controlar o que cada pessoa pode consultar e alterar." action={<Button onClick={openCreate}>Novo grupo</Button>} />}
-          <CollectionToolbar
+          {firstRun && <EmptyState variant="featured" icon="settings" title="Defina o primeiro grupo" description="Reúna permissões por função para controlar o que cada pessoa pode consultar e alterar." action={<Button onClick={openCreate}>Novo grupo</Button>} />}
+          {!firstRun && <><CollectionToolbar
             search={<Input aria-label="Buscar grupos de permissões" placeholder="Buscar grupo ou permissão" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
-            count={`${filteredGroups.length} ${filteredGroups.length === 1 ? "grupo" : "grupos"}`}
+            count={loading ? "Carregando grupos…" : `${filteredGroups.length} ${filteredGroups.length === 1 ? "grupo" : "grupos"}`}
           />
-          <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} state={loading ? "loading" : "ready"} emptyText="Nenhum grupo encontrado." actions={(group) => <TableIconAction label={`Editar ${group.name}`} icon={<Icon name="right" />} onClick={() => openEdit(group)} />} />
+          <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} state={loading ? "loading" : "ready"} emptyText="Nenhum grupo encontrado." actions={(group) => <TableIconAction label={`Editar ${group.name}`} icon={<Icon name="right" />} onClick={() => openEdit(group)} />} /></>}
         </>}
 
       <ActionModal
