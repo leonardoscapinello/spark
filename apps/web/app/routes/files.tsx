@@ -33,10 +33,10 @@ export default function Files() {
   function fileActions(item: StoredFile) { return <><TableIconAction label={`Baixar ${item.name}`} icon={<Icon name="download" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void download(item)} />{canWrite && <TableIconAction label={`Excluir ${item.name}`} icon={<Icon name="trash" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void remove(item)} />}</>; }
   return <div className={styles.page}>
     <PageHeader icon="file" title="Arquivos" description="Use o mesmo arquivo em contatos, campanhas, conversas e automações." actions={canWrite && hasFiles ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />
-    {firstRun && <EmptyState variant="onboarding" icon="file" title="Envie seu primeiro arquivo" description="Organize imagens e documentos para reutilizá-los em toda a equipe." action={canWrite ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />}
-      {!firstRun && <><CollectionToolbar
+    {firstRun && <EmptyState variant="featured" icon="file" title="Envie seu primeiro arquivo" description="Organize imagens e documentos para reutilizá-los em toda a equipe." action={canWrite ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />}
+      <><CollectionToolbar
         search={<Input aria-label="Buscar arquivos" placeholder="Buscar por nome" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
-        filters={<><Select label="Tipo de arquivo" value={kind} options={[{ value: "all", label: "Todos os tipos" }, { value: "image", label: "Imagens" }, { value: "video", label: "Vídeos" }, { value: "document", label: "Documentos" }, { value: "other", label: "Outros" }]} onValueChange={(value) => setKind(value ?? "all")} /><Select label="Status do arquivo" value={status} options={[{ value: "all", label: "Todos os status" }, { value: "ready", label: "Disponíveis" }, { value: "pending", label: "Processando" }, { value: "failed", label: "Com falha" }]} onValueChange={(value) => setStatus(value ?? "all")} /></>}
+        filters={<><Select appearance="filter" label="Tipo de arquivo" value={kind} options={[{ value: "all", label: "Todos os tipos" }, { value: "image", label: "Imagens" }, { value: "video", label: "Vídeos" }, { value: "document", label: "Documentos" }, { value: "other", label: "Outros" }]} onValueChange={(value) => setKind(value ?? "all")} /><Select appearance="filter" label="Status do arquivo" value={status} options={[{ value: "all", label: "Todos os status" }, { value: "ready", label: "Disponíveis" }, { value: "pending", label: "Processando" }, { value: "failed", label: "Com falha" }]} onValueChange={(value) => setStatus(value ?? "all")} /></>}
         count={`${files.length} ${files.length === 1 ? "arquivo" : "arquivos"}`}
         actions={<ViewSwitcher label="Visualização dos arquivos" value={layout} onValueChange={setLayout} />}
       />
@@ -44,7 +44,7 @@ export default function Files() {
         {isLoading && !allFiles.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && files.length === 0 && <p className={styles.empty}>Nenhum arquivo neste filtro.</p>}
         {files.map((item) => <Card key={item.id} title={item.name} description={`${item.folder ?? "Geral"} · ${formatBytes(item.sizeBytes)}`} actions={fileStatusBadge(item)} footer={<div className={styles.cardFooter}><span>{formatDate(item.createdAt)}</span><div>{fileActions(item)}</div></div>}><div className={styles.cardBody}><span className={styles.fileIcon}><Icon name="file" /></span><span>{fileTypeLabel(item.mimeType)}</span></div></Card>)}
-      </div>}</>}
+      </div>}</>
   </div>;
 }
 function fileKind(mime: string): string { if (mime.startsWith("image/")) return "image"; if (mime.startsWith("video/")) return "video"; if (mime.includes("pdf") || mime.includes("document") || mime.includes("sheet") || mime.startsWith("text/")) return "document"; return "other"; }
