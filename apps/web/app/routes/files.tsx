@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { filesControllerComplete, filesControllerDownload, filesControllerRemove, filesControllerUpload } from "@spark/api-client";
 import { fileId, type StoredFile } from "@spark/core";
-import { Badge, DataTable, FilePicker, Icon, Input, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { Badge, DataTable, EmptyState, FilePicker, Icon, Input, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getFilesCollection } from "../lib/files-collection.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -14,6 +14,7 @@ export default function Files() {
   const session = getSession(); const canWrite = session?.capabilities.includes("files:write") ?? false;
   const { data: allFiles, isLoading } = useLiveQuery({ query: (q) => q.from({ files: getFilesCollection() }).orderBy(({ files: item }) => item.createdAt, "desc") });
   const [search, setSearch] = useState(""); const [kind, setKind] = useState("all"); const [uploading, setUploading] = useState<string | null>(null); const [busyId, setBusyId] = useState<string | null>(null);
+  const hasFiles = allFiles.some((item) => !item.deletedAt);
   const files = useMemo(() => allFiles.filter((item) => !item.deletedAt && (kind === "all" || fileKind(item.mimeType) === kind) && (!search.trim() || item.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")))), [allFiles, kind, search]);
   const columns: TableColumn<StoredFile>[] = [
     { id: "name", label: "Arquivo", cell: (item) => <div className={styles.fileName}><span className={styles.fileIcon}><Icon name="file" /></span><span><strong>{item.name}</strong><small>{item.mimeType}</small></span></div>, sortValue: (item) => item.name },
@@ -29,10 +30,11 @@ export default function Files() {
   async function download(item: StoredFile) { setBusyId(item.id); try { const target = await filesControllerDownload(item.id); window.open(target.downloadUrl, "_blank", "noopener,noreferrer"); } finally { setBusyId(null); } }
   async function remove(item: StoredFile) { setBusyId(item.id); try { await filesControllerRemove(item.id); notify({ title: "Arquivo excluído", description: item.name, tone: "success" }); } catch { notify({ title: "Não foi possível excluir", description: item.name, tone: "error" }); } finally { setBusyId(null); } }
   return <div className={styles.page}>
-    <PageHeader eyebrow="Conteúdo" title="Arquivos" description="Envie uma vez e use o mesmo arquivo em contatos, campanhas, conversas e automações." />
-    {canWrite && <FilePicker disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Solte arquivos aqui ou clique para escolher"} hint="Upload direto para o armazenamento ativo · até 5 GB" />}
-    <div className={styles.toolbar}><Input aria-label="Buscar arquivos" placeholder="Buscar por nome" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} /><Select label="Tipo de arquivo" value={kind} options={[{ value: "all", label: "Todos os tipos" }, { value: "image", label: "Imagens" }, { value: "video", label: "Vídeos" }, { value: "document", label: "Documentos" }, { value: "other", label: "Outros" }]} onValueChange={(value) => setKind(value ?? "all")} /><span>{files.length} {files.length === 1 ? "arquivo" : "arquivos"}</span></div>
-    <DataTable label="Biblioteca de arquivos" rows={files} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !allFiles.length ? "loading" : "ready"} emptyText="Nenhum arquivo neste filtro." actions={(item) => <><TableIconAction label="Baixar arquivo" icon={<Icon name="download" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void download(item)} />{canWrite && <TableIconAction label="Excluir arquivo" icon={<Icon name="trash" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void remove(item)} />}</>} />
+    <PageHeader title="Arquivos" description="Use o mesmo arquivo em contatos, campanhas, conversas e automações." actions={canWrite && hasFiles ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />
+    {!hasFiles && !isLoading ? <EmptyState icon="file" title="Envie seu primeiro arquivo" description="Organize imagens e documentos para reutilizá-los em toda a equipe." action={canWrite ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} /> : <>
+      <div className={styles.toolbar}><Input aria-label="Buscar arquivos" placeholder="Buscar por nome" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} /><Select label="Tipo de arquivo" value={kind} options={[{ value: "all", label: "Todos os tipos" }, { value: "image", label: "Imagens" }, { value: "video", label: "Vídeos" }, { value: "document", label: "Documentos" }, { value: "other", label: "Outros" }]} onValueChange={(value) => setKind(value ?? "all")} /><span>{files.length} {files.length === 1 ? "arquivo" : "arquivos"}</span></div>
+      <DataTable label="Biblioteca de arquivos" rows={files} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !allFiles.length ? "loading" : "ready"} emptyText="Nenhum arquivo neste filtro." actions={(item) => <><TableIconAction label="Baixar arquivo" icon={<Icon name="download" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void download(item)} />{canWrite && <TableIconAction label="Excluir arquivo" icon={<Icon name="trash" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void remove(item)} />}</>} />
+    </>}
   </div>;
 }
 function fileKind(mime: string): string { if (mime.startsWith("image/")) return "image"; if (mime.startsWith("video/")) return "video"; if (mime.includes("pdf") || mime.includes("document") || mime.includes("sheet") || mime.startsWith("text/")) return "document"; return "other"; }
