@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
@@ -37,6 +37,7 @@ export async function clientLoader() {
 
 export default function Inbox() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const session = getSession();
   const canWrite = session?.capabilities.includes("inbox:write") ?? false;
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
@@ -47,7 +48,7 @@ export default function Inbox() {
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
   const { data: cannedReplies = [] } = useLiveQuery({ query: (q) => q.from({ replies: getCannedRepliesCollection() }).orderBy(({ replies: item }) => item.shortcut, "asc") });
   const { data: teams = [] } = useLiveQuery({ query: (q) => q.from({ teams: getTeamsCollection() }).orderBy(({ teams: item }) => item.name, "asc") });
-  const [filter, setFilter] = useState<InboxFilter>("open");
+  const filter = parseInboxFilter(searchParams.get("box"));
   const [mobileView, setMobileView] = useState<"list" | "thread">("list");
   const [now, setNow] = useState(() => new Date());
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -119,15 +120,9 @@ export default function Inbox() {
     <PageHeader title="Conversas" description="Acompanhe as conversas com sua equipe." actions={canWrite && canReadContacts ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button> : undefined} />
     <div className={styles.workspace} data-mobile-view={mobileView}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
-        <div className={styles.filters} aria-label="Filtrar conversas">
-        <FilterButton active={filter === "open"} count={conversations.filter((item) => item.status === "open").length} onClick={() => setFilter("open")}>Abertas</FilterButton>
-        <FilterButton active={filter === "mine"} count={conversations.filter((item) => item.status === "open" && item.assigneeId === session?.userId).length} onClick={() => setFilter("mine")}>Minhas conversas</FilterButton>
-        <FilterButton active={filter === "unassigned"} count={conversations.filter((item) => item.status === "open" && !item.assigneeId).length} onClick={() => setFilter("unassigned")}>Não atribuídas</FilterButton>
-        <FilterButton active={filter === "snoozed"} count={conversations.filter((item) => item.status === "snoozed").length} onClick={() => setFilter("snoozed")}>Adiadas</FilterButton>
-        <FilterButton active={filter === "closed"} count={conversations.filter((item) => item.status === "closed").length} onClick={() => setFilter("closed")}>Fechadas</FilterButton>
-        <FilterButton active={filter === "all"} count={conversations.length} onClick={() => setFilter("all")}>Todas</FilterButton>
-        {teams.filter((team) => !team.archivedAt).map((team) => <FilterButton key={team.id} active={filter === `team:${team.id}`} count={conversations.filter((item) => item.status === "open" && item.teamId === team.id).length} onClick={() => setFilter(`team:${team.id}`)}>{team.name}</FilterButton>)}
-        </div>
+        {teams.some((team) => !team.archivedAt) && <div className={styles.filters} aria-label="Filtrar por equipe">
+          {teams.filter((team) => !team.archivedAt).map((team) => <FilterButton key={team.id} active={filter === `team:${team.id}`} count={conversations.filter((item) => item.status === "open" && item.teamId === team.id).length} onClick={() => setSearchParams({ box: `team:${team.id}` })}>{team.name}</FilterButton>)}
+        </div>}
         <header><strong>{filterLabel(filter)}</strong><span>{filtered.length}</span></header>
         <div className={styles.listBody}>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
@@ -192,6 +187,11 @@ function FilterButton({ active, count, children, onClick }: { active: boolean; c
   return <Button variant="ghost" shape="rounded" className={styles.filterButton} data-selected={active || undefined} onClick={onClick}><span>{children}</span><b>{count}</b></Button>;
 }
 type InboxFilter = ConversationStatus | "all" | "mine" | "unassigned" | `team:${string}`;
+function parseInboxFilter(value: string | null): InboxFilter {
+  if (value === "all" || value === "mine" || value === "unassigned" || value === "closed" || value === "snoozed") return value;
+  if (value?.startsWith("team:")) return value as `team:${string}`;
+  return "open";
+}
 function matchesFilter(item: Conversation, filter: InboxFilter, currentUserId: string | null): boolean {
   if (filter === "all") return true;
   if (filter === "mine") return item.status === "open" && item.assigneeId === currentUserId;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { optimisticAutomation } from "@spark/data";
 import { ActionModal, Badge, Button, Card, Field, Input, Label, PageHeader, notify } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
@@ -12,12 +12,17 @@ export async function clientLoader() { await requireCapability("automations:read
 
 export default function Automations() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedStatus = searchParams.get("filter");
   const session = getSession();
   const collection = getAutomationsCollection();
   const { data: automations, isLoading } = useLiveQuery({ query: (q) => q.from({ automations: collection }).orderBy(({ automations: item }) => item.updatedAt, "desc") });
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
+  const visibleAutomations = selectedStatus === "active" || selectedStatus === "draft" || selectedStatus === "paused"
+    ? automations.filter((item) => item.status === selectedStatus)
+    : automations;
 
   async function create() {
     if (!session || !name.trim()) throw new Error("MISSING_NAME");
@@ -29,7 +34,7 @@ export default function Automations() {
   }
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Operação" title="Automações" description="Crie fluxos visuais com múltiplos gatilhos, condições, esperas e ações." actions={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
+    <PageHeader title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} description="Crie e acompanhe fluxos com vários gatilhos e etapas." actions={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
     <section className={styles.summary}>
       <Card title="Fluxos"><strong>{automations.length}</strong></Card>
       <Card title="Ativos"><strong>{automations.filter((item) => item.status === "active").length}</strong></Card>
@@ -39,8 +44,8 @@ export default function Automations() {
     <section className={styles.list} aria-label="Lista de automações">
       <header><span>Nome</span><span>Estrutura</span><span>Versão</span><span>Status</span><span /></header>
       {isLoading && !automations.length && <p className={styles.empty}>Carregando automações…</p>}
-      {!isLoading && !automations.length && <div className={styles.zero}><strong>Construa seu primeiro fluxo</strong><span>Escolha gatilhos e conecte cada etapa em um canvas visual.</span>{canWrite && <Button onClick={() => setModalOpen(true)}>Criar automação</Button>}</div>}
-      {automations.map((automation) => <article key={automation.id}>
+      {!isLoading && !visibleAutomations.length && <div className={styles.zero}><strong>{automations.length ? "Nenhum fluxo neste filtro" : "Construa seu primeiro fluxo"}</strong><span>{automations.length ? "Selecione outra situação no menu para ver seus fluxos." : "Escolha gatilhos e conecte cada etapa em um canvas visual."}</span>{canWrite && !automations.length && <Button onClick={() => setModalOpen(true)}>Criar automação</Button>}</div>}
+      {visibleAutomations.map((automation) => <article key={automation.id}>
         <div><strong>{automation.name}</strong><small>Atualizada {relativeTime(automation.updatedAt)}</small></div>
         <span>{automation.draftGraph.nodes.length} blocos · {automation.draftGraph.edges.length} conexões</span>
         <span>{automation.publishedVersion ? `v${automation.publishedVersion}` : "Ainda não publicada"}</span>

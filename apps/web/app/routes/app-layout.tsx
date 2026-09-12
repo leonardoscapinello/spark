@@ -9,21 +9,30 @@ type NavItem = { label: string; to: string; icon: IconName; capability?: Capabil
 type NavModule = { id: string; title: string; icon: IconName; to: string; sections: { title: string; items: NavItem[] }[] };
 
 const modules: NavModule[] = [
-  { id: "overview", title: "Início", icon: "grid", to: "/dashboard", sections: [
-    { title: "Visão geral", items: [{ label: "Painel", to: "/dashboard", icon: "chart" }] },
+  { id: "overview", title: "Relatórios", icon: "chart", to: "/dashboard", sections: [
+    { title: "Desempenho", items: [{ label: "Visão geral", to: "/dashboard", icon: "grid" }] },
   ] },
   { id: "leads", title: "Leads", icon: "user", to: "/", sections: [
-    { title: "Base de leads", items: [
-      { label: "Contatos", to: "/", icon: "team", capability: "contacts:read" },
+    { title: "Pessoas", items: [
+      { label: "Todos os contatos", to: "/", icon: "team", capability: "contacts:read" },
+      { label: "Novos leads", to: "/?status=new", icon: "user", capability: "contacts:read" },
+      { label: "Qualificados", to: "/?status=qualified", icon: "check", capability: "contacts:read" },
+      { label: "Clientes", to: "/?status=customer", icon: "star", capability: "contacts:read" },
+    ] },
+    { title: "Organizações", items: [
       { label: "Empresas", to: "/companies", icon: "building", capability: "companies:read" },
     ] },
-    { title: "Entrada", items: [
+    { title: "Dados", items: [
       { label: "Importar contatos", to: "/contacts/import", icon: "upload", capability: "contacts:write" },
     ] },
   ] },
   { id: "crm", title: "CRM", icon: "briefcase", to: "/deals", sections: [
-    { title: "Operação comercial", items: [
-      { label: "Negócios", to: "/deals", icon: "briefcase", capability: "deals:read" },
+    { title: "Negócios", items: [
+      { label: "Funil em aberto", to: "/deals", icon: "briefcase", capability: "deals:read" },
+      { label: "Ganhos", to: "/deals?status=won", icon: "check", capability: "deals:read" },
+      { label: "Perdidos", to: "/deals?status=lost", icon: "close", capability: "deals:read" },
+    ] },
+    { title: "Agenda", items: [
       { label: "Atividades", to: "/activities", icon: "calendar", capability: "activities:read" },
     ] },
     { title: "Oferta", items: [
@@ -31,22 +40,44 @@ const modules: NavModule[] = [
       { label: "Ofertas e descontos", to: "/catalog?view=discounts", icon: "bolt", capability: "catalog:read" },
     ] },
   ] },
-  { id: "inbox", title: "Conversas", icon: "inbox", to: "/inbox", sections: [
-    { title: "Atendimento", items: [
-      { label: "Conversas", to: "/inbox", icon: "message", capability: "inbox:read" },
+  { id: "inbox", title: "Atendimento", icon: "inbox", to: "/inbox", sections: [
+    { title: "Caixas", items: [
+      { label: "Abertas", to: "/inbox", icon: "inbox", capability: "inbox:read" },
+      { label: "Minhas conversas", to: "/inbox?box=mine", icon: "user", capability: "inbox:read" },
+      { label: "Não atribuídas", to: "/inbox?box=unassigned", icon: "team", capability: "inbox:read" },
+      { label: "Adiadas", to: "/inbox?box=snoozed", icon: "calendar", capability: "inbox:read" },
+      { label: "Fechadas", to: "/inbox?box=closed", icon: "check", capability: "inbox:read" },
+      { label: "Todas", to: "/inbox?box=all", icon: "grid", capability: "inbox:read" },
+    ] },
+    { title: "Ferramentas", items: [
       { label: "Respostas prontas", to: "/inbox/replies", icon: "file", capability: "inbox:read" },
     ] },
   ] },
   { id: "automations", title: "Automações", icon: "bolt", to: "/automations", sections: [
-    { title: "Fluxos", items: [{ label: "Automações", to: "/automations", icon: "bolt", capability: "automations:read" }] },
+    { title: "Fluxos", items: [
+      { label: "Todos os fluxos", to: "/automations", icon: "grid", capability: "automations:read" },
+      { label: "Ativos", to: "/automations?filter=active", icon: "bolt", capability: "automations:read" },
+      { label: "Rascunhos", to: "/automations?filter=draft", icon: "file", capability: "automations:read" },
+      { label: "Pausados", to: "/automations?filter=paused", icon: "calendar", capability: "automations:read" },
+    ] },
   ] },
   { id: "content", title: "Marketing", icon: "mail", to: "/campaigns", sections: [
-    { title: "Campanhas e canais", items: [
+    { title: "E-mail", items: [
       { label: "Campanhas", to: "/campaigns", icon: "mail", capability: "campaigns:read" },
+      { label: "Públicos", to: "/campaigns?view=audiences", icon: "team", capability: "campaigns:read" },
+    ] },
+    { title: "Captação", items: [
       { label: "Páginas", to: "/pages", icon: "file", capability: "pages:read" },
       { label: "Formulários", to: "/forms", icon: "file", capability: "forms:read" },
-      { label: "Redes sociais", to: "/social", icon: "chart", capability: "social:read" },
+    ] },
+    { title: "Biblioteca", items: [
       { label: "Arquivos", to: "/files", icon: "file", capability: "files:read" },
+    ] },
+  ] },
+  { id: "social", title: "Redes sociais", icon: "message", to: "/social", sections: [
+    { title: "Publicação", items: [
+      { label: "Publicações", to: "/social", icon: "calendar", capability: "social:read" },
+      { label: "Canais conectados", to: "/social?view=channels", icon: "team", capability: "social:read" },
     ] },
   ] },
   { id: "admin", title: "Administração", icon: "settings", to: "/admin/users", sections: [
@@ -70,21 +101,27 @@ const accountModule: NavModule = { id: "account", title: "Minha conta", icon: "u
 
 function pathMatches(pathname: string, to: string, search = "") {
   const [route, query] = to.split("?");
-  if (route === "/") return pathname === "/" || pathname.startsWith("/contacts/") && pathname !== "/contacts/import";
-  const routeMatches = pathname === route || pathname.startsWith(`${route}/`);
-  if (!query) return routeMatches;
-  const selectedView = new URLSearchParams(search).get("view") ?? "products";
-  return routeMatches && selectedView === new URLSearchParams(query).get("view");
+  const routeMatches = route === "/"
+    ? pathname === "/" || pathname.startsWith("/contacts/") && pathname !== "/contacts/import"
+    : route === "/inbox" ? pathname === route : pathname === route || pathname.startsWith(`${route}/`);
+  if (!query) {
+    const relevantParameter = ({ "/": "status", "/deals": "status", "/inbox": "box", "/automations": "filter", "/campaigns": "view", "/social": "view" } as Record<string, string>)[route ?? ""];
+    return routeMatches && (!relevantParameter || !new URLSearchParams(search).has(relevantParameter));
+  }
+  const expected = new URLSearchParams(query);
+  const actual = new URLSearchParams(search);
+  return routeMatches && [...expected.entries()].every(([key, value]) => actual.get(key) === value);
 }
 
 function moduleForPath(pathname: string): NavModule {
   if (pathname === "/security") return accountModule;
-  if (pathname.startsWith("/admin/") || pathname === "/integrations" || pathname === "/settings") return modules[6]!;
+  if (pathname.startsWith("/admin/") || pathname === "/integrations" || pathname === "/settings") return modules[7]!;
   if (pathname.startsWith("/contacts/") || pathname === "/" || pathname.startsWith("/companies")) return modules[1]!;
   if (["/deals", "/activities", "/catalog"].some((route) => pathMatches(pathname, route))) return modules[2]!;
   if (pathname.startsWith("/inbox")) return modules[3]!;
   if (pathname.startsWith("/automations")) return modules[4]!;
-  if (["/campaigns", "/pages", "/forms", "/social", "/files"].some((route) => pathMatches(pathname, route))) return modules[5]!;
+  if (["/campaigns", "/pages", "/forms", "/files"].some((route) => pathMatches(pathname, route))) return modules[5]!;
+  if (pathname.startsWith("/social")) return modules[6]!;
   return modules[0]!;
 }
 

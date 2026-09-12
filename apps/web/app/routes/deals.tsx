@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
@@ -46,6 +46,7 @@ async function createDefaultPipeline() {
 }
 
 export default function Deals() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const pipelinesCollection = getPipelinesCollection();
   const stagesCollection = getStagesCollection();
   const dealsCollection = getDealsCollection();
@@ -71,7 +72,7 @@ export default function Deals() {
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [renamingStage, setRenamingStage] = useState<string | null>(null);
   const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState("open");
+  const statusFilter = searchParams.get("status") ?? "open";
   const [dealModalOpen, setDealModalOpen] = useState(false);
   const [targetStageId, setTargetStageId] = useState<string | null>(null);
   const [dealName, setDealName] = useState("");
@@ -189,7 +190,7 @@ export default function Deals() {
       <PageHeader eyebrow="CRM" title={mainPipeline?.name ?? "Negócios"} description="Acompanhe valor, contato, responsável e avanço de cada oportunidade." actions={canWrite ? <Button onClick={() => openDealModal()}>Novo negócio</Button> : undefined} />
       <div className={styles.toolbar}>
         <Select label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
-        <Select label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setStatusFilter(value ?? "open")} />
+        <Select label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value && value !== "open" ? { status: value } : {})} />
       </div>
 
       <div className={styles.board}>

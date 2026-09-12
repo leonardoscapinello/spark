@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { socialControllerCreatePost, socialControllerSyncChannels } from "@spark/api-client";
 import {
@@ -40,6 +41,8 @@ export async function clientLoader() {
 }
 
 export default function Social() {
+  const [searchParams] = useSearchParams();
+  const channelView = searchParams.get("view") === "channels";
   const session = getSession();
   const canWrite = session?.capabilities.includes("social:write") ?? false;
   const { data: channels } = useLiveQuery({
@@ -139,23 +142,22 @@ export default function Social() {
   return (
     <div className={styles.page}>
       <PageHeader
-        eyebrow="Conteúdo"
-        title="Social"
-        description="Crie, agende e acompanhe publicações sem sair do Spark."
+        title={channelView ? "Canais conectados" : "Publicações"}
+        description={channelView ? "Contas disponíveis para publicar e acompanhar nas redes sociais." : "Crie, agende e acompanhe publicações em cada canal."}
         actions={
           canWrite ? (
             <div className={styles.headerActions}>
-              <Button variant="secondary" loading={syncing} onClick={() => void syncChannels()}>
+              {channelView && <Button variant="secondary" loading={syncing} onClick={() => void syncChannels()}>
                 Sincronizar canais
-              </Button>
-              <Button disabled={!activeChannels.length} onClick={() => setComposerOpen(true)}>
+              </Button>}
+              {!channelView && <Button disabled={!activeChannels.length} onClick={() => setComposerOpen(true)}>
                 Nova publicação
-              </Button>
+              </Button>}
             </div>
           ) : undefined
         }
       />
-      <section className={styles.channelGrid}>
+      {channelView ? <section className={styles.channelGrid}>
         {channels.map((channel) => (
           <Card key={channel.id} title={channel.name} description={serviceLabel(channel.service)}>
             <div className={styles.channelCard}>
@@ -175,12 +177,11 @@ export default function Social() {
         {!channels.length && (
           <Card title="Nenhum canal sincronizado">
             <div className={styles.empty}>
-              <span>Conecte o Buffer em Integrações e sincronize suas contas sociais.</span>
+              <span>Conecte um provedor em Integrações e sincronize suas contas sociais.</span>
             </div>
           </Card>
         )}
-      </section>
-      <DataTable
+      </section> : <DataTable
         label="Calendário de publicações"
         rows={posts}
         columns={columns}
@@ -188,7 +189,7 @@ export default function Social() {
         rowLabel={(post) => post.text}
         state={isLoading && !posts.length ? "loading" : "ready"}
         emptyText="Nenhuma publicação criada."
-      />
+      />}
       <ActionModal
         open={composerOpen}
         onOpenChange={setComposerOpen}
