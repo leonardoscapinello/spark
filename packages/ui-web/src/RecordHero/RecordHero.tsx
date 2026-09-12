@@ -27,11 +27,11 @@ export function RecordHero({ icon, avatarName, eyebrow, title, description, acti
       <div className={styles.copy}>
         {eyebrow && <span className={styles.context}>{eyebrow}</span>}
         <PageHeader title={title} {...(description ? { description } : {})} {...(actions ? { actions } : {})} />
+        {metrics.length > 0 && <dl className={styles.metrics}>{metrics.map((metric) => <div key={metric.label}>
+          <dt>{metric.label}</dt>
+          <dd data-tone={metric.tone}>{metric.value}</dd>
+        </div>)}</dl>}
       </div>
     </div>
-    {metrics.length > 0 && <dl className={styles.metrics}>{metrics.map((metric) => <div key={metric.label}>
-      <dt>{metric.label}</dt>
-      <dd data-tone={metric.tone}>{metric.value}</dd>
-    </div>)}</dl>}
   </section>;
 }
