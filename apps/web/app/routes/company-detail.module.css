@@ -36,8 +36,10 @@
 .empty { margin: 0; padding: var(--space-4) 0; }
 
 @media (max-width: 1200px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile history" "relations relations"; }
-  .relations { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); padding: var(--space-4) 0 0; }
+  .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile history" "relations history"; }
+  .profileColumn { padding-bottom: 0; }
+  .history { padding-right: 0; }
+  .relations { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); padding: 0 var(--space-4) var(--space-4) 0; }
 }
 
 @media (max-width: 760px) {

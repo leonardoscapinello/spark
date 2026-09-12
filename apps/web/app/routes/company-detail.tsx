@@ -115,7 +115,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
 
   return <div className={styles.page}>
     <BackLink render={<Link to="/companies" />}>Empresas</BackLink>
-    <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Empresa"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Contatos", value: linkedContacts.length }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }] : [])]} />
+    <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Contatos", value: linkedContacts.length }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }] : [])]} />
 
     <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <Card title="Editar empresa"><form className={styles.editForm} onSubmit={saveCompany}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
