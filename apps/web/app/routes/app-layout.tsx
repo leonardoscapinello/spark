@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type MouseEvent, type PointerEvent, useEffect, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import type { Capability } from "@spark/core";
 import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, Tooltip, type IconName, type QuickNavigationItem } from "@spark/ui-web";
@@ -170,6 +170,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const activeTopTab = useRef<HTMLAnchorElement>(null);
   const activeSidebarLink = useRef<HTMLAnchorElement>(null);
   const accountRailLink = useRef<HTMLDivElement>(null);
+  const pointerNavigation = useRef<string | null>(null);
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const [accountProfile, setAccountProfile] = useState(session);
   const [quickNavigationOpen, setQuickNavigationOpen] = useState(false);
@@ -225,6 +226,23 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     if (`${location.pathname}${location.search}` !== to) setNavigationIntent({ to, fromKey: location.key });
   }
 
+  function startLinkNavigation(event: PointerEvent<HTMLAnchorElement>, to: string) {
+    if (event.pointerType !== "mouse" || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (`${location.pathname}${location.search}` === to) return;
+    pointerNavigation.current = to;
+    markNavigation(to);
+    void navigate(to);
+  }
+
+  function finishLinkNavigation(event: MouseEvent<HTMLAnchorElement>, to: string) {
+    if (pointerNavigation.current === to && event.detail > 0) {
+      event.preventDefault();
+      pointerNavigation.current = null;
+      return;
+    }
+    if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) markNavigation(to);
+  }
+
   useEffect(() => {
     const active = activeRailLink.current;
     const modulesRail = railModulesRef.current;
@@ -253,7 +271,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
     const target = first?.to ?? module.to;
-    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={() => markNavigation(target)} onClick={() => setRailCollapsed(true)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={(event) => { startLinkNavigation(event, target); setRailCollapsed(true); }} onClick={(event) => { finishLinkNavigation(event, target); setRailCollapsed(true); }} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
@@ -278,7 +296,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
         {visibleSections.map((section) => {
-          const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return visibleSections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
@@ -294,7 +312,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} ref={topTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
+            <Link key={item.to} ref={topTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
