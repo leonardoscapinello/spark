@@ -74,8 +74,11 @@
 
 @media (max-width: 640px) {
   .page { padding: var(--space-4); }
-  .cardHeader { align-items: flex-start; }
-  .factor { align-items: flex-start; }
+  .cardHeader, .factor, .actions { align-items: flex-start; flex-wrap: wrap; }
+  .cardHeader > div, .factor > div { min-width: 0; }
+  .instructions { align-items: flex-start; }
+  .qrCode { max-width: 100%; height: auto; aspect-ratio: 1; }
+  .card > button { max-width: 100%; height: auto; min-height: var(--ui-controlMedium); white-space: normal; text-align: center; }
   .sessionDetails { grid-template-columns: 1fr; }
   .sessionActions { align-items: flex-start; flex-direction: column; }
 }
