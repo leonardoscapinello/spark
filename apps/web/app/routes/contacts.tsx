@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
 import { companyId as companyIdFactory, contactMatches, email as buildEmail, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
-import { ActionModal, Avatar, Button, DataTable, EmptyState, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
@@ -50,6 +50,8 @@ export default function Contacts() {
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [archiveView, setArchiveView] = useState(false);
   const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && ownerFilter === "all";
+  const viewTitle = archiveView ? "Contatos arquivados" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Base de contatos";
+  const viewDescription = archiveView ? "Registros fora da base ativa que você pode restaurar." : statusFilter === "all" ? "Pessoas e leads da organização, reunidos em uma só lista." : "Acompanhe os contatos desta etapa e abra cada perfil para ver o histórico.";
   const filteredContacts = contacts.filter((contact) =>
     (archiveView ? contact.deletedAt !== null : contact.deletedAt === null) &&
     contactMatches(contact, search) &&
@@ -61,16 +63,16 @@ export default function Contacts() {
     const companyNames = new Map(companies.map((company) => [company.id, company.name]));
     return [
     {
-      id: "company",
-      label: "Empresa",
-      cell: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "Empresa indisponível" : <span className={styles.muted}>Não vinculada</span>,
-      sortValue: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "" : "",
-    },
-    {
       id: "name",
       label: "Contato",
       cell: (contact) => <div className={styles.contactCell}><Avatar name={contact.name} /><div><strong>{contact.name}</strong><span className={styles.secondary}>{contact.email ?? "Sem e-mail"}</span></div></div>,
       sortValue: (contact) => contact.name,
+    },
+    {
+      id: "company",
+      label: "Empresa",
+      cell: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "Empresa indisponível" : <span className={styles.muted}>Não vinculada</span>,
+      sortValue: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "" : "",
     },
     {
       id: "phone",
@@ -142,16 +144,16 @@ export default function Contacts() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title={statusFilter === "new" ? "Novos leads" : statusFilter === "qualified" ? "Leads qualificados" : statusFilter === "customer" ? "Clientes" : "Contatos"} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Novo contato</Button></> : undefined} />
-    {!firstRun && <div className={styles.toolbar}>
-      <div className={styles.search}><Icon name="search" /><Input aria-label="Buscar contatos" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" /></div>
-      <div className={styles.filters}>
+    <PageHeader title={viewTitle} description={viewDescription} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Novo contato</Button></> : undefined} />
+    {!firstRun && <CollectionToolbar
+      search={<Input aria-label="Buscar contatos" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}
+      filters={<>
         <Select label="Filtrar por etapa" value={statusFilter} options={[{ value: "all", label: "Todas as etapas" }, ...LEAD_STATUS_OPTIONS]} onValueChange={(value) => setSearchParams(value && value !== "all" ? { status: value } : {})} />
         <Select label="Filtrar por responsável" value={ownerFilter} options={[{ value: "all", label: "Todos os responsáveis" }, { value: "unassigned", label: "Não atribuídos" }, ...users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))]} onValueChange={(value) => setOwnerFilter(value ?? "all")} />
-        <Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>
-      </div>
-      <p className={styles.count} role="status">{filteredContacts.length} {filteredContacts.length === 1 ? "contato" : "contatos"}</p>
-    </div>}
+      </>}
+      actions={<Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>}
+      count={<span role="status">{filteredContacts.length} {filteredContacts.length === 1 ? "contato" : "contatos"}</span>}
+    />}
     {firstRun ? <EmptyState icon="user" title="Seus contatos começam aqui" description="Cadastre um contato ou importe sua base para organizar os leads e acompanhar cada relacionamento." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Novo contato</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button> : undefined} /> : <DataTable
       label="Contatos da organização"
       rows={filteredContacts}
