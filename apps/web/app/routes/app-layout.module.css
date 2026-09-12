@@ -78,6 +78,7 @@
   margin-top: auto;
   width: 100%;
   padding-top: var(--space-2);
+  border-top: var(--ui-hairline) solid var(--color-line);
 }
 
 .accountLink {
@@ -110,7 +111,6 @@
   .rail:is(:hover, :focus-within) .accountMenu { width: 100%; align-items: stretch; }
   .rail:is(:hover, :focus-within) .railModules { overflow-y: auto; scrollbar-width: none; }
   .rail:is(:hover, :focus-within) .railModules::-webkit-scrollbar { display: none; }
-  .rail:is(:hover, :focus-within) .railBottom { border-top: var(--ui-hairline) solid var(--color-line); }
   .rail:is(:hover, :focus-within) .railLabel,
   .rail:is(:hover, :focus-within) .brandLabel { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
   .rail:is(:hover, :focus-within) .brandLabel { font-weight: var(--typography-weight-semibold); }
