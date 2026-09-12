@@ -1,9 +1,9 @@
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useMemo, useState } from "react";
 import { Link, redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/contact-import";
 import { contactsControllerImportCsv } from "@spark/api-client";
 import { contactId as contactIdFactory, parseContactCsv, type ParsedContactCsvRow } from "@spark/core";
-import { Button, DataTable, Field, Input, Label, PageHeader, notify, type TableColumn } from "@spark/ui-web";
+import { Button, DataTable, FilePicker, PageHeader, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./contact-import.module.css";
 
@@ -34,8 +34,7 @@ export default function ContactImport(_props: Route.ComponentProps) {
     { id: "status", label: "Situação", cell: (row) => <span className={styles.status} data-valid={row.errors.length === 0}>{row.errors.length ? row.errors.join(" · ") : "Pronto"}</span>, sortValue: (row) => row.errors.join(" ") },
   ];
 
-  async function selectFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.currentTarget.files?.[0];
+  async function selectFile(file: File | undefined) {
     setRows([]);
     setFileErrors([]);
     setFileName(file?.name ?? "");
@@ -81,17 +80,16 @@ export default function ContactImport(_props: Route.ComponentProps) {
     <Link to="/" className={styles.back}>← Contatos</Link>
     <PageHeader eyebrow="Gestão de leads" title="Importar contatos" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
 
-    <section className={styles.uploadCard}>
-      <Field>
-        <Label>Arquivo CSV</Label>
-        <Input type="file" accept=".csv,text/csv" onChange={(event) => void selectFile(event)} />
-      </Field>
+    <section className={styles.uploadSection} aria-label="Selecionar arquivo CSV">
+      <h2>Selecione o arquivo</h2>
+      <FilePicker accept=".csv,text/csv" multiple={false} label="Solte o CSV aqui ou escolha no computador" hint="Até 5 MB · até 2.000 contatos" onFiles={(files) => void selectFile(files[0])} />
       <p>Coluna obrigatória: <strong>Nome</strong>. Também reconhecemos E-mail, Telefone, Origem e Tags. Use vírgula ou ponto e vírgula.</p>
       {fileName && <span className={styles.fileName}>{fileName}</span>}
       {fileErrors.map((error) => <p key={error} className={styles.error} role="alert">{error}</p>)}
     </section>
 
     {rows.length > 0 && <>
+      <h2 className={styles.previewTitle}>Revise as linhas</h2>
       <div className={styles.summary}>
         <div><span>Linhas lidas</span><strong>{rows.length}</strong></div>
         <div><span>Prontas</span><strong>{validRows.length}</strong></div>
