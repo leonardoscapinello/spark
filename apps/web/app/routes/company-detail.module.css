@@ -13,18 +13,24 @@
 
 .details span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 
-.contentGrid { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.5fr) minmax(0, .95fr); align-items: start; gap: var(--space-3); min-width: 0; }
-.profileColumn, .relations { min-width: 0; }
-.details, .editForm, .relationCard { min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+.contentGrid { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.5fr) minmax(0, 1fr); grid-template-areas: "profile history relations"; align-items: start; min-width: 0; border-top: var(--ui-hairline) solid var(--color-line); }
+.profileColumn { grid-area: profile; min-width: 0; padding: var(--space-4) var(--space-4) var(--space-4) 0; border-right: var(--ui-hairline) solid var(--color-line); }
+.history { grid-area: history; min-width: 0; padding: var(--space-4); }
+.relations { grid-area: relations; min-width: 0; padding: var(--space-4) 0 var(--space-4) var(--space-4); border-left: var(--ui-hairline) solid var(--color-line); }
+.details, .editForm, .relationCard { min-width: 0; }
 .details { display: grid; }
+.details h2 { margin: 0; padding-block: var(--space-2); color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 .details > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-2); padding-block: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .details > div:last-child { border-bottom: 0; }
 .details strong, .details a { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: anywhere; }
 .wide { grid-column: 1 / -1; }
 .editForm { display: grid; gap: var(--space-4); }
 .formActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.relations { display: grid; gap: var(--space-3); }
-.relationCard { display: flex; flex-direction: column; gap: var(--space-4); }
+.relations { display: grid; }
+.relationCard { display: flex; flex-direction: column; gap: var(--space-4); padding-block: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.history { padding-block: var(--space-4); border-bottom: 0; }
+.relations .relationCard:first-child { padding-top: 0; }
+.relations .relationCard:last-child { border-bottom: 0; }
 .sectionHeader { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
 .sectionHeader h2 { margin: 0; font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 .sectionHeader p { margin: var(--space-1) 0 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
@@ -36,12 +42,16 @@
 .empty { margin: 0; padding: var(--space-4) 0; }
 
 @media (max-width: 1200px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); }
-  .contentGrid > section:last-child { grid-column: 1 / -1; }
+  .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile history" "relations relations"; }
+  .relations { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); padding: var(--space-4) 0 0; border-left: 0; border-top: var(--ui-hairline) solid var(--color-line); }
+  .relations .relationCard { padding-top: 0; border-bottom: 0; }
 }
 
 @media (max-width: 760px) {
   .page { padding: var(--space-4); }
-  .contentGrid { grid-template-columns: 1fr; }
-  .contentGrid > section:last-child { grid-column: 1; }
+  .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history" "relations"; }
+  .profileColumn, .history, .relations { padding: var(--space-4) 0; border-inline: 0; }
+  .history, .relations { border-top: var(--ui-hairline) solid var(--color-line); }
+  .relations { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .relations .relationCard { padding-block: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
 }

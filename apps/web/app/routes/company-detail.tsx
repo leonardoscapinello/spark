@@ -124,7 +124,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
       <Field><Label>Empresa controladora</Label><Select label="Empresa controladora" value={parentCompanyId || null} placeholder="Nenhuma" options={companies.filter((item) => item.id !== company.id && !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setParentCompanyId(value ?? "")} /></Field>
       <Field><Label>Endereço</Label><Textarea value={address} onChange={(event) => setAddress(event.target.value)} /></Field>
       <div className={styles.formActions}><Button type="submit" loading={saving}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
-    </form> : <section className={styles.details}>
+    </form> : <section className={styles.details}><h2>Detalhes da empresa</h2>
       <Info label="Responsável" value={owner?.name ?? "Não atribuído"} /><Info label="Empresa controladora" value={parent?.name ?? "Nenhuma"} />
       <Info label="Documento fiscal" value={company.taxId ?? "—"} /><Info label="Telefone" value={company.phone ? formatPhone(company.phone) : "—"} />
       <Info label="E-mail" value={company.email ?? "—"} /><Info label="Site" value={company.website ?? "—"} link={company.website} />
@@ -140,7 +140,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
       </section>
     </div>
 
-    <section className={styles.relationCard}>
+    <section className={`${styles.relationCard} ${styles.history}`}>
       <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas nesta empresa e em seus vínculos comerciais.</p></div></div>
       <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações desta empresa aparecerão aqui." />
     </section>
