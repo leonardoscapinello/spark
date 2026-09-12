@@ -16,7 +16,7 @@ const modules: NavModule[] = [
   ] },
   { id: "leads", title: "Leads", icon: "user", to: "/", sections: [
     { title: "Pessoas", items: [
-      { label: "Pessoas", to: "/", icon: "team", capability: "contacts:read" },
+      { label: "Todas as pessoas", to: "/", icon: "team", capability: "contacts:read" },
       { label: "Novos leads", to: "/?status=new", icon: "user", capability: "contacts:read" },
       { label: "Qualificados", to: "/?status=qualified", icon: "check", capability: "contacts:read" },
       { label: "Clientes", to: "/?status=customer", icon: "star", capability: "contacts:read" },
@@ -128,7 +128,6 @@ function moduleForPath(pathname: string): NavModule {
 }
 
 const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
-  leads: ["Pessoas", "Empresas"],
   crm: ["Negócios", "Atividades", "Produtos", "Ofertas e descontos"],
   automations: ["Todos os fluxos", "Ativos", "Rascunhos", "Pausados"],
   content: ["Campanhas", "Públicos", "Páginas", "Formulários", "Arquivos"],
@@ -136,7 +135,6 @@ const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
 };
 
 function usesTopNavigation(moduleId: string, pathname: string) {
-  if (moduleId === "leads") return pathname === "/" || pathname === "/companies";
   if (moduleId === "crm") return pathname === "/deals" || pathname === "/activities" || pathname === "/catalog";
   if (moduleId === "automations") return pathname === "/automations";
   if (moduleId === "content") return ["/campaigns", "/pages", "/forms", "/files"].includes(pathname);
@@ -201,7 +199,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     (item.to === "/" && location.pathname === "/") ||
     (item.to === "/deals" && location.pathname === "/deals") ||
     pathMatches(location.pathname, item.to, location.search);
-  const showSidebar = current.id === "admin";
+  const showSidebar = current.id === "admin" || current.id === "leads";
   const visibleSections = current.sections.map((section) => ({
     title: section.title,
     items: section.items.filter((item) => allowed(item.capability)),
