@@ -12,6 +12,7 @@ export default mergeConfig(
       css: true,
       pool: "threads",
       maxWorkers: 1,
+      isolate: false,
       testTimeout: 10000,
     },
   }),
