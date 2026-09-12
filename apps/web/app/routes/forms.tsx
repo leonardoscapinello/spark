@@ -62,10 +62,10 @@ export default function Forms() {
 
   return <div className={styles.page}>
     <PageHeader icon="file" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
-    {firstRun && <EmptyState variant="onboarding" icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
-      {!firstRun && <><CollectionToolbar
+    {firstRun && <EmptyState variant="featured" icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
+      <><CollectionToolbar
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}
-        filters={<Select label="Filtrar formulários por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicados" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
+        filters={<Select appearance="filter" label="Filtrar formulários por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicados" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "formulário" : "formulários"}`}
         actions={<ViewSwitcher label="Visualização dos formulários" value={layout} onValueChange={setLayout} />}
       />
@@ -73,7 +73,7 @@ export default function Forms() {
         {isLoading && !forms.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhum formulário encontrado.</p>}
         {filtered.map((item) => <Card key={item.id} title={item.name} description={item.title} actions={formStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizado {formatDate(item.updatedAt)}</span><div>{formActions(item)}</div></div>}><div className={styles.cardMeta}><span><Icon name="file" />{item.fields.length} {item.fields.length === 1 ? "campo" : "campos"}</span><span>{counts.get(item.id) ?? 0} {counts.get(item.id) === 1 ? "resposta" : "respostas"}</span></div></Card>)}
-      </div>}</>}
+      </div>}</>
     <ActionModal open={open} onOpenChange={setOpen} title="Novo formulário" confirmLabel="Criar e editar" errorText="Informe o nome interno e o título público." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Captação do site" onChange={(event) => setName(event.target.value)} /></Field>
