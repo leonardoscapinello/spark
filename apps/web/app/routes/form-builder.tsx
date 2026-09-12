@@ -45,6 +45,8 @@ export default function FormBuilder() {
   const [submitLabel, setSubmitLabel] = useState("Enviar");
   const [successMessage, setSuccessMessage] = useState("");
   const [fields, setFields] = useState<LeadFormField[]>([]);
+  const [previewValues, setPreviewValues] = useState<Record<string, string | boolean>>({});
+  const [previewSubmitted, setPreviewSubmitted] = useState(false);
   const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
   const [saving, setSaving] = useState(false);
   useEffect(() => {
@@ -129,6 +131,10 @@ export default function FormBuilder() {
     }
   }
   const publicUrl = `/f/${form.publicKey}`;
+  function resetPreview() {
+    setPreviewValues({});
+    setPreviewSubmitted(false);
+  }
   return (
     <div className={styles.page}>
       <BackLink render={<Link to="/forms" />}>Formulários</BackLink>
@@ -338,16 +344,19 @@ export default function FormBuilder() {
           </section>
         </div>
         <aside className={styles.preview}>
-          <span>Prévia</span>
+          <div className={styles.previewHeader}>
+            <div><strong>Prévia interativa</strong><span>As respostas nesta prévia não são enviadas.</span></div>
+            {(previewSubmitted || Object.keys(previewValues).length > 0) && <Button size="sm" variant="ghost" onClick={resetPreview}>Reiniciar</Button>}
+          </div>
           <LeadFormRenderer
             title={title || "Título do formulário"}
             description={description}
             fields={fields}
             submitLabel={submitLabel || "Enviar"}
-            values={{}}
-            onValueChange={() => undefined}
-            onSubmit={() => undefined}
-            disabled
+            values={previewValues}
+            onValueChange={(id, value) => setPreviewValues((current) => ({ ...current, [id]: value }))}
+            onSubmit={() => setPreviewSubmitted(true)}
+            successMessage={previewSubmitted ? successMessage || "Sua resposta foi recebida." : null}
           />
         </aside>
       </div>
