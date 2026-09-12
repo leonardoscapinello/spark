@@ -24,7 +24,7 @@ export default function Pages() {
   const [slug, setSlug] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const firstRun = !isLoading && pages.length === 0;
+  const firstRun = !isLoading && pages.length === 0 && !search && status === "all";
   const term = search.trim().toLocaleLowerCase("pt-BR");
   const filtered = pages.filter((page) => (status === "all" || page.status === status)
     && (!term || page.name.toLocaleLowerCase("pt-BR").includes(term) || page.slug.toLocaleLowerCase("pt-BR").includes(term)));
@@ -44,14 +44,13 @@ export default function Pages() {
 
   return <div className={styles.page}>
     <PageHeader title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
-    {firstRun ? <EmptyState variant="onboarding" icon="file" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} /> : <>
+    {firstRun && <EmptyState variant="onboarding" icon="file" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
       <CollectionToolbar
         search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select label="Filtrar páginas por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "página" : "páginas"}`}
       />
-      <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText="Nenhuma página encontrada." actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} />
-    </>}
+      <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText={firstRun ? "As páginas aparecerão aqui após a primeira criação." : "Nenhuma página encontrada."} actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} />
     <ActionModal open={open} onOpenChange={setOpen} title="Nova página" confirmLabel="Criar e editar" errorText="Informe nome e endereço válidos." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Landing de campanha" onChange={(event) => { setName(event.target.value); if (!slug) setSlug(toSlug(event.target.value)); }} /></Field>
