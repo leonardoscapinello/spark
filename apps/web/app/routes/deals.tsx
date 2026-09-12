@@ -174,7 +174,7 @@ export default function Deals() {
   if (!mainPipeline) {
     return (
       <div className={styles.pagina}>
-        <PageHeader title="Negócios" />
+        <PageHeader icon="briefcase" title="Negócios" />
         {isLoadingPipelines
           ? <div className={styles.board} role="status" aria-label="Carregando funis">{[0, 1, 2].map((column) => <div key={column} className={styles.coluna}><Skeleton className={styles.loadingTitle} /><Skeleton className={styles.loadingValue} /><Skeleton className={styles.loadingCard} /><Skeleton className={styles.loadingCard} /></div>)}</div>
           : <EmptyState variant="onboarding" icon="briefcase" title="Organize seu primeiro funil" description="Defina as etapas da venda para acompanhar cada oportunidade e o valor da negociação." action={canManagePipeline ? <Button onClick={() => { setPipelineName("Funil de Vendas"); setPipelineModalOpen(true); }}>Criar funil</Button> : undefined} />}
@@ -187,7 +187,7 @@ export default function Deals() {
 
   return (
     <div className={styles.pagina}>
-      <PageHeader title={mainPipeline?.name ?? "Negócios"} description="Acompanhe valor, contato, responsável e avanço de cada oportunidade." actions={<>{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
+      <PageHeader icon="briefcase" title={mainPipeline?.name ?? "Negócios"} description="Acompanhe valor, contato, responsável e avanço de cada oportunidade." actions={<>{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
       <div className={styles.toolbar}>
         <Select label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
         <Select label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value && value !== "open" ? { status: value } : {})} />

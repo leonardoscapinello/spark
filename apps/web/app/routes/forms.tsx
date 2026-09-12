@@ -58,7 +58,7 @@ export default function Forms() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
+    <PageHeader icon="file" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
     {firstRun && <EmptyState variant="onboarding" icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
       <CollectionToolbar
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}

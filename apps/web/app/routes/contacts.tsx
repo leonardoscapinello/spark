@@ -144,7 +144,7 @@ export default function Contacts() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title={viewTitle} description={viewDescription} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Novo contato</Button></> : undefined} />
+    <PageHeader icon="user" title={viewTitle} description={viewDescription} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Novo contato</Button></> : undefined} />
     {firstRun && <EmptyState variant="onboarding" icon="user" title="Comece com seus contatos" description="Cadastre uma pessoa ou importe sua base para reunir o histórico de relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Novo contato</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button> : undefined} />}
     <CollectionToolbar
       search={<Input aria-label="Buscar contatos" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}

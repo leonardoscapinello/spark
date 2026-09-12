@@ -100,7 +100,7 @@ export default function Companies() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} description={visibility === "archived" ? "Organizações fora da base ativa que você pode restaurar." : "Organize os contatos por empresa e acompanhe seus negócios."} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
+    <PageHeader icon="building" title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} description={visibility === "archived" ? "Organizações fora da base ativa que você pode restaurar." : "Organize os contatos por empresa e acompanhe seus negócios."} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
     {firstRun && <EmptyState variant="onboarding" icon="building" title="Cadastre sua primeira empresa" description="Vincule contatos e negócios à organização para acompanhar o relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
     <CollectionToolbar
       search={<Input aria-label="Buscar empresas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />}

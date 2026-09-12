@@ -59,7 +59,7 @@ export default function Dashboard() {
   ];
 
   return <div className={styles.page}>
-    <PageHeader title="Visão geral" actions={<div className={styles.period}><Select label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>} />
+    <PageHeader icon="chart" title="Visão geral" actions={<div className={styles.period}><Select label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>} />
     {!loading && !hasRecords && <EmptyState variant="onboarding" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre contatos, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canReadContacts ? <Button onClick={() => void navigate("/")}>Ir para Leads</Button> : undefined} />}
     <div className={styles.sectionHeading}><h2>Desempenho comercial</h2><span>Indicadores do período selecionado</span></div>
     <DashboardGrid metrics>

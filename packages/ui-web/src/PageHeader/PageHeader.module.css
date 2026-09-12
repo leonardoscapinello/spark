@@ -12,6 +12,10 @@
   min-width: 0;
 }
 
+.titleRow { display: flex; align-items: center; gap: var(--space-3); }
+.titleIcon { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); color: var(--color-ink); }
+.copy[data-icon] .description { margin-inline-start: calc(var(--ui-icon) + var(--space-3)); }
+
 .header h1 {
   margin: 0;
   font-family: var(--typography-fontFamily-body);

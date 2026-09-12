@@ -101,7 +101,7 @@ export default function Activities() {
   function submit(event: FormEvent) { event.preventDefault(); void createActivity().catch(() => undefined); }
 
   return <div className={styles.page}>
-    <PageHeader title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canCreate && contacts.length > 0 && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
+    <PageHeader icon="calendar" title="Atividades" description="Organize todos os próximos contatos da equipe em uma única fila." actions={canCreate && contacts.length > 0 && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
     {!firstRun && <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="ghost" shape="rounded" className={styles.periodOption} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<strong>{option.count}</strong></Button>)}</div>}
     {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar atividades" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar atividade ou contato" />}

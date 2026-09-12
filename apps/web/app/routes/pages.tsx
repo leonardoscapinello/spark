@@ -43,7 +43,7 @@ export default function Pages() {
   }
 
   return <div className={styles.page}>
-    <PageHeader title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
+    <PageHeader icon="file" title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
     {firstRun && <EmptyState variant="onboarding" icon="file" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
       <CollectionToolbar
         search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} />}
