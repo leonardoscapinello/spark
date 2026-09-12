@@ -148,9 +148,10 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
             }
           >
             <ul className={styles.capabilityList}>
-              {group.capabilities.map((capability) => (
+              {group.capabilities.slice(0, 4).map((capability) => (
                 <li key={capability}>{CAPABILITY_LABELS[capability as Capability]}</li>
               ))}
+              {group.capabilities.length > 4 && <li className={styles.more}>Mais {group.capabilities.length - 4} permissões</li>}
             </ul>
           </Card>
         ))}
