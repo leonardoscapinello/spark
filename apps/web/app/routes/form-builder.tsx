@@ -4,7 +4,6 @@ import { useNavigate, useParams } from "react-router";
 import { formsControllerStatus, formsControllerUpdate } from "@spark/api-client";
 import type { LeadFormField } from "@spark/core";
 import {
-  Badge,
   Button,
   EmptyState,
   Field,
@@ -13,6 +12,7 @@ import {
   Label,
   LeadFormRenderer,
   PageHeader,
+  PublicationStatus,
   SegmentedControl,
   Select,
   Skeleton,
@@ -127,14 +127,6 @@ export default function FormBuilder() {
     }
   }
   const publicUrl = `${window.location.origin}/f/${form.publicKey}`;
-  async function copyPublicLink() {
-    try {
-      await navigator.clipboard.writeText(publicUrl);
-      notify({ title: "Link copiado", tone: "success" });
-    } catch {
-      notify({ title: "Não foi possível copiar o link", tone: "error" });
-    }
-  }
   return (
     <div className={styles.page}>
       <PageHeader
@@ -167,13 +159,7 @@ export default function FormBuilder() {
           </div>
         }
       />
-      <div className={styles.status}>
-        <Badge tone={form.status === "published" ? "success" : "neutral"}>
-          {form.status === "published" ? "Publicado" : "Rascunho"}
-        </Badge>
-        <span>{form.status === "published" ? "Disponível para visitantes" : "Visível apenas para sua equipe"}</span>
-        {form.status === "published" && <Button size="sm" variant="ghost" onClick={() => void copyPublicLink()}>Copiar link</Button>}
-      </div>
+      <PublicationStatus published={form.status === "published"} publicUrl={publicUrl} />
       <SegmentedControl className={styles.mobileViewSwitch} label="Visualização do formulário" value={mobileView} options={[{ value: "editor", label: "Editar" }, { value: "preview", label: "Prévia" }]} onValueChange={setMobileView} />
       <div className={styles.workspace} data-mobile-view={mobileView}>
         <div className={styles.editor}>
