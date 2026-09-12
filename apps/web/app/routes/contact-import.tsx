@@ -3,7 +3,7 @@ import { Link, redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/contact-import";
 import { contactsControllerImportCsv } from "@spark/api-client";
 import { contactId as contactIdFactory, parseContactCsv, type ParsedContactCsvRow } from "@spark/core";
-import { Badge, Button, DataTable, FilePicker, PageHeader, notify, type TableColumn } from "@spark/ui-web";
+import { BackLink, Badge, Button, DataTable, FilePicker, PageHeader, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./contact-import.module.css";
 
@@ -77,7 +77,7 @@ export default function ContactImport(_props: Route.ComponentProps) {
   }
 
   return <div className={styles.page}>
-    <Link to="/" className={styles.back}>← Contatos</Link>
+    <BackLink render={<Link to="/" />}>Contatos</BackLink>
     <PageHeader icon="upload" title="Importar contatos" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
 
     <section className={styles.uploadSection} aria-label="Selecionar arquivo CSV">
