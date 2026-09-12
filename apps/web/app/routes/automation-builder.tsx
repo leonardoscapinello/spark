@@ -32,6 +32,7 @@ export default function AutomationBuilder() {
   const automation = automations.find((item) => item.id === automationId) ?? null;
   const [name, setName] = useState("");
   const [graph, setGraph] = useState<AutomationGraph>({ nodes: [], edges: [] });
+  const [zoom, setZoom] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<"closed" | "palette" | "inspector">("closed");
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
@@ -56,13 +57,13 @@ export default function AutomationBuilder() {
     function move(event: PointerEvent) {
       const current = drag.current;
       if (!current) return;
-      setGraph((value) => ({ ...value, nodes: value.nodes.map((node) => node.id === current.id ? { ...node, position: { x: Math.max(0, current.originX + event.clientX - current.startX), y: Math.max(0, current.originY + event.clientY - current.startY) } } : node) }));
+      setGraph((value) => ({ ...value, nodes: value.nodes.map((node) => node.id === current.id ? { ...node, position: { x: Math.max(0, current.originX + (event.clientX - current.startX) / zoom), y: Math.max(0, current.originY + (event.clientY - current.startY) / zoom) } } : node) }));
     }
     function end() { drag.current = null; }
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);
     return () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", end); };
-  }, []);
+  }, [zoom]);
 
   const selected = graph.nodes.find((node) => node.id === selectedId) ?? null;
   const issues = useMemo(() => validateAutomationGraph(graph), [graph]);
@@ -159,8 +160,10 @@ export default function AutomationBuilder() {
           {canWrite && <Button variant="ghost" className={styles.deleteButton} onClick={removeSelected}>Excluir bloco</Button>}
         </div>}
       </aside>}
+      <div className={styles.canvasViewport}>
       <main className={styles.canvas} onPointerDown={() => { setSelectedId(null); setPanelMode("closed"); }}>
         {canWrite && <Button iconOnly size="lg" className={styles.canvasAdd} aria-label="Adicionar bloco" onPointerDown={(event) => event.stopPropagation()} onClick={() => setPanelMode("palette")}><Icon name="plus" /></Button>}
+        <div className={styles.canvasStage} style={{ transform: `scale(${zoom})` }}>
         <svg className={styles.edges} aria-hidden="true">{graph.edges.map((edge) => <EdgeLine key={edge.id} edge={edge} nodes={graph.nodes} />)}</svg>
         {graph.nodes.length === 0 && <div className={styles.canvasEmpty}><strong>O fluxo começa com um gatilho</strong><span>Adicione o primeiro bloco para definir quando a automação começa.</span><Button disabled={!canWrite} onClick={(event) => { event.stopPropagation(); addNode("trigger"); }}>Adicionar gatilho</Button></div>}
         {graph.nodes.map((node) => <article key={node.id} className={styles.node} data-type={node.type} data-selected={selectedId === node.id || undefined} style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }} onPointerDown={(event) => { event.stopPropagation(); startDrag(event, node); }}>
@@ -168,7 +171,14 @@ export default function AutomationBuilder() {
           <strong>{node.data.label}</strong><p>{node.data.description || "Sem descrição"}</p>
           {canWrite && <footer><Button size="sm" variant={connectingFrom === node.id ? "raised" : "ghost"} onPointerDown={(event) => event.stopPropagation()} onClick={() => connect(node.id)}>{connectingFrom && connectingFrom !== node.id ? "Ligar aqui" : connectingFrom === node.id ? "Cancelar" : "Conectar"}</Button></footer>}
         </article>)}
+        </div>
       </main>
+      <div className={styles.zoomControls} role="group" aria-label="Zoom do fluxo">
+        <Button iconOnly size="sm" variant="ghost" aria-label="Reduzir zoom" disabled={zoom <= 0.5} onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}><Icon name="minus" /></Button>
+        <Button size="sm" variant="ghost" aria-label="Voltar ao zoom de 100%" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</Button>
+        <Button iconOnly size="sm" variant="ghost" aria-label="Ampliar zoom" disabled={zoom >= 1.5} onClick={() => setZoom((value) => Math.min(1.5, value + 0.25))}><Icon name="plus" /></Button>
+      </div>
+      </div>
     </div>
     <ActionModal open={runModalOpen} onOpenChange={setRunModalOpen} title="Executar automação" confirmLabel="Iniciar execução" errorText="Selecione um contato." onConfirm={startRun}><Field><Label>Contato</Label><SearchSelect label="Contato da execução" searchPlacement="dropdown" placeholder="Buscar contato" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={runContact} onValueChange={setRunContact} /></Field></ActionModal>
   </div>;

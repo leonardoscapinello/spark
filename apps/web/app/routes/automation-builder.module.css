@@ -26,7 +26,11 @@
 .validation strong { font-size: var(--typography-size-sm); }
 .validation span { color: var(--color-statusDanger); font-size: var(--typography-size-xs); line-height: var(--typography-lineHeight-body); }
 .validation span[data-valid="true"] { color: var(--color-statusSuccess); }
-.canvas { position: relative; min-width: 0; min-height: 0; overflow: auto; background: var(--ui-automationCanvas); }
+.canvasViewport { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.canvas { position: relative; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: auto; background: var(--ui-automationCanvas); }
+.canvasStage { position: relative; width: 100%; height: 100%; transform-origin: top left; }
+.zoomControls { position: absolute; z-index: 4; inset-block-end: var(--space-3); inset-inline-end: var(--space-3); display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
+.zoomControls > :nth-child(2) { min-width: var(--space-12); font-variant-numeric: tabular-nums; }
 .canvasAdd { position: sticky; z-index: 3; inset-block-start: var(--space-5); inset-inline-start: calc(100% - var(--space-16)); width: var(--space-12); height: var(--space-12); background: var(--color-accent); color: var(--ui-buttonInk); box-shadow: var(--ui-panelShadow); }
 .canvasAdd:hover:not([data-disabled]) { background: var(--color-accent); }
 .edges { position: absolute; inset: var(--space-0); width: 100%; height: 100%; overflow: visible; pointer-events: none; }
