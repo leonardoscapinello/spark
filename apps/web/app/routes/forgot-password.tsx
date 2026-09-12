@@ -4,6 +4,12 @@ import { Button, Field, Input, Label } from "@spark/ui-web";
 import { requestPasswordReset } from "../lib/auth.client";
 import styles from "./login.module.css";
 
+export async function clientLoader() { return null; }
+
+export function HydrateFallback() {
+  return <div className={styles.card} role="status">Preparando recuperação de acesso…</div>;
+}
+
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const email = String(formData.get("email") ?? "").trim();

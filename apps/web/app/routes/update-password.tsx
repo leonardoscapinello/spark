@@ -1,8 +1,16 @@
-import { Form, redirect, useNavigation } from "react-router";
+import { Form, Link, redirect, useNavigation } from "react-router";
 import type { Route } from "./+types/update-password";
 import { Button, Field, Label, PasswordInput } from "@spark/ui-web";
-import { signOut, updatePassword } from "../lib/auth.client";
+import { hasPasswordRecoverySession, updatePassword } from "../lib/auth.client";
 import styles from "./login.module.css";
+
+export async function clientLoader() {
+  return { ready: await hasPasswordRecoverySession() };
+}
+
+export function HydrateFallback() {
+  return <div className={styles.card} role="status">Preparando recuperação de acesso…</div>;
+}
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
@@ -14,16 +22,20 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   try {
     await updatePassword(password);
-    await signOut();
     return redirect("/login?password=updated");
   } catch {
     return { error: "O link expirou ou não é válido. Solicite uma nova recuperação." };
   }
 }
 
-export default function UpdatePassword({ actionData }: Route.ComponentProps) {
+export default function UpdatePassword({ actionData, loaderData }: Route.ComponentProps) {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
+  if (!loaderData.ready) return <div className={styles.card}>
+    <div className={styles.cardHeader}><h2>Link inválido ou expirado</h2><p>Solicite um novo link para criar sua senha.</p></div>
+    <Link to="/forgot-password" className={styles.returnLink}>Solicitar novo link</Link>
+  </div>;
 
   return (
     <Form method="post" className={styles.card}>

@@ -1,6 +1,7 @@
 import type { Capability, OrgId } from "@spark/core";
 import { meControllerMe, setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client";
-import { getSupabaseClient } from "./supabase.client";
+import { getImplicitRecoveryClient, getSupabaseClient } from "./supabase.client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const PROFILE_KEY = "leonardo_app_profile";
 
@@ -199,8 +200,23 @@ export async function requestPasswordReset(email: string): Promise<void> {
 }
 
 export async function updatePassword(password: string): Promise<void> {
-  const { error } = await getSupabaseClient().auth.updateUser({ password });
+  const provider = await passwordRecoveryProvider();
+  if (!provider) throw new Error("PASSWORD_RECOVERY_SESSION_MISSING");
+  const { error } = await provider.auth.updateUser({ password });
   if (error) throw new Error("PASSWORD_UPDATE_FAILED");
+  await provider.auth.signOut({ scope: "local" });
+}
+
+export async function hasPasswordRecoverySession(): Promise<boolean> {
+  return Boolean(await passwordRecoveryProvider());
+}
+
+async function passwordRecoveryProvider(): Promise<SupabaseClient | null> {
+  const recovery = getImplicitRecoveryClient();
+  const { data: implicit } = await recovery.auth.getSession();
+  const provider = implicit.session ? recovery : getSupabaseClient();
+  const { data: session, error: sessionError } = await provider.auth.getSession();
+  return sessionError || !session.session ? null : provider;
 }
 
 export async function signOut(): Promise<void> {
