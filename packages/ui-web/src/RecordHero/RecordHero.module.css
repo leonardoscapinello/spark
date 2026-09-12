@@ -16,6 +16,7 @@
 .metrics dd[data-tone="danger"] { color: var(--color-statusDanger); }
 @media (max-width: 760px) {
   .pageHeader { margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) 0; padding: var(--space-3) var(--space-4) 0; }
+  .pageHeader .root { min-height: 0; padding-block: var(--space-3) var(--space-4); }
   .root { min-height: 0; padding-block: var(--space-3) var(--space-4); }
   .identity { align-items: flex-start; }
 }
