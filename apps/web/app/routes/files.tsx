@@ -13,12 +13,12 @@ export async function clientLoader() { await requireCapability("files:read"); vo
 export default function Files() {
   const session = getSession(); const canWrite = session?.capabilities.includes("files:write") ?? false;
   const { data: allFiles, isLoading } = useLiveQuery({ query: (q) => q.from({ files: getFilesCollection() }).orderBy(({ files: item }) => item.createdAt, "desc") });
-  const [search, setSearch] = useState(""); const [kind, setKind] = useState("all"); const [status, setStatus] = useState("all"); const [layout, setLayout] = useState<"cards" | "table">("cards"); const [uploading, setUploading] = useState<string | null>(null); const [busyId, setBusyId] = useState<string | null>(null);
+  const [search, setSearch] = useState(""); const [kind, setKind] = useState("all"); const [status, setStatus] = useState("all"); const [layout, setLayout] = useState<"cards" | "table">("table"); const [uploading, setUploading] = useState<string | null>(null); const [busyId, setBusyId] = useState<string | null>(null);
   const hasFiles = allFiles.some((item) => !item.deletedAt);
   const firstRun = !hasFiles && !isLoading && !search && kind === "all" && status === "all";
   const files = useMemo(() => allFiles.filter((item) => !item.deletedAt && (kind === "all" || fileKind(item.mimeType) === kind) && (status === "all" || item.status === status) && (!search.trim() || item.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")))), [allFiles, kind, search, status]);
   const columns: TableColumn<StoredFile>[] = [
-    { id: "name", label: "Arquivo", cell: (item) => <div className={styles.fileName}><span className={styles.fileIcon}><Icon name="file" /></span><span><strong>{item.name}</strong><small>{item.mimeType}</small></span></div>, sortValue: (item) => item.name },
+    { id: "name", label: "Arquivo", cell: (item) => <div className={styles.fileName}><span className={styles.fileIcon}><Icon name={fileKind(item.mimeType) === "image" ? "image" : "file"} /></span><span><strong>{item.name}</strong><small>{item.mimeType}</small></span></div>, sortValue: (item) => item.name },
     { id: "folder", label: "Pasta", cell: (item) => item.folder ?? "Geral", sortValue: (item) => item.folder ?? "" },
     { id: "size", label: "Tamanho", cell: (item) => formatBytes(item.sizeBytes), sortValue: (item) => item.sizeBytes },
     { id: "status", label: "Status", cell: (item) => fileStatusBadge(item), sortValue: (item) => item.status },
@@ -43,7 +43,7 @@ export default function Files() {
       {layout === "table" ? <DataTable label="Biblioteca de arquivos" rows={files} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !allFiles.length ? "loading" : "ready"} emptyText="Nenhum arquivo neste filtro." actions={fileActions} /> : <div className={styles.fileGrid} aria-label="Biblioteca de arquivos">
         {isLoading && !allFiles.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
         {!isLoading && files.length === 0 && <p className={styles.empty}>Nenhum arquivo neste filtro.</p>}
-        {files.map((item) => <Card key={item.id} title={item.name} description={`${item.folder ?? "Geral"} · ${formatBytes(item.sizeBytes)}`} actions={fileStatusBadge(item)} footer={<div className={styles.cardFooter}><span>{formatDate(item.createdAt)}</span><div>{fileActions(item)}</div></div>}><div className={styles.cardBody}><span className={styles.fileIcon}><Icon name="file" /></span><span>{fileTypeLabel(item.mimeType)}</span></div></Card>)}
+        {files.map((item) => <Card key={item.id} title={item.name} description={`${item.folder ?? "Geral"} · ${formatBytes(item.sizeBytes)}`} actions={fileStatusBadge(item)} footer={<div className={styles.cardFooter}><span>{formatDate(item.createdAt)}</span><div>{fileActions(item)}</div></div>}><div className={styles.cardBody}><span className={styles.fileIcon}><Icon name={fileKind(item.mimeType) === "image" ? "image" : "file"} /></span><span>{fileTypeLabel(item.mimeType)}</span></div></Card>)}
       </div>}</>
   </div>;
 }
