@@ -220,7 +220,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       metrics={[{ label: "Valor", value: formatBRL(syncedAmount(deal.amount)) }, { label: "Situação", value: statusLabel(deal.status), ...(deal.status === "won" ? { tone: "success" as const } : deal.status === "lost" ? { tone: "danger" as const } : {}) }, { label: "Previsão", value: deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão" }]}
     />
 
-    <div className={styles.contentGrid}>
+    <div className={styles.contentGrid} data-activities={canReadActivities ? "visible" : "hidden"}>
         {editing ? <form className={`${styles.editForm} ${styles.profile}`} onSubmit={saveDeal}>
           <h2>Editar negócio</h2>
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
@@ -239,13 +239,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           {deal.status === "open" && canMove && <div className={styles.closeActions}><Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Marcar como ganho</Button><Button variant="secondary" onClick={() => setLossModalOpen(true)}>Marcar como perdido</Button></div>}
         </section>}
 
-        <section className={styles.activities}>
+        {canReadActivities && <section className={styles.activities}>
           <div className={styles.sectionHeader}><div><h2>Atividades</h2><p>Próximos passos e histórico operacional deste negócio.</p></div>{canWriteActivities && <Button size="sm" onClick={() => setActivityModalOpen(true)}>Nova atividade</Button>}</div>
           {orderedActivities.length === 0 ? <div className={styles.empty}>Nenhuma atividade vinculada a este negócio.</div> : <ul className={styles.activityList}>{orderedActivities.map((activity) => <li key={activity.id} data-completed={activity.completed}>
             <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.notes && <p>{activity.notes}</p>}<time>{formatDateTime(activity.scheduledAt)}</time></div>
             {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>}
           </li>)}</ul>}
-        </section>
+        </section>}
         <section className={`${styles.activities} ${styles.history}`}>
           <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas neste negócio.</p></div></div>
           <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />

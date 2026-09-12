@@ -3,7 +3,8 @@
 .back:hover { color: var(--color-ink); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
-.contentGrid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, .95fr); grid-template-areas: "profile activities history"; align-items: stretch; min-width: 0; border-top: var(--ui-hairline) solid var(--color-line); }
+.contentGrid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, .95fr); grid-template-areas: "profile activities history"; align-items: stretch; min-width: 0; }
+.contentGrid[data-activities="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); grid-template-areas: "profile history"; }
 .contentGrid > * { min-width: 0; }
 .profile { grid-area: profile; padding: var(--space-4) var(--space-4) var(--space-4) 0; border-right: var(--ui-hairline) solid var(--color-line); }
 .details h2, .editForm h2 { margin: 0; padding-block: var(--space-2); color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
@@ -16,6 +17,7 @@
 .formActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .activities { grid-area: activities; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); border-right: var(--ui-hairline) solid var(--color-line); }
 .history { grid-area: history; padding-right: 0; border-right: 0; }
+.contentGrid[data-activities="hidden"] .history { padding-left: var(--space-4); }
 .sectionHeader { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
 .sectionHeader h2 { margin: 0; font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 .sectionHeader p { margin: var(--space-1) 0 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
@@ -30,12 +32,16 @@
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
 @media (max-width: 1200px) {
   .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); grid-template-areas: "profile activities" "history history"; }
+  .contentGrid[data-activities="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); grid-template-areas: "profile history"; }
   .activities { border-right: 0; }
   .history { padding: var(--space-4) 0; border-top: var(--ui-hairline) solid var(--color-line); }
+  .contentGrid[data-activities="hidden"] .history { padding: var(--space-4); border-top: 0; }
 }
 @media (max-width: 760px) {
   .page { padding: var(--space-4); }
   .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "activities" "history"; }
+  .contentGrid[data-activities="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history"; }
   .profile, .activities, .history { padding: var(--space-4) 0; border-right: 0; }
   .activities, .history { border-top: var(--ui-hairline) solid var(--color-line); }
+  .contentGrid[data-activities="hidden"] .history { padding: var(--space-4) 0; border-top: var(--ui-hairline) solid var(--color-line); }
 }
