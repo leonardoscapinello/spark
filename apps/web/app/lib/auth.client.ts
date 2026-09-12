@@ -45,6 +45,7 @@ export interface AuthSessionDetails {
 
 let accessToken: string | null = null;
 let listening = false;
+let restoringSession: Promise<AppSession | null> | null = null;
 
 function readProfile(): AppSession | null {
   try {
@@ -87,10 +88,15 @@ export function getToken(): string | null {
   return accessToken;
 }
 
-export async function restoreSession(): Promise<AppSession | null> {
+export function restoreSession(): Promise<AppSession | null> {
   listenForTokenRotation();
   const activeProfile = getSession();
-  if (activeProfile) return activeProfile;
+  if (activeProfile) return Promise.resolve(activeProfile);
+  restoringSession ??= loadSession().finally(() => { restoringSession = null; });
+  return restoringSession;
+}
+
+async function loadSession(): Promise<AppSession | null> {
   const { data, error } = await getSupabaseClient().auth.getSession();
   if (error || !data.session) {
     accessToken = null;

@@ -87,6 +87,25 @@ describe("auth.client — Supabase Auth session", () => {
     expect(mocks.me).toHaveBeenCalledTimes(1);
   });
 
+  it("shares session restoration between the layout and page loaders", async () => {
+    const orgId = orgIdFactory.create();
+    let releaseSession: ((value: { data: { session: { access_token: string } }; error: null }) => void) | undefined;
+    mocks.getSession.mockImplementation(() => new Promise((resolve) => { releaseSession = resolve; }));
+    mocks.me.mockResolvedValue({ id: "local-user", orgId, capabilities: ["contacts:read"] });
+
+    const layout = restoreSession();
+    const page = restoreSession();
+    expect(layout).toBe(page);
+    expect(mocks.getSession).toHaveBeenCalledTimes(1);
+
+    releaseSession?.({ data: { session: { access_token: "real-jwt" } }, error: null });
+    await expect(Promise.all([layout, page])).resolves.toEqual([
+      { orgId, userId: "local-user", capabilities: ["contacts:read"] },
+      { orgId, userId: "local-user", capabilities: ["contacts:read"] },
+    ]);
+    expect(mocks.me).toHaveBeenCalledTimes(1);
+  });
+
   it("revokes other sessions without clearing the current device", async () => {
     const orgId = orgIdFactory.create();
     mocks.signInWithPassword.mockResolvedValue({ data: { session: { access_token: "real-jwt" } }, error: null });
