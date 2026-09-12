@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, phone as buildPhone, userId as userIdFactory, type Company } from "@spark/core";
 import { optimisticCompany } from "@spark/data";
-import { ActionCard, ActionCardGroup, ActionModal, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -99,7 +99,7 @@ export default function Companies() {
     finally { setBusyId(null); }
   }
 
-  return <div className={styles.page}>
+  return <PageFrame>
     <PageHeader icon="building" title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="building" title="Cadastre sua primeira empresa" description="Reúna as pessoas e oportunidades de uma organização em um único perfil." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
     {firstRun && (canReadContacts || canReadDeals) && <ActionCardGroup title="Explore os vínculos">
@@ -123,7 +123,7 @@ export default function Companies() {
         <div className={styles.formGrid}><Field><Label>Responsável</Label><Select label="Responsável pela empresa" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field><Field><Label>Empresa controladora</Label><Select label="Empresa controladora" value={parentCompanyId || null} placeholder="Nenhuma" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setParentCompanyId(value ?? "")} /></Field></div>
       </div>
     </ActionModal>
-  </div>;
+  </PageFrame>;
 }
 
 function countBy(values: ReadonlyArray<string | null>): Map<string, number> { const result = new Map<string, number>(); for (const value of values) if (value) result.set(value, (result.get(value) ?? 0) + 1); return result; }
