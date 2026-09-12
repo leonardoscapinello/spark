@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { formsControllerCreate, formsControllerStatus } from "@spark/api-client";
 import { leadFormId, type LeadForm } from "@spark/core";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Skeleton, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getFormSubmissionsCollection, getLeadFormsCollection } from "../lib/forms-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -26,6 +26,7 @@ export default function Forms() {
   const [busy, setBusy] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [layout, setLayout] = useState<"cards" | "table">("cards");
   const firstRun = !isLoading && forms.length === 0 && !search && status === "all";
   const term = search.trim().toLocaleLowerCase("pt-BR");
   const filtered = forms.filter((form) => (status === "all" || form.status === status)
@@ -36,7 +37,7 @@ export default function Forms() {
     { id: "name", label: "Formulário", cell: (item) => <div><strong>{item.name}</strong><small className={styles.secondary}>{item.title}</small></div>, sortValue: (item) => item.name },
     { id: "fields", label: "Campos", cell: (item) => item.fields.length, sortValue: (item) => item.fields.length },
     { id: "submissions", label: "Respostas", cell: (item) => counts.get(item.id) ?? 0, sortValue: (item) => counts.get(item.id) ?? 0 },
-    { id: "status", label: "Situação", cell: (item) => <Badge tone={item.status === "published" ? "success" : "neutral"}>{item.status === "published" ? "Publicado" : item.status === "archived" ? "Arquivado" : "Rascunho"}</Badge>, sortValue: (item) => item.status },
+    { id: "status", label: "Situação", cell: (item) => formStatusBadge(item), sortValue: (item) => item.status },
     { id: "updated", label: "Atualizado", cell: (item) => formatDate(item.updatedAt), sortValue: (item) => item.updatedAt },
   ];
 
@@ -57,6 +58,8 @@ export default function Forms() {
     }
   }
 
+  function formActions(item: LeadForm) { return <><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busy === item.id} onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar" : "Publicar"}</Button>}</>; }
+
   return <div className={styles.page}>
     <PageHeader icon="file" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
     {firstRun && <EmptyState variant="onboarding" icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
@@ -64,8 +67,13 @@ export default function Forms() {
         search={<Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} />}
         filters={<Select label="Filtrar formulários por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicados" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
         count={`${filtered.length} ${filtered.length === 1 ? "formulário" : "formulários"}`}
+        actions={<div className={styles.layoutSwitch} role="group" aria-label="Visualização dos formulários"><Button iconOnly size="sm" variant={layout === "cards" ? "raised" : "ghost"} aria-label="Visualização em cartões" aria-pressed={layout === "cards"} onClick={() => setLayout("cards")}><Icon name="grid" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>}
       />
-      <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText="Nenhum formulário encontrado." actions={(item) => <><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busy === item.id} onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar" : "Publicar"}</Button>}</>} /></>}
+      {layout === "table" ? <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText="Nenhum formulário encontrado." actions={formActions} /> : <div className={styles.cardGrid} aria-label="Formulários">
+        {isLoading && !forms.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
+        {!isLoading && filtered.length === 0 && <p className={styles.empty}>Nenhum formulário encontrado.</p>}
+        {filtered.map((item) => <Card key={item.id} title={item.name} description={item.title} actions={formStatusBadge(item)} footer={<div className={styles.cardFooter}><span>Atualizado {formatDate(item.updatedAt)}</span><div>{formActions(item)}</div></div>}><div className={styles.cardMeta}><span><Icon name="file" />{item.fields.length} {item.fields.length === 1 ? "campo" : "campos"}</span><span>{counts.get(item.id) ?? 0} {counts.get(item.id) === 1 ? "resposta" : "respostas"}</span></div></Card>)}
+      </div>}</>}
     <ActionModal open={open} onOpenChange={setOpen} title="Novo formulário" confirmLabel="Criar e editar" errorText="Informe o nome interno e o título público." onConfirm={create}>
       <div className={styles.form}>
         <Field><Label>Nome interno</Label><Input value={name} placeholder="Captação do site" onChange={(event) => setName(event.target.value)} /></Field>
@@ -78,3 +86,4 @@ export default function Forms() {
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 }
+function formStatusBadge(item: LeadForm) { return <Badge tone={item.status === "published" ? "success" : "neutral"}>{item.status === "published" ? "Publicado" : item.status === "archived" ? "Arquivado" : "Rascunho"}</Badge>; }
