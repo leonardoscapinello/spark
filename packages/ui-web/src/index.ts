@@ -62,6 +62,7 @@ export { ViewSwitcher, type ViewSwitcherProps, type ViewMode } from "./ViewSwitc
 export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from "./SegmentedControl/SegmentedControl.js";
 export { Avatar, type AvatarProps } from "./Avatar/Avatar.js";
 export { PersonChoice, type PersonChoiceProps } from "./PersonChoice/PersonChoice.js";
+export { QuickNavigation, type QuickNavigationProps, type QuickNavigationItem } from "./QuickNavigation/QuickNavigation.js";
 export { Timeline, type TimelineItem } from "./Timeline/Timeline.js";
 export { FilePicker, type FilePickerProps } from "./FilePicker/FilePicker.js";
 export { LeadFormRenderer, type LeadFormRendererProps } from "./LeadForm/LeadForm.js";
