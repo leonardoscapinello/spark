@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { pagesControllerCreate } from "@spark/api-client";
 import { pageId, type Page } from "@spark/core";
-import { ActionModal, Badge, Button, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getPagesCollection } from "../lib/pages-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -45,11 +45,11 @@ export default function Pages() {
   return <div className={styles.page}>
     <PageHeader title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
     {firstRun ? <EmptyState icon="file" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} /> : <>
-      <div className={styles.toolbar}>
-        <div className={styles.search}><Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} /></div>
-        <div className={styles.status}><Select label="Filtrar páginas por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setStatus(value ?? "all")} /></div>
-        <span className={styles.count}>{filtered.length} {filtered.length === 1 ? "página" : "páginas"}</span>
-      </div>
+      <CollectionToolbar
+        search={<Input aria-label="Buscar páginas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou endereço" value={search} onChange={(event) => setSearch(event.target.value)} />}
+        filters={<Select label="Filtrar páginas por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicadas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setStatus(value ?? "all")} />}
+        count={`${filtered.length} ${filtered.length === 1 ? "página" : "páginas"}`}
+      />
       <DataTable label="Páginas" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !pages.length ? "loading" : "ready"} emptyText="Nenhuma página encontrada." actions={(item) => <TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/pages/${item.id}`)} />} />
     </>}
     <ActionModal open={open} onOpenChange={setOpen} title="Nova página" confirmLabel="Criar e editar" errorText="Informe nome e endereço válidos." onConfirm={create}>
