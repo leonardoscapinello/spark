@@ -127,6 +127,14 @@ export default function FormBuilder() {
     }
   }
   const publicUrl = `${window.location.origin}/f/${form.publicKey}`;
+  async function copyPublicLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      notify({ title: "Link copiado", tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível copiar o link", tone: "error" });
+    }
+  }
   return (
     <div className={styles.page}>
       <PageHeader
@@ -163,7 +171,8 @@ export default function FormBuilder() {
         <Badge tone={form.status === "published" ? "success" : "neutral"}>
           {form.status === "published" ? "Publicado" : "Rascunho"}
         </Badge>
-        <code>{publicUrl}</code>
+        <span>{form.status === "published" ? "Disponível para visitantes" : "Visível apenas para sua equipe"}</span>
+        {form.status === "published" && <Button size="sm" variant="ghost" onClick={() => void copyPublicLink()}>Copiar link</Button>}
       </div>
       <SegmentedControl className={styles.mobileViewSwitch} label="Visualização do formulário" value={mobileView} options={[{ value: "editor", label: "Editar" }, { value: "preview", label: "Prévia" }]} onValueChange={setMobileView} />
       <div className={styles.workspace} data-mobile-view={mobileView}>
