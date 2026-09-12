@@ -50,7 +50,7 @@ export default function Automations() {
     navigate(`/automations/${automation.id}`);
   }
 
-  return <PageFrame width="content">
+  return <PageFrame>
     <PageHeader icon="bolt" title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
     {initialLoad && <div role="status" aria-label="Carregando automações"><EmptyState variant="featured" icon="bolt" title="Preparando suas automações" description="Carregando os fluxos deste espaço de trabalho…" /></div>}
     {firstRun && <EmptyState variant="featured" icon="bolt" title="Crie sua primeira automação" description="Comece por um gatilho, escolha o que deve acontecer e acompanhe cada execução no mesmo fluxo." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />}

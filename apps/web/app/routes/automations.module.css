@@ -9,7 +9,7 @@
   font-size: var(--typography-size-xs);
 }
 
-.cardList { display: grid; gap: var(--space-3); min-width: 0; }
+.cardList { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-drawerWidth)), 1fr)); gap: var(--space-3); min-width: 0; }
 .cardLink { display: block; min-width: 0; color: inherit; text-decoration: none; border-radius: var(--radius-md); }
 .cardLink:hover > section { border-color: var(--color-lineStrong); box-shadow: var(--ui-panelShadow); }
 .cardLink:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
