@@ -4,10 +4,11 @@
   padding: var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-4);
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-.toolbar,
 .actions {
   display: flex;
   align-items: center;
@@ -15,7 +16,6 @@
   gap: var(--space-3);
 }
 
-.toolbar span,
 .secondary {
   color: var(--color-inkMuted);
   font-size: var(--typography-size-sm);
@@ -24,20 +24,6 @@
 .secondary {
   display: block;
   margin-top: var(--space-1);
-}
-
-.status {
-  display: inline-flex;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-full);
-  background: var(--color-surface2);
-  color: var(--color-statusSuccess);
-  font-size: var(--typography-size-xs);
-  font-weight: var(--typography-weight-medium);
-}
-
-.status[data-archived="true"] {
-  color: var(--color-inkMuted);
 }
 
 .modalFields,
@@ -65,5 +51,5 @@
 
 @media (max-width: 48rem) {
   .page { padding: var(--space-4); }
-  .toolbar { align-items: flex-start; }
+  .actions { flex-wrap: wrap; }
 }

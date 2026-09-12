@@ -10,7 +10,7 @@ import {
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
-import { ActionModal, Button, Checkbox, DataTable, EmptyState, Field, Input, Label, PageHeader, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
 
@@ -24,6 +24,7 @@ export default function AdminTeams({ loaderData }: Route.ComponentProps) {
   const membersLabelId = useId();
   const [teams, setTeams] = useState(loaderData.teams);
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -31,12 +32,16 @@ export default function AdminTeams({ loaderData }: Route.ComponentProps) {
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const userNames = useMemo(() => new Map(loaderData.users.map((user) => [user.id, user.name])), [loaderData.users]);
-  const visibleTeams = teams.filter((team) => showArchived ? team.archivedAt !== null : team.archivedAt === null);
+  const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
+  const visibleTeams = teams.filter((team) =>
+    (showArchived ? team.archivedAt !== null : team.archivedAt === null) &&
+    (!searchTerm || `${team.name} ${team.description ?? ""}`.toLocaleLowerCase("pt-BR").includes(searchTerm)),
+  );
 
   const columns: TableColumn<TeamDto>[] = [
     { id: "name", label: "Time", cell: (team) => <div><strong>{team.name}</strong><span className={styles.secondary}>{team.description || "Sem descrição"}</span></div>, sortValue: (team) => team.name },
     { id: "members", label: "Membros", cell: (team) => team.memberIds.length ? team.memberIds.map((id) => userNames.get(id) ?? "Usuário indisponível").join(", ") : "Nenhum membro", sortValue: (team) => team.memberIds.length },
-    { id: "status", label: "Situação", cell: (team) => <span className={styles.status} data-archived={Boolean(team.archivedAt)}>{team.archivedAt ? "Arquivado" : "Ativo"}</span>, sortValue: (team) => team.archivedAt ?? "" },
+    { id: "status", label: "Situação", cell: (team) => <Badge tone={team.archivedAt ? "neutral" : "success"}>{team.archivedAt ? "Arquivado" : "Ativo"}</Badge>, sortValue: (team) => team.archivedAt ?? "" },
   ];
 
   function openCreate() {
@@ -88,11 +93,12 @@ export default function AdminTeams({ loaderData }: Route.ComponentProps) {
   }
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Administração" title="Times" description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={<Button onClick={openCreate}>Novo time</Button>} />
-    {(teams.length > 0 || showArchived) && <div className={styles.toolbar}>
-      <span>{visibleTeams.length} {visibleTeams.length === 1 ? "time" : "times"}</span>
-      <Button variant="secondary" onClick={() => setShowArchived((current) => !current)}>{showArchived ? "Ver ativos" : "Ver arquivados"}</Button>
-    </div>}
+    <PageHeader eyebrow="Administração" title={showArchived ? "Times arquivados" : "Times"} description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={teams.length > 0 ? <Button onClick={openCreate}>Novo time</Button> : undefined} />
+    {teams.length > 0 && <CollectionToolbar
+      search={<Input aria-label="Buscar times" placeholder="Buscar por nome ou descrição" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+      filters={<Select label="Situação dos times" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativos" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
+      count={`${visibleTeams.length} ${visibleTeams.length === 1 ? "time" : "times"}`}
+    />}
     {teams.length === 0 ? <EmptyState icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} /> : <DataTable
       label="Times da organização"
       rows={visibleTeams}
