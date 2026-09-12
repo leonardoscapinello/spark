@@ -16,12 +16,15 @@ import {
   ActionModal,
   Button,
   Checkbox,
+  CollectionToolbar,
   DataTable,
   EmptyState,
   Field,
+  Icon,
   Input,
   Label,
   PageHeader,
+  TableIconAction,
   type TableColumn,
 } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
@@ -88,6 +91,11 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
   const [name, setName] = useState("");
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
+  const filteredGroups = groups.filter((group) =>
+    !searchTerm || `${group.name} ${group.capabilities.map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" ")}`.toLocaleLowerCase("pt-BR").includes(searchTerm),
+  );
   const columns: TableColumn<PermissionGroupDto>[] = [
     { id: "name", label: "Grupo", cell: (group) => <strong>{group.name}</strong>, sortValue: (group) => group.name },
     { id: "permissions", label: "Permissões", cell: (group) => <div className={styles.groupSummary}><strong>{group.capabilities.length} {group.capabilities.length === 1 ? "permissão" : "permissões"}</strong><span>{group.capabilities.length ? group.capabilities.slice(0, 3).map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" · ") : "Sem acesso configurado"}</span></div>, sortValue: (group) => group.capabilities.length },
@@ -142,7 +150,7 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
         eyebrow="Administração"
         title="Grupos de permissões"
         description="Defina o que cada equipe pode consultar, criar e administrar."
-        actions={<Button onClick={openCreate}>Novo grupo</Button>}
+        actions={groups.length > 0 ? <Button onClick={openCreate}>Novo grupo</Button> : undefined}
       />
 
       {feedback && (
@@ -151,9 +159,14 @@ export default function AdminPermissionGroups({ loaderData }: Route.ComponentPro
         </p>
       )}
 
+      {groups.length > 0 && <CollectionToolbar
+        search={<Input aria-label="Buscar grupos de permissões" placeholder="Buscar grupo ou permissão" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+        count={`${filteredGroups.length} ${filteredGroups.length === 1 ? "grupo" : "grupos"}`}
+      />}
+
       {groups.length === 0
         ? <EmptyState icon="settings" title="Defina o primeiro grupo" description="Reúna permissões por função para controlar o que cada pessoa pode consultar e alterar." action={<Button onClick={openCreate}>Novo grupo</Button>} />
-        : <DataTable label="Grupos de permissões" rows={groups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} actions={(group) => <Button variant="secondary" size="sm" onClick={() => openEdit(group)}>Editar</Button>} />}
+        : <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} emptyText="Nenhum grupo encontrado." actions={(group) => <TableIconAction label={`Editar ${group.name}`} icon={<Icon name="right" />} onClick={() => openEdit(group)} />} />}
 
       <ActionModal
         open={modalOpen}
