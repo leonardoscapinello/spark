@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionModal, Button, Card, Field, Input, Label, RecordHero, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, BackLink, Button, Card, Field, Input, Label, RecordHero, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -111,10 +111,10 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 
-  if (!company) return <div className={styles.page}><Link className={styles.back} to="/companies">← Empresas</Link>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</div>;
+  if (!company) return <div className={styles.page}><BackLink render={<Link to="/companies" />}>Empresas</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</div>;
 
   return <div className={styles.page}>
-    <Link className={styles.back} to="/companies">← Empresas</Link>
+    <BackLink render={<Link to="/companies" />}>Empresas</BackLink>
     <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Empresa"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Contatos", value: linkedContacts.length }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }] : [])]} />
 
     <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <Card title="Editar empresa"><form className={styles.editForm} onSubmit={saveCompany}>
