@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Badge, Button, DataTable, Field, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Badge, Button, DataTable, Field, Input, Label, PageHeader, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -31,7 +31,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const columns: TableColumn<AdminUserDto>[] = [
-    { id: "name", label: "Pessoa", cell: (user) => <div><strong>{user.name}</strong><span className={styles.email}>{user.email}</span></div>, sortValue: (user) => user.name },
+    { id: "name", label: "Pessoa", cell: (user) => <div className={styles.person}><Avatar name={user.name} /><div><strong>{user.name}</strong><span className={styles.email}>{user.email}</span></div></div>, sortValue: (user) => user.name },
     { id: "group", label: "Grupo", cell: (user) => (
       <Select
         label={`Grupo de ${user.name}`}

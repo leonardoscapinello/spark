@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
 import { companyId as companyIdFactory, contactMatches, email as buildEmail, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
-import { ActionModal, Button, DataTable, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Button, DataTable, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
@@ -68,7 +68,7 @@ export default function Contacts() {
     {
       id: "name",
       label: "Contato",
-      cell: (contact) => <div className={styles.contactCell}><span className={styles.avatar} aria-hidden="true">{initials(contact.name)}</span><div><strong>{contact.name}</strong><span className={styles.secondary}>{contact.email ?? "Sem e-mail"}</span></div></div>,
+      cell: (contact) => <div className={styles.contactCell}><Avatar name={contact.name} /><div><strong>{contact.name}</strong><span className={styles.secondary}>{contact.email ?? "Sem e-mail"}</span></div></div>,
       sortValue: (contact) => contact.name,
     },
     {
@@ -173,8 +173,4 @@ export default function Contacts() {
       </form>
     </ActionModal>
   </div>;
-}
-
-function initials(name: string): string {
-  return name.split(/\s+/).slice(0, 2).map((part) => part[0] ?? "").join("").toLocaleUpperCase("pt-BR");
 }
