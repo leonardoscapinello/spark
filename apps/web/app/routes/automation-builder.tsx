@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { automationsControllerPublish, automationsControllerRun } from "@spark/api-client";
 import { validateAutomationGraph, type AutomationEdge, type AutomationGraph, type AutomationNode, type AutomationNodeType } from "@spark/core";
-import { ActionModal, Badge, Button, EmptyState, Field, Icon, Input, Label, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type IconName, type SelectOption } from "@spark/ui-web";
+import { ActionModal, BackLink, Badge, Button, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationRunsCollection, getAutomationRunStepsCollection, getAutomationVersionsCollection, getAutomationsCollection } from "../lib/automations-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -128,22 +128,32 @@ export default function AutomationBuilder() {
     try {
       await collection.update(automation.id, (draft) => { draft.name = name.trim() || automation.name; draft.draftGraph = graph; }).isPersisted.promise;
       const result = await automationsControllerPublish(automation.id, {});
-      notify({ title: `Versão ${result.version.version} publicada`, description: "Novas execuções usarão esta versão imutável.", tone: "success" });
+      notify({ title: `Versão ${result.version.version} publicada`, description: "Novas entradas seguirão esta versão do fluxo.", tone: "success" });
     } catch { notify({ title: "Não foi possível publicar", description: "Atualize o rascunho e tente novamente.", tone: "error" }); }
     finally { setSaving(false); }
   }
 
   async function startRun() {
     if (!automation || !runContact) throw new Error("MISSING_CONTACT");
-    const response = await automationsControllerRun(automation.id, { contactId: runContact.value, context: { source: "manual" } });
-    notify({ title: "Execução iniciada", description: `Run ${response.run.id.slice(0, 8)} entrou na fila.`, tone: "success" });
+    await automationsControllerRun(automation.id, { contactId: runContact.value, context: { source: "manual" } });
+    notify({ title: "Execução iniciada", description: "O contato entrou no fluxo.", tone: "success" });
     setRunContact(null);
   }
 
-  if (!automation) return <div className={styles.page}><PageHeader title="Editor de automação" />{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando automação"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="bolt" title="Automação não encontrada" description="Este fluxo não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/automations")}>Ver automações</Button>} />}</div>;
+  if (!automation) return <div className={styles.page}><BackLink render={<Link to="/automations" />}>Automações</BackLink><PageHeader title="Editor de automação" />{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando automação"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="bolt" title="Automação não encontrada" description="Este fluxo não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/automations")}>Ver automações</Button>} />}</div>;
 
   return <div className={styles.page}>
-    <PageHeader eyebrow="Automações" title={automation.name} actions={<div className={styles.headerActions}><Button variant="ghost" onClick={() => navigate("/automations")}>Voltar</Button><Badge tone={automation.status === "active" ? "success" : automation.status === "paused" ? "warning" : "neutral"}>{automation.status === "active" ? "Ativa" : automation.status === "paused" ? "Pausada" : "Rascunho"}</Badge><Button size="sm" variant="ghost" aria-expanded={runsOpen} onClick={() => setRunsOpen((open) => !open)}>Execuções {runs.length}</Button>{selected && panelMode === "palette" && <Button variant="ghost" onClick={() => setPanelMode("inspector")}>Configurar bloco</Button>}{canWrite && automation.status === "active" && canReadContacts && <Button variant="secondary" onClick={() => setRunModalOpen(true)}>Executar agora</Button>}{canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}{canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}</div>} />
+    <BackLink render={<Link to="/automations" />}>Automações</BackLink>
+    <PageHeader title={automation.name} actions={<div className={styles.headerActions}>
+      <Badge tone={automation.status === "active" ? "success" : automation.status === "paused" ? "warning" : "neutral"}>{automation.status === "active" ? "Ativa" : automation.status === "paused" ? "Pausada" : "Rascunho"}</Badge>
+      <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label="Mais ações do fluxo" menu={<>
+        <MenuItem onClick={() => setRunsOpen((open) => !open)}>{runsOpen ? "Ocultar execuções" : `Ver execuções (${runs.length})`}</MenuItem>
+        {selected && panelMode === "palette" && <MenuItem onClick={() => setPanelMode("inspector")}>Configurar bloco</MenuItem>}
+        {canWrite && automation.status === "active" && canReadContacts && <MenuItem onClick={() => setRunModalOpen(true)}>Executar agora</MenuItem>}
+      </>} />
+      {canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}
+      {canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}
+    </div>} />
     {runsOpen && <section className={styles.runBar} aria-label="Execuções recentes"><div><strong>Execuções recentes</strong><span>{runs.length ? `${runs.length} registradas nesta automação` : "Nenhuma execução iniciada"}</span></div><div className={styles.runList}>{runs.slice(0, 5).map((run) => <span key={run.id}><Badge tone={run.status === "completed" ? "success" : run.status === "failed" ? "danger" : run.status === "waiting" ? "warning" : "neutral"}>{runStatusLabel(run.status)}</Badge><small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(run.startedAt))}</small></span>)}</div></section>}
     <div className={styles.workspace} data-panel={panelMode}>
       {panelMode !== "closed" && <aside className={styles.panel} aria-label={panelMode === "palette" || !selected ? "Adicionar blocos" : "Configurar bloco"}>
