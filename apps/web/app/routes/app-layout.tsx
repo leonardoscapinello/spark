@@ -106,7 +106,7 @@ function pathMatches(pathname: string, to: string, search = "") {
     ? pathname === "/" || pathname.startsWith("/contacts/") && pathname !== "/contacts/import"
     : route === "/inbox" || route === "/admin" ? pathname === route : pathname === route || pathname.startsWith(`${route}/`);
   if (!query) {
-    const relevantParameter = ({ "/": "status", "/deals": "status", "/inbox": "box", "/automations": "filter", "/campaigns": "view", "/social": "view" } as Record<string, string>)[route ?? ""];
+    const relevantParameter = ({ "/": "status", "/deals": "status", "/catalog": "view", "/inbox": "box", "/automations": "filter", "/campaigns": "view", "/social": "view" } as Record<string, string>)[route ?? ""];
     return routeMatches && (!relevantParameter || !new URLSearchParams(search).has(relevantParameter));
   }
   const expected = new URLSearchParams(query);
@@ -124,6 +124,21 @@ function moduleForPath(pathname: string): NavModule {
   if (["/campaigns", "/pages", "/forms", "/files"].some((route) => pathMatches(pathname, route))) return modules[5]!;
   if (pathname.startsWith("/social")) return modules[6]!;
   return modules[0]!;
+}
+
+const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
+  leads: ["Todos os contatos", "Empresas"],
+  crm: ["Funil em aberto", "Atividades", "Produtos", "Ofertas e descontos"],
+  automations: ["Todos os fluxos", "Ativos", "Rascunhos", "Pausados"],
+  social: ["Publicações", "Canais conectados"],
+};
+
+function usesTopNavigation(moduleId: string, pathname: string) {
+  if (moduleId === "leads") return pathname === "/" || pathname === "/companies";
+  if (moduleId === "crm") return pathname === "/deals" || pathname === "/activities" || pathname === "/catalog";
+  if (moduleId === "automations") return pathname === "/automations";
+  if (moduleId === "social") return pathname === "/social";
+  return false;
 }
 
 /** Session restoration happens on the client because it reads local storage. */
@@ -146,8 +161,10 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     ? ADMIN_CAPABILITIES.some(allowed)
     : module.sections.some((section) => section.items.some((item) => allowed(item.capability))));
   const current = moduleForPath(location.pathname);
-  const showModuleTabs = current.id === "leads" || current.id === "crm" && location.pathname === "/deals";
-  const showSidebar = current.id !== "overview" && current.id !== "account" && !showModuleTabs
+  const topNavigation = usesTopNavigation(current.id, location.pathname)
+    ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
+    : [];
+  const showSidebar = ["inbox", "content", "admin"].includes(current.id)
     && !["/automations/", "/pages/", "/forms/"].some((prefix) => location.pathname.startsWith(prefix));
 
   function railLink(module: NavModule) {
@@ -178,8 +195,8 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         })}
       </Sidebar>}
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(pendingLocation)}>
-        {showModuleTabs && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
-          {current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability)).map((item) =>
+        {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
+          {topNavigation.map((item) =>
             <Link key={item.to} to={item.to} prefetch="intent" className={styles.moduleTab} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
           )}
         </nav>}
