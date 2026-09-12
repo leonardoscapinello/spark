@@ -24,7 +24,10 @@ export function RecordHero({ icon, avatarName, eyebrow, title, description, acti
   return <section className={styles.root} aria-label={title} data-person={Boolean(avatarName)}>
     <div className={styles.identity}>
       {avatarName ? <Avatar name={avatarName} size="hero" /> : <span className={styles.avatar}><Icon name={icon} /></span>}
-      <PageHeader title={title} {...(eyebrow ? { eyebrow } : {})} {...(description ? { description } : {})} {...(actions ? { actions } : {})} />
+      <div className={styles.copy}>
+        {eyebrow && <span className={styles.context}>{eyebrow}</span>}
+        <PageHeader title={title} {...(description ? { description } : {})} {...(actions ? { actions } : {})} />
+      </div>
     </div>
     {metrics.length > 0 && <dl className={styles.metrics}>{metrics.map((metric) => <div key={metric.label}>
       <dt>{metric.label}</dt>
