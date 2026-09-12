@@ -23,3 +23,4 @@ export * from "./campaign-collections.js";
 export * from "./custom-fields-collection.js";
 export * from "./pages-collections.js";
 export * from "./canned-replies-collection.js";
+export * from "./teams-collection.js";

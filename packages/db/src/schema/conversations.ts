@@ -18,6 +18,8 @@ export const conversations = pgTable("conversations", {
   assigneeId: uuid("assignee_id").references(() => users.id, { onDelete: "set null" }),
   teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
   snoozedUntil: timestamp("snoozed_until", { withTimezone: true }),
+  firstResponseDueAt: timestamp("first_response_due_at", { withTimezone: true }).notNull(),
+  firstRespondedAt: timestamp("first_responded_at", { withTimezone: true }),
   lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

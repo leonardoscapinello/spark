@@ -19,6 +19,8 @@ export const ConversationSchema = z.object({
   assigneeId: zUserId.nullable().default(null),
   teamId: zTeamId.nullable().default(null),
   snoozedUntil: zServerTimestamp.nullable().default(null),
+  firstResponseDueAt: zServerTimestamp,
+  firstRespondedAt: zServerTimestamp.nullable().default(null),
   lastMessageAt: zServerTimestamp,
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,

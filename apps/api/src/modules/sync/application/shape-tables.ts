@@ -48,6 +48,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   pages: { column: "org_id" },
   page_versions: { column: "org_id" },
   canned_replies: { column: "org_id" },
+  teams: { column: "org_id" },
 };
 
 export function isSyncableTable(table: string): table is SyncResource {

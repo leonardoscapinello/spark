@@ -1,12 +1,12 @@
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
-import { ConversationSchema, conversationId, type Conversation, type CreateConversationInput, type OrgId } from "@spark/core";
+import { ConversationSchema, conversationId, firstResponseDueAt, type Conversation, type CreateConversationInput, type OrgId } from "@spark/core";
 import { getSparkApiBaseUrl, getSparkAuthToken, inboxControllerCreate, inboxControllerUpdate } from "@spark/api-client";
 
 export function optimisticConversation(input: Omit<CreateConversationInput, "id">, orgId: OrgId, assigneeId: Conversation["assigneeId"]): Conversation {
   const now = new Date().toISOString();
-  return { id: conversationId.create(), orgId, contactId: input.contactId, channel: input.channel, subject: input.subject, status: "open", priority: "normal", assigneeId, teamId: null, snoozedUntil: null, lastMessageAt: now, createdAt: now, updatedAt: now };
+  return { id: conversationId.create(), orgId, contactId: input.contactId, channel: input.channel, subject: input.subject, status: "open", priority: "normal", assigneeId, teamId: null, snoozedUntil: null, firstResponseDueAt: firstResponseDueAt(now, "normal"), firstRespondedAt: null, lastMessageAt: now, createdAt: now, updatedAt: now };
 }
 
 export function createConversationsCollection() {

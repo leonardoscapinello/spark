@@ -33,6 +33,7 @@ export const SYNC_RESOURCES = [
   "pages",
   "page_versions",
   "canned_replies",
+  "teams",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
@@ -69,6 +70,7 @@ const READ_REQUIREMENTS: Record<
   pages: ["pages:read"],
   page_versions: ["pages:read"],
   canned_replies: ["inbox:read"],
+  teams: ["inbox:read", "users:manage"],
 };
 
 const DIRECTORY_READERS: readonly Capability[] = [

@@ -12,6 +12,8 @@ export const TeamSchema = z.object({
   archivedAt: zServerTimestamp.nullable(),
 });
 export type Team = z.infer<typeof TeamSchema>;
+export const TeamDirectorySchema = TeamSchema.omit({ memberIds: true });
+export type TeamDirectoryEntry = z.infer<typeof TeamDirectorySchema>;
 
 export const CreateTeamInputSchema = z.object({
   id: zTeamId,

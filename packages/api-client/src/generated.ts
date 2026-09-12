@@ -1860,6 +1860,8 @@ export type ConversationWriteResponseDtoConversation = {
      */
   teamId?: string | null;
   snoozedUntil?: string | null;
+  firstResponseDueAt: string;
+  firstRespondedAt?: string | null;
   lastMessageAt: string;
   createdAt: string;
   updatedAt: string;
@@ -2022,6 +2024,8 @@ export type MessageWriteResponseDtoConversation = {
      */
   teamId?: string | null;
   snoozedUntil?: string | null;
+  firstResponseDueAt: string;
+  firstRespondedAt?: string | null;
   lastMessageAt: string;
   createdAt: string;
   updatedAt: string;
