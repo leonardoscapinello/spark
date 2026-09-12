@@ -171,7 +171,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const active = current.id === module.id;
     const pending = pendingLocation && moduleForPath(pendingLocation.pathname).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
-    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} prefetch="intent" className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} prefetch="render" className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !pendingLocation ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
@@ -197,7 +197,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(pendingLocation)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} to={item.to} prefetch="intent" className={styles.moduleTab} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
+            <Link key={item.to} to={item.to} prefetch="render" className={styles.moduleTab} aria-current={!pendingLocation && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
