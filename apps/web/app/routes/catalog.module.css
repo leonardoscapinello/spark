@@ -1,8 +1,6 @@
-.page { display: grid; gap: var(--space-6); padding: var(--space-8); min-width: 0; }
+.page { display: grid; gap: var(--space-4); padding: var(--space-8); min-width: 0; }
 .panel { display: grid; gap: var(--space-4); min-width: 0; }
-.toolbar { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); }
-.toolbar > :first-child:not(.explanation) { flex: 1; }
 .secondary { display: block; margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
 .form { display: grid; gap: var(--space-4); }
 .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); align-items: end; }
-@media (max-width: 720px) { .page { padding: var(--space-4); } .toolbar { align-items: stretch; flex-direction: column; } .columns { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .page { padding: var(--space-4); } .columns { grid-template-columns: 1fr; } }
