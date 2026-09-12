@@ -176,12 +176,12 @@ export default function Inbox() {
   return <div className={styles.page}>
     <Sidebar title="Atendimento" className={styles.queueSidebar}>
       <SidebarSection title="Caixas">
-        {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} prefetch="intent" />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
+        {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
       </SidebarSection>
       {teams.some((team) => !team.archivedAt) && <SidebarSection title="Equipes">
-        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link ref={filter === `team:${team.id}` ? activeQueueLink : undefined} to={`/inbox?box=team:${team.id}`} prefetch="intent" />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
+        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link ref={filter === `team:${team.id}` ? activeQueueLink : undefined} to={`/inbox?box=team:${team.id}`} />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
       </SidebarSection>}
-      <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" prefetch="intent" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
+      <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
     </Sidebar>
     <div className={styles.workspace} data-layout={layout} data-preview-open={layout === "table" && selectedId && selected ? "true" : "false"} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"} data-first-run={firstRun ? "true" : undefined}>
       <section className={styles.conversationList} aria-label="Lista de conversas">

@@ -120,9 +120,17 @@ const secondaryEntry: Record<string, () => Promise<unknown>> = {
   "/companies": () => import("./companies"),
   "/activities": () => import("./activities"),
   "/catalog": () => import("./catalog"),
+  "/contacts/import": () => import("./contact-import"),
+  "/inbox/replies": () => import("./inbox-replies"),
   "/pages": () => import("./pages"),
   "/forms": () => import("./forms"),
   "/files": () => import("./files"),
+  "/admin/users": () => import("./admin-users"),
+  "/admin/teams": () => import("./admin-teams"),
+  "/admin/permission-groups": () => import("./admin-permission-groups"),
+  "/admin/audit-log": () => import("./admin-audit-log"),
+  "/integrations": () => import("./integrations"),
+  "/settings": () => import("./settings"),
 };
 
 function warmRoute(to: string) {
@@ -257,14 +265,14 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
     const target = first?.to ?? module.to;
-    const warm = () => void moduleEntry[module.id]?.().catch(() => undefined);
-    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerEnter={warm} onFocus={warm} onTouchStart={warm} onPointerDown={() => { warm(); markNavigation(target); }} onClick={() => markNavigation(target)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
+    const warm = () => warmRoute(target);
+    return <Tooltip key={module.id} content={module.title} pinOnClick={false}><Link ref={active ? activeRailLink : undefined} to={target} onPointerEnter={warm} onFocus={warm} onTouchStart={warm} onPointerDown={() => { warm(); markNavigation(target); }} onClick={() => markNavigation(target)} className={[styles.railLink, module.id === "account" && styles.accountLink].filter(Boolean).join(" ")} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link></Tooltip>;
   }
 
   return (
     <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
       <NavigationRail className={styles.rail}>
-        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><span className={styles.brandLabel}>Leonardo Scapinello</span></Link>
+        <Link to="/dashboard" onPointerEnter={() => warmRoute("/dashboard")} onFocus={() => warmRoute("/dashboard")} className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><span className={styles.brandLabel}>Leonardo Scapinello</span></Link>
         <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.railBottom}>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
@@ -275,7 +283,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
-          const links = items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} onPointerEnter={() => warmRoute(item.to)} onFocus={() => warmRoute(item.to)} onTouchStart={() => warmRoute(item.to)} onPointerDown={() => { warmRoute(item.to); markNavigation(item.to); }} onClick={() => markNavigation(item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return current.sections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
@@ -284,7 +292,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} ref={pathMatches(location.pathname, item.to, location.search) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerEnter={() => warmRoute(item.to)} onFocus={() => warmRoute(item.to)} onTouchStart={() => warmRoute(item.to)} onPointerDown={() => { warmRoute(item.to); markNavigation(item.to); }} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
+            <Link key={item.to} ref={pathMatches(location.pathname, item.to, location.search) ? activeTopTab : undefined} to={item.to} onPointerEnter={() => warmRoute(item.to)} onFocus={() => warmRoute(item.to)} onTouchStart={() => warmRoute(item.to)} onPointerDown={() => { warmRoute(item.to); markNavigation(item.to); }} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
