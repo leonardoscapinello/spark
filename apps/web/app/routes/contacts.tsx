@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
 import { companyId as companyIdFactory, contactMatches, email as buildEmail, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
@@ -144,7 +144,7 @@ export default function Contacts() {
     }
   }
 
-  return <div className={styles.page}>
+  return <PageFrame>
     <PageHeader icon="user" title={viewTitle} description={viewDescription} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Nova pessoa</Button></> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="user" title="Cadastre a primeira pessoa" description="Reúna pessoas, empresas e conversas em uma base que a equipe pode acompanhar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova pessoa</Button> : undefined} />}
     {firstRun && (canWrite || canReadCompanies || canReadIntegrations) && <ActionCardGroup title="Prepare sua base de leads">
@@ -182,5 +182,5 @@ export default function Contacts() {
         <Field><Label>Empresa</Label><Select label="Empresa do contato" value={companyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
       </form>
     </ActionModal>
-  </div>;
+  </PageFrame>;
 }
