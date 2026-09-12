@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
 import { companyId as companyIdFactory, contactMatches, email as buildEmail, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
-import { ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
@@ -33,6 +33,7 @@ export default function Contacts() {
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }) });
   const canReadCompanies = getSession()?.capabilities.includes("companies:read") ?? false;
   const canWrite = getSession()?.capabilities.includes("contacts:write") ?? false;
+  const canReadIntegrations = getSession()?.capabilities.includes("integrations:read") ?? false;
   const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
@@ -145,8 +146,13 @@ export default function Contacts() {
 
   return <div className={styles.page}>
     <PageHeader icon="user" title={viewTitle} description={viewDescription} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Novo contato</Button></> : undefined} />
-    {firstRun && <EmptyState variant="featured" icon="user" title="Comece com seus contatos" description="Cadastre uma pessoa ou importe sua base para reunir o histórico de relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Novo contato</Button> : undefined} secondaryAction={canWrite ? <Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button> : undefined} />}
-    <CollectionToolbar
+    {firstRun && <EmptyState variant="featured" icon="user" title="Comece com seus contatos" description="Reúna as pessoas, empresas e conversas em uma base que a equipe pode acompanhar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Novo contato</Button> : undefined} />}
+    {firstRun && (canWrite || canReadCompanies || canReadIntegrations) && <ActionCardGroup title="Prepare sua base de leads">
+      {canWrite && <ActionCard icon="upload" title="Traga sua lista" description="Importe um CSV e revise os dados antes de salvar os contatos." action={<Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar contatos</Button>} />}
+      {canReadCompanies && <ActionCard icon="building" title="Organize empresas" description="Vincule as pessoas às organizações com quem você negocia." action={<Button variant="secondary" onClick={() => void navigate("/companies")}>Abrir empresas</Button>} />}
+      {canReadIntegrations && <ActionCard icon="message" title="Conecte seus canais" description="Receba novas conversas por e-mail e redes sociais." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Abrir integrações</Button>} />}
+    </ActionCardGroup>}
+    {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar contatos" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}
       filters={<>
         <Select appearance="filter" label="Filtrar por etapa" value={statusFilter} options={[{ value: "all", label: "Todas as etapas" }, ...LEAD_STATUS_OPTIONS]} onValueChange={(value) => setSearchParams(value && value !== "all" ? { status: value } : {})} />
@@ -154,17 +160,17 @@ export default function Contacts() {
       </>}
       actions={<Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>}
       count={<span role="status">{isLoading ? "Carregando contatos…" : `${filteredContacts.length} ${filteredContacts.length === 1 ? "contato" : "contatos"}`}</span>}
-    />
-    <DataTable
+    />}
+    {!firstRun && <DataTable
       label="Contatos da organização"
       rows={filteredContacts}
       columns={columns}
       rowKey={(contact) => contact.id}
       rowLabel={(contact) => contact.name}
       state={isLoading && contacts.length === 0 ? "loading" : "ready"}
-      emptyText={archiveView ? "Nenhum contato arquivado." : search ? `Nenhum contato encontrado para “${search}”.` : firstRun ? "Os contatos criados ou importados aparecerão nesta tabela." : "Nenhum contato cadastrado."}
+      emptyText={archiveView ? "Nenhum contato arquivado." : search ? `Nenhum contato encontrado para “${search}”.` : "Nenhum contato cadastrado."}
       actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>}
-    />
+    />}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Novo contato" confirmLabel="Criar contato" errorText="Não foi possível criar o contato. Corrija os campos marcados ou tente novamente." onConfirm={addContact}>
       <form className={styles.modalFields} onSubmit={submitFromForm}>
         <Field invalid={Boolean(nameError)}><Label>Nome</Label><Input autoFocus autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setNameError(null); }} placeholder="Nome completo" /><ErrorText>{nameError}</ErrorText></Field>
