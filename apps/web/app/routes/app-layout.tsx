@@ -96,7 +96,7 @@ const modules: NavModule[] = [
   ] },
 ];
 
-const accountModule: NavModule = { id: "account", title: "Minha conta", icon: "user", to: "/security", sections: [
+const accountModule: NavModule = { id: "account", title: "Minha conta", icon: "account", to: "/security", sections: [
   { title: "Conta", items: [{ label: "Segurança", to: "/security", icon: "settings" }] },
 ] };
 
