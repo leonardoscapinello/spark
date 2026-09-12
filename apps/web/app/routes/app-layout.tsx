@@ -297,7 +297,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return visibleSections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
-            : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
+            : <SidebarSection key={`${section.title}:${current.id === "admin" ? location.pathname : ""}`} title={section.title} collapsible={current.id === "admin"} defaultOpen={section.items.some((item) => pathMatches(location.pathname, item.to, location.search))}>{links}</SidebarSection>;
         })}
       </Sidebar>}
       {showSidebar && activeSecondaryItem && <nav className={styles.mobileSecondaryNav} aria-label={`Seções de ${current.title}`}>

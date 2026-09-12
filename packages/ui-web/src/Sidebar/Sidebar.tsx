@@ -1,4 +1,5 @@
-import { cloneElement, type ComponentProps, type ReactElement, type ReactNode } from "react";
+import { cloneElement, useId, useState, type ComponentProps, type ReactElement, type ReactNode } from "react";
+import { Icon } from "../Icon/Icon.js";
 import styles from "./Sidebar.module.css";
 export interface SidebarProps { title: string; children: ReactNode; actions?: ReactNode; footer?: ReactNode; brand?: ReactNode; className?: string | undefined }
 export function Sidebar({ title, children, actions, footer, brand, className }: SidebarProps) {
@@ -9,8 +10,15 @@ export function SidebarItem({ active, icon, count, children, className, render, 
   const linkProps = { ...props, className: [styles.item, className].filter(Boolean).join(" "), "aria-current": active ? "page" as const : undefined, children: content };
   return render ? cloneElement(render as ReactElement<ComponentProps<"a">>, linkProps) : <a {...linkProps} />;
 }
-export function SidebarSection({ title, children }: { title: string; children: ReactNode }) {
-  return <section className={styles.section}><h3>{title}</h3>{children}</section>;
+export function SidebarSection({ title, children, collapsible = false, defaultOpen = false }: { title: string; children: ReactNode; collapsible?: boolean; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const contentId = useId();
+  return <section className={styles.section} data-collapsible={collapsible || undefined}>
+    {collapsible
+      ? <button type="button" className={styles.sectionToggle} aria-expanded={open} aria-controls={contentId} onClick={() => setOpen((value) => !value)}><span>{title}</span><Icon name="right" /></button>
+      : <h3>{title}</h3>}
+    {collapsible ? <div id={contentId} className={styles.sectionItems} hidden={!open}>{children}</div> : children}
+  </section>;
 }
 export function NavigationRail({ children, label = "Módulos", className, ...props }: ComponentProps<"nav"> & { children: ReactNode; label?: string; className?: string | undefined }) {
   return <nav {...props} className={[styles.rail, className].filter(Boolean).join(" ")} aria-label={label}>{children}</nav>;
