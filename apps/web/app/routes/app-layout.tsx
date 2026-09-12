@@ -192,6 +192,12 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     (item.to === "/deals" && location.pathname === "/deals") ||
     pathMatches(location.pathname, item.to, location.search);
   const showSidebar = current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox";
+  const visibleSections = current.sections.map((section) => ({
+    title: section.title,
+    items: section.items.filter((item) => allowed(item.capability)),
+  })).filter((section) => section.items.length > 0);
+  const activeSecondaryItem = visibleSections.flatMap((section) => section.items)
+    .find((item) => pathMatches(location.pathname, item.to, location.search)) ?? visibleSections[0]?.items[0];
 
   useEffect(() => {
     if (session.name) return;
@@ -255,15 +261,20 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         </div>
       </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
-        {current.sections.map((section) => {
-          const items = section.items.filter((item) => allowed(item.capability));
-          if (items.length === 0) return null;
-          const links = items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
-          return current.sections.length === 1 || section.title === "Início"
+        {visibleSections.map((section) => {
+          const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          return visibleSections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
         })}
       </Sidebar>}
+      {showSidebar && activeSecondaryItem && <nav className={styles.mobileSecondaryNav} aria-label={`Seções de ${current.title}`}>
+        <MenuButton variant="ghost" shape="rounded" className={styles.mobileSecondaryTrigger} icon={<Icon name={activeSecondaryItem.icon} />} aria-label={`Seção atual: ${activeSecondaryItem.label}. Mudar seção`} menu={<>
+          {visibleSections.map((section) => <MenuGroup key={section.title} label={section.title}>
+            {section.items.map((item) => <MenuItem key={item.to} icon={<Icon name={item.icon} />} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} onClick={() => { markNavigation(item.to); void navigate(item.to); }}>{item.label}</MenuItem>)}
+          </MenuGroup>)}
+        </>}>{activeSecondaryItem.label}</MenuButton>
+      </nav>}
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
