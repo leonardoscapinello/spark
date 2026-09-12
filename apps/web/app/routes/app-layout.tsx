@@ -273,6 +273,12 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <NavigationRail className={styles.rail}>
         <Link to="/dashboard" onPointerEnter={() => warmRoute("/dashboard")} onFocus={() => warmRoute("/dashboard")} className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><span className={styles.brandLabel}>Leonardo Scapinello</span></Link>
         <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
+        <div className={styles.mobileModuleMenu}>
+          <MenuButton variant="ghost" shape="rounded" className={styles.mobileModuleTrigger} icon={<Icon name={current.icon} />} aria-label={`Módulo atual: ${current.title}. Mudar módulo`} menu={<MenuGroup label="Módulos">{visibleModules.filter((module) => module.id !== "admin").map((module) => {
+            const target = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability))?.to ?? module.to;
+            return <MenuItem key={module.id} icon={<Icon name={module.icon} />} aria-current={current.id === module.id ? "page" : undefined} onPointerEnter={() => warmRoute(target)} onFocus={() => warmRoute(target)} onClick={() => { markNavigation(target); void navigate(target); }}>{module.title}</MenuItem>;
+          })}</MenuGroup>}><span className={styles.mobileModuleTitle}>{current.title}</span></MenuButton>
+        </div>
         <div className={styles.railBottom}>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
           <div ref={accountRailLink} className={styles.accountMenu}><Tooltip content="Minha conta" pinOnClick={false}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} icon={accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} /> : <Icon name="account" />} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}>{<span className={styles.railLabel}>Minha conta</span>}</MenuButton></Tooltip></div>
