@@ -13,6 +13,7 @@ import {
   Label,
   LeadFormRenderer,
   PageHeader,
+  SegmentedControl,
   Select,
   Skeleton,
   Switch,
@@ -43,6 +44,7 @@ export default function FormBuilder() {
   const [submitLabel, setSubmitLabel] = useState("Enviar");
   const [successMessage, setSuccessMessage] = useState("");
   const [fields, setFields] = useState<LeadFormField[]>([]);
+  const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (!form) return;
@@ -163,7 +165,8 @@ export default function FormBuilder() {
         </Badge>
         <code>{publicUrl}</code>
       </div>
-      <div className={styles.workspace}>
+      <SegmentedControl className={styles.mobileViewSwitch} label="Visualização do formulário" value={mobileView} options={[{ value: "editor", label: "Editar" }, { value: "preview", label: "Prévia" }]} onValueChange={setMobileView} />
+      <div className={styles.workspace} data-mobile-view={mobileView}>
         <div className={styles.editor}>
           <section className={styles.editorSection}>
             <div className={styles.sectionHeading}><h2>Conteúdo</h2><p>Textos que aparecem no topo e após o envio.</p></div>
