@@ -1,11 +1,22 @@
 import { useId, type ReactNode } from "react";
 import { Button } from "../Button/Button.js";
+import { Icon, type IconName } from "../Icon/Icon.js";
 import { Skeleton } from "../Feedback/Feedback.js";
 import s from "./Card.module.css";
 export interface CardProps { title: string; description?: string; actions?: ReactNode; footer?: ReactNode; children?: ReactNode; appearance?: "outlined" | "elevated" }
 export function Card({ title, description, actions, footer, children, appearance = "outlined" }: CardProps) {
   const id = useId();
   return <section aria-labelledby={id} className={s.card} data-appearance={appearance}><header className={s.header}><div><h2 id={id}>{title}</h2>{description && <p>{description}</p>}</div>{actions && <div className={s.actions}>{actions}</div>}</header>{children !== undefined && <div className={s.body}>{children}</div>}{footer && <footer className={s.footer}>{footer}</footer>}</section>;
+}
+export interface ActionCardProps { icon: IconName; title: string; description: string; action: ReactNode }
+export function ActionCard({ icon, title, description, action }: ActionCardProps) {
+  const id = useId();
+  return <article className={s.actionCard} aria-labelledby={id}>
+    <span className={s.actionIcon}><Icon name={icon} /></span>
+    <h3 id={id}>{title}</h3>
+    <p>{description}</p>
+    <div className={s.actionControl}>{action}</div>
+  </article>;
 }
 export type CardState = "ready" | "loading" | "empty" | "error";
 export function CardContentState({ state, children, emptyText = "Nenhum dado neste período", errorText = "Não foi possível carregar os dados", onRetry, loadingVariant = "metric" }: { state: CardState; children: ReactNode; emptyText?: string; errorText?: string; onRetry?: (() => void) | undefined; loadingVariant?: "metric" | "chart" | "donut" }) {
