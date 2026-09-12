@@ -82,7 +82,7 @@ const modules: NavModule[] = [
     ] },
   ] },
   { id: "admin", title: "Administração", icon: "settings", to: "/admin", sections: [
-    { title: "Início", items: [{ label: "Visão geral", to: "/admin", icon: "grid" }] },
+    { title: "Início", items: [{ label: "Início", to: "/admin", icon: "grid" }] },
     { title: "Acesso", items: [
       { label: "Usuários", to: "/admin/users", icon: "user", capability: "users:manage" },
       { label: "Times", to: "/admin/teams", icon: "team", capability: "users:manage" },
