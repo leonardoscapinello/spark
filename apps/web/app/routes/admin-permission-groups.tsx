@@ -177,11 +177,11 @@ export default function AdminPermissionGroups() {
         ? <EmptyState icon="settings" title="Não foi possível carregar os grupos" description="Tente novamente para consultar as permissões." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} />
         : <>
           {firstRun && <EmptyState variant="featured" icon="settings" title="Defina o primeiro grupo" description="Reúna permissões por função para controlar o que cada pessoa pode consultar e alterar." action={<Button onClick={openCreate}>Novo grupo</Button>} />}
-          {!firstRun && <><CollectionToolbar
+          <CollectionToolbar
             search={<Input aria-label="Buscar grupos de permissões" placeholder="Buscar grupo ou permissão" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
             count={loading ? "Carregando grupos…" : `${filteredGroups.length} ${filteredGroups.length === 1 ? "grupo" : "grupos"}`}
           />
-          <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} state={loading ? "loading" : "ready"} emptyText="Nenhum grupo encontrado." actions={(group) => <TableIconAction label={`Editar ${group.name}`} icon={<Icon name="right" />} onClick={() => openEdit(group)} />} /></>}
+          <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} state={loading ? "loading" : "ready"} emptyText={firstRun ? "Os grupos criados aparecerão nesta tabela." : "Nenhum grupo encontrado."} actions={(group) => <TableIconAction label={`Editar ${group.name}`} icon={<Icon name="right" />} onClick={() => openEdit(group)} />} />
         </>}
 
       <ActionModal
