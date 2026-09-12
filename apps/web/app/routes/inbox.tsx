@@ -70,7 +70,20 @@ export default function Inbox() {
       .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm))));
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
-  const queueCount = (box: InboxFilter) => conversations.filter((item) => matchesFilter(item, box, session?.userId ?? null)).length;
+  const queueCounts = useMemo(() => {
+    const counts = new Map<InboxFilter, number>();
+    const increment = (box: InboxFilter) => counts.set(box, (counts.get(box) ?? 0) + 1);
+    for (const conversation of conversations) {
+      increment("all");
+      increment(conversation.status);
+      if (conversation.status !== "open") continue;
+      if (conversation.assigneeId === session?.userId) increment("mine");
+      if (conversation.assigneeId === null) increment("unassigned");
+      if (conversation.teamId) increment(`team:${conversation.teamId}`);
+    }
+    return counts;
+  }, [conversations, session?.userId]);
+  const queueCount = (box: InboxFilter) => queueCounts.get(box) ?? 0;
   const queues = [
     { label: "Abertas", box: "open" as const, to: "/inbox", icon: "inbox" as const },
     { label: "Minhas conversas", box: "mine" as const, to: "/inbox?box=mine", icon: "user" as const },
