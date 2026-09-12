@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { optimisticAutomation } from "@spark/data";
 import type { Automation } from "@spark/core";
-import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationsCollection } from "../lib/automations-collections.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -24,6 +24,8 @@ export default function Automations() {
   const [triggerFilter, setTriggerFilter] = useState("all");
   const [layout, setLayout] = useState<"cards" | "table">("cards");
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
+  const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
+  const canReadIntegrations = session?.capabilities.includes("integrations:read") ?? false;
   const firstRun = automations.length === 0 && !isLoading && !selectedStatus && !search;
   const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
   const triggerOptions = [...new Set(automations.flatMap((item) => item.draftGraph.nodes.filter((node) => node.type === "trigger").map((node) => node.data.label)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -49,16 +51,21 @@ export default function Automations() {
 
   return <PageFrame width="content">
     <PageHeader icon="bolt" title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
-    {firstRun && <EmptyState variant="featured" icon="bolt" title="Crie sua primeira automação" description="Comece por um gatilho, escolha o que deve acontecer e acompanhe cada execução no mesmo fluxo." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />}
-    <CollectionToolbar search={<Input aria-label="Buscar automações" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" />} filters={<Select appearance="filter" label="Filtrar automações por gatilho" value={triggerFilter} options={[{ value: "all", label: "Qualquer gatilho" }, ...triggerOptions.map((label) => ({ value: label, label }))]} onValueChange={(value) => setTriggerFilter(value ?? "all")} />} count={`${visibleAutomations.length} ${visibleAutomations.length === 1 ? "automação" : "automações"}`} actions={<ViewSwitcher label="Visualização das automações" value={layout} onValueChange={setLayout} />} />
-    {layout === "table" ? <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={firstRun ? "As automações criadas aparecerão nesta lista." : automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /> : <div className={styles.cardList} aria-label="Lista de automações">
+    {firstRun && <EmptyState variant="featured" icon="bolt" title="Crie sua primeira automação" description="Comece por um gatilho, escolha o que deve acontecer e acompanhe cada execução no mesmo fluxo." />}
+    {firstRun && (canWrite || canReadContacts || canReadIntegrations) && <ActionCardGroup title="Prepare seu primeiro fluxo">
+      {canWrite && <ActionCard icon="bolt" title="Desenhe o fluxo" description="Crie uma automação e escolha os gatilhos e ações no editor." action={<Button variant="secondary" onClick={() => setModalOpen(true)}>Nova automação</Button>} />}
+      {canReadContacts && <ActionCard icon="team" title="Veja seus contatos" description="Encontre as pessoas que poderão entrar nos seus fluxos." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir contatos</Button>} />}
+      {canReadIntegrations && <ActionCard icon="message" title="Conecte canais" description="Prepare os canais que vão iniciar ou receber mensagens." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Abrir integrações</Button>} />}
+    </ActionCardGroup>}
+    {!firstRun && <><CollectionToolbar search={<Input aria-label="Buscar automações" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" />} filters={<Select appearance="filter" label="Filtrar automações por gatilho" value={triggerFilter} options={[{ value: "all", label: "Qualquer gatilho" }, ...triggerOptions.map((label) => ({ value: label, label }))]} onValueChange={(value) => setTriggerFilter(value ?? "all")} />} count={`${visibleAutomations.length} ${visibleAutomations.length === 1 ? "automação" : "automações"}`} actions={<ViewSwitcher label="Visualização das automações" value={layout} onValueChange={setLayout} />} />
+    {layout === "table" ? <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /> : <div className={styles.cardList} aria-label="Lista de automações">
       {isLoading && !automations.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
       {!isLoading && visibleAutomations.length === 0 && !firstRun && <p className={styles.empty}>{automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."}</p>}
       {visibleAutomations.map((item) => {
         const triggers = item.draftGraph.nodes.filter((node) => node.type === "trigger");
         return <Link key={item.id} to={`/automations/${item.id}`} className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} actions={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardBody}><div className={styles.cardTriggers}>{triggers.length ? <>{triggers.slice(0, 2).map((node) => <span key={node.id}><Icon name="bolt" />{node.data.label}</span>)}{triggers.length > 2 && <span>+{triggers.length - 2} gatilhos</span>}</> : <span>Nenhum gatilho configurado</span>}</div><div className={styles.cardMeta}><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></div></Card></Link>;
       })}
-    </div>}
+    </div>}</>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Qualificar leads do Instagram" maxLength={160} /></Field>
     </ActionModal>
