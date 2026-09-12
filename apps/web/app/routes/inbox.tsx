@@ -41,6 +41,7 @@ export default function Inbox() {
   const session = getSession();
   const canWrite = session?.capabilities.includes("inbox:write") ?? false;
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
+  const canReadIntegrations = session?.capabilities.includes("integrations:read") ?? false;
   const conversationsCollection = getConversationsCollection();
   const messagesCollection = getMessagesCollection();
   const { data: conversations, isLoading } = useLiveQuery({ query: (q) => q.from({ conversations: conversationsCollection }).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") });
@@ -162,6 +163,13 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
+  function startConversationAction() {
+    if (!canWrite || !canReadContacts) return null;
+    return contacts.length > 0
+      ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button>
+      : <Button onClick={() => navigate("/")}>Adicionar contato</Button>;
+  }
+
   function renderDetails() {
     if (!selected) return null;
     const contact = contacts.find((item) => item.id === selected.contactId);
@@ -200,7 +208,7 @@ export default function Inbox() {
         {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
         <div className={styles.listControls}><span>{filtered.length} {filtered.length === 1 ? "conversa" : "conversas"}</span><div className={styles.listControlActions}><div className={styles.layoutSwitch} role="group" aria-label="Formato das conversas"><Button iconOnly size="sm" variant={layout === "chat" ? "raised" : "ghost"} aria-label="Visualização de conversa" aria-pressed={layout === "chat"} onClick={() => setLayout("chat")}><Icon name="message" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>{layout === "chat" && <MenuButton size="sm" variant="ghost" shape="rounded" menu={<><MenuItem onClick={() => setSortOrder("recent")}>Mais recentes</MenuItem><MenuItem onClick={() => setSortOrder("oldest")}>Mais antigas</MenuItem></>}>{sortOrder === "recent" ? "Mais recentes" : "Mais antigas"}</MenuButton>}</div></div>
         <div className={styles.listBody}>
-          {firstRun && layout === "chat" ? <div className={styles.listFirstRun} role="status"><span className={styles.listFirstRunIcon}><Icon name="message" /></span><strong>Comece seu primeiro atendimento</strong><span>Crie uma conversa para reunir o histórico e as respostas da equipe.</span>{canWrite && canReadContacts && (contacts.length > 0 ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button> : <Button variant="secondary" onClick={() => navigate("/")}>Adicionar contato</Button>)}</div> : layout === "table" ? <DataTable label="Conversas" rows={filtered} columns={tableColumns} rowKey={(item) => item.id} rowLabel={(item) => item.subject} state={isLoading && conversations.length === 0 ? "loading" : "ready"} emptyText={searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."} actions={(item) => <TableIconAction label={`Abrir conversa ${item.subject}`} icon={<Icon name="right" />} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }} />} /> : <>
+          {firstRun && layout === "chat" ? <div className={styles.listFirstRun} role="status"><span className={styles.listFirstRunIcon}><Icon name="message" /></span><strong>Nenhuma conversa ainda</strong><span>As conversas recebidas aparecem nesta lista.</span><div className={styles.listFirstRunAction}>{startConversationAction()}</div></div> : layout === "table" ? <><DataTable label="Conversas" rows={filtered} columns={tableColumns} rowKey={(item) => item.id} rowLabel={(item) => item.subject} state={isLoading && conversations.length === 0 ? "loading" : "ready"} emptyText={searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."} actions={(item) => <TableIconAction label={`Abrir conversa ${item.subject}`} icon={<Icon name="right" />} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }} />} />{firstRun && <div className={styles.listFirstRunAction}>{startConversationAction()}</div>}</> : <>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
           {!isLoading && filtered.length === 0 && <p className={styles.empty}>{searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."}</p>}
           {filtered.map((item) => <Button key={item.id} variant="ghost" shape="rounded" className={styles.conversationButton} data-selected={selected?.id === item.id || undefined} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>
@@ -239,11 +247,9 @@ export default function Inbox() {
           </form>}
         </> : <div className={styles.threadEmpty}>
           <Icon name="message" />
-          <strong>{isLoading ? "Preparando atendimento" : searchTerm ? "Nenhuma conversa encontrada" : conversations.length === 0 ? "Comece seu primeiro atendimento" : "Nenhuma conversa nesta caixa"}</strong>
-          <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou canal." : conversations.length === 0 ? "Crie uma conversa para acompanhar o histórico e responder em um só lugar." : "Escolha outra caixa para continuar o atendimento."}</span>
-          {!isLoading && conversations.length === 0 && layout === "table" && canWrite && canReadContacts && (contacts.length > 0
-            ? <Button onClick={() => setNewConversationOpen(true)}>Nova conversa</Button>
-            : <Button variant="secondary" onClick={() => navigate("/")}>Adicionar contato</Button>)}
+          <strong>{isLoading ? "Preparando atendimento" : searchTerm ? "Nenhuma conversa encontrada" : conversations.length === 0 ? "Sua caixa de atendimento está pronta" : "Nenhuma conversa nesta caixa"}</strong>
+          <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou canal." : conversations.length === 0 ? "Comece uma conversa ou conecte um canal para receber mensagens da sua equipe e dos seus contatos." : "Escolha outra caixa para continuar o atendimento."}</span>
+          {!isLoading && conversations.length === 0 && <div className={styles.threadEmptyActions}>{startConversationAction()}{canReadIntegrations && <Button variant="secondary" onClick={() => navigate("/integrations")}>Conectar canal</Button>}</div>}
         </div>}
       </section>
 
