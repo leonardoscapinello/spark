@@ -36,6 +36,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
+  const hasRelations = canReadContacts || canReadDeals;
   const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
   const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: dealsCollection }).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
@@ -114,9 +115,9 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
 
   return <div className={styles.page}>
     <Link className={styles.back} to="/companies">← Empresas</Link>
-    <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Empresa"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[{ label: "Contatos", value: linkedContacts.length }, { label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }]} />
+    <RecordHero icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} description={company.legalName ?? "Empresa"} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Contatos", value: linkedContacts.length }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)) }] : [])]} />
 
-    <div className={styles.contentGrid}><div className={styles.profileColumn}>{editing ? <form className={styles.editForm} onSubmit={saveCompany}>
+    <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <form className={styles.editForm} onSubmit={saveCompany}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
       <Field><Label>Segmento</Label><Input value={industry} onChange={(event) => setIndustry(event.target.value)} /></Field><Field><Label>Documento fiscal</Label><Input value={taxId} onChange={(event) => setTaxId(event.target.value)} /></Field>
       <Field><Label>Site</Label><Input value={website} onChange={(event) => setWebsite(event.target.value)} /></Field><Field><Label>E-mail</Label><Input value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
@@ -131,14 +132,14 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
       <Info label="Endereço" value={company.address ?? "—"} wide />
     </section>}</div>
 
-    <div className={styles.relations}>
-      <section className={styles.relationCard}><div className={styles.sectionHeader}><div><h2>Contatos</h2><p>Pessoas que trabalham ou se relacionam com esta empresa.</p></div>{canLinkContacts && <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular contato</Button>}</div>
+    {hasRelations && <div className={styles.relations}>
+      {canReadContacts && <section className={styles.relationCard}><div className={styles.sectionHeader}><div><h2>Contatos</h2><p>Pessoas que trabalham ou se relacionam com esta empresa.</p></div>{canLinkContacts && <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular contato</Button>}</div>
         {linkedContacts.length ? <ul>{linkedContacts.map((contact) => <li key={contact.id}><div><Link to={`/contacts/${contact.id}`}>{contact.name}</Link><span>{contact.email ?? "Sem e-mail"}</span></div>{canLinkContacts && <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhum contato vinculado.</p>}
-      </section>
-      <section className={styles.relationCard}><div className={styles.sectionHeader}><div><h2>Negócios</h2><p>Oportunidades comerciais desta empresa.</p></div>{canLinkDeals && <Button size="sm" onClick={() => setLinkDealOpen(true)}>Vincular negócio</Button>}</div>
+      </section>}
+      {canReadDeals && <section className={styles.relationCard}><div className={styles.sectionHeader}><div><h2>Negócios</h2><p>Oportunidades comerciais desta empresa.</p></div>{canLinkDeals && <Button size="sm" onClick={() => setLinkDealOpen(true)}>Vincular negócio</Button>}</div>
         {linkedDeals.length ? <ul>{linkedDeals.map((deal) => <li key={deal.id}><div><Link to={`/deals/${deal.id}`}>{deal.name}</Link><span>{formatBRL(syncedAmount(deal.amount))} · {deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></div>{canLinkDeals && <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhum negócio vinculado.</p>}
-      </section>
-    </div>
+      </section>}
+    </div>}
 
     <section className={`${styles.relationCard} ${styles.history}`}>
       <div className={styles.sectionHeader}><div><h2>Histórico</h2><p>Mudanças registradas nesta empresa e em seus vínculos comerciais.</p></div></div>
