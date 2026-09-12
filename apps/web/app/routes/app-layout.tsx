@@ -154,13 +154,13 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const active = current.id === module.id;
     const pending = pendingLocation && moduleForPath(pendingLocation.pathname).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
-    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} className={styles.railLink} aria-label={module.title} aria-current={active ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /></Link></Tooltip>;
+    return <Tooltip key={module.id} content={module.title}><Link to={first?.to ?? module.to} prefetch="intent" className={styles.railLink} aria-label={module.title} aria-current={active ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /></Link></Tooltip>;
   }
 
   return (
     <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={pendingLocation ? "true" : undefined}>
       <NavigationRail className={styles.rail}>
-        <Link to="/dashboard" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /></Link>
+        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /></Link>
         <div className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.railBottom}>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
@@ -171,7 +171,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
-          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} prefetch="intent" data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return current.sections.length === 1
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
@@ -180,7 +180,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(pendingLocation)}>
         {showModuleTabs && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability)).map((item) =>
-            <Link key={item.to} to={item.to} className={styles.moduleTab} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
+            <Link key={item.to} to={item.to} prefetch="intent" className={styles.moduleTab} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={pendingLocation && pathMatches(pendingLocation.pathname, item.to, pendingLocation.search) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
