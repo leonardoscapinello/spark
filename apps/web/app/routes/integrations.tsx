@@ -21,6 +21,7 @@ import {
   Icon,
   Input,
   Label,
+  PageFrame,
   PageHeader,
   Select,
   Switch,
@@ -170,7 +171,7 @@ export default function Integrations() {
   }
 
   return (
-    <div className={styles.page}>
+    <PageFrame width="content">
       <PageHeader
         icon="bolt"
         title="Integrações"
@@ -263,7 +264,7 @@ export default function Integrations() {
           />
         )}
       </ActionModal>
-    </div>
+    </PageFrame>
   );
 }
 
