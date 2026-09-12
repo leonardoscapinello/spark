@@ -34,8 +34,8 @@ export default function AdminHome({ loaderData }: Route.ComponentProps) {
   const allowed = (capability: Capability) => loaderData.session.capabilities.includes(capability);
 
   return <div className={styles.page}>
-    <PageHeader title="Configurações da organização" description="Gerencie pessoas, acessos e conexões em um só lugar." />
-    {sections.map((section) => {
+    <PageHeader title="Administração" description="Acesso da equipe, integrações e estrutura dos dados." />
+    <div className={styles.sections}>{sections.map((section) => {
       const visible = section.areas.filter((area) => allowed(area.capability));
       if (visible.length === 0) return null;
       return <section key={section.title} className={styles.section} aria-label={section.title}>
@@ -46,6 +46,6 @@ export default function AdminHome({ loaderData }: Route.ComponentProps) {
           <Icon name="right" />
         </Link>)}</div>
       </section>;
-    })}
+    })}</div>
   </div>;
 }
