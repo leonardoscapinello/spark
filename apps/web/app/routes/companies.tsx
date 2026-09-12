@@ -58,7 +58,7 @@ export default function Companies() {
     const textMatch = !normalizedSearch || [company.name, company.legalName, company.industry, company.taxId].some((value) => value?.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
     return visibilityMatch && textMatch;
   });
-  const firstRun = !isLoading && companies.length === 0;
+  const firstRun = !isLoading && companies.length === 0 && !search && visibility === "active";
 
   const columns: TableColumn<Company>[] = [
     { id: "name", label: "Empresa", cell: (company) => <div><strong>{company.name}</strong><span className={styles.secondary}>{company.legalName ?? company.website ?? "Sem dados complementares"}</span></div>, sortValue: (company) => company.name },
@@ -101,12 +101,13 @@ export default function Companies() {
 
   return <div className={styles.page}>
     <PageHeader title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} description={visibility === "archived" ? "Organizações fora da base ativa que você pode restaurar." : "Organize os contatos por empresa e acompanhe seus negócios."} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
-    {!firstRun && <CollectionToolbar
+    {firstRun && <EmptyState variant="onboarding" icon="building" title="Cadastre sua primeira empresa" description="Vincule contatos e negócios à organização para acompanhar o relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
+    <CollectionToolbar
       search={<Input aria-label="Buscar empresas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />}
       filters={<Select label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
       count={`${filtered.length} ${filtered.length === 1 ? "empresa" : "empresas"}`}
-    />}
-    {firstRun ? <EmptyState variant="onboarding" icon="building" title="Cadastre sua primeira empresa" description="Vincule contatos e negócios à organização para acompanhar o relacionamento em um só lugar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} /> : <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} emptyText="Nenhuma empresa neste filtro." actions={(company) => <><TableIconAction label="Abrir empresa" icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busyId === company.id} onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</Button>}</>} />}
+    />
+    <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} emptyText={firstRun ? "As empresas aparecerão aqui depois do primeiro cadastro." : "Nenhuma empresa neste filtro."} actions={(company) => <><TableIconAction label="Abrir empresa" icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busyId === company.id} onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</Button>}</>} />
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova empresa" confirmLabel="Criar empresa" errorText="Revise os dados da empresa." onConfirm={createCompany}>
       <div className={styles.form}>
         <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nome comercial" /></Field>
