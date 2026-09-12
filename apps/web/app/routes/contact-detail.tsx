@@ -20,6 +20,8 @@ import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
+import { getDealsCollection } from "../lib/deals-collections.client";
+import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { getEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { getIdentitiesCollection } from "../lib/identities-collection.client";
@@ -40,6 +42,8 @@ export async function clientLoader() {
     getCustomFieldsCollection().preload(),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
+    ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
+    ...(session.capabilities.includes("inbox:read") ? [getConversationsCollection().preload()] : []),
   ]);
   return null;
 }
@@ -72,6 +76,8 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
   const canWriteActivities = canReadActivities && (session?.capabilities.includes("activities:write") ?? false);
   const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
+  const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
+  const canReadInbox = session?.capabilities.includes("inbox:read") ?? false;
   const [selectedType, setSelectedType] = useState<ActivityType>("task");
   const [activityTitle, setActivityTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -112,6 +118,8 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.contactId, params.contactId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const { data: identities } = useLiveQuery({ query: (q) => q.from({ identities: getIdentitiesCollection() }).where(({ identities: item }) => eq(item.contactId, params.contactId)).orderBy(({ identities: item }) => item.createdAt, "asc") });
   const { data: customFields } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: item }) => eq(item.entityType, "contact")).orderBy(({ fields: item }) => item.label, "asc") });
+  const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }).where(({ deals: item }) => eq(item.contactId, params.contactId)).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
+  const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, params.contactId)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
 
   async function addIdentity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -337,6 +345,14 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
 
         </div>
         <div className={layout.workColumn}>
+      {canReadDeals && <section className={styles.atividades}>
+        <h2 className={styles.subtitulo}>Negócios</h2>
+        {deals.length === 0 ? <span className={styles.valor}>Nenhum negócio desta pessoa.</span> : <ul className={styles.listaAtividades}>{deals.map((deal) => <li key={deal.id} className={styles.atividade}><Link className={layout.recordLink} to={`/deals/${deal.id}`}>{deal.name}<span>{deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></Link></li>)}</ul>}
+      </section>}
+      {canReadInbox && <section className={styles.atividades}>
+        <h2 className={styles.subtitulo}>Conversas</h2>
+        {conversations.length === 0 ? <span className={styles.valor}>Nenhuma conversa desta pessoa.</span> : <ul className={styles.listaAtividades}>{conversations.map((conversation) => <li key={conversation.id} className={styles.atividade}><Link className={layout.recordLink} to={`/inbox?box=all&conversation=${conversation.id}`}>{conversation.subject}<span>{conversation.channel === "email" ? "E-mail" : conversation.channel === "instagram" ? "Instagram" : conversation.channel === "whatsapp" ? "WhatsApp" : conversation.channel === "messenger" ? "Messenger" : "Interno"}</span></Link></li>)}</ul>}
+      </section>}
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Histórico</h2>
         <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste contato aparecerão aqui." />

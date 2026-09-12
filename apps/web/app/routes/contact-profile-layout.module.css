@@ -10,6 +10,9 @@
 .profileColumn > :not(:first-child), .workColumn > section + section { border-top: var(--ui-hairline) solid var(--color-line); }
 .profileColumn > section > div, .identityColumn > section > div, .workColumn > section > form, .identityColumn > section form { padding: 0; border: 0; border-radius: 0; background: transparent; }
 .workColumn > section > ul > li { padding-inline: 0; border: 0; border-top: var(--ui-hairline) solid var(--color-line); border-radius: 0; }
+.recordLink { display: flex; flex: 1; min-width: 0; justify-content: space-between; gap: var(--space-3); color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); text-decoration: none; }
+.recordLink:hover { color: var(--color-accent); }
+.recordLink span { flex: 0 0 auto; color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
 @media (max-width: 1200px) {
   .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile work" "identity identity"; }
   .workColumn { border-right: 0; }
