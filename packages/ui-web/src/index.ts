@@ -59,6 +59,7 @@ export { CollectionToolbar, type CollectionToolbarProps } from "./CollectionTool
 export { RecordHero, type RecordHeroProps, type RecordMetric } from "./RecordHero/RecordHero.js";
 export { EmptyState, type EmptyStateProps } from "./EmptyState/EmptyState.js";
 export { ViewSwitcher, type ViewSwitcherProps, type ViewMode } from "./ViewSwitcher/ViewSwitcher.js";
+export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from "./SegmentedControl/SegmentedControl.js";
 export { Avatar, type AvatarProps } from "./Avatar/Avatar.js";
 export { Timeline, type TimelineItem } from "./Timeline/Timeline.js";
 export { FilePicker, type FilePickerProps } from "./FilePicker/FilePicker.js";

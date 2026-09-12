@@ -1,0 +1,11 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--color-surface2);
+}
+
+.root > button { flex: 1 1 0; min-width: 0; }

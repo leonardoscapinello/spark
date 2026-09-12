@@ -27,8 +27,7 @@
 .previewHeader > span { font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 .preview iframe { flex: 1; width: 100%; min-height: 0; border: 0; }
 @media (max-width: 850px) {
-  .mobileViewSwitch { display: flex; gap: var(--space-1); padding: var(--space-1); border-radius: var(--radius-md); background: var(--color-surface2); }
-  .mobileViewSwitch > button { flex: 1 1 0; }
+  .mobileViewSwitch { display: flex; }
   .workspace { grid-template-columns: 1fr; }
   .workspace[data-mobile-view="editor"] .preview,
   .workspace[data-mobile-view="preview"] .toolPanel { display: none; }
