@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
-import { useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { optimisticAutomation } from "@spark/data";
 import type { Automation } from "@spark/core";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Skeleton, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationsCollection } from "../lib/automations-collections.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -21,6 +21,7 @@ export default function Automations() {
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
+  const [layout, setLayout] = useState<"cards" | "table">("cards");
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
   const firstRun = automations.length === 0 && !isLoading && !selectedStatus && !search;
   const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
@@ -44,10 +45,14 @@ export default function Automations() {
   }
 
   return <div className={styles.page}>
-    <PageHeader icon="bolt" title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} description="Crie e acompanhe fluxos com vários gatilhos e etapas." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
+    <PageHeader icon="bolt" title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
     {firstRun && <EmptyState variant="onboarding" icon="bolt" title="Crie sua primeira automação" description="Desenhe gatilhos e etapas para acompanhar cada contato sem repetir tarefas manuais." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />}
-    {!firstRun && <><CollectionToolbar search={<Input aria-label="Buscar automações" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" />} count={`${visibleAutomations.length} ${visibleAutomations.length === 1 ? "automação" : "automações"}`} />
-    <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /></>}
+    {!firstRun && <><CollectionToolbar search={<Input aria-label="Buscar automações" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" />} count={`${visibleAutomations.length} ${visibleAutomations.length === 1 ? "automação" : "automações"}`} actions={<div className={styles.layoutSwitch} role="group" aria-label="Visualização das automações"><Button iconOnly size="sm" variant={layout === "cards" ? "raised" : "ghost"} aria-label="Visualização em cartões" aria-pressed={layout === "cards"} onClick={() => setLayout("cards")}><Icon name="grid" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>} />
+    {layout === "table" ? <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /> : <div className={styles.cardList} aria-label="Lista de automações">
+      {isLoading && !automations.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
+      {!isLoading && visibleAutomations.length === 0 && <p className={styles.empty}>{automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."}</p>}
+      {visibleAutomations.map((item) => <Link key={item.id} to={`/automations/${item.id}`} prefetch="intent" className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} actions={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardMeta}><span><Icon name="bolt" />{item.draftGraph.nodes.filter((node) => node.type === "trigger").length} gatilhos</span><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></Card></Link>)}
+    </div>}</>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Qualificar leads do Instagram" maxLength={160} /></Field>
     </ActionModal>

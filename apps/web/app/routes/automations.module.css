@@ -2,7 +2,7 @@
   display: grid;
   gap: var(--space-4);
   min-width: 0;
-  padding: var(--space-8);
+  padding: var(--space-6);
 }
 
 .primary {
@@ -15,6 +15,17 @@
   color: var(--color-inkMuted);
   font-size: var(--typography-size-xs);
 }
+
+.layoutSwitch { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); }
+.cardList { display: grid; gap: var(--space-3); min-width: 0; }
+.cardLink { display: block; min-width: 0; color: inherit; text-decoration: none; border-radius: var(--radius-md); }
+.cardLink:hover > section { border-color: var(--color-lineStrong); box-shadow: var(--ui-panelShadow); }
+.cardLink:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+.cardMeta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.cardMeta span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.cardMeta svg { width: var(--ui-icon); height: var(--ui-icon); color: var(--color-accent); }
+.cardLoading { display: block; height: var(--ui-textareaHeight); border-radius: var(--radius-md); }
+.empty { margin: 0; padding: var(--space-8); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }
 
 @media (max-width: 640px) {
   .page { padding: var(--space-4); }
