@@ -77,7 +77,7 @@ export default function ContactImport(_props: Route.ComponentProps) {
   }
 
   return <div className={styles.page} data-has-preview={rows.length > 0 || undefined}>
-    <BackLink render={<Link to="/" />}>Contatos</BackLink>
+    <BackLink render={<Link to="/" />}>Pessoas</BackLink>
     <PageHeader icon="upload" title="Importar contatos" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
 
     <section className={styles.uploadSection} aria-label="Selecionar arquivo CSV">
