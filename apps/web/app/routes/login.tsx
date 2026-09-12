@@ -45,8 +45,8 @@ export default function Login({ actionData }: Route.ComponentProps) {
   return (
     <Form method="post" className={styles.card}>
       <div className={styles.cardHeader}>
-        <h2>Boas-vindas</h2>
-        <p>Use suas credenciais para acessar sua área de trabalho.</p>
+        <h2>Entre na sua conta</h2>
+        <p>Informe seu e-mail e sua senha para continuar.</p>
       </div>
 
       {passwordUpdated && <p className={styles.success} role="status">Senha atualizada. Você já pode entrar.</p>}
