@@ -3,11 +3,79 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { formsControllerCreate, formsControllerStatus } from "@spark/api-client";
 import { leadFormId, type LeadForm } from "@spark/core";
-import { ActionModal, Badge, Button, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getFormSubmissionsCollection, getLeadFormsCollection } from "../lib/forms-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./forms.module.css";
-export async function clientLoader() { await requireCapability("forms:read"); void Promise.allSettled([getLeadFormsCollection().preload(), getFormSubmissionsCollection().preload()]); return null; }
-export default function Forms() { const navigate = useNavigate(); const session = getSession(); const canWrite = session?.capabilities.includes("forms:write") ?? false; const { data: forms, isLoading } = useLiveQuery({ query: (q) => q.from({ forms: getLeadFormsCollection() }).orderBy(({ forms: item }) => item.updatedAt, "desc") }); const { data: submissions } = useLiveQuery({ query: (q) => q.from({ submissions: getFormSubmissionsCollection() }) }); const [open, setOpen] = useState(false); const [name, setName] = useState(""); const [title, setTitle] = useState(""); const [busy, setBusy] = useState<string | null>(null); const counts = useMemo(() => submissions.reduce((map, item) => map.set(item.formId, (map.get(item.formId) ?? 0) + 1), new Map<string, number>()), [submissions]); const columns: TableColumn<LeadForm>[] = [{ id: "name", label: "Formulário", cell: (item) => <div><strong>{item.name}</strong><small className={styles.secondary}>{item.title}</small></div>, sortValue: (item) => item.name }, { id: "fields", label: "Campos", cell: (item) => item.fields.length, sortValue: (item) => item.fields.length }, { id: "submissions", label: "Respostas", cell: (item) => counts.get(item.id) ?? 0, sortValue: (item) => counts.get(item.id) ?? 0 }, { id: "status", label: "Status", cell: (item) => <Badge tone={item.status === "published" ? "success" : "neutral"}>{item.status === "published" ? "Publicado" : "Rascunho"}</Badge>, sortValue: (item) => item.status }, { id: "updated", label: "Atualizado", cell: (item) => formatDate(item.updatedAt), sortValue: (item) => item.updatedAt }]; async function create() { if (!name.trim() || !title.trim()) throw new Error("MISSING_FORM"); const response = await formsControllerCreate({ id: leadFormId.create(), name: name.trim(), title: title.trim() }); notify({ title: "Formulário criado", description: name, tone: "success" }); navigate(`/forms/${response.form.id}`); } async function toggle(item: LeadForm) { setBusy(item.id); try { await formsControllerStatus(item.id, { published: item.status !== "published" }); notify({ title: item.status === "published" ? "Formulário retirado do ar" : "Formulário publicado", tone: "success" }); } finally { setBusy(null); } } return <div className={styles.page}><PageHeader eyebrow="Aquisição" title="Formulários" description="Publique formulários que validam dados, evitam duplicatas e criam leads diretamente no CRM." actions={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />{forms.length === 0 && !isLoading ? <EmptyState icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} /> : <DataTable label="Formulários" rows={forms} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText="Nenhum formulário criado." actions={(item) => <><TableIconAction label="Editar formulário" icon={<Icon name="right" />} onClick={() => navigate(`/forms/${item.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busy === item.id} onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar" : "Publicar"}</Button>}</>} />}<ActionModal open={open} onOpenChange={setOpen} title="Novo formulário" confirmLabel="Criar e editar" errorText="Informe o nome interno e o título público." onConfirm={create}><div className={styles.form}><Field><Label>Nome interno</Label><Input value={name} placeholder="Captação do site" onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Título público</Label><Input value={title} placeholder="Fale com nossa equipe" onChange={(event) => setTitle(event.target.value)} /></Field></div></ActionModal></div>; }
-function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+
+export async function clientLoader() {
+  await requireCapability("forms:read");
+  void Promise.allSettled([getLeadFormsCollection().preload(), getFormSubmissionsCollection().preload()]);
+  return null;
+}
+
+export default function Forms() {
+  const navigate = useNavigate();
+  const canWrite = getSession()?.capabilities.includes("forms:write") ?? false;
+  const { data: forms, isLoading } = useLiveQuery({ query: (q) => q.from({ forms: getLeadFormsCollection() }).orderBy(({ forms: item }) => item.updatedAt, "desc") });
+  const { data: submissions } = useLiveQuery({ query: (q) => q.from({ submissions: getFormSubmissionsCollection() }) });
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const firstRun = !isLoading && forms.length === 0;
+  const term = search.trim().toLocaleLowerCase("pt-BR");
+  const filtered = forms.filter((form) => (status === "all" || form.status === status)
+    && (!term || form.name.toLocaleLowerCase("pt-BR").includes(term) || form.title.toLocaleLowerCase("pt-BR").includes(term)));
+  const counts = useMemo(() => submissions.reduce((map, item) => map.set(item.formId, (map.get(item.formId) ?? 0) + 1), new Map<string, number>()), [submissions]);
+
+  const columns: TableColumn<LeadForm>[] = [
+    { id: "name", label: "Formulário", cell: (item) => <div><strong>{item.name}</strong><small className={styles.secondary}>{item.title}</small></div>, sortValue: (item) => item.name },
+    { id: "fields", label: "Campos", cell: (item) => item.fields.length, sortValue: (item) => item.fields.length },
+    { id: "submissions", label: "Respostas", cell: (item) => counts.get(item.id) ?? 0, sortValue: (item) => counts.get(item.id) ?? 0 },
+    { id: "status", label: "Situação", cell: (item) => <Badge tone={item.status === "published" ? "success" : "neutral"}>{item.status === "published" ? "Publicado" : item.status === "archived" ? "Arquivado" : "Rascunho"}</Badge>, sortValue: (item) => item.status },
+    { id: "updated", label: "Atualizado", cell: (item) => formatDate(item.updatedAt), sortValue: (item) => item.updatedAt },
+  ];
+
+  async function create() {
+    if (!name.trim() || !title.trim()) throw new Error("MISSING_FORM");
+    const response = await formsControllerCreate({ id: leadFormId.create(), name: name.trim(), title: title.trim() });
+    notify({ title: "Formulário criado", description: name, tone: "success" });
+    void navigate(`/forms/${response.form.id}`);
+  }
+
+  async function toggle(item: LeadForm) {
+    setBusy(item.id);
+    try {
+      await formsControllerStatus(item.id, { published: item.status !== "published" });
+      notify({ title: item.status === "published" ? "Formulário retirado do ar" : "Formulário publicado", tone: "success" });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return <div className={styles.page}>
+    <PageHeader title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !firstRun && !isLoading ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
+    {firstRun ? <EmptyState icon="file" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} /> : <>
+      <div className={styles.toolbar}>
+        <div className={styles.search}><Input aria-label="Buscar formulários" startAdornment={<Icon name="search" />} placeholder="Buscar por nome ou título" value={search} onChange={(event) => setSearch(event.target.value)} /></div>
+        <div className={styles.status}><Select label="Filtrar formulários por situação" value={status} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "published", label: "Publicados" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setStatus(value ?? "all")} /></div>
+        <span className={styles.count}>{filtered.length} {filtered.length === 1 ? "formulário" : "formulários"}</span>
+      </div>
+      <DataTable label="Formulários" rows={filtered} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !forms.length ? "loading" : "ready"} emptyText="Nenhum formulário encontrado." actions={(item) => <><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />{canWrite && <Button size="sm" variant="ghost" loading={busy === item.id} onClick={() => void toggle(item)}>{item.status === "published" ? "Despublicar" : "Publicar"}</Button>}</>} />
+    </>}
+    <ActionModal open={open} onOpenChange={setOpen} title="Novo formulário" confirmLabel="Criar e editar" errorText="Informe o nome interno e o título público." onConfirm={create}>
+      <div className={styles.form}>
+        <Field><Label>Nome interno</Label><Input value={name} placeholder="Captação do site" onChange={(event) => setName(event.target.value)} /></Field>
+        <Field><Label>Título público</Label><Input value={title} placeholder="Fale com nossa equipe" onChange={(event) => setTitle(event.target.value)} /></Field>
+      </div>
+    </ActionModal>
+  </div>;
+}
+
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+}
