@@ -167,7 +167,6 @@ function moduleForPath(pathname: string): NavModule {
 const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
   leads: ["Todos os contatos", "Empresas"],
   crm: ["Funil em aberto", "Atividades", "Produtos", "Ofertas e descontos"],
-  automations: ["Todos os fluxos", "Ativos", "Rascunhos", "Pausados"],
   content: ["Campanhas", "Públicos", "Páginas", "Formulários", "Arquivos"],
   social: ["Publicações", "Canais conectados"],
 };
@@ -175,7 +174,7 @@ const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
 function usesTopNavigation(moduleId: string, pathname: string) {
   if (moduleId === "leads") return pathname === "/" || pathname === "/companies";
   if (moduleId === "crm") return pathname === "/deals" || pathname === "/activities" || pathname === "/catalog";
-  if (moduleId === "automations") return pathname === "/automations";
+  if (moduleId === "automations") return false;
   if (moduleId === "content") return ["/campaigns", "/pages", "/forms", "/files"].includes(pathname);
   if (moduleId === "social") return pathname === "/social";
   return false;
@@ -224,7 +223,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const topNavigation = usesTopNavigation(current.id, location.pathname)
     ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
     : [];
-  const showSidebar = current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox";
+  const showSidebar = current.id === "admin" || current.id === "automations" && location.pathname === "/automations" || current.id === "inbox" && location.pathname !== "/inbox";
 
   useEffect(() => {
     if (session.name) return;

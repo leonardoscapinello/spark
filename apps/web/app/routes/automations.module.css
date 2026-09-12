@@ -1,32 +1,3 @@
-.page {
-  display: grid;
-  gap: var(--space-4);
-  min-width: 0;
-  padding: var(--space-6);
-}
-
-.flowIntroduction {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.flowStep {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-}
-
-.flowStep strong { font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
-.flowStep > span:last-child { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
-.stepIcon { display: inline-flex; align-items: center; justify-content: center; width: var(--ui-controlMedium); height: var(--ui-controlMedium); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
-.stepIcon svg { width: var(--ui-icon); height: var(--ui-icon); }
-
 .primary {
   display: grid;
   gap: var(--space-1);
@@ -47,8 +18,3 @@
 .cardMeta svg { width: var(--ui-icon); height: var(--ui-icon); color: var(--color-accent); }
 .cardLoading { display: block; height: var(--ui-textareaHeight); border-radius: var(--radius-md); }
 .empty { margin: 0; padding: var(--space-8); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }
-
-@media (max-width: 640px) {
-  .page { padding: var(--space-4); }
-  .flowIntroduction { grid-template-columns: 1fr; }
-}

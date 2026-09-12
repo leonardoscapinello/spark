@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { optimisticAutomation } from "@spark/data";
 import type { Automation } from "@spark/core";
-import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageHeader, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationsCollection } from "../lib/automations-collections.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -44,26 +44,19 @@ export default function Automations() {
     navigate(`/automations/${automation.id}`);
   }
 
-  return <div className={styles.page}>
+  return <PageFrame width="content">
     <PageHeader icon="bolt" title={selectedStatus === "active" ? "Fluxos ativos" : selectedStatus === "draft" ? "Rascunhos" : selectedStatus === "paused" ? "Fluxos pausados" : "Automações"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
-    {firstRun && <>
-      <EmptyState variant="featured" icon="bolt" title="Crie sua primeira automação" description="Comece por um gatilho, escolha o que deve acontecer e acompanhe cada execução no mesmo fluxo." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />
-      <div className={styles.flowIntroduction} aria-label="Como funciona uma automação">
-        <div className={styles.flowStep}><span className={styles.stepIcon}><Icon name="bolt" /></span><strong>1. Gatilho</strong><span>Defina quando o fluxo começa.</span></div>
-        <div className={styles.flowStep}><span className={styles.stepIcon}><Icon name="grid" /></span><strong>2. Condição</strong><span>Escolha quem segue cada caminho.</span></div>
-        <div className={styles.flowStep}><span className={styles.stepIcon}><Icon name="message" /></span><strong>3. Ação</strong><span>Responda, atualize ou avise alguém.</span></div>
-      </div>
-    </>}
-    {!firstRun && <><CollectionToolbar search={<Input aria-label="Buscar automações" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" />} count={`${visibleAutomations.length} ${visibleAutomations.length === 1 ? "automação" : "automações"}`} actions={<ViewSwitcher label="Visualização das automações" value={layout} onValueChange={setLayout} />} />
-    {layout === "table" ? <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /> : <div className={styles.cardList} aria-label="Lista de automações">
+    {firstRun && <EmptyState variant="featured" icon="bolt" title="Crie sua primeira automação" description="Comece por um gatilho, escolha o que deve acontecer e acompanhe cada execução no mesmo fluxo." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova automação</Button> : undefined} />}
+    <CollectionToolbar search={<Input aria-label="Buscar automações" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar automação" />} count={`${visibleAutomations.length} ${visibleAutomations.length === 1 ? "automação" : "automações"}`} actions={<ViewSwitcher label="Visualização das automações" value={layout} onValueChange={setLayout} />} />
+    {layout === "table" ? <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={firstRun ? "As automações criadas aparecerão nesta lista." : automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /> : <div className={styles.cardList} aria-label="Lista de automações">
       {isLoading && !automations.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
       {!isLoading && visibleAutomations.length === 0 && <p className={styles.empty}>{automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."}</p>}
-      {visibleAutomations.map((item) => <Link key={item.id} to={`/automations/${item.id}`} prefetch="intent" className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} actions={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardMeta}><span><Icon name="bolt" />{item.draftGraph.nodes.filter((node) => node.type === "trigger").length} gatilhos</span><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></Card></Link>)}
-    </div>}</>}
+      {visibleAutomations.map((item) => <Link key={item.id} to={`/automations/${item.id}`} className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} actions={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardMeta}><span><Icon name="bolt" />{item.draftGraph.nodes.filter((node) => node.type === "trigger").length} gatilhos</span><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></Card></Link>)}
+    </div>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Qualificar leads do Instagram" maxLength={160} /></Field>
     </ActionModal>
-  </div>;
+  </PageFrame>;
 }
 
 function statusLabel(status: "draft" | "active" | "paused"): string { return ({ draft: "Rascunho", active: "Ativa", paused: "Pausada" })[status]; }
