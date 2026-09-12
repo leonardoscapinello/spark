@@ -82,7 +82,7 @@ const modules: NavModule[] = [
       { label: "Canais conectados", to: "/social?view=channels", icon: "team", capability: "social:read" },
     ] },
   ] },
-  { id: "admin", title: "Administração", icon: "settings", to: "/admin", sections: [
+  { id: "admin", title: "Configurações", icon: "settings", to: "/admin", sections: [
     { title: "Início", items: [{ label: "Início", to: "/admin", icon: "grid" }] },
     { title: "Acesso", items: [
       { label: "Usuários", to: "/admin/users", icon: "user", capability: "users:manage" },
@@ -133,7 +133,6 @@ const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
   automations: ["Todos os fluxos", "Ativos", "Rascunhos", "Pausados"],
   content: ["Campanhas", "Públicos", "Páginas", "Formulários", "Arquivos"],
   social: ["Publicações", "Canais conectados"],
-  admin: ["Início", "Usuários", "Times", "Grupos de permissões", "Integrações", "Auditoria", "Campos personalizados"],
 };
 
 function usesTopNavigation(moduleId: string, pathname: string) {
@@ -142,7 +141,6 @@ function usesTopNavigation(moduleId: string, pathname: string) {
   if (moduleId === "automations") return pathname === "/automations";
   if (moduleId === "content") return ["/campaigns", "/pages", "/forms", "/files"].includes(pathname);
   if (moduleId === "social") return pathname === "/social";
-  if (moduleId === "admin") return pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/integrations" || pathname === "/settings";
   return false;
 }
 
@@ -171,6 +169,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
   const activeTopTab = useRef<HTMLAnchorElement>(null);
+  const activeSidebarLink = useRef<HTMLAnchorElement>(null);
   const accountRailLink = useRef<HTMLDivElement>(null);
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
@@ -184,7 +183,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const topNavigation = usesTopNavigation(current.id, location.pathname)
     ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
     : [];
-  const showSidebar = current.id === "inbox" && location.pathname !== "/inbox";
+  const showSidebar = current.id === "admin" || current.id === "inbox" && location.pathname !== "/inbox";
 
   function markNavigation(to: string) {
     if (`${location.pathname}${location.search}` !== to) setNavigationIntent({ to, fromKey: location.key });
@@ -200,6 +199,12 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     const active = activeTopTab.current;
     const tabs = active?.closest("nav");
     if (active && tabs && tabs.scrollWidth > tabs.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    const active = activeSidebarLink.current;
+    const strip = active?.parentElement?.parentElement;
+    if (active && strip && strip.scrollWidth > strip.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
   }, [location.pathname, location.search]);
 
   async function leaveAccount() {
@@ -230,7 +235,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {current.sections.map((section) => {
           const items = section.items.filter((item) => allowed(item.capability));
           if (items.length === 0) return null;
-          const links = items.map((item) => <SidebarItem key={item.to} render={<Link to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={() => markNavigation(item.to)} onClick={() => markNavigation(item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={<Icon name={item.icon} />}>{item.label}</SidebarItem>);
           return current.sections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={section.title} title={section.title}>{links}</SidebarSection>;
