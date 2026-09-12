@@ -1,5 +1,6 @@
 .root { min-width: 0; max-width: var(--ui-popoverWidth); padding: var(--space-2) var(--space-3); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); background: var(--ui-helpBg); color: var(--ui-buttonInk); border: 0; border-radius: var(--radius-sm); }
 .root[data-instant] { transition: none; }
+.compact { padding: var(--space-1) var(--space-2); font-size: var(--typography-size-xs); line-height: var(--typography-line-sm); white-space: nowrap; }
 
 @media (prefers-reduced-transparency: reduce) { .root { background: var(--ui-helpSolid); } }
 @media (forced-colors: active) { .root { background: Canvas; color: CanvasText; } }

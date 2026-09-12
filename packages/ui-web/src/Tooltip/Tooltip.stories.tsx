@@ -6,3 +6,4 @@ const meta: Meta<typeof Tooltip> = { title: "Componentes/Tooltip", component: To
 export default meta;
 type Story = StoryObj<typeof Tooltip>;
 export const Default: Story = { render: () => (<TooltipProvider><Tooltip content="Mais informações"><Button>Ajuda</Button></Tooltip></TooltipProvider>) };
+export const Compacto: Story = { render: () => (<TooltipProvider><Tooltip size="compact" pinOnClick={false} content="Automações"><Button iconOnly aria-label="Automações">A</Button></Tooltip></TooltipProvider>) };
