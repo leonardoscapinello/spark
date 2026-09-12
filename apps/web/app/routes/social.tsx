@@ -180,7 +180,6 @@ export default function Social() {
       <PageHeader
         icon={channelView ? "team" : "calendar"}
         title={channelView ? "Canais conectados" : "Publicações"}
-        description={channelView ? "Contas disponíveis para publicar e acompanhar nas redes sociais." : "Crie, agende e acompanhe publicações em cada canal."}
         actions={
           canWrite ? (
             <div className={styles.headerActions}>

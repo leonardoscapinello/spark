@@ -47,7 +47,7 @@ export default function Pages() {
   }
 
   return <PageFrame className={styles.page}>
-    <PageHeader icon="page" title="Páginas" description="Crie, publique e acompanhe páginas de captação." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
+    <PageHeader icon="page" title="Páginas" actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="page" title="Crie sua primeira página" description="Monte uma página de captação com blocos e publique quando estiver pronta." action={canWrite ? <Button onClick={() => setOpen(true)}>Nova página</Button> : undefined} />}
     {firstRun && (canReadForms || canReadFiles) && <ActionCardGroup title="Prepare sua página">
       {canReadForms && <ActionCard icon="form" title="Capture respostas" description="Use um formulário para receber novos contatos pela página." action={<Button variant="secondary" onClick={() => void navigate("/forms")}>Abrir formulários</Button>} />}

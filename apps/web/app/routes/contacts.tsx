@@ -52,7 +52,6 @@ export default function Contacts() {
   const [archiveView, setArchiveView] = useState(false);
   const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && ownerFilter === "all";
   const viewTitle = archiveView ? "Pessoas arquivadas" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Pessoas";
-  const viewDescription = archiveView ? "Registros fora da base ativa que você pode restaurar." : statusFilter === "all" ? "" : "Acompanhe as pessoas desta etapa e abra cada perfil para ver o histórico.";
   const filteredContacts = contacts.filter((contact) =>
     (archiveView ? contact.deletedAt !== null : contact.deletedAt === null) &&
     contactMatches(contact, search) &&
@@ -145,7 +144,7 @@ export default function Contacts() {
   }
 
   return <PageFrame>
-    <PageHeader icon="user" title={viewTitle} description={viewDescription} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Nova pessoa</Button></> : undefined} />
+    <PageHeader icon="user" title={viewTitle} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Nova pessoa</Button></> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="user" title="Cadastre a primeira pessoa" description="Reúna pessoas, empresas e conversas em uma base que a equipe pode acompanhar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova pessoa</Button> : undefined} />}
     {firstRun && (canWrite || canReadCompanies || canReadIntegrations) && <ActionCardGroup title="Prepare sua base de leads">
       {canWrite && <ActionCard icon="upload" title="Traga sua lista" description="Importe um CSV e revise os dados antes de salvar as pessoas." action={<Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar pessoas</Button>} />}

@@ -66,7 +66,7 @@ export default function Forms() {
     : <TableIconAction label={`Abrir ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/forms/${item.id}`)} />; }
 
   return <PageFrame className={styles.page}>
-    <PageHeader icon="form" title="Formulários" description="Capture contatos e acompanhe as respostas recebidas." actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
+    <PageHeader icon="form" title="Formulários" actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="form" title="Crie seu primeiro formulário" description="Capture contatos com os campos que sua equipe precisa e acompanhe as respostas aqui." action={canWrite ? <Button onClick={() => setOpen(true)}>Novo formulário</Button> : undefined} />}
     {firstRun && (canReadPages || canReadContacts) && <ActionCardGroup title="Prepare a captação">
       {canReadPages && <ActionCard icon="page" title="Use em uma página" description="Coloque o formulário em uma página de captação." action={<Button variant="secondary" onClick={() => void navigate("/pages")}>Abrir páginas</Button>} />}
