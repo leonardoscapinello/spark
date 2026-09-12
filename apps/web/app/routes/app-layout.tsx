@@ -16,7 +16,7 @@ const modules: NavModule[] = [
   ] },
   { id: "leads", title: "Leads", icon: "user", to: "/", sections: [
     { title: "Pessoas", items: [
-      { label: "Todos os contatos", to: "/", icon: "team", capability: "contacts:read" },
+      { label: "Contatos", to: "/", icon: "team", capability: "contacts:read" },
       { label: "Novos leads", to: "/?status=new", icon: "user", capability: "contacts:read" },
       { label: "Qualificados", to: "/?status=qualified", icon: "check", capability: "contacts:read" },
       { label: "Clientes", to: "/?status=customer", icon: "star", capability: "contacts:read" },
@@ -30,7 +30,7 @@ const modules: NavModule[] = [
   ] },
   { id: "crm", title: "CRM", icon: "briefcase", to: "/deals", sections: [
     { title: "Negócios", items: [
-      { label: "Funil em aberto", to: "/deals", icon: "briefcase", capability: "deals:read" },
+      { label: "Negócios", to: "/deals", icon: "briefcase", capability: "deals:read" },
       { label: "Ganhos", to: "/deals?status=won", icon: "check", capability: "deals:read" },
       { label: "Perdidos", to: "/deals?status=lost", icon: "close", capability: "deals:read" },
     ] },
@@ -165,8 +165,8 @@ function moduleForPath(pathname: string): NavModule {
 }
 
 const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
-  leads: ["Todos os contatos", "Empresas"],
-  crm: ["Funil em aberto", "Atividades", "Produtos", "Ofertas e descontos"],
+  leads: ["Contatos", "Empresas"],
+  crm: ["Negócios", "Atividades", "Produtos", "Ofertas e descontos"],
   content: ["Campanhas", "Públicos", "Páginas", "Formulários", "Arquivos"],
   social: ["Publicações", "Canais conectados"],
 };
@@ -223,6 +223,10 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const topNavigation = usesTopNavigation(current.id, location.pathname)
     ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
     : [];
+  const topTabActive = (item: NavItem) =>
+    (item.to === "/" && location.pathname === "/") ||
+    (item.to === "/deals" && location.pathname === "/deals") ||
+    pathMatches(location.pathname, item.to, location.search);
   const showSidebar = current.id === "admin" || current.id === "automations" && location.pathname === "/automations" || current.id === "inbox" && location.pathname !== "/inbox";
 
   useEffect(() => {
@@ -297,7 +301,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : "panel"} aria-busy={Boolean(requestedPath)}>
         {topNavigation.length > 0 && <nav className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
           {topNavigation.map((item) =>
-            <Link key={item.to} ref={pathMatches(location.pathname, item.to, location.search) ? activeTopTab : undefined} to={item.to} onPointerEnter={() => warmRoute(item.to)} onFocus={() => warmRoute(item.to)} onTouchStart={() => warmRoute(item.to)} onPointerDown={() => { warmRoute(item.to); markNavigation(item.to); }} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
+            <Link key={item.to} ref={topTabActive(item) ? activeTopTab : undefined} to={item.to} onPointerEnter={() => warmRoute(item.to)} onFocus={() => warmRoute(item.to)} onTouchStart={() => warmRoute(item.to)} onPointerDown={() => { warmRoute(item.to); markNavigation(item.to); }} onClick={() => markNavigation(item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
         </nav>}
         <Outlet />
