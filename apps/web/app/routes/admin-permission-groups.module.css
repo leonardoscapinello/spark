@@ -23,8 +23,8 @@
   border: 0;
 }
 
-.capabilityGroup { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); }
-.capabilityGroup h3 { margin: 0 0 var(--space-1); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+.capabilityGroup { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; padding: var(--space-4) var(--space-2) 0; border-top: var(--ui-hairline) solid var(--color-line); }
+.capabilityGroup h3 { margin: 0 0 var(--space-1); color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 
 .capabilityLegend {
   grid-column: 1 / -1;
