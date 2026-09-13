@@ -25,10 +25,7 @@ export function RecordHero({ icon, avatarName, eyebrow, title, description, acti
     <div className={styles.identity}>
       {avatarName ? <Avatar name={avatarName} size="hero" /> : <span className={styles.avatar}><Icon name={icon} /></span>}
       <div className={styles.copy}>
-        <div className={styles.heading}>
-          <div className={styles.titleLine}><h1>{title}</h1>{eyebrow && <span className={styles.context}>{eyebrow}</span>}</div>
-          {actions && <div className={styles.actions}>{actions}</div>}
-        </div>
+        <div className={styles.titleLine}><h1>{title}</h1>{eyebrow && <span className={styles.context}>{eyebrow}</span>}</div>
         {description && <p className={styles.description}>{description}</p>}
         {metrics.length > 0 && <dl className={styles.metrics}>{metrics.map((metric) => <div key={metric.label}>
           {metric.icon && <Icon name={metric.icon} />}
@@ -36,6 +33,7 @@ export function RecordHero({ icon, avatarName, eyebrow, title, description, acti
           <dd data-tone={metric.tone}>{metric.value}</dd>
         </div>)}</dl>}
       </div>
+      {actions && <div className={styles.actions}>{actions}</div>}
     </div>
   </section>;
 }
