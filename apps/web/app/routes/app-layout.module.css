@@ -181,6 +181,7 @@
   min-height: 0;
   overflow: auto;
   background: var(--color-surface);
+  border: var(--ui-hairline) solid var(--color-line);
   border-radius: var(--radius-lg);
   box-shadow: var(--ui-panelShadow);
 }
@@ -188,6 +189,7 @@
 .conteudo[data-surface="workspace"] {
   overflow: hidden;
   background: transparent;
+  border: 0;
   border-radius: 0;
   box-shadow: none;
 }
