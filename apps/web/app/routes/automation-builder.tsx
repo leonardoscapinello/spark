@@ -24,6 +24,7 @@ const NODE_ORIGIN_X = Number.parseFloat(lightTheme["space-16"]) - Number.parseFl
 const NODE_ORIGIN_Y = Number.parseFloat(lightTheme["space-16"]);
 const NODE_STEP_X = NODE_WIDTH + Number.parseFloat(lightTheme["space-8"]) + Number.parseFloat(lightTheme["space-1"]);
 const NODE_STEP_Y = NODE_HEIGHT + Number.parseFloat(lightTheme["space-10"]);
+const CONDITION_BRANCH_OFFSET = (Number.parseFloat(lightTheme["ui-touchTarget"]) + Number.parseFloat(lightTheme["space-1"])) / 2;
 
 export async function clientLoader() { const session = await requireCapability("automations:read"); void Promise.allSettled([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload(), getAutomationRunsCollection().preload(), getAutomationRunStepsCollection().preload(), ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : [])]); return null; }
 
@@ -42,7 +43,7 @@ export default function AutomationBuilder() {
   const [zoom, setZoom] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<"closed" | "palette" | "inspector">("closed");
-  const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
+  const [connectingFrom, setConnectingFrom] = useState<{ nodeId: string; label?: "sim" | "não" } | null>(null);
   const [saving, setSaving] = useState(false);
   const [runModalOpen, setRunModalOpen] = useState(false);
   const [runsOpen, setRunsOpen] = useState(false);
@@ -92,15 +93,17 @@ export default function AutomationBuilder() {
     drag.current = { id: node.id, startX: event.clientX, startY: event.clientY, originX: node.position.x, originY: node.position.y };
   }
 
-  function connect(targetId: string) {
-    if (!connectingFrom) { setConnectingFrom(targetId); return; }
-    if (connectingFrom === targetId) { setConnectingFrom(null); return; }
-    const exists = graph.edges.some((edge) => edge.source === connectingFrom && edge.target === targetId);
-    if (!exists) setGraph((value) => {
-      const source = value.nodes.find((node) => node.id === connectingFrom);
-      const branchCount = value.edges.filter((edge) => edge.source === connectingFrom).length;
-      const label = source?.type === "condition" ? (branchCount === 0 ? "sim" : "não") : undefined;
-      return { ...value, edges: [...value.edges, { id: `edge-${crypto.randomUUID()}`, source: connectingFrom, target: targetId, ...(label ? { label } : {}) }] };
+  function startConnection(nodeId: string, label?: "sim" | "não") {
+    setConnectingFrom((current) => current?.nodeId === nodeId && current.label === label ? null : { nodeId, ...(label ? { label } : {}) });
+  }
+
+  function finishConnection(targetId: string) {
+    if (!connectingFrom || connectingFrom.nodeId === targetId) return;
+    const source = connectingFrom;
+    setGraph((value) => {
+      const exists = value.edges.some((edge) => edge.source === source.nodeId && edge.target === targetId && edge.label === source.label);
+      if (exists) return value;
+      return { ...value, edges: [...value.edges, { id: `edge-${crypto.randomUUID()}`, source: source.nodeId, target: targetId, ...(source.label ? { label: source.label } : {}) }] };
     });
     setConnectingFrom(null);
   }
@@ -185,14 +188,21 @@ export default function AutomationBuilder() {
       </aside>}
       <div className={styles.canvasViewport}>
       {canWrite && <Button iconOnly size="lg" className={styles.canvasAdd} aria-label="Adicionar bloco" onClick={() => setPanelMode("palette")}><Icon name="plus" /></Button>}
-      <main className={styles.canvas} onPointerDown={() => { setSelectedId(null); setPanelMode("closed"); }}>
+      <main className={styles.canvas} onPointerDown={() => { setSelectedId(null); setPanelMode("closed"); setConnectingFrom(null); }}>
         <div className={styles.canvasStage} style={{ transform: `scale(${zoom})` }}>
         <svg className={styles.edges} aria-hidden="true">{graph.edges.map((edge) => <EdgeLine key={edge.id} edge={edge} nodes={graph.nodes} />)}</svg>
         {graph.nodes.length === 0 && <div className={styles.canvasEmpty}><strong>O fluxo começa com um gatilho</strong><span>Adicione o primeiro bloco para definir quando a automação começa.</span><Button disabled={!canWrite} onClick={(event) => { event.stopPropagation(); addNode("trigger"); }}>Adicionar gatilho</Button></div>}
         {graph.nodes.map((node) => <article key={node.id} className={styles.node} data-type={node.type} data-selected={selectedId === node.id || undefined} style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }} onPointerDown={(event) => { event.stopPropagation(); startDrag(event, node); }}>
           <header><span className={styles.nodeIcon}><Icon name={NODE_ICONS[node.type]} /></span><small>{typeLabel(node.type)}</small></header>
           <strong>{node.data.label}</strong><p>{node.data.description || "Sem descrição"}</p>
-          {canWrite && <footer><Button size="sm" variant={connectingFrom === node.id ? "raised" : "ghost"} onPointerDown={(event) => event.stopPropagation()} onClick={() => connect(node.id)}>{connectingFrom && connectingFrom !== node.id ? "Ligar aqui" : connectingFrom === node.id ? "Cancelar" : "Conectar"}</Button></footer>}
+          {canWrite && connectingFrom && connectingFrom.nodeId !== node.id && <Button iconOnly size="sm" variant="ghost" className={`${styles.nodePort} ${styles.inputPort}`} aria-label={`Conectar a ${node.data.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => finishConnection(node.id)} />}
+          {canWrite && <div className={styles.nodeOutputs} data-condition={node.type === "condition" || undefined}>
+            {(node.type === "condition" ? (["sim", "não"] as const) : ([undefined] as const)).map((label, index) => <div key={label ?? "next"} className={styles.nodeOutput}>
+              {label && <span className={styles.nodeOutputLabel}>{label === "sim" ? "Sim" : "Não"}</span>}
+              <Button iconOnly size="sm" variant="ghost" className={styles.nodePort} data-branch={label} data-connecting={connectingFrom?.nodeId === node.id && connectingFrom.label === label || undefined} aria-label={connectingFrom?.nodeId === node.id && connectingFrom.label === label ? "Cancelar ligação" : `Conectar ${label ? `saída ${label}` : "próxima etapa"} de ${node.data.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => startConnection(node.id, label)} />
+              {!label && index === 0 && <span className={styles.nodeOutputHint}>Próximo passo</span>}
+            </div>)}
+          </div>}
         </article>)}
         </div>
       </main>
@@ -219,9 +229,9 @@ function NodeConfiguration({ node, disabled, onChange }: { node: AutomationNode;
 function EdgeLine({ edge, nodes }: { edge: AutomationEdge; nodes: AutomationNode[] }) {
   const source = nodes.find((node) => node.id === edge.source); const target = nodes.find((node) => node.id === edge.target);
   if (!source || !target) return null;
-  const x1 = source.position.x + NODE_WIDTH; const y1 = source.position.y + NODE_HEIGHT / 2; const x2 = target.position.x; const y2 = target.position.y + NODE_HEIGHT / 2;
+  const x1 = source.position.x + NODE_WIDTH; const y1 = source.position.y + NODE_HEIGHT / 2 + (edge.label === "sim" ? -CONDITION_BRANCH_OFFSET : edge.label === "não" ? CONDITION_BRANCH_OFFSET : 0); const x2 = target.position.x; const y2 = target.position.y + NODE_HEIGHT / 2;
   const middle = (x1 + x2) / 2;
-  return <path d={`M ${x1} ${y1} C ${middle} ${y1}, ${middle} ${y2}, ${x2} ${y2}`} />;
+  return <path data-branch={edge.label} d={`M ${x1} ${y1} C ${middle} ${y1}, ${middle} ${y2}, ${x2} ${y2}`} />;
 }
 function typeLabel(type: AutomationNodeType): string { return ({ trigger: "Gatilho", action: "Ação", condition: "Condição", wait: "Espera" })[type]; }
 function runStatusLabel(status: "queued" | "running" | "waiting" | "completed" | "failed" | "cancelled"): string { return ({ queued: "Na fila", running: "Executando", waiting: "Aguardando", completed: "Concluída", failed: "Falhou", cancelled: "Cancelada" })[status]; }

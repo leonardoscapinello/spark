@@ -47,11 +47,13 @@
 .canvasAdd:hover:not([data-disabled]) { background: var(--color-accent); }
 .edges { position: absolute; inset: var(--space-0); width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .edges path { fill: none; stroke: var(--color-lineStrong); stroke-width: calc(var(--ui-hairline) * 2); }
-.node { box-sizing: border-box; position: absolute; top: var(--space-0); left: var(--space-0); display: flex; flex-direction: column; width: var(--ui-automationNodeWidth); height: var(--ui-automationNodeHeight); padding: 0; overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); cursor: grab; user-select: none; transition: border-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out); }
+.edges path[data-branch="sim"] { stroke: var(--color-statusSuccess); }
+.edges path[data-branch="não"] { stroke: var(--color-statusDanger); }
+.node { box-sizing: border-box; position: absolute; top: var(--space-0); left: var(--space-0); display: flex; flex-direction: column; width: var(--ui-automationNodeWidth); height: var(--ui-automationNodeHeight); padding: 0; overflow: visible; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); cursor: grab; user-select: none; transition: border-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out); }
 .node:active { cursor: grabbing; }
 .node:hover { border-color: var(--color-lineStrong); box-shadow: var(--ui-panelShadow); }
 .node[data-selected="true"] { border-color: var(--color-accent); box-shadow: var(--ui-selectionShadow); }
-.node > header { display: flex; align-items: center; flex-shrink: 0; gap: var(--space-2); padding: var(--space-1) var(--space-3); color: var(--color-ink); text-transform: uppercase; letter-spacing: var(--typography-tracking-wide); }
+.node > header { display: flex; align-items: center; flex-shrink: 0; gap: var(--space-2); padding: var(--space-1) var(--space-3); border-radius: var(--radius-md) var(--radius-md) 0 0; color: var(--color-ink); text-transform: uppercase; letter-spacing: var(--typography-tracking-wide); }
 .node[data-type="trigger"] > header { background: var(--ui-automationTrigger); }
 .node[data-type="condition"] > header { background: var(--ui-automationCondition); }
 .node[data-type="action"] > header { background: var(--ui-automationAction); }
@@ -61,7 +63,20 @@
 .node > header .nodeIcon svg { width: var(--space-3); height: var(--space-3); }
 .node > strong { display: block; margin: var(--space-2) var(--space-3) 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); }
 .node p { flex: 1; min-height: 0; margin: var(--space-1) var(--space-3); overflow: hidden; color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
-.node footer { display: flex; justify-content: flex-end; flex-shrink: 0; padding: var(--space-1) var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); }
+.nodeOutputs { position: absolute; inset-block-start: 50%; inset-inline-end: calc(var(--ui-touchTarget) / -2); display: flex; flex-direction: column; gap: var(--space-1); transform: translateY(-50%); }
+.nodeOutput { position: relative; display: flex; align-items: center; justify-content: center; }
+.node .nodePort { box-sizing: border-box; display: grid; place-items: center; width: var(--ui-touchTarget); height: var(--ui-touchTarget); min-width: var(--ui-touchTarget); min-height: var(--ui-touchTarget); padding: 0; border-radius: var(--radius-full); background: transparent; box-shadow: none; cursor: crosshair; }
+.node .nodePort:hover:not([data-disabled]) { background: transparent; }
+.nodePort::before { content: ""; box-sizing: border-box; width: var(--space-4); height: var(--space-4); border: calc(var(--ui-hairline) * 2) solid var(--color-lineStrong); border-radius: var(--radius-full); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); transition: transform var(--motion-duration-fast) var(--motion-ease-out), border-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out); }
+.nodePort:hover::before, .nodePort[data-connecting]::before { transform: scale(1.25); border-color: var(--color-accent); box-shadow: var(--ui-selectionShadow); }
+.nodePort[data-branch="sim"]::before { border-color: var(--color-statusSuccess); }
+.nodePort[data-branch="não"]::before { border-color: var(--color-statusDanger); }
+.node .inputPort { position: absolute; inset-block-start: 50%; inset-inline-start: calc(var(--ui-touchTarget) / -2); transform: translateY(-50%); }
+.node .inputPort::before { border-color: var(--color-accent); box-shadow: var(--ui-selectionShadow); }
+.nodeOutputLabel, .nodeOutputHint { position: absolute; inset-inline-end: calc(var(--ui-touchTarget) + var(--space-1)); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); white-space: nowrap; pointer-events: none; }
+.nodeOutputLabel { text-transform: uppercase; letter-spacing: var(--typography-tracking-wide); }
+.nodeOutputHint { opacity: 0; transition: opacity var(--motion-duration-fast) var(--motion-ease-out); }
+.nodeOutput:hover .nodeOutputHint, .nodeOutput:focus-within .nodeOutputHint { opacity: 1; }
 .canvasEmpty { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: var(--space-3); color: var(--color-inkMuted); text-align: center; }
 .canvasEmpty strong { color: var(--color-ink); font-size: var(--typography-size-lg); }
 .inspector { gap: var(--space-4); padding: 0 var(--space-4) var(--space-4); }
@@ -93,4 +108,4 @@
   .palette, .inspector { min-height: 0; }
   .zoomControls { inset-block-start: auto; inset-block-end: var(--space-3); transform: none; }
 }
-@media (prefers-reduced-motion: reduce) { .palette .paletteButton { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .palette .paletteButton, .nodePort::before, .nodeOutputHint { transition: none; } }
