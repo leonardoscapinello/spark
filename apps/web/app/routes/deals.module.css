@@ -11,19 +11,12 @@
 
 .toolbar {
   padding-block: var(--space-3);
-  border-block: var(--ui-hairline) solid var(--color-line);
+  border-bottom: var(--ui-hairline) solid var(--color-line);
 }
 
 .loadingTitle { width: var(--space-16); height: var(--space-4); }
 .loadingValue { width: var(--space-12); height: var(--space-3); }
 .loadingCard { height: var(--space-16); background: var(--color-surface); }
-
-.titulo {
-  margin: 0;
-  font-family: var(--typography-fontFamily-display);
-  font-size: var(--typography-size-2xl);
-  font-weight: var(--typography-weight-semibold);
-}
 
 /* Board rola na horizontal — nunca vidro aqui dentro (docs/adr/0025). */
 .board {
@@ -54,16 +47,16 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  border: var(--ui-hairline) dashed var(--color-line);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface2);
   padding: var(--space-4);
 }
 
 .colunaCabecalho {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-2);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
 }
 
 .colunaNome {
@@ -72,10 +65,13 @@
   margin: calc(var(--ui-focusWidth) * -1) calc(var(--space-1) * -1);
   font-weight: var(--typography-weight-medium);
   font-size: var(--typography-size-sm);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .formRenomear {
-  flex: 1;
+  width: 100%;
   min-width: 0;
 }
 
@@ -95,7 +91,7 @@
 
 .cartao {
   background: var(--color-surface);
-  border: var(--ui-hairline) solid transparent;
+  border: var(--ui-hairline) solid var(--color-line);
   border-radius: var(--radius-md);
   box-shadow: var(--ui-panelShadow);
   padding: var(--space-3);
@@ -105,7 +101,7 @@
   gap: var(--space-1);
   /* feedback de estado (arrastando), não movimento contínuo — a posição
    * do card durante o arraste já é o navegador quem desenha. */
-  transition: opacity var(--motion-duration-instant) var(--motion-ease-out);
+  transition: opacity var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .cartao:active {
@@ -135,7 +131,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--typography-size-sm);
-  font-weight: var(--typography-weight-medium);
+  font-weight: var(--typography-weight-semibold);
   color: var(--color-ink);
   text-decoration: none;
 }
@@ -145,8 +141,9 @@
 }
 
 .cartaoValor {
-  font-size: var(--typography-size-xs);
-  color: var(--color-inkMuted);
+  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-semibold);
+  color: var(--color-ink);
   font-variant-numeric: tabular-nums;
 }
 

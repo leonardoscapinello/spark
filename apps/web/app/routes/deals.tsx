@@ -204,7 +204,7 @@ export default function Deals() {
       <div className={styles.toolbar}><CollectionToolbar filters={<>
         <Select appearance="filter" label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
         <Select appearance="filter" label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value && value !== "open" ? { status: value } : {})} />
-      </>} /></div>
+      </>} count={`${deals.length} ${deals.length === 1 ? "negócio" : "negócios"} · ${formatBRL(sum(deals.map((deal) => syncedAmount(deal.amount))))}`} /></div>
 
       <div className={styles.board}>
         {stages.map((stage) => {
