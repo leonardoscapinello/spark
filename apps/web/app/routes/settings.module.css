@@ -1,1 +1,1 @@
-.page { gap: var(--space-6); } .form { display: grid; gap: var(--space-4); } .primary { display: grid; gap: var(--space-1); } .primary span { color: var(--color-inkMuted); font-family: var(--typography-fontFamily-mono); font-size: var(--typography-size-xs); }
+.page { gap: var(--space-6); } .form { display: grid; gap: var(--space-4); }
