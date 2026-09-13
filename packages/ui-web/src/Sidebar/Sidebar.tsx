@@ -1,9 +1,9 @@
 import { cloneElement, useEffect, useId, useState, type ComponentProps, type ReactElement, type ReactNode } from "react";
 import { Icon } from "../Icon/Icon.js";
 import styles from "./Sidebar.module.css";
-export interface SidebarProps { title: string; children: ReactNode; actions?: ReactNode; footer?: ReactNode; brand?: ReactNode; className?: string | undefined }
-export function Sidebar({ title, children, actions, footer, brand, className }: SidebarProps) {
-  return <nav aria-label={title} className={[styles.root, className].filter(Boolean).join(" ")}>{brand && <div className={styles.brand}>{brand}</div>}<header className={styles.header}><h2>{title}</h2>{actions}</header><div className={styles.body}>{children}</div>{footer && <footer className={styles.footer}>{footer}</footer>}</nav>;
+export interface SidebarProps { title: string; children: ReactNode; actions?: ReactNode; footer?: ReactNode; className?: string | undefined }
+export function Sidebar({ title, children, actions, footer, className }: SidebarProps) {
+  return <nav aria-label={title} className={[styles.root, className].filter(Boolean).join(" ")}><header className={styles.header}><h2>{title}</h2>{actions}</header><div className={styles.body}>{children}</div>{footer && <footer className={styles.footer}>{footer}</footer>}</nav>;
 }
 export function SidebarItem({ active, icon, count, children, className, render, ...props }: ComponentProps<"a"> & { active?: boolean; icon?: ReactNode; count?: number | undefined; render?: ReactElement }) {
   const content = <>{icon}<span className={styles.label}>{children}</span>{count !== undefined && <span className={styles.count}>{count}</span>}</>;
