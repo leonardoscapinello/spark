@@ -1,7 +1,5 @@
 .page { gap: var(--space-6); }
-.form, .primary { display: grid; gap: var(--space-2); }
-.form { gap: var(--space-4); }
-.primary span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.form { display: grid; gap: var(--space-4); }
 .cardGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-cardMinWidth)), 1fr)); align-content: start; gap: var(--space-3); min-width: 0; }
 .cardGrid > section { min-width: 0; }
 .cardGrid > section h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

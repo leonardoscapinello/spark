@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { pagesControllerCreate } from "@spark/api-client";
 import { pageId, type Page } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, RecordIdentity, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getPagesCollection } from "../lib/pages-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -34,7 +34,7 @@ export default function Pages() {
     && (!term || page.name.toLocaleLowerCase("pt-BR").includes(term) || page.slug.toLocaleLowerCase("pt-BR").includes(term)));
 
   const columns: TableColumn<Page>[] = [
-    { id: "name", label: "Página", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><span>Identificador: {item.slug}</span></div>, sortValue: (item) => item.name },
+    { id: "name", label: "Página", cell: (item) => <RecordIdentity icon="page" title={item.name} subtitle={`Identificador: ${item.slug}`} />, sortValue: (item) => item.name },
     { id: "status", label: "Situação", cell: (item) => pageStatusBadge(item), sortValue: (item) => item.status },
     { id: "updated", label: "Atualizada", cell: (item) => formatDate(item.updatedAt), sortValue: (item) => item.updatedAt },
   ];
