@@ -1,5 +1,4 @@
 .page { gap: var(--space-6); }
-.secondary { display: block; margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
 .form { display: grid; gap: var(--space-4); }
 .cardGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-cardMinWidth)), 1fr)); align-content: start; gap: var(--space-3); min-width: 0; }
 .cardGrid > section { min-width: 0; }

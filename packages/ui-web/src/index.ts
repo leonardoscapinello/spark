@@ -25,6 +25,7 @@ export * from "./RadioGroup/RadioGroup.js";
 export * from "./Textarea/Textarea.js";
 export * from "./Feedback/Feedback.js";
 export * from "./Card/Card.js";
+export * from "./RecordIdentity/RecordIdentity.js";
 export { SettingsSection } from "./SettingsSection/SettingsSection.js";
 export * from "./Dashboard/Dashboard.js";
 export * from "./Chart/Chart.js";

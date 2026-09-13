@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useNavigate } from "react-router";
 import { formsControllerCreate, formsControllerStatus } from "@spark/api-client";
 import { leadFormId, type LeadForm } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, RecordIdentity, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getFormSubmissionsCollection, getLeadFormsCollection } from "../lib/forms-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -37,7 +37,7 @@ export default function Forms() {
   const counts = useMemo(() => submissions.reduce((map, item) => map.set(item.formId, (map.get(item.formId) ?? 0) + 1), new Map<string, number>()), [submissions]);
 
   const columns: TableColumn<LeadForm>[] = [
-    { id: "name", label: "Formulário", cell: (item) => <div><strong>{item.name}</strong><small className={styles.secondary}>{item.title}</small></div>, sortValue: (item) => item.name },
+    { id: "name", label: "Formulário", cell: (item) => <RecordIdentity icon="form" title={item.name} subtitle={item.title} />, sortValue: (item) => item.name },
     { id: "fields", label: "Campos", cell: (item) => item.fields.length, sortValue: (item) => item.fields.length },
     { id: "submissions", label: "Respostas", cell: (item) => counts.get(item.id) ?? 0, sortValue: (item) => counts.get(item.id) ?? 0 },
     { id: "status", label: "Situação", cell: (item) => formStatusBadge(item), sortValue: (item) => item.status },
