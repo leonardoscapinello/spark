@@ -9,5 +9,7 @@ import { defineConfig } from "vitest/config";
 export const sharedTestConfig = defineConfig({
   test: {
     exclude: ["**/node_modules/**", "**/.git/**", "**/dist/**", "**/.turbo/**"],
+    // Persist transformed modules between runs so small UI changes do not rebuild the test graph.
+    fsModuleCache: true,
   },
 });
