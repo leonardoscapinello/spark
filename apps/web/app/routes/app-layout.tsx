@@ -133,14 +133,12 @@ function moduleForPath(pathname: string): NavModule {
 
 const TOP_NAVIGATION: Partial<Record<string, readonly string[]>> = {
   crm: ["Negócios", "Atividades", "Produtos", "Ofertas e descontos"],
-  automations: ["Todos os fluxos", "Ativos", "Rascunhos", "Pausados"],
   content: ["Campanhas", "Públicos", "Páginas", "Formulários", "Arquivos"],
   social: ["Publicações", "Canais conectados"],
 };
 
 function usesTopNavigation(moduleId: string, pathname: string) {
   if (moduleId === "crm") return pathname === "/deals" || pathname === "/activities" || pathname === "/catalog";
-  if (moduleId === "automations") return pathname === "/automations";
   if (moduleId === "content") return ["/campaigns", "/pages", "/forms", "/files"].includes(pathname);
   if (moduleId === "social") return pathname === "/social";
   return false;
@@ -212,7 +210,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const displayedTopTabActive = (item: NavItem) => requestedPath
     ? pathMatches(requestedPath, item.to, requestedSearch)
     : topTabActive(item);
-  const showSidebar = current.id === "admin" || current.id === "leads";
+  const showSidebar = current.id === "admin" || current.id === "leads" || (current.id === "automations" && location.pathname === "/automations");
   const visibleSections = current.sections.map((section) => ({
     title: section.title,
     icon: section.icon,
