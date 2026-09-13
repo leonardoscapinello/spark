@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, ProgressBar, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client"; import { requireCapability } from "../lib/route-access.client"; import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getAudiencesCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
 
@@ -34,7 +34,7 @@ export default function Campaigns() {
   const columns: TableColumn<Campaign>[] = [
     { id: "name", label: "Campanha", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><span>{item.subject}</span></div>, sortValue: (item) => item.name },
     { id: "audience", label: "Público", cell: (item) => audienceById.get(item.audienceId)?.name ?? "—", sortValue: (item) => audienceById.get(item.audienceId)?.name ?? "" },
-    { id: "delivery", label: "Entrega", cell: (item) => `${item.sentCount}/${item.recipientCount}`, sortValue: (item) => item.sentCount },
+    { id: "delivery", label: "Entrega", cell: (item) => <div className={styles.delivery}><strong>{item.sentCount} de {item.recipientCount}</strong><ProgressBar label={`E-mails enviados em ${item.name}`} value={item.sentCount} max={item.recipientCount} /></div>, sortValue: (item) => item.sentCount },
     { id: "status", label: "Status", cell: (item) => <Badge tone={item.status === "sent" ? "success" : item.status === "failed" ? "danger" : item.status === "partial" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>, sortValue: (item) => item.status },
   ];
   const audienceColumns: TableColumn<Audience>[] = [

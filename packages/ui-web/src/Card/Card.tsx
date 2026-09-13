@@ -37,7 +37,10 @@ export function MetricCard({ title, description, actions, value, comparison, sen
   return <Card title={title} {...(description !== undefined ? {description} : {})} actions={actions}><CardContentState state={state} onRetry={onRetry}><div className={s.value}>{value}</div>{comparison && <p className={s.comparison} data-sentiment={sentiment}>{comparison}</p>}</CardContentState></Card>;
 }
 export function ProgressCard({ title, value, max = 100, label, footer }: { title: string; value: number; max?: number; label: string; footer?: ReactNode }) {
-  return <Card title={title} footer={footer}><div className={s.progressLabel}>{label}</div><progress aria-label={title} className={s.progress} value={value} max={max} /></Card>;
+  return <Card title={title} footer={footer}><div className={s.progressLabel}>{label}</div><ProgressBar label={title} value={value} max={max} /></Card>;
+}
+export function ProgressBar({ label, value, max = 100 }: { label: string; value: number; max?: number }) {
+  return <progress aria-label={label} className={s.progress} value={Math.max(0, Math.min(value, max))} max={Math.max(1, max)} />;
 }
 export interface SummaryItem { id: string; label: string; value: ReactNode; detail?: string; action?: ReactNode }
 export function SummaryList({ items, label }: { items: readonly SummaryItem[]; label: string }) {
