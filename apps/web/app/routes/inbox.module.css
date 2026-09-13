@@ -37,9 +37,6 @@
 .conversationButton + .conversationButton { margin-top: var(--space-1); }
 .conversationButton:hover { background: var(--color-surface); }
 .conversationButton[data-selected] { border-color: var(--color-line); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
-.avatar,.avatarLarge { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border-radius: var(--radius-full); background: var(--color-accentWash); color: var(--color-accent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); }
-.avatar { width: var(--ui-controlMedium); height: var(--ui-controlMedium); }
-.avatarLarge { width: var(--ui-controlLarge); height: var(--ui-controlLarge); }
 .preview { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .preview > span { display: flex; justify-content: space-between; gap: var(--space-2); }
 .preview strong,.preview b,.preview small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
