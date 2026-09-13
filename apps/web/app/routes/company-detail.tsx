@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount } from "@spark/data";
-import { ActionModal, BackLink, Button, Card, Field, Input, Label, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Avatar, BackLink, Badge, Button, Card, Field, Input, Label, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -133,10 +133,10 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
 
     {hasRelations && <div className={styles.relations}>
       {canReadContacts && <div className={styles.relationCard}><Card title="Pessoas" description="Pessoas que trabalham ou se relacionam com esta empresa." actions={canLinkContacts ? <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular pessoa</Button> : undefined}>
-        {linkedContacts.length ? <ul>{linkedContacts.map((contact) => <li key={contact.id}><div><Link to={`/contacts/${contact.id}`}>{contact.name}</Link><span>{contact.email ?? "Sem e-mail"}</span></div>{canLinkContacts && <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhuma pessoa vinculada.</p>}
+        {linkedContacts.length ? <ul>{linkedContacts.map((contact) => <li key={contact.id}><div className={styles.personIdentity}><Avatar name={contact.name} /><div><Link to={`/contacts/${contact.id}`}>{contact.name}</Link><span>{contact.email ?? "Sem e-mail"}</span></div></div>{canLinkContacts && <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhuma pessoa vinculada.</p>}
       </Card></div>}
       {canReadDeals && <div className={styles.relationCard}><Card title="Negócios" description="Oportunidades comerciais desta empresa." actions={canLinkDeals ? <Button size="sm" onClick={() => setLinkDealOpen(true)}>Vincular negócio</Button> : undefined}>
-        {linkedDeals.length ? <ul>{linkedDeals.map((deal) => <li key={deal.id}><div><Link to={`/deals/${deal.id}`}>{deal.name}</Link><span>{formatBRL(syncedAmount(deal.amount))} · {deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></div>{canLinkDeals && <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhum negócio vinculado.</p>}
+        {linkedDeals.length ? <ul>{linkedDeals.map((deal) => <li key={deal.id}><div><Link to={`/deals/${deal.id}`}>{deal.name}</Link><span>{formatBRL(syncedAmount(deal.amount))}</span></div><div className={styles.dealActions}><Badge tone={deal.status === "won" ? "success" : deal.status === "lost" ? "danger" : "neutral"}>{deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</Badge>{canLinkDeals && <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button>}</div></li>)}</ul> : <p className={styles.empty}>Nenhum negócio vinculado.</p>}
       </Card></div>}
     </div>}
 

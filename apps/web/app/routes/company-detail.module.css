@@ -21,6 +21,10 @@
 .relationCard ul { list-style: none; padding: 0; margin: 0; }
 .relationCard li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-top: var(--ui-hairline) solid var(--color-line); }
 .relationCard li > div { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.relationCard li > .personIdentity { flex-direction: row; align-items: center; gap: var(--space-3); }
+.personIdentity > div { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.personIdentity a, .personIdentity span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.relationCard li > .dealActions { flex-direction: row; align-items: center; flex-shrink: 0; gap: var(--space-2); }
 .relationCard li a { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
 .relationCard li span, .empty { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .empty { margin: 0; padding: var(--space-4) 0; }
