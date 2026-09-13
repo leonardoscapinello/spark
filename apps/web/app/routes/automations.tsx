@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { optimisticAutomation } from "@spark/data";
 import type { Automation } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, RecordIdentity, Select, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
-import { getAutomationsCollection } from "../lib/automations-collections.client";
+import { getAutomationRunsCollection, getAutomationsCollection } from "../lib/automations-collections.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./automations.module.css";
 
-export async function clientLoader() { await requireCapability("automations:read"); void getAutomationsCollection().preload().catch(() => undefined); return null; }
+export async function clientLoader() { await requireCapability("automations:read"); void Promise.allSettled([getAutomationsCollection().preload(), getAutomationRunsCollection().preload()]); return null; }
 
 export default function Automations() {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ export default function Automations() {
   const session = getSession();
   const collection = getAutomationsCollection();
   const { data: automations, isLoading } = useLiveQuery({ query: (q) => q.from({ automations: collection }).orderBy(({ automations: item }) => item.updatedAt, "desc") });
+  const { data: runs = [] } = useLiveQuery({ query: (q) => q.from({ runs: getAutomationRunsCollection() }) });
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
@@ -30,12 +31,14 @@ export default function Automations() {
   const initialLoad = automations.length === 0 && isLoading;
   const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
   const triggerOptions = [...new Set(automations.flatMap((item) => item.draftGraph.nodes.filter((node) => node.type === "trigger").map((node) => node.data.label)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const runCounts = useMemo(() => runs.reduce((counts, run) => counts.set(run.automationId, (counts.get(run.automationId) ?? 0) + 1), new Map<string, number>()), [runs]);
   const visibleAutomations = selectedStatus === "active" || selectedStatus === "draft" || selectedStatus === "paused"
     ? automations.filter((item) => item.status === selectedStatus && item.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch) && (triggerFilter === "all" || item.draftGraph.nodes.some((node) => node.type === "trigger" && node.data.label === triggerFilter)))
     : automations.filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch) && (triggerFilter === "all" || item.draftGraph.nodes.some((node) => node.type === "trigger" && node.data.label === triggerFilter)));
   const columns: TableColumn<Automation>[] = [
     { id: "name", label: "Automação", cell: (item) => <RecordIdentity icon="bolt" title={item.name} subtitle={`Atualizada ${relativeTime(item.updatedAt)}`} />, sortValue: (item) => item.name },
     { id: "trigger", label: "Gatilho", cell: (item) => <AutomationTriggers automation={item} />, sortValue: (item) => item.draftGraph.nodes.find((node) => node.type === "trigger")?.data.label ?? "" },
+    { id: "runs", label: "Execuções", cell: (item) => formatCount(runCounts.get(item.id) ?? 0), sortValue: (item) => runCounts.get(item.id) ?? 0, align: "end" },
     { id: "structure", label: "Estrutura", cell: (item) => `${item.draftGraph.nodes.length} blocos · ${item.draftGraph.edges.length} conexões`, sortValue: (item) => item.draftGraph.nodes.length },
     { id: "version", label: "Versão", cell: (item) => item.publishedVersion ? `v${item.publishedVersion}` : "Ainda não publicada", sortValue: (item) => item.publishedVersion ?? 0 },
     { id: "status", label: "Situação", cell: (item) => <Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>, sortValue: (item) => item.status },
@@ -61,7 +64,7 @@ export default function Automations() {
     {initialLoad || layout === "table" ? <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /> : <div className={styles.cardList} aria-label="Lista de automações">
       {!isLoading && visibleAutomations.length === 0 && !firstRun && <p className={styles.empty}>{automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."}</p>}
       {visibleAutomations.map((item) => {
-        return <Link key={item.id} to={`/automations/${item.id}`} className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card appearance="elevated" title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} leading={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardBody}><AutomationTriggers automation={item} /><div className={styles.cardMeta}><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></div></Card></Link>;
+        return <Link key={item.id} to={`/automations/${item.id}`} className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card appearance="elevated" title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} leading={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardBody}><AutomationTriggers automation={item} /><div className={styles.cardMeta}><span className={styles.runCount}>{formatCount(runCounts.get(item.id) ?? 0)} <small>execuções</small></span><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></div></Card></Link>;
       })}
     </div>}</>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>
@@ -77,3 +80,4 @@ function AutomationTriggers({ automation }: { automation: Automation }) {
 
 function statusLabel(status: "draft" | "active" | "paused"): string { return ({ draft: "Rascunho", active: "Ativa", paused: "Pausada" })[status]; }
 function relativeTime(value: string): string { const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60_000)); return minutes < 1 ? "agora" : minutes < 60 ? `há ${minutes} min` : minutes < 1_440 ? `há ${Math.floor(minutes / 60)} h` : `há ${Math.floor(minutes / 1_440)} d`; }
+function formatCount(value: number): string { return new Intl.NumberFormat("pt-BR").format(value); }

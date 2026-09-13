@@ -13,6 +13,8 @@
 .cardLink .cardTriggers svg { color: var(--color-statusSuccess); }
 .cardMeta { display: grid; justify-items: end; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); white-space: nowrap; }
 .cardMeta span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.cardMeta .runCount { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); font-variant-numeric: tabular-nums; }
+.runCount small { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-regular); }
 .cardMeta svg { width: var(--ui-icon); height: var(--ui-icon); color: var(--color-accent); }
 .empty { margin: 0; padding: var(--space-8); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }
 @media (max-width: 720px) { .cardBody { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); } .cardMeta { justify-items: start; white-space: normal; } }
