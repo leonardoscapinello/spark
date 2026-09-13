@@ -11,4 +11,9 @@
 .typeIcon svg { width: var(--ui-icon); height: var(--ui-icon); }
 .secondary { margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .overdue { color: var(--color-statusDanger); font-weight: var(--typography-weight-medium); }
+.calendarActivity { display: grid; justify-items: start; gap: var(--space-1); min-width: 0; }
+.calendarActivity > strong, .calendarActivity > span:not(.calendarTime) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calendarActivity > strong { font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
+.calendarActivity > span:not(.calendarTime) { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.calendarTime { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
 .form { display: flex; flex-direction: column; gap: var(--space-4); }

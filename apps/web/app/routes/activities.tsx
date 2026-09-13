@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { contactId as contactIdFactory, type Activity, type ActivityType } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, SearchSelect, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CalendarMonth, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getSession } from "../lib/auth.client";
@@ -37,6 +37,8 @@ export default function Activities() {
   const [period, setPeriod] = useState("open");
   const [typeFilter, setTypeFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [layout, setLayout] = useState<"list" | "calendar">("list");
+  const [calendarMonth, setCalendarMonth] = useState(() => { const today = new Date(); return new Date(today.getFullYear(), today.getMonth(), 1); });
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -67,6 +69,16 @@ export default function Activities() {
     { value: "completed", label: "Concluídas", count: completed },
     { value: "all", label: "Todas", count: activities.length },
   ];
+  const calendarItems = filtered.map((activity) => ({
+    id: activity.id,
+    date: localDateKey(activity.scheduledAt),
+    content: <div className={styles.calendarActivity}>
+      <span className={styles.calendarTime}>{new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(activity.scheduledAt))}</span>
+      <strong>{activity.title}</strong>
+      <span>{activity.contactId ? contactNames.get(activity.contactId) ?? "Pessoa indisponível" : typeLabel(activity.type)}</span>
+      <Badge tone={activity.completed ? "success" : isOverdue(activity, now) ? "danger" : "neutral"}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : typeLabel(activity.type)}</Badge>
+    </div>,
+  }));
   const columns: TableColumn<Activity>[] = [
     { id: "title", label: "Atividade", cell: (activity) => <div className={styles.activityCell}><span className={styles.typeIcon}><Icon name={activity.type === "call" ? "phone" : activity.type === "meeting" ? "team" : activity.type === "email" ? "mail" : "check"} /></span><div><strong>{activity.title}</strong><span className={styles.secondary}>{typeLabel(activity.type)}</span></div></div>, sortValue: (activity) => activity.title },
     { id: "contact", label: "Pessoa", cell: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "Pessoa indisponível" : "—", sortValue: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "" : "" },
@@ -108,8 +120,9 @@ export default function Activities() {
       search={<Input aria-label="Buscar atividades" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar atividade ou pessoa" />}
       filters={<Select appearance="filter" label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} />}
       count={isLoading ? "Carregando atividades…" : `${filtered.length} ${filtered.length === 1 ? "atividade" : "atividades"}`}
+      actions={<SegmentedControl label="Visualização das atividades" value={layout} options={[{ value: "list", label: "Lista" }, { value: "calendar", label: "Calendário" }]} onValueChange={setLayout} />}
     />}
-    {!firstRun && <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText={activities.length ? "Nenhuma atividade neste filtro." : "Nenhuma atividade cadastrada."} actions={(activity) => <>{canReadContacts && activity.contactId && <TableIconAction label="Abrir pessoa" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${activity.title}`} loading={busyId === activity.id} menu={<MenuItem onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</MenuItem>} />}</>} />}
+    {!firstRun && (layout === "calendar" ? <CalendarMonth label="atividades" month={calendarMonth} items={calendarItems} onMonthChange={setCalendarMonth} /> : <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText={activities.length ? "Nenhuma atividade neste filtro." : "Nenhuma atividade cadastrada."} actions={(activity) => <>{canReadContacts && activity.contactId && <TableIconAction label="Abrir pessoa" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${activity.title}`} loading={busyId === activity.id} menu={<MenuItem onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</MenuItem>} />}</>} />)}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha pessoa, título e data para agendar." onConfirm={createActivity}>
       <form className={styles.form} onSubmit={submit}>
         <Field><Label>Pessoa</Label><SearchSelect label="Buscar pessoa" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>
@@ -128,3 +141,4 @@ function endOfToday(value: Date): Date { return new Date(value.getFullYear(), va
 function isSameDay(left: Date, right: Date): boolean { return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate(); }
 function isOverdue(activity: Activity, now: Date): boolean { return !activity.completed && new Date(activity.scheduledAt) < startOfToday(now); }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function localDateKey(value: string): string { const date = new Date(value); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
