@@ -23,6 +23,7 @@ import {
   DatePicker,
   DateTimePicker,
   Field,
+  Icon,
   Input,
   Label,
   MoneyInput,
@@ -227,7 +228,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       metrics={[{ label: "Valor", value: formatBRL(syncedAmount(deal.amount)) }, { label: "Situação", value: statusLabel(deal.status), ...(deal.status === "won" ? { tone: "success" as const } : deal.status === "lost" ? { tone: "danger" as const } : {}) }, { label: "Previsão", value: deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão" }]}
     />
 
-    <div className={styles.contentGrid} data-activities={canReadActivities ? "visible" : "hidden"}>
+    <div className={styles.contentGrid} data-activities={canReadActivities || canReadInbox ? "visible" : "hidden"}>
         <div className={styles.profile}>{editing ? <Card title="Editar negócio"><form className={styles.editForm} onSubmit={saveDeal}>
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
@@ -244,17 +245,18 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           {deal.status === "open" && canMove && <div className={styles.closeActions}><Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Marcar como ganho</Button><Button variant="secondary" onClick={() => setLossModalOpen(true)}>Marcar como perdido</Button></div>}
         </div></Card>}
-        {canReadInbox && <Card title="Atendimento da pessoa" description="Conversas desta pessoa em todos os canais.">
-          {!deal.contactId ? <div className={styles.empty}>Vincule uma pessoa para ver o atendimento.</div> : conversations.length === 0 ? <div className={styles.empty}>Nenhuma conversa desta pessoa ainda.</div> : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?box=all&conversation=${conversation.id}`}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {conversation.status === "open" ? "Aberta" : conversation.status === "snoozed" ? "Adiada" : "Fechada"}</span></Link></li>)}</ul>}
-        </Card>}
         </div>
 
-        {canReadActivities && <div className={styles.activities}><Card title="Atividades" description="Próximos passos e histórico operacional deste negócio." actions={canWriteActivities ? <Button size="sm" onClick={() => setActivityModalOpen(true)}>Nova atividade</Button> : undefined}>
+        {(canReadActivities || canReadInbox) && <div className={styles.activities}>{canReadActivities && <Card title="Atividades" description="Próximos passos e histórico operacional deste negócio." actions={canWriteActivities ? <Button size="sm" onClick={() => setActivityModalOpen(true)}>Nova atividade</Button> : undefined}>
           {orderedActivities.length === 0 ? <div className={styles.empty}>Nenhuma atividade vinculada a este negócio.</div> : <ul className={styles.activityList}>{orderedActivities.map((activity) => <li key={activity.id} data-completed={activity.completed}>
             <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.notes && <p>{activity.notes}</p>}<time>{formatDateTime(activity.scheduledAt)}</time></div>
             {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>}
           </li>)}</ul>}
-        </Card></div>}
+        </Card>}
+          {canReadInbox && <Card title="Atendimento da pessoa" description="Conversas desta pessoa em todos os canais.">
+            {!deal.contactId ? <div className={styles.empty}>Vincule uma pessoa para ver o atendimento.</div> : conversations.length === 0 ? <div className={styles.empty}>Nenhuma conversa desta pessoa ainda.</div> : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?box=all&conversation=${conversation.id}`}><span className={styles.conversationBody}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {conversation.status === "open" ? "Aberta" : conversation.status === "snoozed" ? "Adiada" : "Fechada"} · {formatDateTime(conversation.lastMessageAt)}</span></span><Icon name="right" /></Link></li>)}</ul>}
+          </Card>}
+        </div>}
         <div className={`${styles.activities} ${styles.history}`}><Card title="Histórico" description="Mudanças registradas neste negócio.">
           <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />
         </Card></div>
