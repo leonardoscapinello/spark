@@ -4,7 +4,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { catalogControllerArchiveProduct, catalogControllerCreateDiscount, catalogControllerCreateProduct, catalogControllerCreateVariant, catalogControllerRestoreProduct, catalogControllerUpdateDiscount, catalogControllerUpdateProduct } from "@spark/api-client";
 import { discountRuleId, formatBRL, money, productId, productVariantId, toCents, toDecimal, type DiscountRule, type Money, type Product } from "@spark/core";
 import { catalogMoney } from "@spark/data";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, Select, Switch, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, RecordIdentity, Select, Switch, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getDiscountRulesCollection, getProductsCollection, getProductVariantsCollection } from "../lib/catalog-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -27,14 +27,14 @@ export default function Catalog() {
   const discountTerm = discountSearch.trim().toLocaleLowerCase("pt-BR");
   const shownDiscounts = discounts.filter((item) => !discountTerm || item.name.toLocaleLowerCase("pt-BR").includes(discountTerm));
   const productColumns: TableColumn<Product>[] = [
-    { id: "product", label: "Produto", cell: (item) => <div><strong>{item.name}</strong><small className={styles.secondary}>{item.sku}</small></div>, sortValue: (item) => item.name },
+    { id: "product", label: "Produto", cell: (item) => <RecordIdentity icon="file" title={item.name} subtitle={item.sku} />, sortValue: (item) => item.name },
     { id: "price", label: "Preço", cell: (item) => formatMoney(catalogMoney(item.price), item.currency), sortValue: (item) => toCents(catalogMoney(item.price)) },
     { id: "stock", label: "Estoque", cell: (item) => item.stock === null ? "Sem controle" : `${item.stock} ${item.unit}`, sortValue: (item) => item.stock ?? Number.MAX_SAFE_INTEGER },
     { id: "variants", label: "Variações", cell: (item) => countVariants.get(item.id) ?? 0, sortValue: (item) => countVariants.get(item.id) ?? 0 },
     { id: "status", label: "Status", cell: (item) => <Badge tone={item.deletedAt || !item.active ? "neutral" : "success"}>{item.deletedAt ? "Arquivado" : item.active ? "Ativo" : "Inativo"}</Badge>, sortValue: (item) => item.deletedAt ? 0 : item.active ? 2 : 1 },
   ];
   const discountColumns: TableColumn<DiscountRule>[] = [
-    { id: "name", label: "Regra", cell: (item) => <strong>{item.name}</strong>, sortValue: (item) => item.name },
+    { id: "name", label: "Regra", cell: (item) => <RecordIdentity icon="bolt" title={item.name} subtitle={item.type === "percentage" ? "Desconto percentual" : "Valor fixo"} />, sortValue: (item) => item.name },
     { id: "value", label: "Desconto", cell: (item) => item.type === "percentage" ? `${(item.value / 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%` : formatBRL(money(item.value)), sortValue: (item) => item.value },
     { id: "minimum", label: "Pedido mínimo", cell: (item) => formatBRL(catalogMoney(item.minimumSubtotal)), sortValue: (item) => toCents(catalogMoney(item.minimumSubtotal)) },
     { id: "period", label: "Período", cell: (item) => period(item), sortValue: (item) => item.startsAt ?? "" },
