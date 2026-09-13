@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { filesControllerComplete, filesControllerDownload, filesControllerRemove, filesControllerUpload } from "@spark/api-client";
 import { fileId, type StoredFile } from "@spark/core";
-import { Badge, Card, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, Input, PageFrame, PageHeader, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { Badge, Card, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, Input, PageFrame, PageHeader, RecordIdentity, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getFilesCollection } from "../lib/files-collection.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -19,7 +19,7 @@ export default function Files() {
   const emptyText = "Nenhum arquivo corresponde aos filtros.";
   const files = useMemo(() => allFiles.filter((item) => !item.deletedAt && (kind === "all" || fileKind(item.mimeType) === kind) && (status === "all" || item.status === status) && (!search.trim() || item.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")))), [allFiles, kind, search, status]);
   const columns: TableColumn<StoredFile>[] = [
-    { id: "name", label: "Arquivo", cell: (item) => <div className={styles.fileName}><span className={styles.fileIcon}><Icon name={fileKind(item.mimeType) === "image" ? "image" : "file"} /></span><span><strong>{item.name}</strong><small>{item.mimeType}</small></span></div>, sortValue: (item) => item.name },
+    { id: "name", label: "Arquivo", cell: (item) => <RecordIdentity icon={fileKind(item.mimeType) === "image" ? "image" : "file"} title={item.name} subtitle={item.mimeType} />, sortValue: (item) => item.name },
     { id: "folder", label: "Pasta", cell: (item) => item.folder ?? "Geral", sortValue: (item) => item.folder ?? "" },
     { id: "size", label: "Tamanho", cell: (item) => formatBytes(item.sizeBytes), sortValue: (item) => item.sizeBytes },
     { id: "status", label: "Status", cell: (item) => fileStatusBadge(item), sortValue: (item) => item.status },
