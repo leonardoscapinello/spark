@@ -40,7 +40,9 @@ export function ProgressCard({ title, value, max = 100, label, footer }: { title
   return <Card title={title} footer={footer}><div className={s.progressLabel}>{label}</div><ProgressBar label={title} value={value} max={max} /></Card>;
 }
 export function ProgressBar({ label, value, max = 100 }: { label: string; value: number; max?: number }) {
-  return <progress aria-label={label} className={s.progress} value={Math.max(0, Math.min(value, max))} max={Math.max(1, max)} />;
+  const safeMax = Number.isFinite(max) && max > 0 ? max : 1;
+  const safeValue = Number.isFinite(value) ? Math.max(0, Math.min(value, safeMax)) : 0;
+  return <progress aria-label={label} className={s.progress} value={safeValue} max={safeMax} />;
 }
 export interface SummaryItem { id: string; label: string; value: ReactNode; detail?: string; action?: ReactNode }
 export function SummaryList({ items, label }: { items: readonly SummaryItem[]; label: string }) {
