@@ -3,7 +3,7 @@
 
 .details span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 
-.contentGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr) minmax(0, 1fr); grid-template-areas: "profile history relations"; align-items: start; gap: var(--space-5); min-width: 0; }
+.contentGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr) minmax(0, 1fr); grid-template-areas: "profile relations history"; align-items: start; gap: var(--space-5); min-width: 0; }
 .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); grid-template-areas: "profile history"; }
 .profileColumn { grid-area: profile; min-width: 0; }
 .history { grid-area: history; min-width: 0; }
@@ -30,12 +30,12 @@
 .empty { margin: 0; padding: var(--space-4) 0; }
 
 @media (max-width: 1200px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile history" "relations history"; }
+  .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile relations" "history history"; }
   .relations { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 760px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history" "relations"; }
+  .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "relations" "history"; }
   .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history"; }
   .profileColumn, .history, .relations { padding-inline: 0; }
   .relations { grid-template-columns: minmax(0, 1fr); }
