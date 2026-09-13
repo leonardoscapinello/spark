@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, ProgressBar, RecordIdentity, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DashboardGrid, DataTable, EmptyState, Field, Icon, Input, Label, MetricCard, PageFrame, PageHeader, ProgressBar, RecordIdentity, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client"; import { requireCapability } from "../lib/route-access.client"; import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getAudiencesCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
 
@@ -31,6 +31,9 @@ export default function Campaigns() {
   const filteredAudiences = audiences.filter((item) => !normalizedSearch || `${item.name} ${item.description ?? ""}`.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
   const filteredCampaigns = campaigns.filter((item) => (statusFilter === "all" || item.status === statusFilter) && (!normalizedSearch || `${item.name} ${item.subject} ${audienceById.get(item.audienceId)?.name ?? ""}`.toLocaleLowerCase("pt-BR").includes(normalizedSearch)));
   const firstRun = audienceView ? audiences.length === 0 && !audiencesLoading && !search : campaigns.length === 0 && !isLoading && !search && statusFilter === "all";
+  const sentCount = campaigns.reduce((total, item) => total + item.sentCount, 0);
+  const failedCount = campaigns.reduce((total, item) => total + item.failedCount, 0);
+  const draftCount = campaigns.filter((item) => item.status === "draft").length;
   const columns: TableColumn<Campaign>[] = [
     { id: "name", label: "Campanha", cell: (item) => <RecordIdentity icon="mail" title={item.name} subtitle={item.subject} />, sortValue: (item) => item.name },
     { id: "audience", label: "Público", cell: (item) => audienceById.get(item.audienceId)?.name ?? "—", sortValue: (item) => audienceById.get(item.audienceId)?.name ?? "" },
@@ -56,6 +59,12 @@ export default function Campaigns() {
         {canImportContacts && <ActionCard icon="upload" title="Traga sua base de pessoas" description="Importe sua base para enviar mensagens às pessoas certas." action={<Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar pessoas</Button>} />}
         {canConfigureEmail && <ActionCard icon="mail" title="Conecte o e-mail" description="Prepare o canal que enviará as mensagens da equipe." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Configurar e-mail</Button>} />}
     </ActionCardGroup>}
+    {!audienceView && campaigns.length > 0 && <DashboardGrid metrics>
+      <MetricCard title="Campanhas" value={campaigns.length} comparison="Criadas pela equipe" />
+      <MetricCard title="E-mails enviados" value={sentCount} comparison="Total registrado nas campanhas" />
+      <MetricCard title="Rascunhos" value={draftCount} comparison="Aguardando envio" />
+      <MetricCard title="Falhas de envio" value={failedCount} comparison="Ocorrências registradas" sentiment={failedCount > 0 ? "negative" : "neutral"} />
+    </DashboardGrid>}
     {!firstRun && <><CollectionToolbar
       search={<Input aria-label={audienceView ? "Buscar públicos" : "Buscar campanhas"} placeholder={audienceView ? "Buscar público" : "Buscar campanha, assunto ou público"} value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
       filters={!audienceView ? <Select appearance="filter" label="Filtrar campanhas por situação" value={statusFilter} options={[{ value: "all", label: "Todas as situações" }, { value: "draft", label: "Rascunhos" }, { value: "sending", label: "Em envio" }, { value: "sent", label: "Enviadas" }, { value: "partial", label: "Parciais" }, { value: "failed", label: "Com falha" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} /> : undefined}
