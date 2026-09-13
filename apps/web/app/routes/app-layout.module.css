@@ -150,9 +150,9 @@
   .rail[data-expanded] .railBrand,
   .rail[data-expanded] .railModules,
   .rail[data-expanded] .railBottom { box-sizing: border-box; width: var(--ui-railFlyoutWidth); padding-inline: var(--space-2); }
-  .rail[data-expanded] .railBrand { justify-content: flex-start; overflow: hidden; }
-  .rail[data-expanded] .brandSymbol { opacity: 0; }
-  .rail[data-expanded] .brandWordmark { opacity: 1; visibility: visible; }
+  .rail[data-expanded] .railBrand { justify-content: flex-start; gap: var(--space-2); overflow: hidden; }
+  .rail[data-expanded] .brandSymbol { opacity: 1; }
+  .rail[data-expanded] .brandWordmark { position: static; flex: 0 1 auto; width: calc(var(--ui-railFlyoutWidth) - var(--space-4) - var(--space-6) - var(--space-2)); max-width: 100%; opacity: 1; visibility: visible; transform: none; }
   .rail[data-expanded] .railModules,
   .rail[data-expanded] .railBottom { align-items: stretch; }
   .rail[data-expanded] .railBottom { overflow: hidden; }
