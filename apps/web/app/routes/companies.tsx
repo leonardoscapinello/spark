@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, phone as buildPhone, userId as userIdFactory, type Company } from "@spark/core";
 import { optimisticCompany } from "@spark/data";
-import { ActionCard, ActionCardGroup, ActionModal, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -61,7 +61,7 @@ export default function Companies() {
   const firstRun = !isLoading && companies.length === 0 && !search && visibility === "active";
 
   const columns: TableColumn<Company>[] = [
-    { id: "name", label: "Empresa", cell: (company) => <div><strong>{company.name}</strong><span className={styles.secondary}>{company.legalName ?? company.website ?? "Sem dados complementares"}</span></div>, sortValue: (company) => company.name },
+    { id: "name", label: "Empresa", cell: (company) => <div className={styles.companyCell}><Avatar name={company.name} /><div><strong>{company.name}</strong><span className={styles.secondary}>{company.legalName ?? company.website ?? "Sem dados complementares"}</span></div></div>, sortValue: (company) => company.name },
     { id: "industry", label: "Segmento", cell: (company) => company.industry ?? "—", sortValue: (company) => company.industry ?? "" },
     { id: "contacts", label: "Pessoas", cell: (company) => contactCounts.get(company.id) ?? 0, sortValue: (company) => contactCounts.get(company.id) ?? 0 },
     { id: "deals", label: "Negócios", cell: (company) => dealCounts.get(company.id) ?? 0, sortValue: (company) => dealCounts.get(company.id) ?? 0 },
