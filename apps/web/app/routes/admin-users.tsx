@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { redirect } from "react-router";
+import { redirect, useSearchParams } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto, type PermissionGroupDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
@@ -16,6 +16,7 @@ export async function clientLoader() {
 }
 
 export default function AdminUsers({ loaderData }: Route.ComponentProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<AdminUserDto[]>([]);
   const [groups, setGroups] = useState<PermissionGroupDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,21 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
     }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [reloadKey]);
+  useEffect(() => {
+    if (searchParams.get("invite") === "1" && !loading && !loadError && groups.length > 0) setModalOpen(true);
+  }, [searchParams, loading, loadError, groups.length]);
+
+  function changeInviteOpen(open: boolean) {
+    setModalOpen(open);
+    if (!open) {
+      resetForm();
+      if (searchParams.has("invite")) {
+        const next = new URLSearchParams(searchParams);
+        next.delete("invite");
+        setSearchParams(next, { replace: true });
+      }
+    }
+  }
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const filteredUsers = users.filter((user) =>
     (statusFilter === "all" || accessStatus(user) === statusFilter) &&
@@ -172,7 +188,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
 
       <ActionModal
         open={modalOpen}
-        onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }}
+        onOpenChange={changeInviteOpen}
         title="Convidar usuário"
         confirmLabel="Enviar convite"
         errorText="Não foi possível enviar o convite. Confira os dados e tente novamente."
