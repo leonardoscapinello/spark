@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Sidebar } from "./Sidebar.js";
 import { SidebarItem, SidebarSection } from "./Sidebar.js";
+import { Icon } from "../Icon/Icon.js";
 const meta: Meta<typeof Sidebar> = { title: "Componentes/Sidebar", component: Sidebar };
 export default meta;
 type Story = StoryObj<typeof Sidebar>;
 export const Default: Story = { render: () => (<Sidebar title="Atendimento"><SidebarItem href="#all" active count={4}>Todas</SidebarItem><SidebarItem href="#mine" count={0}>Minhas conversas</SidebarItem></Sidebar>) };
 export const Configuracoes: Story = { render: () => (<Sidebar title="Configurações"><SidebarItem href="#inicio" active>Início</SidebarItem><SidebarSection title="Acesso" collapsible><SidebarItem href="#users">Usuários</SidebarItem><SidebarItem href="#teams">Times</SidebarItem><SidebarItem href="#groups">Grupos de permissões</SidebarItem></SidebarSection><SidebarSection title="Sistema" collapsible><SidebarItem href="#integrations">Integrações</SidebarItem><SidebarItem href="#audit">Auditoria</SidebarItem></SidebarSection></Sidebar>) };
+export const Leads: Story = { render: () => (<Sidebar title="Leads"><SidebarSection title="Pessoas" icon={<Icon name="team" />}><SidebarItem href="#all" active count={42}>Todas as pessoas</SidebarItem><SidebarItem href="#new" count={8}>Novos leads</SidebarItem><SidebarItem href="#customers" count={12}>Clientes</SidebarItem></SidebarSection><SidebarSection title="Organizações" icon={<Icon name="building" />}><SidebarItem href="#companies">Empresas</SidebarItem></SidebarSection></Sidebar>) };

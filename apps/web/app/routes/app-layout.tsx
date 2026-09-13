@@ -10,23 +10,23 @@ import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import styles from "./app-layout.module.css";
 
 type NavItem = { label: string; to: string; icon: IconName; capability?: Capability };
-type NavModule = { id: string; title: string; icon: IconName; to: string; sections: { title: string; items: NavItem[] }[] };
+type NavModule = { id: string; title: string; icon: IconName; to: string; sections: { title: string; icon?: IconName; items: NavItem[] }[] };
 
 const modules: NavModule[] = [
   { id: "overview", title: "Relatórios", icon: "chart", to: "/dashboard", sections: [
     { title: "Desempenho", items: [{ label: "Visão geral", to: "/dashboard", icon: "grid" }] },
   ] },
   { id: "leads", title: "Leads", icon: "user", to: "/", sections: [
-    { title: "Pessoas", items: [
+    { title: "Pessoas", icon: "team", items: [
       { label: "Todas as pessoas", to: "/", icon: "team", capability: "contacts:read" },
       { label: "Novos leads", to: "/?status=new", icon: "user", capability: "contacts:read" },
       { label: "Qualificados", to: "/?status=qualified", icon: "check", capability: "contacts:read" },
       { label: "Clientes", to: "/?status=customer", icon: "star", capability: "contacts:read" },
     ] },
-    { title: "Organizações", items: [
+    { title: "Organizações", icon: "building", items: [
       { label: "Empresas", to: "/companies", icon: "building", capability: "companies:read" },
     ] },
-    { title: "Dados", items: [
+    { title: "Dados", icon: "upload", items: [
       { label: "Importar pessoas", to: "/contacts/import", icon: "upload", capability: "contacts:write" },
     ] },
   ] },
@@ -213,6 +213,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const showSidebar = current.id === "admin" || current.id === "leads";
   const visibleSections = current.sections.map((section) => ({
     title: section.title,
+    icon: section.icon,
     items: section.items.filter((item) => allowed(item.capability)),
   })).filter((section) => section.items.length > 0);
   const activeSecondaryItem = visibleSections.flatMap((section) => section.items)
@@ -322,10 +323,10 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
         {visibleSections.map((section) => {
-          const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={current.id === "admin" ? undefined : <Icon name={item.icon} />} count={current.id === "leads" ? leadCounts.get(item.to) : undefined}>{item.label}</SidebarItem>);
+          const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={current.id === "admin" || current.id === "leads" ? undefined : <Icon name={item.icon} />} count={current.id === "leads" ? leadCounts.get(item.to) : undefined}>{item.label}</SidebarItem>);
           return visibleSections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
-            : <SidebarSection key={`${current.id}:${section.title}`} title={section.title} collapsible={current.id === "admin"} defaultOpen={section.items.some((item) => pathMatches(location.pathname, item.to, location.search))}>{links}</SidebarSection>;
+            : <SidebarSection key={`${current.id}:${section.title}`} title={section.title} icon={section.icon ? <Icon name={section.icon} /> : undefined} collapsible={current.id === "admin"} defaultOpen={section.items.some((item) => pathMatches(location.pathname, item.to, location.search))}>{links}</SidebarSection>;
         })}
       </Sidebar>}
       {showSidebar && activeSecondaryItem && <nav className={styles.mobileSecondaryNav} aria-label={`Seções de ${current.title}`}>

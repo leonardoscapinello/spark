@@ -10,14 +10,14 @@ export function SidebarItem({ active, icon, count, children, className, render, 
   const linkProps = { ...props, className: [styles.item, className].filter(Boolean).join(" "), "aria-current": active ? "page" as const : undefined, children: content };
   return render ? cloneElement(render as ReactElement<ComponentProps<"a">>, linkProps) : <a {...linkProps} />;
 }
-export function SidebarSection({ title, children, collapsible = false, defaultOpen = false }: { title: string; children: ReactNode; collapsible?: boolean; defaultOpen?: boolean }) {
+export function SidebarSection({ title, icon, children, collapsible = false, defaultOpen = false }: { title: string; icon?: ReactNode; children: ReactNode; collapsible?: boolean; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   const contentId = useId();
   useEffect(() => { if (defaultOpen) setOpen(true); }, [defaultOpen]);
-  return <section className={styles.section} data-collapsible={collapsible || undefined}>
+  return <section className={styles.section} data-collapsible={collapsible || undefined} data-icon={icon ? "true" : undefined}>
     {collapsible
-      ? <button type="button" className={styles.sectionToggle} aria-expanded={open} aria-controls={contentId} onClick={() => setOpen((value) => !value)}><span>{title}</span><Icon name="right" /></button>
-      : <h3>{title}</h3>}
+      ? <button type="button" className={styles.sectionToggle} aria-expanded={open} aria-controls={contentId} onClick={() => setOpen((value) => !value)}>{icon && <span className={styles.sectionIcon}>{icon}</span>}<span className={styles.sectionTitle}>{title}</span><Icon name="right" /></button>
+      : <h3>{icon && <span className={styles.sectionIcon}>{icon}</span>}{title}</h3>}
     {collapsible ? <div id={contentId} className={styles.sectionItems} data-open={open || undefined} aria-hidden={!open} inert={!open}><div className={styles.sectionItemsInner}>{children}</div></div> : children}
   </section>;
 }
