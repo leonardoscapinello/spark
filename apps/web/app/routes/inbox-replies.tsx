@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { inboxControllerArchiveCannedReply, inboxControllerCreateCannedReply, inboxControllerUpdateCannedReply } from "@spark/api-client";
 import { cannedReplyId, type CannedReply } from "@spark/core";
-import { ActionModal, BackLink, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, BackLink, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, RecordIdentity, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getCannedRepliesCollection } from "../lib/canned-replies-collection.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -34,7 +34,7 @@ export default function InboxReplies() {
   const firstRun = !isLoading && replies.length === 0 && !showArchived && !query;
 
   const columns: TableColumn<CannedReply>[] = [
-    { id: "title", label: "Resposta", cell: (reply) => <div className={styles.primary}><strong>{reply.title}</strong><span>/{reply.shortcut}</span></div>, sortValue: (reply) => reply.title },
+    { id: "title", label: "Resposta", cell: (reply) => <RecordIdentity icon="message" title={reply.title} subtitle={`/${reply.shortcut}`} subtitleVariant="code" />, sortValue: (reply) => reply.title },
     { id: "body", label: "Texto", cell: (reply) => <span className={styles.excerpt}>{reply.body}</span> },
     { id: "team", label: "Disponível para", cell: (reply) => reply.teamId ? teamNames.get(reply.teamId) ?? "Equipe" : "Todas as equipes", sortValue: (reply) => reply.teamId ? teamNames.get(reply.teamId) ?? "" : "" },
     { id: "status", label: "Situação", cell: (reply) => <Badge tone={reply.archivedAt ? "neutral" : "success"}>{reply.archivedAt ? "Arquivada" : "Ativa"}</Badge> },

@@ -6,3 +6,4 @@ export default meta;
 type Story = StoryObj<typeof RecordIdentity>;
 export const ComDescricao: Story = {};
 export const SomenteTitulo: Story = { args: { icon: "file", title: "Contrato de prestação de serviços", subtitle: undefined } };
+export const Atalho: Story = { args: { icon: "message", title: "Resposta sobre entrega", subtitle: "/prazo", subtitleVariant: "code" } };

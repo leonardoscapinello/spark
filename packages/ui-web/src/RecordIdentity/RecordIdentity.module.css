@@ -5,3 +5,4 @@
 .copy strong, .copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .copy strong { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 .copy small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
+.copy small[data-variant="code"] { font-family: var(--typography-fontFamily-mono); }

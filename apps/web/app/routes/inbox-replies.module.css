@@ -1,4 +1,2 @@
-.primary { display: grid; gap: var(--space-1); }
-.primary span { color: var(--color-inkMuted); font-family: var(--typography-fontFamily-mono); font-size: var(--typography-size-xs); }
 .excerpt { display: block; max-width: var(--ui-drawerWidth); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .form { display: grid; gap: var(--space-4); }
