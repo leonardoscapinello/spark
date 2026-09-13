@@ -10,7 +10,7 @@ import {
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
-import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonChoice, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonChoice, RecordIdentity, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
 
@@ -52,7 +52,7 @@ export default function AdminTeams() {
   );
 
   const columns: TableColumn<TeamDto>[] = [
-    { id: "name", label: "Time", cell: (team) => <div><strong>{team.name}</strong><span className={styles.secondary}>{team.description || "Sem descrição"}</span></div>, sortValue: (team) => team.name },
+    { id: "name", label: "Time", cell: (team) => <RecordIdentity icon="team" title={team.name} subtitle={team.description || "Sem descrição"} />, sortValue: (team) => team.name },
     { id: "members", label: "Membros", cell: (team) => {
       const names = team.memberIds.map((id) => userNames.get(id) ?? "Usuário indisponível");
       return names.length ? <div className={styles.memberSummary} title={names.join(", ")} aria-label={names.join(", ")}>
