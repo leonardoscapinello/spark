@@ -22,7 +22,7 @@ export default function Automations() {
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
   const [triggerFilter, setTriggerFilter] = useState("all");
-  const [layout, setLayout] = useState<"cards" | "table">("table");
+  const [layout, setLayout] = useState<"cards" | "table">("cards");
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canReadIntegrations = session?.capabilities.includes("integrations:read") ?? false;
@@ -61,7 +61,7 @@ export default function Automations() {
     {initialLoad || layout === "table" ? <DataTable label="Lista de automações" rows={visibleAutomations} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !automations.length ? "loading" : "ready"} emptyText={automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."} actions={(item) => <TableIconAction label={`${canWrite ? "Editar" : "Abrir"} ${item.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/automations/${item.id}`)} />} /> : <div className={styles.cardList} aria-label="Lista de automações">
       {!isLoading && visibleAutomations.length === 0 && !firstRun && <p className={styles.empty}>{automations.length ? "Nenhum fluxo encontrado neste filtro." : "Nenhuma automação nesta situação."}</p>}
       {visibleAutomations.map((item) => {
-        return <Link key={item.id} to={`/automations/${item.id}`} className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} actions={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardBody}><AutomationTriggers automation={item} /><div className={styles.cardMeta}><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></div></Card></Link>;
+        return <Link key={item.id} to={`/automations/${item.id}`} className={styles.cardLink} aria-label={`Abrir automação ${item.name}`}><Card appearance="elevated" title={item.name} description={`Atualizada ${relativeTime(item.updatedAt)}`} actions={<Badge tone={item.status === "active" ? "success" : item.status === "paused" ? "warning" : "neutral"}>{statusLabel(item.status)}</Badge>}><div className={styles.cardBody}><AutomationTriggers automation={item} /><div className={styles.cardMeta}><span>{item.draftGraph.nodes.length} blocos · {item.draftGraph.edges.length} conexões</span><span>{item.publishedVersion ? `Versão ${item.publishedVersion}` : "Não publicada"}</span></div></div></Card></Link>;
       })}
     </div>}</>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title="Nova automação" confirmLabel="Criar e abrir" errorText="Informe um nome para a automação." onConfirm={create}>

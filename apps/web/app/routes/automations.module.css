@@ -9,16 +9,21 @@
   font-size: var(--typography-size-xs);
 }
 
-.cardList { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-drawerWidth)), 1fr)); gap: var(--space-3); min-width: 0; }
+.cardList { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); width: 100%; max-width: var(--ui-settingsContentWidth); min-width: 0; margin-inline: auto; }
 .cardLink { display: block; min-width: 0; color: inherit; text-decoration: none; border-radius: var(--radius-md); }
-.cardLink:hover > section { border-color: var(--color-lineStrong); box-shadow: var(--ui-panelShadow); }
+.cardLink > section { transition: box-shadow var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out); }
+.cardLink:hover > section { box-shadow: var(--ui-popupShadow); transform: translateY(calc(var(--ui-hairline) * -1)); }
 .cardLink:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.cardBody { display: grid; gap: var(--space-3); }
+.cardBody { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--space-5); }
 .cardTriggers { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
 .cardTriggers span { display: inline-flex; align-items: center; gap: var(--space-1); max-width: 100%; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--color-surface2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cardTriggers svg { flex: 0 0 auto; width: var(--ui-icon); height: var(--ui-icon); color: var(--color-accent); }
-.cardMeta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
-.cardTriggers + .cardMeta { padding-top: var(--space-2); border-top: var(--ui-hairline) solid var(--color-line); }
+.cardLink .cardTriggers { display: grid; align-items: start; justify-items: start; gap: var(--space-1); }
+.cardLink .cardTriggers span { padding: 0; background: transparent; }
+.cardLink .cardTriggers svg { color: var(--color-statusSuccess); }
+.cardMeta { display: grid; justify-items: end; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); white-space: nowrap; }
 .cardMeta span { display: inline-flex; align-items: center; gap: var(--space-1); }
 .cardMeta svg { width: var(--ui-icon); height: var(--ui-icon); color: var(--color-accent); }
 .empty { margin: 0; padding: var(--space-8); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }
+@media (max-width: 720px) { .cardBody { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); } .cardMeta { justify-items: start; white-space: normal; } }
+@media (prefers-reduced-motion: reduce) { .cardLink > section { transition: none; } .cardLink:hover > section { transform: none; } }
