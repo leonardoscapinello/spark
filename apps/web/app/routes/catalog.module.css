@@ -2,4 +2,14 @@
 .panel { display: grid; gap: var(--space-4); min-width: 0; }
 .form { display: grid; gap: var(--space-4); }
 .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); align-items: end; }
+.productDetails { display: grid; gap: var(--space-6); min-width: 0; }
+.productDescription { margin: 0; color: var(--color-inkMuted); line-height: var(--ui-bodyLine); }
+.productFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); margin: 0; }
+.productFacts > div { display: grid; align-content: start; gap: var(--space-1); min-width: 0; }
+.productFacts dt { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.productFacts dd { margin: 0; font-weight: var(--typography-weight-medium); overflow-wrap: anywhere; }
+.variantsHeading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); padding-bottom: var(--space-3); }
+.variantsHeading h3 { margin: 0; font-size: var(--typography-size-sm); }
+.variantsHeading span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.noVariants { margin: 0; color: var(--color-inkMuted); }
 @media (max-width: 720px) { .columns { grid-template-columns: 1fr; } }
