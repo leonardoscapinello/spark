@@ -5,6 +5,12 @@
   font-size: var(--typography-size-sm);
 }
 
+.memberSummary { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.memberAvatars { display: inline-flex; flex: 0 0 auto; align-items: center; padding-inline-start: var(--space-2); }
+.memberAvatars > span { border: var(--ui-hairline) solid var(--color-surface); }
+.memberAvatars > span + span { margin-inline-start: calc(var(--space-2) * -1); }
+.memberNames { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+
 .modalFields,
 .members {
   display: flex;

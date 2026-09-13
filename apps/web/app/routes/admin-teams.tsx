@@ -10,7 +10,7 @@ import {
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonChoice, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonChoice, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
 
@@ -53,7 +53,13 @@ export default function AdminTeams() {
 
   const columns: TableColumn<TeamDto>[] = [
     { id: "name", label: "Time", cell: (team) => <div><strong>{team.name}</strong><span className={styles.secondary}>{team.description || "Sem descrição"}</span></div>, sortValue: (team) => team.name },
-    { id: "members", label: "Membros", cell: (team) => team.memberIds.length ? team.memberIds.map((id) => userNames.get(id) ?? "Usuário indisponível").join(", ") : "Nenhum membro", sortValue: (team) => team.memberIds.length },
+    { id: "members", label: "Membros", cell: (team) => {
+      const names = team.memberIds.map((id) => userNames.get(id) ?? "Usuário indisponível");
+      return names.length ? <div className={styles.memberSummary} title={names.join(", ")} aria-label={names.join(", ")}>
+        <span className={styles.memberAvatars}>{names.slice(0, 3).map((person, index) => <Avatar key={`${team.id}:${index}`} name={person} size="small" />)}</span>
+        <span className={styles.memberNames}>{names.slice(0, 2).join(", ")}{names.length > 2 ? ` +${names.length - 2}` : ""}</span>
+      </div> : "Nenhum membro";
+    }, sortValue: (team) => team.memberIds.length },
     { id: "status", label: "Situação", cell: (team) => <Badge tone={team.archivedAt ? "neutral" : "success"}>{team.archivedAt ? "Arquivado" : "Ativo"}</Badge>, sortValue: (team) => team.archivedAt ?? "" },
   ];
 
