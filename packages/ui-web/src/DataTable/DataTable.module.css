@@ -4,9 +4,13 @@
 .table { border-collapse: collapse; width: max-content; min-width: 100%; text-align: start; }
 .table caption { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .table th,.table td { padding: var(--space-3) var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); text-align: start; overflow-wrap: anywhere; max-width: var(--ui-popoverWidth); }
-.table th { background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); white-space: nowrap; }
+.table th { padding-block: var(--space-2); background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); white-space: nowrap; }
+.table th .sortButton { padding-inline: 0; color: inherit; font-weight: inherit; }
+.sortIcon { width: var(--space-3); height: var(--space-3); color: var(--color-accent); }
+.visuallyHidden { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .table [data-align="end"] { text-align: end; font-variant-numeric: tabular-nums; }
 .table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr { transition: background-color var(--motion-duration-instant) var(--motion-ease-out); }
 .table tbody tr:hover { background: var(--ui-subtle); }
 .actions { white-space: nowrap; }
 .emptyState { box-sizing: border-box; width: 100%; padding: var(--space-8) var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); text-align: center; line-height: var(--ui-bodyLine); overflow-wrap: anywhere; }
@@ -24,7 +28,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .table tbody tr .actionGroup { transition: none; }
+  .table tbody tr, .table tbody tr .actionGroup { transition: none; }
 }
 
 @media (max-width: 720px) {
