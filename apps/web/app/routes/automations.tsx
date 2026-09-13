@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { optimisticAutomation } from "@spark/data";
 import type { Automation } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, Select, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Card, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, PageFrame, PageHeader, RecordIdentity, Select, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationsCollection } from "../lib/automations-collections.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -34,7 +34,7 @@ export default function Automations() {
     ? automations.filter((item) => item.status === selectedStatus && item.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch) && (triggerFilter === "all" || item.draftGraph.nodes.some((node) => node.type === "trigger" && node.data.label === triggerFilter)))
     : automations.filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch) && (triggerFilter === "all" || item.draftGraph.nodes.some((node) => node.type === "trigger" && node.data.label === triggerFilter)));
   const columns: TableColumn<Automation>[] = [
-    { id: "name", label: "Automação", cell: (item) => <div className={styles.primary}><strong>{item.name}</strong><small>Atualizada {relativeTime(item.updatedAt)}</small></div>, sortValue: (item) => item.name },
+    { id: "name", label: "Automação", cell: (item) => <RecordIdentity icon="bolt" title={item.name} subtitle={`Atualizada ${relativeTime(item.updatedAt)}`} />, sortValue: (item) => item.name },
     { id: "trigger", label: "Gatilho", cell: (item) => <AutomationTriggers automation={item} />, sortValue: (item) => item.draftGraph.nodes.find((node) => node.type === "trigger")?.data.label ?? "" },
     { id: "structure", label: "Estrutura", cell: (item) => `${item.draftGraph.nodes.length} blocos · ${item.draftGraph.edges.length} conexões`, sortValue: (item) => item.draftGraph.nodes.length },
     { id: "version", label: "Versão", cell: (item) => item.publishedVersion ? `v${item.publishedVersion}` : "Ainda não publicada", sortValue: (item) => item.publishedVersion ?? 0 },
