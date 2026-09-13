@@ -25,6 +25,7 @@ const NODE_ORIGIN_Y = Number.parseFloat(lightTheme["space-16"]);
 const NODE_STEP_X = NODE_WIDTH + Number.parseFloat(lightTheme["space-8"]) + Number.parseFloat(lightTheme["space-1"]);
 const NODE_STEP_Y = NODE_HEIGHT + Number.parseFloat(lightTheme["space-10"]);
 const CONDITION_BRANCH_OFFSET = (Number.parseFloat(lightTheme["ui-touchTarget"]) + Number.parseFloat(lightTheme["space-1"])) / 2;
+const CANVAS_MARGIN = Number.parseFloat(lightTheme["space-16"]);
 
 export async function clientLoader() { const session = await requireCapability("automations:read"); void Promise.allSettled([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload(), getAutomationRunsCollection().preload(), getAutomationRunStepsCollection().preload(), ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : [])]); return null; }
 
@@ -75,6 +76,10 @@ export default function AutomationBuilder() {
 
   const selected = graph.nodes.find((node) => node.id === selectedId) ?? null;
   const issues = useMemo(() => validateAutomationGraph(graph), [graph]);
+  const canvasBounds = useMemo(() => graph.nodes.reduce((bounds, node) => ({
+    width: Math.max(bounds.width, node.position.x + NODE_WIDTH + CANVAS_MARGIN),
+    height: Math.max(bounds.height, node.position.y + NODE_HEIGHT + CANVAS_MARGIN),
+  }), { width: 0, height: 0 }), [graph.nodes]);
 
   function addNode(type: AutomationNodeType) {
     const id = `${type}-${crypto.randomUUID()}`;
@@ -189,7 +194,7 @@ export default function AutomationBuilder() {
       <div className={styles.canvasViewport}>
       {canWrite && <Button iconOnly size="lg" className={styles.canvasAdd} aria-label="Adicionar bloco" onClick={() => setPanelMode("palette")}><Icon name="plus" /></Button>}
       <main className={styles.canvas} onPointerDown={() => { setSelectedId(null); setPanelMode("closed"); setConnectingFrom(null); }}>
-        <div className={styles.canvasStage} style={{ transform: `scale(${zoom})` }}>
+        <div className={styles.canvasStage} style={{ transform: `scale(${zoom})`, minWidth: `max(100%, ${canvasBounds.width}px)`, minHeight: `max(100%, ${canvasBounds.height}px)` }}>
         <svg className={styles.edges} aria-hidden="true">{graph.edges.map((edge) => <EdgeLine key={edge.id} edge={edge} nodes={graph.nodes} />)}</svg>
         {graph.nodes.length === 0 && <div className={styles.canvasEmpty}><strong>O fluxo começa com um gatilho</strong><span>Adicione o primeiro bloco para definir quando a automação começa.</span><Button disabled={!canWrite} onClick={(event) => { event.stopPropagation(); addNode("trigger"); }}>Adicionar gatilho</Button></div>}
         {graph.nodes.map((node) => <article key={node.id} className={styles.node} data-type={node.type} data-selected={selectedId === node.id || undefined} style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }} onPointerDown={(event) => { event.stopPropagation(); startDrag(event, node); }}>
