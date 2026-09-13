@@ -3,9 +3,13 @@
 .back { display: flex; align-items: center; min-height: var(--ui-controlMedium); }
 .pageHeader .root { min-height: calc(var(--space-16) * 2); padding-block: var(--space-3) var(--space-5); border-bottom: 0; }
 .identity { display: flex; align-items: center; gap: var(--space-4); width: 100%; min-width: 0; }
-.copy { flex: 1; min-width: 0; display: grid; gap: var(--space-1); }
-.copy > header { min-width: 0; padding: 0; border: 0; }
-.context { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); }
+.copy { flex: 1; min-width: 0; display: grid; gap: var(--space-2); }
+.heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); min-width: 0; }
+.titleLine { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); min-width: 0; }
+.titleLine h1 { margin: 0; color: var(--color-ink); font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); line-height: var(--typography-lineHeight-tight); overflow-wrap: anywhere; }
+.context { display: inline-flex; align-items: center; min-height: var(--space-5); padding-inline: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); }
+.actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.description { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); line-height: var(--ui-bodyLine); overflow-wrap: anywhere; }
 .avatar { display: grid; place-items: center; flex: 0 0 calc(var(--space-16) + var(--space-2)); width: calc(var(--space-16) + var(--space-2)); height: calc(var(--space-16) + var(--space-2)); border-radius: var(--radius-full); background: var(--color-accentWash); color: var(--color-accent); }
 .avatar svg { width: var(--space-6); height: var(--space-6); }
 .metrics { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin: var(--space-2) 0 0; }
@@ -19,4 +23,5 @@
   .pageHeader .root { min-height: 0; padding-block: var(--space-3) var(--space-4); }
   .root { min-height: 0; padding-block: var(--space-3) var(--space-4); }
   .identity { align-items: flex-start; }
+  .actions { width: 100%; }
 }
