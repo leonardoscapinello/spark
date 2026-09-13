@@ -1,13 +1,17 @@
 .page {
-  gap: var(--space-6);
+  gap: var(--space-4);
 }
 
 .card {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding-block: var(--space-2) var(--space-6);
-  border-bottom: var(--ui-hairline) solid var(--color-line);
+  gap: var(--space-5);
+  min-width: 0;
+  padding: var(--space-6);
+  border: var(--ui-hairline) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
 }
 
 .card > button { align-self: flex-start; }
@@ -27,15 +31,18 @@
 
 .cardHeader,
 .factor { justify-content: space-between; }
+.cardHeader { align-items: flex-start; }
+.cardHeader > div { display: grid; gap: var(--space-2); min-width: 0; }
 
 .cardHeader h2,
 .cardHeader p,
 .instructions p { margin: 0; }
-.cardHeader h2 { font-size: var(--typography-size-lg); }
+.cardHeader h2 { font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
 .cardHeader p,
 .instructions p,
 .factor span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
 .factor span { display: block; margin-top: var(--space-1); }
+.factor { padding-block: var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); }
 
 .enrollment { display: flex; flex-direction: column; gap: var(--space-4); max-width: var(--ui-drawerWidth); }
 .qrCode { width: var(--ui-menuWidth); height: var(--ui-menuWidth); border-radius: var(--radius-md); }
@@ -47,7 +54,8 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
-  padding-block: var(--space-3) var(--space-5);
+  padding-block: var(--space-4);
+  border-top: var(--ui-hairline) solid var(--color-line);
 }
 
 .sessionDetails div { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
@@ -66,6 +74,7 @@
 .sessionActions p { margin: var(--space-1) 0 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
 
 @media (max-width: 640px) {
+  .card { padding: var(--space-4); }
   .cardHeader, .factor, .actions { align-items: flex-start; flex-wrap: wrap; }
   .cardHeader > div, .factor > div { min-width: 0; }
   .instructions { align-items: flex-start; }
