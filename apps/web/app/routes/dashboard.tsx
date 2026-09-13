@@ -62,8 +62,8 @@ export default function Dashboard() {
   ];
 
   return <PageFrame className={styles.page}>
-    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre pessoas, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar pessoas</Button> : undefined} />}
     <PageHeader icon="chart" title="Visão geral" />
+    {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre pessoas, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar pessoas</Button> : undefined} />}
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar pessoas, negócios ou atividades." />}
     {firstRun && <ActionCardGroup title="Acompanhe o trabalho da equipe">
       {canReadContacts && <ActionCard icon="team" title="Pessoas" description="Veja quem entrou na base e como o relacionamento evolui." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir Leads</Button>} />}
@@ -86,7 +86,7 @@ export default function Dashboard() {
     {hasMetrics && !firstRun && <>
       <div className={styles.sectionHeading}><h2>Movimento no período</h2><span>Novos registros e atividades por dia</span></div>
       <DashboardGrid>
-        <DataChart title="Evolução diária" description="Pessoas, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : hasRecords ? "ready" : "empty"} />
+        <div className={styles.wideChart}><DataChart title="Evolução diária" description="Pessoas, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : hasRecords ? "ready" : "empty"} /></div>
       </DashboardGrid>
       <div className={styles.sectionHeading}><h2>Distribuição</h2><span>Como os registros estão organizados agora</span></div>
       <DashboardGrid>
