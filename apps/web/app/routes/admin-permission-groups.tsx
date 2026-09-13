@@ -24,6 +24,7 @@ import {
   Label,
   PageHeader,
   PageFrame,
+  RecordIdentity,
   TableIconAction,
   type TableColumn,
 } from "@spark/ui-web";
@@ -110,7 +111,7 @@ export default function AdminPermissionGroups() {
   );
   const firstRun = !loading && groups.length === 0 && !search;
   const columns: TableColumn<PermissionGroupDto>[] = [
-    { id: "name", label: "Grupo", cell: (group) => <strong>{group.name}</strong>, sortValue: (group) => group.name },
+    { id: "name", label: "Grupo", cell: (group) => <RecordIdentity icon="settings" title={group.name} />, sortValue: (group) => group.name },
     { id: "permissions", label: "Permissões", cell: (group) => <div className={styles.groupSummary}><strong>{group.capabilities.length} {group.capabilities.length === 1 ? "permissão" : "permissões"}</strong><span>{group.capabilities.length ? group.capabilities.slice(0, 3).map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" · ") : "Sem acesso configurado"}</span></div>, sortValue: (group) => group.capabilities.length },
   ];
 
