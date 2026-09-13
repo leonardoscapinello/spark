@@ -184,8 +184,8 @@ export default function AutomationBuilder() {
         </div>}
       </aside>}
       <div className={styles.canvasViewport}>
+      {canWrite && <Button iconOnly size="lg" className={styles.canvasAdd} aria-label="Adicionar bloco" onClick={() => setPanelMode("palette")}><Icon name="plus" /></Button>}
       <main className={styles.canvas} onPointerDown={() => { setSelectedId(null); setPanelMode("closed"); }}>
-        {canWrite && <Button iconOnly size="lg" className={styles.canvasAdd} aria-label="Adicionar bloco" onPointerDown={(event) => event.stopPropagation()} onClick={() => setPanelMode("palette")}><Icon name="plus" /></Button>}
         <div className={styles.canvasStage} style={{ transform: `scale(${zoom})` }}>
         <svg className={styles.edges} aria-hidden="true">{graph.edges.map((edge) => <EdgeLine key={edge.id} edge={edge} nodes={graph.nodes} />)}</svg>
         {graph.nodes.length === 0 && <div className={styles.canvasEmpty}><strong>O fluxo começa com um gatilho</strong><span>Adicione o primeiro bloco para definir quando a automação começa.</span><Button disabled={!canWrite} onClick={(event) => { event.stopPropagation(); addNode("trigger"); }}>Adicionar gatilho</Button></div>}

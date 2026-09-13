@@ -22,9 +22,9 @@
 .palette > header span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--typography-lineHeight-body); }
 .paletteGroup { display: grid; gap: var(--space-3); }
 .paletteGroup > strong { color: var(--color-ink); font-size: var(--typography-size-sm); }
-.paletteGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-.palette .paletteButton { height: auto; min-height: calc(var(--space-16) + var(--space-4)); flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: var(--space-2); padding: var(--space-3); border: var(--ui-hairline) dashed var(--color-lineStrong); border-radius: var(--radius-md); background: var(--color-surface); text-align: left; white-space: normal; }
-.palette .paletteButton:hover:not([data-disabled]) { border-color: var(--color-lineStrong); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
+.paletteGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+.palette .paletteButton { height: auto; min-height: var(--space-16); flex-direction: row; align-items: center; justify-content: flex-start; gap: var(--space-3); padding: var(--space-3); border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; white-space: normal; transition: background-color var(--motion-duration-instant) var(--motion-ease-out); }
+.palette .paletteButton:hover:not([data-disabled]) { background: var(--ui-selected); }
 .paletteButton > span:last-child { display: grid; gap: var(--space-1); }
 .paletteButton small { color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); white-space: normal; }
 .nodeIcon { display: grid; place-items: center; flex: 0 0 var(--space-8); width: var(--space-8); height: var(--space-8); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
@@ -43,12 +43,13 @@
 .zoomControls { position: absolute; z-index: 4; inset-block-start: 50%; inset-inline-end: var(--space-3); display: flex; flex-direction: column; align-items: center; gap: var(--space-2); transform: translateY(-50%); }
 .zoomControls > button { width: var(--ui-touchTarget); height: var(--ui-touchTarget); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--ui-panelShadow); }
 .zoomControls > :nth-child(2) { min-width: var(--ui-touchTarget); font-variant-numeric: tabular-nums; }
-.canvasAdd { position: sticky; z-index: 3; inset-block-start: var(--space-5); inset-inline-start: calc(100% - var(--space-16)); width: var(--space-12); height: var(--space-12); border-radius: var(--radius-full); background: var(--color-accent); color: var(--ui-buttonInk); box-shadow: var(--ui-panelShadow); }
+.canvasAdd { position: absolute; z-index: 4; inset-block-start: var(--space-3); inset-inline-end: var(--space-2); width: var(--space-12); height: var(--space-12); border-radius: var(--radius-full); background: var(--color-accent); color: var(--ui-buttonInk); box-shadow: var(--ui-panelShadow); }
 .canvasAdd:hover:not([data-disabled]) { background: var(--color-accent); }
 .edges { position: absolute; inset: var(--space-0); width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .edges path { fill: none; stroke: var(--color-lineStrong); stroke-width: calc(var(--ui-hairline) * 2); }
 .node { box-sizing: border-box; position: absolute; top: var(--space-0); left: var(--space-0); display: flex; flex-direction: column; width: var(--ui-automationNodeWidth); height: var(--ui-automationNodeHeight); padding: 0; overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--effect-shadow-sm); cursor: grab; user-select: none; transition: border-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out); }
 .node:active { cursor: grabbing; }
+.node:hover { border-color: var(--color-lineStrong); box-shadow: var(--ui-panelShadow); }
 .node[data-selected="true"] { border-color: var(--color-accent); box-shadow: var(--ui-selectionShadow); }
 .node > header { display: flex; align-items: center; flex-shrink: 0; gap: var(--space-2); padding: var(--space-1) var(--space-3); color: var(--color-ink); text-transform: uppercase; letter-spacing: var(--typography-tracking-wide); }
 .node[data-type="trigger"] > header { background: var(--ui-automationTrigger); }
@@ -92,3 +93,4 @@
   .palette, .inspector { min-height: 0; }
   .zoomControls { inset-block-start: auto; inset-block-end: var(--space-3); transform: none; }
 }
+@media (prefers-reduced-motion: reduce) { .palette .paletteButton { transition: none; } }
