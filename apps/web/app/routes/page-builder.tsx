@@ -29,7 +29,7 @@ export default function PageBuilder() { const { pageId } = useParams(); const na
         {panelMode === "structure" && <section className={styles.panelSection}>
           <h2>Estrutura</h2><p>Selecione, reorganize ou remova blocos.</p>
           <div className={styles.blockList}>{tree.blocks.map((block, index) => <div key={block.id} className={selectedId === block.id ? styles.blockActive : styles.block}>
-            <Button variant="ghost" onClick={() => { setSelectedId(block.id); setPanelMode("properties"); }}>{BLOCK_CATALOG.find((item) => item.type === block.type)?.label ?? block.type}</Button>
+            <Button variant="ghost" icon={<Icon name={BLOCK_ICONS[block.type]} />} onClick={() => { setSelectedId(block.id); setPanelMode("properties"); }}>{BLOCK_CATALOG.find((item) => item.type === block.type)?.label ?? block.type}</Button>
             {canWrite && <div><Button iconOnly size="sm" variant="ghost" aria-label="Subir" disabled={index === 0} onClick={() => move(index, -1)}><Icon name="up" /></Button><Button iconOnly size="sm" variant="ghost" aria-label="Descer" disabled={index === tree.blocks.length - 1} onClick={() => move(index, 1)}><Icon name="chevron" /></Button><Button iconOnly size="sm" variant="ghost" aria-label="Remover" onClick={() => setTree((current) => ({ blocks: current.blocks.filter((item) => item.id !== block.id) }))}><Icon name="trash" /></Button></div>}
           </div>)}</div>
           {!tree.blocks.length && <span className={styles.empty}>Adicione um bloco para começar.</span>}
