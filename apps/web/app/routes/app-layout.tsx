@@ -97,7 +97,7 @@ const modules: NavModule[] = [
   ] },
 ];
 
-const accountModule: NavModule = { id: "account", title: "Minha conta", icon: "account", to: "/security", sections: [
+const accountModule: NavModule = { id: "account", title: "Perfil", icon: "account", to: "/security", sections: [
   { title: "Conta", items: [{ label: "Segurança", to: "/security", icon: "settings" }] },
 ] };
 
@@ -185,7 +185,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     : module.sections.some((section) => section.items.some((item) => allowed(item.capability))));
   const quickNavigationItems: QuickNavigationItem[] = [
     ...visibleModules.flatMap((module) => module.sections.flatMap((section) => section.items.filter((item) => allowed(item.capability)).map((item) => ({ id: item.to, label: item.label, group: module.title, icon: item.icon })))),
-    { id: "/security", label: "Segurança da conta", group: "Minha conta", icon: "account" },
+    { id: "/security", label: "Segurança da conta", group: "Perfil", icon: "account" },
   ];
   const current = moduleForPath(location.pathname);
   const topNavigation = usesTopNavigation(current.id, location.pathname)
@@ -302,8 +302,8 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         <div className={styles.railBottom}>
           <Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railLink} aria-label="Pesquisar áreas" onClick={() => setQuickNavigationOpen(true)} icon={<Icon name="search" />}><span className={styles.railLabel}>Pesquisar</span></Button>
           {visibleModules.filter((module) => module.id === "admin").map(railLink)}
-          <div className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} aria-label="Minha conta" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Minha conta"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}> 
-            {accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />}<span className={styles.railLabel}>Minha conta</span>
+          <div className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} aria-label="Perfil" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuGroup label={accountProfile.name ?? "Perfil"}><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}> 
+            {accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />}<span className={styles.railLabel}>Perfil</span>
           </MenuButton></div>
         </div>
       </NavigationRail>

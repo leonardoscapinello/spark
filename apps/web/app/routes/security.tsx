@@ -98,7 +98,7 @@ export default function Security() {
 
   return (
     <PageFrame width="content" className={styles.page}>
-      <PageHeader icon="account" eyebrow="Minha conta" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." />
+      <PageHeader icon="account" eyebrow="Perfil" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." />
 
       <section className={styles.card}>
         <div className={styles.cardHeader}>
