@@ -10,6 +10,8 @@
 .actionGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); gap: var(--space-3); width: 100%; }
 @media (max-width: 760px) { .actionGroup { padding: var(--space-3) 0; } }
 .header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); padding: var(--space-5) var(--space-5) var(--space-4); }
+.headerCopy { flex: 1; min-width: 0; }
+.leading { display: inline-flex; flex: 0 0 auto; align-items: center; min-height: var(--ui-tabLine); }
 .header h2 { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); line-height: var(--ui-tabLine); }
 .header p { margin: var(--space-1) 0 0; font-size: var(--typography-size-compact); color: var(--color-inkMuted); line-height: var(--ui-tabLine); }
 .actions { flex-shrink: 0; display: flex; gap: var(--space-1); }

@@ -1,11 +1,13 @@
 import type { Meta as StoryMeta, StoryObj } from "@storybook/react-vite";
 import { ActionCard, ActionCardGroup, Card, MetricCard, ProgressBar, ProgressCard } from "./Card.js";
 import { Button } from "../Button/Button.js";
+import { Badge } from "../Feedback/Feedback.js";
 const meta: StoryMeta<typeof Card> = { title:"Dashboard/Cards",component:Card,args:{title:"Volume de conversas",description:"Resumo do período",children:"Conteúdo fornecido pelo módulo responsável"} };
 export default meta;
 type Story = StoryObj<typeof Card>;
 export const Borda: Story = {};
 export const Elevado: Story = {args:{appearance:"elevated"}};
+export const ComEstadoAntesDoTitulo: Story = {args:{appearance:"elevated",title:"Qualificação de novos leads",description:"Atualizada há 2 horas",leading:<Badge tone="success">Ativa</Badge>}};
 export const Indicador: Story = {render:()=> <MetricCard title="Conversas" value="1.508" comparison="↑ 12% no período" sentiment="positive" />};
 export const Meta: Story = {render:()=> <ProgressCard title="Meta mensal" value={84} label="84% concluída" />};
 export const BarrasDeProgresso: Story = {render:()=> <div style={{maxWidth:"var(--ui-metricColumn)",display:"grid",gap:"var(--space-4)"}}><ProgressBar label="E-mails enviados" value={42} max={100} /><ProgressBar label="Campanha ainda sem destinatários" value={0} max={0} /></div>};

@@ -3,10 +3,10 @@ import { Button } from "../Button/Button.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
 import { Skeleton } from "../Feedback/Feedback.js";
 import s from "./Card.module.css";
-export interface CardProps { title: string; description?: string; actions?: ReactNode; footer?: ReactNode; children?: ReactNode; appearance?: "outlined" | "elevated" }
-export function Card({ title, description, actions, footer, children, appearance = "outlined" }: CardProps) {
+export interface CardProps { title: string; description?: string; leading?: ReactNode; actions?: ReactNode; footer?: ReactNode; children?: ReactNode; appearance?: "outlined" | "elevated" }
+export function Card({ title, description, leading, actions, footer, children, appearance = "outlined" }: CardProps) {
   const id = useId();
-  return <section aria-labelledby={id} className={s.card} data-appearance={appearance}><header className={s.header}><div><h2 id={id}>{title}</h2>{description && <p>{description}</p>}</div>{actions && <div className={s.actions}>{actions}</div>}</header>{children !== undefined && <div className={s.body}>{children}</div>}{footer && <footer className={s.footer}>{footer}</footer>}</section>;
+  return <section aria-labelledby={id} className={s.card} data-appearance={appearance}><header className={s.header}>{leading && <span className={s.leading}>{leading}</span>}<div className={s.headerCopy}><h2 id={id}>{title}</h2>{description && <p>{description}</p>}</div>{actions && <div className={s.actions}>{actions}</div>}</header>{children !== undefined && <div className={s.body}>{children}</div>}{footer && <footer className={s.footer}>{footer}</footer>}</section>;
 }
 export interface ActionCardProps { icon: IconName; title: string; description: string; action: ReactNode }
 export function ActionCard({ icon, title, description, action }: ActionCardProps) {
