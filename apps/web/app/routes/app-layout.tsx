@@ -1,9 +1,11 @@
-import { type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
+import { useLiveQuery } from "@tanstack/react-db";
 import type { Capability } from "@spark/core";
 import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
+import { getContactsCollection } from "../lib/contacts-collection.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import styles from "./app-layout.module.css";
 
@@ -163,6 +165,17 @@ export function HydrateFallback() {
 
 export default function AppLayout({ loaderData: session }: Route.ComponentProps) {
   const location = useLocation();
+  const current = moduleForPath(location.pathname);
+  const { data: navigationContacts = [] } = useLiveQuery({ query: (q) => current.id === "leads" && session.capabilities.includes("contacts:read") ? q.from({ contacts: getContactsCollection() }) : undefined });
+  const leadCounts = useMemo(() => {
+    const active = navigationContacts.filter((contact) => !contact.deletedAt);
+    return new Map([
+      ["/", active.length],
+      ["/?status=new", active.filter((contact) => contact.leadStatus === "new").length],
+      ["/?status=qualified", active.filter((contact) => contact.leadStatus === "qualified").length],
+      ["/?status=customer", active.filter((contact) => contact.leadStatus === "customer").length],
+    ]);
+  }, [navigationContacts]);
   const navigate = useNavigate();
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
@@ -187,7 +200,6 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     ...visibleModules.flatMap((module) => module.sections.flatMap((section) => section.items.filter((item) => allowed(item.capability)).map((item) => ({ id: item.to, label: item.label, group: module.title, icon: item.icon })))),
     { id: "/security", label: "Segurança da conta", group: "Perfil", icon: "account" },
   ];
-  const current = moduleForPath(location.pathname);
   const topNavigation = usesTopNavigation(current.id, location.pathname)
     ? current.sections.flatMap((section) => section.items).filter((item) => allowed(item.capability) && TOP_NAVIGATION[current.id]?.includes(item.label))
     : [];
@@ -309,7 +321,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
       </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
         {visibleSections.map((section) => {
-          const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={current.id === "admin" ? undefined : <Icon name={item.icon} />}>{item.label}</SidebarItem>);
+          const links = section.items.map((item) => <SidebarItem key={item.to} render={<Link ref={pathMatches(location.pathname, item.to, location.search) ? activeSidebarLink : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined} />} active={pathMatches(location.pathname, item.to, location.search)} icon={current.id === "admin" ? undefined : <Icon name={item.icon} />} count={current.id === "leads" ? leadCounts.get(item.to) : undefined}>{item.label}</SidebarItem>);
           return visibleSections.length === 1 || section.title === "Início"
             ? <div key={section.title} className={styles.singleSection}>{links}</div>
             : <SidebarSection key={`${current.id}:${section.title}`} title={section.title} collapsible={current.id === "admin"} defaultOpen={section.items.some((item) => pathMatches(location.pathname, item.to, location.search))}>{links}</SidebarSection>;
