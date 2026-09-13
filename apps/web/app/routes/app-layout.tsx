@@ -86,13 +86,15 @@ const modules: NavModule[] = [
   ] },
   { id: "admin", title: "Configurações", icon: "settings", to: "/admin", sections: [
     { title: "Início", items: [{ label: "Início", to: "/admin", icon: "grid" }] },
-    { title: "Acesso", items: [
+    { title: "Área de trabalho", items: [
       { label: "Usuários", to: "/admin/users", icon: "user", capability: "users:manage" },
       { label: "Times", to: "/admin/teams", icon: "team", capability: "users:manage" },
       { label: "Grupos de permissões", to: "/admin/permission-groups", icon: "settings", capability: "permission_groups:manage" },
     ] },
-    { title: "Sistema", items: [
+    { title: "Canais", items: [
       { label: "Integrações", to: "/integrations", icon: "bolt", capability: "integrations:read" },
+    ] },
+    { title: "Dados", items: [
       { label: "Auditoria", to: "/admin/audit-log", icon: "file", capability: "audit_logs:read" },
       { label: "Campos personalizados", to: "/settings", icon: "file", capability: "settings:manage" },
     ] },

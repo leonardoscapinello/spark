@@ -19,8 +19,10 @@ const sections: { title: string; areas: AdminArea[] }[] = [
     { title: "Times", to: "/admin/teams", icon: "team", description: "Organize as equipes de trabalho.", capability: "users:manage" },
     { title: "Grupos de permissões", to: "/admin/permission-groups", icon: "settings", description: "Defina o que cada grupo pode fazer.", capability: "permission_groups:manage" },
   ] },
-  { title: "Sistema", areas: [
+  { title: "Canais", areas: [
     { title: "Integrações", to: "/integrations", icon: "bolt", description: "Conecte canais e serviços externos.", capability: "integrations:read" },
+  ] },
+  { title: "Dados", areas: [
     { title: "Campos personalizados", to: "/settings", icon: "file", description: "Adapte os dados dos seus cadastros.", capability: "settings:manage" },
     { title: "Auditoria", to: "/admin/audit-log", icon: "chart", description: "Consulte alterações de acesso e equipe.", capability: "audit_logs:read" },
   ] },
