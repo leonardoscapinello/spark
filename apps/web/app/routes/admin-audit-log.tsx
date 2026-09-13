@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { redirect } from "react-router";
 import { auditLogsControllerList, type AdminAuditLogDto } from "@spark/api-client";
-import { Button, CollectionToolbar, DataTable, EmptyState, Icon, Input, PageFrame, PageHeader, Select, type TableColumn } from "@spark/ui-web";
+import { Button, CollectionToolbar, DataTable, EmptyState, Icon, Input, PageFrame, PageHeader, RecordIdentity, Select, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 
 const ACTION_LABELS: Record<AdminAuditLogDto["action"], string> = {
@@ -58,16 +58,15 @@ export default function AdminAuditLog() {
       cell: (entry) => formatDate(entry.createdAt),
       sortValue: (entry) => entry.createdAt,
     },
-    { id: "actor", label: "Responsável", cell: (entry) => entry.actorName, sortValue: (entry) => entry.actorName },
-    { id: "action", label: "Ação", cell: (entry) => ACTION_LABELS[entry.action], sortValue: (entry) => ACTION_LABELS[entry.action] },
-    { id: "target", label: "Registro", cell: (entry) => entry.targetLabel, sortValue: (entry) => entry.targetLabel },
+    { id: "actor", label: "Responsável", cell: (entry) => <RecordIdentity title={entry.actorName} icon="user" />, sortValue: (entry) => entry.actorName },
+    { id: "target", label: "Registro e ação", cell: (entry) => <RecordIdentity title={entry.targetLabel} subtitle={ACTION_LABELS[entry.action]} icon={entry.action.startsWith("team.") ? "team" : entry.action.startsWith("permission_group.") ? "settings" : "user"} />, sortValue: (entry) => `${entry.targetLabel} ${ACTION_LABELS[entry.action]}` },
     { id: "details", label: "Detalhes", cell: describeEntry },
   ];
 
   return (
     <PageFrame width="content">
       <PageHeader
-        icon="chart"
+        icon="file"
         eyebrow="Administração"
         title="Auditoria"
         description="Acompanhe alterações de acesso, usuários, times e grupos de permissão."
