@@ -63,14 +63,15 @@
 .message header { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--typography-size-xs); }
 .message time,.message small { color: var(--color-inkMuted); }
 .message p { margin: var(--space-2) 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--typography-size-sm); line-height: var(--typography-lineHeight-body); }
-.composer { min-width: 0; margin: var(--space-3) var(--space-4) var(--space-4); padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--ui-panelShadow); display: flex; flex-direction: column; gap: var(--space-2); }
+.composer { position: relative; min-width: 0; margin: var(--space-3) var(--space-4) var(--space-4); padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--ui-panelShadow); display: flex; flex-direction: column; gap: var(--space-2); }
 .composer:focus-within { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .composer .composerInput { min-height: var(--ui-textareaHeight); padding-inline: 0; border: 0; background: transparent; }
 .composer .composerInput[data-focused] { border: 0; outline: 0; }
 .composer[data-mode="note"] { background: var(--color-internalNoteSurface); }
 .composerMode,.composerFooter { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .modeButtons { display: flex; align-items: center; gap: var(--space-1); }
-.replyTools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }
+.replyTools { box-sizing: border-box; position: absolute; z-index: 5; inset-inline-start: var(--space-3); inset-block-end: calc(var(--ui-controlSmall) + var(--space-4)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); width: min(var(--ui-drawerWidth), calc(100% - var(--space-6))); padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--ui-popupShadow); }
+.composerFooter > span { margin-inline-start: auto; }
 .details { display: flex; flex-direction: column; gap: 0; overflow-y: auto; }
 .detailContent { min-width: 0; display: flex; flex-direction: column; gap: 0; }
 .details h2 { margin: 0; padding: var(--space-4) var(--space-5); border-bottom: var(--ui-hairline) solid var(--color-line); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
