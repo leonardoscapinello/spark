@@ -15,7 +15,7 @@ const meta: StoryMeta<typeof RecordPageHeader> = {
     title: "Maria Oliveira",
     description: "maria@empresa.com · (11) 99999-9999",
     actions: <Button variant="secondary">Editar pessoa</Button>,
-    metrics: [{ label: "Pontuação", value: 87 }, { label: "Etapa", value: "Qualificado" }, { label: "Empresa", value: "Acme Brasil" }],
+    metrics: [{ label: "Pontuação", value: 87, icon: "star" }, { label: "Etapa", value: "Qualificado", icon: "check" }, { label: "Empresa", value: "Acme Brasil", icon: "building" }],
   },
 };
 

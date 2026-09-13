@@ -6,6 +6,7 @@ import styles from "./RecordHero.module.css";
 export interface RecordMetric {
   label: string;
   value: ReactNode;
+  icon?: IconName;
   tone?: "success" | "danger";
 }
 
@@ -30,6 +31,7 @@ export function RecordHero({ icon, avatarName, eyebrow, title, description, acti
         </div>
         {description && <p className={styles.description}>{description}</p>}
         {metrics.length > 0 && <dl className={styles.metrics}>{metrics.map((metric) => <div key={metric.label}>
+          {metric.icon && <Icon name={metric.icon} />}
           <dt>{metric.label}</dt>
           <dd data-tone={metric.tone}>{metric.value}</dd>
         </div>)}</dl>}

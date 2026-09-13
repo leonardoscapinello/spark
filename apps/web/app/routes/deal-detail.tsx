@@ -225,7 +225,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       title={deal.name}
       description={`Criado em ${formatDateTime(deal.createdAt)} · atualizado em ${formatDateTime(deal.updatedAt)}`}
       actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar negócio</Button> : undefined}
-      metrics={[{ label: "Valor", value: formatBRL(syncedAmount(deal.amount)) }, { label: "Situação", value: statusLabel(deal.status), ...(deal.status === "won" ? { tone: "success" as const } : deal.status === "lost" ? { tone: "danger" as const } : {}) }, { label: "Previsão", value: deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão" }]}
+      metrics={[{ label: "Valor", value: formatBRL(syncedAmount(deal.amount)), icon: "chart" }, { label: "Situação", value: statusLabel(deal.status), icon: "check", ...(deal.status === "won" ? { tone: "success" as const } : deal.status === "lost" ? { tone: "danger" as const } : {}) }, { label: "Previsão", value: deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão", icon: "calendar" }]}
     />
 
     <div className={styles.contentGrid} data-activities={canReadActivities || canReadInbox ? "visible" : "hidden"}>
