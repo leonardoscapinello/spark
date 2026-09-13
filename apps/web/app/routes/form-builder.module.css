@@ -1,7 +1,7 @@
 .page { gap: var(--space-5); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
-.headerActions,.fieldCardHeader > div { display: flex; align-items: center; gap: var(--space-2); }
+.headerActions,.fieldActions { display: flex; align-items: center; gap: var(--space-2); }
 .mobileViewSwitch { display: none; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(var(--ui-drawerWidth), .85fr); align-items: start; min-width: 0; border-top: var(--ui-hairline) solid var(--color-line); }
 .editor { display: grid; gap: var(--space-5); min-width: 0; padding: var(--space-4) var(--space-5) var(--space-4) 0; }
@@ -10,10 +10,15 @@
 .sectionHeading { display: grid; gap: var(--space-1); }
 .sectionHeading h2 { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 .sectionHeading p { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.fieldList { display: grid; min-width: 0; }
+.fieldList { display: grid; gap: var(--space-3); min-width: 0; }
 .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: var(--space-3); }
-.fieldCard { display: grid; gap: var(--space-3); padding: var(--space-4) 0; border-bottom: var(--ui-hairline) solid var(--color-line); }
-.fieldCardHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.fieldCard { display: grid; gap: var(--space-4); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); transition: border-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out); }
+.fieldCard:focus-within { border-color: var(--color-focusRing); box-shadow: var(--ui-selectionShadow); }
+.fieldCardHeader { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.fieldCardHeader > strong { flex: 1; min-width: 0; overflow: hidden; color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
+.fieldActions { flex-shrink: 0; }
+.fieldNumber { display: grid; place-items: center; flex: 0 0 var(--space-6); width: var(--space-6); height: var(--space-6); border-radius: var(--radius-sm); background: var(--color-accentWash); color: var(--color-accent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); font-variant-numeric: tabular-nums; }
+.fieldActions > :nth-child(2) svg { transform: rotate(180deg); }
 .preview { position: sticky; top: var(--space-6); display: grid; gap: var(--space-3); min-width: 0; padding: var(--space-4) 0 var(--space-4) var(--space-5); border-left: var(--ui-hairline) solid var(--color-line); }
 .previewHeader { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
 .previewHeader > div { display: grid; gap: var(--space-1); }
@@ -27,4 +32,5 @@
   .editor { padding-right: 0; }
   .preview { position: static; padding: var(--space-4) 0; border-left: 0; border-top: 0; }
 }
-@media (max-width: 720px) { .columns { grid-template-columns: 1fr; } .headerActions { flex-wrap: wrap; } }
+@media (max-width: 720px) { .columns { grid-template-columns: 1fr; } .headerActions { flex-wrap: wrap; } .fieldCard { padding: var(--space-3); } }
+@media (prefers-reduced-motion: reduce) { .fieldCard { transition: none; } }

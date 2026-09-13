@@ -221,8 +221,9 @@ export default function FormBuilder() {
               {fields.map((item, index) => (
                 <div className={styles.fieldCard} key={item.id}>
                   <div className={styles.fieldCardHeader}>
-                    <strong>Campo {index + 1}</strong>
-                    <div>
+                    <span className={styles.fieldNumber}>{index + 1}</span>
+                    <strong>{item.label.trim() || `Campo ${index + 1}`}</strong>
+                    <div className={styles.fieldActions}>
                       <Button
                         iconOnly
                         size="sm"
@@ -241,7 +242,7 @@ export default function FormBuilder() {
                         disabled={!canWrite || index === fields.length - 1}
                         onClick={() => move(index, 1)}
                       >
-                        <Icon name="chevron" />
+                        <Icon name="up" />
                       </Button>
                       <Button
                         iconOnly
