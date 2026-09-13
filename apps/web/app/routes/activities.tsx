@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { contactId as contactIdFactory, type Activity, type ActivityType } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { ActionModal, Button, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, SearchSelect, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, SearchSelect, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getSession } from "../lib/auth.client";
@@ -68,10 +68,10 @@ export default function Activities() {
     { value: "all", label: "Todas", count: activities.length },
   ];
   const columns: TableColumn<Activity>[] = [
-    { id: "title", label: "Atividade", cell: (activity) => <div><strong>{activity.title}</strong><span className={styles.secondary}>{typeLabel(activity.type)}</span></div>, sortValue: (activity) => activity.title },
+    { id: "title", label: "Atividade", cell: (activity) => <div className={styles.activityCell}><span className={styles.typeIcon}><Icon name={activity.type === "call" ? "phone" : activity.type === "meeting" ? "team" : activity.type === "email" ? "mail" : "check"} /></span><div><strong>{activity.title}</strong><span className={styles.secondary}>{typeLabel(activity.type)}</span></div></div>, sortValue: (activity) => activity.title },
     { id: "contact", label: "Pessoa", cell: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "Pessoa indisponível" : "—", sortValue: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "" : "" },
     { id: "date", label: "Data e hora", cell: (activity) => <span className={isOverdue(activity, now) ? styles.overdue : undefined}>{formatDateTime(activity.scheduledAt)}</span>, sortValue: (activity) => activity.scheduledAt },
-    { id: "status", label: "Situação", cell: (activity) => <span className={styles.status} data-completed={activity.completed}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : "Pendente"}</span>, sortValue: (activity) => activity.completed ? 2 : isOverdue(activity, now) ? 0 : 1 },
+    { id: "status", label: "Situação", cell: (activity) => <Badge tone={activity.completed ? "success" : isOverdue(activity, now) ? "danger" : "neutral"}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : "Pendente"}</Badge>, sortValue: (activity) => activity.completed ? 2 : isOverdue(activity, now) ? 0 : 1 },
   ];
 
   function resetForm() {

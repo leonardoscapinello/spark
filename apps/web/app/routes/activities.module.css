@@ -4,8 +4,11 @@
 .periodOption { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding-inline: var(--space-3); border-bottom: var(--ui-focusWidth) solid transparent; border-radius: 0; white-space: nowrap; }
 .periodOption[data-selected] { border-bottom-color: var(--color-accent); color: var(--color-ink); }
 .periodOption strong { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
-.secondary { display: block; margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.status { display: inline-flex; padding: var(--space-1) var(--space-2); border-radius: var(--radius-full); background: var(--color-surface2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); }
-.status[data-completed="true"] { color: var(--color-statusSuccess); }
+.activityCell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.activityCell > div { min-width: 0; }
+.activityCell strong, .secondary { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.typeIcon { display: grid; flex: 0 0 var(--space-8); place-items: center; width: var(--space-8); height: var(--space-8); border-radius: var(--radius-sm); background: var(--color-surface2); color: var(--color-inkMuted); }
+.typeIcon svg { width: var(--ui-icon); height: var(--ui-icon); }
+.secondary { margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .overdue { color: var(--color-statusDanger); font-weight: var(--typography-weight-medium); }
 .form { display: flex; flex-direction: column; gap: var(--space-4); }
