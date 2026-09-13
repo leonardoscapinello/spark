@@ -46,6 +46,8 @@
   text-decoration: none;
 }
 
+.railLink { position: relative; }
+
 .railBrand {
   margin-bottom: var(--space-6);
   flex-shrink: 0;
@@ -59,7 +61,22 @@
 }
 
 .brandWordmark { display: none; }
-.railLabel { display: none; }
+.railLabel {
+  position: absolute;
+  inset-inline-start: var(--space-8);
+  max-width: calc(var(--ui-railFlyoutWidth) - var(--space-10));
+  overflow: hidden;
+  color: inherit;
+  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(calc(var(--space-1) * -1));
+  pointer-events: none;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out), visibility var(--motion-duration-fast);
+}
 
 .railLink:hover,
 .railLink[aria-current="page"] {
@@ -126,12 +143,12 @@
   .rail[data-expanded] .railBottom { overflow: hidden; }
   .rail[data-expanded] .railLink { justify-content: flex-start; gap: var(--space-2); width: 100%; padding-inline: var(--space-2); }
   .rail[data-expanded] .railLink svg { flex: 0 0 var(--ui-icon); }
-  .rail[data-expanded] .railLabel { display: block; min-width: 0; overflow: hidden; color: inherit; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); text-overflow: ellipsis; white-space: nowrap; }
+  .rail[data-expanded] .railLabel { opacity: 1; visibility: visible; transform: none; }
   .rail[data-expanded] .accountMenu { justify-content: flex-start; width: 100%; }
   .rail[data-expanded] .accountLink { border-radius: var(--radius-md); }
 }
 
-@media (prefers-reduced-motion: reduce) { .railLink, .rail::before, .railBrand, .railModules, .railBottom { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .railLink, .railLabel, .rail::before, .railBrand, .railModules, .railBottom { transition: none; } }
 
 .sidebar {
   height: 100%;
