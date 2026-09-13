@@ -64,6 +64,7 @@ export { RecordHero, RecordPageHeader, type RecordHeroProps, type RecordMetric }
 export { EmptyState, type EmptyStateProps } from "./EmptyState/EmptyState.js";
 export { ViewSwitcher, type ViewSwitcherProps, type ViewMode } from "./ViewSwitcher/ViewSwitcher.js";
 export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from "./SegmentedControl/SegmentedControl.js";
+export { CalendarMonth, type CalendarMonthProps, type CalendarMonthItem } from "./CalendarMonth/CalendarMonth.js";
 export { Avatar, type AvatarProps } from "./Avatar/Avatar.js";
 export { PersonChoice, type PersonChoiceProps } from "./PersonChoice/PersonChoice.js";
 export { QuickNavigation, type QuickNavigationProps, type QuickNavigationItem } from "./QuickNavigation/QuickNavigation.js";

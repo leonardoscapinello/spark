@@ -39,6 +39,11 @@
   -webkit-box-orient: vertical;
   max-width: var(--ui-popupMaxWidth);
 }
+.calendarPost { display: grid; gap: var(--space-1); min-width: 0; }
+.calendarPost strong, .calendarPost > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calendarPost strong { font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); }
+.calendarPost > span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.calendarPost > :last-child { justify-self: start; }
 .form {
   display: grid;
   gap: var(--space-4);

@@ -15,6 +15,7 @@ import {
   Avatar,
   Badge,
   Button,
+  CalendarMonth,
   CollectionToolbar,
   DataTable,
   DateTimePicker,
@@ -26,6 +27,7 @@ import {
   PageHeader,
   PageFrame,
   Select,
+  SegmentedControl,
   Textarea,
   notify,
   type TableColumn,
@@ -74,6 +76,8 @@ export default function Social() {
   const [syncing, setSyncing] = useState(false);
   const [channelSearch, setChannelSearch] = useState("");
   const [postSearch, setPostSearch] = useState("");
+  const [postLayout, setPostLayout] = useState<"list" | "calendar">("list");
+  const [calendarMonth, setCalendarMonth] = useState(() => { const today = new Date(); return new Date(today.getFullYear(), today.getMonth(), 1); });
   const [channelStatusFilter, setChannelStatusFilter] = useState("all");
   const [postStatusFilter, setPostStatusFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
@@ -96,6 +100,15 @@ export default function Social() {
     (channelFilter === "all" || post.channelId === channelFilter) &&
     (!postSearchTerm || `${post.text} ${channelById.get(post.channelId)?.name ?? ""}`.toLocaleLowerCase("pt-BR").includes(postSearchTerm)),
   );
+  const calendarItems = shownPosts.map((post) => ({
+    id: post.id,
+    date: localDateKey(post.scheduledAt ?? post.publishedAt ?? post.createdAt),
+    content: <div className={styles.calendarPost}>
+      <strong>{channelById.get(post.channelId)?.name ?? "Canal indisponível"}</strong>
+      <span>{post.text}</span>
+      <Badge tone={statusTone(post.status)}>{statusLabel(post.status)}</Badge>
+    </div>,
+  }));
   const firstRun = channelView
     ? channels.length === 0 && !channelsLoading && !channelSearch && channelStatusFilter === "all"
     : posts.length === 0 && !isLoading && !postSearch && postStatusFilter === "all" && channelFilter === "all";
@@ -208,8 +221,9 @@ export default function Social() {
           {!channelView && <Select appearance="filter" label="Filtrar por canal" value={channelFilter} options={[{ value: "all", label: "Todos os canais" }, ...channels.map((channel) => ({ value: channel.id, label: channel.name }))]} onValueChange={(value) => setChannelFilter(value ?? "all")} />}
         </>}
         count={initialLoad ? "Carregando…" : `${channelView ? shownChannels.length : shownPosts.length} ${channelView ? shownChannels.length === 1 ? "canal" : "canais" : shownPosts.length === 1 ? "publicação" : "publicações"}`}
+        actions={!channelView ? <SegmentedControl label="Visualização das publicações" value={postLayout} options={[{ value: "list", label: "Lista" }, { value: "calendar", label: "Calendário" }]} onValueChange={setPostLayout} /> : undefined}
       />
-      {channelView ? <DataTable label="Canais conectados" rows={shownChannels} columns={channelColumns} rowKey={(channel) => channel.id} rowLabel={(channel) => channel.name} state={channelsLoading && !channels.length ? "loading" : "ready"} emptyText={firstRun ? "Os canais conectados aparecerão nesta tabela." : "Nenhum canal encontrado."} /> : <DataTable
+      {channelView ? <DataTable label="Canais conectados" rows={shownChannels} columns={channelColumns} rowKey={(channel) => channel.id} rowLabel={(channel) => channel.name} state={channelsLoading && !channels.length ? "loading" : "ready"} emptyText={firstRun ? "Os canais conectados aparecerão nesta tabela." : "Nenhum canal encontrado."} /> : postLayout === "calendar" ? <CalendarMonth label="publicações" month={calendarMonth} items={calendarItems} onMonthChange={setCalendarMonth} /> : <DataTable
         label="Publicações"
         rows={shownPosts}
         columns={columns}
@@ -330,4 +344,8 @@ function formatDate(value: string): string {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
     new Date(value),
   );
+}
+function localDateKey(value: string): string {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
