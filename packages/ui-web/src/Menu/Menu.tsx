@@ -2,6 +2,7 @@ import { lightTheme } from "@spark/tokens/native-theme";
 import { Menu as BaseMenu } from "@base-ui/react/menu";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Button, type ButtonProps } from "../Button/Button.js";
+import { Avatar } from "../Avatar/Avatar.js";
 import { Icon } from "../Icon/Icon.js";
 import s from "../shared/surfaces.module.css";
 import styles from "./Menu.module.css";
@@ -19,6 +20,12 @@ export function MenuCheckboxItem({ children, ...props }: ComponentProps<typeof B
 export function MenuSeparator() { return <BaseMenu.Separator className={s.separator} />; }
 export function MenuGroup({ label, children }: { label: string; children: ReactNode }) {
   return <BaseMenu.Group><BaseMenu.GroupLabel className={s.groupLabel}>{label}</BaseMenu.GroupLabel>{children}</BaseMenu.Group>;
+}
+export function MenuIdentity({ name, detail, avatarUrl }: { name: string; detail?: string; avatarUrl?: string | null }) {
+  return <div className={styles.identity}>
+    <Avatar name={name} src={avatarUrl ?? null} size="medium" />
+    <span className={styles.identityCopy}><strong>{name}</strong>{detail && <small>{detail}</small>}</span>
+  </div>;
 }
 export function MenuSubmenu({ label, children }: { label: string; children: ReactNode }) {
   return <BaseMenu.SubmenuRoot><BaseMenu.SubmenuTrigger className={s.item}><span className={s.label}>{label}</span><Icon name="right" /></BaseMenu.SubmenuTrigger><MenuContent>{children}</MenuContent></BaseMenu.SubmenuRoot>;

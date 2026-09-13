@@ -4,6 +4,10 @@
 .root > [data-split-part="action"] { border-start-end-radius: 0; border-end-end-radius: 0; }
 .root > [data-split-part="menu"] { border-start-start-radius: 0; border-end-start-radius: 0; }
 .root > button:focus-visible { position: relative; z-index: 1; }
+.identity { display: flex; align-items: center; gap: var(--space-3); min-width: 0; padding: var(--space-3) var(--space-2); }
+.identityCopy { display: grid; gap: var(--space-1); min-width: 0; }
+.identityCopy strong { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.identityCopy small { color: var(--color-inkMuted); font-size: var(--typography-size-compact); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .root > [data-split-part="menu"] { position: relative; }
 .root > [data-split-part="menu"]::before { content: ""; position: absolute; inset-inline-start: 0; top: var(--space-2); bottom: var(--space-2); width: var(--ui-hairline); background: currentColor; opacity: var(--ui-splitDividerOpacity); pointer-events: none; }

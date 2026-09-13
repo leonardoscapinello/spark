@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { MenuButton, MenuItem, MenuSeparator, SplitButton } from "./Menu.js";
+import { MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, SplitButton } from "./Menu.js";
 import { Icon } from "../Icon/Icon.js";
 const meta: Meta<typeof MenuButton> = { title: "Componentes/Menu", component: MenuButton };
 export default meta;
@@ -11,3 +11,4 @@ export const TextoComIcone: Story = { args: { children: "Atribuir", menu: option
 export const Dividido: Story = { render: () => <SplitButton menu={options} menuLabel="Opções de envio">Enviar</SplitButton> };
 export const DivididoRetangular: Story = { render: () => <SplitButton shape="rounded" variant="secondary" menu={options} menuLabel="Opções de salvar">Salvar</SplitButton> };
 export const DivididoCarregando: Story = { render: () => <SplitButton loading menu={options}>Enviando</SplitButton> };
+export const Perfil: Story = { render: () => <MenuButton variant="secondary" menu={<><MenuIdentity name="Maria Oliveira" detail="Conta pessoal" /><MenuSeparator /><MenuGroup label="Conta"><MenuItem icon={<Icon name="settings" />}>Segurança da conta</MenuItem></MenuGroup><MenuGroup label="Administração"><MenuItem icon={<Icon name="grid" />}>Configurações</MenuItem></MenuGroup><MenuSeparator /><MenuItem icon={<Icon name="exit" />}>Sair da conta</MenuItem></>}>Minha conta</MenuButton> };
