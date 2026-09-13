@@ -114,7 +114,7 @@
 
 .submit { width: 100%; }
 
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
   .container { display: flex; flex-direction: column; min-height: 100dvh; background: var(--color-surface); }
   .intro { min-height: 0; padding: var(--space-6) var(--space-4) 0; border-right: 0; background: var(--color-surface); }
   .logo { width: min(100%, calc(var(--space-16) * 3)); }
@@ -122,4 +122,8 @@
   .access { flex: 1; align-items: flex-start; padding: var(--space-8) var(--space-4); }
   .card { max-width: var(--ui-drawerWidth); margin-inline: auto; gap: var(--space-6); }
   .cardHeader h2 { font-size: var(--typography-size-xl); }
+}
+
+@media (min-width: 761px) and (max-width: 1024px) {
+  .access { align-items: center; }
 }
