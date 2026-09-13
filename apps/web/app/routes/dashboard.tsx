@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, redirect, useNavigate } from "react-router";
+import { Link, redirect, useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { buildCrmDashboard, formatBRL } from "@spark/core";
 import { syncedAmount } from "@spark/data";
@@ -28,11 +28,20 @@ export async function clientLoader() {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canImportContacts = session?.capabilities.includes("contacts:write") ?? false;
   const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
   const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
+  const requestedView = searchParams.get("view");
+  const view = requestedView === "people" && canReadContacts ? "people"
+    : requestedView === "deals" && canReadDeals ? "deals"
+      : requestedView === "activities" && canReadActivities ? "activities" : "overview";
+  const showPeople = view === "overview" || view === "people";
+  const showDeals = view === "overview" || view === "deals";
+  const showActivities = view === "overview" || view === "activities";
+  const viewTitle = ({ overview: "Visão geral", people: "Pessoas", deals: "Negócios", activities: "Atividades" } as const)[view];
   const { data: contacts = [], isLoading: loadingContacts } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: getContactsCollection() }) : undefined });
   const { data: deals = [], isLoading: loadingDeals } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }) : undefined });
   const { data: activities = [], isLoading: loadingActivities } = useLiveQuery({ query: (q) => canReadActivities ? q.from({ activities: getActivitiesCollection() }) : undefined });
@@ -47,8 +56,9 @@ export default function Dashboard() {
   }), [activities, contacts, deals, periodDays]);
   const loading = loadingContacts || loadingDeals || loadingActivities;
   const hasRecords = contacts.length > 0 || deals.length > 0 || activities.length > 0;
+  const visibleRecords = view === "people" ? contacts.length > 0 : view === "deals" ? deals.length > 0 : view === "activities" ? activities.length > 0 : hasRecords;
   const hasMetrics = canReadContacts || canReadDeals || canReadActivities;
-  const firstRun = hasMetrics && !loading && !hasRecords;
+  const firstRun = hasMetrics && !loading && !visibleRecords;
   const chartData = snapshot.days.map((day) => ({
     label: formatDay(day.date, periodDays),
     contatos: canReadContacts ? day.newContacts : null,
@@ -56,13 +66,13 @@ export default function Dashboard() {
     atividades: canReadActivities ? day.activities : null,
   }));
   const chartSeries = [
-    ...(canReadContacts ? [{ key: "contatos", label: "Novas pessoas", color: 1 as const }] : []),
-    ...(canReadDeals ? [{ key: "negocios", label: "Novos negócios", color: 2 as const }] : []),
-    ...(canReadActivities ? [{ key: "atividades", label: "Atividades", color: 3 as const }] : []),
+    ...(canReadContacts && showPeople ? [{ key: "contatos", label: "Novas pessoas", color: 1 as const }] : []),
+    ...(canReadDeals && showDeals ? [{ key: "negocios", label: "Novos negócios", color: 2 as const }] : []),
+    ...(canReadActivities && showActivities ? [{ key: "atividades", label: "Atividades", color: 3 as const }] : []),
   ];
 
   return <PageFrame className={styles.page}>
-    <PageHeader icon="chart" title="Visão geral" />
+    <PageHeader icon="chart" title={viewTitle} />
     {firstRun && <EmptyState variant="featured" icon="chart" title="Os relatórios começam com seus registros" description="Cadastre pessoas, acompanhe negócios e agende atividades. O desempenho da equipe aparece aqui automaticamente." action={canImportContacts ? <Button onClick={() => void navigate("/contacts/import")}>Importar pessoas</Button> : undefined} />}
     {!hasMetrics && <EmptyState icon="chart" title="Indicadores indisponíveis" description="Seu grupo de acesso ainda não permite consultar pessoas, negócios ou atividades." />}
     {firstRun && <ActionCardGroup title="Acompanhe o trabalho da equipe">
@@ -75,34 +85,36 @@ export default function Dashboard() {
         <span className={styles.filterLabel}><Icon name="calendar" />Período</span>
         <div className={styles.period}><Select appearance="filter" label="Período do relatório" value={period} options={PERIODS} onValueChange={(value) => { if (value !== null) setPeriod(value); }} /></div>
       </div>
-      <div className={styles.sectionHeading}><h2>Desempenho comercial</h2><span>Indicadores do período selecionado</span></div>
+      <div className={styles.sectionHeading}><h2>{view === "overview" ? "Desempenho" : `Desempenho de ${viewTitle.toLocaleLowerCase("pt-BR")}`}</h2><span>Indicadores do período selecionado</span></div>
       <DashboardGrid metrics>
-      {canReadContacts && <Link className={styles.metricLink} to="/"><MetricCard title="Pessoas na base" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} /></Link>}
-      {canReadDeals && <Link className={styles.metricLink} to="/deals"><MetricCard title="Negócios em aberto" value={snapshot.openDeals} comparison={formatBRL(snapshot.openPipelineAmount)} state={loadingDeals ? "loading" : "ready"} /></Link>}
-      {canReadActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Atividades atrasadas" value={snapshot.overdueActivities} comparison="Pendências anteriores a hoje" sentiment={snapshot.overdueActivities > 0 ? "negative" : "positive"} state={loadingActivities ? "loading" : "ready"} /></Link>}
-      {canReadActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
+      {canReadContacts && showPeople && <Link className={styles.metricLink} to="/"><MetricCard title="Pessoas na base" value={snapshot.totalContacts} comparison={newContactsComparison(snapshot.newContacts, snapshot.newContactsChange, periodDays)} sentiment={(snapshot.newContactsChange ?? 0) >= 0 ? "positive" : "negative"} state={loadingContacts ? "loading" : "ready"} /></Link>}
+      {canReadContacts && view === "people" && <Link className={styles.metricLink} to="/?status=new"><MetricCard title="Novas pessoas no período" value={snapshot.newContacts} comparison={`${periodDays} dias selecionados`} state={loadingContacts ? "loading" : "ready"} /></Link>}
+      {canReadDeals && showDeals && <Link className={styles.metricLink} to="/deals"><MetricCard title="Negócios em aberto" value={snapshot.openDeals} comparison={formatBRL(snapshot.openPipelineAmount)} state={loadingDeals ? "loading" : "ready"} /></Link>}
+      {canReadDeals && view === "deals" && <Link className={styles.metricLink} to="/deals"><MetricCard title="Valor em negociação" value={formatBRL(snapshot.openPipelineAmount)} comparison="Negócios em aberto" state={loadingDeals ? "loading" : "ready"} /></Link>}
+      {canReadActivities && showActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Atividades atrasadas" value={snapshot.overdueActivities} comparison="Pendências anteriores a hoje" sentiment={snapshot.overdueActivities > 0 ? "negative" : "positive"} state={loadingActivities ? "loading" : "ready"} /></Link>}
+      {canReadActivities && showActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
       </DashboardGrid>
     </>}
     {hasMetrics && !firstRun && <>
       <div className={styles.sectionHeading}><h2>Movimento no período</h2><span>Novos registros e atividades por dia</span></div>
       <DashboardGrid>
-        <div className={styles.wideChart}><DataChart title="Evolução diária" description="Pessoas, negócios e atividades" data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : hasRecords ? "ready" : "empty"} /></div>
+        <div className={styles.wideChart}><DataChart title="Evolução diária" description={view === "overview" ? "Pessoas, negócios e atividades" : viewTitle} data={chartData} series={chartSeries} kind="area" state={loading ? "loading" : visibleRecords ? "ready" : "empty"} /></div>
       </DashboardGrid>
-      <div className={styles.sectionHeading}><h2>Distribuição</h2><span>Como os registros estão organizados agora</span></div>
+      {view !== "activities" && <><div className={styles.sectionHeading}><h2>Distribuição</h2><span>Como os registros estão organizados agora</span></div>
       <DashboardGrid>
-        {canReadDeals && <DonutChart title="Negócios por situação" state={loadingDeals ? "loading" : deals.length ? "ready" : "empty"} data={[
+        {canReadDeals && showDeals && <DonutChart title="Negócios por situação" state={loadingDeals ? "loading" : deals.length ? "ready" : "empty"} data={[
         { id: "open", label: "Em aberto", value: snapshot.dealsByStatus.open, color: 1 },
         { id: "won", label: "Ganhos", value: snapshot.dealsByStatus.won, color: 2 },
         { id: "lost", label: "Perdidos", value: snapshot.dealsByStatus.lost, color: 4 },
         ]} />}
-        {canReadContacts && <DonutChart title="Pessoas por etapa" state={loadingContacts ? "loading" : contacts.length ? "ready" : "empty"} data={[
+        {canReadContacts && showPeople && <DonutChart title="Pessoas por etapa" state={loadingContacts ? "loading" : contacts.length ? "ready" : "empty"} data={[
         { id: "new", label: "Novos", value: snapshot.contactsByStatus.new, color: 1 },
         { id: "qualified", label: "Qualificados", value: snapshot.contactsByStatus.qualified, color: 2 },
         { id: "nurturing", label: "Em nutrição", value: snapshot.contactsByStatus.nurturing, color: 3 },
         { id: "customer", label: "Clientes", value: snapshot.contactsByStatus.customer, color: 5 },
         { id: "unqualified", label: "Desqualificados", value: snapshot.contactsByStatus.unqualified, color: 4 },
         ]} />}
-      </DashboardGrid>
+      </DashboardGrid></>}
     </>}
   </PageFrame>;
 }

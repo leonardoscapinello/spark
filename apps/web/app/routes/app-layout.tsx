@@ -15,6 +15,11 @@ type NavModule = { id: string; title: string; icon: IconName; to: string; sectio
 const modules: NavModule[] = [
   { id: "overview", title: "Relatórios", icon: "chart", to: "/dashboard", sections: [
     { title: "Desempenho", items: [{ label: "Visão geral", to: "/dashboard", icon: "grid" }] },
+    { title: "Áreas", items: [
+      { label: "Pessoas", to: "/dashboard?view=people", icon: "user", capability: "contacts:read" },
+      { label: "Negócios", to: "/dashboard?view=deals", icon: "briefcase", capability: "deals:read" },
+      { label: "Atividades", to: "/dashboard?view=activities", icon: "calendar", capability: "activities:read" },
+    ] },
   ] },
   { id: "leads", title: "Leads", icon: "user", to: "/", sections: [
     { title: "Pessoas", icon: "team", items: [
@@ -111,7 +116,7 @@ function pathMatches(pathname: string, to: string, search = "") {
     ? pathname === "/" || pathname.startsWith("/contacts/") && pathname !== "/contacts/import"
     : route === "/inbox" || route === "/admin" ? pathname === route : pathname === route || pathname.startsWith(`${route}/`);
   if (!query) {
-    const relevantParameter = ({ "/": "status", "/deals": "status", "/catalog": "view", "/inbox": "box", "/automations": "filter", "/campaigns": "view", "/social": "view" } as Record<string, string>)[route ?? ""];
+    const relevantParameter = ({ "/": "status", "/dashboard": "view", "/deals": "status", "/catalog": "view", "/inbox": "box", "/automations": "filter", "/campaigns": "view", "/social": "view" } as Record<string, string>)[route ?? ""];
     return routeMatches && (!relevantParameter || !new URLSearchParams(search).has(relevantParameter));
   }
   const expected = new URLSearchParams(query);
@@ -210,7 +215,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const displayedTopTabActive = (item: NavItem) => requestedPath
     ? pathMatches(requestedPath, item.to, requestedSearch)
     : topTabActive(item);
-  const showSidebar = current.id === "admin" || current.id === "leads" || (current.id === "automations" && location.pathname === "/automations");
+  const showSidebar = current.id === "admin" || current.id === "leads" || current.id === "overview" || (current.id === "automations" && location.pathname === "/automations");
   const visibleSections = current.sections.map((section) => ({
     title: section.title,
     icon: section.icon,
