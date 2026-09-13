@@ -247,7 +247,7 @@ export default function Deals() {
                       }}
                     />
                   </form>
-                ) : (
+                ) : canManagePipeline ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -257,7 +257,7 @@ export default function Deals() {
                   >
                     {stage.name}
                   </Button>
-                )}
+                ) : <span className={styles.colunaNome}>{stage.name}</span>}
                 <span className={styles.colunaTotal}>
                   {stageDeals.length} · {formatBRL(total)}
                 </span>
@@ -273,6 +273,7 @@ export default function Deals() {
                         .filter(Boolean)
                         .join(" ")}
                       draggable={isOpen && canMove}
+                      data-draggable={isOpen && canMove ? "true" : undefined}
                       onDragStart={(event) => {
                         event.dataTransfer.effectAllowed = "move";
                         setDragging(deal.id);

@@ -60,6 +60,7 @@
 }
 
 .colunaNome {
+  display: block;
   height: auto;
   padding: var(--ui-focusWidth) var(--space-1);
   margin: calc(var(--ui-focusWidth) * -1) calc(var(--space-1) * -1);
@@ -95,7 +96,6 @@
   border-radius: var(--radius-md);
   box-shadow: var(--ui-panelShadow);
   padding: var(--space-3);
-  cursor: grab;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -104,7 +104,8 @@
   transition: opacity var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out);
 }
 
-.cartao:active {
+.cartao[data-draggable] { cursor: grab; }
+.cartao[data-draggable]:active {
   cursor: grabbing;
 }
 .cartao:hover { box-shadow: var(--ui-selectionShadow); }
