@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { contactId as contactIdFactory, type Activity, type ActivityType } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { ActionModal, Badge, Button, CalendarMonth, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CalendarWeek, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getSession } from "../lib/auth.client";
@@ -38,7 +38,7 @@ export default function Activities() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [layout, setLayout] = useState<"list" | "calendar">("list");
-  const [calendarMonth, setCalendarMonth] = useState(() => { const today = new Date(); return new Date(today.getFullYear(), today.getMonth(), 1); });
+  const [calendarWeek, setCalendarWeek] = useState(() => new Date());
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -72,6 +72,7 @@ export default function Activities() {
   const calendarItems = filtered.map((activity) => ({
     id: activity.id,
     date: localDateKey(activity.scheduledAt),
+    hour: new Date(activity.scheduledAt).getHours(),
     content: <div className={styles.calendarActivity}>
       <span className={styles.calendarTime}>{new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(activity.scheduledAt))}</span>
       <strong>{activity.title}</strong>
@@ -122,7 +123,7 @@ export default function Activities() {
       count={isLoading ? "Carregando atividades…" : `${filtered.length} ${filtered.length === 1 ? "atividade" : "atividades"}`}
       actions={<SegmentedControl label="Visualização das atividades" value={layout} options={[{ value: "list", label: "Lista" }, { value: "calendar", label: "Calendário" }]} onValueChange={setLayout} />}
     />}
-    {!firstRun && (layout === "calendar" ? <CalendarMonth label="atividades" month={calendarMonth} items={calendarItems} onMonthChange={setCalendarMonth} /> : <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText={activities.length ? "Nenhuma atividade neste filtro." : "Nenhuma atividade cadastrada."} actions={(activity) => <>{canReadContacts && activity.contactId && <TableIconAction label="Abrir pessoa" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${activity.title}`} loading={busyId === activity.id} menu={<MenuItem onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</MenuItem>} />}</>} />)}
+    {!firstRun && (layout === "calendar" ? <CalendarWeek label="atividades" week={calendarWeek} items={calendarItems} onWeekChange={setCalendarWeek} /> : <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText={activities.length ? "Nenhuma atividade neste filtro." : "Nenhuma atividade cadastrada."} actions={(activity) => <>{canReadContacts && activity.contactId && <TableIconAction label="Abrir pessoa" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${activity.title}`} loading={busyId === activity.id} menu={<MenuItem onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</MenuItem>} />}</>} />)}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha pessoa, título e data para agendar." onConfirm={createActivity}>
       <form className={styles.form} onSubmit={submit}>
         <Field><Label>Pessoa</Label><SearchSelect label="Buscar pessoa" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>

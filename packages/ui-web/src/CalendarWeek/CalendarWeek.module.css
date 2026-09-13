@@ -1,0 +1,22 @@
+.root { display: grid; gap: var(--space-4); min-width: 0; color: var(--color-ink); font-family: var(--typography-fontFamily-body); }
+.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
+.header > div:first-child { display: grid; gap: var(--space-1); }
+.header h2 { margin: 0; font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
+.header span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.controls { display: flex; align-items: center; gap: var(--space-1); }
+.controls > :nth-child(2) svg { transform: rotate(180deg); }
+.scroll { max-width: 100%; max-height: var(--ui-previewHeight); overflow: auto; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+.scroll:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+.grid { display: grid; grid-template-columns: var(--space-12) repeat(7, minmax(0, 1fr)); min-width: calc(var(--space-16) * 12); }
+.corner, .dayHeading { position: sticky; inset-block-start: 0; z-index: 2; border-bottom: var(--ui-hairline) solid var(--color-line); background: var(--color-surface); }
+.corner { position: sticky; inset-inline-start: 0; z-index: 3; }
+.dayHeading { display: flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--ui-touchTarget); border-inline-start: var(--ui-hairline) solid var(--color-line); text-transform: capitalize; }
+.dayHeading span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.dayHeading strong { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); border-radius: var(--radius-full); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
+.dayHeading[data-today] strong { background: var(--color-accent); color: var(--ui-buttonInk); }
+.hourRow { display: contents; }
+.hourLabel, .slot { min-height: var(--space-16); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.hourLabel { position: sticky; inset-inline-start: 0; z-index: 1; padding: var(--space-2) var(--space-1); background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
+.slot { display: grid; align-content: start; gap: var(--space-1); min-width: 0; padding: var(--space-1); border-inline-start: var(--ui-hairline) solid var(--color-line); }
+.slot[data-today] { background: var(--color-accentWash); }
+.item { min-width: 0; padding: var(--space-1) var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--ui-selectionShadow); }
