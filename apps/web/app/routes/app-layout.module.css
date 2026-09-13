@@ -49,8 +49,10 @@
 .railLink { position: relative; }
 
 .railBrand {
+  position: relative;
   margin-bottom: var(--space-6);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .railBrand .brandSymbol {
@@ -58,9 +60,22 @@
   height: var(--space-6);
   object-fit: contain;
   flex: 0 0 auto;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-out);
 }
 
-.brandWordmark { display: none; }
+.brandWordmark {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--space-2);
+  width: calc(var(--ui-railFlyoutWidth) - var(--space-8));
+  max-height: var(--ui-controlMedium);
+  object-fit: contain;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-out), visibility var(--motion-duration-fast);
+}
 .railLabel {
   position: absolute;
   inset-inline-start: var(--space-8);
@@ -136,8 +151,8 @@
   .rail[data-expanded] .railModules,
   .rail[data-expanded] .railBottom { box-sizing: border-box; width: var(--ui-railFlyoutWidth); padding-inline: var(--space-2); }
   .rail[data-expanded] .railBrand { justify-content: flex-start; overflow: hidden; }
-  .rail[data-expanded] .brandSymbol { display: none; }
-  .rail[data-expanded] .brandWordmark { display: block; width: calc(var(--ui-railFlyoutWidth) - var(--space-8)); max-height: var(--ui-controlMedium); object-fit: contain; }
+  .rail[data-expanded] .brandSymbol { opacity: 0; }
+  .rail[data-expanded] .brandWordmark { opacity: 1; visibility: visible; }
   .rail[data-expanded] .railModules,
   .rail[data-expanded] .railBottom { align-items: stretch; }
   .rail[data-expanded] .railBottom { overflow: hidden; }
@@ -148,7 +163,7 @@
   .rail[data-expanded] .accountLink { border-radius: var(--radius-md); }
 }
 
-@media (prefers-reduced-motion: reduce) { .railLink, .railLabel, .rail::before, .railBrand, .railModules, .railBottom { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .railLink, .railLabel, .brandSymbol, .brandWordmark, .rail::before, .railBrand, .railModules, .railBottom { transition: none; } }
 
 .sidebar {
   height: 100%;
