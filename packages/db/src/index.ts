@@ -4,3 +4,4 @@
 export * from "./schema/index.js";
 export * from "./client.js";
 export * from "./roles.js";
+export * from "./eventPartitions.js";

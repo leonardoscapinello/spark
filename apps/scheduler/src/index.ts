@@ -1,6 +1,6 @@
 import { Queue, type ConnectionOptions } from "bullmq";
 import { eq, sql } from "drizzle-orm";
-import { automationJobs, automationTimers, createDbClient, type SparkDb } from "@spark/db";
+import { automationJobs, automationTimers, createDbClient, ensureEventPartitions, type SparkDb } from "@spark/db";
 import { automationJobId } from "@spark/core";
 
 export const APP_NAME = "@spark/scheduler" as const;
@@ -56,6 +56,19 @@ export function startAutomationScheduler(): { queue: Queue; stop: () => Promise<
   void scheduleDueAutomationWork(db, queue);
   return { queue, stop: async () => { clearInterval(interval); await queue.close(); } };
 }
+/**
+ * events é particionada por mês; sem partição para o mês, todo write de
+ * negócio que registra evento falha (ver packages/db/src/eventPartitions.ts).
+ * Roda na subida e uma vez por dia — a rotina é idempotente, e três meses
+ * de horizonte dão folga para o scheduler ficar fora do ar sem consequência.
+ */
+export function startEventPartitionMaintenance(db: SparkDb): { stop: () => void } {
+  const run = () => ensureEventPartitions(db).catch((error: unknown) => process.stderr.write(`event partitions: ${error instanceof Error ? error.message : String(error)}\n`));
+  const interval = setInterval(() => { void run(); }, Number(process.env.EVENT_PARTITIONS_INTERVAL_MS ?? 24 * 60 * 60 * 1_000));
+  void run();
+  return { stop: () => clearInterval(interval) };
+}
 function required(name: string): string { const value = process.env[name]; if (!value) throw new Error(`${name} is required.`); return value; }
 function redisConnection(value: string): ConnectionOptions { const url = new URL(value); return { host: url.hostname, port: Number(url.port || 6379), ...(url.username ? { username: decodeURIComponent(url.username) } : {}), ...(url.password ? { password: decodeURIComponent(url.password) } : {}), ...(url.protocol === "rediss:" ? { tls: {} } : {}) }; }
 if (process.env.NODE_ENV !== "test" && process.env.REDIS_URL && process.env.DATABASE_URL) startAutomationScheduler();
+if (process.env.NODE_ENV !== "test" && process.env.DATABASE_URL) startEventPartitionMaintenance(createDbClient(process.env.DATABASE_URL));
