@@ -12,7 +12,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:seed-demo": "node scripts/seed-demo.mjs"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.10",

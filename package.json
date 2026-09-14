@@ -18,7 +18,8 @@
     "db:generate": "pnpm --filter @spark/db db:generate",
     "gen:api": "pnpm --filter @spark/contracts gen:openapi && pnpm --filter @spark/api-client gen",
     "gen:tokens": "pnpm --filter @spark/tokens build",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "seed:demo": "pnpm --filter @spark/db db:seed-demo"
   },
   "devDependencies": {
     "turbo": "^2.3.0",
