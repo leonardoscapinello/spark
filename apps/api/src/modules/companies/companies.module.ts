@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { SettingsModule } from "../settings/settings.module.js";
 import { CapabilityGuard, SupabaseJwtGuard } from "../../auth/index.js";
 import { GetCurrentUserUseCase } from "../identity/application/get-current-user.usecase.js";
 import { PermissionGroupsRepository } from "../identity/infrastructure/permission-groups.repository.js";
@@ -11,7 +12,7 @@ import { CompaniesController } from "./presentation/companies.controller.js";
 import { EventsModule } from "../events/events.module.js";
 
 @Module({
-  imports: [EventsModule],
+  imports: [SettingsModule, EventsModule],
   controllers: [CompaniesController],
   providers: [CreateCompanyUseCase, UpdateCompanyUseCase, ArchiveCompanyUseCase, CompaniesRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })

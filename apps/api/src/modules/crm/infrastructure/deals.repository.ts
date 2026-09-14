@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { eq, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, deals, type SparkDb } from "@spark/db";
 import {
@@ -18,7 +19,7 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 export class DealsRepository {
   private readonly db: SparkDb;
 
-  constructor(private readonly eventWriter: DomainEventWriter) {
+  constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter) {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
@@ -48,6 +49,10 @@ export class DealsRepository {
       if (!row) throw new Error("Deal insert returned no row.");
 
       const deal = toDeal(row);
+
+      // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
+
+      if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "deal", deal.id, input.customFields);
       await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.created", data: { name: deal.name, stageId: deal.stageId } });
       return { deal, txid };
     });
@@ -67,6 +72,9 @@ export class DealsRepository {
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
 
       const deal = toDeal(row);
+
+      // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
+
       await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.stage_changed", data: { stageId: deal.stageId } });
       return { deal, txid };
     });
@@ -94,6 +102,8 @@ export class DealsRepository {
 
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
       const deal = toDeal(row);
+      // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
+      if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "deal", deal.id, input.customFields);
       await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.updated", data: { fields: Object.keys(input) } });
       return { deal, txid };
     });
@@ -117,6 +127,9 @@ export class DealsRepository {
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
 
       const deal = toDeal(row);
+
+      // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
+
       await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: input.status === "won" ? "deal.won" : "deal.lost", data: input.status === "lost" ? { reason: input.lossReason ?? null } : {} });
       return { deal, txid };
     });

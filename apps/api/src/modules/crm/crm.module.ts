@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { SettingsModule } from "../settings/settings.module.js";
 import { PipelinesController } from "./presentation/pipelines.controller.js";
 import { StagesController } from "./presentation/stages.controller.js";
 import { DealsController } from "./presentation/deals.controller.js";
@@ -23,7 +24,7 @@ import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
 import { EventsModule } from "../events/events.module.js";
 
 @Module({
-  imports: [EventsModule],
+  imports: [SettingsModule, EventsModule],
   controllers: [StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
   providers: [StageFieldRulesRepository, DealProductsRepository, 
     CreatePipelineUseCase,

@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { SettingsModule } from "../settings/settings.module.js";
 import { ContactsController } from "./presentation/contacts.controller.js";
 import { CreateContactUseCase } from "./application/create-contact.usecase.js";
 import { UpdateContactUseCase } from "./application/update-contact.usecase.js";
@@ -15,7 +16,7 @@ import { ImportContactsUseCase } from "./application/import-contacts.usecase.js"
 import { SearchContactsUseCase } from "./application/search-contacts.usecase.js";
 
 @Module({
-  imports: [EventsModule],
+  imports: [SettingsModule, EventsModule],
   controllers: [ContactsController],
   providers: [
     CreateContactUseCase,
