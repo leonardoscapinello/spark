@@ -3,11 +3,12 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { contacts, createDbClient, identities, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
 import type { ContactId, ConversationChannel, OrgId } from "@spark/core";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
+import { ConnectionSettingsRepository } from "../../integrations/infrastructure/connection-settings.repository.js";
 import { EmailDeliveryService } from "../../integrations/application/email-delivery.service.js";
 @Injectable()
 export class ChannelSender {
   private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
-  constructor(private readonly vault: SecretVault, private readonly email: EmailDeliveryService) {}
+  constructor(private readonly vault: SecretVault, private readonly email: EmailDeliveryService, private readonly settings: ConnectionSettingsRepository) {}
   async send(orgId: OrgId, contactId: ContactId, channel: ConversationChannel, subject: string, body: string): Promise<string> {
     if (channel !== "email" && channel !== "instagram") throw new BadRequestException(`O canal ${channel} ainda não aceita respostas externas.`);
     const loaded = await withOrgContext(this.db, orgId, async (tx) => {
@@ -18,11 +19,12 @@ export class ChannelSender {
       if (!secret) throw new ServiceUnavailableException("Credenciais do canal indisponíveis.");
       const [contact] = await tx.select({ email: contacts.email }).from(contacts).where(and(eq(contacts.id, contactId), eq(contacts.orgId, orgId))).limit(1);
       const [identity] = await tx.select({ externalValue: identities.externalValue }).from(identities).where(and(eq(identities.contactId, contactId), eq(identities.orgId, orgId), eq(identities.channel, channel))).limit(1);
-      return { connection, credentials: this.vault.decrypt(secret), recipient: channel === "email" ? contact?.email ?? identity?.externalValue : identity?.externalValue };
+      // A configuração vem de `integration_connection_settings` (ADR-0035).
+      return { connection, config: await this.settings.read(tx, connection.id), credentials: this.vault.decrypt(secret), recipient: channel === "email" ? contact?.email ?? identity?.externalValue : identity?.externalValue };
     });
     if (!loaded.recipient) throw new BadRequestException(`O contato não possui identidade ${channel}.`);
     if (loaded.connection.provider === "smtp" || loaded.connection.provider === "google_workspace") return this.email.send(orgId, { to: loaded.recipient, subject, text: body });
-    return this.instagram(loaded.connection.config, loaded.credentials, loaded.recipient, body);
+    return this.instagram(loaded.config, loaded.credentials, loaded.recipient, body);
   }
   private async instagram(config: Record<string, unknown>, credentials: Record<string, string>, recipient: string, body: string): Promise<string> { const accountId = text(config.accountId); const version = text(config.apiVersion) || "v23.0"; if (!accountId || !credentials.accessToken) throw new ServiceUnavailableException("Conta ou token do Instagram indisponível."); const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(accountId)}/messages`, { method: "POST", headers: { Authorization: `Bearer ${credentials.accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ recipient: { id: recipient }, messaging_type: "RESPONSE", message: { text: body } }) }); const payload = await json(response); if (!response.ok) throw new Error(apiError(payload, "O Instagram recusou a mensagem.")); return text(payload.message_id) || text(payload.id) || crypto.randomUUID(); }
 }

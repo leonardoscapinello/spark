@@ -28,8 +28,6 @@ export class CompaniesRepository {
         email: input.email ?? null,
         phone: input.phone ?? null,
         address: input.address ?? null,
-        customFields: input.customFields ?? {},
-        tags: input.tags ?? [],
       }).returning();
       if (!row) throw new Error("Company insert returned no row.");
       const company = toCompany(row);
@@ -44,7 +42,8 @@ export class CompaniesRepository {
   async update(orgId: OrgId, id: CompanyId, input: UpdateCompanyInput): Promise<{ company: Company; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
-      const [row] = await tx.update(companies).set({ ...input, updatedAt: new Date() }).where(eq(companies.id, id)).returning();
+      const { customFields: _customFields, tags: _tags, ...columns } = input;
+      const [row] = await tx.update(companies).set({ ...columns, updatedAt: new Date() }).where(eq(companies.id, id)).returning();
       if (!row) throw new NotFoundException(`Company ${id} not found.`);
       const company = toCompany(row);
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
@@ -76,8 +75,6 @@ async function captureTxid(tx: SparkDb): Promise<number> {
 function toCompany(row: typeof companies.$inferSelect): Company {
   return {
     ...row,
-    customFields: (row.customFields ?? {}) as Record<string, unknown>,
-    tags: (row.tags ?? []) as string[],
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,

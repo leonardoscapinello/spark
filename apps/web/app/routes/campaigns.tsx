@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
+import { useTagsByEntity } from "../lib/tags.client";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DashboardGrid, DataTable, EmptyState, Field, Icon, Input, Label, MetricCard, PageFrame, PageHeader, ProgressBar, RecordIdentity, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
@@ -20,12 +21,14 @@ export default function Campaigns() {
   const { data: audiences, isLoading: audiencesLoading } = useLiveQuery({ query: (q) => q.from({ audiences: getAudiencesCollection() }).orderBy(({ audiences: item }) => item.updatedAt, "desc") });
   const { data: campaigns, isLoading } = useLiveQuery({ query: (q) => q.from({ campaigns: getCampaignsCollection() }).orderBy(({ campaigns: item }) => item.createdAt, "desc") });
   const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: getContactsCollection() }) });
+  // As marcações vêm das tabelas, não de coluna jsonb (ADR-0035).
+  const tagsByContact = useTagsByEntity("contact");
   const [audienceOpen, setAudienceOpen] = useState(false); const [campaignOpen, setCampaignOpen] = useState(false); const [sending, setSending] = useState<string | null>(null);
   const [search, setSearch] = useState(""); const [statusFilter, setStatusFilter] = useState("all");
   const [audienceName, setAudienceName] = useState(""); const [description, setDescription] = useState(""); const [operator, setOperator] = useState<"all" | "any">("all"); const [statuses, setStatuses] = useState<string[]>([]); const [tags, setTags] = useState(""); const [minimumScore, setMinimumScore] = useState("");
   const [name, setName] = useState(""); const [audienceIdValue, setAudienceIdValue] = useState(""); const [subject, setSubject] = useState(""); const [body, setBody] = useState("");
   const filter: AudienceFilter = useMemo(() => ({ operator, leadStatuses: statuses, tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean), minimumScore: minimumScore === "" ? null : Number(minimumScore) }), [operator, statuses, tags, minimumScore]);
-  const previewCount = contacts.filter((contact) => matchesAudience({ ...contact, tags: contact.tags }, filter)).length;
+  const previewCount = contacts.filter((contact) => matchesAudience({ ...contact, tags: tagsByContact.get(contact.id) ?? [] }, filter)).length;
   const audienceById = useMemo(() => new Map<string, Audience>(audiences.map((item) => [item.id, item])), [audiences]);
   const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
   const filteredAudiences = audiences.filter((item) => !normalizedSearch || `${item.name} ${item.description ?? ""}`.toLocaleLowerCase("pt-BR").includes(normalizedSearch));
@@ -42,7 +45,7 @@ export default function Campaigns() {
   ];
   const audienceColumns: TableColumn<Audience>[] = [
     { id: "name", label: "Público", cell: (item) => <RecordIdentity icon="team" title={item.name} subtitle={item.description || "Sem descrição"} />, sortValue: (item) => item.name },
-    { id: "contacts", label: "Pessoas agora", cell: (item) => contacts.filter((contact) => matchesAudience({ ...contact, tags: contact.tags }, item.filter)).length, sortValue: (item) => contacts.filter((contact) => matchesAudience({ ...contact, tags: contact.tags }, item.filter)).length },
+    { id: "contacts", label: "Pessoas agora", cell: (item) => contacts.filter((contact) => matchesAudience({ ...contact, tags: tagsByContact.get(contact.id) ?? [] }, item.filter)).length, sortValue: (item) => contacts.filter((contact) => matchesAudience({ ...contact, tags: tagsByContact.get(contact.id) ?? [] }, item.filter)).length },
     { id: "updated", label: "Atualizado", cell: (item) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(item.updatedAt)), sortValue: (item) => item.updatedAt },
   ];
   async function createAudience() { const response = await campaignsControllerCreateAudience({ id: audienceId.create(), name: audienceName.trim(), description: description.trim() || null, filter }); notify({ title: "Público criado", description: `${previewCount} ${previewCount === 1 ? "pessoa corresponde" : "pessoas correspondem"} agora.`, tone: "success" }); setAudienceIdValue(response.audience.id); setAudienceName(""); setDescription(""); }

@@ -4,20 +4,22 @@ import { S3ObjectStorage, type ObjectStorage, type StorageConfig } from "@spark/
 import { createDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
 import type { IntegrationConnectionId, OrgId } from "@spark/core";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
+import { ConnectionSettingsRepository } from "../../integrations/infrastructure/connection-settings.repository.js";
 
 @Injectable()
 export class StorageResolver {
   private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
-  constructor(private readonly vault: SecretVault) {}
+  constructor(private readonly vault: SecretVault, private readonly settings: ConnectionSettingsRepository) {}
   async forNewUpload(orgId: OrgId): Promise<{ connectionId: IntegrationConnectionId; storage: ObjectStorage }> {
     const loaded = await withOrgContext(this.db, orgId, async (tx) => {
       const [connection] = await tx.select().from(integrationConnections).where(and(eq(integrationConnections.orgId, orgId), eq(integrationConnections.provider, "s3"), eq(integrationConnections.status, "connected"))).orderBy(desc(integrationConnections.updatedAt)).limit(1);
       if (!connection) throw new ServiceUnavailableException("Conecte e teste um armazenamento S3 antes de enviar arquivos.");
       const [secret] = await tx.select().from(integrationSecrets).where(and(eq(integrationSecrets.connectionId, connection.id), eq(integrationSecrets.orgId, orgId))).limit(1);
       if (!secret) throw new ServiceUnavailableException("As credenciais do armazenamento não estão configuradas.");
-      return { connection, credentials: this.vault.decrypt(secret) };
+      // A configuração vem de `integration_connection_settings` (ADR-0035).
+      return { connection, config: await this.settings.read(tx, connection.id), credentials: this.vault.decrypt(secret) };
     });
-    return { connectionId: loaded.connection.id as IntegrationConnectionId, storage: buildStorage(loaded.connection.config, loaded.credentials) };
+    return { connectionId: loaded.connection.id as IntegrationConnectionId, storage: buildStorage(loaded.config, loaded.credentials) };
   }
   async byConnection(orgId: OrgId, connectionId: IntegrationConnectionId): Promise<ObjectStorage> {
     const loaded = await withOrgContext(this.db, orgId, async (tx) => {
@@ -25,9 +27,10 @@ export class StorageResolver {
       if (!connection) throw new NotFoundException("O provedor original deste arquivo não está mais disponível.");
       const [secret] = await tx.select().from(integrationSecrets).where(and(eq(integrationSecrets.connectionId, connection.id), eq(integrationSecrets.orgId, orgId))).limit(1);
       if (!secret) throw new ServiceUnavailableException("As credenciais do provedor original estão indisponíveis.");
-      return { connection, credentials: this.vault.decrypt(secret) };
+      // A configuração vem de `integration_connection_settings` (ADR-0035).
+      return { connection, config: await this.settings.read(tx, connection.id), credentials: this.vault.decrypt(secret) };
     });
-    return buildStorage(loaded.connection.config, loaded.credentials);
+    return buildStorage(loaded.config, loaded.credentials);
   }
 }
 function buildStorage(config: Record<string, unknown>, credentials: Record<string, string>): ObjectStorage {

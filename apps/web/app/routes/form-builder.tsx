@@ -22,7 +22,7 @@ import {
   Textarea,
   notify,
 } from "@spark/ui-web";
-import { getLeadFormsCollection } from "../lib/forms-collections.client";
+import { useLeadFormFields, getLeadFormsCollection } from "../lib/forms-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./form-builder.module.css";
@@ -46,6 +46,8 @@ export default function FormBuilder() {
   const [submitLabel, setSubmitLabel] = useState("Enviar");
   const [successMessage, setSuccessMessage] = useState("");
   const [fields, setFields] = useState<LeadFormField[]>([]);
+  // O desenho vem de `lead_form_fields`, não de coluna jsonb (ADR-0035).
+  const storedFields = useLeadFormFields(form?.id);
   const [previewValues, setPreviewValues] = useState<Record<string, string | boolean>>({});
   const [previewSubmitted, setPreviewSubmitted] = useState(false);
   const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
@@ -57,8 +59,8 @@ export default function FormBuilder() {
     setDescription(form.description ?? "");
     setSubmitLabel(form.submitLabel);
     setSuccessMessage(form.successMessage);
-    setFields(form.fields);
-  }, [form]);
+    setFields(storedFields);
+  }, [form, storedFields]);
   if (!form)
     return (
       <PageFrame className={styles.page}>

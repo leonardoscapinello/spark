@@ -30,8 +30,12 @@ export const ContactSchema = z.object({
   ownerId: zUserId.nullable().default(null),
   companyId: zCompanyId.nullable().default(null),
   score: z.number().int().min(0).max(100).default(0),
-  customFields: z.record(z.string(), z.unknown()).default({}),
-  tags: z.array(z.string()).default([]),
+  /* Campo personalizado e marcação NÃO são coluna deste registro (ADR-0035):
+   * moram em `custom_field_values` e em `tags` + vínculo, e a tela os junta
+   * localmente. Continuam aqui, opcionais, porque é esta a forma que a
+   * escrita usa — a API recebe a lista e a distribui em linhas. */
+  customFields: z.record(z.string(), z.unknown()).optional(),
+  tags: z.array(z.string()).optional(),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
   deletedAt: zServerTimestamp.nullable(),

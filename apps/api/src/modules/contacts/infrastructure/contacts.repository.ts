@@ -45,8 +45,6 @@ export class ContactsRepository {
           ownerId: input.ownerId ?? null,
           companyId: input.companyId ?? null,
           score: input.score ?? 0,
-          customFields: input.customFields ?? {},
-          tags: input.tags ?? [],
         })
         .returning();
 
@@ -102,8 +100,6 @@ export class ContactsRepository {
           ownerId: input.ownerId,
           companyId: input.companyId,
           score: input.score,
-          customFields: input.customFields,
-          tags: input.tags,
           updatedAt: new Date(),
         })
         .where(eq(contacts.id, id))
@@ -166,7 +162,6 @@ export class ContactsRepository {
           email: contact.email ?? null,
           phone: contact.phone ?? null,
           source: contact.source ?? "csv",
-          tags: contact.tags ?? [],
         })));
         await this.eventWriter.appendMany(tx, accepted.map((contact) => ({
           orgId,
@@ -191,8 +186,6 @@ function toContact(row: {
   ownerId: string | null;
   companyId: string | null;
   score: number;
-  customFields: unknown;
-  tags: unknown;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -208,8 +201,6 @@ function toContact(row: {
     ownerId: row.ownerId,
     companyId: row.companyId,
     score: row.score,
-    customFields: (row.customFields ?? {}) as Record<string, unknown>,
-    tags: (row.tags ?? []) as string[],
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,

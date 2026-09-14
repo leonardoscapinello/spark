@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { audiences, campaignRecipients, campaigns, contacts, createDbClient, emailSuppressions, withOrgContext, type SparkDb } from "@spark/db";
+import { audiences, campaignRecipients, campaigns, contactTags, contacts, createDbClient, emailSuppressions, tags, withOrgContext, type SparkDb } from "@spark/db";
 import { campaignRecipientId, matchesAudience, type Campaign, type CampaignId, type CreateAudienceInput, type CreateCampaignInput, type OrgId, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
@@ -16,7 +16,12 @@ export class CampaignsRepository {
   createCampaign(orgId: OrgId, userId: UserId, input: CreateCampaignInput) { return withOrgContext(this.db, orgId, async (tx) => {
     const [audience] = await tx.select().from(audiences).where(and(eq(audiences.orgId, orgId), eq(audiences.id, input.audienceId))).limit(1); if (!audience) throw new NotFoundException("Público não encontrado.");
     const candidates = await tx.select().from(contacts).where(and(eq(contacts.orgId, orgId), isNull(contacts.deletedAt)));
-    const matching = candidates.filter((contact) => matchesAudience({ ...contact, deletedAt: contact.deletedAt?.toISOString() ?? null, tags: Array.isArray(contact.tags) ? contact.tags.filter((tag): tag is string => typeof tag === "string") : [] }, audience.filter));
+    // As marcações são linhas (ADR-0035): uma consulta para a organização
+    // inteira, e o público é avaliado sobre ela — não uma consulta por pessoa.
+    const tagRows = await tx.select({ contactId: contactTags.contactId, name: tags.name }).from(contactTags).innerJoin(tags, eq(contactTags.tagId, tags.id)).where(eq(contactTags.orgId, orgId));
+    const tagsByContact = new Map<string, string[]>();
+    for (const row of tagRows) tagsByContact.set(row.contactId, [...(tagsByContact.get(row.contactId) ?? []), row.name]);
+    const matching = candidates.filter((contact) => matchesAudience({ ...contact, deletedAt: contact.deletedAt?.toISOString() ?? null, tags: tagsByContact.get(contact.id) ?? [] }, audience.filter));
     const [row] = await tx.insert(campaigns).values({ ...input, orgId, createdBy: userId, recipientCount: matching.length }).returning(); if (!row) throw new Error("Campaign insert returned no row.");
     if (matching.length) await tx.insert(campaignRecipients).values(matching.map((contact) => ({ id: campaignRecipientId.create(), orgId, campaignId: input.id, contactId: contact.id, email: contact.email! })));
     const txid = await captureTxid(tx); await this.events.append(tx, { orgId, type: "campaign.created", data: { campaignId: input.id, recipientCount: matching.length } }); return { campaign: toCampaign(row), txid };

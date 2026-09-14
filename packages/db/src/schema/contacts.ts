@@ -1,4 +1,4 @@
-import { pgTable, pgPolicy, text, timestamp, uuid, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, pgPolicy, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -22,8 +22,6 @@ export const contacts = pgTable(
     ownerId: uuid("owner_id").references(() => users.id, { onDelete: "set null" }),
     companyId: uuid("company_id").references(() => companies.id, { onDelete: "set null" }),
     score: integer("score").notNull().default(0),
-    customFields: jsonb("custom_fields").notNull().default({}),
-    tags: jsonb("tags").notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zDiscountRuleId, zMoney, zOrgId, zProductId, zProductVariantId, zServerTimestamp } from "./zodHelpers.js";
 export const CurrencySchema = z.enum(["BRL", "USD"]);
-export const ProductSchema = z.object({ id: zProductId, orgId: zOrgId, sku: z.string().trim().min(1).max(80), name: z.string().trim().min(1).max(200), description: z.string().max(2_000).nullable(), price: zMoney, currency: CurrencySchema, unit: z.string().trim().min(1).max(40), stock: z.number().int().nonnegative().nullable(), active: z.boolean(), tags: z.array(z.string()).default([]), createdAt: zServerTimestamp, updatedAt: zServerTimestamp, deletedAt: zServerTimestamp.nullable() });
+export const ProductSchema = z.object({ id: zProductId, orgId: zOrgId, sku: z.string().trim().min(1).max(80), name: z.string().trim().min(1).max(200), description: z.string().max(2_000).nullable(), price: zMoney, currency: CurrencySchema, unit: z.string().trim().min(1).max(40), stock: z.number().int().nonnegative().nullable(), active: z.boolean(), tags: z.array(z.string()).optional(), createdAt: zServerTimestamp, updatedAt: zServerTimestamp, deletedAt: zServerTimestamp.nullable() });
 export type Product = z.infer<typeof ProductSchema>;
 export const CreateProductInputSchema = ProductSchema.omit({ orgId: true, createdAt: true, updatedAt: true, deletedAt: true }).partial({ description: true, stock: true, active: true, tags: true, currency: true, unit: true });
 export type CreateProductInput = z.infer<typeof CreateProductInputSchema>;

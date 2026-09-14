@@ -12,6 +12,8 @@ import s from "./CustomFieldValue.module.css";
 export interface CustomFieldValueProps {
   field: CustomFieldDefinition;
   value: unknown;
+  /** As opções válidas, vindas de `custom_field_options` (ADR-0035). */
+  options?: readonly string[];
   disabled?: boolean;
   /** Recebe o valor já normalizado pelo core; lançar aqui volta como erro na tela. */
   onSave: (value: unknown) => Promise<void>;
@@ -34,7 +36,8 @@ export interface CustomFieldValueProps {
  * digitar mostram «Salvar», porque gravar a cada tecla mandaria valor pela
  * metade.
  */
-export function CustomFieldValue({ field, value, disabled = false, onSave, onError, onSuccess }: CustomFieldValueProps) {
+export function CustomFieldValue({ field, value, options, disabled = false, onSave, onError, onSuccess }: CustomFieldValueProps) {
+  const choices = options ?? customFieldOptions(field);
   const [draft, setDraft] = useState(() => toDraft(field, value));
   const [saving, setSaving] = useState(false);
   // Valor que chegou pela sincronização (outro dispositivo, outra pessoa) substitui
@@ -44,7 +47,7 @@ export function CustomFieldValue({ field, value, disabled = false, onSave, onErr
   async function save(raw: unknown) {
     setSaving(true);
     try {
-      await onSave(normalizeCustomFieldValue(field, raw));
+      await onSave(normalizeCustomFieldValue(field, raw, choices));
       onSuccess?.(field.label);
     } catch (cause) {
       onError?.(cause instanceof Error ? cause.message : "Revise o campo.");
@@ -58,8 +61,8 @@ export function CustomFieldValue({ field, value, disabled = false, onSave, onErr
   const row = (control: ReactNode) => <div className={s.row}><span className={s.label}>{field.label}{field.required && <span className={s.required} aria-label="obrigatório">*</span>}</span><div className={s.control}>{control}</div></div>;
 
   if (field.type === "boolean") return row(<Checkbox checked={value === true} disabled={busy} onCheckedChange={(checked) => void save(checked === true)}>{value === true ? "Sim" : "Não"}</Checkbox>);
-  if (field.type === "single_select") return row(<Select label={field.label} value={typeof value === "string" ? value : null} placeholder="Selecionar" options={customFieldOptions(field).map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
-  if (field.type === "multi_select") return row(<Select<true> multiple label={field.label} value={Array.isArray(value) ? value.map(String) : []} placeholder="Selecionar" options={customFieldOptions(field).map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
+  if (field.type === "single_select") return row(<Select label={field.label} value={typeof value === "string" ? value : null} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
+  if (field.type === "multi_select") return row(<Select<true> multiple label={field.label} value={Array.isArray(value) ? value.map(String) : []} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
   if (field.type === "date") return row(<DatePicker label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); void save(next); }} />);
   if (field.type === "datetime") return row(<DateTimePicker mode="datetime" label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); void save(next); }} />);
   if (field.type === "paragraph") return row(<div className={s.editor}><Textarea aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} /><SaveButton saving={saving} disabled={disabled} onClick={() => void save(draft)} /></div>);

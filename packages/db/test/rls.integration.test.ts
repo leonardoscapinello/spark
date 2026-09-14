@@ -127,12 +127,19 @@ describe("RLS — permission_groups and user_permission_groups isolate by org (d
       (${orgC}, 'Organization C', ${"org-c-" + orgC}),
       (${orgD}, 'Organization D', ${"org-d-" + orgD})`;
 
-    await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-      (${groupOrgC}, ${orgC}, 'Manager', ${admin.json(["contacts:read", "contacts:write"])}),
-      (${groupOrgD}, ${orgD}, 'Manager', ${admin.json(["contacts:read"])})`;
+    await admin`INSERT INTO permission_groups (id, org_id, name) VALUES
+      (${groupOrgC}, ${orgC}, 'Manager'),
+      (${groupOrgD}, ${orgD}, 'Manager')`;
+    // A capacidade é linha (ADR-0035), e carrega org_id próprio — é isso que a
+    // isolação por organização passa a proteger.
+    await admin`INSERT INTO permission_group_capabilities (org_id, group_id, capability) VALUES
+      (${orgC}, ${groupOrgC}, 'contacts:read'),
+      (${orgC}, ${groupOrgC}, 'contacts:write'),
+      (${orgD}, ${groupOrgD}, 'contacts:read')`;
   });
 
   afterAll(async () => {
+    await admin`DELETE FROM permission_group_capabilities WHERE org_id IN (${orgC}, ${orgD})`;
     await admin`DELETE FROM permission_groups WHERE org_id IN (${orgC}, ${orgD})`;
     await admin`DELETE FROM organizations WHERE id IN (${orgC}, ${orgD})`;
   });
@@ -140,14 +147,11 @@ describe("RLS — permission_groups and user_permission_groups isolate by org (d
   it("org C sees only org C's group", async () => {
     const rows = await appUser.begin(async (tx) => {
       await tx.unsafe(`SET LOCAL app.current_org_id = '${orgC}'`);
-      return tx`SELECT id, capabilities FROM permission_groups`;
+      return tx`SELECT g.id, c.capability FROM permission_groups g JOIN permission_group_capabilities c ON c.group_id = g.id ORDER BY c.capability`;
     });
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.id).toBe(groupOrgC);
-    // jsonb volta como array mesmo: o driver desserializa. O parse que havia
-    // aqui existia porque a escrita gravava JSON dentro de JSON (migration
-    // 0039) — era bug nosso, não do driver.
-    expect(rows[0]?.capabilities).toEqual(["contacts:read", "contacts:write"]);
+    expect(rows).toHaveLength(2);
+    expect(rows.every((l) => l.id === groupOrgC)).toBe(true);
+    expect(rows.map((l) => l.capability)).toEqual(["contacts:read", "contacts:write"]);
   });
 
   it("org D can't see org C's group even without a WHERE", async () => {

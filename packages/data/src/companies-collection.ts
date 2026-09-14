@@ -43,7 +43,7 @@ export function createCompaniesCollection() {
         id: company.id, parentCompanyId: company.parentCompanyId, ownerId: company.ownerId,
         name: company.name, legalName: company.legalName, taxId: company.taxId,
         website: company.website, industry: company.industry, email: company.email,
-        phone: company.phone, address: company.address, customFields: company.customFields, tags: company.tags,
+        phone: company.phone, address: company.address, customFields: company.customFields ?? {}, tags: company.tags ?? [],
       });
       return confirmed(response);
     },
@@ -68,8 +68,8 @@ export function createCompaniesCollection() {
         ...(changed.includes("email") ? { email: mutation.modified.email } : {}),
         ...(changed.includes("phone") ? { phone: mutation.modified.phone } : {}),
         ...(changed.includes("address") ? { address: mutation.modified.address } : {}),
-        ...(changed.includes("customFields") ? { customFields: mutation.modified.customFields } : {}),
-        ...(changed.includes("tags") ? { tags: mutation.modified.tags } : {}),
+        ...(changed.includes("customFields") ? { customFields: mutation.modified.customFields ?? {} } : {}),
+        ...(changed.includes("tags") ? { tags: mutation.modified.tags ?? [] } : {}),
       });
       return confirmed(response);
     },

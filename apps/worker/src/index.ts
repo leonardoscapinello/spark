@@ -1,7 +1,7 @@
 import { Worker, type ConnectionOptions, type Job } from "bullmq";
 import { and, desc, eq } from "drizzle-orm";
-import { automationJobs, automationRuns, automationRunSteps, automationTimers, automationVersions, contacts, createDbClient, events, withOrgContext, type SparkDb } from "@spark/db";
-import { automationJobId, automationStepId, automationTimerId, contactId as contactIdFactory, eventId, orgId as orgIdFactory, resolveAutomationTransition, automationWaitMilliseconds, type AutomationNode, type ContactId, type OrgId } from "@spark/core";
+import { automationJobs, automationRuns, automationRunSteps, automationTimers, automationVersions, contactTags, contacts, createDbClient, events, tags, withOrgContext, type SparkDb } from "@spark/db";
+import { automationJobId, automationStepId, automationTimerId, contactId as contactIdFactory, eventId, orgId as orgIdFactory, resolveAutomationTransition, automationWaitMilliseconds, tagDisplayName, tagSlug, type AutomationNode, type ContactId, type OrgId } from "@spark/core";
 
 export const APP_NAME = "@spark/worker" as const;
 export const AUTOMATION_QUEUE = "automation";
@@ -53,16 +53,27 @@ async function executeAction(tx: SparkDb, orgId: OrgId, contactId: ContactId, no
   const value = node.data.config.value;
   const [contact] = await tx.select().from(contacts).where(and(eq(contacts.id, contactId), eq(contacts.orgId, orgId))).limit(1);
   if (!contact) throw new Error("Automation contact not found.");
-  const contactTags = Array.isArray(contact.tags) ? contact.tags.filter((tag): tag is string => typeof tag === "string") : [];
+  // Marcação é linha em `tags` + `contact_tags` (ADR-0035): a automação cria a
+  // marcação no catálogo se ela ainda não existir, e liga ou desliga o vínculo.
   if (operation === "contact.add_tag" && typeof value === "string") {
-    const tags = Array.from(new Set([...contactTags, value]));
-    await tx.update(contacts).set({ tags, updatedAt: new Date() }).where(eq(contacts.id, contact.id));
-    await tx.insert(events).values({ id: eventId.create(), orgId, contactId: contact.id, type: "contact.updated", data: { automation: true, addedTag: value } });
-    return { operation, addedTag: value };
+    const name = tagDisplayName(value);
+    const slug = tagSlug(name);
+    if (slug === "") return { operation, addedTag: null };
+    await tx.insert(tags).values({ orgId, name, slug }).onConflictDoNothing();
+    const [tag] = await tx.select({ id: tags.id }).from(tags).where(and(eq(tags.orgId, orgId), eq(tags.slug, slug))).limit(1);
+    if (!tag) throw new Error("Tag could not be resolved.");
+    await tx.insert(contactTags).values({ orgId, contactId: contact.id, tagId: tag.id }).onConflictDoNothing();
+    await tx.update(contacts).set({ updatedAt: new Date() }).where(eq(contacts.id, contact.id));
+    await tx.insert(events).values({ id: eventId.create(), orgId, contactId: contact.id, type: "contact.updated", data: { automation: true, addedTag: name } });
+    return { operation, addedTag: name };
   }
   if (operation === "contact.remove_tag" && typeof value === "string") {
-    const tags = contactTags.filter((tag) => tag !== value);
-    await tx.update(contacts).set({ tags, updatedAt: new Date() }).where(eq(contacts.id, contact.id));
+    const slug = tagSlug(value);
+    const [tag] = await tx.select({ id: tags.id }).from(tags).where(and(eq(tags.orgId, orgId), eq(tags.slug, slug))).limit(1);
+    if (tag) {
+      await tx.delete(contactTags).where(and(eq(contactTags.contactId, contact.id), eq(contactTags.tagId, tag.id)));
+      await tx.update(contacts).set({ updatedAt: new Date() }).where(eq(contacts.id, contact.id));
+    }
     return { operation, removedTag: value };
   }
   if (operation === "contact.set_status" && typeof value === "string" && ["new", "qualified", "nurturing", "customer", "unqualified"].includes(value)) {

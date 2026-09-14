@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { jsonb, pgPolicy, pgTable, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { pgPolicy, pgTable, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
 import { users } from "./users.js";
@@ -20,8 +20,6 @@ export const companies = pgTable(
     email: text("email"),
     phone: text("phone"),
     address: text("address"),
-    customFields: jsonb("custom_fields").notNull().default({}),
-    tags: jsonb("tags").notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),

@@ -102,8 +102,10 @@ export function createContactsCollection() {
           ownerId: contact.ownerId,
           companyId: contact.companyId,
           score: contact.score,
-          customFields: contact.customFields,
-          tags: contact.tags,
+          // Não são coluna da pessoa (ADR-0035): a API recebe a lista e a
+          // distribui em `custom_field_values` e nos vínculos de marcação.
+          customFields: contact.customFields ?? {},
+          tags: contact.tags ?? [],
         });
 
         // { txid } in the return value — that's what TanStack DB uses
@@ -137,8 +139,8 @@ export function createContactsCollection() {
           ...("ownerId" in mutation.changes ? { ownerId: mutation.modified.ownerId } : {}),
           ...("companyId" in mutation.changes ? { companyId: mutation.modified.companyId } : {}),
           ...("score" in mutation.changes ? { score: mutation.modified.score } : {}),
-          ...("tags" in mutation.changes ? { tags: mutation.modified.tags } : {}),
-          ...("customFields" in mutation.changes ? { customFields: mutation.modified.customFields } : {}),
+          ...("tags" in mutation.changes ? { tags: mutation.modified.tags ?? [] } : {}),
+          ...("customFields" in mutation.changes ? { customFields: mutation.modified.customFields ?? {} } : {}),
         });
 
         return confirmed(response);

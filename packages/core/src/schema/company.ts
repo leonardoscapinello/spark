@@ -14,8 +14,9 @@ export const CompanySchema = z.object({
   email: zEmail.nullable(),
   phone: zPhone.nullable(),
   address: z.string().trim().min(1).max(500).nullable(),
-  customFields: z.record(z.string(), z.unknown()).default({}),
-  tags: z.array(z.string()).default([]),
+  /* Não são coluna: ver a nota em contact.ts (ADR-0035). */
+  customFields: z.record(z.string(), z.unknown()).optional(),
+  tags: z.array(z.string()).optional(),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
   deletedAt: zServerTimestamp.nullable(),

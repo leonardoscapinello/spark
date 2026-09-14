@@ -36,7 +36,7 @@ import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
-import { useCustomFieldValues } from "../lib/custom-fields.client";
+import { useCustomFieldOptions, useCustomFieldValues } from "../lib/custom-fields.client";
 import { getDealProductsCollection } from "../lib/deal-products-collection.client";
 import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collection.client";
 import { getNotesCollection } from "../lib/notes-collection.client";
@@ -158,6 +158,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
   // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
   const customValues = useCustomFieldValues("deal", params.dealId, customFields);
+  const fieldOptions = useCustomFieldOptions();
   const isOpen = deal?.status === "open";
   /* Tempo em cada etapa, reconstruído do histórico (packages/core/rules/stageDuration) —
    * sem coluna nova: os eventos de mudança já contam essa história. */
@@ -469,6 +470,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
               </form>
             : <div className={styles.details}>
                 {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
+                  options={fieldOptions.get(field.id) ?? []}
                   key={field.id}
                   field={field}
                   value={customValues[field.key]}

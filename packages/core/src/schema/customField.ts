@@ -19,7 +19,7 @@ export const CUSTOM_FIELD_TYPE_LABELS: Record<CustomFieldType, string> = {
   boolean: "Sim/Não", single_select: "Seleção única", multi_select: "Seleção múltipla",
 };
 export type CustomFieldEntity = (typeof CUSTOM_FIELD_ENTITIES)[number]; export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
-export const CustomFieldDefinitionSchema = z.object({ id: zCustomFieldDefinitionId, orgId: zOrgId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), key: z.string().min(1), label: z.string().min(1), type: z.enum(CUSTOM_FIELD_TYPES), required: z.boolean(), options: z.array(z.string()), createdBy: zUserId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp, archivedAt: zServerTimestamp.nullable() });
+export const CustomFieldDefinitionSchema = z.object({ id: zCustomFieldDefinitionId, orgId: zOrgId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), key: z.string().min(1), label: z.string().min(1), type: z.enum(CUSTOM_FIELD_TYPES), required: z.boolean(), options: z.array(z.string()).optional(), createdBy: zUserId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp, archivedAt: zServerTimestamp.nullable() });
 export type CustomFieldDefinition = z.infer<typeof CustomFieldDefinitionSchema>;
 export const CreateCustomFieldInputSchema = z.object({ id: zCustomFieldDefinitionId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), key: z.string().trim().min(1).max(63).regex(/^[a-z][a-z0-9_]*$/), label: z.string().trim().min(1).max(120), type: z.enum(CUSTOM_FIELD_TYPES), required: z.boolean().default(false), options: z.array(z.string().trim().min(1).max(100)).max(100).default([]) }).superRefine((input, ctx) => { if ((input.type === "single_select" || input.type === "multi_select") && input.options.length === 0) ctx.addIssue({ code: "custom", path: ["options"], message: "Campos de seleção precisam de opções." }); });
 export type CreateCustomFieldInput = z.infer<typeof CreateCustomFieldInputSchema>;
@@ -32,8 +32,9 @@ export type CustomFieldWriteResponse = z.infer<typeof CustomFieldWriteResponseSc
  *
  * `options` é `jsonb` no banco e a sincronização entrega o valor como o texto
  * cru que o Postgres mandou — o schema Zod só transforma escrita local, nunca
- * leitura sincronizada. Ler direto com `.map` estoura a tela. Enquanto a
- * coluna não vira tabela própria, toda leitura passa por aqui.
+ * leitura sincronizada. Ler direto com `.map` estoura a tela. A coluna virou `custom_field_options`
+ * (ADR-0035); isto continua aqui para um campo cuja lista ainda não foi
+ * carregada, e devolve lista vazia em vez de estourar.
  */
 export function customFieldOptions(field: Pick<CustomFieldDefinition, "options">): string[] {
   const raw: unknown = field.options;
@@ -44,7 +45,15 @@ export function customFieldOptions(field: Pick<CustomFieldDefinition, "options">
   return [];
 }
 
-export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: unknown): unknown {
+/**
+ * Valida e converte o que a pessoa digitou no que vai para o banco.
+ *
+ * `allowedOptions` são as opções válidas do campo. Elas vêm de
+ * `custom_field_options` (ADR-0035), não mais de uma coluna jsonb da
+ * definição — por isso entram por parâmetro: quem chama é quem tem a lista
+ * sincronizada.
+ */
+export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: unknown, allowedOptions: readonly string[] = customFieldOptions(field)): unknown {
   if (value === "" || value === null || value === undefined) { if (field.required) throw new Error(`${field.label} é obrigatório.`); return null; }
   if (field.type === "text" || field.type === "paragraph") return String(value).trim();
   if (field.type === "number") { const parsed = typeof value === "number" ? value : Number(value); if (!Number.isFinite(parsed)) throw new Error(`${field.label} precisa ser um número.`); return parsed; }
@@ -57,8 +66,8 @@ export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: u
   if (field.type === "phone") { try { return normalizePhone(String(value)); } catch { throw new Error(`${field.label} precisa ser um telefone válido.`); } }
   // Sem `new URL`: o core não depende de plataforma (roda em Node, navegador e RN).
   if (field.type === "url") { const raw = String(value).trim().replace(/\s/g, ""); const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`; if (!/^https?:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/[^\s]*)?$/i.test(withScheme)) throw new Error(`${field.label} precisa ser um endereço web.`); return withScheme; }
-  if (field.type === "single_select") { const selected = String(value); if (!customFieldOptions(field).includes(selected)) throw new Error(`Opção inválida em ${field.label}.`); return selected; }
-  const selected = Array.isArray(value) ? value.map(String) : []; const allowed = customFieldOptions(field); if (selected.some((item) => !allowed.includes(item))) throw new Error(`Opção inválida em ${field.label}.`); return selected;
+  if (field.type === "single_select") { const selected = String(value); if (!allowedOptions.includes(selected)) throw new Error(`Opção inválida em ${field.label}.`); return selected; }
+  const selected = Array.isArray(value) ? value.map(String) : []; if (selected.some((item) => !allowedOptions.includes(item))) throw new Error(`Opção inválida em ${field.label}.`); return selected;
 }
 
 /**

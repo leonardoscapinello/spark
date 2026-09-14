@@ -27,7 +27,7 @@ export const DealSchema = z.object({
   lossReason: z.string().max(500).nullable(),
   /** Campos definidos pela organização (packages/core/schema/customField,
    * entityType "deal") — como no Pipedrive, um negócio também carrega os seus. */
-  customFields: z.record(z.string(), z.unknown()).default({}),
+  customFields: z.record(z.string(), z.unknown()).optional(),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
   deletedAt: zServerTimestamp.nullable(),

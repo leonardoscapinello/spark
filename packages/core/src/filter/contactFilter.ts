@@ -69,7 +69,10 @@ export function filterOperatorAcceptsMany(operator: FilterOperator): boolean {
 }
 
 function fieldValue(contact: Contact, field: ContactFilterField): unknown {
-  if (field.startsWith("custom:")) return contact.customFields[field.slice("custom:".length)];
+  // Campo personalizado não é coluna da pessoa (ADR-0035): quem filtra passa
+  // os valores já juntados das tabelas. Sem eles, o campo simplesmente não
+  // casa — nunca estoura.
+  if (field.startsWith("custom:")) return contact.customFields?.[field.slice("custom:".length)];
   return contact[field as (typeof CONTACT_FILTER_FIELDS)[number]];
 }
 

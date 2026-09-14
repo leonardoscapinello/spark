@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { and, eq, isNull, useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact, optimisticSavedView } from "@spark/data";
-import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus, type SavedViewVisibility, customFieldOptions } from "@spark/core";
+import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus, type SavedViewVisibility } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { usePreference } from "../lib/preferences.client";
@@ -10,6 +10,8 @@ import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
+import { useCustomFieldOptions, useCustomFieldValuesByEntity } from "../lib/custom-fields.client";
+import { useTagsByEntity } from "../lib/tags.client";
 import { getSavedViewsCollection } from "../lib/saved-views-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS, leadStatusLabel } from "../lib/lead-options";
@@ -38,6 +40,10 @@ export default function Contacts() {
   });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }) });
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).orderBy(({ fields: item }) => item.label, "asc") });
+  // Campo personalizado e marcação vêm das tabelas, não de coluna jsonb (ADR-0035).
+  const customValuesByContact = useCustomFieldValuesByEntity("contact", customFields);
+  const tagsByContact = useTagsByEntity("contact");
+  const fieldOptions = useCustomFieldOptions();
   const savedViewsCollection = getSavedViewsCollection();
   const { data: savedViews = [] } = useLiveQuery({ query: (q) => q.from({ views: savedViewsCollection }).where(({ views: view }) => and(eq(view.entityType, "contact"), isNull(view.archivedAt))).orderBy(({ views: view }) => view.createdAt, "asc") });
   const [savedViewsOpen, setSavedViewsOpen] = useState(false);
@@ -134,7 +140,7 @@ export default function Contacts() {
   const filteredContacts = contacts.filter((contact) =>
     (archiveView ? contact.deletedAt !== null : contact.deletedAt === null) &&
     contactMatches(contact, search) &&
-    (statusFilter === "all" || contact.leadStatus === statusFilter) && contactMatchesFilterSet(contact, filters),
+    (statusFilter === "all" || contact.leadStatus === statusFilter) && contactMatchesFilterSet({ ...contact, customFields: customValuesByContact.get(contact.id) ?? {}, tags: tagsByContact.get(contact.id) ?? [] }, filters),
   );
   const columns = useMemo<TableColumn<Contact>[]>(() => {
     const userNames = new Map(users.map((user) => [user.id, user.name]));
@@ -179,11 +185,11 @@ export default function Contacts() {
       id: `custom:${field.key}`,
       group: "Campos personalizados",
       label: field.label,
-      cell: (contact: Contact) => formatCustomFieldValue(field, contact.customFields[field.key]) || <span className={styles.muted}>—</span>,
-      sortValue: (contact: Contact) => formatCustomFieldValue(field, contact.customFields[field.key]),
+      cell: (contact: Contact) => formatCustomFieldValue(field, customValuesByContact.get(contact.id)?.[field.key]) || <span className={styles.muted}>—</span>,
+      sortValue: (contact: Contact) => formatCustomFieldValue(field, customValuesByContact.get(contact.id)?.[field.key]),
     })),
   ];
-  }, [companies, customFields, users]);
+  }, [companies, customFields, customValuesByContact, users]);
 
   function resetForm() {
     setName(""); setEmail(""); setPhone("");
@@ -246,9 +252,9 @@ export default function Contacts() {
       label: field.label,
       group: "Campos personalizados",
       type: field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "multi_select" ? "list" : field.type === "single_select" ? "select" : "text",
-      ...(customFieldOptions(field).length > 0 ? { options: customFieldOptions(field).map((option) => ({ value: option, label: option })) } : {}),
+      ...((fieldOptions.get(field.id) ?? []).length > 0 ? { options: (fieldOptions.get(field.id) ?? []).map((option) => ({ value: option, label: option })) } : {}),
     })),
-  ], [companies, customFields, users]);
+  ], [companies, customFields, fieldOptions, users]);
 
   // Sem preferência gravada, campo personalizado começa escondido: a lista não
   // pode nascer com uma coluna por campo que a organização tenha criado.

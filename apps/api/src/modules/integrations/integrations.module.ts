@@ -33,6 +33,6 @@ import { EmailDeliveryService } from "./application/email-delivery.service.js";
     SupabaseJwtGuard,
     CapabilityGuard,
   ],
-  exports: [SecretVault, IntegrationRuntimeResolver, EmailDeliveryService],
+  exports: [SecretVault, ConnectionSettingsRepository, IntegrationRuntimeResolver, EmailDeliveryService],
 })
 export class IntegrationsModule {}

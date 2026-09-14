@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { automationJobs, automationRuns, automationVersions, automations, contacts, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
+import { automationJobs, automationRuns, automationVersions, automations, contactTags, contacts, createDbClient, tags, withOrgContext, type SparkDb } from "@spark/db";
 import { automationJobId, automationRunId, automationVersionId, firstAutomationNode, validateAutomationGraph, type Automation, type AutomationId, type AutomationPublishResponse, type AutomationRun, type AutomationVersion, type AutomationWriteResponse, type CreateAutomationInput, type OrgId, type PublishAutomationInput, type StartAutomationRunInput, type StartAutomationRunResponse, type UpdateAutomationDraftInput, type UpdateAutomationStatusInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
@@ -68,13 +68,16 @@ export class AutomationsRepository {
       if (!automation?.currentPublishedVersionId || automation.status !== "active") throw new BadRequestException("Only a published, active automation can run.");
       const [version] = await tx.select().from(automationVersions).where(and(eq(automationVersions.id, automation.currentPublishedVersionId), eq(automationVersions.orgId, orgId))).limit(1);
       if (!version) throw new NotFoundException("Published automation version not found.");
-      const [contact] = await tx.select({ id: contacts.id, name: contacts.name, email: contacts.email, phone: contacts.phone, score: contacts.score, leadStatus: contacts.leadStatus, tags: contacts.tags }).from(contacts).where(and(eq(contacts.id, input.contactId), eq(contacts.orgId, orgId), sql`${contacts.deletedAt} IS NULL`)).limit(1);
+      const [contact] = await tx.select({ id: contacts.id, name: contacts.name, email: contacts.email, phone: contacts.phone, score: contacts.score, leadStatus: contacts.leadStatus }).from(contacts).where(and(eq(contacts.id, input.contactId), eq(contacts.orgId, orgId), sql`${contacts.deletedAt} IS NULL`)).limit(1);
       if (!contact) throw new BadRequestException("Contact is not available in this organization.");
+      // As marcações são linhas (ADR-0035); o contexto da execução leva os nomes.
+      const contactTagRows = await tx.select({ name: tags.name }).from(contactTags).innerJoin(tags, eq(contactTags.tagId, tags.id)).where(and(eq(contactTags.orgId, orgId), eq(contactTags.contactId, input.contactId)));
+      const contactSnapshot = { ...contact, tags: contactTagRows.map((row) => row.name) };
       const first = firstAutomationNode(version.graph);
       if (!first) throw new BadRequestException("Published automation has no trigger.");
       const runId = automationRunId.create();
       const txid = await captureTxid(tx);
-      const [row] = await tx.insert(automationRuns).values({ id: runId, orgId, automationId: id, versionId: version.id, contactId: input.contactId, status: "queued", currentNodeId: first.id, context: { ...input.context, contact } }).returning();
+      const [row] = await tx.insert(automationRuns).values({ id: runId, orgId, automationId: id, versionId: version.id, contactId: input.contactId, status: "queued", currentNodeId: first.id, context: { ...input.context, contact: contactSnapshot } }).returning();
       await tx.insert(automationJobs).values({ id: automationJobId.create(), orgId, runId, nodeId: first.id });
       if (!row) throw new Error("Automation run insert returned no row.");
       await this.events.append(tx, { orgId, contactId: input.contactId, type: "automation.run_started", data: { automationId: id, runId, version: version.version, actorUserId } });
