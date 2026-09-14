@@ -2,11 +2,12 @@ import { type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useMemo
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import type { Capability } from "@spark/core";
-import { Avatar, Button, Icon, MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem } from "@spark/ui-web";
+import { Alert, Avatar, Button, Icon, MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
+import { sendQueueNotice, useSendQueue } from "../lib/send-queue.client";
 import styles from "./app-layout.module.css";
 
 type NavItem = { label: string; to: string; icon: IconName; capability?: Capability };
@@ -192,6 +193,8 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     ]);
   }, [navigationContacts]);
   const navigate = useNavigate();
+  const sendQueue = useSendQueue();
+  const queueNotice = sendQueueNotice(sendQueue);
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
   const railModulesRef = useRef<HTMLDivElement>(null);
@@ -371,6 +374,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           )}
           {tabIndicator && <span className={styles.moduleIndicator} style={{ left: tabIndicator.left, width: tabIndicator.width }} aria-hidden="true" />}
         </nav>}
+        {queueNotice && <div className={styles.sendQueueNotice}><Alert tone="warning" title={queueNotice.title}>{queueNotice.description}</Alert></div>}
         <Outlet />
       </main>
       <QuickNavigation open={quickNavigationOpen} onOpenChange={setQuickNavigationOpen} items={quickNavigationItems} onSelect={(to) => { markNavigation(to); void navigate(to); }} />

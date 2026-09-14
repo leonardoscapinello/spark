@@ -366,3 +366,6 @@
   .moduleTabs { padding-inline: var(--space-4); scrollbar-width: none; }
   .moduleTabs::-webkit-scrollbar { display: none; }
 }
+
+/* Aviso da fila de envio (docs/adr/0017): acima do conteúdo, no mesmo recuo do título. Âmbar é semântico aqui — pendência —, não marca (ADR-0034). */
+.sendQueueNotice { flex-shrink: 0; padding: var(--space-4) var(--space-8) 0; }

@@ -26,6 +26,8 @@ cleanupOutdatedCaches();
 self.skipWaiting();
 self.addEventListener("activate", () => {
   void self.clients.claim();
+  // recarregou a página com fila de ontem: o aviso volta sem depender de um envio novo.
+  void broadcastQueueSize();
 });
 
 /**
@@ -45,7 +47,26 @@ self.addEventListener("activate", () => {
  */
 const API_ORIGIN = new URL(import.meta.env.VITE_API_BASE_URL || "http://localhost:3000").origin;
 const WRITE_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
-const sendQueue = new Queue("spark-send-queue", { maxRetentionTime: 24 * 60 });
+const sendQueue = new Queue("spark-send-queue", {
+  maxRetentionTime: 24 * 60,
+  // Repete e, saia como sair, conta para a página o que ficou — é o que
+  // alimenta o aviso "N envios aguardam sinal" (app/lib/send-queue.client.ts).
+  onSync: async ({ queue }) => {
+    try { await queue.replayRequests(); }
+    finally { await broadcastQueueSize(); }
+  },
+});
+
+async function broadcastQueueSize(): Promise<void> {
+  const size = await sendQueue.size();
+  const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  for (const client of clients) client.postMessage({ type: "spark:send-queue", size });
+}
+
+self.addEventListener("message", (event) => {
+  const data = event.data as { type?: string } | null;
+  if (data?.type === "spark:send-queue:query") void broadcastQueueSize();
+});
 
 registerRoute(
   ({ request, url }) => url.origin === API_ORIGIN && url.pathname.startsWith("/v1/") && !url.pathname.startsWith("/v1/shapes") && WRITE_METHODS.has(request.method),
@@ -54,6 +75,7 @@ registerRoute(
       return await fetch(request.clone());
     } catch {
       await sendQueue.pushRequest({ request });
+      await broadcastQueueSize();
       return new Response(JSON.stringify({ queued: true }), { status: 202, headers: { "content-type": "application/json" } });
     }
   },
