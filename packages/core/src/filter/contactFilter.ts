@@ -14,6 +14,35 @@ export type FilterOperator = (typeof FILTER_OPERATORS)[number];
 
 export interface ContactFilter { field: ContactFilterField; operator: FilterOperator; value: string | null }
 
+export const FILTER_VALUE_TYPES = ["select", "text", "number", "date", "list"] as const;
+export type FilterValueType = (typeof FILTER_VALUE_TYPES)[number];
+
+/**
+ * Operadores que fazem sentido para cada tipo de campo. Fica junto do motor
+ * porque é ele quem sabe o que consegue decidir: oferecer «contém» para uma
+ * data produziria uma condição que o filtro não sabe responder direito.
+ */
+export function operatorsForFilterType(type: FilterValueType): readonly FilterOperator[] {
+  if (type === "select") return ["is", "is_not", "is_empty", "is_not_empty"];
+  if (type === "number") return ["is", "gt", "lt", "is_empty", "is_not_empty"];
+  if (type === "date") return ["after", "before", "is_empty", "is_not_empty"];
+  if (type === "list") return ["is", "is_not", "is_empty", "is_not_empty"];
+  return ["contains", "is", "is_not", "is_empty", "is_not_empty"];
+}
+
+const OPERATOR_LABELS: Record<FilterOperator, string> = {
+  is: "é", is_not: "não é", contains: "contém",
+  is_empty: "está vazio", is_not_empty: "tem valor",
+  before: "antes de", after: "depois de", gt: "maior que", lt: "menor que",
+};
+
+export function filterOperatorLabel(operator: FilterOperator): string { return OPERATOR_LABELS[operator]; }
+
+/** Operador que decide pela ausência: a condição não pede valor nenhum. */
+export function filterOperatorNeedsValue(operator: FilterOperator): boolean {
+  return operator !== "is_empty" && operator !== "is_not_empty";
+}
+
 function fieldValue(contact: Contact, field: ContactFilterField): unknown {
   if (field.startsWith("custom:")) return contact.customFields[field.slice("custom:".length)];
   return contact[field as (typeof CONTACT_FILTER_FIELDS)[number]];

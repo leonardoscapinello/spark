@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { contactMatchesFilter, contactMatchesFilters, type ContactFilter } from "./contactFilter.js";
+import { contactMatchesFilter, contactMatchesFilters, filterOperatorLabel, filterOperatorNeedsValue, operatorsForFilterType, FILTER_OPERATORS, FILTER_VALUE_TYPES, type ContactFilter } from "./contactFilter.js";
 import { decodeContactFilters, encodeContactFilters } from "./filterUrl.js";
 import type { Contact } from "../schema/contact.js";
 
@@ -81,5 +81,27 @@ describe("ida e volta pela URL", () => {
     expect(decodeContactFilters("")).toEqual([]);
     expect(decodeContactFilters(null)).toEqual([]);
     expect(decodeContactFilters("leadStatus:is:new;quebrado")).toEqual([f("leadStatus", "is", "new")]);
+  });
+});
+
+describe("operadores por tipo de campo", () => {
+  it("só oferece o que o motor sabe decidir", () => {
+    expect(operatorsForFilterType("date")).not.toContain("contains");
+    expect(operatorsForFilterType("number")).toContain("gt");
+    expect(operatorsForFilterType("text")).toContain("contains");
+    expect(operatorsForFilterType("select")).not.toContain("contains");
+  });
+
+  it("todo tipo oferece decidir por vazio, e esses não pedem valor", () => {
+    for (const type of FILTER_VALUE_TYPES) {
+      expect(operatorsForFilterType(type)).toContain("is_empty");
+      expect(operatorsForFilterType(type)).toContain("is_not_empty");
+    }
+    expect(filterOperatorNeedsValue("is_empty")).toBe(false);
+    expect(filterOperatorNeedsValue("is")).toBe(true);
+  });
+
+  it("todo operador tem rótulo em português", () => {
+    for (const operator of FILTER_OPERATORS) expect(filterOperatorLabel(operator)).toMatch(/\S/);
   });
 });
