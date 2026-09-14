@@ -201,6 +201,9 @@
   .rail[data-expanded] .railHeader,
   .rail[data-expanded] .railModules,
   .rail[data-expanded] .railBottom { box-sizing: border-box; width: var(--ui-railFlyoutWidth); padding-inline: var(--space-2); }
+  /* Expandido, a lista tem largura fixa e o padding já dá a folga do anel — a
+   * margem negativa da regra base deslocaria o bloco 8px para a esquerda. */
+  .rail[data-expanded] .railModules { margin-inline: 0; }
   .rail[data-expanded] .railHeader { justify-content: flex-start; gap: var(--space-2); }
   .rail[data-expanded] .railBrand { width: auto; justify-content: flex-start; gap: var(--space-2); }
   .rail[data-expanded] .brandSymbol { opacity: 1; }
