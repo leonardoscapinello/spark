@@ -12,6 +12,7 @@ import { EventsModule } from "../events/events.module.js";
 import { AddContactIdentityUseCase } from "./application/add-contact-identity.usecase.js";
 import { IdentitiesRepository } from "./infrastructure/identities.repository.js";
 import { ImportContactsUseCase } from "./application/import-contacts.usecase.js";
+import { SearchContactsUseCase } from "./application/search-contacts.usecase.js";
 
 @Module({
   imports: [EventsModule],
@@ -22,6 +23,7 @@ import { ImportContactsUseCase } from "./application/import-contacts.usecase.js"
     ArchiveContactUseCase,
     AddContactIdentityUseCase,
     ImportContactsUseCase,
+    SearchContactsUseCase,
     ContactsRepository,
     IdentitiesRepository,
     GetCurrentUserUseCase,

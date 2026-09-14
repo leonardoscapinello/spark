@@ -578,6 +578,72 @@ export interface UpdateIntegrationStatusDto {
   disabled: boolean;
 }
 
+export type SearchContactsResponseDtoContactsItemLeadStatus = typeof SearchContactsResponseDtoContactsItemLeadStatus[keyof typeof SearchContactsResponseDtoContactsItemLeadStatus];
+
+
+export const SearchContactsResponseDtoContactsItemLeadStatus = {
+  new: 'new',
+  qualified: 'qualified',
+  nurturing: 'nurturing',
+  customer: 'customer',
+  unqualified: 'unqualified',
+} as const;
+
+export type SearchContactsResponseDtoContactsItemCustomFields = {[key: string]: unknown};
+
+export type SearchContactsResponseDtoContactsItem = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  email: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  phone: string | null;
+  leadStatus?: SearchContactsResponseDtoContactsItemLeadStatus;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @nullable
+     */
+  source?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score?: number;
+  customFields?: SearchContactsResponseDtoContactsItemCustomFields;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export interface SearchContactsResponseDto {
+  contacts: SearchContactsResponseDtoContactsItem[];
+}
+
 export type ImportContactsDtoContactsItem = {
   /** @minLength 1 */
   id: string;
@@ -4125,6 +4191,19 @@ export interface PublicPageDto {
   publicKey: string;
 }
 
+export type ContactsControllerSearchParams = {
+/**
+ * @minLength 1
+ * @maxLength 100
+ */
+q: string;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
+
 export type InstagramWebhookControllerVerifyParams = {
 'hub.mode': string;
 'hub.verify_token': string;
@@ -5461,6 +5540,94 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getIntegrationsControllerStatusMutationOptions(options), queryClient);
     }
+
+export const contactsControllerSearch = (
+    params: ContactsControllerSearchParams,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<SearchContactsResponseDto>(
+      {url: `/v1/contacts/search`, method: 'GET',
+        params, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getContactsControllerSearchQueryKey = (params?: ContactsControllerSearchParams,) => {
+    return [
+    `/v1/contacts/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getContactsControllerSearchQueryOptions = <TData = Awaited<ReturnType<typeof contactsControllerSearch>>, TError = unknown>(params: ContactsControllerSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof contactsControllerSearch>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getContactsControllerSearchQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof contactsControllerSearch>>> = ({ signal }) => contactsControllerSearch(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof contactsControllerSearch>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ContactsControllerSearchQueryResult = NonNullable<Awaited<ReturnType<typeof contactsControllerSearch>>>
+export type ContactsControllerSearchQueryError = unknown
+
+
+export function useContactsControllerSearch<TData = Awaited<ReturnType<typeof contactsControllerSearch>>, TError = unknown>(
+ params: ContactsControllerSearchParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof contactsControllerSearch>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof contactsControllerSearch>>,
+          TError,
+          Awaited<ReturnType<typeof contactsControllerSearch>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useContactsControllerSearch<TData = Awaited<ReturnType<typeof contactsControllerSearch>>, TError = unknown>(
+ params: ContactsControllerSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof contactsControllerSearch>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof contactsControllerSearch>>,
+          TError,
+          Awaited<ReturnType<typeof contactsControllerSearch>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useContactsControllerSearch<TData = Awaited<ReturnType<typeof contactsControllerSearch>>, TError = unknown>(
+ params: ContactsControllerSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof contactsControllerSearch>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useContactsControllerSearch<TData = Awaited<ReturnType<typeof contactsControllerSearch>>, TError = unknown>(
+ params: ContactsControllerSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof contactsControllerSearch>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getContactsControllerSearchQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const contactsControllerImportCsv = (
     importContactsDto: ImportContactsDto,

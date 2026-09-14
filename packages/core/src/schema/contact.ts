@@ -78,6 +78,17 @@ export const UpdateContactResponseSchema = z.object({
 });
 export type UpdateContactResponse = z.infer<typeof UpdateContactResponseSchema>;
 
+/** GET /v1/contacts/search — leitura pela API (ADR-0026). A tela não usa:
+ * ela filtra a coleção local (CLAUDE.md regra 5). */
+export const SearchContactsQuerySchema = z.object({
+  q: z.string().trim().min(1).max(100),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type SearchContactsQuery = z.infer<typeof SearchContactsQuerySchema>;
+
+export const SearchContactsResponseSchema = z.object({ contacts: z.array(ContactSchema) });
+export type SearchContactsResponse = z.infer<typeof SearchContactsResponseSchema>;
+
 export const ImportContactItemSchema = CreateContactInputSchema.pick({
   id: true,
   name: true,

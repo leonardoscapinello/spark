@@ -707,6 +707,54 @@
         ]
       }
     },
+    "/v1/contacts/search": {
+      "get": {
+        "operationId": "ContactsController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchContactsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "contacts"
+        ]
+      }
+    },
     "/v1/contacts/import": {
       "post": {
         "operationId": "ContactsController_importCsv",
@@ -4295,6 +4343,141 @@
         },
         "required": [
           "disabled"
+        ]
+      },
+      "SearchContactsResponseDto": {
+        "type": "object",
+        "properties": {
+          "contacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "orgId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "email": {
+                  "type": "string",
+                  "minLength": 1,
+                  "nullable": true
+                },
+                "phone": {
+                  "type": "string",
+                  "minLength": 1,
+                  "nullable": true
+                },
+                "leadStatus": {
+                  "default": "new",
+                  "type": "string",
+                  "enum": [
+                    "new",
+                    "qualified",
+                    "nurturing",
+                    "customer",
+                    "unqualified"
+                  ]
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100,
+                  "default": null,
+                  "nullable": true
+                },
+                "ownerId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "nullable": true
+                },
+                "companyId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "nullable": true
+                },
+                "score": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "customFields": {
+                  "default": {},
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "tags": {
+                  "default": [],
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "createdAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  ]
+                },
+                "updatedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  ]
+                },
+                "deletedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  ],
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "orgId",
+                "name",
+                "email",
+                "phone",
+                "createdAt",
+                "updatedAt",
+                "deletedAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "contacts"
         ]
       },
       "ImportContactsDto": {

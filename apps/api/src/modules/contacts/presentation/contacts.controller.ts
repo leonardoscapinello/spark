@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { contactId as contactIdFactory } from "@spark/core";
 import {
@@ -13,10 +13,11 @@ import { CreateContactUseCase } from "../application/create-contact.usecase.js";
 import { UpdateContactUseCase } from "../application/update-contact.usecase.js";
 import { ArchiveContactUseCase } from "../application/archive-contact.usecase.js";
 import { AddContactIdentityUseCase } from "../application/add-contact-identity.usecase.js";
-import { CreateContactDto, CreateContactResponseDto, UpdateContactArchiveDto, UpdateContactDto, UpdateContactResponseDto } from "../dto/contact.dto.js";
+import { CreateContactDto, CreateContactResponseDto, SearchContactsQueryDto, SearchContactsResponseDto, UpdateContactArchiveDto, UpdateContactDto, UpdateContactResponseDto } from "../dto/contact.dto.js";
 import { AddContactIdentityDto, CreateIdentityResponseDto } from "../dto/identity.dto.js";
 import { ImportContactsDto, ImportContactsResponseDto } from "../dto/contact.dto.js";
 import { ImportContactsUseCase } from "../application/import-contacts.usecase.js";
+import { SearchContactsUseCase } from "../application/search-contacts.usecase.js";
 
 @ApiTags("contacts")
 @Controller("v1/contacts")
@@ -28,7 +29,21 @@ export class ContactsController {
     private readonly archiveContact: ArchiveContactUseCase,
     private readonly addContactIdentity: AddContactIdentityUseCase,
     private readonly importContacts: ImportContactsUseCase,
+    private readonly searchContacts: SearchContactsUseCase,
   ) {}
+
+  @Get("search")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("contacts:read")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: SearchContactsResponseDto })
+  async search(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Query() query: SearchContactsQueryDto,
+  ): Promise<SearchContactsResponseDto> {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    return this.searchContacts.execute(user.orgId, query) as Promise<SearchContactsResponseDto>;
+  }
 
   @Post("import")
   @UseGuards(SupabaseJwtGuard, CapabilityGuard)

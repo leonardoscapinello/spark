@@ -6,7 +6,7 @@ import type { Contact } from "../schema/contact.js";
  * rule 5). Ignores accents: Brazilian names have them, and nobody types
  * "Jose" expecting not to find "José".
  */
-function normalize(text: string): string {
+export function normalizeSearchText(text: string): string {
   return text
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
@@ -14,12 +14,12 @@ function normalize(text: string): string {
 }
 
 export function contactMatches(contact: Pick<Contact, "name" | "email" | "phone">, term: string): boolean {
-  const target = normalize(term.trim());
+  const target = normalizeSearchText(term.trim());
   if (!target) return true;
 
   return (
-    normalize(contact.name).includes(target) ||
-    (contact.email !== null && normalize(contact.email).includes(target)) ||
-    (contact.phone !== null && normalize(contact.phone).includes(target))
+    normalizeSearchText(contact.name).includes(target) ||
+    (contact.email !== null && normalizeSearchText(contact.email).includes(target)) ||
+    (contact.phone !== null && normalizeSearchText(contact.phone).includes(target))
   );
 }

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, contacts, type SparkDb } from "@spark/db";
 import type { Contact, CreateContactInput, ImportContactsInput, ImportContactsResponse, UpdateContactInput, OrgId, ContactId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
@@ -53,6 +53,27 @@ export class ContactsRepository {
       const contact = toContact(row);
       await this.eventWriter.append(tx, { orgId, contactId: contact.id, companyId: contact.companyId, type: "contact.created", data: { name: contact.name, source: contact.source } });
       return { contact, txid: Number(txid) };
+    });
+  }
+
+  /**
+   * Busca no banco pelo índice GIN de search_vector (migration 0029). Só a
+   * API usa: a tela lê a coleção local (CLAUDE.md regra 5). `query` já é
+   * uma tsquery montada por core — o usuário nunca escreve sintaxe aqui —
+   * e entra como bind parameter, não interpolada.
+   */
+  async search(orgId: OrgId, query: string, limit: number): Promise<Contact[]> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const vector = sql.raw('"contacts"."search_vector"');
+      const rows = await tx
+        .select()
+        .from(contacts)
+        // org_id explícito além do RLS: em teste a API conecta como postgres, que ignora RLS —
+        // e leitura pela API é exatamente onde vazar entre organizações custa mais (ADR-0026).
+        .where(and(eq(contacts.orgId, orgId), isNull(contacts.deletedAt), sql`${vector} @@ to_tsquery('simple', ${query})`))
+        .orderBy(sql`ts_rank(${vector}, to_tsquery('simple', ${query})) DESC`, contacts.name)
+        .limit(limit);
+      return rows.map(toContact);
     });
   }
 

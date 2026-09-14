@@ -4,6 +4,9 @@ import { ConfigService } from "@nestjs/config";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { Readable } from "node:stream";
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
+import { getTableColumns, getTableName, is } from "drizzle-orm";
+import { PgTable } from "drizzle-orm/pg-core";
+import * as dbSchema from "@spark/db";
 import { canReadSyncResource, effectiveCapabilities, readableEventPrefixes } from "@spark/core";
 import { SupabaseJwtGuard, CurrentSupabaseUser, type SupabaseJwtClaims } from "../../../auth/index.js";
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
@@ -23,6 +26,23 @@ import { PermissionGroupsRepository } from "../../identity/infrastructure/permis
  * sync infrastructure that packages/data talks to via ShapeStream, not
  * via api-client.
  */
+/**
+ * Column list per table, derived from the Drizzle schema at boot. The
+ * server decides the columns for the same reason it decides the WHERE:
+ * Electric refuses a shape over a table that has a GENERATED column
+ * (contacts.search_vector, migration 0029) unless the columns are listed
+ * explicitly — and the client never needed that column anyway (it
+ * filters locally, CLAUDE.md rule 5). Derived, not hand-written, so a new
+ * column added through Drizzle is synced without anyone remembering this.
+ */
+const TABLE_COLUMNS: ReadonlyMap<string, readonly string[]> = new Map(
+  // `unknown` first: the module also exports strings and functions, and a union
+  // with a string literal defeats the type predicate below.
+  Object.values(dbSchema as Record<string, unknown>)
+    .filter((value): value is PgTable => is(value, PgTable))
+    .map((table) => [getTableName(table), Object.values(getTableColumns(table)).map((column) => column.name)] as const),
+);
+
 @Controller("v1/shapes")
 export class ShapesController {
   constructor(
@@ -79,6 +99,8 @@ export class ShapesController {
     upstream.searchParams.set("where", `"${column}" = $1${eventFilter}`);
     upstream.searchParams.set("params[1]", user.orgId);
     eventPrefixes.forEach((prefix, index) => upstream.searchParams.set(`params[${index + 2}]`, `${prefix}.%`));
+    const columns = TABLE_COLUMNS.get(table);
+    if (columns) upstream.searchParams.set("columns", columns.join(","));
 
     const response = await fetch(upstream);
 
