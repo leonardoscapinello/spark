@@ -19,7 +19,7 @@
 .workspace[data-first-run="true"] { grid-template-columns: minmax(var(--ui-menuWidth), var(--ui-inboxListWidth)) minmax(0, 1fr); }
 .workspace[data-first-run="true"] .details { display: none; }
 .workspace[data-first-run="true"][data-layout="table"] { grid-template-columns: minmax(0, 1fr); }
-.filters,.conversationList,.thread,.details { min-width: 0; min-height: 0; }
+.conversationList,.thread,.details { min-width: 0; min-height: 0; }
 .conversationList,.thread,.details { background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); overflow: hidden; }
 .conversationList { display: flex; flex-direction: column; }
 .conversationList > header { height: var(--space-16); padding: 0 var(--space-4); display: flex; align-items: center; gap: var(--space-2); border-bottom: var(--ui-hairline) solid var(--color-line); }

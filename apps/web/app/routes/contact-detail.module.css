@@ -1,30 +1,3 @@
-.pagina {
-  padding: var(--space-8);
-  max-width: 640px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.voltar {
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
-  text-decoration: none;
-  align-self: flex-start;
-}
-
-.voltar:hover {
-  color: var(--color-ink);
-}
-
-.titulo {
-  margin: 0;
-  font-family: var(--typography-fontFamily-display);
-  font-size: var(--typography-size-2xl);
-  font-weight: var(--typography-weight-semibold);
-}
-
 .campos {
   display: flex;
   flex-direction: column;

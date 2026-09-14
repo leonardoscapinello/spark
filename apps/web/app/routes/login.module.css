@@ -72,7 +72,7 @@
   font-weight: var(--typography-weight-semibold);
 }
 
-.cardHeader p:not(.eyebrow) {
+.cardHeader p {
   margin: 0;
   color: var(--color-inkMuted);
   font-size: var(--typography-size-sm);
