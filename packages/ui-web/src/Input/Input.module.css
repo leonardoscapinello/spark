@@ -22,7 +22,10 @@
  * que criava um segundo anel separado por 1px). O outline transparente é só
  * a rede de forced-colors. Mesmo tratamento no .trigger de shared/surfaces —
  * todo campo com borda foca igual (ADR-0020). */
-.root[data-focused] { border-color: var(--color-focusRing); box-shadow: 0 0 0 var(--ui-hairline) var(--color-focusRing); outline: var(--ui-focusWidth) solid transparent; outline-offset: 0; }
+/* :focus, não [data-focused]: o Base UI só marca data-focused dentro de
+ * <Field>. Toda barra de busca fica fora de Field, então o input caía no
+ * outline padrão do navegador (auto 1px âmbar) — era o segundo anel. */
+.root:focus, .root[data-focused] { border-color: var(--color-focusRing); box-shadow: 0 0 0 var(--ui-hairline) var(--color-focusRing); outline: var(--ui-focusWidth) solid transparent; outline-offset: 0; }
 
 .root[data-invalid] {
   border-color: var(--color-statusDanger);
@@ -43,7 +46,8 @@
 
 .adorned { display: flex; align-items: center; min-width: 0; gap: var(--space-2); padding-inline: var(--space-3); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); }
 .adorned > input { flex: 1; min-width: 0; border: 0; padding-inline: 0; background: transparent; }
-.adorned > input[data-focused] { outline: none; box-shadow: none; border-color: transparent; }
+/* o anel de um campo adornado vive no contêiner (:focus-within); o input interno nunca desenha o seu. */
+.adorned > input, .adorned > input:focus { outline: none; box-shadow: none; }
 .adorned:focus-within { border-color: var(--color-focusRing); box-shadow: 0 0 0 var(--ui-hairline) var(--color-focusRing); outline: var(--ui-focusWidth) solid transparent; outline-offset: 0; }
 .adorned:has([data-invalid]) { border-color: var(--color-statusDanger); }
 .adorned[data-disabled] { background: var(--color-surface2); }
