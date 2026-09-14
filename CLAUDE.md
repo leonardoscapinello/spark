@@ -51,6 +51,7 @@ Isso não é otimismo — é consequência direta de decisões de arquitetura. *
 | Dinheiro calculado errado | Tipo marcado `Money` — erro de compilação | zero |
 | Contrato de API divergente entre plataformas | Cliente gerado do OpenAPI | zero |
 | Componente fora do design system | Lint de fronteiras | segundos |
+| Classe de módulo CSS que não existe | Lint (`spark/css-module-classes`) | segundos |
 | Módulo tocando tabela de outro módulo | Lint de fronteiras | segundos |
 | Validação divergindo entre formulário e API | Mesmo schema Zod | zero |
 
