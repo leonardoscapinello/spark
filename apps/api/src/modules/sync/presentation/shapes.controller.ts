@@ -146,6 +146,14 @@ export class ShapesController {
       reply.raw.end();
       return;
     }
-    Readable.fromWeb(response.body as never).pipe(reply.raw);
+    const stream = Readable.fromWeb(response.body as never);
+    // The abort above surfaces here as an AbortError on the readable. It's
+    // the normal end of a live stream (the browser left), not a failure —
+    // and an unhandled 'error' on a Readable takes the whole process down.
+    stream.on("error", (error: Error) => {
+      if (error.name !== "AbortError") request.log.warn({ err: error }, "shape stream from Electric failed");
+      reply.raw.destroy();
+    });
+    stream.pipe(reply.raw);
   }
 }
