@@ -20,3 +20,21 @@ export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: u
   if (field.type === "single_select") { const selected = String(value); if (!field.options.includes(selected)) throw new Error(`Opção inválida em ${field.label}.`); return selected; }
   const selected = Array.isArray(value) ? value.map(String) : []; if (selected.some((item) => !field.options.includes(item))) throw new Error(`Opção inválida em ${field.label}.`); return selected;
 }
+
+/**
+ * Par de leitura do normalizeCustomFieldValue: o que aquele grava, este exibe.
+ * Nunca lança — formatar para a tela não é validação, e um valor estranho vindo
+ * de import ou de versão antiga do campo precisa aparecer, não derrubar a lista.
+ *
+ * Data é formatada por texto, não por `new Date`: o valor gravado é um dia civil
+ * ("2026-09-14"), e converter para Date o trataria como meia-noite UTC — em
+ * Brasília isso exibe o dia anterior.
+ */
+export function formatCustomFieldValue(field: CustomFieldDefinition, value: unknown): string {
+  if (value === null || value === undefined || value === "") return "";
+  if (field.type === "boolean") return value === true ? "Sim" : "Não";
+  if (field.type === "number") return typeof value === "number" && Number.isFinite(value) ? new Intl.NumberFormat("pt-BR").format(value) : String(value);
+  if (field.type === "date") { const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value)); return match ? `${match[3]}/${match[2]}/${match[1]}` : String(value); }
+  if (field.type === "multi_select") return Array.isArray(value) ? value.map(String).join(", ") : String(value);
+  return String(value);
+}
