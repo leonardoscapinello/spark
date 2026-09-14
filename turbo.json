@@ -1,5 +1,12 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "//": "Arquivos de raiz que mudam o resultado de qualquer tarefa. Sem isto o turbo\nserve cache de lint feito com outra regra, ou de typecheck feito com outro\ntsconfig — e o `pnpm check` dá verde sem ter verificado nada.",
+  "globalDependencies": [
+    "tsconfig.base.json",
+    "eslint.config.mjs",
+    "eslint-rules/**",
+    "vitest.shared.ts"
+  ],
   "tasks": {
     "build": {
       "dependsOn": [
