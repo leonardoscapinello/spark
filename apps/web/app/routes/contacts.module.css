@@ -4,3 +4,8 @@
 .secondary, .muted { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .secondary { margin-top: var(--space-1); }
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.savedViews { display: flex; flex-direction: column; gap: var(--space-1); max-height: var(--ui-previewHeight); overflow-y: auto; margin-block: var(--space-3); }
+.savedViewsEmpty { margin: var(--space-2) 0; color: var(--color-inkMuted); }
+.savedViewRow { display: flex; align-items: center; gap: var(--space-1); }
+.savedViewApply { flex: 1 1 auto; justify-content: flex-start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

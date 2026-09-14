@@ -1,14 +1,15 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { useLiveQuery } from "@tanstack/react-db";
-import { optimisticContact } from "@spark/data";
+import { and, eq, isNull, useLiveQuery } from "@tanstack/react-db";
+import { optimisticContact, optimisticSavedView } from "@spark/data";
 import { companyId as companyIdFactory, contactMatches, contactMatchesFilters, decodeContactFilters, encodeContactFilters, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type LeadStatus } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
+import { getSavedViewsCollection } from "../lib/saved-views-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS, leadStatusLabel } from "../lib/lead-options";
 import styles from "./contacts.module.css";
@@ -31,6 +32,7 @@ export async function clientLoader() {
     getContactsCollection().preload(),
     getUsersCollection().preload(),
     getCustomFieldsCollection().preload(),
+    getSavedViewsCollection().preload(),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
   ]);
   return null;
@@ -46,6 +48,11 @@ export default function Contacts() {
   });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }) });
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).orderBy(({ fields: item }) => item.label, "asc") });
+  const savedViewsCollection = getSavedViewsCollection();
+  const { data: savedViews = [] } = useLiveQuery({ query: (q) => q.from({ views: savedViewsCollection }).where(({ views: view }) => and(eq(view.entityType, "contact"), isNull(view.archivedAt))).orderBy(({ views: view }) => view.createdAt, "asc") });
+  const [savedViewsOpen, setSavedViewsOpen] = useState(false);
+  const [saveViewOpen, setSaveViewOpen] = useState(false);
+  const [saveViewName, setSaveViewName] = useState("");
   const canReadCompanies = getSession()?.capabilities.includes("companies:read") ?? false;
   const canWrite = getSession()?.capabilities.includes("contacts:write") ?? false;
   const canReadIntegrations = getSession()?.capabilities.includes("integrations:read") ?? false;
@@ -79,6 +86,44 @@ export default function Contacts() {
     const encoded = encodeContactFilters(rest);
     if (encoded) params.set("f", encoded);
     setSearchParams(params);
+  }
+
+  // Uma visualização salva guarda o recorte inteiro num só campo — aplicar
+  // manda tudo para `f`, então o item de menu da etapa (que aponta para
+  // `?status=`) não acende para uma visualização que inclua etapa. É um
+  // detalhe cosmético: o filtro em si aplica certo, só o destaque do menu
+  // lateral que não acompanha.
+  function applySavedView(encoded: string) {
+    const params = new URLSearchParams();
+    if (encoded) params.set("f", encoded);
+    setSearchParams(params);
+    setSavedViewsOpen(false);
+  }
+
+  async function saveCurrentView() {
+    const trimmedName = saveViewName.trim();
+    if (!trimmedName) return;
+    const session = getSession();
+    if (!session) return;
+    try {
+      const transaction = savedViewsCollection.insert(optimisticSavedView({ name: trimmedName, entityType: "contact", filters: encodeContactFilters(filters) }, session.orgId, userIdFactory.from(session.userId)));
+      await transaction.isPersisted.promise;
+      setSaveViewOpen(false);
+      setSaveViewName("");
+      notify({ title: "Visualização salva", description: trimmedName, tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível salvar a visualização", tone: "error" });
+    }
+  }
+
+  async function removeSavedView(view: { id: string; name: string }) {
+    try {
+      const transaction = savedViewsCollection.update(view.id, (draft) => { draft.archivedAt = new Date().toISOString(); });
+      await transaction.isPersisted.promise;
+      notify({ title: "Visualização removida", description: view.name, tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível remover a visualização", tone: "error" });
+    }
   }
   const [archiveView, setArchiveView] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -255,7 +300,23 @@ export default function Contacts() {
     </ActionCardGroup>}
     {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar pessoas" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}
-      filters={<FilterBar fields={filterFields} filters={filters} onChange={changeFilters} />}
+      filters={<>
+        <FilterBar fields={filterFields} filters={filters} onChange={changeFilters} />
+        <Popover open={savedViewsOpen} onOpenChange={setSavedViewsOpen}>
+          <PopoverTrigger render={<Button size="sm" variant="ghost" icon={<Icon name="star" />}>{savedViews.length > 0 ? `Visualizações (${savedViews.length})` : "Visualizações"}</Button>} />
+          <PopoverContent title="Visualizações salvas">
+            <div className={styles.savedViews}>
+              {savedViews.length === 0
+                ? <p className={styles.savedViewsEmpty}>Nenhuma visualização salva ainda.</p>
+                : savedViews.map((view) => <div key={view.id} className={styles.savedViewRow}>
+                    <Button variant="ghost" className={styles.savedViewApply} onClick={() => applySavedView(view.filters)}>{view.name}</Button>
+                    {(view.createdBy === getSession()?.userId || canWrite) && <TableIconAction label={`Remover visualização ${view.name}`} icon={<Icon name="trash" />} onClick={() => void removeSavedView(view)} />}
+                  </div>)}
+            </div>
+            <Button variant="secondary" onClick={() => { setSavedViewsOpen(false); setSaveViewOpen(true); }}>Salvar visualização atual</Button>
+          </PopoverContent>
+        </Popover>
+      </>}
       actions={selectedContacts.length > 0
         ? <>
             <Button variant="secondary" loading={bulkRunning} onClick={() => void updateArchivedMany(selectedContacts, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</Button>
@@ -287,6 +348,9 @@ export default function Contacts() {
         <Field><Label>Responsável</Label><Select label="Responsável pelo lead" value={ownerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
         <Field><Label>Empresa</Label><Select label="Empresa da pessoa" value={companyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
       </form>
+    </ActionModal>
+    <ActionModal open={saveViewOpen} onOpenChange={(open) => { setSaveViewOpen(open); if (!open) setSaveViewName(""); }} title="Salvar visualização" confirmLabel="Salvar" errorText="Não foi possível salvar a visualização. Tente novamente." onConfirm={saveCurrentView}>
+      <Field><Label>Nome</Label><Input autoFocus value={saveViewName} onChange={(event) => setSaveViewName(event.target.value)} placeholder="Ex.: Qualificados de São Paulo" /></Field>
     </ActionModal>
   </PageFrame>;
 }
