@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
@@ -50,6 +50,8 @@ export default function Contacts() {
   const statusFilter = searchParams.get("status") ?? "all";
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [archiveView, setArchiveView] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkRunning, setBulkRunning] = useState(false);
   const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && ownerFilter === "all";
   const viewTitle = archiveView ? "Pessoas arquivadas" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Pessoas";
   const filteredContacts = contacts.filter((contact) =>
@@ -143,6 +145,36 @@ export default function Contacts() {
     }
   }
 
+  const selectedContacts = useMemo(() => {
+    const chosen = new Set(selectedIds);
+    return filteredContacts.filter((contact) => chosen.has(contact.id));
+  }, [filteredContacts, selectedIds]);
+
+  // Trocar de visão muda o conjunto à vista; manter a seleção antiga faria a
+  // ação em lote agir sobre linha que a pessoa não está mais vendo.
+  useEffect(() => { setSelectedIds([]); }, [archiveView, statusFilter, ownerFilter, search]);
+
+  async function updateArchivedMany(contacts: readonly Contact[], archived: boolean, offerUndo = true) {
+    setBulkRunning(true);
+    try {
+      await Promise.all(contacts.map(async (contact) => {
+        const transaction = collection.update(contact.id, (draft) => { draft.deletedAt = archived ? new Date().toISOString() : null; });
+        await transaction.isPersisted.promise;
+      }));
+      setSelectedIds([]);
+      notify({
+        title: `${contacts.length} ${contacts.length === 1 ? (archived ? "pessoa arquivada" : "pessoa restaurada") : (archived ? "pessoas arquivadas" : "pessoas restauradas")}`,
+        description: contacts.map((contact) => contact.name).slice(0, 3).join(", ") + (contacts.length > 3 ? ` e mais ${contacts.length - 3}` : ""),
+        tone: "success",
+        ...(offerUndo ? { actions: <Button size="sm" variant="ghost" onClick={() => void updateArchivedMany(contacts, !archived, false)}>Desfazer</Button> } : {}),
+      });
+    } catch {
+      notify({ title: "Não foi possível atualizar todas as pessoas", description: "Nenhuma, algumas ou todas podem ter mudado. Confira a lista.", tone: "error" });
+    } finally {
+      setBulkRunning(false);
+    }
+  }
+
   return <PageFrame>
     <PageHeader icon="user" title={viewTitle} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Nova pessoa</Button></> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="user" title="Cadastre a primeira pessoa" description="Reúna pessoas, empresas e conversas em uma base que a equipe pode acompanhar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova pessoa</Button> : undefined} />}
@@ -157,8 +189,13 @@ export default function Contacts() {
         <Select appearance="filter" label="Filtrar por etapa" value={statusFilter} options={[{ value: "all", label: "Todas as etapas" }, ...LEAD_STATUS_OPTIONS]} onValueChange={(value) => setSearchParams(value && value !== "all" ? { status: value } : {})} />
         <Select appearance="filter" label="Filtrar por responsável" value={ownerFilter} options={[{ value: "all", label: "Todos os responsáveis" }, { value: "unassigned", label: "Não atribuídos" }, ...users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))]} onValueChange={(value) => setOwnerFilter(value ?? "all")} />
       </>}
-      actions={<Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>}
-      count={<span role="status">{isLoading ? "Carregando pessoas…" : `${filteredContacts.length} ${filteredContacts.length === 1 ? "pessoa" : "pessoas"}`}</span>}
+      actions={selectedContacts.length > 0
+        ? <>
+            <Button variant="secondary" loading={bulkRunning} onClick={() => void updateArchivedMany(selectedContacts, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</Button>
+            <Button variant="ghost" disabled={bulkRunning} onClick={() => setSelectedIds([])}>Limpar seleção</Button>
+          </>
+        : <Button variant="secondary" onClick={() => setArchiveView((current) => !current)}>{archiveView ? "Ver ativos" : "Ver arquivados"}</Button>}
+      count={<span role="status">{isLoading ? "Carregando pessoas…" : selectedContacts.length > 0 ? `${selectedContacts.length} de ${filteredContacts.length} selecionadas` : `${filteredContacts.length} ${filteredContacts.length === 1 ? "pessoa" : "pessoas"}`}</span>}
     />}
     {!firstRun && <DataTable
       label="Pessoas da organização"
@@ -167,6 +204,7 @@ export default function Contacts() {
       rowKey={(contact) => contact.id}
       rowLabel={(contact) => contact.name}
       state={isLoading && contacts.length === 0 ? "loading" : "ready"}
+      {...(canWrite ? { selectedIds, onSelectionChange: setSelectedIds } : {})}
       emptyText={archiveView ? "Nenhuma pessoa arquivada." : search ? `Nenhuma pessoa encontrada para “${search}”.` : "Nenhuma pessoa cadastrada."}
       actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>}
     />}
