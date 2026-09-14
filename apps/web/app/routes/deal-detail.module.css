@@ -1,44 +1,65 @@
 .page { gap: var(--space-4); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
-.contentGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr) minmax(0, 1fr); grid-template-areas: "profile activities history"; align-items: start; gap: var(--space-5); min-width: 0; }
-.contentGrid[data-activities="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); grid-template-areas: "profile history"; }
+
+/* Duas colunas, como a tela de negócio do Pipedrive (captura 001): painel de
+ * seções à esquerda, o que aconteceu e o que vem a seguir à direita. */
+.contentGrid { display: grid; grid-template-columns: minmax(0, var(--ui-popoverWidth)) minmax(0, 1fr); align-items: start; gap: var(--space-5); min-width: 0; }
 .contentGrid > * { min-width: 0; }
-.profile { grid-area: profile; display: flex; flex-direction: column; gap: var(--space-3); }
+.painel { min-width: 0; }
+.fluxo { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+
+/* Cabeçalho: responsável, Ganho e Perdido à direita do título — decidir o
+ * desfecho é a ação principal da tela, não algo no fim de um cartão. */
+.owner { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; margin-inline-end: var(--space-2); font-size: var(--typography-size-sm); }
+.owner > span { display: grid; min-width: 0; line-height: var(--ui-tabLine); }
+.owner small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.lostButton { color: var(--color-statusDanger); }
+
+/* Caminho do funil abaixo da trilha: «Funil › Etapa». */
+.trilha { display: flex; align-items: center; gap: var(--space-1); margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.trilha a { color: var(--color-accent); text-decoration: none; }
+.trilha a:hover { text-decoration: underline; }
+.trilha svg { width: var(--space-3); height: var(--space-3); transform: rotate(-90deg); }
+
 .details { display: grid; }
-.details > div:not(.closeActions) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: center; gap: var(--space-2); min-width: 0; padding-block: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.details > div:first-child { padding-top: 0; }
-.details span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.details > div { display: grid; grid-template-columns: minmax(var(--space-16), 38%) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-width: 0; min-height: var(--ui-controlMedium); }
+.details span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
 .details strong, .details a { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: anywhere; }
-.closeActions { display: flex; flex-wrap: wrap; gap: var(--space-2); padding-top: var(--space-4); }
+.details a { color: var(--color-accent); }
+
 .editForm { display: grid; gap: var(--space-4); }
 .formActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.activities { grid-area: activities; display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
-.history { grid-area: history; }
-.empty { padding: var(--space-4) 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.conversationList { list-style: none; padding: 0; margin: 0; }
-.conversationList li + li { border-top: var(--ui-hairline) solid var(--color-line); }
-.conversationList a { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); margin-inline: calc(-1 * var(--space-3)); border-radius: var(--radius-sm); color: var(--color-ink); text-decoration: none; transition: background-color var(--motion-duration-fast) var(--motion-ease-out), color var(--motion-duration-fast) var(--motion-ease-out); }
-.conversationList a:hover, .conversationList a:focus-visible { color: var(--color-accent); background: var(--ui-selected); }
-.conversationList a > svg { flex: 0 0 auto; color: var(--color-inkMuted); }
-.conversationBody { display: grid; gap: var(--space-1); min-width: 0; }
-.conversationList strong { font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
-.conversationList span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.empty { margin: 0; padding: var(--space-2) 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+
+/* Compositor: onde se agenda o próximo passo, no topo da coluna da direita. */
+.compositor { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); }
+.compositorDica { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+
+.bloco { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.blocoTitulo { margin: 0; font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
+
 .activityList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
 .activityList li { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; border-top: var(--ui-hairline) solid var(--color-line); }
+.activityList li:first-child { border-top: 0; }
 .activityList li > div { display: grid; gap: var(--space-1); min-width: 0; }
 .activityList li[data-completed="true"] strong { color: var(--color-inkMuted); text-decoration: line-through; }
 .activityType { color: var(--color-accent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); text-transform: uppercase; }
 .activityList strong { font-size: var(--typography-size-sm); }
-.activityList p, .activityList time { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.activityList p, .activityList time { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.activityList time[data-overdue] { color: var(--color-statusDanger); font-weight: var(--typography-weight-medium); }
+
+.conversationList { list-style: none; padding: 0; margin: 0; }
+.conversationList li + li { border-top: var(--ui-hairline) solid var(--color-line); }
+.conversationList a { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2); margin-inline: calc(-1 * var(--space-2)); border-radius: var(--radius-sm); text-decoration: none; color: inherit; }
+.conversationList a:hover, .conversationList a:focus-visible { color: var(--color-accent); background: var(--ui-subtle); }
+.conversationList a > svg { flex: 0 0 auto; width: var(--space-3); height: var(--space-3); color: var(--color-inkMuted); transform: rotate(-90deg); }
+.conversationBody { display: grid; gap: var(--space-1); min-width: 0; }
+.conversationList strong { font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
+.conversationList span { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
-@media (max-width: 1200px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); grid-template-areas: "profile activities" "profile history"; }
-  .contentGrid[data-activities="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); grid-template-areas: "profile history"; }
-  .activities, .history { padding-inline: 0; }
-}
-@media (max-width: 760px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "activities" "history"; }
-  .contentGrid[data-activities="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history"; }
-  .profile, .activities, .history { padding-inline: 0; }
+
+@media (max-width: 1000px) {
+  .contentGrid { grid-template-columns: minmax(0, 1fr); }
 }

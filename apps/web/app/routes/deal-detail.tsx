@@ -15,7 +15,7 @@ import {
   type Money,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount } from "@spark/data";
-import { ActionModal, BackLink, Button, Card, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MoneyInput, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, StageProgress, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -109,6 +109,23 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const owner = deal?.ownerId ? users.find((item) => item.id === deal.ownerId) : undefined;
   const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
+  const isOpen = deal?.status === "open";
+  // «Foco» é o que ainda não foi feito, do mais antigo para o mais novo — o que
+  // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
+  const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
+  const doneActivities = useMemo(() => orderedActivities.filter((activity) => activity.completed).reverse(), [orderedActivities]);
+
+  /** Desfazer o fechamento: volta para em aberto e limpa o motivo da perda. */
+  async function reopenDeal() {
+    if (!deal || !canMove) return;
+    try {
+      const transaction = dealsCollection.update(deal.id, (draft) => { draft.status = "open"; draft.lossReason = null; });
+      await transaction.isPersisted.promise;
+      notify({ title: "Negócio reaberto", tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível reabrir o negócio", tone: "error" });
+    }
+  }
 
   function beginEditing() {
     if (!deal) return;
@@ -202,11 +219,20 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     <RecordPageHeader
       back={<BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
       icon="briefcase"
-      eyebrow={`${pipeline?.name ?? "Funil"} · ${stage?.name ?? "Etapa"}`}
       title={deal.name}
-      description={`Criado em ${formatDateTime(deal.createdAt)} · atualizado em ${formatDateTime(deal.updatedAt)}`}
-      actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar negócio</Button> : undefined}
-      metrics={[{ label: "Valor", value: formatBRL(syncedAmount(deal.amount)), icon: "chart" }, { label: "Situação", value: statusLabel(deal.status), icon: "check", ...(deal.status === "won" ? { tone: "success" as const } : deal.status === "lost" ? { tone: "danger" as const } : {}) }, { label: "Previsão", value: deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão", icon: "calendar" }]}
+      description={`${formatBRL(syncedAmount(deal.amount))}${deal.expectedCloseDate ? ` · previsão ${formatDate(deal.expectedCloseDate)}` : ""}`}
+      actions={<>
+        {owner && <span className={styles.owner}><Avatar name={owner.name} size="small" /><span><small>Responsável</small>{owner.name}</span></span>}
+        {isOpen && canMove && <>
+          <Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
+          <Button variant="secondary" className={styles.lostButton} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
+        </>}
+        {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
+        {canWrite && <MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} menu={<>
+          <MenuItem icon={<Icon name="file" />} onClick={beginEditing}>Editar negócio</MenuItem>
+          {!isOpen && canMove && <MenuItem icon={<Icon name="briefcase" />} onClick={() => void reopenDeal()}>Reabrir negócio</MenuItem>}
+        </>} />}
+      </>}
     />
 
     {pipelineStages.length > 0 && <StageProgress
@@ -214,49 +240,93 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       currentId={deal.stageId}
       currentHint={daysInStage(events.find((item) => item.type === "deal.stage_changed")?.occurredAt ?? deal.createdAt)}
       outcome={deal.status === "open" ? undefined : deal.status}
-      {...(canMove && deal.status === "open" ? { onSelect: (id: string) => void moveDeal(id) } : {})}
+      {...(canMove && isOpen ? { onSelect: (id: string) => void moveDeal(id) } : {})}
     />}
+    <p className={styles.trilha}><Link to="/deals">{pipeline?.name ?? "Funil"}</Link> <Icon name="chevron" /> {stage?.name ?? "Etapa"}</p>
 
-    <div className={styles.contentGrid} data-activities={canReadActivities || canReadInbox ? "visible" : "hidden"}>
-        <div className={styles.profile}>{editing ? <Card title="Editar negócio"><form className={styles.editForm} onSubmit={saveDeal}>
-          <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
-          <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
-          <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
-          <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={companyId || null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
-          <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
-          <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
-          <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null || !contact}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
-        </form></Card> : <Card title="Detalhes do negócio"><div className={styles.details}>
-          <div><span>Pessoa</span>{linkedContact ? <Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link> : <strong>Não vinculada</strong>}</div>
-          <div><span>Empresa</span>{linkedCompany ? <Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link> : <strong>Não vinculada</strong>}</div>
-          <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
-          {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
-          {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
-            key={field.id}
-            field={field}
-            value={deal.customFields?.[field.key]}
-            disabled={!canWrite}
-            onSave={async (value) => { const transaction = dealsCollection.update(deal.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }}
-            onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
-            onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })}
-          />)}
-          {deal.status === "open" && canMove && <div className={styles.closeActions}><Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Marcar como ganho</Button><Button variant="secondary" onClick={() => setLossModalOpen(true)}>Marcar como perdido</Button></div>}
-        </div></Card>}
-        </div>
+    <div className={styles.contentGrid}>
+      <aside className={styles.painel}>
+        <Accordion defaultValue={["resumo", "detalhes"]} items={[
+          { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, content: <div className={styles.details}>
+            <div><span>Valor</span><strong>{formatBRL(syncedAmount(deal.amount))}</strong></div>
+            <div><span>Situação</span><strong>{statusLabel(deal.status)}</strong></div>
+            <div><span>Previsão</span><strong>{deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"}</strong></div>
+            <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
+            {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
+          </div> },
+          { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, content: editing
+            ? <form className={styles.editForm} onSubmit={saveDeal}>
+                <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
+                <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
+                <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={companyId || null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
+                <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
+                <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
+                <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
+                <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null || !contact}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
+              </form>
+            : <div className={styles.details}>
+                {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
+                  key={field.id}
+                  field={field}
+                  value={deal.customFields?.[field.key]}
+                  disabled={!canWrite}
+                  onSave={async (value) => { const transaction = dealsCollection.update(deal.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }}
+                  onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
+                  onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })}
+                />)}
+                {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
+              </div> },
+          { value: "pessoa", title: "Pessoa", icon: <Icon name="user" />, content: <div className={styles.details}>
+            {linkedContact
+              ? <><div><span>Nome</span><Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link></div>
+                  {linkedContact.email && <div><span>E-mail</span><strong>{linkedContact.email}</strong></div>}
+                  {linkedContact.phone && <div><span>Telefone</span><strong>{linkedContact.phone}</strong></div>}</>
+              : <p className={styles.empty}>Nenhuma pessoa vinculada.</p>}
+          </div> },
+          { value: "empresa", title: "Empresa", icon: <Icon name="building" />, content: <div className={styles.details}>
+            {linkedCompany
+              ? <><div><span>Nome</span><Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link></div>
+                  {linkedCompany.industry && <div><span>Segmento</span><strong>{linkedCompany.industry}</strong></div>}</>
+              : <p className={styles.empty}>Nenhuma empresa vinculada.</p>}
+          </div> },
+          ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId
+            ? <p className={styles.empty}>Vincule uma pessoa para ver o atendimento.</p>
+            : conversations.length === 0
+              ? <p className={styles.empty}>Nenhuma conversa desta pessoa ainda.</p>
+              : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?conversation=${conversation.id}`}><div className={styles.conversationBody}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {formatDateTime(conversation.lastMessageAt)}</span></div><Icon name="chevron" /></Link></li>)}</ul> }] : []),
+        ]} />
+      </aside>
 
-        {(canReadActivities || canReadInbox) && <div className={styles.activities}>{canReadActivities && <Card title="Atividades" description="Próximos passos e histórico operacional deste negócio." actions={canWriteActivities ? <Button size="sm" onClick={() => setActivityModalOpen(true)}>Nova atividade</Button> : undefined}>
-          {orderedActivities.length === 0 ? <div className={styles.empty}>Nenhuma atividade vinculada a este negócio.</div> : <ul className={styles.activityList}>{orderedActivities.map((activity) => <li key={activity.id} data-completed={activity.completed}>
-            <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.notes && <p>{activity.notes}</p>}<time>{formatDateTime(activity.scheduledAt)}</time></div>
-            {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</Button>}
-          </li>)}</ul>}
-        </Card>}
-          {canReadInbox && <Card title="Atendimento da pessoa" description="Conversas desta pessoa em todos os canais.">
-            {!deal.contactId ? <div className={styles.empty}>Vincule uma pessoa para ver o atendimento.</div> : conversations.length === 0 ? <div className={styles.empty}>Nenhuma conversa desta pessoa ainda.</div> : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?box=all&conversation=${conversation.id}`}><span className={styles.conversationBody}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {conversation.status === "open" ? "Aberta" : conversation.status === "snoozed" ? "Adiada" : "Fechada"} · {formatDateTime(conversation.lastMessageAt)}</span></span><Icon name="right" /></Link></li>)}</ul>}
-          </Card>}
+      <section className={styles.fluxo}>
+        {canWriteActivities && <div className={styles.compositor}>
+          <Button variant="secondary" icon={<Icon name="calendar" />} onClick={() => setActivityModalOpen(true)}>Agendar atividade</Button>
+          <span className={styles.compositorDica}>Toda atividade agendada aqui também aparece no calendário da equipe.</span>
         </div>}
-        <div className={`${styles.activities} ${styles.history}`}><Card title="Histórico" description="Mudanças registradas neste negócio.">
-          <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />
-        </Card></div>
+
+        {canReadActivities && <section className={styles.bloco} aria-labelledby="deal-foco">
+          <h2 id="deal-foco" className={styles.blocoTitulo}>Foco</h2>
+          {focusActivities.length === 0
+            ? <p className={styles.empty}>Nenhum próximo passo agendado.</p>
+            : <ul className={styles.activityList}>{focusActivities.map((activity) => <li key={activity.id} data-completed="false">
+                <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.notes && <p>{activity.notes}</p>}<time data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>{activity.scheduledAt < new Date().toISOString() ? "Atrasada · " : ""}{formatDateTime(activity.scheduledAt)}</time></div>
+                {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Concluir</Button>}
+              </li>)}</ul>}
+        </section>}
+
+        <section className={styles.bloco} aria-labelledby="deal-historico">
+          <h2 id="deal-historico" className={styles.blocoTitulo}>Histórico</h2>
+          <Tabs label="Filtrar o histórico" defaultValue="tudo" items={[
+            { value: "tudo", label: "Tudo", content: <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
+            ...(canReadActivities ? [{ value: "atividades", label: `Atividades (${doneActivities.length})`, content: doneActivities.length === 0
+              ? <p className={styles.empty}>Nenhuma atividade concluída ainda.</p>
+              : <ul className={styles.activityList}>{doneActivities.map((activity) => <li key={activity.id} data-completed="true">
+                  <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong><time>{formatDateTime(activity.scheduledAt)}</time></div>
+                  {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Reabrir</Button>}
+                </li>)}</ul> }] : []),
+            { value: "mudancas", label: "Mudanças", content: <Timeline items={events.filter((item) => item.type !== "activity.created").map(toTimelineItem)} emptyText="Nenhuma mudança registrada." /> },
+          ]} />
+        </section>
+      </section>
     </div>
 
     <ActionModal open={activityModalOpen} onOpenChange={(open) => setActivityModalOpen(open)} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha título, tipo, data e hora." onConfirm={createActivity}>
