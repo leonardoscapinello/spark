@@ -52,9 +52,7 @@ export class SupabaseJwtGuard implements CanActivate {
       });
       request.supabaseUser = SupabaseJwtClaimsSchema.parse(payload);
       return true;
-    } catch (error) {
-      // eslint-disable-next-line no-console -- temporary CI diagnostic, reverting after
-      console.error("DEBUG supabase-jwt.guard caught:", error, "NODE_ENV=", this.config.get("NODE_ENV"), "isIsolatedTest computed as", this.config.get("NODE_ENV") === "test");
+    } catch {
       throw new UnauthorizedException("Invalid or expired token");
     }
   }

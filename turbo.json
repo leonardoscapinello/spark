@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "//": "Arquivos de raiz que mudam o resultado de qualquer tarefa. Sem isto o turbo\nserve cache de lint feito com outra regra, ou de typecheck feito com outro\ntsconfig — e o `pnpm check` dá verde sem ter verificado nada.",
+  "//": "test.env: o turbo 2 roda tarefas em modo strict — variável de ambiente que não está listada ali NÃO chega ao subprocesso da tarefa, mesmo exportada no shell ou no env: do job do CI. Sem isto o SupabaseJwtGuard lança em getOrThrow(SUPABASE_JWT_SECRET) e toda rota autenticada dos testes e2e responde 401.\n\nglobalDependencies: arquivos de raiz que mudam o resultado de qualquer tarefa. Sem isto o turbo\nserve cache de lint feito com outra regra, ou de typecheck feito com outro\ntsconfig — e o `pnpm check` dá verde sem ter verificado nada.",
   "globalDependencies": [
     "tsconfig.base.json",
     "eslint.config.mjs",
@@ -34,6 +34,10 @@
     "test": {
       "dependsOn": [
         "^build"
+      ],
+      "env": [
+        "DATABASE_URL",
+        "SUPABASE_JWT_SECRET"
       ]
     },
     "size": {
