@@ -45,9 +45,16 @@
 .formActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .empty { margin: 0; padding: var(--space-2) 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 
-/* Compositor: onde se agenda o próximo passo, no topo da coluna da direita. */
-.compositor { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) var(--space-4); background: var(--color-accentWash); border: var(--ui-hairline) solid color-mix(in srgb, var(--color-accent) 20%, transparent); border-radius: var(--radius-md); }
-.compositorRotulo { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); }
+.compositorNota { display: grid; gap: var(--space-2); }
+.compositorAcoes { display: flex; gap: var(--space-2); }
+
+/* Nota: papel amarelo, como no Pipedrive — fala de gente, não registro do sistema. */
+.notaList { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: grid; gap: var(--space-2); }
+.nota { padding: var(--space-3); border-radius: var(--ui-fieldRadius); background: color-mix(in srgb, var(--color-statusWarning) 12%, var(--color-surface)); border: var(--ui-hairline) solid color-mix(in srgb, var(--color-statusWarning) 24%, transparent); }
+.nota header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.nota header strong { color: var(--color-ink); font-weight: var(--typography-weight-medium); }
+.nota header time { flex: 1; }
+.nota p { margin: 0; font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); white-space: pre-wrap; overflow-wrap: anywhere; }
 .modalLinha { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); }
 .activityActions { display: inline-flex; align-items: center; gap: var(--space-1); flex-shrink: 0; }
 @media (max-width: 640px) { .modalLinha { grid-template-columns: minmax(0, 1fr); } }

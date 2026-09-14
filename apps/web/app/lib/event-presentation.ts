@@ -18,6 +18,7 @@ const TITLES: Record<DomainEventType, string> = {
   "deal.lost": "Negócio perdido",
   "activity.created": "Atividade agendada",
   "activity.updated": "Atividade atualizada",
+  "note.created": "Nota registrada",
   "activity.completed": "Atividade concluída",
   "activity.reopened": "Atividade reaberta",
   "conversation.created": "Conversa criada",

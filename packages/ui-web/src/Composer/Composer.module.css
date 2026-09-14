@@ -1,0 +1,37 @@
+/* Cartão do compositor: barra de abas + corpo (Pipedrive, captura 001). */
+.root { background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
+
+.tabs { display: flex; align-items: stretch; gap: var(--space-1); padding-inline: var(--space-2); border-bottom: var(--ui-hairline) solid var(--color-line); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  box-sizing: border-box;
+  display: inline-flex; align-items: center; gap: var(--space-2); flex-shrink: 0;
+  min-height: var(--space-10); padding-inline: var(--space-3);
+  margin-bottom: calc(var(--ui-hairline) * -1);
+  border: 0; border-bottom: var(--ui-focusWidth) solid transparent;
+  background: transparent; color: var(--color-inkMuted);
+  font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium);
+  cursor: pointer;
+  transition: color var(--motion-duration-instant) var(--motion-ease-out), background-color var(--motion-duration-instant) var(--motion-ease-out);
+}
+.tab svg { width: var(--ui-icon); height: var(--ui-icon); }
+.tab:hover:not(:disabled) { color: var(--color-ink); }
+.tab[aria-selected="true"] { color: var(--color-accent); border-bottom-color: var(--color-accent); background: var(--color-accentWash); }
+.tab:disabled { color: var(--ui-disabledInk); cursor: not-allowed; }
+.tab:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(var(--ui-focusWidth) * -1); }
+
+.body { padding: var(--space-3) var(--space-4); min-width: 0; }
+
+/* Estado fechado: uma linha de convite, não um campo — clicar é que abre. */
+.prompt {
+  display: block; width: 100%; padding: var(--space-2) 0;
+  border: 0; background: transparent; color: var(--color-inkFaint);
+  font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm);
+  text-align: start; cursor: pointer;
+}
+.prompt:hover:not(:disabled) { color: var(--color-inkMuted); }
+.prompt:disabled { cursor: not-allowed; }
+.prompt:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); border-radius: var(--radius-sm); }
+
+@media (prefers-reduced-motion: reduce) { .tab { transition: none; } }

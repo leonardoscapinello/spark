@@ -4388,6 +4388,86 @@ export interface UserPreferenceWriteResponseDto {
   txid: number;
 }
 
+export interface CreateNoteDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  dealId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  body: string;
+  pinned?: boolean;
+}
+
+/**
+ * @nullable
+ */
+export type NoteWriteResponseDtoNote = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  dealId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  body: string;
+  pinned?: boolean;
+  /** @minLength 1 */
+  authorId: string;
+  createdAt: string;
+  updatedAt: string;
+} | null;
+
+export interface NoteWriteResponseDto {
+  /** @nullable */
+  note: NoteWriteResponseDtoNote;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface UpdateNoteDto {
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  body?: string;
+  pinned?: boolean;
+}
+
 export interface CreatePageDto {
   /** @minLength 1 */
   id: string;
@@ -10038,6 +10118,191 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getUserPreferencesControllerUpsertMutationOptions(options), queryClient);
+    }
+
+export const notesControllerCreate = (
+    createNoteDto: CreateNoteDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<NoteWriteResponseDto>(
+      {url: `/v1/notes`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createNoteDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getNotesControllerCreateMutationKey = () => ['notesControllerCreate'] as const;
+
+export const getNotesControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notesControllerCreate>>, TError,NotesControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof notesControllerCreate>>, TError,NotesControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getNotesControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notesControllerCreate>>, NotesControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  notesControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof notesControllerCreate>>>
+    export type NotesControllerCreateMutationBody = CreateNoteDto
+    export type NotesControllerCreateMutationError = unknown
+    export type NotesControllerCreateMutationVariables = {data: CreateNoteDto}
+
+    export const useNotesControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notesControllerCreate>>, TError,NotesControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notesControllerCreate>>,
+        TError,
+        NotesControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getNotesControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const notesControllerUpdate = (
+    id: string,
+    updateNoteDto: UpdateNoteDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<NoteWriteResponseDto>(
+      {url: `/v1/notes/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateNoteDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getNotesControllerUpdateMutationKey = () => ['notesControllerUpdate'] as const;
+
+export const getNotesControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notesControllerUpdate>>, TError,NotesControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof notesControllerUpdate>>, TError,NotesControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getNotesControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notesControllerUpdate>>, NotesControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  notesControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof notesControllerUpdate>>>
+    export type NotesControllerUpdateMutationBody = UpdateNoteDto
+    export type NotesControllerUpdateMutationError = unknown
+    export type NotesControllerUpdateMutationVariables = {id: string;data: UpdateNoteDto}
+
+    export const useNotesControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notesControllerUpdate>>, TError,NotesControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notesControllerUpdate>>,
+        TError,
+        NotesControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getNotesControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const notesControllerRemove = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<NoteWriteResponseDto>(
+      {url: `/v1/notes/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getNotesControllerRemoveMutationKey = () => ['notesControllerRemove'] as const;
+
+export const getNotesControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notesControllerRemove>>, TError,NotesControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof notesControllerRemove>>, TError,NotesControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getNotesControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notesControllerRemove>>, NotesControllerRemoveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  notesControllerRemove(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotesControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof notesControllerRemove>>>
+
+    export type NotesControllerRemoveMutationError = unknown
+    export type NotesControllerRemoveMutationVariables = {id: string}
+
+    export const useNotesControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notesControllerRemove>>, TError,NotesControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notesControllerRemove>>,
+        TError,
+        NotesControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getNotesControllerRemoveMutationOptions(options), queryClient);
     }
 
 export const pagesControllerCreate = (

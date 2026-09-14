@@ -32,3 +32,4 @@ export * from "./saved-views.js";
 export * from "./user-preferences.js";
 export * from "./deal-products.js";
 export * from "./stage-field-rules.js";
+export * from "./notes.js";

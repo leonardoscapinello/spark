@@ -63,6 +63,7 @@ import {
   savedViewId as toSavedViewId,
   dealProductId as toDealProductId,
   stageFieldRuleId as toStageFieldRuleId,
+  noteId as toNoteId,
   userPreferenceId as toUserPreferenceId,
   type OrgId,
   type ContactId,
@@ -103,6 +104,7 @@ import {
   type SavedViewId,
   type DealProductId,
   type StageFieldRuleId,
+  type NoteId,
   type UserPreferenceId,
 } from "../identity/id.js";
 
@@ -169,6 +171,7 @@ export const zCannedReplyId = bridged<CannedReplyId>(toCannedReplyId.from);
 export const zSavedViewId = bridged<SavedViewId>(toSavedViewId.from);
 export const zDealProductId = bridged<DealProductId>(toDealProductId.from);
 export const zStageFieldRuleId = bridged<StageFieldRuleId>(toStageFieldRuleId.from);
+export const zNoteId = bridged<NoteId>(toNoteId.from);
 export const zUserPreferenceId = bridged<UserPreferenceId>(toUserPreferenceId.from);
 
 /**

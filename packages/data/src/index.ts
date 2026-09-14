@@ -29,3 +29,4 @@ export * from "./saved-views-collection.js";
 export * from "./user-preferences-collection.js";
 export * from "./teams-collection.js";
 export { confirmed } from "./confirmed.js";
+export * from "./notes-collection.js";

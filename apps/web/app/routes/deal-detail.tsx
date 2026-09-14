@@ -28,14 +28,16 @@ import {
   formatStageDuration,
   evaluateStageFields,
   stageFieldLabel,
+  type Note,
 } from "@spark/core";
-import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert } from "@spark/data";
-import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
+import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote } from "@spark/data";
+import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getDealProductsCollection } from "../lib/deal-products-collection.client";
 import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collection.client";
+import { getNotesCollection } from "../lib/notes-collection.client";
 import { getProductsCollection } from "../lib/catalog-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
@@ -49,7 +51,6 @@ import { requireCapability } from "../lib/route-access.client";
 import styles from "./deal-detail.module.css";
 
 const ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPES.map((value) => ({ value, label: ACTIVITY_TYPE_LABELS[value] }));
-const ACTIVITY_TYPE_ICONS: Record<ActivityType, IconName> = { task: "check", call: "phone", meeting: "team", email: "mail", lunch: "calendar", deadline: "bolt" };
 /* Durações que o Pipedrive oferece por padrão — quem precisa de outra escreve. */
 const DURATIONS = [{ value: "0", label: "Sem duração" }, { value: "15", label: "15 min" }, { value: "30", label: "30 min" }, { value: "60", label: "1 hora" }, { value: "90", label: "1h30" }, { value: "120", label: "2 horas" }];
 
@@ -62,6 +63,7 @@ export async function clientLoader() {
     getUsersCollection().preload(),
     getDealProductsCollection().preload(),
     getStageFieldRulesCollection().preload(),
+    getNotesCollection().preload(),
     ...(session.capabilities.includes("catalog:read") ? [getProductsCollection().preload()] : []),
     getEventsCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
@@ -80,6 +82,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const usersCollection = getUsersCollection();
   const activitiesCollection = getActivitiesCollection();
   const itemsCollection = getDealProductsCollection();
+  const notesCollection = getNotesCollection();
   const companiesCollection = getCompaniesCollection();
   const session = getSession();
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
@@ -104,6 +107,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const canReadCatalog = session?.capabilities.includes("catalog:read") ?? false;
   const { data: dealItems = [] } = useLiveQuery({ query: (q) => q.from({ items: getDealProductsCollection() }).where(({ items: item }) => eq(item.dealId, params.dealId)).orderBy(({ items: item }) => item.sortOrder, "asc") });
   const { data: catalog = [] } = useLiveQuery({ query: (q) => canReadCatalog ? q.from({ products: getProductsCollection() }).orderBy(({ products: product }) => product.name, "asc") : undefined });
+  const { data: dealNotes = [] } = useLiveQuery({ query: (q) => q.from({ notes: getNotesCollection() }).where(({ notes: note }) => eq(note.dealId, params.dealId)).orderBy(({ notes: note }) => note.createdAt, "desc") });
   const { data: fieldRules = [] } = useLiveQuery({ query: (q) => q.from({ rules: getStageFieldRulesCollection() }) });
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: field }) => eq(field.entityType, "deal")).orderBy(({ fields: field }) => field.label, "asc") });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
@@ -126,6 +130,9 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [activityLocation, setActivityLocation] = useState("");
   const [activityOwnerId, setActivityOwnerId] = useState("");
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [composerTab, setComposerTab] = useState<"atividade" | "nota">("atividade");
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [itemProductId, setItemProductId] = useState("");
@@ -173,6 +180,31 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       notify({ title: "Responsável atualizado", tone: "success" });
     } catch {
       notify({ title: "Não foi possível trocar o responsável", tone: "error" });
+    }
+  }
+
+  async function saveNote() {
+    const body = noteDraft.trim();
+    if (!deal || !session || !body || savingNote) return;
+    setSavingNote(true);
+    try {
+      const note = optimisticNote({ dealId: dealIdFactory.from(deal.id), contactId: deal.contactId, body }, session.orgId, userIdFactory.from(session.userId));
+      await notesCollection.insert(note).isPersisted.promise;
+      setNoteDraft("");
+      notify({ title: "Nota registrada", tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível salvar a nota", tone: "error" });
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  async function removeNote(note: Note) {
+    try {
+      await notesCollection.delete(note.id).isPersisted.promise;
+      notify({ title: "Nota removida", tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível remover a nota", tone: "error" });
     }
   }
 
@@ -492,10 +524,24 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       </aside>
 
       <section className={styles.fluxo}>
-        {canWriteActivities && <div className={styles.compositor}>
-          <span className={styles.compositorRotulo}>Registrar</span>
-          {ACTIVITY_TYPE_OPTIONS.map((option) => <Button key={option.value} size="sm" variant="secondary" shape="rounded" icon={<Icon name={ACTIVITY_TYPE_ICONS[option.value]} />} onClick={() => { openActivityModal(); setActivityType(option.value); }}>{option.label}</Button>)}
-        </div>}
+        <Composer
+          label="Registrar no negócio"
+          value={composerTab}
+          onValueChange={setComposerTab}
+          tabs={[{ id: "atividade", label: "Atividade", icon: "calendar", disabled: !canWriteActivities }, { id: "nota", label: "Nota", icon: "file" }]}
+        >
+          {composerTab === "atividade"
+            ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal()}>
+                {canWriteActivities ? "Clique aqui para agendar uma atividade…" : "Você não pode agendar atividades."}
+              </ComposerPrompt>
+            : <div className={styles.compositorNota}>
+                <Textarea aria-label="Nova nota" rows={noteDraft ? 4 : 2} value={noteDraft} placeholder="Clique aqui para escrever uma nota…" onChange={(event) => setNoteDraft(event.target.value)} />
+                {noteDraft.trim() && <div className={styles.compositorAcoes}>
+                  <Button size="sm" loading={savingNote} onClick={() => void saveNote()}>Salvar nota</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setNoteDraft("")}>Cancelar</Button>
+                </div>}
+              </div>}
+        </Composer>
 
         {canReadActivities && <section className={styles.bloco} aria-labelledby="deal-foco">
           <header className={styles.blocoCabecalho}>
@@ -519,7 +565,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             <span className={styles.blocoContagem}>{events.length} {events.length === 1 ? "registro" : "registros"}</span>
           </header>
           <div className={styles.blocoCorpo}><Tabs label="Filtrar o histórico" defaultValue="tudo" items={[
-            { value: "tudo", label: "Tudo", content: <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
+            { value: "tudo", label: "Tudo", content: <>
+              {dealNotes.length > 0 && <ul className={styles.notaList}>{dealNotes.slice(0, 3).map((note) => <li key={note.id}><NoteCard note={note} authorName={users.find((user) => user.id === note.authorId)?.name} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} /></li>)}</ul>}
+              <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />
+            </> },
+            { value: "notas", label: `Notas (${dealNotes.length})`, content: dealNotes.length === 0
+              ? <p className={styles.empty}>Nenhuma nota ainda. Use o campo acima para registrar o que foi conversado.</p>
+              : <ul className={styles.notaList}>{dealNotes.map((note) => <li key={note.id}><NoteCard note={note} authorName={users.find((user) => user.id === note.authorId)?.name} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} /></li>)}</ul> },
             ...(canReadActivities ? [{ value: "atividades", label: `Atividades (${doneActivities.length})`, content: doneActivities.length === 0
               ? <p className={styles.empty}>Nenhuma atividade concluída ainda.</p>
               : <ul className={styles.activityList}>{doneActivities.map((activity) => <li key={activity.id} data-completed="true">
@@ -572,3 +624,11 @@ function activityTypeLabel(type: ActivityType): string { return ACTIVITY_TYPE_LA
 function conversationChannelLabel(channel: string): string { return ({ manual: "Interno", email: "E-mail", instagram: "Instagram", whatsapp: "WhatsApp", messenger: "Messenger" } as Record<string, string>)[channel] ?? channel; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value)); }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+
+/** Nota no histórico: papel amarelo, como o do Pipedrive — fala de gente, não registro do sistema. */
+function NoteCard({ note, authorName, onRemove }: { note: Note; authorName?: string | undefined; onRemove?: (() => void) | undefined }) {
+  return <article className={styles.nota}>
+    <header><strong>{authorName ?? "Alguém"}</strong><time>{formatDateTime(note.createdAt)}</time>{onRemove && <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label="Remover nota" onClick={onRemove} />}</header>
+    <p>{note.body}</p>
+  </article>;
+}

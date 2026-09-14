@@ -20,6 +20,7 @@ import { CampaignsModule } from "./modules/campaigns/campaigns.module.js";
 import { SettingsModule } from "./modules/settings/settings.module.js";
 import { ViewsModule } from "./modules/views/views.module.js";
 import { PreferencesModule } from "./modules/preferences/preferences.module.js";
+import { NotesModule } from "./modules/notes/notes.module.js";
 import { PagesModule } from "./modules/pages/pages.module.js";
 
 @Module({
@@ -58,6 +59,7 @@ import { PagesModule } from "./modules/pages/pages.module.js";
     SettingsModule,
     ViewsModule,
     PreferencesModule,
+    NotesModule,
     PagesModule,
   ],
 })
