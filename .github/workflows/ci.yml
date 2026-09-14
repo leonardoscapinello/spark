@@ -14,6 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://postgres:spark_dev@localhost:5432/spark
+      # Mesmo texto que os testes e2e já usam como fallback quando a
+      # variável não está definida (apps/api/test/*.e2e.test.ts) — sem
+      # isto o SupabaseJwtGuard (apps/api/src/auth/supabase-jwt.guard.ts)
+      # lança em getOrThrow() antes de sequer tentar verificar o token, e
+      # TODA rota autenticada responde 401 em vez do código real do teste.
+      # Nunca um segredo de produção: apps/api/.env (gitignorado) é a
+      # fonte real fora do CI.
+      SUPABASE_JWT_SECRET: dev-only-local-secret-do-not-use-in-production
     steps:
       - uses: actions/checkout@v4
         with:
