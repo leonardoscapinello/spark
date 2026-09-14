@@ -90,3 +90,32 @@ it("não oferece alça quando o consumidor não trata largura",()=>{
  render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]}/>);
  expect(screen.queryByRole("separator")).not.toBeInTheDocument();
 });
+
+it("reordena a coluna por arrasto e por Control com as setas",()=>{
+ const onColumnOrderChange=vi.fn();
+ const columns=[{id:"name",label:"Nome",cell:(r:{id:string})=>r.id},{id:"company",label:"Empresa",cell:(r:{id:string})=>r.id},{id:"stage",label:"Etapa",cell:(r:{id:string})=>r.id}];
+ render(<DataTable label="Contatos" rows={[{id:"a"}]} rowKey={r=>r.id} columns={columns} columnOrder={["name","company","stage"]} onColumnOrderChange={onColumnOrderChange}/>);
+ const [nome,,etapa]=screen.getAllByRole("columnheader");
+ fireEvent.dragStart(etapa!,{dataTransfer:{effectAllowed:""}});
+ fireEvent.dragOver(nome!);
+ fireEvent.drop(nome!);
+ expect(onColumnOrderChange).toHaveBeenCalledWith(["stage","name","company"]);
+ fireEvent.keyDown(nome!,{key:"ArrowRight",ctrlKey:true});
+ expect(onColumnOrderChange).toHaveBeenLastCalledWith(["company","name","stage"]);
+ fireEvent.keyDown(nome!,{key:"ArrowLeft",ctrlKey:true});
+ expect(onColumnOrderChange).toHaveBeenCalledTimes(2);
+});
+
+it("respeita a ordem recebida e ignora seta sem Control",()=>{
+ const onColumnOrderChange=vi.fn();
+ const columns=[{id:"name",label:"Nome",cell:(r:{id:string})=>r.id},{id:"company",label:"Empresa",cell:(r:{id:string})=>r.id}];
+ render(<DataTable label="Contatos" rows={[{id:"a"}]} rowKey={r=>r.id} columns={columns} columnOrder={["company","name"]} onColumnOrderChange={onColumnOrderChange}/>);
+ expect(screen.getAllByRole("columnheader").map(cell=>cell.textContent)).toEqual(["Empresa","Nome"]);
+ fireEvent.keyDown(screen.getAllByRole("columnheader")[0]!,{key:"ArrowRight"});
+ expect(onColumnOrderChange).not.toHaveBeenCalled();
+});
+
+it("não arrasta cabeçalho quando o consumidor não trata ordem",()=>{
+ render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]}/>);
+ expect(screen.getByRole("columnheader")).not.toHaveAttribute("draggable");
+});

@@ -11,6 +11,7 @@ export const Carregando = () => <DataTable label="Pessoas" rows={[]} columns={[{
 export const Selecao = () => <SelectionExample />;
 export const CatalogoDeColunas = () => <CatalogExample />;
 export const LarguraDeColuna = () => <ResizeExample />;
+export const ColunasSobMedida = () => <FullControlExample />;
 
 const people=[
  {id:"1",name:"Ana Prado",company:"Vega",stage:"Novo lead"},
@@ -63,4 +64,29 @@ function ResizeExample(){
    {id:"stage",label:"Etapa",cell:row=>row.stage},
   ]}
   columnWidths={widths} onColumnWidthsChange={setWidths}/>;
+}
+
+/** Tudo o que a tela pode entregar na tabela ao mesmo tempo: escolher colunas,
+ * reordenar, redimensionar e selecionar linhas. Arraste o cabeçalho para mover
+ * a coluna, ou use Control com as setas. */
+function FullControlExample(){
+ const [hidden,setHidden]=useState<string[]>([]);
+ const [order,setOrder]=useState<string[]>(["name","company","stage","owner"]);
+ const [widths,setWidths]=useState<Record<string,number>>({});
+ const [selected,setSelected]=useState<string[]>([]);
+ return <>
+  <CollectionToolbar count={selected.length?`${selected.length} de ${people.length} selecionadas`:`${people.length} pessoas`}
+   actions={selected.length?<Button size="sm" variant="ghost" onClick={()=>setSelected([])}>Limpar</Button>:undefined}/>
+  <DataTable label="Pessoas" rows={people} rowKey={row=>row.id} rowLabel={row=>row.name}
+   columns={[
+    {id:"name",label:"Pessoa",cell:row=>row.name,sortValue:row=>row.name,alwaysVisible:true},
+    {id:"company",label:"Empresa",cell:row=>row.company,sortValue:row=>row.company,group:"Geral"},
+    {id:"stage",label:"Etapa",cell:row=>row.stage,group:"Geral"},
+    {id:"owner",label:"Responsável",cell:()=>"Não atribuído",group:"Atendimento"},
+   ]}
+   selectedIds={selected} onSelectionChange={setSelected}
+   hiddenColumnIds={hidden} onHiddenColumnsChange={setHidden}
+   columnOrder={order} onColumnOrderChange={setOrder}
+   columnWidths={widths} onColumnWidthsChange={setWidths}/>
+ </>;
 }

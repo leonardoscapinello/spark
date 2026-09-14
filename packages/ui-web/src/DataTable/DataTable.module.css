@@ -20,6 +20,9 @@
 .table[data-fixed] { table-layout: fixed; width: 100%; }
 .table[data-fixed] th,.table[data-fixed] td { box-sizing: border-box; }
 .table[data-fixed] td { overflow: hidden; text-overflow: ellipsis; }
+.table th[draggable] { cursor: grab; }
+.table th[draggable]:active { cursor: grabbing; }
+.table th[data-drop]::before { content: ""; position: absolute; inset-block: var(--space-1); inset-inline-start: 0; width: var(--ui-tabIndicator); background: var(--color-accent); border-radius: var(--radius-full); }
 .resizer { position: absolute; inset-block: 0; inset-inline-end: calc(var(--space-1) * -1); width: var(--space-2); cursor: col-resize; touch-action: none; }
 .resizer::after { content: ""; position: absolute; inset-block: var(--space-1); inset-inline-start: 50%; width: var(--ui-hairline); background: var(--color-line); opacity: 0; transition: opacity var(--motion-duration-instant) var(--motion-ease-out); }
 .resizer:hover::after,.resizer:focus-visible::after { opacity: 1; background: var(--color-accent); }
