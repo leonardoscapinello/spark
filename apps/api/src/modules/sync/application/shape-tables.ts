@@ -15,6 +15,8 @@ export interface ShapeTableConfig {
   column: "org_id" | "id"; // "id" only makes sense for organizations (syncs its own row)
   /** Personal data: the shape is narrowed to the requesting user's rows as well. */
   userColumn?: "user_id";
+  /** Rows shared org-wide when flagColumn = sharedValue, otherwise only their owner sees them. */
+  sharedUnless?: { ownerColumn: string; flagColumn: string; sharedValue: string };
 }
 
 export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
@@ -51,7 +53,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   page_versions: { column: "org_id" },
   canned_replies: { column: "org_id" },
   teams: { column: "org_id" },
-  saved_views: { column: "org_id" },
+  saved_views: { column: "org_id", sharedUnless: { ownerColumn: "created_by", flagColumn: "visibility", sharedValue: "org" } },
   user_preferences: { column: "org_id", userColumn: "user_id" },
 };
 

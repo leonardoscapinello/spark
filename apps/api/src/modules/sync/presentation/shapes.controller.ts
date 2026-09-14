@@ -90,7 +90,7 @@ export class ShapesController {
     if (!tableConfig) {
       throw new NotFoundException(`Table "${table}" is not syncable.`);
     }
-    const { column, userColumn } = tableConfig;
+    const { column, userColumn, sharedUnless } = tableConfig;
     upstream.searchParams.set("table", table);
     const eventPrefixes = table === "events" ? readableEventPrefixes(capabilities) : [];
     const eventFilter = eventPrefixes.length > 0
@@ -100,10 +100,18 @@ export class ShapesController {
     // server decides this, never the client, for the same reason as the org.
     const userParam = eventPrefixes.length + 2;
     const userFilter = userColumn ? ` AND "${userColumn}" = $${userParam}` : "";
-    upstream.searchParams.set("where", `"${column}" = $1${eventFilter}${userFilter}`);
+    // Shared-unless-private rows (saved views): everyone gets the org-wide
+    // ones, only the owner gets their private ones — decided here, so a
+    // private view never leaves the server for anyone else.
+    const sharedFilter = sharedUnless ? ` AND ("${sharedUnless.flagColumn}" = $${userParam} OR "${sharedUnless.ownerColumn}" = $${userParam + 1})` : "";
+    upstream.searchParams.set("where", `"${column}" = $1${eventFilter}${userFilter}${sharedFilter}`);
     upstream.searchParams.set("params[1]", user.orgId);
     eventPrefixes.forEach((prefix, index) => upstream.searchParams.set(`params[${index + 2}]`, `${prefix}.%`));
     if (userColumn) upstream.searchParams.set(`params[${userParam}]`, user.id);
+    if (sharedUnless) {
+      upstream.searchParams.set(`params[${userParam}]`, sharedUnless.sharedValue);
+      upstream.searchParams.set(`params[${userParam + 1}]`, user.id);
+    }
     const columns = TABLE_COLUMNS.get(table);
     if (columns) upstream.searchParams.set("columns", columns.join(","));
 

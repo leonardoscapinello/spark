@@ -9,6 +9,11 @@ import { zOrgId, zSavedViewId, zServerTimestamp, zUserId } from "./zodHelpers.js
 export const SAVED_VIEW_ENTITIES = ["contact"] as const;
 export type SavedViewEntity = (typeof SAVED_VIEW_ENTITIES)[number];
 
+/** «Só eu» ou «toda a organização», como no Pipedrive. A shape só entrega a
+ * visão privada a quem a criou (apps/api sync decide isso no servidor). */
+export const SAVED_VIEW_VISIBILITIES = ["private", "org"] as const;
+export type SavedViewVisibility = (typeof SAVED_VIEW_VISIBILITIES)[number];
+
 export const SavedViewSchema = z.object({
   id: zSavedViewId,
   orgId: zOrgId,
@@ -18,6 +23,7 @@ export const SavedViewSchema = z.object({
   // query string. Kept as an opaque string here so the schema doesn't need
   // to know the shape of ContactFilter; core/filter owns that shape.
   filters: z.string().max(4000),
+  visibility: z.enum(SAVED_VIEW_VISIBILITIES),
   createdBy: zUserId,
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
@@ -30,6 +36,7 @@ export const CreateSavedViewInputSchema = z.object({
   entityType: z.enum(SAVED_VIEW_ENTITIES),
   name: z.string().trim().min(1).max(80),
   filters: z.string().max(4000).default(""),
+  visibility: z.enum(SAVED_VIEW_VISIBILITIES).default("org"),
 });
 export type CreateSavedViewInput = z.infer<typeof CreateSavedViewInputSchema>;
 

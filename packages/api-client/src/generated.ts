@@ -3924,6 +3924,14 @@ export const CreateSavedViewDtoEntityType = {
   contact: 'contact',
 } as const;
 
+export type CreateSavedViewDtoVisibility = typeof CreateSavedViewDtoVisibility[keyof typeof CreateSavedViewDtoVisibility];
+
+
+export const CreateSavedViewDtoVisibility = {
+  private: 'private',
+  org: 'org',
+} as const;
+
 export interface CreateSavedViewDto {
   /** @minLength 1 */
   id: string;
@@ -3935,6 +3943,7 @@ export interface CreateSavedViewDto {
   name: string;
   /** @maxLength 4000 */
   filters?: string;
+  visibility?: CreateSavedViewDtoVisibility;
 }
 
 export type SavedViewWriteResponseDtoViewEntityType = typeof SavedViewWriteResponseDtoViewEntityType[keyof typeof SavedViewWriteResponseDtoViewEntityType];
@@ -3942,6 +3951,14 @@ export type SavedViewWriteResponseDtoViewEntityType = typeof SavedViewWriteRespo
 
 export const SavedViewWriteResponseDtoViewEntityType = {
   contact: 'contact',
+} as const;
+
+export type SavedViewWriteResponseDtoViewVisibility = typeof SavedViewWriteResponseDtoViewVisibility[keyof typeof SavedViewWriteResponseDtoViewVisibility];
+
+
+export const SavedViewWriteResponseDtoViewVisibility = {
+  private: 'private',
+  org: 'org',
 } as const;
 
 export type SavedViewWriteResponseDtoView = {
@@ -3957,6 +3974,7 @@ export type SavedViewWriteResponseDtoView = {
   name: string;
   /** @maxLength 4000 */
   filters: string;
+  visibility: SavedViewWriteResponseDtoViewVisibility;
   /** @minLength 1 */
   createdBy: string;
   createdAt: string;

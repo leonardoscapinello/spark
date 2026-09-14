@@ -106,7 +106,7 @@ describe("packages/data — saved views collection", () => {
 
     await Promise.all([collectionA.preload(), collectionB.preload()]);
 
-    const view = optimisticSavedView({ name: "Qualificados", entityType: "contact", filters: "leadStatus:is:qualified" }, org, localUserId);
+    const view = optimisticSavedView({ name: "Qualificados", entityType: "contact", filters: "leadStatus:is:qualified", visibility: "org" }, org, localUserId);
 
     const start = Date.now();
     const tx = collectionA.insert(view);

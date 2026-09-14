@@ -2,14 +2,14 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
-import { SavedViewSchema, savedViewId, type OrgId, type SavedView, type SavedViewEntity, type UserId } from "@spark/core";
+import { SavedViewSchema, savedViewId, type OrgId, type SavedView, type SavedViewEntity, type SavedViewVisibility, type UserId } from "@spark/core";
 import { getSparkApiBaseUrl, getSparkAuthToken, savedViewsControllerArchive, savedViewsControllerCreate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 
 /** Same shape the create endpoint needs; orgId/timestamps are only the
  * optimistic placeholder — Electric replaces them once Postgres confirms
  * the real row (mirrors optimisticContact in contacts-collection.ts). */
-export function optimisticSavedView(input: { name: string; entityType: SavedViewEntity; filters: string }, orgId: OrgId, createdBy: UserId): SavedView {
+export function optimisticSavedView(input: { name: string; entityType: SavedViewEntity; filters: string; visibility: SavedViewVisibility }, orgId: OrgId, createdBy: UserId): SavedView {
   const now = new Date().toISOString();
   return {
     id: savedViewId.create(),
@@ -17,6 +17,7 @@ export function optimisticSavedView(input: { name: string; entityType: SavedView
     entityType: input.entityType,
     name: input.name,
     filters: input.filters,
+    visibility: input.visibility,
     createdBy,
     createdAt: now,
     updatedAt: now,
@@ -39,7 +40,7 @@ export function createSavedViewsCollection() {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onInsert called with no pending mutation.");
         const view = mutation.modified;
-        const response = await savedViewsControllerCreate({ id: view.id, entityType: view.entityType, name: view.name, filters: view.filters });
+        const response = await savedViewsControllerCreate({ id: view.id, entityType: view.entityType, name: view.name, filters: view.filters, visibility: view.visibility });
         return confirmed(response);
       },
       onUpdate: async ({ transaction }) => {

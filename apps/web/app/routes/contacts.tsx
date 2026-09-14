@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { and, eq, isNull, useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact, optimisticSavedView } from "@spark/data";
-import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus } from "@spark/core";
+import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus, type SavedViewVisibility } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { usePreference } from "../lib/preferences.client";
@@ -43,6 +43,7 @@ export default function Contacts() {
   const [savedViewsOpen, setSavedViewsOpen] = useState(false);
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
+  const [saveViewVisibility, setSaveViewVisibility] = useState<SavedViewVisibility>("private");
   const canReadCompanies = getSession()?.capabilities.includes("companies:read") ?? false;
   const canWrite = getSession()?.capabilities.includes("contacts:write") ?? false;
   const canReadIntegrations = getSession()?.capabilities.includes("integrations:read") ?? false;
@@ -104,7 +105,7 @@ export default function Contacts() {
     const session = getSession();
     if (!session) return;
     try {
-      const transaction = savedViewsCollection.insert(optimisticSavedView({ name: trimmedName, entityType: "contact", filters: encodeContactFilterSet(filtersToSave()) }, session.orgId, userIdFactory.from(session.userId)));
+      const transaction = savedViewsCollection.insert(optimisticSavedView({ name: trimmedName, entityType: "contact", filters: encodeContactFilterSet(filtersToSave()), visibility: saveViewVisibility }, session.orgId, userIdFactory.from(session.userId)));
       await transaction.isPersisted.promise;
       setSaveViewOpen(false);
       setSaveViewName("");
@@ -308,6 +309,7 @@ export default function Contacts() {
                 ? <p className={styles.savedViewsEmpty}>Nenhuma visualização salva ainda.</p>
                 : savedViews.map((view) => <div key={view.id} className={styles.savedViewRow}>
                     <Button variant="ghost" className={styles.savedViewApply} onClick={() => applySavedView(view.filters)}>{view.name}</Button>
+                    {view.visibility === "private" && <Badge>Só eu</Badge>}
                     {(view.createdBy === getSession()?.userId || canWrite) && <TableIconAction label={`Remover visualização ${view.name}`} icon={<Icon name="trash" />} onClick={() => void removeSavedView(view)} />}
                   </div>)}
             </div>
@@ -349,6 +351,7 @@ export default function Contacts() {
     </ActionModal>
     <ActionModal open={saveViewOpen} onOpenChange={(open) => { setSaveViewOpen(open); if (!open) setSaveViewName(""); }} title="Salvar visualização" confirmLabel="Salvar" errorText="Não foi possível salvar a visualização. Tente novamente." onConfirm={saveCurrentView}>
       <Field><Label>Nome</Label><Input autoFocus value={saveViewName} onChange={(event) => setSaveViewName(event.target.value)} placeholder="Ex.: Qualificados de São Paulo" /></Field>
+      <Field><Label>Quem vê</Label><Select label="Quem vê a visualização" value={saveViewVisibility} options={[{ value: "private", label: "Só eu" }, { value: "org", label: "Toda a organização" }]} onValueChange={(value) => { if (value === "private" || value === "org") setSaveViewVisibility(value); }} /></Field>
     </ActionModal>
   </PageFrame>;
 }

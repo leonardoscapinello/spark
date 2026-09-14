@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { index, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import type { SavedViewEntity } from "@spark/core";
+import type { SavedViewEntity, SavedViewVisibility } from "@spark/core";
 import { APP_ROLE } from "../roles.js";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -14,6 +14,7 @@ export const savedViews = pgTable("saved_views", {
   // Opaque wire format from core/filter's filterUrl.ts — the table doesn't
   // parse it, the same way `automations.graph` doesn't parse automation nodes.
   filters: text("filters").notNull().default(""),
+  visibility: text("visibility").$type<SavedViewVisibility>().notNull().default("org"),
   createdBy: uuid("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
