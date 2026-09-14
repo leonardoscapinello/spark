@@ -429,12 +429,12 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />Preencha para avançar melhor: {fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)).join(", ")}</p>}
             {/* O valor é a soma dos produtos e por isso não se edita aqui: um
               * número solto faria a conta do funil discordar do que foi vendido. */}
-            <div><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
-            {dealItems.length > 0 && <div><span>Produtos</span><strong>{dealItems.length}</strong></div>}
+            <div className={styles.linha}><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
+            {dealItems.length > 0 && <div className={styles.linha}><span>Produtos</span><strong>{dealItems.length}</strong></div>}
             <InlineField label="Nome" value={deal.name} disabled={!canWrite}>
               {(close) => <Input aria-label="Nome do negócio" defaultValue={deal.name} onBlur={(event) => { const next = event.target.value.trim(); close(); if (next && next !== deal.name) void saveField({ name: next }, "Nome"); }} />}
             </InlineField>
-            <div><span>Situação</span><strong>{statusLabel(deal.status)}</strong></div>
+            <div className={styles.linha}><span>Situação</span><strong>{statusLabel(deal.status)}</strong></div>
             <InlineField label="Previsão" value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
               {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => { close(); void saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"); }} />}
             </InlineField>
@@ -447,7 +447,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} empty={!linkedCompany} disabled={!canWrite}>
               {(close) => <Select label="Empresa do negócio" value={deal.companyId ?? null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => { close(); void saveField({ companyId: next ? companyIdFactory.from(next) : null }, "Empresa"); }} />}
             </InlineField>
-            {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
+            {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           </div> },
           { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, content: <div className={styles.details}>
             {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
@@ -493,15 +493,15 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           </div> },
           { value: "pessoa", title: "Pessoa", icon: <Icon name="user" />, content: <div className={styles.details}>
             {linkedContact
-              ? <><div><span>Nome</span><Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link></div>
-                  {linkedContact.email && <div><span>E-mail</span><strong>{linkedContact.email}</strong></div>}
-                  {linkedContact.phone && <div><span>Telefone</span><strong>{linkedContact.phone}</strong></div>}</>
+              ? <><div className={styles.linha}><span>Nome</span><Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link></div>
+                  {linkedContact.email && <div className={styles.linha}><span>E-mail</span><strong>{linkedContact.email}</strong></div>}
+                  {linkedContact.phone && <div className={styles.linha}><span>Telefone</span><strong>{linkedContact.phone}</strong></div>}</>
               : <p className={styles.empty}>Nenhuma pessoa vinculada.</p>}
           </div> },
           { value: "empresa", title: "Empresa", icon: <Icon name="building" />, content: <div className={styles.details}>
             {linkedCompany
-              ? <><div><span>Nome</span><Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link></div>
-                  {linkedCompany.industry && <div><span>Segmento</span><strong>{linkedCompany.industry}</strong></div>}</>
+              ? <><div className={styles.linha}><span>Nome</span><Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link></div>
+                  {linkedCompany.industry && <div className={styles.linha}><span>Segmento</span><strong>{linkedCompany.industry}</strong></div>}</>
               : <p className={styles.empty}>Nenhuma empresa vinculada.</p>}
           </div> },
           ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId

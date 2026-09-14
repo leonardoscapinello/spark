@@ -36,10 +36,15 @@
 .trilha svg { width: var(--space-3); height: var(--space-3); transform: rotate(-90deg); }
 
 .details { display: grid; }
-.details > div { display: grid; grid-template-columns: minmax(var(--space-16), 38%) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-width: 0; min-height: var(--ui-controlMedium); }
-.details span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
-.details strong, .details a { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: anywhere; }
-.details a { color: var(--color-accent); }
+/* A linha «rótulo · valor» é marcada por classe, NUNCA por `.details > div`.
+ * Um seletor de descendente pegava também o invólucro de InlineField e de
+ * CustomFieldValue, virava os dois num grid de duas colunas, e a linha inteira
+ * do componente caía dentro da primeira — 38% do painel. Era isso que quebrava
+ * «Implantação Acme» uma letra por linha. */
+.linha { display: grid; grid-template-columns: minmax(var(--space-16), 38%) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-width: 0; min-height: var(--ui-controlMedium); }
+.linha > span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+.linha > strong, .linha > a { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: break-word; }
+.linha > a { color: var(--color-accent); }
 
 .editForm { display: grid; gap: var(--space-4); }
 .formActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }

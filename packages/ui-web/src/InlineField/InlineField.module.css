@@ -31,7 +31,11 @@
    * linha. `break-word` quebra só quando a palavra não cabe. */
   overflow-wrap: break-word;
 }
-.value > span { flex: 1 1 auto; min-width: 0; }
+/* Só o texto cresce; o lápis fica do tamanho dele. Sem `min-width: 0`
+ * de propósito: o piso automático do item flex é a palavra mais longa, e é
+ * ele que impede o valor de virar uma coluna de letras. */
+.value > span:first-child { flex: 1 1 auto; }
+.value > .pencil { flex: 0 0 auto; }
 .value:hover { background: var(--ui-subtle); border-color: var(--color-line); }
 .value:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .value[data-empty="true"] { color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }
