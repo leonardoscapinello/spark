@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { and, eq, isNull, useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact, optimisticSavedView } from "@spark/data";
-import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus, type SavedViewVisibility } from "@spark/core";
+import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus, type SavedViewVisibility, customFieldOptions } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { usePreference } from "../lib/preferences.client";
@@ -246,7 +246,7 @@ export default function Contacts() {
       label: field.label,
       group: "Campos personalizados",
       type: field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "multi_select" ? "list" : field.type === "single_select" ? "select" : "text",
-      ...(field.options.length > 0 ? { options: field.options.map((option) => ({ value: option, label: option })) } : {}),
+      ...(customFieldOptions(field).length > 0 ? { options: customFieldOptions(field).map((option) => ({ value: option, label: option })) } : {}),
     })),
   ], [companies, customFields, users]);
 

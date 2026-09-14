@@ -27,6 +27,23 @@ export const ArchiveCustomFieldInputSchema = z.object({ archived: z.boolean() })
 export const CustomFieldWriteResponseSchema = z.object({ field: CustomFieldDefinitionSchema, txid: z.number().int() });
 export type CustomFieldWriteResponse = z.infer<typeof CustomFieldWriteResponseSchema>;
 
+/**
+ * As opções como lista, venha de onde vier.
+ *
+ * `options` é `jsonb` no banco e a sincronização entrega o valor como o texto
+ * cru que o Postgres mandou — o schema Zod só transforma escrita local, nunca
+ * leitura sincronizada. Ler direto com `.map` estoura a tela. Enquanto a
+ * coluna não vira tabela própria, toda leitura passa por aqui.
+ */
+export function customFieldOptions(field: Pick<CustomFieldDefinition, "options">): string[] {
+  const raw: unknown = field.options;
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw === "string") {
+    try { const parsed: unknown = JSON.parse(raw); return Array.isArray(parsed) ? parsed.map(String) : []; } catch { return []; }
+  }
+  return [];
+}
+
 export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: unknown): unknown {
   if (value === "" || value === null || value === undefined) { if (field.required) throw new Error(`${field.label} é obrigatório.`); return null; }
   if (field.type === "text" || field.type === "paragraph") return String(value).trim();
@@ -40,8 +57,8 @@ export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: u
   if (field.type === "phone") { try { return normalizePhone(String(value)); } catch { throw new Error(`${field.label} precisa ser um telefone válido.`); } }
   // Sem `new URL`: o core não depende de plataforma (roda em Node, navegador e RN).
   if (field.type === "url") { const raw = String(value).trim().replace(/\s/g, ""); const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`; if (!/^https?:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/[^\s]*)?$/i.test(withScheme)) throw new Error(`${field.label} precisa ser um endereço web.`); return withScheme; }
-  if (field.type === "single_select") { const selected = String(value); if (!field.options.includes(selected)) throw new Error(`Opção inválida em ${field.label}.`); return selected; }
-  const selected = Array.isArray(value) ? value.map(String) : []; if (selected.some((item) => !field.options.includes(item))) throw new Error(`Opção inválida em ${field.label}.`); return selected;
+  if (field.type === "single_select") { const selected = String(value); if (!customFieldOptions(field).includes(selected)) throw new Error(`Opção inválida em ${field.label}.`); return selected; }
+  const selected = Array.isArray(value) ? value.map(String) : []; const allowed = customFieldOptions(field); if (selected.some((item) => !allowed.includes(item))) throw new Error(`Opção inválida em ${field.label}.`); return selected;
 }
 
 /**

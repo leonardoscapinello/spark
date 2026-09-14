@@ -20,7 +20,7 @@ export default function PublicForm() {
   const fields: LeadFormField[] = form.fields.map((field) => ({
     ...field,
     required: field.required ?? false,
-    options: field.options ?? [],
+    options: Array.isArray(field.options) ? field.options : [],
   }));
   const [values, setValues] = useState<Record<string, string | boolean>>({});
   const [website, setWebsite] = useState("");

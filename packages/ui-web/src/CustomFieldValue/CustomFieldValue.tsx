@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { normalizeCustomFieldValue, type CustomFieldDefinition } from "@spark/core";
+import { customFieldOptions, normalizeCustomFieldValue, type CustomFieldDefinition } from "@spark/core";
 import { Button } from "../Button/Button.js";
 import { Checkbox } from "../Checkbox/Checkbox.js";
 import { DatePicker, DateTimePicker } from "../DateTimePicker/DateTimePicker.js";
@@ -58,8 +58,8 @@ export function CustomFieldValue({ field, value, disabled = false, onSave, onErr
   const row = (control: ReactNode) => <div className={s.row}><span className={s.label}>{field.label}{field.required && <span className={s.required} aria-label="obrigatório">*</span>}</span><div className={s.control}>{control}</div></div>;
 
   if (field.type === "boolean") return row(<Checkbox checked={value === true} disabled={busy} onCheckedChange={(checked) => void save(checked === true)}>{value === true ? "Sim" : "Não"}</Checkbox>);
-  if (field.type === "single_select") return row(<Select label={field.label} value={typeof value === "string" ? value : null} placeholder="Selecionar" options={field.options.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
-  if (field.type === "multi_select") return row(<Select<true> multiple label={field.label} value={Array.isArray(value) ? value.map(String) : []} placeholder="Selecionar" options={field.options.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
+  if (field.type === "single_select") return row(<Select label={field.label} value={typeof value === "string" ? value : null} placeholder="Selecionar" options={customFieldOptions(field).map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
+  if (field.type === "multi_select") return row(<Select<true> multiple label={field.label} value={Array.isArray(value) ? value.map(String) : []} placeholder="Selecionar" options={customFieldOptions(field).map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
   if (field.type === "date") return row(<DatePicker label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); void save(next); }} />);
   if (field.type === "datetime") return row(<DateTimePicker mode="datetime" label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); void save(next); }} />);
   if (field.type === "paragraph") return row(<div className={s.editor}><Textarea aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} /><SaveButton saving={saving} disabled={disabled} onClick={() => void save(draft)} /></div>);

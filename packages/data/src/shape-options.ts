@@ -1,4 +1,5 @@
 import { snakeCamelMapper } from "@electric-sql/client";
+import type { ShapeStreamOptions } from "@electric-sql/client";
 import { getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 
 /**
@@ -16,6 +17,29 @@ export function sparkShapeOptions(table: string) {
     url: `${getSparkApiBaseUrl()}/v1/shapes/${table}`,
     liveSse: true,
     columnMapper: snakeCamelMapper(),
+    parser: SPARK_PARSER,
     headers: { authorization: () => { const token = getSparkAuthToken(); return token ? `Bearer ${token}` : ""; } },
   };
 }
+
+/**
+ * O Electric entrega cada coluna como o texto que veio do Postgres; o schema
+ * Zod da coleção só transforma **escrita local**, nunca leitura sincronizada.
+ * Sem isto, um `jsonb` chega como string e `field.options.map` estoura na tela
+ * — foi exatamente o que aconteceu com as opções de um campo personalizado.
+ *
+ * Um parser por tipo de coluna, aqui, resolve para todas as coleções.
+ */
+/* O tipo `Parser` do cliente não é exportado; tirado da própria opção. */
+type SparkParser = NonNullable<ShapeStreamOptions["parser"]>;
+
+/** Valor inválido não derruba a tela: volta como veio, e quem lê decide. */
+const parseJson: SparkParser[string] = (value) => {
+  if (typeof value !== "string") return value;
+  try { return JSON.parse(value) as ReturnType<SparkParser[string]>; } catch { return value; }
+};
+const SPARK_PARSER: SparkParser = {
+  jsonb: parseJson,
+  json: parseJson,
+};
+
