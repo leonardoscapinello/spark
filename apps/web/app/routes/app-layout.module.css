@@ -133,7 +133,9 @@
   transition: opacity var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out), visibility var(--motion-duration-fast);
 }
 
-.railLink:hover,
+/* Hover é sutil (cinza); só o selecionado ganha o cartão branco com anel —
+ * senão dois itens parecem selecionados ao mesmo tempo. Mesma regra do Sidebar. */
+.railLink:hover { color: var(--color-ink); background: var(--ui-subtle); }
 .railLink[aria-current="page"] {
   color: var(--color-ink);
   background: var(--ui-selected);
@@ -166,7 +168,11 @@
   gap: var(--space-1);
 }
 
-.railModules { flex: 1; min-height: 0; width: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+/* O contêiner rola, e contêiner que rola corta o que passa da borda — o anel e a
+ * sombra do item selecionado vazam 1–5px e ficavam decepados no topo do primeiro
+ * item e nas laterais de todos. O padding dá esse espaço; a margem negativa
+ * devolve o layout exatamente onde estava. */
+.railModules { box-sizing: border-box; flex: 1; min-height: 0; width: calc(100% + var(--space-4)); margin-inline: calc(var(--space-2) * -1); padding: var(--space-2); overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
 .railModules::-webkit-scrollbar { display: none; }
 
 .railBottom {
