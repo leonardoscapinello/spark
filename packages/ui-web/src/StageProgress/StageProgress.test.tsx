@@ -28,7 +28,9 @@ it("ganho preenche a trilha inteira", () => {
   for (const stage of stages) expect(screen.getByText(stage.label).closest("li")).toHaveAttribute("data-state", "done");
 });
 
-it("mostra o tempo parado só na etapa atual", () => {
-  render(<StageProgress stages={stages} currentId="b" currentHint="6 dias" />);
-  expect(screen.getByText("· 6 dias").closest("li")).toHaveAttribute("data-state", "current");
+it("mostra o tempo de cada etapa já vivida, e não das que faltam", () => {
+  render(<StageProgress stages={stages} currentId="b" durations={{ a: "3 dias", b: "6 dias", c: "1 dia" }} />);
+  expect(screen.getByText("3 dias").closest("li")).toHaveAttribute("data-state", "done");
+  expect(screen.getByText("6 dias").closest("li")).toHaveAttribute("data-state", "current");
+  expect(screen.queryByText("1 dia")).toBeNull();
 });

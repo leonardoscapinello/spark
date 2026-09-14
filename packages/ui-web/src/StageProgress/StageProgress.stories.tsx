@@ -15,9 +15,9 @@ const stages = [
 
 export const Interativa = () => {
   const [current, setCurrent] = useState("qualified");
-  return <StageProgress stages={stages} currentId={current} currentHint="6 dias nesta etapa" onSelect={setCurrent} />;
+  return <StageProgress stages={stages} currentId={current} durations={{ new: "2 dias", contact: "5 dias", qualified: "6 dias" }} onSelect={setCurrent} />;
 };
-export const Primeira = () => <StageProgress stages={stages} currentId="new" currentHint="hoje" onSelect={() => {}} />;
+export const Primeira = () => <StageProgress stages={stages} currentId="new" durations={{ new: "agora" }} onSelect={() => {}} />;
 export const Ganho = () => <StageProgress stages={stages} currentId="negotiation" outcome="won" />;
 export const Perdido = () => <StageProgress stages={stages} currentId="proposal" outcome="lost" />;
-export const SomenteLeitura = () => <StageProgress stages={stages} currentId="contact" currentHint="12 dias nesta etapa" />;
+export const SomenteLeitura = () => <StageProgress stages={stages} currentId="contact" durations={{ new: "3 dias", contact: "12 dias" }} />;

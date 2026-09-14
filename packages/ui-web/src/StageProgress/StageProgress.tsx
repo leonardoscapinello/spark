@@ -11,8 +11,9 @@ export interface StageProgressProps<Id extends string = string> {
   stages: readonly StageProgressItem[];
   /** Etapa onde o registro está agora. */
   currentId: Id | null;
-  /** Rótulo de apoio dentro da etapa atual — «6 dias nesta etapa». */
-  currentHint?: string;
+  /** Tempo que o registro passou em cada etapa, por id — «3 dias», «5 h».
+   * A etapa atual mostra o tempo corrente; as vencidas, o que levaram. */
+  durations?: Readonly<Record<string, string>>;
   /** Ganho/perdido encerra o funil: nenhuma etapa fica "a fazer". */
   outcome?: "won" | "lost" | undefined;
   /** Sem isto a barra é só leitura (sem permissão de mover, ou negócio fechado). */
@@ -29,7 +30,7 @@ export interface StageProgressProps<Id extends string = string> {
  * Só desenha e avisa quem clicou. Quem decide se pode mover, e o que fazer
  * com isso, é a tela (ADR-0020).
  */
-export function StageProgress<Id extends string = string>({ stages, currentId, currentHint, outcome, onSelect, label = "Etapas do funil" }: StageProgressProps<Id>) {
+export function StageProgress<Id extends string = string>({ stages, currentId, durations, outcome, onSelect, label = "Etapas do funil" }: StageProgressProps<Id>) {
   const currentIndex = stages.findIndex((stage) => stage.id === currentId);
   const tone = outcome === "lost" ? "lost" : outcome === "won" ? "won" : "open";
 
@@ -39,10 +40,11 @@ export function StageProgress<Id extends string = string>({ stages, currentId, c
         : index < currentIndex ? "done"
         : index === currentIndex ? "current"
         : "todo";
+      const duration = durations?.[stage.id];
       const content = <>
         {state === "done" && <Icon name="check" className={s.check} />}
         <span className={s.label}>{stage.label}</span>
-        {state === "current" && currentHint && <span className={s.hint}>· {currentHint}</span>}
+        {duration && state !== "todo" && <span className={s.hint}>{duration}</span>}
       </>;
       return <li key={stage.id} className={s.step} data-state={state}>
         {onSelect

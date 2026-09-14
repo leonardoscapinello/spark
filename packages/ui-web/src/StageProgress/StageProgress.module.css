@@ -57,7 +57,9 @@ button.action:hover { background: var(--color-line); color: var(--color-ink); }
 .root[data-tone="lost"] .step[data-state="current"] .action { background: var(--color-statusDanger); color: var(--ui-buttonInk); }
 
 .label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.hint { font-weight: var(--typography-weight-regular); opacity: 0.85; }
+/* O tempo fica numa cápsula translúcida, para separar do nome da etapa sem
+ * competir com ele — é o que o Pipedrive faz dentro da seta. */
+.hint { flex-shrink: 0; padding-inline: var(--space-1); border-radius: var(--radius-full); background: color-mix(in srgb, currentColor 14%, transparent); font-weight: var(--typography-weight-regular); font-size: var(--typography-size-xs); }
 .check { flex: 0 0 var(--space-3); width: var(--space-3); height: var(--space-3); }
 
 @media (prefers-reduced-motion: reduce) { .action { transition: none; } }

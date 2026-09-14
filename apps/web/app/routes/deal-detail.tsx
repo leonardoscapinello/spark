@@ -23,9 +23,12 @@ import {
   parseBasisPoints,
   productId as productIdFactory,
   type DealProduct,
+  millisecondsByStage,
+  stageVisits,
+  formatStageDuration,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert } from "@spark/data";
-import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, RecordPageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -138,6 +141,18 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
   const isOpen = deal?.status === "open";
+  /* Tempo em cada etapa, reconstruído do histórico (packages/core/rules/stageDuration) —
+   * sem coluna nova: os eventos de mudança já contam essa história. */
+  const stageDurations = useMemo(() => {
+    if (!deal) return {};
+    const changes = events
+      .filter((event) => event.type === "deal.stage_changed")
+      .map((event) => ({ stageId: String((event.data as { stageId?: string } | null)?.stageId ?? ""), occurredAt: event.occurredAt }))
+      .filter((change) => change.stageId);
+    const firstStage = changes.length > 0 ? pipelineStages[0]?.id ?? deal.stageId : deal.stageId;
+    const totals = millisecondsByStage(stageVisits(deal.createdAt, firstStage, changes, new Date()), new Date());
+    return Object.fromEntries([...totals].map(([stageId, ms]) => [stageId, formatStageDuration(ms)]));
+  }, [deal, events, pipelineStages]);
   const itemsSummary = useMemo(() => dealProductsSummary(dealItems.map((item) => ({ ...item, unitAmount: syncedAmount(item.unitAmount) }))), [dealItems]);
   // «Foco» é o que ainda não foi feito, do mais antigo para o mais novo — o que
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
@@ -340,11 +355,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   }
 
   return <PageFrame className={styles.page}>
-    <RecordPageHeader
+    <PageHeader
       back={<BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
       icon="briefcase"
       title={deal.name}
-      description={`${formatBRL(syncedAmount(deal.amount))}${deal.expectedCloseDate ? ` · previsão ${formatDate(deal.expectedCloseDate)}` : ""}`}
       actions={<>
         {/* Trocar o responsável é um clique no próprio nome — sem abrir o formulário de edição. */}
         <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
@@ -370,7 +384,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       {pipelineStages.length > 0 && <StageProgress
         stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
         currentId={deal.stageId}
-        currentHint={daysInStage(events.find((item) => item.type === "deal.stage_changed")?.occurredAt ?? deal.createdAt)}
+        durations={stageDurations}
         outcome={deal.status === "open" ? undefined : deal.status}
         {...(canMove && isOpen ? { onSelect: (id: string) => void moveDeal(id) } : {})}
       />}
@@ -534,14 +548,6 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
     </ActionModal>
   </PageFrame>;
-}
-
-/** Há quanto tempo o negócio está nesta etapa — o «6 dias» do Pipedrive.
- * Sem coluna própria no banco: o último `deal.stage_changed` é o marco, e
- * enquanto não houve mudança nenhuma vale a criação. */
-function daysInStage(since: string): string {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(since).getTime()) / 86_400_000));
-  return days === 0 ? "hoje" : days === 1 ? "1 dia aqui" : `${days} dias aqui`;
 }
 
 function statusLabel(status: DealStatus): string { return status === "open" ? "Em aberto" : status === "won" ? "Ganho" : "Perdido"; }
