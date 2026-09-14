@@ -109,7 +109,7 @@ Não está na lista: revisão visual manual, teste exploratório, cobertura mín
 1. **Regra de domínio vive em `packages/core`.** Cálculo, validação e política — lá, e só lá.
 2. **Nenhum elemento HTML nativo fora de `packages/ui-web`.** Sem `<input>`, `<select>`, `<textarea>`, `<button>` no código de aplicação.
 3. **Zero geração de schema em runtime.** Sem DDL por tenant, sem entidade de ORM dinâmica, sem GraphQL gerado.
-4. **Um só banco.** Postgres é a fonte da verdade. Valkey é transporte; R2 são bytes.
+4. **Um só banco, e ele é remoto.** O Postgres de produção no Supabase é a fonte da verdade. Não existe Postgres local, de desenvolvimento ou de homologação. Valkey é transporte; R2 são bytes.
 5. **Leitura não vai à rede.** Tela de trabalho lê de coleção local. Chamada de rede na renderização de tela sincronizada é bug de arquitetura.
    **Existem dois caminhos de leitura** — o sync (nosso app) e a API (terceiros e relatórios). Os dois consomem a **mesma** política de `packages/core/policy`. Escrever regra de acesso em só um deles é vazamento de dado ([ADR-0026](docs/adr/0026-superficie-da-api.md)).
 6. **Nada de valor literal de design.** Cor, espaço, raio e tipografia vêm de `packages/tokens`.

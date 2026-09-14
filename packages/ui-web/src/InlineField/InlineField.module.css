@@ -18,14 +18,23 @@
 .field:first-child .row { border-top: 0; padding-top: 0; }
 
 .label {
+  display: block;
   min-width: 0;
   padding-top: var(--space-2);
   color: var(--color-inkMuted);
   font-size: var(--typography-size-sm);
   line-height: var(--ui-tabLine);
-  overflow-wrap: break-word;
+  /* Uma linha só: a altura da linha do painel fica igual em todo campo. */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .control { min-width: 0; font-size: var(--typography-size-sm); }
+.required { margin-inline-start: var(--space-1); color: var(--color-statusDanger); }
+
+/* Campo que precisa da largura toda (texto longo): o controle desce. */
+.row[data-block="true"] { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+.row[data-block="true"] .label { padding-top: 0; }
 
 /* Em edição: o campo ocupa o espaço e o «fechar» fica ao lado, do tamanho
  * dele. Desistir tem de ser visível, não só uma tecla que ninguém adivinha. */
@@ -71,9 +80,14 @@
    * largo, e o valor quebraria uma letra por linha. */
   overflow-wrap: break-word;
 }
-.value > span:first-child { flex: 1 1 auto; }
+.value > span:first-child { flex: 1 1 auto; min-width: 0; }
+/* Endereço longo não empurra a linha: corta com reticências, e o valor inteiro
+ * continua no rótulo acessível e a um clique de distância. */
+.value[data-link="true"] > span:first-child { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .value:hover { background: var(--ui-subtle); border-color: var(--color-line); }
 .value:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+/* Valor que aponta para um endereço se lê como link. */
+.value[data-link="true"]:not([data-empty="true"]) { color: var(--color-accent); }
 .value[data-disabled="true"] { cursor: default; }
 .value[data-disabled="true"]:hover { background: transparent; border-color: transparent; }
 

@@ -11,36 +11,14 @@ import { config as loadEnv } from "dotenv";
 // O banco do app é o da API (docs/operacao/ambientes.md): sem DATABASE_URL no ambiente, lê apps/api/.env.
 loadEnv({ path: ["../../apps/api/.env", ".env"] });
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) throw new Error("DATABASE_URL is required; Spark has no local database fallback.");
 const MIGRATIONS_DIR = new URL("../migrations", import.meta.url).pathname;
-
-async function ensurePrivileges() {
-  // supabase/postgres images don't grant CREATE on `public` or CREATE on
-  // the database to the `postgres` role by default (only USAGE) — the
-  // real superuser there is `supabase_admin`. CREATE PUBLICATION (migration
-  // 0001) needs the latter; CREATE TABLE needs the former. On plain
-  // Postgres this is a no-op (the role already owns everything). See
-  // migration 0000 for context.
-  const adminUrl = DATABASE_URL.replace(/postgres:([^@]+)@/, "supabase_admin:$1@");
-  const admin = postgres(adminUrl, { prepare: false, max: 1 });
-  try {
-    await admin`GRANT CREATE ON SCHEMA public TO postgres`;
-    await admin`GRANT CREATE ON DATABASE spark TO postgres`;
-    console.log("✓ privileges ensured via supabase_admin (CREATE on schema + database)");
-  } catch (error) {
-    console.log(`  (grant via supabase_admin skipped: ${error.message})`);
-  } finally {
-    await admin.end();
-  }
-}
 
 async function main() {
   const sql = postgres(DATABASE_URL, { prepare: false, max: 1 });
 
   try {
-    await ensurePrivileges();
-
     await sql`
       CREATE TABLE IF NOT EXISTS _spark_migrations (
         tag text PRIMARY KEY,

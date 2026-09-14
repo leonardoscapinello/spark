@@ -15,7 +15,7 @@ import { AppModule } from "../src/app.module.js";
 import { seedPermissionGroup } from "./permissions.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
-const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.TEST_DATABASE_URL!;
 const admin = postgres(DATABASE_URL, { prepare: false });
 
 const org = orgIdFactory.create();

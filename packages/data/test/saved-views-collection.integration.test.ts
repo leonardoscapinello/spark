@@ -17,9 +17,8 @@ import { setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client
 import { createSavedViewsCollection, optimisticSavedView, type SavedViewsCollection } from "../src/saved-views-collection.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
-const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
-// O Electric dos testes é o do Docker local — o do app aponta para o banco real (docs/operacao/ambientes.md).
-const TEST_ELECTRIC_URL = process.env.TEST_ELECTRIC_URL ?? "http://localhost:3010";
+const DATABASE_URL = process.env.TEST_DATABASE_URL!;
+const TEST_ELECTRIC_URL = process.env.TEST_ELECTRIC_URL!;
 const PORT = 3214; // distinct from 3211 (api-client), 3212 (contacts), 3213 (deals), 3000 (dev)
 
 const admin = postgres(DATABASE_URL, { prepare: false });

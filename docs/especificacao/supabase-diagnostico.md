@@ -15,15 +15,17 @@ Data: 11/09/2026. Projeto: `vrxjqqqsoqfaxzanebtf`. Acesso fornecido pelo usuári
 | `wal_level` | `logical` |
 | Publicações | `supabase_realtime`; publicação Electric ausente |
 | Auth JWKS | HTTP 200, chave pública com algoritmo ES256 |
-| Configuração local do repositório | Continua usando banco local |
+| Configuração local do repositório | Diagnóstico histórico; substituído pela regra de banco único remoto |
 
 O projeto contém os schemas gerenciados de Auth, Storage, Realtime e outros serviços Supabase. “Sem tabelas Spark” não significa projeto inteiro sem dados. Não foram inspecionados usuários, objetos de armazenamento ou configurações administrativas desses serviços.
 
 ## Diferenças que precisam ser resolvidas antes de conectar o app
 
-### 1. Migração escrita para o ambiente local
+### 1. Migração (situação histórica, já resolvida)
 
-`packages/db/scripts/migrate.mjs` tenta conceder privilégios por uma conexão derivada para `supabase_admin` e usa o nome de banco local `spark` em um `GRANT`. A conexão remota fornecida usa banco `postgres` e usuário qualificado pelo projeto. Esse procedimento não deve ser executado sem adaptação para o ambiente gerenciado.
+O runner foi adaptado para exigir `DATABASE_URL` e apontar somente ao projeto
+Supabase. Não existe fallback local nem tentativa de fabricar uma conexão
+`supabase_admin`.
 
 A migration inicial cria `app_user` com senha literal de desenvolvimento. O provisionamento remoto deve separar criação/configuração da role e segredo do conteúdo versionado. A aplicação usa role restrita com contexto de tenant; a conexão administrativa de inspeção não deve virar a conexão de runtime.
 

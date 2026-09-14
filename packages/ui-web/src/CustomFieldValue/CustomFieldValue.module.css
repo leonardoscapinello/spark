@@ -1,46 +1,5 @@
-/* Campo do painel de detalhes: rótulo à esquerda, valor à direita.
- *
- * A coluna do rótulo é LARGURA FIXA, vinda de token, e não porcentagem. É o
- * que faz o valor de toda linha do painel começar no mesmo lugar — linha com
- * campo, linha só de leitura, linha de campo personalizado. Com porcentagem,
- * cada bloco calculava a sua e o painel virava um ziguezague.
- *
- * `align-items: start` em vez de `center`: rótulo de duas linhas alinha pelo
- * topo com o campo, em vez de centralizar e encostar na linha de baixo. */
-.field { container-type: inline-size; }
-
-.row {
-  display: grid;
-  grid-template-columns: var(--ui-fieldLabelColumn) minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-3);
-  padding-block: var(--space-3);
-  border-top: var(--ui-hairline) solid var(--color-line);
-}
-.field:first-child .row { border-top: 0; padding-top: 0; }
-
-/* Texto longo não cabe numa coluna estreita: o campo desce para a largura
- * toda, com o rótulo em cima. Mesma regra para qualquer campo que precise de
- * espaço para ser preenchido. */
-.row[data-block="true"] { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
-
-.label {
-  min-width: 0;
-  /* Empurra o rótulo para a linha de base do campo ao lado, que tem borda. */
-  padding-top: var(--space-2);
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
-  line-height: var(--ui-tabLine);
-  overflow-wrap: break-word;
-}
-.row[data-block="true"] .label { padding-top: 0; }
-.required { margin-inline-start: var(--space-1); color: var(--color-statusDanger); }
-
-.control { min-width: 0; font-size: var(--typography-size-sm); }
+/* A geometria da linha vive em InlineField: campo personalizado e campo do
+ * sistema são a mesma coisa para quem usa, e ter duas folhas dizendo a mesma
+ * medida foi o que desalinhou o painel antes. Aqui fica só o que é próprio do
+ * editor de campo personalizado. */
 .area { width: 100%; min-height: calc(2 * var(--ui-controlMedium)); resize: vertical; }
-
-/* Abaixo disso nem o campo caberia ao lado do rótulo. */
-@container (max-width: 240px) {
-  .row { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
-  .label { padding-top: 0; font-size: var(--typography-size-compact); }
-}

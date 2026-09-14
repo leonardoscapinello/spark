@@ -16,7 +16,8 @@ import { config as loadEnv } from "dotenv";
 // O banco do app é o da API (docs/operacao/ambientes.md): sem DATABASE_URL no ambiente, lê apps/api/.env.
 loadEnv({ path: ["../../apps/api/.env", ".env"] });
 
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) throw new Error("DATABASE_URL is required; Spark has no local database fallback.");
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const orgArg = args[args.indexOf("--org") + 1];

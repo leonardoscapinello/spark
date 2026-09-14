@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse } from "react-router";
 import type { Route } from "./+types/root";
+import { TooltipProvider } from "@spark/ui-web";
 import "@spark/tokens/css";
 import "./app.css";
 
@@ -24,7 +25,10 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function Root() {
-  return <Outlet />;
+  /* Uma dica só por vez em toda a aplicação: o provedor coordena o atraso de
+   * abertura entre elas, senão cada campo abriria a sua com o tempo cheio e a
+   * coluna piscaria a cada passada de mouse. */
+  return <TooltipProvider><Outlet /></TooltipProvider>;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

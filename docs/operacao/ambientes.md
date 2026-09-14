@@ -14,17 +14,14 @@ ele; abrir o app em outro dispositivo é ver os mesmos dados.
 | Semeador (`pnpm seed:demo --org …`) | `DATABASE_URL` | idem — semeia o banco real, de propósito e com `--org` explícito |
 | Web (`apps/web`) | a API local (`:3000`) e o Supabase Auth | `apps/web/.env.local` |
 
-## Testes automatizados nunca tocam o banco do app
+## Não existe banco local nem homologação
 
-Os testes de integração e e2e **criam e apagam organizações**. Eles usam
-`TEST_DATABASE_URL` — por padrão o Postgres do Docker local
-(`postgresql://postgres:spark_dev@localhost:5432/spark`) — e o setup dos e2e
-(`apps/api/test/setup.ts`) sobrescreve `DATABASE_URL` com esse valor antes de
-a API carregar, porque o `.env` da API traz a URL real. No CI as duas
-variáveis apontam para o Postgres do job.
-
-O Docker (`docker compose up -d`) continua existindo por isso: Postgres e
-Electric locais servem aos testes, não ao app.
+O único banco persistente do Spark é o Postgres de produção no Supabase.
+`localhost:5432`, container de Postgres e fallback silencioso para banco de
+desenvolvimento são proibidos. Testes puros rodam normalmente; testes de
+integração que criam/apagam dados só rodam quando a infraestrutura fornece
+explicitamente `TEST_DATABASE_URL`. Sem essa variável eles são excluídos, nunca
+redirecionados ao banco de produção.
 
 Projeto Supabase do Spark: **`aiqbhzugqwbcraifhyxl`** (organização Human Studio, São Paulo) — criado em 14/09/2026; Auth e banco no mesmo projeto. A configuração de Auth (site URL, redirecionamentos) vive em `supabase/config.toml` e sobe com `supabase config push`.
 
@@ -32,8 +29,8 @@ Projeto Supabase do Spark: **`aiqbhzugqwbcraifhyxl`** (organização Human Studi
 
 - **Conexão direta**, não o pooler em modo transação: Electric precisa de
   replicação lógica, e as migrations criam publicação e papel (`app_user`).
-- O comando de migração já tolera o que o Supabase não permite (o grant via
-  `supabase_admin` é pulado; o banco lá se chama `postgres`, não `spark`).
+- O comando de migração usa somente `DATABASE_URL`; não tenta fabricar uma
+  conexão administrativa ou nome de banco local.
 - `http://localhost:3100/**` (e a URL pública do app) na lista de Redirect
   URLs do Auth, para links de recuperação caírem na página de nova senha.
 

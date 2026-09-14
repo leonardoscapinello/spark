@@ -47,9 +47,8 @@ import {
 } from "../src/deals-collection.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
-const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
-// O Electric dos testes é o do Docker local — o do app aponta para o banco real (docs/operacao/ambientes.md).
-const TEST_ELECTRIC_URL = process.env.TEST_ELECTRIC_URL ?? "http://localhost:3010";
+const DATABASE_URL = process.env.TEST_DATABASE_URL!;
+const TEST_ELECTRIC_URL = process.env.TEST_ELECTRIC_URL!;
 const PORT = 3213; // dedicated to this test — distinct from 3211/3212/3000
 
 const admin = postgres(DATABASE_URL, { prepare: false });

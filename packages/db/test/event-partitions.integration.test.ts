@@ -4,14 +4,14 @@
  * novo cai na partição certa, e uma linha fora de qualquer horizonte cai na
  * DEFAULT (migration 0028) em vez de derrubar a transação.
  *
- * Precisa do Postgres local com as migrations aplicadas — CI faz os dois.
+ * Só roda quando a infraestrutura fornece TEST_DATABASE_URL explicitamente.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import postgres from "postgres";
 import { orgId as orgIdFactory, eventId as eventIdFactory } from "@spark/core";
 import { createDbClient, ensureEventPartitions, ensureMessagePartitions } from "../src/index.js";
 
-const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.TEST_DATABASE_URL!;
 const admin = postgres(DATABASE_URL, { prepare: false });
 const db = createDbClient(DATABASE_URL);
 const org = orgIdFactory.create();

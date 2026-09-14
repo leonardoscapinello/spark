@@ -16,8 +16,7 @@ import {
   dealId as dealIdFactory,
 } from "@spark/core";
 
-const DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.TEST_DATABASE_URL!;
 const APP_DATABASE_URL = DATABASE_URL.replace(
   /postgres:([^@]+)@/,
   "app_user:app_user_dev_password@",

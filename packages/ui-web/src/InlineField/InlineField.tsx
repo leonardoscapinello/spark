@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "../Icon/Icon.js";
+import { Tooltip } from "../Tooltip/Tooltip.js";
 import s from "./InlineField.module.css";
 
 export interface InlineFieldProps {
@@ -10,6 +11,16 @@ export interface InlineFieldProps {
   empty?: boolean;
   /** Só leitura: continua legível, deixa de ser clicável. */
   disabled?: boolean;
+  /** Marca o campo como obrigatório ao lado do rótulo. */
+  required?: boolean;
+  /** Campo que precisa da largura toda: o controle desce para baixo do rótulo. */
+  block?: boolean;
+  /**
+   * Endereço que o valor aponta. Com ele, o valor parado vira link: um clique
+   * edita, dois cliques abrem. Quem só quer ver para onde vai não precisa
+   * entrar em modo de edição para descobrir.
+   */
+  href?: string;
   /**
    * O campo de edição. Recebe `close`, que a tela chama depois de gravar —
    * um `Select` fecha ao escolher, um texto fecha ao sair do campo.
@@ -31,16 +42,26 @@ export interface InlineFieldProps {
  * Desistir tem três saídas, e todas fecham sem gravar: `Esc`, clicar fora, e o
  * botão de fechar ao lado do campo.
  */
-export function InlineField({ label, value, empty = false, disabled = false, children }: InlineFieldProps) {
+export function InlineField({ label, value, empty = false, disabled = false, required = false, block = false, href, children }: InlineFieldProps) {
   const [open, setOpen] = useState(false);
   const holder = useRef<HTMLDivElement>(null);
 
-  // O controle acabou de substituir um botão: sem levar o foco junto, quem
-  // navega por teclado perde o lugar na tela.
+  /* O controle acabou de substituir um botão: sem levar o foco junto, quem
+   * navega por teclado perde o lugar na tela.
+   *
+   * E quando o controle é um GATILHO — calendário, seleção, busca — ele abre
+   * sozinho. Sem isso são dois cliques para uma ação só: o primeiro troca o
+   * texto pelo botão, o segundo abre o calendário. Num painel com dez campos
+   * isso é o dobro de cliques o dia inteiro.
+   *
+   * Campo de digitar (`input`, `textarea`) só recebe o foco: abrir não
+   * significa nada ali, e o cursor já está no lugar certo. */
   useEffect(() => {
     if (!open) return;
-    const focusable = holder.current?.querySelector<HTMLElement>("input, select, textarea, button, [tabindex]");
-    focusable?.focus();
+    const control = holder.current?.querySelector<HTMLElement>("input, select, textarea, button, [tabindex]");
+    if (!control) return;
+    control.focus();
+    if (control.tagName === "BUTTON" || control.getAttribute("aria-haspopup") !== null) control.click();
   }, [open]);
 
   /* Clicar fora desiste. `pointerdown` e não `click`: o clique num item de
@@ -61,23 +82,41 @@ export function InlineField({ label, value, empty = false, disabled = false, chi
     return () => document.removeEventListener("pointerdown", onPointerDown, true);
   }, [open]);
 
+  /* Rótulo em UMA linha, cortado com reticências, e a dica mostra o inteiro.
+   *
+   * «Orçamento do cliente» quebrava em duas linhas e desalinhava a coluna toda,
+   * e um painel com dez campos ficava com altura irregular. Cortar mantém o
+   * ritmo; a dica devolve o que foi cortado sem custar um clique. */
+  const rotulo = (
+    <Tooltip content={label} pinOnClick={false} size="compact">
+      <span className={s.label}>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</span>
+    </Tooltip>
+  );
+
   if (!open || disabled) {
     return (
       <div className={s.field}>
-        <div className={s.row}>
-          <span className={s.label}>{label}</span>
+        <div className={s.row} data-block={block}>
+          {rotulo}
           <div className={s.control}>
             <button
               type="button"
               className={s.value}
               data-empty={empty}
               data-disabled={disabled}
-              aria-label={disabled ? `${label}: ${textOf(value)}` : `Alterar ${label}. Valor atual: ${textOf(value)}`}
+              data-link={href !== undefined}
+              aria-label={disabled ? `${label}: ${textOf(value)}` : `Alterar ${label}. Valor atual: ${textOf(value)}${href ? ". Dois cliques abrem o endereço." : ""}`}
               disabled={disabled}
               onClick={() => setOpen(true)}
+              onDoubleClick={() => {
+                if (href === undefined) return;
+                // Abrir ganha do editar: quem clicou duas vezes queria o destino.
+                setOpen(false);
+                window.open(href, "_blank", "noopener,noreferrer");
+              }}
             >
               <span>{value}</span>
-              {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name="pencil" /></span>}
+              {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name={href === undefined ? "pencil" : "link"} /></span>}
             </button>
           </div>
         </div>
@@ -87,8 +126,8 @@ export function InlineField({ label, value, empty = false, disabled = false, chi
 
   return (
     <div className={s.field}>
-      <div className={s.row}>
-        <span className={s.label}>{label}</span>
+      <div className={s.row} data-block={block}>
+        {rotulo}
         <div
           className={s.control}
           ref={holder}

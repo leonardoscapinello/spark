@@ -16,17 +16,15 @@ Drizzle schema + migrations. See `docs/adr/0005`, `docs/adr/0021`, `docs/adr/002
 ## Commands
 
 ```bash
-docker compose up -d postgres   # start the local Postgres (see note below)
 pnpm db:generate                # generate a migration from packages/db/src/schema
-pnpm db:migrate                 # apply pending migrations/*.sql
-pnpm test                       # includes the RLS isolation test — needs Postgres up and migrated
+pnpm db:migrate                 # apply pending migrations to DATABASE_URL (produção)
+pnpm test                       # integração só com TEST_DATABASE_URL explícita
 ```
 
 `db:migrate` runs `scripts/migrate.mjs`, not `drizzle-kit migrate` — the drizzle-kit CLI hangs reproducibly in this kind of environment (the spinner just spins forever, never actually connecting or returning an error). The custom script is deterministic: it reads `migrations/*.sql` in order, applies whatever's missing, and records it in `_spark_migrations`. Use `pnpm db:generate` to create a new migration from the schema — that works fine through the CLI, it's only `migrate` that hangs.
 
-### ⚠️ `listen_addresses` — why docker-compose has this flag
-
-The `supabase/postgres` image listens only on `127.0.0.1`/`::1` by default — correct inside their full stack (everything on the same Docker network, behind Kong), wrong when something **outside** the container (your `DATABASE_URL` pointing at `localhost:5432`) tries to connect: the connection arrives through the container's interface, not loopback, and Postgres drops it **silently** — no auth error, it just closes. `docker-compose.yml` already sets `-c listen_addresses=*` for this. If the base image ever changes, confirm this flag is still there.
+There is no local Postgres fallback. The only persistent database is the
+Supabase production project documented in `docs/operacao/ambientes.md`.
 
 ## Hand-written migrations, outside drizzle-kit's journal
 

@@ -8,7 +8,8 @@ import { defineConfig } from "vitest/config";
 
 export const sharedTestConfig = defineConfig({
   test: {
-    exclude: ["**/node_modules/**", "**/.git/**", "**/dist/**", "**/.turbo/**"],
+    exclude: ["**/node_modules/**", "**/.git/**", "**/dist/**", "**/.turbo/**", ...(process.env.TEST_DATABASE_URL ? [] : ["**/*.integration.test.ts", "**/*.e2e.test.ts"])],
+    passWithNoTests: true,
     // Persist transformed modules between runs so small UI changes do not rebuild the test graph.
     fsModuleCache: true,
   },
