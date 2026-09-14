@@ -1,7 +1,17 @@
 import { z } from "zod";
 import { zCustomFieldDefinitionId, zOrgId, zServerTimestamp, zUserId } from "./zodHelpers.js";
+import { phone as normalizePhone } from "../format/phone.js";
+import { formatBRL, money, toCents } from "../money/index.js";
 export const CUSTOM_FIELD_ENTITIES = ["contact", "company", "deal"] as const;
-export const CUSTOM_FIELD_TYPES = ["text", "number", "date", "boolean", "single_select", "multi_select"] as const;
+/* Tipos na ordem em que aparecem no seletor. Os cinco últimos foram trazidos do
+ * Pipedrive (docs/inspiration/pipedrive): moeda, data e hora, telefone, endereço
+ * web e texto longo — o que um CRM pede e "texto" não resolve. */
+export const CUSTOM_FIELD_TYPES = ["text", "paragraph", "number", "currency", "date", "datetime", "phone", "url", "boolean", "single_select", "multi_select"] as const;
+export const CUSTOM_FIELD_TYPE_LABELS: Record<CustomFieldType, string> = {
+  text: "Texto", paragraph: "Texto longo", number: "Número", currency: "Moeda (R$)",
+  date: "Data", datetime: "Data e hora", phone: "Telefone", url: "Endereço web",
+  boolean: "Sim/Não", single_select: "Seleção única", multi_select: "Seleção múltipla",
+};
 export type CustomFieldEntity = (typeof CUSTOM_FIELD_ENTITIES)[number]; export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
 export const CustomFieldDefinitionSchema = z.object({ id: zCustomFieldDefinitionId, orgId: zOrgId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), key: z.string().min(1), label: z.string().min(1), type: z.enum(CUSTOM_FIELD_TYPES), required: z.boolean(), options: z.array(z.string()), createdBy: zUserId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp, archivedAt: zServerTimestamp.nullable() });
 export type CustomFieldDefinition = z.infer<typeof CustomFieldDefinitionSchema>;
@@ -13,10 +23,17 @@ export type CustomFieldWriteResponse = z.infer<typeof CustomFieldWriteResponseSc
 
 export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: unknown): unknown {
   if (value === "" || value === null || value === undefined) { if (field.required) throw new Error(`${field.label} é obrigatório.`); return null; }
-  if (field.type === "text") return String(value).trim();
+  if (field.type === "text" || field.type === "paragraph") return String(value).trim();
   if (field.type === "number") { const parsed = typeof value === "number" ? value : Number(value); if (!Number.isFinite(parsed)) throw new Error(`${field.label} precisa ser um número.`); return parsed; }
+  // Moeda em centavos inteiros, como todo dinheiro no sistema (packages/core/money).
+  if (field.type === "currency") { const parsed = typeof value === "number" ? value : Number(String(value).replace(/\./g, "").replace(",", ".")); if (!Number.isFinite(parsed)) throw new Error(`${field.label} precisa ser um valor.`); return toCents(money(Math.round(parsed * 100))); }
   if (field.type === "boolean") return value === true;
   if (field.type === "date") { const parsed = new Date(String(value)); if (Number.isNaN(parsed.getTime())) throw new Error(`${field.label} precisa ser uma data.`); return parsed.toISOString().slice(0, 10); }
+  if (field.type === "datetime") { const parsed = new Date(String(value)); if (Number.isNaN(parsed.getTime())) throw new Error(`${field.label} precisa ser uma data e hora.`); return parsed.toISOString(); }
+  // Telefone passa pela mesma regra do telefone da pessoa — um formato só no sistema.
+  if (field.type === "phone") { try { return normalizePhone(String(value)); } catch { throw new Error(`${field.label} precisa ser um telefone válido.`); } }
+  // Sem `new URL`: o core não depende de plataforma (roda em Node, navegador e RN).
+  if (field.type === "url") { const raw = String(value).trim().replace(/\s/g, ""); const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`; if (!/^https?:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/[^\s]*)?$/i.test(withScheme)) throw new Error(`${field.label} precisa ser um endereço web.`); return withScheme; }
   if (field.type === "single_select") { const selected = String(value); if (!field.options.includes(selected)) throw new Error(`Opção inválida em ${field.label}.`); return selected; }
   const selected = Array.isArray(value) ? value.map(String) : []; if (selected.some((item) => !field.options.includes(item))) throw new Error(`Opção inválida em ${field.label}.`); return selected;
 }
@@ -35,6 +52,8 @@ export function formatCustomFieldValue(field: CustomFieldDefinition, value: unkn
   if (field.type === "boolean") return value === true ? "Sim" : "Não";
   if (field.type === "number") return typeof value === "number" && Number.isFinite(value) ? new Intl.NumberFormat("pt-BR").format(value) : String(value);
   if (field.type === "date") { const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value)); return match ? `${match[3]}/${match[2]}/${match[1]}` : String(value); }
+  if (field.type === "currency") return typeof value === "number" && Number.isFinite(value) ? formatBRL(money(value)) : String(value);
+  if (field.type === "datetime") { const parsed = new Date(String(value)); return Number.isNaN(parsed.getTime()) ? String(value) : new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(parsed); }
   if (field.type === "multi_select") return Array.isArray(value) ? value.map(String).join(", ") : String(value);
   return String(value);
 }

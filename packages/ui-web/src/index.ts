@@ -73,3 +73,5 @@ export { QuickNavigation, type QuickNavigationProps, type QuickNavigationItem } 
 export { Timeline, type TimelineItem } from "./Timeline/Timeline.js";
 export { FilePicker, type FilePickerProps } from "./FilePicker/FilePicker.js";
 export { LeadFormRenderer, type LeadFormRendererProps } from "./LeadForm/LeadForm.js";
+export * from "./StageProgress/StageProgress.js";
+export * from "./CustomFieldValue/CustomFieldValue.js";

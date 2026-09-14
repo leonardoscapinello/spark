@@ -10,11 +10,9 @@ import {
   companyId as companyIdFactory,
   type ActivityType,
   type IdentityChannel,
-  normalizeCustomFieldValue,
-  type CustomFieldDefinition,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity } from "@spark/data";
-import { BackLink, Button, Checkbox, DatePicker, DateTimePicker, ErrorText, Field, Input, Label, Select, Skeleton, Timeline, RecordPageHeader, notify } from "@spark/ui-web";
+import { BackLink, Button, CustomFieldValue, DateTimePicker, ErrorText, Field, Input, Label, RecordPageHeader, Select, Skeleton, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -342,7 +340,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
       {customFields.filter((field) => !field.archivedAt).length > 0 && <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Campos personalizados</h2>
         <div className={styles.campos}>
-          {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldEditor key={field.id} field={field} value={data.customFields[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} />)}
+          {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue key={field.id} field={field} value={data.customFields[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })} />)}
         </div>
       </section>}
 
@@ -445,11 +443,3 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   );
 }
 
-function CustomFieldEditor({ field, value, disabled, onSave }: { field: CustomFieldDefinition; value: unknown; disabled: boolean; onSave: (value: unknown) => Promise<void> }) {
-  const initial = field.type === "multi_select" && Array.isArray(value) ? value.join(", ") : value === null || value === undefined ? "" : String(value); const [draft, setDraft] = useState(initial); const [saving, setSaving] = useState(false);
-  async function save(raw: unknown) { setSaving(true); try { await onSave(normalizeCustomFieldValue(field, raw)); notify({ title: `${field.label} atualizado`, tone: "success" }); } catch (cause) { notify({ title: "Valor inválido", description: cause instanceof Error ? cause.message : "Revise o campo.", tone: "error" }); } finally { setSaving(false); } }
-  if (field.type === "boolean") return <div className={styles.campo}><span className={styles.rotulo}>{field.label}</span><Checkbox checked={value === true} disabled={disabled || saving} onCheckedChange={(checked) => void save(checked === true)}>{value === true ? "Sim" : "Não"}</Checkbox></div>;
-  if (field.type === "single_select") return <div className={styles.campo}><span className={styles.rotulo}>{field.label}</span><Select label={field.label} value={typeof value === "string" ? value : null} placeholder="Selecionar" options={field.options.map((option) => ({ value: option, label: option }))} disabled={disabled || saving} onValueChange={(next) => void save(next)} /></div>;
-  if (field.type === "date") return <div className={styles.campo}><span className={styles.rotulo}>{field.label}</span><DatePicker label={field.label} value={draft} disabled={disabled || saving} onValueChange={(next) => { setDraft(next); void save(next); }} /></div>;
-  return <Field><Label>{field.label}</Label><div className={styles.acoesEdicao}><Input type={field.type === "number" ? "number" : "text"} value={draft} disabled={disabled || saving} placeholder={field.type === "multi_select" ? "Valores separados por vírgula" : "Sem valor"} onChange={(event) => setDraft(event.target.value)} /><Button size="sm" variant="secondary" loading={saving} disabled={disabled} onClick={() => void save(field.type === "multi_select" ? draft.split(",").map((item) => item.trim()).filter(Boolean) : draft)}>Salvar</Button></div></Field>;
-}

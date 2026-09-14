@@ -10505,8 +10505,13 @@
             "type": "string",
             "enum": [
               "text",
+              "paragraph",
               "number",
+              "currency",
               "date",
+              "datetime",
+              "phone",
+              "url",
               "boolean",
               "single_select",
               "multi_select"
@@ -10569,8 +10574,13 @@
                 "type": "string",
                 "enum": [
                   "text",
+                  "paragraph",
                   "number",
+                  "currency",
                   "date",
+                  "datetime",
+                  "phone",
+                  "url",
                   "boolean",
                   "single_select",
                   "multi_select"

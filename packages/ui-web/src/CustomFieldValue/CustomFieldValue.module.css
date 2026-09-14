@@ -1,0 +1,9 @@
+/* Linha «rótulo · valor» do painel de detalhes (Intercom, captura 051):
+ * rótulo apagado à esquerda, controle à direita, tudo em 14px. */
+.row { display: grid; grid-template-columns: minmax(var(--space-16), 34%) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-height: var(--ui-controlMedium); }
+.label { min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); overflow-wrap: anywhere; }
+.required { margin-inline-start: var(--space-1); color: var(--color-statusDanger); }
+.control { min-width: 0; font-size: var(--typography-size-sm); }
+.editor { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.editor > :first-child { flex: 1; min-width: 0; }
+@media (max-width: 640px) { .row { grid-template-columns: minmax(0, 1fr); align-items: stretch; } }

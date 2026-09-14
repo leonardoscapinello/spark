@@ -93,17 +93,19 @@ const modules: NavModule[] = [
   ] },
   { id: "admin", title: "Configurações", icon: "settings", to: "/admin", sections: [
     { title: "Início", items: [{ label: "Início", to: "/admin", icon: "grid" }] },
-    { title: "Área de trabalho", items: [
+    // Agrupado por assunto, como Intercom e Pipedrive: quem procura um campo
+    // vai em «Dados», quem procura um acesso vai em «Pessoas e acesso».
+    { title: "Pessoas e acesso", icon: "team", items: [
       { label: "Usuários", to: "/admin/users", icon: "user", capability: "users:manage" },
       { label: "Times", to: "/admin/teams", icon: "team", capability: "users:manage" },
       { label: "Grupos de permissões", to: "/admin/permission-groups", icon: "settings", capability: "permission_groups:manage" },
-    ] },
-    { title: "Canais", items: [
-      { label: "Integrações", to: "/integrations", icon: "bolt", capability: "integrations:read" },
-    ] },
-    { title: "Dados", items: [
       { label: "Auditoria", to: "/admin/audit-log", icon: "file", capability: "audit_logs:read" },
-      { label: "Campos personalizados", to: "/settings", icon: "file", capability: "settings:manage" },
+    ] },
+    { title: "Dados", icon: "file", items: [
+      { label: "Campos personalizados", to: "/admin/data/custom-fields", icon: "file", capability: "settings:manage" },
+    ] },
+    { title: "Canais e integrações", icon: "bolt", items: [
+      { label: "Integrações", to: "/integrations", icon: "bolt", capability: "integrations:read" },
     ] },
   ] },
 ];
@@ -133,7 +135,7 @@ function pathMatches(pathname: string, to: string, search = "") {
 
 function moduleForPath(pathname: string): NavModule {
   if (pathname === "/security") return accountModule;
-  if (pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/integrations" || pathname === "/settings") return modules[7]!;
+  if (pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/integrations") return modules[7]!;
   if (pathname.startsWith("/contacts/") || pathname === "/" || pathname.startsWith("/companies")) return modules[1]!;
   if (["/deals", "/activities", "/catalog"].some((route) => pathMatches(pathname, route))) return modules[2]!;
   if (pathname.startsWith("/inbox")) return modules[3]!;

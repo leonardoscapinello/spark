@@ -32,6 +32,8 @@ import { createContactsCollection, optimisticContact, type ContactsCollection } 
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+// O Electric dos testes é o do Docker local — o do app aponta para o banco real (docs/operacao/ambientes.md).
+const TEST_ELECTRIC_URL = process.env.TEST_ELECTRIC_URL ?? "http://localhost:3010";
 const PORT = 3212; // dedicated to this test — distinct from 3211 (api-client) and 3000 (dev)
 
 const admin = postgres(DATABASE_URL, { prepare: false });
@@ -95,6 +97,7 @@ beforeAll(async () => {
       ...process.env,
       PORT: String(PORT),
       DATABASE_URL,
+      ELECTRIC_URL: TEST_ELECTRIC_URL,
       SUPABASE_JWT_SECRET: JWT_SECRET,
       NODE_ENV: "test",
       TS_NODE_TRANSPILE_ONLY: "true",

@@ -3831,8 +3831,13 @@ export type CreateCustomFieldDtoType = typeof CreateCustomFieldDtoType[keyof typ
 
 export const CreateCustomFieldDtoType = {
   text: 'text',
+  paragraph: 'paragraph',
   number: 'number',
+  currency: 'currency',
   date: 'date',
+  datetime: 'datetime',
+  phone: 'phone',
+  url: 'url',
   boolean: 'boolean',
   single_select: 'single_select',
   multi_select: 'multi_select',
@@ -3877,8 +3882,13 @@ export type CustomFieldWriteResponseDtoFieldType = typeof CustomFieldWriteRespon
 
 export const CustomFieldWriteResponseDtoFieldType = {
   text: 'text',
+  paragraph: 'paragraph',
   number: 'number',
+  currency: 'currency',
   date: 'date',
+  datetime: 'datetime',
+  phone: 'phone',
+  url: 'url',
   boolean: 'boolean',
   single_select: 'single_select',
   multi_select: 'multi_select',

@@ -1,0 +1,63 @@
+/* Trilha de etapas do Pipedrive (captura 001): faixa de 24px, setas encaixadas,
+ * etapa atual sólida. Aqui com a paleta da casa — azul de marca no lugar do
+ * verde, âmbar/vermelho só no desfecho (ADR-0033, ADR-0034). */
+.root {
+  display: flex;
+  align-items: stretch;
+  gap: var(--ui-hairline);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.root::-webkit-scrollbar { display: none; }
+
+.step { flex: 1 1 0; min-width: var(--space-16); display: flex; }
+
+.action {
+  box-sizing: border-box;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 0;
+  height: var(--ui-controlSmall);
+  padding-inline: var(--space-4);
+  border: 0;
+  font-family: var(--typography-fontFamily-body);
+  font-size: var(--typography-size-compact);
+  font-weight: var(--typography-weight-medium);
+  line-height: var(--ui-tabLine);
+  white-space: nowrap;
+  background: var(--ui-subtle);
+  color: var(--color-inkMuted);
+  /* A seta: entalhe à esquerda, ponta à direita. A primeira não tem entalhe e
+   * a última não tem ponta, então as pontas da faixa ficam retas. */
+  clip-path: polygon(0 0, calc(100% - var(--space-2)) 0, 100% 50%, calc(100% - var(--space-2)) 100%, 0 100%, var(--space-2) 50%);
+  transition: background-color var(--motion-duration-fast) var(--motion-ease-out), color var(--motion-duration-fast) var(--motion-ease-out);
+}
+.step:first-child .action { clip-path: polygon(0 0, calc(100% - var(--space-2)) 0, 100% 50%, calc(100% - var(--space-2)) 100%, 0 100%); border-start-start-radius: var(--radius-sm); border-end-start-radius: var(--radius-sm); }
+.step:last-child .action { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--space-2) 50%); border-start-end-radius: var(--radius-sm); border-end-end-radius: var(--radius-sm); }
+.step:only-child .action { clip-path: none; border-radius: var(--radius-sm); }
+
+button.action { cursor: pointer; }
+button.action:hover { background: var(--color-line); color: var(--color-ink); }
+.action:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(var(--ui-focusWidth) * -1); }
+
+.step[data-state="done"] .action { background: var(--color-accentWash); color: var(--color-accent); }
+.step[data-state="done"] button.action:hover { background: var(--color-line); color: var(--color-ink); }
+.step[data-state="current"] .action { background: var(--color-accent); color: var(--ui-buttonInk); font-weight: var(--typography-weight-semibold); }
+.step[data-state="current"] button.action:hover { background: var(--ui-buttonHover); color: var(--ui-buttonInk); }
+
+/* Desfecho: ganho pinta a trilha inteira, perdido marca só a etapa onde parou. */
+.root[data-tone="won"] .step[data-state="done"] .action { background: color-mix(in srgb, var(--color-statusSuccess) 16%, transparent); color: var(--color-statusSuccess); }
+.root[data-tone="lost"] .step[data-state="current"] .action { background: var(--color-statusDanger); color: var(--ui-buttonInk); }
+
+.label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.hint { font-weight: var(--typography-weight-regular); opacity: 0.85; }
+.check { flex: 0 0 var(--space-3); width: var(--space-3); height: var(--space-3); }
+
+@media (prefers-reduced-motion: reduce) { .action { transition: none; } }

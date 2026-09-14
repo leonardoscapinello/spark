@@ -18,6 +18,8 @@ import { createSavedViewsCollection, optimisticSavedView, type SavedViewsCollect
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+// O Electric dos testes é o do Docker local — o do app aponta para o banco real (docs/operacao/ambientes.md).
+const TEST_ELECTRIC_URL = process.env.TEST_ELECTRIC_URL ?? "http://localhost:3010";
 const PORT = 3214; // distinct from 3211 (api-client), 3212 (contacts), 3213 (deals), 3000 (dev)
 
 const admin = postgres(DATABASE_URL, { prepare: false });
@@ -73,7 +75,7 @@ beforeAll(async () => {
 
   apiProcess = spawn("node", ["--loader", "ts-node/esm", "src/main.ts"], {
     cwd: new URL("../../../apps/api", import.meta.url).pathname,
-    env: { ...process.env, PORT: String(PORT), DATABASE_URL, SUPABASE_JWT_SECRET: JWT_SECRET, NODE_ENV: "test", TS_NODE_TRANSPILE_ONLY: "true" },
+    env: { ...process.env, PORT: String(PORT), DATABASE_URL, ELECTRIC_URL: TEST_ELECTRIC_URL, SUPABASE_JWT_SECRET: JWT_SECRET, NODE_ENV: "test", TS_NODE_TRANSPILE_ONLY: "true" },
     stdio: ["ignore", "pipe", "pipe"],
   });
   await waitForApiReady(apiProcess);
