@@ -112,6 +112,13 @@ Medido contra as capturas 028 (tabela de atendimento) e 031 (modal "Criar visual
 | Item selecionado da sidebar | sombra íntegra com vizinho em hover | hover do vizinho cobria a sombra | selecionado acima dos irmãos (`z-index`) | `Sidebar` |
 | Filtros da coleção | Intercom: visão + filtro em modal; Pipedrive: construtor com grupos E/OU | chips soltos que empilhavam e empurravam a busca | pílula «Filtros · N» → construtor com grupos, E/OU, calendário, seleção múltipla | `FilterBar`, `core/filter` |
 
+| Kanban do CRM (Pipedrive 020) | coluna ~280/8/raio 8, card 264 raio 8 pad 8 gap 4, nome 16/600, soma 13 | coluna 320/16/raio 16, card raio 10 pad 12 gap 8 | igual ao Pipedrive; token `--ui-kanbanColumnWidth` | `deals.module.css` |
+| Herói do perfil (051) | avatar 72, nome 24/600, metadados 14 | nome 19, metadados 12 | igual | `RecordHero` |
+| Cartão de detalhes do perfil (051) | raio 8, 16, linha «rótulo · valor» 14 | raio 10, 24, rótulo caixa alta 12 sobre valor 16 | igual | `contact-detail.module.css` |
+| «Buscar conversas» (Atendimento) | item de navegação 32, 8 de respiro | parecia campo cinza colado no item | `SidebarItem` botão | `Sidebar`, `inbox.tsx` |
+| Módulo selecionado no rail | anel íntegro; hover sutil | anel decepado pelo overflow; hover = selecionado | folga de 8px na lista; hover cinza | `app-layout.module.css` |
+| Linha de filtros da lista de conversas | 40 (chips 24, 8/16) | 44, 12 lateral | 40, 8/16 | `inbox.module.css` |
+
 Armadilha registrada: o Base UI só marca `data-focused` dentro de `<Field>`. Estilo de foco que dependa do atributo falha em toda barra de busca (que fica fora de `Field`) e deixa o outline padrão do navegador aparecer. Usar `:focus`/`:focus-within` reais.
 
 Ainda diferente e deixado de propósito: a tabela da Intercom assenta sobre fundo `surface2` com a linha selecionada em cartão branco; a nossa é branca com seleção em `accentWash`. Mudança de linguagem, não de medida — decidir em ADR antes de mexer.
