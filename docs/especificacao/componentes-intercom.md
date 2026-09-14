@@ -108,6 +108,10 @@ Medido contra as capturas 028 (tabela de atendimento) e 031 (modal "Criar visual
 | Modal | 640, raio 12, cabeçalho 64 + hairline, título 16, corpo 24, rodapé 64 + hairline | 560, raio 16, cabeçalho 24 solto, título 19 | igual à Intercom | `Modal`, token `--ui-modalWidth` |
 | Item da navegação lateral | 212 × 32, 4 × 12, raio 8, selecionado branco | igual | igual | `Sidebar` |
 
+| Sidebar do módulo | título 64, primeiro item colado, seções a 12, cabeçalho de seção 32 | 16+16 no título, 24 na primeira seção, cabeçalho ~40 | igual à Intercom | `Sidebar` |
+| Item selecionado da sidebar | sombra íntegra com vizinho em hover | hover do vizinho cobria a sombra | selecionado acima dos irmãos (`z-index`) | `Sidebar` |
+| Filtros da coleção | Intercom: visão + filtro em modal; Pipedrive: construtor com grupos E/OU | chips soltos que empilhavam e empurravam a busca | pílula «Filtros · N» → construtor com grupos, E/OU, calendário, seleção múltipla | `FilterBar`, `core/filter` |
+
 Armadilha registrada: o Base UI só marca `data-focused` dentro de `<Field>`. Estilo de foco que dependa do atributo falha em toda barra de busca (que fica fora de `Field`) e deixa o outline padrão do navegador aparecer. Usar `:focus`/`:focus-within` reais.
 
 Ainda diferente e deixado de propósito: a tabela da Intercom assenta sobre fundo `surface2` com a linha selecionada em cartão branco; a nossa é branca com seleção em `accentWash`. Mudança de linguagem, não de medida — decidir em ADR antes de mexer.
