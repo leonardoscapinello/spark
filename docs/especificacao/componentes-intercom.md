@@ -88,3 +88,26 @@ A largura é arrastada pela alça na borda direita do cabeçalho, que responde n
 A reordenação é por arrasto do cabeçalho ou por `Control`/`Command` com as setas. Ela opera sobre a lista completa de colunas, não sobre a visível: uma coluna escondida entre duas visíveis não engole o movimento, e uma coluna nova que a ordem ainda não conhece entra no fim em vez de sumir. `moveColumn` e `applyColumnOrder` ficam em `columnOrder.ts`, testados à parte.
 
 Diferenças conhecidas em relação à captura 030: os itens do catálogo ainda não têm ícone por coluna, e o popover tem título visível em vez de apenas o campo de busca. Nenhuma medição independente do popup de colunas da Intercom foi feita — a composição segue o primitivo `Popover` já existente. O comportamento de largura também não foi medido contra a Intercom: com `table-layout: fixed` a tabela ocupa 100 % da largura disponível e ajustar uma coluna redistribui o resto, em vez de fazer a tabela crescer e rolar.
+
+## Passada de fidelidade — 14/09/2026
+
+Medido contra as capturas 028 (tabela de atendimento) e 031 (modal "Criar visualização") e contra `medidas-inbox-shadow-dom.json`. Cada linha foi corrigida **no componente**, então vale em todas as telas (ADR-0020). Valores em px; "antes" é o que o app mostrava antes desta passada.
+
+| Elemento | Intercom | Antes | Agora | Onde |
+|---|---|---|---|---|
+| Linha de título | 64, sem risco embaixo, ~8 até a barra | 64 + hairline, 16 até a barra | 64, sem risco, 8 | `PageFrame` |
+| Título | 20/600, linha 32 | 19/600 | 19/600 (1 px, mantido) | `PageHeader` |
+| Campo de busca | ~220 × 32 | 320 × 40 | 220 × 32 | `CollectionToolbar` re-escopa `--ui-fieldHeight` |
+| Campo com ícone | mesma altura do campo simples | 2 px mais alto | igual | `Input` `.adorned` é o campo (border-box) |
+| Foco em campo | um anel | 2–3 anéis (borda + outline com gap + outline do navegador) | um anel: borda + sombra encostada | `Input` (`:focus`, não `[data-focused]`), `surfaces .trigger` |
+| Busca → filtros | hairline vertical, 16 de cada lado | gap 8 | 16 · hairline · 16 | `CollectionToolbar` |
+| Chip de filtro | pílula 32 | 32 | 32 | já batia |
+| Cabeçalho da tabela | 40, 14/600 apagado | ~30, 13/500 | 40, 14/600 apagado | `DataTable` |
+| Linha da tabela | 14/400, ~16 de respiro (66 com avatar) | 12 de padding (~46) | 16 de padding (53) | `DataTable` |
+| Botões | pílula 32, 14/600, 8 × 12 | igual | igual | `Button` |
+| Modal | 640, raio 12, cabeçalho 64 + hairline, título 16, corpo 24, rodapé 64 + hairline | 560, raio 16, cabeçalho 24 solto, título 19 | igual à Intercom | `Modal`, token `--ui-modalWidth` |
+| Item da navegação lateral | 212 × 32, 4 × 12, raio 8, selecionado branco | igual | igual | `Sidebar` |
+
+Armadilha registrada: o Base UI só marca `data-focused` dentro de `<Field>`. Estilo de foco que dependa do atributo falha em toda barra de busca (que fica fora de `Field`) e deixa o outline padrão do navegador aparecer. Usar `:focus`/`:focus-within` reais.
+
+Ainda diferente e deixado de propósito: a tabela da Intercom assenta sobre fundo `surface2` com a linha selecionada em cartão branco; a nossa é branca com seleção em `accentWash`. Mudança de linguagem, não de medida — decidir em ADR antes de mexer.
