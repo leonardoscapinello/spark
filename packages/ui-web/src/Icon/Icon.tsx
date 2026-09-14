@@ -38,6 +38,7 @@ const paths = {
   chart: "M2 13V8m4 5V3m4 10V6m4 7V1M1 14h14",
   team: "M6 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm6 .5a2 2 0 1 0 0 4M1.5 14v-2a4.5 4.5 0 0 1 9 0v2m1.5-5a3 3 0 0 1 2.5 3v2",
   exit: "M6 2H2v12h4m4-9 4 3-4 3m4-3H5",
+  pin: "M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5Zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z",
 } as const;
 export type IconName = keyof typeof paths;
 export function Icon({ name, ...props }: { name: IconName } & Omit<ComponentProps<"svg">, "children">) {

@@ -110,6 +110,16 @@ const accountModule: NavModule = { id: "account", title: "Perfil", icon: "accoun
   { title: "Conta", items: [{ label: "Segurança", to: "/security", icon: "settings" }] },
 ] };
 
+const RAIL_PINNED_KEY = "spark_rail_pinned";
+
+// Fixar o trilho é preferência de quem usa a máquina, não da organização —
+// mora no navegador, não sincroniza (diferente das colunas escondidas de
+// contacts.tsx, que também são por navegador pelo mesmo motivo: escolha de
+// tela, não regra de negócio).
+function readRailPinned(): boolean {
+  try { return localStorage.getItem(RAIL_PINNED_KEY) === "true"; } catch { return false; }
+}
+
 function pathMatches(pathname: string, to: string, search = "") {
   const [route, query] = to.split("?");
   const routeMatches = route === "/"
@@ -192,7 +202,17 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const [accountProfile, setAccountProfile] = useState(session);
   const [quickNavigationOpen, setQuickNavigationOpen] = useState(false);
-  const [railExpanded, setRailExpanded] = useState(false);
+  const [railPinned, setRailPinned] = useState(readRailPinned);
+  const [railHovered, setRailHovered] = useState(false);
+  const railExpanded = railPinned || railHovered;
+
+  function toggleRailPinned() {
+    setRailPinned((current) => {
+      const next = !current;
+      try { localStorage.setItem(RAIL_PINNED_KEY, String(next)); } catch { /* modo privado: a escolha vale só nesta sessão */ }
+      return next;
+    });
+  }
   const [tabIndicator, setTabIndicator] = useState<{ left: number; width: number } | null>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
@@ -308,8 +328,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
 
   return (
     <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
-      <NavigationRail className={styles.rail} data-expanded={railExpanded || undefined} onPointerEnter={(event) => { if (event.pointerType === "mouse") setRailExpanded(true); }} onPointerLeave={(event) => { if (event.pointerType === "mouse") setRailExpanded(false); }} onFocusCapture={() => setRailExpanded(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setRailExpanded(false); }}>
+      <NavigationRail className={styles.rail} data-expanded={railExpanded || undefined} data-pinned={railPinned || undefined} onPointerEnter={(event) => { if (event.pointerType === "mouse") setRailHovered(true); }} onPointerLeave={(event) => { if (event.pointerType === "mouse") setRailHovered(false); }} onFocusCapture={() => setRailHovered(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setRailHovered(false); }}>
         <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><img className={styles.brandWordmark} src="/brand/leonardo-scapinello-ink.svg" alt="" /></Link>
+        <Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railPin} aria-label={railPinned ? "Recolher módulos automaticamente" : "Fixar módulos sempre abertos"} aria-pressed={railPinned} onClick={toggleRailPinned} icon={<Icon name="pin" />} />
         <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.mobileModuleMenu}>
           <MenuButton variant="ghost" shape="rounded" className={styles.mobileModuleTrigger} icon={<Icon name={current.icon} />} aria-label={`Módulo atual: ${current.title}. Mudar módulo`} menu={<MenuGroup label="Módulos">{visibleModules.filter((module) => module.id !== "admin").map((module) => {

@@ -15,6 +15,22 @@
   grid-template-columns: var(--ui-railWidth) minmax(0, 1fr);
 }
 
+@media (min-width: 761px) {
+  /* O trilho expandido (hover ou fixado) precisa mesmo empurrar a coluna,
+     não flutuar por cima: a largura das colunas internas do trilho já
+     crescia para --ui-railFlyoutWidth, mas a própria célula do grid
+     continuava em --ui-railWidth — o conteúdo do trilho vazava por cima do
+     início da barra lateral secundária. Corrigido fazendo a trilha do grid
+     crescer junto, não escondendo o sintoma com z-index. */
+  .shell { transition: grid-template-columns var(--motion-duration-fast) var(--motion-ease-out); }
+  .shell:has(.rail[data-expanded]) { grid-template-columns: var(--ui-railFlyoutWidth) var(--ui-sidebarWidth) minmax(0, 1fr); }
+  .shell[data-sidebar="hidden"]:has(.rail[data-expanded]) { grid-template-columns: var(--ui-railFlyoutWidth) minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell { transition: none; }
+}
+
 .rail {
   position: relative;
   z-index: var(--ui-navigationLayer);
@@ -53,6 +69,13 @@
   margin-bottom: var(--space-6);
   flex-shrink: 0;
   overflow: hidden;
+}
+
+/* Só cabe com o trilho expandido — recolhido, o ícone da marca já ocupa
+   toda a largura da coluna. Fica sobreposto ao topo do flyout, não dentro
+   do fluxo, para não empurrar os módulos para baixo quando aparece. */
+.railPin {
+  display: none;
 }
 
 .railBrand .brandSymbol {
@@ -145,7 +168,12 @@
 
 @media (min-width: 761px) {
   .railBrand, .railModules, .railBottom { transition: width var(--motion-duration-fast) var(--motion-ease-out); }
-  .rail[data-expanded] { align-items: flex-start; }
+  /* packages/ui-web fixa a largura do <nav> em --ui-railWidth (o rail
+     compartilhado); a tela precisa da própria largura para o botão de
+     fixar se posicionar contra a borda certa — sem isto ele calculava a
+     posição contra a caixa estreita de 36px, não contra o flyout de 196px
+     que os filhos já desenhavam por cima dela. */
+  .rail[data-expanded] { width: var(--ui-railFlyoutWidth); align-items: flex-start; }
   .rail[data-expanded]::before { width: var(--ui-railFlyoutWidth); background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); }
   .rail[data-expanded] .railBrand,
   .rail[data-expanded] .railModules,
@@ -161,6 +189,8 @@
   .rail[data-expanded] .railLabel { opacity: 1; visibility: visible; transform: none; }
   .rail[data-expanded] .accountMenu { justify-content: flex-start; width: 100%; }
   .rail[data-expanded] .accountLink { border-radius: var(--radius-md); }
+  .rail[data-expanded] .railPin { display: flex; position: absolute; top: var(--space-2); inset-inline-end: var(--space-2); z-index: 1; }
+  .rail[data-pinned] .railPin { color: var(--color-accent); }
 }
 
 @media (prefers-reduced-motion: reduce) { .railLink, .railLabel, .brandSymbol, .brandWordmark, .rail::before, .railBrand, .railModules, .railBottom { transition: none; } }
@@ -297,6 +327,7 @@
   .rail::before { display: none; }
 
   .railBrand { margin: 0 var(--space-2) 0 0; flex-shrink: 0; }
+  .railPin { display: none; }
   .railModules { display: none; }
   .mobileModuleMenu { display: flex; flex: 1 1 auto; min-width: 0; }
   .mobileModuleTrigger { width: 100%; min-width: 0; justify-content: flex-start; overflow: hidden; white-space: nowrap; }
