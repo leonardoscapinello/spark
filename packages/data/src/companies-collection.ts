@@ -4,6 +4,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { CompanySchema, companyId, type Company, type CreateCompanyInput, type OrgId } from "@spark/core";
 import { companiesControllerArchive, companiesControllerCreate, companiesControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { confirmed } from "./confirmed.js";
 
 export function optimisticCompany(input: Omit<CreateCompanyInput, "id">, orgId: OrgId): Company {
   const now = new Date().toISOString();
@@ -44,7 +45,7 @@ export function createCompaniesCollection() {
         website: company.website, industry: company.industry, email: company.email,
         phone: company.phone, address: company.address, customFields: company.customFields, tags: company.tags,
       });
-      return { txid: response.txid };
+      return confirmed(response);
     },
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0];
@@ -52,7 +53,7 @@ export function createCompaniesCollection() {
       const changed = Object.keys(mutation.changes);
       if (changed.length === 1 && changed[0] === "deletedAt") {
         const response = await companiesControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
-        return { txid: response.txid };
+        return confirmed(response);
       }
       const allowed = new Set(["parentCompanyId", "ownerId", "name", "legalName", "taxId", "website", "industry", "email", "phone", "address", "customFields", "tags"]);
       if (!changed.length || !changed.every((field) => allowed.has(field))) throw new Error(`Unsupported company field(s): ${changed.join(", ")}.`);
@@ -70,7 +71,7 @@ export function createCompaniesCollection() {
         ...(changed.includes("customFields") ? { customFields: mutation.modified.customFields } : {}),
         ...(changed.includes("tags") ? { tags: mutation.modified.tags } : {}),
       });
-      return { txid: response.txid };
+      return confirmed(response);
     },
   }));
 }

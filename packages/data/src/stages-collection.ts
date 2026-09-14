@@ -8,6 +8,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { StageSchema, stageId, type Stage, type CreateStageInput, type OrgId } from "@spark/core";
 import { stagesControllerCreate, stagesControllerRename, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { confirmed } from "./confirmed.js";
 
 export function optimisticStage(input: Omit<CreateStageInput, "id">, orgId: OrgId): Stage {
   const now = new Date().toISOString();
@@ -56,7 +57,7 @@ export function createStagesCollection() {
           probability: stage.probability,
         });
 
-        return { txid: response.txid };
+        return confirmed(response);
       },
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
@@ -70,7 +71,7 @@ export function createStagesCollection() {
         }
 
         const response = await stagesControllerRename(mutation.original.id, { name: mutation.modified.name });
-        return { txid: response.txid };
+        return confirmed(response);
       },
     }),
   );

@@ -10,6 +10,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { z } from "zod";
 import { DealSchema, dealId, money, toCents, type Deal, type Money, type CreateDealInput, type OrgId } from "@spark/core";
+import { confirmed } from "./confirmed.js";
 import {
   dealsControllerCreate,
   dealsControllerEdit,
@@ -145,7 +146,7 @@ export function createDealsCollection() {
           lossReason: deal.lossReason,
         });
 
-        return { txid: response.txid };
+        return confirmed(response);
       },
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
@@ -155,7 +156,7 @@ export function createDealsCollection() {
 
         if (changedFields.length === 1 && changedFields[0] === "stageId") {
           const response = await dealsControllerMove(mutation.original.id, { stageId: mutation.modified.stageId });
-          return { txid: response.txid };
+          return confirmed(response);
         }
 
         // closing (won/lost) changes "status" and, only when lost, also
@@ -173,7 +174,7 @@ export function createDealsCollection() {
             mutation.original.id,
             status === "lost" ? { status, lossReason: mutation.modified.lossReason } : { status },
           );
-          return { txid: response.txid };
+          return confirmed(response);
         }
 
         const editableFields = ["name", "amount", "contactId", "companyId", "ownerId", "expectedCloseDate"];
@@ -186,7 +187,7 @@ export function createDealsCollection() {
             ownerId: mutation.modified.ownerId,
             expectedCloseDate: mutation.modified.expectedCloseDate,
           });
-          return { txid: response.txid };
+          return confirmed(response);
         }
 
         throw new Error(

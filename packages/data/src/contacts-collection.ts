@@ -20,6 +20,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { ContactSchema, contactId, type Contact, type CreateContactInput, type OrgId } from "@spark/core";
 import { contactsControllerArchive, contactsControllerCreate, contactsControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { confirmed } from "./confirmed.js";
 
 /**
  * Builds the full row `collection.insert()` requires — the collection's
@@ -108,7 +109,7 @@ export function createContactsCollection() {
         // { txid } in the return value — that's what TanStack DB uses
         // (awaitTxId under the hood) to know Electric has already
         // replicated this write before releasing the local optimistic state.
-        return { txid: response.txid };
+        return confirmed(response);
       },
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
@@ -117,7 +118,7 @@ export function createContactsCollection() {
         const changedFields = Object.keys(mutation.changes);
         if (changedFields.length === 1 && changedFields[0] === "deletedAt") {
           const response = await contactsControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
-          return { txid: response.txid };
+          return confirmed(response);
         }
         const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId", "companyId", "score", "tags", "customFields"]);
         const isAllowed = changedFields.length > 0 && changedFields.every((field) => allowedFields.has(field));
@@ -140,7 +141,7 @@ export function createContactsCollection() {
           ...("customFields" in mutation.changes ? { customFields: mutation.modified.customFields } : {}),
         });
 
-        return { txid: response.txid };
+        return confirmed(response);
       },
     }),
   );

@@ -8,6 +8,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { PipelineSchema, pipelineId, type Pipeline, type CreatePipelineInput, type OrgId } from "@spark/core";
 import { pipelinesControllerCreate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { confirmed } from "./confirmed.js";
 
 export function optimisticPipeline(input: Omit<CreatePipelineInput, "id">, orgId: OrgId): Pipeline {
   const now = new Date().toISOString();
@@ -52,7 +53,7 @@ export function createPipelinesCollection() {
           isDefault: pipeline.isDefault,
         });
 
-        return { txid: response.txid };
+        return confirmed(response);
       },
     }),
   );

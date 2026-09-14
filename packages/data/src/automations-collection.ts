@@ -4,6 +4,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { AutomationSchema, automationId, type Automation, type OrgId } from "@spark/core";
 import { automationsControllerCreate, automationsControllerDraft, automationsControllerStatus, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { confirmed } from "./confirmed.js";
 
 export function optimisticAutomation(name: string, orgId: OrgId): Automation {
   const now = new Date().toISOString();
@@ -20,7 +21,7 @@ export function createAutomationsCollection() {
       const value = transaction.mutations[0]?.modified;
       if (!value) throw new Error("Automation insert has no mutation.");
       const response = await automationsControllerCreate({ id: value.id, name: value.name });
-      return { txid: response.txid };
+      return confirmed(response);
     },
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0];
@@ -29,7 +30,7 @@ export function createAutomationsCollection() {
       const draftFields = fields.filter((field) => field === "name" || field === "draftGraph");
       const statusFields = fields.filter((field) => field === "status");
       if (fields.some((field) => !["name", "draftGraph", "status"].includes(field))) throw new Error(`Unsupported automation field(s): ${fields.join(", ")}.`);
-      let txid = 0;
+      let txid: number | undefined;
       if (draftFields.length) {
         const response = await automationsControllerDraft(mutation.original.id, { name: mutation.modified.name, draftGraph: {
           nodes: mutation.modified.draftGraph.nodes,
@@ -42,7 +43,7 @@ export function createAutomationsCollection() {
         const response = await automationsControllerStatus(mutation.original.id, { status: mutation.modified.status });
         txid = response.txid;
       }
-      return { txid };
+      return confirmed({ txid });
     },
   }));
 }

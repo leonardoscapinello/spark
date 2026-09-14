@@ -11,6 +11,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { ActivitySchema, activityId, type Activity, type CreateActivityInput, type OrgId } from "@spark/core";
 import { activitiesControllerCreate, activitiesControllerComplete, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { confirmed } from "./confirmed.js";
 
 export function optimisticActivity(input: Omit<CreateActivityInput, "id">, orgId: OrgId): Activity {
   const now = new Date().toISOString();
@@ -64,7 +65,7 @@ export function createActivitiesCollection() {
           scheduledAt: activity.scheduledAt,
         });
 
-        return { txid: response.txid };
+        return confirmed(response);
       },
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
@@ -83,7 +84,7 @@ export function createActivitiesCollection() {
         const response = await activitiesControllerComplete(mutation.original.id, {
           completed: mutation.modified.completed,
         });
-        return { txid: response.txid };
+        return confirmed(response);
       },
     }),
   );

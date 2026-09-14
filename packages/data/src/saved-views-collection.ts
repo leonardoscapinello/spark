@@ -4,6 +4,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { SavedViewSchema, savedViewId, type OrgId, type SavedView, type SavedViewEntity, type UserId } from "@spark/core";
 import { getSparkApiBaseUrl, getSparkAuthToken, savedViewsControllerArchive, savedViewsControllerCreate } from "@spark/api-client";
+import { confirmed } from "./confirmed.js";
 
 /** Same shape the create endpoint needs; orgId/timestamps are only the
  * optimistic placeholder — Electric replaces them once Postgres confirms
@@ -39,7 +40,7 @@ export function createSavedViewsCollection() {
         if (!mutation) throw new Error("onInsert called with no pending mutation.");
         const view = mutation.modified;
         const response = await savedViewsControllerCreate({ id: view.id, entityType: view.entityType, name: view.name, filters: view.filters });
-        return { txid: response.txid };
+        return confirmed(response);
       },
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
@@ -49,7 +50,7 @@ export function createSavedViewsCollection() {
           throw new Error(`Unsupported saved view field(s): ${changedFields.join(", ")}.`);
         }
         const response = await savedViewsControllerArchive(mutation.original.id, { archived: mutation.modified.archivedAt !== null });
-        return { txid: response.txid };
+        return confirmed(response);
       },
     }),
   );

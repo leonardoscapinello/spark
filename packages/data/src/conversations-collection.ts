@@ -4,6 +4,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { ConversationSchema, conversationId, firstResponseDueAt, type Conversation, type CreateConversationInput, type OrgId } from "@spark/core";
 import { getSparkApiBaseUrl, getSparkAuthToken, inboxControllerCreate, inboxControllerUpdate } from "@spark/api-client";
+import { confirmed } from "./confirmed.js";
 
 export function optimisticConversation(input: Omit<CreateConversationInput, "id">, orgId: OrgId, assigneeId: Conversation["assigneeId"]): Conversation {
   const now = new Date().toISOString();
@@ -20,7 +21,7 @@ export function createConversationsCollection() {
       const value = transaction.mutations[0]?.modified;
       if (!value) throw new Error("Conversation insert has no mutation.");
       const response = await inboxControllerCreate({ id: value.id, contactId: value.contactId, channel: value.channel, subject: value.subject });
-      return { txid: response.txid };
+      return confirmed(response);
     },
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0];
@@ -35,7 +36,7 @@ export function createConversationsCollection() {
         ...(changed.includes("teamId") ? { teamId: mutation.modified.teamId } : {}),
         ...(changed.includes("snoozedUntil") ? { snoozedUntil: mutation.modified.snoozedUntil } : {}),
       });
-      return { txid: response.txid };
+      return confirmed(response);
     },
   }));
 }
