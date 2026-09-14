@@ -67,6 +67,48 @@ const activitiesSeed = [
   ["call", "Retorno para o Diego", 3, null, daysAgo(3, 11), true],
   ["meeting", "Apresentação para a Clínica Aurora", 8, null, daysAhead(5, 10), false],
 ];
+/* Catálogo e itens: o valor do negócio é a soma deles (packages/core/rules/dealProducts). */
+const productsSeed = [
+  ["IMPL-001", "Implantação assistida", 1_500_000, "serviço"],
+  ["LIC-MENSAL", "Licença mensal por usuário", 19_900, "usuário/mês"],
+  ["TRE-TURMA", "Treinamento da equipe (turma)", 450_000, "turma"],
+  ["SUP-PREM", "Suporte premium", 89_000, "mês"],
+];
+/* [índice do negócio, [índice do produto, quantidade em milésimos, desconto bp, imposto bp]] */
+const dealItemsSeed = [
+  [0, [[0, 1000, 0, 0], [1, 10_000, 1000, 0]]],
+  [1, [[3, 12_000, 0, 500]]],
+  [2, [[1, 5_000, 0, 0], [3, 12_000, 0, 500]]],
+  [3, [[0, 2_000, 1500, 0], [2, 3_000, 0, 0]]],
+  [4, [[2, 1_000, 0, 0]]],
+];
+const notesSeed = [
+  [0, "Reunião com o time de operações: implantação precisa caber antes do fechamento trimestral. Enviar cronograma."],
+  [0, "Decisor é o diretor de operações, não o gerente com quem falamos. Pedir apresentação para ele."],
+  [1, "Cliente comparou com dois concorrentes. Diferencial que pesou: suporte em português e prazo de implantação."],
+  [3, "Expansão depende da aprovação do orçamento de 2027 — retomar em janeiro."],
+];
+/* Campos personalizados por módulo, cobrindo os tipos novos. */
+const customFieldsSeed = [
+  ["deal", "origem_negocio", "Origem do negócio", "single_select", ["Indicação", "Site", "Evento", "Prospecção"]],
+  ["deal", "valor_previsto", "Orçamento do cliente", "currency", []],
+  ["deal", "assinatura_prevista", "Assinatura prevista", "datetime", []],
+  ["deal", "contrato_url", "Link da proposta", "url", []],
+  ["deal", "observacoes_internas", "Observações internas", "paragraph", []],
+  ["contact", "cargo", "Cargo", "text", []],
+  ["contact", "decisor", "É decisor", "boolean", []],
+  ["contact", "telefone_direto", "Telefone direto", "phone", []],
+  ["company", "porte", "Porte", "single_select", ["Pequena", "Média", "Grande"]],
+];
+/* Regras de etapa: obrigatório barra a passagem, importante só sinaliza. */
+const stageRulesSeed = [
+  [1, "contactId", "required"],
+  [2, "products", "required"],
+  [2, "custom:origem_negocio", "important"],
+  [3, "expectedCloseDate", "required"],
+  [3, "custom:contrato_url", "important"],
+];
+
 const conversationsSeed = [
   ["whatsapp", "Dúvida sobre o plano", 2, [["inbound", "Oi! Vocês fazem plano mensal?"], ["outbound", "Fazemos sim, Carla. Posso te mandar as opções?"], ["inbound", "Pode, por favor."]]],
   ["email", "Proposta comercial", 0, [["inbound", "Recebi a proposta, tenho algumas perguntas sobre o prazo."], ["outbound", "Claro, Ana — o prazo de implantação é de 3 semanas."]]],
@@ -147,7 +189,79 @@ async function run(tx) {
     }
     created += 1;
   }
+  // campos personalizados (os tipos novos, para dar o que testar em cada módulo)
+  const fieldIds = new Map();
+  for (const [entityType, key, label, type, options] of customFieldsSeed) {
+    const [existing] = await tx`select id from custom_field_definitions where org_id = ${org.id} and entity_type = ${entityType} and key = ${key}`;
+    if (existing) { fieldIds.set(key, existing.id); continue; }
+    const fid = id();
+    await tx`insert into custom_field_definitions (id, org_id, entity_type, key, label, type, required, options, created_by) values (${fid}, ${org.id}, ${entityType}, ${key}, ${label}, ${type}, false, ${JSON.stringify(options)}::jsonb, ${owner?.id ?? null})`;
+    fieldIds.set(key, fid);
+  }
+
+  // produtos do catálogo e itens dos negócios — o valor do negócio vem daqui
+  const productIds = [];
+  for (const [sku, name, price, unit] of productsSeed) {
+    const [existing] = await tx`select id from products where org_id = ${org.id} and sku = ${sku}`;
+    if (existing) { productIds.push(existing.id); continue; }
+    const pid = id();
+    await tx`insert into products (id, org_id, sku, name, description, price, currency, unit, stock, active, tags) values (${pid}, ${org.id}, ${sku}, ${name}, null, ${price}, 'BRL', ${unit}, null, true, ${JSON.stringify(["demo"])}::jsonb)`;
+    productIds.push(pid);
+  }
+
+  const dealRows = await tx`select id, name from deals where org_id = ${org.id} order by created_at`;
+  let itemsCreated = 0;
+  for (const [dealIndex, lines] of dealItemsSeed) {
+    const deal = dealRows[dealIndex];
+    if (!deal) continue;
+    const [already] = await tx`select 1 from deal_products where org_id = ${org.id} and deal_id = ${deal.id} limit 1`;
+    if (already) continue;
+    let total = 0;
+    for (const [index, [productIndex, quantityMilli, discountBp, taxBp]] of lines.entries()) {
+      const [sku, name, price] = productsSeed[productIndex];
+      void sku;
+      const gross = Math.round((price * quantityMilli) / 1000);
+      const discount = Math.round((gross * discountBp) / 10_000);
+      total += gross - discount + Math.round(((gross - discount) * taxBp) / 10_000);
+      await tx`insert into deal_products (id, org_id, deal_id, product_id, name, quantity_milli, unit_amount, discount_basis_points, tax_basis_points, sort_order) values (${id()}, ${org.id}, ${deal.id}, ${productIds[productIndex]}, ${name}, ${quantityMilli}, ${price}, ${discountBp}, ${taxBp}, ${index})`;
+      itemsCreated += 1;
+    }
+    await tx`update deals set amount = ${total}, updated_at = now() where id = ${deal.id}`;
+  }
+
+  // valores nos campos personalizados dos negócios já semeados
+  const originOptions = customFieldsSeed[0][4];
+  for (const [index, deal] of dealRows.entries()) {
+    await tx`update deals set custom_fields = ${JSON.stringify({
+      origem_negocio: originOptions[index % originOptions.length],
+      valor_previsto: 100_000 * (index + 5),
+      contrato_url: index % 2 === 0 ? `https://propostas.exemplo.com.br/${index + 1}` : null,
+    })}::jsonb where id = ${deal.id} and custom_fields = '{}'::jsonb`;
+  }
+
+  // notas: o que aconteceu, ao lado das atividades
+  let notesCreated = 0;
+  for (const [dealIndex, body] of notesSeed) {
+    const deal = dealRows[dealIndex];
+    if (!deal || !owner) continue;
+    const [already] = await tx`select 1 from notes where org_id = ${org.id} and deal_id = ${deal.id} and body = ${body}`;
+    if (already) continue;
+    await tx`insert into notes (id, org_id, deal_id, body, author_id, created_at) values (${id()}, ${org.id}, ${deal.id}, ${body}, ${owner.id}, ${daysAgo(notesCreated + 1, 14)})`;
+    notesCreated += 1;
+  }
+
+  // o que cada etapa exige
+  const stageRows = await tx`select s.id, s.sort_order, s.pipeline_id from stages s join pipelines p on p.id = s.pipeline_id where s.org_id = ${org.id} and p.name = ${pipelineName} order by s.sort_order`;
+  let rulesCreated = 0;
+  for (const [stageIndex, fieldKey, level] of stageRulesSeed) {
+    const stage = stageRows[stageIndex];
+    if (!stage) continue;
+    await tx`insert into stage_field_rules (id, org_id, pipeline_id, stage_id, field_key, level) values (${id()}, ${org.id}, ${stage.pipeline_id}, ${stage.id}, ${fieldKey}, ${level}) on conflict (org_id, stage_id, field_key) do nothing`;
+    rulesCreated += 1;
+  }
+
   console.log(`Empresas: ${companyIds.length} · pessoas: ${contactIds.length} · conversas novas: ${created}.`);
+  console.log(`Catálogo: ${productIds.length} produtos · itens em negócios: ${itemsCreated} · notas: ${notesCreated} · campos personalizados: ${fieldIds.size} · regras de etapa: ${rulesCreated}.`);
 }
 
 try {
