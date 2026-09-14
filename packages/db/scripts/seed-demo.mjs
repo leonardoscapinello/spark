@@ -133,7 +133,7 @@ async function run(tx) {
     const [existing] = await tx`select id from companies where org_id = ${org.id} and name = ${c.name} and deleted_at is null`;
     if (existing) { companyIds.push(existing.id); continue; }
     const cid = id();
-    await tx`insert into companies (id, org_id, owner_id, name, industry, website, email, phone, tags) values (${cid}, ${org.id}, ${owner?.id ?? null}, ${c.name}, ${c.industry}, ${c.website ?? null}, ${c.email ?? null}, ${c.phone ?? null}, ${JSON.stringify(["demo"])}::jsonb)`;
+    await tx`insert into companies (id, org_id, owner_id, name, industry, website, email, phone, tags) values (${cid}, ${org.id}, ${owner?.id ?? null}, ${c.name}, ${c.industry}, ${c.website ?? null}, ${c.email ?? null}, ${c.phone ?? null}, ${sql.json(["demo"])})`;
     companyIds.push(cid);
   }
 
@@ -143,7 +143,7 @@ async function run(tx) {
     const [existing] = await tx`select id from contacts where org_id = ${org.id} and name = ${name} and deleted_at is null`;
     if (existing) { contactIds.push(existing.id); continue; }
     const cid = id();
-    await tx`insert into contacts (id, org_id, name, email, phone, lead_status, source, owner_id, company_id, score, tags, created_at) values (${cid}, ${org.id}, ${name}, ${email}, ${phone}, ${leadStatus}, ${source}, ${owner?.id ?? null}, ${companyIndex === null ? null : companyIds[companyIndex]}, ${score}, ${JSON.stringify([...tags, "demo"])}::jsonb, ${daysAgo(30 - contactIds.length * 2)})`;
+    await tx`insert into contacts (id, org_id, name, email, phone, lead_status, source, owner_id, company_id, score, tags, created_at) values (${cid}, ${org.id}, ${name}, ${email}, ${phone}, ${leadStatus}, ${source}, ${owner?.id ?? null}, ${companyIndex === null ? null : companyIds[companyIndex]}, ${score}, ${sql.json([...tags, "demo"])}, ${daysAgo(30 - contactIds.length * 2)})`;
     if (email) await tx`insert into identities (id, org_id, contact_id, channel, external_value, verified) values (${id()}, ${org.id}, ${cid}, 'email', ${email}, true) on conflict do nothing`;
     if (phone) await tx`insert into identities (id, org_id, contact_id, channel, external_value, verified) values (${id()}, ${org.id}, ${cid}, 'whatsapp', ${phone}, false) on conflict do nothing`;
     contactIds.push(cid);
@@ -195,7 +195,7 @@ async function run(tx) {
     const [existing] = await tx`select id from custom_field_definitions where org_id = ${org.id} and entity_type = ${entityType} and key = ${key}`;
     if (existing) { fieldIds.set(key, existing.id); continue; }
     const fid = id();
-    await tx`insert into custom_field_definitions (id, org_id, entity_type, key, label, type, required, options, created_by) values (${fid}, ${org.id}, ${entityType}, ${key}, ${label}, ${type}, false, ${JSON.stringify(options)}::jsonb, ${owner?.id ?? null})`;
+    await tx`insert into custom_field_definitions (id, org_id, entity_type, key, label, type, required, options, created_by) values (${fid}, ${org.id}, ${entityType}, ${key}, ${label}, ${type}, false, ${sql.json(options)}, ${owner?.id ?? null})`;
     fieldIds.set(key, fid);
   }
 
@@ -205,7 +205,7 @@ async function run(tx) {
     const [existing] = await tx`select id from products where org_id = ${org.id} and sku = ${sku}`;
     if (existing) { productIds.push(existing.id); continue; }
     const pid = id();
-    await tx`insert into products (id, org_id, sku, name, description, price, currency, unit, stock, active, tags) values (${pid}, ${org.id}, ${sku}, ${name}, null, ${price}, 'BRL', ${unit}, null, true, ${JSON.stringify(["demo"])}::jsonb)`;
+    await tx`insert into products (id, org_id, sku, name, description, price, currency, unit, stock, active, tags) values (${pid}, ${org.id}, ${sku}, ${name}, null, ${price}, 'BRL', ${unit}, null, true, ${sql.json(["demo"])})`;
     productIds.push(pid);
   }
 

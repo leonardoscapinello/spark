@@ -128,8 +128,8 @@ describe("RLS — permission_groups and user_permission_groups isolate by org (d
       (${orgD}, 'Organization D', ${"org-d-" + orgD})`;
 
     await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-      (${groupOrgC}, ${orgC}, 'Manager', ${JSON.stringify(["contacts:read", "contacts:write"])}::jsonb),
-      (${groupOrgD}, ${orgD}, 'Manager', ${JSON.stringify(["contacts:read"])}::jsonb)`;
+      (${groupOrgC}, ${orgC}, 'Manager', ${admin.json(["contacts:read", "contacts:write"])}),
+      (${groupOrgD}, ${orgD}, 'Manager', ${admin.json(["contacts:read"])})`;
   });
 
   afterAll(async () => {
@@ -144,9 +144,10 @@ describe("RLS — permission_groups and user_permission_groups isolate by org (d
     });
     expect(rows).toHaveLength(1);
     expect(rows[0]?.id).toBe(groupOrgC);
-    // postgres.js (raw driver, without Drizzle's type mapping) returns
-    // jsonb as a string — explicit parse, not an application bug.
-    expect(JSON.parse(rows[0]?.capabilities as string)).toEqual(["contacts:read", "contacts:write"]);
+    // jsonb volta como array mesmo: o driver desserializa. O parse que havia
+    // aqui existia porque a escrita gravava JSON dentro de JSON (migration
+    // 0039) — era bug nosso, não do driver.
+    expect(rows[0]?.capabilities).toEqual(["contacts:read", "contacts:write"]);
   });
 
   it("org D can't see org C's group even without a WHERE", async () => {

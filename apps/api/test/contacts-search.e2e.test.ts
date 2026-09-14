@@ -42,7 +42,7 @@ beforeAll(async () => {
     (${reader}, ${org}, ${readerSub}, 'Reader', 'reader@company.com'),
     (${nobody}, ${org}, ${nobodySub}, 'Nobody', 'nobody@company.com')`;
   const group = permissionGroupIdFactory.create();
-  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES (${group}, ${org}, 'Leitor', ${JSON.stringify(["contacts:read"])}::jsonb)`;
+  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES (${group}, ${org}, 'Leitor', ${admin.json(["contacts:read"])})`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES (${org}, ${reader}, ${group})`;
   await admin`INSERT INTO contacts (id, org_id, name, email, deleted_at) VALUES
     (${jose}, ${org}, 'José Conceição', 'jose@vega.com', NULL),

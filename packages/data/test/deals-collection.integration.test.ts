@@ -93,7 +93,7 @@ beforeAll(async () => {
 
   const group = permissionGroupIdFactory.create();
   await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-    (${group}, ${org}, 'Gerente', ${JSON.stringify(["deals:read", "deals:write", "deals:move"])}::jsonb)`;
+    (${group}, ${org}, 'Gerente', ${admin.json(["deals:read", "deals:write", "deals:move"])})`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES (${org}, ${localUserId}, ${group})`;
 
   await admin`INSERT INTO pipelines (id, org_id, name, is_default) VALUES (${pipeline}, ${org}, 'Test Funnel', true)`;

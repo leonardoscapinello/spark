@@ -51,8 +51,8 @@ beforeAll(async () => {
   const managerGroup = permissionGroupIdFactory.create();
   const viewerGroup = permissionGroupIdFactory.create();
   await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-    (${managerGroup}, ${org}, 'Gerente', ${JSON.stringify(["contacts:write", "activities:read", "activities:write"])}::jsonb),
-    (${viewerGroup}, ${org}, 'Visualizador', ${JSON.stringify(["activities:read"])}::jsonb)`;
+    (${managerGroup}, ${org}, 'Gerente', ${admin.json(["contacts:write", "activities:read", "activities:write"])}),
+    (${viewerGroup}, ${org}, 'Visualizador', ${admin.json(["activities:read"])})`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
     (${org}, ${manager}, ${managerGroup}),
     (${org}, ${viewer}, ${viewerGroup})`;

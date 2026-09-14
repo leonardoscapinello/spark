@@ -45,7 +45,7 @@ beforeAll(async () => {
 
   const group = permissionGroupIdFactory.create();
   await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-    (${group}, ${org}, 'Agente', ${JSON.stringify(["contacts:write"])}::jsonb)`;
+    (${group}, ${org}, 'Agente', ${admin.json(["contacts:write"])})`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES (${org}, ${userWithGroup}, ${group})`;
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
