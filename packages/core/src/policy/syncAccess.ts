@@ -51,11 +51,12 @@ export const SYNC_RESOURCES = [
   "saved_views",
   "user_preferences",
   "user_preference_items",
+  "link_previews",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
 const READ_REQUIREMENTS: Record<
-  Exclude<SyncResource, "organizations" | "events" | "users" | "user_preferences" | "user_preference_items">,
+  Exclude<SyncResource, "organizations" | "events" | "users" | "user_preferences" | "user_preference_items" | "link_previews">,
   readonly Capability[]
 > = {
   contacts: ["contacts:read"],
@@ -131,6 +132,8 @@ export function canReadSyncResource(
   if (resource === "user_preferences" || resource === "user_preference_items") return true;
   if (resource === "events") return readableEventPrefixes(capabilities).length > 0;
   if (resource === "users")
+    return DIRECTORY_READERS.some((capability) => capabilities.includes(capability));
+  if (resource === "link_previews")
     return DIRECTORY_READERS.some((capability) => capabilities.includes(capability));
   return READ_REQUIREMENTS[resource].some((capability) => capabilities.includes(capability));
 }

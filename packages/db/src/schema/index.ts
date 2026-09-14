@@ -38,3 +38,4 @@ export * from "./custom-field-data.js";
 export * from "./permission-group-capabilities.js";
 export * from "./lead-form-fields.js";
 export * from "./integration-connection-settings.js";
+export * from "./link-previews.js";

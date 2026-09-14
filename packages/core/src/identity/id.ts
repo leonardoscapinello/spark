@@ -56,6 +56,7 @@ export type LeadFormFieldId = Id<"LeadFormField">;
 export type IntegrationSettingId = Id<"IntegrationSetting">;
 export type CustomFieldValueId = Id<"CustomFieldValue">;
 export type UserPreferenceId = Id<"UserPreference">;
+export type LinkPreviewId = Id<"LinkPreview">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -126,3 +127,4 @@ export const leadFormFieldId = makeIdFactory("LeadFormField");
 export const integrationSettingId = makeIdFactory("IntegrationSetting");
 export const customFieldValueId = makeIdFactory("CustomFieldValue");
 export const userPreferenceId = makeIdFactory("UserPreference");
+export const linkPreviewId = makeIdFactory("LinkPreview");

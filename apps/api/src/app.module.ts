@@ -22,6 +22,7 @@ import { ViewsModule } from "./modules/views/views.module.js";
 import { PreferencesModule } from "./modules/preferences/preferences.module.js";
 import { NotesModule } from "./modules/notes/notes.module.js";
 import { PagesModule } from "./modules/pages/pages.module.js";
+import { LinkPreviewsModule } from "./modules/link-previews/link-previews.module.js";
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { PagesModule } from "./modules/pages/pages.module.js";
     PreferencesModule,
     NotesModule,
     PagesModule,
+    LinkPreviewsModule,
   ],
 })
 export class AppModule {}

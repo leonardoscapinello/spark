@@ -1,6 +1,9 @@
 /* Fundo cinza com cartões brancos por cima, como Pipedrive e Intercom fazem:
  * sem isso a tela inteira é uma folha branca e nada se separa de nada. */
-.page { gap: var(--space-4); background: var(--color-surface2); min-height: 100%; }
+/* A página ocupa a altura do quadro e NÃO rola: rolam as duas colunas, cada
+ * uma na sua. Sem isso o painel precisava adivinhar quanto sobrava de tela e
+ * errava — o fim dele ficava abaixo da borda, fora do alcance da rolagem. */
+.page { gap: var(--space-4); background: var(--color-surface2); height: 100%; min-height: 0; overflow: hidden; }
 
 /* Faixa branca do topo: título, trilha de etapas e caminho do funil moram
  * juntos, coladas ao cabeçalho da rota, e a linha embaixo fecha o bloco. */
@@ -11,15 +14,15 @@
 
 /* Duas colunas, como a tela de negócio do Pipedrive (captura 001): painel de
  * seções à esquerda, o que aconteceu e o que vem a seguir à direita. */
-.contentGrid { display: grid; grid-template-columns: minmax(0, var(--ui-detailPanelWidth)) minmax(0, 1fr); align-items: start; gap: var(--space-5); min-width: 0; }
+.contentGrid { display: grid; grid-template-columns: minmax(0, var(--ui-detailPanelWidth)) minmax(0, 1fr); align-items: stretch; gap: var(--space-5); flex: 1; min-width: 0; min-height: 0; }
 .contentGrid > * { min-width: 0; }
 /* Cada bloco é um cartão: fundo branco, borda fina, raio 8 — o mesmo
  * tratamento dos painéis da lista de conversas. */
 /* Rola sozinho e acompanha a página: os campos do negócio ficam à vista
  * enquanto o histórico corre do lado — é o que o Pipedrive faz, e o motivo é
  * prático: consultar um campo não pode custar voltar ao topo. */
-.painel { position: sticky; top: var(--space-4); max-height: calc(100vh - var(--space-16) - var(--space-8)); overscroll-behavior: contain; min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow-x: hidden; overflow-y: auto; }
-.fluxo { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+.painel { overscroll-behavior: contain; min-width: 0; min-height: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow-x: hidden; overflow-y: auto; }
+.fluxo { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: var(--space-4); }
 
 /* Cabeçalho: responsável, Ganho e Perdido à direita do título — decidir o
  * desfecho é a ação principal da tela, não algo no fim de um cartão. */
@@ -110,8 +113,12 @@
 
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
 
+/* Numa coluna só, a página volta a rolar inteira: duas áreas de rolagem
+ * empilhadas numa tela estreita é pior que uma. */
 @media (max-width: 1000px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr); }
+  .contentGrid { grid-template-columns: minmax(0, 1fr); align-items: start; flex: none; }
+  .page { height: auto; min-height: 100%; overflow: visible; }
+  .painel, .fluxo { overflow: visible; min-height: auto; }
 }
 
 /* Itens do negócio: linha com nome e conta, valor à direita, resumo no pé —
