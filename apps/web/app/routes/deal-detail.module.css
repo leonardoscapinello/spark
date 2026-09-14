@@ -102,3 +102,7 @@
 .itemResumo dt { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 .itemResumo dd { margin: 0; font-size: var(--typography-size-compact); font-variant-numeric: tabular-nums; }
 .itemResumo > div[data-total] dt, .itemResumo > div[data-total] dd { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+
+/* Campo importante vazio: sinaliza, não impede (packages/core/rules/stageFieldRules). */
+.aviso { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0 0 var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--ui-fieldRadius); background: color-mix(in srgb, var(--color-statusWarning) 12%, transparent); color: var(--color-ink); font-size: var(--typography-size-compact); }
+.aviso svg { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); color: var(--color-statusWarning); }

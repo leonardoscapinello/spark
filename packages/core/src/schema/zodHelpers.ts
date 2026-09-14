@@ -62,6 +62,7 @@ import {
   cannedReplyId as toCannedReplyId,
   savedViewId as toSavedViewId,
   dealProductId as toDealProductId,
+  stageFieldRuleId as toStageFieldRuleId,
   userPreferenceId as toUserPreferenceId,
   type OrgId,
   type ContactId,
@@ -101,6 +102,7 @@ import {
   type CannedReplyId,
   type SavedViewId,
   type DealProductId,
+  type StageFieldRuleId,
   type UserPreferenceId,
 } from "../identity/id.js";
 
@@ -166,6 +168,7 @@ export const zPageVersionId = bridged<PageVersionId>(toPageVersionId.from);
 export const zCannedReplyId = bridged<CannedReplyId>(toCannedReplyId.from);
 export const zSavedViewId = bridged<SavedViewId>(toSavedViewId.from);
 export const zDealProductId = bridged<DealProductId>(toDealProductId.from);
+export const zStageFieldRuleId = bridged<StageFieldRuleId>(toStageFieldRuleId.from);
 export const zUserPreferenceId = bridged<UserPreferenceId>(toUserPreferenceId.from);
 
 /**

@@ -11,6 +11,8 @@ import { CloseDealUseCase } from "./application/close-deal.usecase.js";
 import { EditDealUseCase } from "./application/edit-deal.usecase.js";
 import { PipelinesRepository } from "./infrastructure/pipelines.repository.js";
 import { StagesRepository } from "./infrastructure/stages.repository.js";
+import { StageFieldRulesRepository } from "./infrastructure/stage-field-rules.repository.js";
+import { StageFieldRulesController } from "./presentation/stage-field-rules.controller.js";
 import { DealProductsRepository } from "./infrastructure/deal-products.repository.js";
 import { DealProductsController } from "./presentation/deal-products.controller.js";
 import { DealsRepository } from "./infrastructure/deals.repository.js";
@@ -22,8 +24,8 @@ import { EventsModule } from "../events/events.module.js";
 
 @Module({
   imports: [EventsModule],
-  controllers: [DealProductsController, PipelinesController, StagesController, DealsController],
-  providers: [DealProductsRepository, 
+  controllers: [StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
+  providers: [StageFieldRulesRepository, DealProductsRepository, 
     CreatePipelineUseCase,
     CreateStageUseCase,
     RenameStageUseCase,

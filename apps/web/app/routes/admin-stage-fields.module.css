@@ -1,0 +1,10 @@
+/* Grade: campos nas linhas, etapas nas colunas — o mesmo campo lido de uma vez
+ * em todo o funil, que é a pergunta de quem configura. */
+.grade { display: grid; gap: var(--ui-hairline); min-width: 0; overflow-x: auto; }
+.linha { display: grid; grid-template-columns: minmax(var(--ui-menuWidth), 1.4fr) repeat(auto-fit, minmax(var(--space-16), 1fr)); align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: var(--ui-hairline) solid var(--color-line); }
+.linha[data-head="true"] { padding-block: var(--space-3); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
+.campo { display: grid; gap: var(--space-1); min-width: 0; font-size: var(--typography-size-sm); }
+.campo small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.etapa { min-width: 0; }
+.nota { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.nota svg { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); }

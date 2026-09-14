@@ -26,6 +26,8 @@ import {
   millisecondsByStage,
   stageVisits,
   formatStageDuration,
+  evaluateStageFields,
+  stageFieldLabel,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert } from "@spark/data";
 import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
@@ -33,6 +35,7 @@ import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getDealProductsCollection } from "../lib/deal-products-collection.client";
+import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collection.client";
 import { getProductsCollection } from "../lib/catalog-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
@@ -58,6 +61,7 @@ export async function clientLoader() {
     getStagesCollection().preload(),
     getUsersCollection().preload(),
     getDealProductsCollection().preload(),
+    getStageFieldRulesCollection().preload(),
     ...(session.capabilities.includes("catalog:read") ? [getProductsCollection().preload()] : []),
     getEventsCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
@@ -100,6 +104,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const canReadCatalog = session?.capabilities.includes("catalog:read") ?? false;
   const { data: dealItems = [] } = useLiveQuery({ query: (q) => q.from({ items: getDealProductsCollection() }).where(({ items: item }) => eq(item.dealId, params.dealId)).orderBy(({ items: item }) => item.sortOrder, "asc") });
   const { data: catalog = [] } = useLiveQuery({ query: (q) => canReadCatalog ? q.from({ products: getProductsCollection() }).orderBy(({ products: product }) => product.name, "asc") : undefined });
+  const { data: fieldRules = [] } = useLiveQuery({ query: (q) => q.from({ rules: getStageFieldRulesCollection() }) });
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: field }) => eq(field.entityType, "deal")).orderBy(({ fields: field }) => field.label, "asc") });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox && deal?.contactId ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, deal.contactId!)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
@@ -153,6 +158,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     const totals = millisecondsByStage(stageVisits(deal.createdAt, firstStage, changes, new Date()), new Date());
     return Object.fromEntries([...totals].map(([stageId, ms]) => [stageId, formatStageDuration(ms)]));
   }, [deal, events, pipelineStages]);
+  const fieldWarnings = useMemo(() => (deal ? evaluateStageFields({ deal, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages }).warnings : []), [deal, dealItems.length, fieldRules, pipelineStages]);
   const itemsSummary = useMemo(() => dealProductsSummary(dealItems.map((item) => ({ ...item, unitAmount: syncedAmount(item.unitAmount) }))), [dealItems]);
   // «Foco» é o que ainda não foi feito, do mais antigo para o mais novo — o que
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
@@ -276,6 +282,16 @@ export default function DealDetail({ params }: Route.ComponentProps) {
 
   async function moveDeal(value: string | null) {
     if (!deal || !value || !canMove) return;
+    // Obrigatório é obrigatório: a etapa não muda com campo do caminho vazio.
+    const check = evaluateStageFields({ deal, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages, targetStageId: value });
+    if (check.blocking.length > 0) {
+      notify({
+        title: "Campos obrigatórios para avançar",
+        description: check.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)).join(", "),
+        tone: "warning",
+      });
+      return;
+    }
     try {
       const transaction = dealsCollection.update(deal.id, (draft) => { draft.stageId = stageIdFactory.from(value); });
       await transaction.isPersisted.promise;
@@ -395,6 +411,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       <aside className={styles.painel}>
         <Accordion defaultValue={["resumo", "detalhes"]} items={[
           { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, content: <div className={styles.details}>
+            {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />Preencha para avançar melhor: {fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)).join(", ")}</p>}
             <div><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
             {dealItems.length > 0 && <div><span>Produtos</span><strong>{dealItems.length}</strong></div>}
             <div><span>Situação</span><strong>{statusLabel(deal.status)}</strong></div>

@@ -48,6 +48,7 @@ export type PageVersionId = Id<"PageVersion">;
 export type CannedReplyId = Id<"CannedReply">;
 export type SavedViewId = Id<"SavedView">;
 export type DealProductId = Id<"DealProduct">;
+export type StageFieldRuleId = Id<"StageFieldRule">;
 export type UserPreferenceId = Id<"UserPreference">;
 
 export class InvalidIdError extends Error {
@@ -111,4 +112,5 @@ export const pageVersionId = makeIdFactory("PageVersion");
 export const cannedReplyId = makeIdFactory("CannedReply");
 export const savedViewId = makeIdFactory("SavedView");
 export const dealProductId = makeIdFactory("DealProduct");
+export const stageFieldRuleId = makeIdFactory("StageFieldRule");
 export const userPreferenceId = makeIdFactory("UserPreference");

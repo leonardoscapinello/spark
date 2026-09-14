@@ -25,6 +25,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   companies: { column: "org_id" },
   pipelines: { column: "org_id" },
   stages: { column: "org_id" },
+  stage_field_rules: { column: "org_id" },
   deals: { column: "org_id" },
   deal_products: { column: "org_id" },
   activities: { column: "org_id" },

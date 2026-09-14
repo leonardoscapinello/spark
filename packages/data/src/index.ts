@@ -5,6 +5,7 @@ export * from "./events-collection.js";
 export * from "./identities-collection.js";
 export * from "./pipelines-collection.js";
 export * from "./stages-collection.js";
+export * from "./stage-field-rules-collection.js";
 export * from "./deals-collection.js";
 export * from "./deal-products-collection.js";
 export * from "./activities-collection.js";

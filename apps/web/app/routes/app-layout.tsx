@@ -103,6 +103,7 @@ const modules: NavModule[] = [
     ] },
     { title: "Dados", icon: "file", items: [
       { label: "Campos personalizados", to: "/admin/data/custom-fields", icon: "file", capability: "settings:manage" },
+      { label: "O que cada etapa exige", to: "/admin/data/stage-fields", icon: "briefcase", capability: "pipelines:manage" },
     ] },
     { title: "Canais e integrações", icon: "bolt", items: [
       { label: "Integrações", to: "/integrations", icon: "bolt", capability: "integrations:read" },

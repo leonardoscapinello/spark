@@ -24,6 +24,7 @@ const sections: { title: string; areas: AdminArea[] }[] = [
   ] },
   { title: "Dados", areas: [
     { title: "Campos personalizados", to: "/admin/data/custom-fields", icon: "file", description: "Adapte os dados dos seus cadastros.", capability: "settings:manage" },
+    { title: "O que cada etapa exige", to: "/admin/data/stage-fields", icon: "briefcase", description: "Campos obrigatórios e importantes por funil e etapa.", capability: "pipelines:manage" },
     { title: "Auditoria", to: "/admin/audit-log", icon: "chart", description: "Consulte alterações de acesso e equipe.", capability: "audit_logs:read" },
   ] },
 ];

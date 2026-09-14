@@ -1006,6 +1006,69 @@ export interface UpdateContactArchiveDto {
   archived: boolean;
 }
 
+export type CreateStageFieldRuleDtoLevel = typeof CreateStageFieldRuleDtoLevel[keyof typeof CreateStageFieldRuleDtoLevel];
+
+
+export const CreateStageFieldRuleDtoLevel = {
+  required: 'required',
+  important: 'important',
+} as const;
+
+export interface CreateStageFieldRuleDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /** @minLength 1 */
+  stageId: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  fieldKey: string;
+  level: CreateStageFieldRuleDtoLevel;
+}
+
+export type StageFieldRuleWriteResponseDtoRuleLevel = typeof StageFieldRuleWriteResponseDtoRuleLevel[keyof typeof StageFieldRuleWriteResponseDtoRuleLevel];
+
+
+export const StageFieldRuleWriteResponseDtoRuleLevel = {
+  required: 'required',
+  important: 'important',
+} as const;
+
+/**
+ * @nullable
+ */
+export type StageFieldRuleWriteResponseDtoRule = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /** @minLength 1 */
+  stageId: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  fieldKey: string;
+  level: StageFieldRuleWriteResponseDtoRuleLevel;
+  createdAt: string;
+  updatedAt: string;
+} | null;
+
+export interface StageFieldRuleWriteResponseDto {
+  /** @nullable */
+  rule: StageFieldRuleWriteResponseDtoRule;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export interface CreateDealProductDto {
   /** @minLength 1 */
   id: string;
@@ -6288,6 +6351,128 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getContactsControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const stageFieldRulesControllerSave = (
+    createStageFieldRuleDto: CreateStageFieldRuleDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<StageFieldRuleWriteResponseDto>(
+      {url: `/v1/stage-field-rules`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createStageFieldRuleDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getStageFieldRulesControllerSaveMutationKey = () => ['stageFieldRulesControllerSave'] as const;
+
+export const getStageFieldRulesControllerSaveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stageFieldRulesControllerSave>>, TError,StageFieldRulesControllerSaveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof stageFieldRulesControllerSave>>, TError,StageFieldRulesControllerSaveMutationVariables, TContext> => {
+
+const mutationKey = getStageFieldRulesControllerSaveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stageFieldRulesControllerSave>>, StageFieldRulesControllerSaveMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  stageFieldRulesControllerSave(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StageFieldRulesControllerSaveMutationResult = NonNullable<Awaited<ReturnType<typeof stageFieldRulesControllerSave>>>
+    export type StageFieldRulesControllerSaveMutationBody = CreateStageFieldRuleDto
+    export type StageFieldRulesControllerSaveMutationError = unknown
+    export type StageFieldRulesControllerSaveMutationVariables = {data: CreateStageFieldRuleDto}
+
+    export const useStageFieldRulesControllerSave = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stageFieldRulesControllerSave>>, TError,StageFieldRulesControllerSaveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof stageFieldRulesControllerSave>>,
+        TError,
+        StageFieldRulesControllerSaveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStageFieldRulesControllerSaveMutationOptions(options), queryClient);
+    }
+
+export const stageFieldRulesControllerRemove = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<StageFieldRuleWriteResponseDto>(
+      {url: `/v1/stage-field-rules/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getStageFieldRulesControllerRemoveMutationKey = () => ['stageFieldRulesControllerRemove'] as const;
+
+export const getStageFieldRulesControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stageFieldRulesControllerRemove>>, TError,StageFieldRulesControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof stageFieldRulesControllerRemove>>, TError,StageFieldRulesControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getStageFieldRulesControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stageFieldRulesControllerRemove>>, StageFieldRulesControllerRemoveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  stageFieldRulesControllerRemove(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StageFieldRulesControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof stageFieldRulesControllerRemove>>>
+
+    export type StageFieldRulesControllerRemoveMutationError = unknown
+    export type StageFieldRulesControllerRemoveMutationVariables = {id: string}
+
+    export const useStageFieldRulesControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stageFieldRulesControllerRemove>>, TError,StageFieldRulesControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof stageFieldRulesControllerRemove>>,
+        TError,
+        StageFieldRulesControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStageFieldRulesControllerRemoveMutationOptions(options), queryClient);
     }
 
 export const dealProductsControllerAdd = (
