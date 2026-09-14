@@ -69,17 +69,22 @@ Conferência do que as seções anteriores listavam como pendente, item por item
 | Estados de rede | Entregue na tabela | `DataTable` tem `state` de carregamento, erro e vazio |
 | Tabela com seleção | Entregue | `DataTable` com `selectedIds`/`onSelectionChange` |
 | Tabela com escolha de colunas | Entregue | `ColumnCatalog`, pelo `+` no fim do cabeçalho (captura 030) |
-| Tabela com resize e reordenação de coluna | **Falta** | — |
+| Tabela com resize de coluna | Entregue | `ColumnResizer`, alça no cabeçalho, com teclado |
+| Tabela com reordenação de coluna | Entregue | arrasto do cabeçalho, ou Control com as setas |
 | Editor rico | **Falta** | nenhum equivalente no pacote |
 | Ícones exatos | **Falta** | `Icon` usa silhuetas próprias, não reprodução |
 | Hover/foco medidos sistematicamente | **Falta** | medições existem para alguns estados, não para todos |
 | Tema escuro | **A avaliar** | `packages/tokens` já compila a paleta escura; [ADR-0033](../adr/0033-interface-fiel-intercom.md) registra o tema como provisório e sem referência |
 | Mobile | **Parcial** | tabela e atendimento adaptam; falta a varredura por tela |
 
-### Seleção e catálogo de colunas
+### Colunas e seleção
 
 Ambos são controlados pela tela: a tabela informa o que mudou e não guarda preferência. Isso mantém a decisão de escopo — sessão, usuário ou visualização salva — fora do componente, e deixa as ações em lote com quem conhece a política de acesso ([ADR-0029](../adr/0029-paineis-e-grupos-de-permissao.md)).
 
 A seleção é indexada por `rowKey`, então ordenar não a desfaz. Uma coluna marcada `alwaysVisible` não pode ser escondida, e ordenar por coluna escondida deixa de valer.
 
-Diferenças conhecidas em relação à captura 030: os itens do catálogo ainda não têm ícone por coluna, e o popover tem título visível em vez de apenas o campo de busca. Nenhuma medição independente do popup de colunas da Intercom foi feita — a composição segue o primitivo `Popover` já existente.
+A largura é arrastada pela alça na borda direita do cabeçalho, que responde no *pointer-down* — a coluna acompanha o ponteiro, não espera o release. A mesma alça é um `separator` focável: setas ajustam de 16 px, `Home` devolve a largura automática, e a largura mínima é 64 px. A tabela só troca para `table-layout: fixed` depois do primeiro ajuste, e nesse modo as células são `border-box`, para a medida arrastada ser exatamente a medida renderizada.
+
+A reordenação é por arrasto do cabeçalho ou por `Control`/`Command` com as setas. Ela opera sobre a lista completa de colunas, não sobre a visível: uma coluna escondida entre duas visíveis não engole o movimento, e uma coluna nova que a ordem ainda não conhece entra no fim em vez de sumir. `moveColumn` e `applyColumnOrder` ficam em `columnOrder.ts`, testados à parte.
+
+Diferenças conhecidas em relação à captura 030: os itens do catálogo ainda não têm ícone por coluna, e o popover tem título visível em vez de apenas o campo de busca. Nenhuma medição independente do popup de colunas da Intercom foi feita — a composição segue o primitivo `Popover` já existente. O comportamento de largura também não foi medido contra a Intercom: com `table-layout: fixed` a tabela ocupa 100 % da largura disponível e ajustar uma coluna redistribui o resto, em vez de fazer a tabela crescer e rolar.
