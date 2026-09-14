@@ -60,6 +60,7 @@ import {
   pageId as toPageId,
   pageVersionId as toPageVersionId,
   cannedReplyId as toCannedReplyId,
+  savedViewId as toSavedViewId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -96,6 +97,7 @@ import {
   type PageId,
   type PageVersionId,
   type CannedReplyId,
+  type SavedViewId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -158,6 +160,7 @@ export const zCustomFieldDefinitionId = bridged<CustomFieldDefinitionId>(toCusto
 export const zPageId = bridged<PageId>(toPageId.from);
 export const zPageVersionId = bridged<PageVersionId>(toPageVersionId.from);
 export const zCannedReplyId = bridged<CannedReplyId>(toCannedReplyId.from);
+export const zSavedViewId = bridged<SavedViewId>(toSavedViewId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

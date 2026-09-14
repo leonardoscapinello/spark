@@ -22,3 +22,4 @@ export * from "./social.js";
 export * from "./campaign.js";
 export * from "./customField.js";
 export * from "./page.js";
+export * from "./savedView.js";
