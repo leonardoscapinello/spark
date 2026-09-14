@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { contactMatchesFilter, contactMatchesFilters, filterOperatorLabel, filterOperatorNeedsValue, operatorsForFilterType, FILTER_OPERATORS, FILTER_VALUE_TYPES, type ContactFilter } from "./contactFilter.js";
-import { decodeContactFilters, encodeContactFilters } from "./filterUrl.js";
+import { FILTER_OPERATORS, FILTER_VALUE_TYPES, contactMatchesFilter, contactMatchesFilterSet, contactMatchesFilters, filterOperatorLabel, filterOperatorNeedsValue, filterSetFromConditions, operatorsForFilterType, type ContactFilter } from "./contactFilter.js";
+import { decodeContactFilterSet, decodeContactFilters, encodeContactFilterSet, encodeContactFilters } from "./filterUrl.js";
 import type { Contact } from "../schema/contact.js";
 
 const base = {
@@ -103,5 +103,57 @@ describe("operadores por tipo de campo", () => {
 
   it("todo operador tem rótulo em português", () => {
     for (const operator of FILTER_OPERATORS) expect(filterOperatorLabel(operator)).toMatch(/\S/);
+  });
+});
+
+describe("filtro composto (grupos com E/OU)", () => {
+  const contact = (overrides: Partial<Contact>) => ({ ...base, ...overrides } as Contact);
+  const novo = contact({ leadStatus: "new", score: 10, tags: ["vip"] });
+  const cliente = contact({ leadStatus: "customer", score: 90, tags: [] });
+
+  it("«é um de» aceita qualquer valor da lista; «não é nenhum de» recusa todos", () => {
+    expect(contactMatchesFilter(novo, { field: "leadStatus", operator: "in", value: ["new", "qualified"] })).toBe(true);
+    expect(contactMatchesFilter(cliente, { field: "leadStatus", operator: "in", value: ["new", "qualified"] })).toBe(false);
+    expect(contactMatchesFilter(cliente, { field: "leadStatus", operator: "not_in", value: ["new", "qualified"] })).toBe(true);
+    expect(contactMatchesFilter(novo, { field: "tags", operator: "in", value: ["vip", "outro"] })).toBe(true);
+  });
+
+  it("lista vazia em «é um de» é filtro pela metade — inerte", () => {
+    expect(contactMatchesFilter(cliente, { field: "leadStatus", operator: "in", value: [] })).toBe(true);
+  });
+
+  it("OU entre grupos, E dentro do grupo", () => {
+    const set = { combinator: "or" as const, groups: [
+      { combinator: "and" as const, conditions: [{ field: "leadStatus" as const, operator: "is" as const, value: "new" }, { field: "score" as const, operator: "gt" as const, value: "50" }] },
+      { combinator: "and" as const, conditions: [{ field: "leadStatus" as const, operator: "is" as const, value: "customer" }] },
+    ] };
+    expect(contactMatchesFilterSet(novo, set)).toBe(false);
+    expect(contactMatchesFilterSet(cliente, set)).toBe(true);
+    expect(contactMatchesFilterSet(contact({ leadStatus: "new", score: 80 }), set)).toBe(true);
+  });
+
+  it("OU dentro do grupo", () => {
+    const set = { combinator: "and" as const, groups: [{ combinator: "or" as const, conditions: [{ field: "score" as const, operator: "gt" as const, value: "50" }, { field: "leadStatus" as const, operator: "is" as const, value: "new" }] }] };
+    expect(contactMatchesFilterSet(novo, set)).toBe(true);
+    expect(contactMatchesFilterSet(cliente, set)).toBe(true);
+    expect(contactMatchesFilterSet(contact({ leadStatus: "qualified", score: 1 }), set)).toBe(false);
+  });
+
+  it("conjunto sem condição é inerte", () => {
+    expect(contactMatchesFilterSet(cliente, { combinator: "and", groups: [{ combinator: "and", conditions: [] }] })).toBe(true);
+  });
+
+  it("vai e volta pela URL com grupos, E/OU e valores múltiplos com separadores dentro", () => {
+    const set = { combinator: "or" as const, groups: [
+      { combinator: "and" as const, conditions: [{ field: "leadStatus" as const, operator: "in" as const, value: ["new", "a,b/c;d:e"] }, { field: "score" as const, operator: "gt" as const, value: "50" }] },
+      { combinator: "or" as const, conditions: [{ field: "custom:plano" as const, operator: "contains" as const, value: "pro/max" }] },
+    ] };
+    expect(decodeContactFilterSet(encodeContactFilterSet(set))).toEqual(set);
+    expect(encodeContactFilterSet(set).startsWith("any/and:")).toBe(true);
+  });
+
+  it("lê o formato antigo como um grupo «tudo E» — visões salvas antes do construtor abrem iguais", () => {
+    expect(decodeContactFilterSet("leadStatus:is:new;score:gt:50")).toEqual(filterSetFromConditions([{ field: "leadStatus", operator: "is", value: "new" }, { field: "score", operator: "gt", value: "50" }]));
+    expect(decodeContactFilterSet("")).toEqual({ combinator: "and", groups: [] });
   });
 });

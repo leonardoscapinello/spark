@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta } from "@storybook/react-vite";
-import { FilterBar, type FilterCondition, type FilterFieldDefinition } from "./FilterBar.js";
+import { FilterBar, type FilterFieldDefinition, type FilterSet } from "./FilterBar.js";
 
 const meta: Meta<typeof FilterBar> = { title: "Dados/Filtros", component: FilterBar };
 export default meta;
@@ -15,10 +15,13 @@ const fields: FilterFieldDefinition[] = [
   { id: "custom:renovacao", label: "Renovação", type: "date", group: "Campos personalizados" },
 ];
 
-export const Composicao = () => <Example initial={[]} />;
-export const ComCondicoes = () => <Example initial={[{ field: "leadStatus", operator: "is", value: "qualified" }, { field: "score", operator: "gt", value: "50" }, { field: "custom:plano", operator: "contains", value: "Prem" }]} />;
+export const Vazio = () => <Example initial={{ combinator: "and", groups: [] }} />;
+export const ComGrupos = () => <Example initial={{ combinator: "or", groups: [
+  { combinator: "and", conditions: [{ field: "leadStatus", operator: "in", value: ["new", "qualified"] }, { field: "score", operator: "gt", value: "50" }] },
+  { combinator: "and", conditions: [{ field: "ownerId", operator: "is", value: "u1" }, { field: "createdAt", operator: "after", value: "2026-01-01" }] },
+] }} />;
 
-function Example({ initial }: { initial: FilterCondition[] }) {
-  const [filters, setFilters] = useState<FilterCondition[]>(initial);
-  return <FilterBar fields={fields} filters={filters} onChange={setFilters} />;
+function Example({ initial }: { initial: FilterSet }) {
+  const [value, setValue] = useState<FilterSet>(initial);
+  return <FilterBar fields={fields} value={value} onChange={setValue} />;
 }

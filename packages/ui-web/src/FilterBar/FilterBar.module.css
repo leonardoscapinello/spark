@@ -1,15 +1,14 @@
-.root { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-/* Cada condição é uma pílula de 32px, como o "4 Aberto ▾" da Intercom (captura
- * 028): rótulo + seta para editar, × para tirar, tudo dentro da mesma borda.
- * «Adicionar filtro» fica na mesma linha, à altura das pílulas. */
-.chip { box-sizing: border-box; display: inline-flex; align-items: center; height: var(--ui-controlMedium); padding-inline-end: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); background: var(--color-surface); }
-.chip:hover { border-color: var(--color-lineStrong); }
-.chipLabel { height: 100%; gap: var(--space-1); padding-inline: var(--space-3) var(--space-1); border-radius: var(--radius-full); }
-.chipLabel:hover:not([data-disabled]) { background: transparent; }
-.caret { width: var(--ui-icon); height: var(--ui-icon); color: var(--color-inkMuted); }
-.add { color: var(--color-ink); }
-.editor { display: flex; flex-direction: column; gap: var(--space-3); }
-.fieldList { display: flex; flex-direction: column; gap: var(--space-1); max-height: var(--ui-previewHeight); overflow-y: auto; margin-top: var(--space-3); }
-.fieldOption { justify-content: flex-start; width: 100%; }
-.group { margin: var(--space-2) 0 var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
-.empty { margin: 0; color: var(--color-inkMuted); }
+/* Pílula «Filtros · N» na barra; o construtor abre num painel largo (largura da
+ * modal, não a de popover comum) com grupos de condições, como no Pipedrive. */
+.panel { width: min(var(--ui-modalWidth), calc(100vw - var(--space-8))); }
+.group { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); }
+.groupHeader { display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); }
+.groupTitle { flex: 1; min-width: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr) auto; align-items: center; gap: var(--space-2); }
+.row > * { min-width: 0; }
+.remove { justify-self: end; }
+.empty { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+.panelFooter { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+@media (max-width: 640px) {
+  .row { grid-template-columns: minmax(0, 1fr) auto; }
+}

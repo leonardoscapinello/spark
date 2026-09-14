@@ -39,6 +39,7 @@ const paths = {
   team: "M6 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm6 .5a2 2 0 1 0 0 4M1.5 14v-2a4.5 4.5 0 0 1 9 0v2m1.5-5a3 3 0 0 1 2.5 3v2",
   exit: "M6 2H2v12h4m4-9 4 3-4 3m4-3H5",
   pushpin: "M6 2h4v4l2 3H4l2-3V2ZM8 9v5",
+  filter: "M2 3h12L9.5 8.5V13l-3 1V8.5L2 3Z",
 } as const;
 export type IconName = keyof typeof paths;
 export function Icon({ name, ...props }: { name: IconName } & Omit<ComponentProps<"svg">, "children">) {

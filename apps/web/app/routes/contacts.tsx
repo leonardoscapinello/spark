@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { and, eq, isNull, useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact, optimisticSavedView } from "@spark/data";
-import { companyId as companyIdFactory, contactMatches, contactMatchesFilters, decodeContactFilters, encodeContactFilters, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type LeadStatus } from "@spark/core";
+import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -73,19 +73,27 @@ export default function Contacts() {
   // A etapa continua morando em `?status=` porque o trilho de navegação aponta
   // para esses links e destaca o item comparando a URL. As demais condições vão
   // para `?f=`. Trocar tudo por `f` apagaria o destaque do menu.
-  const filters = useMemo<ContactFilter[]>(() => [
-    ...(statusFilter !== "all" ? [{ field: "leadStatus", operator: "is", value: statusFilter } as ContactFilter] : []),
-    ...decodeContactFilters(searchParams.get("f")),
-  ], [searchParams, statusFilter]);
+  // A etapa do menu lateral (`?status=`) é a base da visão — «Novos leads» —
+  // e o construtor de filtros (`?f=`) refina por cima dela, como a Intercom
+  // faz com visão + filtro. Os dois não se misturam na URL.
+  const filters = useMemo<ContactFilterSet>(() => decodeContactFilterSet(searchParams.get("f")), [searchParams]);
+  const filterCount = filterSetConditions(filters).length;
 
-  function changeFilters(next: readonly ContactFilter[]) {
-    const stage = next.find((filter) => filter.field === "leadStatus" && filter.operator === "is" && filter.value);
-    const rest = next.filter((filter) => filter !== stage);
-    const params = new URLSearchParams();
-    if (stage?.value) params.set("status", stage.value);
-    const encoded = encodeContactFilters(rest);
-    if (encoded) params.set("f", encoded);
+  function changeFilters(next: ContactFilterSet) {
+    const params = new URLSearchParams(searchParams);
+    const encoded = encodeContactFilterSet(next);
+    if (encoded) params.set("f", encoded); else params.delete("f");
     setSearchParams(params);
+  }
+
+  // Salvar a visão dentro de uma etapa guarda a etapa junto, como primeiro
+  // grupo E — abrir a visão depois reproduz o que se via ao salvar.
+  function filtersToSave(): ContactFilterSet {
+    if (statusFilter === "all") return filters;
+    const stage = { combinator: "and" as const, conditions: [{ field: "leadStatus", operator: "is", value: statusFilter } as ContactFilter] };
+    return filters.combinator === "and" || filters.groups.length <= 1
+      ? { combinator: "and", groups: [stage, ...filters.groups] }
+      : { combinator: "or", groups: filters.groups.map((group) => ({ ...group, conditions: [...stage.conditions, ...group.conditions] })) };
   }
 
   // Uma visualização salva guarda o recorte inteiro num só campo — aplicar
@@ -106,7 +114,7 @@ export default function Contacts() {
     const session = getSession();
     if (!session) return;
     try {
-      const transaction = savedViewsCollection.insert(optimisticSavedView({ name: trimmedName, entityType: "contact", filters: encodeContactFilters(filters) }, session.orgId, userIdFactory.from(session.userId)));
+      const transaction = savedViewsCollection.insert(optimisticSavedView({ name: trimmedName, entityType: "contact", filters: encodeContactFilterSet(filtersToSave()) }, session.orgId, userIdFactory.from(session.userId)));
       await transaction.isPersisted.promise;
       setSaveViewOpen(false);
       setSaveViewName("");
@@ -129,12 +137,12 @@ export default function Contacts() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [storedHiddenColumns, setStoredHiddenColumns] = useState<string[] | null>(readHiddenColumns);
   const [bulkRunning, setBulkRunning] = useState(false);
-  const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && filters.length === 0;
+  const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && filterCount === 0;
   const viewTitle = archiveView ? "Pessoas arquivadas" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Pessoas";
   const filteredContacts = contacts.filter((contact) =>
     (archiveView ? contact.deletedAt !== null : contact.deletedAt === null) &&
     contactMatches(contact, search) &&
-    contactMatchesFilters(contact, filters),
+    (statusFilter === "all" || contact.leadStatus === statusFilter) && contactMatchesFilterSet(contact, filters),
   );
   const columns = useMemo<TableColumn<Contact>[]>(() => {
     const userNames = new Map(users.map((user) => [user.id, user.name]));
@@ -301,7 +309,7 @@ export default function Contacts() {
     {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar pessoas" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}
       filters={<>
-        <FilterBar fields={filterFields} filters={filters} onChange={changeFilters} />
+        <FilterBar fields={filterFields} value={filters} onChange={changeFilters} />
         <Popover open={savedViewsOpen} onOpenChange={setSavedViewsOpen}>
           <PopoverTrigger render={<Button variant="secondary" icon={<Icon name="star" />}>{savedViews.length > 0 ? `Visualizações (${savedViews.length})` : "Visualizações"}</Button>} />
           <PopoverContent title="Visualizações salvas">

@@ -1,47 +1,59 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { it, expect, vi } from "vitest";
-import { FilterBar, type FilterCondition, type FilterFieldDefinition } from "./FilterBar.js";
+import { FilterBar, type FilterFieldDefinition, type FilterSet } from "./FilterBar.js";
 
 const fields: FilterFieldDefinition[] = [
   { id: "leadStatus", label: "Etapa", type: "select", group: "Pessoa", options: [{ value: "new", label: "Novo lead" }, { value: "qualified", label: "Qualificado" }] },
   { id: "score", label: "Pontuação", type: "number", group: "Pessoa" },
   { id: "custom:plano", label: "Plano", type: "text", group: "Campos personalizados" },
 ];
+const empty: FilterSet = { combinator: "and", groups: [] };
+const one = (conditions: FilterSet["groups"][number]["conditions"]): FilterSet => ({ combinator: "and", groups: [{ combinator: "and", conditions }] });
 
-it("adiciona uma condição já com o primeiro operador do tipo",async()=>{
- const onChange=vi.fn();
- render(<FilterBar fields={fields} filters={[]} onChange={onChange}/>);
- fireEvent.click(screen.getByRole("button",{name:"Adicionar filtro"}));
- fireEvent.click(await screen.findByRole("button",{name:"Pontuação"}));
- expect(onChange).toHaveBeenCalledWith([{field:"score",operator:"is",value:null}]);
+it("abre pela pílula e adiciona uma condição já com o primeiro campo e o primeiro operador do tipo", async () => {
+  const onChange = vi.fn();
+  render(<FilterBar fields={fields} value={empty} onChange={onChange} />);
+  fireEvent.click(screen.getByRole("button", { name: "Filtros" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Condição" }));
+  expect(onChange).toHaveBeenCalledWith(one([{ field: "leadStatus", operator: "is", value: null }]));
 });
 
-it("descreve a condição pelo rótulo da opção, não pelo valor cru",()=>{
- const filters:FilterCondition[]=[{field:"leadStatus",operator:"is",value:"qualified"}];
- render(<FilterBar fields={fields} filters={filters} onChange={vi.fn()}/>);
- expect(screen.getByRole("button",{name:"Etapa é Qualificado"})).toBeInTheDocument();
+it("conta as condições na pílula, e só ali — a barra não cresce", () => {
+  render(<FilterBar fields={fields} value={one([{ field: "leadStatus", operator: "is", value: "qualified" }, { field: "score", operator: "gt", value: "50" }])} onChange={vi.fn()} />);
+  expect(screen.getByRole("button", { name: "Filtros: 2 condições" })).toHaveTextContent("Filtros · 2");
+  expect(screen.queryByText("Qualificado")).toBeNull();
 });
 
-it("mostra que falta valor em vez de fingir condição pronta",()=>{
- render(<FilterBar fields={fields} filters={[{field:"leadStatus",operator:"is",value:null}]} onChange={vi.fn()}/>);
- expect(screen.getByRole("button",{name:"Etapa é…"})).toBeInTheDocument();
+it("remove a condição certa quando há duas do mesmo campo", async () => {
+  const onChange = vi.fn();
+  render(<FilterBar fields={fields} value={one([{ field: "score", operator: "gt", value: "10" }, { field: "score", operator: "lt", value: "90" }])} onChange={onChange} />);
+  fireEvent.click(screen.getByRole("button", { name: "Filtros: 2 condições" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Remover condição 2" }));
+  expect(onChange).toHaveBeenCalledWith(one([{ field: "score", operator: "gt", value: "10" }]));
 });
 
-it("operador sem valor não pede valor",()=>{
- render(<FilterBar fields={fields} filters={[{field:"leadStatus",operator:"is_empty",value:null}]} onChange={vi.fn()}/>);
- expect(screen.getByRole("button",{name:"Etapa está vazio"})).toBeInTheDocument();
+it("operador sem valor não pede valor", async () => {
+  render(<FilterBar fields={fields} value={one([{ field: "score", operator: "is_empty", value: null }])} onChange={vi.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: "Filtros: 1 condição" }));
+  await screen.findByRole("group", { name: "Condição 1" });
+  expect(screen.queryByLabelText("Valor de Pontuação")).toBeNull();
 });
 
-it("remove a condição certa quando há duas do mesmo campo",()=>{
- const onChange=vi.fn();
- const filters:FilterCondition[]=[{field:"score",operator:"gt",value:"10"},{field:"score",operator:"lt",value:"90"}];
- render(<FilterBar fields={fields} filters={filters} onChange={onChange}/>);
- fireEvent.click(screen.getAllByRole("button",{name:"Remover filtro Pontuação"})[1]!);
- expect(onChange).toHaveBeenCalledWith([{field:"score",operator:"gt",value:"10"}]);
+it("novo grupo entra vazio e o E/OU entre grupos aparece só a partir do segundo", async () => {
+  const onChange = vi.fn();
+  const set = one([{ field: "score", operator: "gt", value: "10" }]);
+  const { rerender } = render(<FilterBar fields={fields} value={set} onChange={onChange} />);
+  fireEvent.click(screen.getByRole("button", { name: "Filtros: 1 condição" }));
+  expect(screen.queryByRole("group", { name: "Como combinar os grupos" })).toBeNull();
+  fireEvent.click(await screen.findByRole("button", { name: "Grupo" }));
+  const next = { ...set, groups: [...set.groups, { combinator: "and", conditions: [] }] };
+  expect(onChange).toHaveBeenCalledWith(next);
+  rerender(<FilterBar fields={fields} value={next as FilterSet} onChange={onChange} />);
+  expect(await screen.findByRole("group", { name: "Como combinar os grupos" })).toBeInTheDocument();
 });
 
-it("ignora condição de campo que não existe mais",()=>{
- render(<FilterBar fields={fields} filters={[{field:"campo_apagado",operator:"is",value:"x"}]} onChange={vi.fn()}/>);
- expect(screen.getByRole("group",{name:"Filtros aplicados"})).toBeInTheDocument();
- expect(screen.queryByText(/campo_apagado/)).not.toBeInTheDocument();
+it("ignora campo que não existe mais sem derrubar o construtor", async () => {
+  render(<FilterBar fields={fields} value={one([{ field: "sumido", operator: "is", value: "x" }])} onChange={vi.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: "Filtros: 1 condição" }));
+  expect(await screen.findByRole("group", { name: "Condição 1" })).toBeInTheDocument();
 });
