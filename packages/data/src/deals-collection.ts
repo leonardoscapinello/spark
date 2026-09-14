@@ -80,7 +80,12 @@ export function syncedAmount(rawAmount: unknown): Money {
   if (typeof rawAmount === "object" && rawAmount !== null) {
     return rawAmount as Money;
   }
-  return money(Number(rawAmount));
+  const cents = Number(rawAmount);
+  /* Valor ausente ou ilegível vira zero em vez de derrubar a tela. `money()`
+   * recusa lançando, e numa função chamada durante o render isso apagava a
+   * página inteira com «Invalid monetary value: NaN» — o certo é a linha
+   * mostrar R$ 0,00 e o resto continuar de pé. */
+  return money(Number.isInteger(cents) ? cents : 0);
 }
 
 /**

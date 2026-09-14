@@ -20,7 +20,6 @@ import {
   formatQuantity,
   parseQuantity,
   formatBasisPoints,
-  parseBasisPoints,
   productId as productIdFactory,
   type DealProduct,
   millisecondsByStage,
@@ -28,11 +27,12 @@ import {
   formatStageDuration,
   evaluateStageFields,
   stageFieldLabel,
+  stageFieldMessage,
   type Note,
   type Deal,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote } from "@spark/data";
-import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify } from "@spark/ui-web";
+import { Accordion, ActionModal, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -136,8 +136,8 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [itemName, setItemName] = useState("");
   const [itemQuantity, setItemQuantity] = useState("1");
   const [itemUnitAmount, setItemUnitAmount] = useState<Money | null>(null);
-  const [itemDiscount, setItemDiscount] = useState("0");
-  const [itemTax, setItemTax] = useState("0");
+  const [itemDiscount, setItemDiscount] = useState<number | null>(0);
+  const [itemTax, setItemTax] = useState<number | null>(0);
   const [busyActivityId, setBusyActivityId] = useState<string | null>(null);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [lossReason, setLossReason] = useState("");
@@ -215,10 +215,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       setItemName(item.name);
       setItemQuantity(formatQuantity(item.quantityMilli));
       setItemUnitAmount(syncedAmount(item.unitAmount));
-      setItemDiscount(formatBasisPoints(item.discountBasisPoints));
-      setItemTax(formatBasisPoints(item.taxBasisPoints));
+      setItemDiscount(item.discountBasisPoints);
+      setItemTax(item.taxBasisPoints);
     } else {
-      setEditingItemId(null); setItemProductId(""); setItemName(""); setItemQuantity("1"); setItemUnitAmount(null); setItemDiscount("0"); setItemTax("0");
+      setEditingItemId(null); setItemProductId(""); setItemName(""); setItemQuantity("1"); setItemUnitAmount(null); setItemDiscount(0); setItemTax(0);
     }
     setItemModalOpen(true);
   }
@@ -231,11 +231,17 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   }
 
   async function saveItem() {
-    if (!deal || !session) throw new Error("MISSING_FIELDS");
+    if (!deal || !session) throw new Error("Sessão expirada. Entre de novo para salvar.");
     const quantityMilli = parseQuantity(itemQuantity);
-    const discountBasisPoints = parseBasisPoints(itemDiscount);
-    const taxBasisPoints = parseBasisPoints(itemTax);
-    if (!itemName.trim() || itemUnitAmount === null || quantityMilli === null || discountBasisPoints === null || taxBasisPoints === null) throw new Error("MISSING_FIELDS");
+    const discountBasisPoints = itemDiscount;
+    const taxBasisPoints = itemTax;
+    // Uma mensagem por campo: dizer «preencha nome, quantidade e preço» com os
+    // três preenchidos não ajuda ninguém a descobrir o que está errado.
+    if (!itemName.trim()) throw new Error("Escreva o nome do item.");
+    if (quantityMilli === null) throw new Error("A quantidade precisa ser um número maior que zero.");
+    if (itemUnitAmount === null) throw new Error("Informe o preço unitário.");
+    if (discountBasisPoints === null) throw new Error("O desconto vai de 0% a 100%.");
+    if (taxBasisPoints === null) throw new Error("O imposto vai de 0% a 100%.");
     const fields = { name: itemName.trim(), quantityMilli, unitAmount: itemUnitAmount, discountBasisPoints, taxBasisPoints };
     if (editingItemId) {
       const transaction = itemsCollection.update(editingItemId, (draft) => { Object.assign(draft, { ...fields, unitAmount: toCents(fields.unitAmount) }); });
@@ -302,8 +308,8 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     const check = evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages, targetStageId: value });
     if (check.blocking.length > 0) {
       notify({
-        title: "Campos obrigatórios para avançar",
-        description: check.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)).join(", "),
+        title: "Faltam campos obrigatórios",
+        description: stageFieldMessage("required", check.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)), pipelineStages.find((item) => item.id === value)?.name),
         tone: "warning",
       });
       return;
@@ -426,7 +432,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       <aside className={styles.painel}>
         <Accordion defaultValue={["resumo", "detalhes"]} items={[
           { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, content: <div className={styles.details}>
-            {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />Preencha para avançar melhor: {fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)).join(", ")}</p>}
+            {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))}</p>}
             {/* O valor é a soma dos produtos e por isso não se edita aqui: um
               * número solto faria a conta do funil discordar do que foi vendido. */}
             <div className={styles.linha}><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
@@ -588,7 +594,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         <Field><Label>Observações</Label><Textarea value={activityNotes} onChange={(event) => setActivityNotes(event.target.value)} placeholder="Contexto para a equipe" /></Field>
       </div>
     </ActionModal>
-    <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Preencha nome, quantidade e preço — desconto e imposto vão de 0 a 100." onConfirm={saveItem}>
+    <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>
       <div className={styles.modalFields}>
         {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="dropdown" placeholder="Escolher um produto cadastrado (opcional)" options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(item.price)}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
         <Field><Label>Nome do item</Label><Input value={itemName} onChange={(event) => setItemName(event.target.value)} placeholder="Escreva um item avulso ou escolha do catálogo" /></Field>
@@ -597,8 +603,8 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <Field><Label>Preço unitário</Label><MoneyInput label="Preço unitário" value={itemUnitAmount} onValueChange={setItemUnitAmount} /></Field>
         </div>
         <div className={styles.modalLinha}>
-          <Field><Label>Desconto (%)</Label><Input inputMode="decimal" value={itemDiscount} onChange={(event) => setItemDiscount(event.target.value)} placeholder="0" /></Field>
-          <Field><Label>Imposto (%)</Label><Input inputMode="decimal" value={itemTax} onChange={(event) => setItemTax(event.target.value)} placeholder="0" /></Field>
+          <Field><Label>Desconto</Label><PercentInput label="Desconto do item" value={itemDiscount} onValueChange={setItemDiscount} /></Field>
+          <Field><Label>Imposto</Label><PercentInput label="Imposto do item" value={itemTax} onValueChange={setItemTax} /></Field>
         </div>
       </div>
     </ActionModal>

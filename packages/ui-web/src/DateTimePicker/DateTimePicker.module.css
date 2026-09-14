@@ -1,6 +1,6 @@
 /* Uma data é sempre curta («14/09/2026 às 15:30»): ela não quebra linha, e o
  * que não couber vira reticências em vez de empurrar o campo para baixo. */
-.trigger { width: 100%; justify-content: space-between; min-height: var(--ui-fieldHeight); text-align: start; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trigger { width: 100%; justify-content: flex-start; min-height: var(--ui-fieldHeight); text-align: start; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .layout { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-5); }
 .calendar { flex: 1 1 var(--ui-popoverWidth); min-width: min(100%, var(--ui-popoverWidth)); width: 100%; font-family: var(--typography-fontFamily-body); }
 .months,.month { width: 100%; }
@@ -29,3 +29,5 @@
 .timeFields { display: flex; align-items: center; gap: var(--space-2); }
 .timeField { flex: 0 0 var(--ui-timeFieldWidth); width: var(--ui-timeFieldWidth); }
 .hint { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+/* Vazio é dica de formato, não valor: fica apagado como um placeholder. */
+.trigger[data-empty="true"] { color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }

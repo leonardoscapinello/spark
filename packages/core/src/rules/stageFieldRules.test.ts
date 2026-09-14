@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateStageFields, stageFieldLabel } from "./stageFieldRules.js";
+import { evaluateStageFields, stageFieldLabel, stageFieldMessage } from "./stageFieldRules.js";
 import type { Deal } from "../schema/deal.js";
 import type { StageFieldRule } from "../schema/stageFieldRule.js";
 import type { CustomFieldDefinition } from "../schema/customField.js";
@@ -62,6 +62,22 @@ describe("campos exigidos por etapa", () => {
     const custom = [{ key: "plano", label: "Plano contratado" } as CustomFieldDefinition];
     expect(stageFieldLabel("custom:plano", custom)).toBe("Plano contratado");
     expect(stageFieldLabel("expectedCloseDate", [])).toBe("Previsão de fechamento");
-    expect(stageFieldLabel("custom:sumiu", [])).toBe("sumiu");
+    // Sem a definição, o nome da coluna vira frase: quem lê a tela não sabe o
+    // que é `origem_negocio`.
+    expect(stageFieldLabel("custom:sumiu", [])).toBe("Sumiu");
+    expect(stageFieldLabel("custom:origem_negocio", [])).toBe("Origem negocio");
+  });
+
+  it("separa a frase de obrigatório da de importante", () => {
+    // Obrigatório impede a mudança de etapa; importante só sinaliza. As duas
+    // frases têm de deixar isso claro — é a diferença que o usuário precisa ver.
+    expect(stageFieldMessage("required", ["Origem do negócio"], "Proposta enviada"))
+      .toBe("Preencha Origem do negócio antes de mover para «Proposta enviada».");
+    expect(stageFieldMessage("required", ["Pessoa", "Valor"]))
+      .toBe("Preencha estes campos antes de mover: Pessoa, Valor.");
+    expect(stageFieldMessage("important", ["Origem do negócio"]))
+      .toBe("Origem do negócio é um campo importante desta etapa e está em branco.");
+    expect(stageFieldMessage("important", ["Pessoa", "Valor"]))
+      .toBe("Campos importantes desta etapa ainda em branco: Pessoa, Valor.");
   });
 });

@@ -16,6 +16,25 @@ export const AudienceFilterSchema = z.object({
 });
 export type AudienceFilter = z.infer<typeof AudienceFilterSchema>;
 
+/** Linha persistida de `audiences`. As listas do filtro são relações próprias
+ * e são reunidas pela camada de leitura local, não um JSON escondido aqui. */
+export const AudienceRowSchema = z.object({
+  id: zAudienceId, orgId: zOrgId, name: z.string().min(1), description: z.string().nullable(),
+  operator: z.enum(AUDIENCE_OPERATORS), minimumScore: z.number().int().min(0).max(100).nullable(),
+  createdBy: zUserId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp,
+});
+export type AudienceRow = z.infer<typeof AudienceRowSchema>;
+
+export const AudienceLeadStatusSchema = z.object({
+  orgId: zOrgId, audienceId: zAudienceId, leadStatus: z.string().min(1),
+});
+export type AudienceLeadStatus = z.infer<typeof AudienceLeadStatusSchema>;
+
+export const AudienceTagSchema = z.object({
+  orgId: zOrgId, audienceId: zAudienceId, tagId: z.string().uuid(),
+});
+export type AudienceTag = z.infer<typeof AudienceTagSchema>;
+
 export const AudienceSchema = z.object({
   id: zAudienceId, orgId: zOrgId, name: z.string().min(1), description: z.string().nullable(),
   filter: AudienceFilterSchema, createdBy: zUserId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp,

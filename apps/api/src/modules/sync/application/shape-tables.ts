@@ -56,6 +56,8 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   social_channels: { column: "org_id" },
   social_posts: { column: "org_id" },
   audiences: { column: "org_id" },
+  audience_lead_statuses: { column: "org_id" },
+  audience_tags: { column: "org_id" },
   campaigns: { column: "org_id" },
   campaign_recipients: { column: "org_id" },
   custom_field_definitions: { column: "org_id" },

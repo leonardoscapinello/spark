@@ -43,6 +43,8 @@ export const MessageSchema = z.object({
   body: z.string().trim().min(1).max(20_000),
   externalId: z.string().max(500).nullable(),
   createdAt: zServerTimestamp,
+  updatedAt: zServerTimestamp,
+  deletedAt: zServerTimestamp.nullable(),
 });
 export type Message = z.infer<typeof MessageSchema>;
 

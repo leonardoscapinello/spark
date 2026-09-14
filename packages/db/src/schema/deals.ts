@@ -1,4 +1,4 @@
-import { bigint, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, check, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -43,6 +43,8 @@ export const deals = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (t) => [
+    check("deals_amount_check", sql`${t.amount} >= 0`),
+    check("deals_status_check", sql`${t.status} = ANY (ARRAY['open', 'won', 'lost'])`),
     pgPolicy("deals_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

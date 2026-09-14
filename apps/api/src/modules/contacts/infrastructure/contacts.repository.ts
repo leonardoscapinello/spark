@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { createDbClient, withOrgContext, contacts, type SparkDb } from "@spark/db";
-import type { Contact, CreateContactInput, ImportContactsInput, ImportContactsResponse, UpdateContactInput, OrgId, ContactId } from "@spark/core";
+import { createDbClient, withOrgContext, contacts, identities, type SparkDb } from "@spark/db";
+import { contactId, identityId, type Contact, type CreateContactInput, type ImportContactsInput, type ImportContactsResponse, type UpdateContactInput, type OrgId, type ContactId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 /**
@@ -49,6 +49,8 @@ export class ContactsRepository {
         .returning();
 
       if (!row) throw new Error("Contact insert returned no row.");
+
+      await ensureContactIdentities(tx, orgId, contactId.from(row.id), row.email, row.phone);
 
       const contact = toContact(row);
 
@@ -107,6 +109,8 @@ export class ContactsRepository {
 
       if (!row) throw new NotFoundException(`Contact ${id} not found.`);
 
+      await ensureContactIdentities(tx, orgId, contactId.from(row.id), input.email === undefined ? null : row.email, input.phone === undefined ? null : row.phone);
+
       const contact = toContact(row);
 
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
@@ -163,6 +167,7 @@ export class ContactsRepository {
           phone: contact.phone ?? null,
           source: contact.source ?? "csv",
         })));
+        for (const contact of accepted) await ensureContactIdentities(tx, orgId, contact.id, contact.email ?? null, contact.phone ?? null);
         await this.eventWriter.appendMany(tx, accepted.map((contact) => ({
           orgId,
           contactId: contact.id,
@@ -172,6 +177,30 @@ export class ContactsRepository {
       }
       return { imported: accepted.length, skipped: input.contacts.length - accepted.length, txid };
     });
+  }
+}
+
+/** Mantém e-mail/telefone pesquisáveis em `contacts` e também no índice
+ * omnichannel. Colisão nunca é ignorada: uma identidade só pode apontar para
+ * uma pessoa dentro da organização. */
+async function ensureContactIdentities(
+  tx: SparkDb,
+  orgId: OrgId,
+  contactId: ContactId,
+  email: string | null,
+  phone: string | null,
+): Promise<void> {
+  for (const identity of [
+    ...(email ? [{ channel: "email", externalValue: email }] : []),
+    ...(phone ? [{ channel: "phone", externalValue: phone }] : []),
+  ] as const) {
+    const [existing] = await tx.select({ contactId: identities.contactId }).from(identities).where(and(
+      eq(identities.orgId, orgId),
+      eq(identities.channel, identity.channel),
+      eq(identities.externalValue, identity.externalValue),
+    )).limit(1);
+    if (existing && existing.contactId !== contactId) throw new ConflictException(`A identidade ${identity.channel} já pertence a outra pessoa.`);
+    if (!existing) await tx.insert(identities).values({ id: identityId.create(), orgId, contactId, ...identity });
   }
 }
 

@@ -75,7 +75,8 @@ A pergunta fazia sentido em 2010, quando "não-relacional" significava trocar de
 | Formato do dado | Exemplo no Spark | Como é guardado |
 |---|---|---|
 | Relacional | Contatos, negócios, produtos, usuários, listas | Tabelas, chaves estrangeiras, transação |
-| Documento | Campos customizados, grafo de automação, árvore de página | **JSONB** + índice GIN |
+| Documento | Grafo de automação, árvore de página, payload de evento/auditoria | **JSONB**; somente quando lido e gravado inteiro |
+| Dado configurável consultável | Campos customizados, tags, público, preferências | **Tabelas relacionais e colunas tipadas** |
 | Série temporal | Mensagens, eventos, métricas de envio | Tabelas **particionadas por mês** |
 | Busca textual | Contato, negócio, conversa | **FTS** nativo + `pg_trgm` |
 | Chave-valor efêmero | Fila, rate limit, sessão | **Valkey** — transporte, não fonte de verdade |

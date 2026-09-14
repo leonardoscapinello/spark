@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { bigint, boolean, date, integer, numeric, pgPolicy, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, date, index, integer, numeric, pgPolicy, pgTable, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { APP_ROLE } from "../roles.js";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -48,6 +48,11 @@ export const customFieldValues = pgTable(
   },
   (t) => [
     unique("custom_field_values_unique").on(t.fieldId, t.entityId, t.optionId),
+    uniqueIndex("custom_field_values_scalar_uidx").on(t.fieldId, t.entityId).where(sql`${t.optionId} IS NULL`),
+    index("custom_field_values_money_idx").on(t.orgId, t.fieldId, t.valueMoney).where(sql`${t.valueMoney} IS NOT NULL`),
+    index("custom_field_values_date_idx").on(t.orgId, t.fieldId, t.valueDate).where(sql`${t.valueDate} IS NOT NULL`),
+    index("custom_field_values_timestamp_idx").on(t.orgId, t.fieldId, t.valueTimestamp).where(sql`${t.valueTimestamp} IS NOT NULL`),
+    index("custom_field_values_boolean_idx").on(t.orgId, t.fieldId, t.valueBoolean).where(sql`${t.valueBoolean} IS NOT NULL`),
     pgPolicy("custom_field_values_isolation_by_org", { for: "all", to: APP_ROLE, using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid` }),
   ],
 ).enableRLS();

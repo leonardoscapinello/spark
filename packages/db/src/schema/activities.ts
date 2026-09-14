@@ -1,4 +1,4 @@
-import { pgTable, pgPolicy, text, timestamp, uuid, boolean, integer } from "drizzle-orm/pg-core";
+import { check, pgTable, pgPolicy, text, timestamp, uuid, boolean, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -30,6 +30,10 @@ export const activities = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    check("activities_target_check", sql`num_nonnulls(${t.contactId}, ${t.dealId}) >= 1`),
+    check("activities_type_check", sql`${t.type} = ANY (ARRAY['task', 'call', 'meeting', 'email', 'lunch', 'deadline'])`),
+    check("activities_duration_check", sql`${t.durationMinutes} BETWEEN 0 AND 1440`),
+    check("activities_completion_check", sql`${t.completed} = (${t.completedAt} IS NOT NULL)`),
     pgPolicy("activities_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

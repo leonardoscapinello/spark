@@ -1,4 +1,4 @@
-import { pgTable, pgPolicy, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
+import { check, pgTable, pgPolicy, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -24,6 +24,8 @@ export const stages = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [
+    check("stages_sort_order_check", sql`${t.sortOrder} >= 0`),
+    check("stages_probability_check", sql`${t.probability} BETWEEN 0 AND 100`),
     pgPolicy("stages_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

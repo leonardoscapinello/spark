@@ -37,7 +37,7 @@ export { ActionModal } from "./Modal/ActionModal.js";
 export { Notification, NotificationList, type NotificationProps, type NotificationEntry } from "./Notification/Notification.js";
 export { Toaster, notify, dismissNotification } from "./Notification/Toast.js";
 
-export { MaskedInput, MoneyInput, PhoneInput, type MaskedInputProps, type PhoneCountry, type PhoneDraft } from "./MaskedInput/MaskedInput.js";
+export { MaskedInput, MoneyInput, PercentInput, PhoneInput, type MaskedInputProps, type PhoneCountry, type PhoneDraft } from "./MaskedInput/MaskedInput.js";
 
 export { Panel, PanelTrigger, PanelClose, PanelContent, type PanelSide, type PanelContentProps } from "./Panel/Panel.js";
 

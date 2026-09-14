@@ -32,7 +32,7 @@ Cada arquivo aqui registra **uma decisão**, o contexto em que foi tomada, as al
 | [0018](0018-arquitetura-local-first.md) | Local-first: TanStack DB + Electric | Aceito |
 | [0019](0019-nucleo-compartilhado.md) | Núcleo compartilhado: uma regra, um lugar | Aceito |
 | [0020](0020-design-system-proprio.md) | Design system próprio, zero componente nativo | Aceito |
-| [0021](0021-schema-estatico-campos-dinamicos.md) | Schema estático, campos customizados em JSONB | Aceito |
+| [0021](0021-schema-estatico-campos-dinamicos.md) | Schema estático, campos customizados em JSONB | Parcialmente substituído por 0035 |
 | [0022](0022-um-so-banco-postgres.md) | Um só banco: Postgres para tudo | Aceito |
 | [0023](0023-construtor-de-paginas.md) | Construtor de páginas: árvore JSON, publicação estática | Aceito |
 | [0024](0024-limite-de-verificacao.md) | Limite de verificação: critério binário, duas tentativas | Aceito |
@@ -45,6 +45,9 @@ Cada arquivo aqui registra **uma decisão**, o contexto em que foi tomada, as al
 | [0031](0031-identidade-visual-colorsoft.md) | Identidade visual COLORsoft substitui a paleta Luna; vidro ganha camada de conteúdo | Parcialmente substituído por 0033 |
 | [0032](0032-provedores-substituiveis.md) | Contratos próprios, troca de destino por configuração e coexistência de fornecedores | Aceito; implementação pendente |
 | [0033](0033-interface-fiel-intercom.md) | Interface de produto fiel ao Intercom; precedência ManyChat na automação | Aceito |
+| [0034](0034-acentos-azuis-da-marca.md) | Acentos azuis da marca | Aceito |
+| [0035](0035-dado-de-negocio-em-coluna.md) | Dado de negócio em coluna, JSON só para documento | Aceito |
+| [0036](0036-integridade-relacional-e-particoes.md) | Integridade de tenant no banco e mensagens particionadas | Aceito |
 
 ## Leitura obrigatória antes do primeiro código
 

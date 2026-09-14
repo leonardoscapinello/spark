@@ -92,5 +92,5 @@ function toConversation(row: typeof conversations.$inferSelect): Conversation {
 }
 
 function toMessage(row: typeof messages.$inferSelect): Message {
-  return { ...row, createdAt: row.createdAt.toISOString() } as Message;
+  return { ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(), deletedAt: row.deletedAt?.toISOString() ?? null } as Message;
 }

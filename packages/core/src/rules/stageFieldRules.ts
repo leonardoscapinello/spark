@@ -29,9 +29,45 @@ export const DEAL_BUILT_IN_FIELD_LABELS: Record<DealBuiltInField, string> = {
 export function stageFieldLabel(fieldKey: string, customFields: readonly CustomFieldDefinition[]): string {
   if (fieldKey.startsWith("custom:")) {
     const key = fieldKey.slice("custom:".length);
-    return customFields.find((field) => field.key === key)?.label ?? key;
+    const found = customFields.find((field) => field.key === key)?.label;
+    // Sem a definição em mãos (a organização apagou o campo, ou a
+    // sincronização ainda não chegou), mostrar `origem_negocio` seria mostrar
+    // o nome da coluna para quem não sabe o que é coluna.
+    return found ?? humanize(key);
   }
-  return DEAL_BUILT_IN_FIELD_LABELS[fieldKey as DealBuiltInField] ?? fieldKey;
+  return DEAL_BUILT_IN_FIELD_LABELS[fieldKey as DealBuiltInField] ?? humanize(fieldKey);
+}
+
+/** `origem_negocio` → «Origem negocio». Último recurso, nunca o caminho normal. */
+function humanize(key: string): string {
+  const words = key.replace(/[_-]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * A frase que a tela mostra para cada nível, no plural certo.
+ *
+ * Fica aqui porque a **diferença entre importante e obrigatório é regra de
+ * negócio, não estilo de texto**: obrigatório impede a etapa de mudar e
+ * importante só sinaliza. Escrever a frase na tela deixaria as duas com a
+ * mesma cara, que é o que apagava a diferença.
+ */
+export function stageFieldMessage(
+  level: StageFieldLevel,
+  labels: readonly string[],
+  stageName?: string,
+): string {
+  const lista = labels.join(", ");
+  const plural = labels.length > 1;
+  if (level === "required") {
+    const destino = stageName ? ` para «${stageName}»` : "";
+    return plural
+      ? `Preencha estes campos antes de mover${destino}: ${lista}.`
+      : `Preencha ${lista} antes de mover${destino}.`;
+  }
+  return plural
+    ? `Campos importantes desta etapa ainda em branco: ${lista}.`
+    : `${lista} é um campo importante desta etapa e está em branco.`;
 }
 
 function isFilled(value: unknown): boolean {

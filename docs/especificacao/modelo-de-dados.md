@@ -1,107 +1,81 @@
 # Modelo de dados integrado
 
-Status: modelo lógico proposto em 11/09/2026. Não é migration e não foi aplicado ao Supabase. Referência de implementação atual: `packages/db/src/schema/`. As relações abaixo devem se tornar contratos concretos por unidade de desenvolvimento.
+Status: implementado e auditado em 14/09/2026. A fonte executável é
+`packages/db/src/schema/`; migrations 0038–0049 materializam a normalização e
+as garantias descritas aqui.
 
-## Invariantes existentes
+## Regra de armazenamento
 
-Postgres é a fonte da verdade; tabelas estáticas; campos personalizados em JSONB com definições; isolamento por organização; regras em `core`; migrations versionadas; leitura de trabalho por coleções locais. Automações publicadas são imutáveis e esperas ficam em Postgres. Os ADRs 0009, 0018, 0021, 0022, 0026, 0027 e 0029 continuam sendo referência.
+Dado que pode ser filtrado, agrupado, ordenado, somado ou relacionado é coluna
+tipada. Lista consultável é tabela filha. JSONB só guarda documento cuja forma
+varia e que é lido/gravado como unidade. O Postgres é a única fonte de verdade.
 
-## Vocabulário que não pode ser ambíguo
+As únicas famílias JSONB deliberadas são:
 
-| Termo | Significado |
-| --- | --- |
-| Organização / tenant | Cliente que usa o Spark; tabela atual `organizations` |
-| Empresa do CRM | Empresa com a qual esse cliente negocia; propor `companies`, separada de `organizations` |
-| Usuário | Pessoa autenticada que opera o Spark |
-| Contato | Pessoa atendida ou relacionada a negócio; pode existir sem login |
-| Identidade | Identificador do contato em um provedor/canal e seu escopo |
-| Conexão | Conta Google, conta Instagram, número WhatsApp ou configuração de canal do tenant |
-| Caixa de equipe | Fila de trabalho compartilhada; não é sinônimo de conexão |
-| Responsável / seguidor / participante | Atribuição de trabalho / acompanhamento / pessoa envolvida, respectivamente |
+| Família | Colunas | Motivo |
+|---|---|---|
+| Automação | `automations.draft_graph`, `automation_versions.graph` | grafo versionado como unidade |
+| Execução | `automation_runs.context`, `automation_run_steps.result` | envelope variável de execução |
+| Página | `pages.draft_tree`, `page_versions.tree` | árvore de conteúdo |
+| Histórico | `events.data`, `audit_logs.data` | payload varia pelo tipo append-only |
+| Prova externa | `email_verifications.raw_result` | resposta crua preservada |
 
-## Mapa de relações proposto
+Campos personalizados, tags, capacidades, formulários, preferências, filtros de
+público, configurações de integração e MX são relacionais (ADR-0035).
 
-```mermaid
-erDiagram
-  ORGANIZATION ||--o{ CONTACT : possui
-  ORGANIZATION ||--o{ COMPANY : possui
-  CONTACT ||--o{ IDENTITY : identifica
-  CONTACT }o--o{ COMPANY : relaciona
-  PIPELINE ||--o{ STAGE : ordena
-  STAGE ||--o{ DEAL : posiciona
-  CONTACT }o--o{ DEAL : participa
-  DEAL ||--o{ DEAL_ITEM : compoe
-  PRODUCT ||--o{ DEAL_ITEM : referencia
-  CHANNEL_CONNECTION ||--o{ CONVERSATION : recebe
-  CONTACT }o--o{ CONVERSATION : participa
-  CONVERSATION ||--o{ MESSAGE : contem
-  CONVERSATION }o--o{ DEAL : contextualiza
-  AUTOMATION ||--o{ AUTOMATION_VERSION : publica
-  AUTOMATION_VERSION ||--o{ TRIGGER_CONFIG : configura
-  AUTOMATION_VERSION ||--o{ AUTOMATION_RUN : executa
-  CONTACT ||--o{ AUTOMATION_RUN : percorre
-  AUTOMATION_RUN ||--o{ RUN_STEP : registra
-  AUTOMATION_RUN ||--o{ TIMER : aguarda
-```
+## Mapa físico por domínio
 
-O diagrama é lógico. `TRIGGER_CONFIG` representa configurações de assinatura de eventos dentro da versão, não um segundo barramento nem uma decisão de criar tabela de gatilhos independente, descartada no ADR-0027. Relações N:N exigem vínculos explícitos no modelo físico.
+| Domínio | Raízes e relações |
+|---|---|
+| Tenant e acesso | `organizations`, `users`, `permission_groups`, `permission_group_capabilities`, `user_permission_groups`, `teams`, `team_members` |
+| Pessoas e empresas | `contacts`, `identities`, `companies`, `tags` e três tabelas de vínculo |
+| CRM | `pipelines`, `stages`, `stage_field_rules`, `deals`, `deal_products`, `activities`, `notes` |
+| Campos configuráveis | `custom_field_definitions`, `custom_field_options`, `custom_field_values` com uma coluna por tipo |
+| Inbox | `conversations`, `messages` particionada, `message_registry`, `canned_replies` |
+| Automação | `automations`, `automation_versions`, `automation_runs`, `automation_run_steps`, `automation_timers`, `automation_jobs` |
+| Integrações | `integration_connections`, `integration_connection_settings`, `integration_secrets` |
+| Catálogo | `products`, `product_variants`, `discount_rules`, `product_tags` |
+| Formulários | `lead_forms`, campos/opções, `form_submissions`, valores tipados e chaves públicas |
+| Social | `social_channels`, `social_posts` |
+| Campanhas | `audiences`, seus status/tags, `campaigns`, destinatários e supressões |
+| Páginas e arquivos | `pages`, `page_versions`, `page_public_keys`, `files` |
+| Preferências e visões | `user_preferences`, `user_preference_items`, `saved_views` |
+| Histórico | `events` particionada, `audit_logs`, verificações de e-mail e seus MX |
 
-## Entidades e lacunas
+## Invariantes garantidos pelo banco
 
-| Domínio | Existe no schema local | Complemento proposto |
-| --- | --- | --- |
-| Organização e acesso | `organizations`, `users`, grupos e vínculos de permissão | Times, membros, política de acesso a caixas/conexões; decidir usuário multi-organização |
-| Contatos | `contacts`, `identities` | Empresa cliente e vínculos, responsável, fusão/deduplicação, consentimento e definições de campos |
-| Classificação | Tags como JSONB em contatos | Definir catálogo de tags com ID estável, renomeação/arquivamento e associação; listas/segmentos separados |
-| CRM | `pipelines`, `stages`, `deals`, `activities` | Owner, seguidores, participantes, empresa, custom fields do negócio, notas/anexos e histórico de etapa |
-| Catálogo | Ausente | Produtos, variantes/preços, itens de negócio, desconto/imposto e cronograma |
-| Canais e inbox | Ausente | Conexões, caixas/times, conversas, participantes, mensagens, anexos, macros, atribuições e SLA |
-| Automação | Apenas decisões arquiteturais | Rascunho, versões, configurações de gatilho, execuções, passos, timers e registro de efeitos |
-| Eventos | `events`, particionamento previsto nas migrations | Eventos tipados e outbox transacional com entrega e deduplicação |
-| Documentos | Ausente no schema inspecionado | Referência externa Google e vínculos; arquivos internos via `packages/storage` |
+- RLS e `org_id` em toda tabela de negócio sincronizável.
+- Toda FK entre tabelas tenant-aware exige pai e filho na mesma organização.
+- Etapa pertence ao funil do negócio/regra; versão pertence à automação; canal
+  pertence à conexão; variante pertence ao produto; opção pertence ao campo.
+- Mensagem e conversa apontam para a mesma pessoa; valor de formulário aponta
+  para campo do mesmo formulário; versão publicada pertence à sua raiz.
+- Alvo polimórfico de campo personalizado existe, tem o tipo declarado e está
+  no tenant. Valor escalar é único por campo/entidade mesmo com `option_id NULL`.
+- Nota e atividade têm alvo; scores, probabilidades, duração, quantidades,
+  dinheiro, percentuais e estados respeitam os limites do domínio.
+- Preferências têm exatamente a coluna escalar compatível com `value_kind`, e
+  itens não repetem chave de objeto nem posição de lista.
+- E-mail/telefone canônicos de contatos também entram em `identities`; colisão
+  com outra pessoa aborta a transação.
 
-### Contato e identidade
+## Sync, volume e índices
 
-Hoje a unicidade da identidade é `(org_id, channel, external_value)`. Antes de integrar canais, definir o escopo do identificador externo: provedor, conta ou aplicação podem fazer parte da identidade. Não presumir que um ID social é global ou que um telefone/e-mail não verificado basta para fundir contatos.
+Toda tabela disponível ao Electric aparece tanto na publicação quanto nas
+allowlists de autorização e shape. Tabelas filhas de públicos e preferências
+são sincronizadas; a UI remonta os agregados por junção local.
 
-Propor identificador normalizado, valor de apresentação, origem e verificação. Campos `contacts.email/phone` precisam ter relação explícita com identidades: projeção do principal ou fonte canônica, evitando duas fontes divergentes. Fusão preserva histórico e trata vínculos de negócio/conversa/execução com auditoria.
+`events` e `messages` são particionadas mensalmente e possuem partição default.
+O scheduler mantém o horizonte futuro. `message_registry` garante unicidade
+global de ID e `external_id` apesar da chave física particionada.
 
-### Negócio e catálogo
+Há índices pelos acessos centrais: contato por e-mail/telefone e busca textual;
+mensagem por conversa/data e estado/data; valores customizados por cada tipo;
+negócio por funil/etapa; filas e timers por disponibilidade.
 
-O negócio atual tem pipeline, etapa, contato opcional, valor, estado e previsão de fechamento. Falta moeda explícita no schema inspecionado; o contrato monetário precisa definir moeda e unidade mínima antes de atender múltiplas moedas.
+## Regra para evolução
 
-Propor contato principal opcional e participantes N:N; owner singular; seguidores N:N; empresa cliente opcional. Itens de negócio guardam snapshot de descrição, preço, quantidade, desconto e imposto, para alteração do catálogo não reescrever negociação passada. Datas de cobrança, recorrência e parcelas precisam de regras próprias e exemplos aprovados.
-
-Estados atuais: aberto, ganho e perdido, conforme contrato de domínio. Toda movimentação valida que a etapa pertence ao pipeline e que todos os vínculos pertencem ao tenant. Definir como manter ordem de cards quando houver reordenação manual e edição concorrente.
-
-### Conversas, caixas e mensagens
-
-Propor conexão com provedor, conta externa, capacidades, escopos concedidos, estado e referência a segredo; segredo nunca é sincronizado para o cliente. Caixa de equipe e atendente são atribuições separadas. Uma conexão pode alimentar filas diferentes segundo regras.
-
-Conversa tem canal/conexão, participantes, estado, atendente, caixa, prioridade e datas de atividade/adiamento. Mensagem tem direção, autor, tipo (externa/nota interna), conteúdo, identificador externo, encadeamento, datas e estado de entrega. Estados propostos de entrega: pendente, enviando, aceita pelo provedor, entregue, lida e falha; nem todo canal oferece cada estado. Aceita pelo provedor não significa entregue.
-
-Nota interna não entra na fila de envio externo. Para e-mail, modelar Para/CC/BCC, Message-ID, In-Reply-To/References, assunto, anexos e aliases; não encadear apenas pelo assunto. SMTP envia; recebimento depende de API/IMAP/encaminhamento.
-
-Particionamento de mensagens exige decidir chave física e unicidade global dos IDs de provedor. Índice único incluindo mês não basta, sozinho, para deduplicar um evento reenviado em outro mês; especificar registro de dedupe independente quando necessário.
-
-### Automação com várias entradas
-
-Rascunho contém grafo, posições, configurações e coleção de gatilhos. Cada configuração possui ID estável, tipo do evento, filtro, escopo de canal/conexão e estado. Publicar congela essa configuração na versão. A ativação operacional precisa de semântica explícita: suspensão da automação impede novas entradas; cancelamento de execuções existentes é outra ação.
-
-Execução registra versão, contato, evento de origem, ID do gatilho que iniciou, contexto e estado. Estados propostos: pronta, executando, esperando, concluída, falha e cancelada. Espera por resposta ou tempo deve ter resultado único quando resposta e timeout disputarem a mesma execução.
-
-Passo registra nó, ocorrência da passagem pelo nó, tentativa, entrada/saída, resultado e timestamps. Separar a identidade do efeito da tentativa de transporte: uma nova tentativa não pode, por si só, autorizar novo envio. O ADR-0009 dá a direção; o contrato de falha precisa especificar o intervalo entre efeito aceito pelo provedor e confirmação local. Quando o provedor não fornece idempotência, não prometer exatamente uma entrega sem mecanismo adicional de reconciliação.
-
-Timers precisam de reivindicação recuperável após queda do worker/scheduler. Publicação em fila usa outbox; um crash depois de reivindicar timer e antes de enfileirar não pode deixar a execução parada permanentemente. Esses detalhes precisam de testes antes de liberar automação com efeitos externos.
-
-## Integridade, sync e permissões
-
-- Toda referência entre entidades de negócio deve garantir mesmo tenant, por validação central e constraints apropriadas; RLS isoladamente não descreve toda integridade entre vínculos.
-- Dados que sincronizam precisam de contrato de atualização/exclusão. Há entidades atuais com `archived_at`, outras com `deleted_at`, e identidades sem `updated_at`; definir semântica antes de adicioná-las às coleções.
-- Índices devem partir das consultas: fila por estado/atribuição, mensagens por conversa/data, contatos por identidade, negócios por pipeline/etapa e timers vencidos.
-- API pública e sync aplicam a mesma política de acesso. E-mails pessoais e documentos autorizados exigem visibilidade específica, além de pertencer ao tenant.
-- Eventos de domínio descrevem entidade, ação, origem, ator, tempo, correlação e versão do payload. Mudança de negócio e outbox são gravados na mesma transação.
-
-## Próxima unidade pronta para especificar fisicamente
-
-Identidade + empresa cliente + vínculos do negócio. Produzir campos/tipos, nulabilidade, unicidades, FKs, índices, regras de acesso, eventos e migrations compatíveis com os dados existentes. Em seguida, especificar inbox e versão/execução de automação com os mesmos IDs e políticas. Não criar antecipadamente tabelas para todos os canais sem fechar seus contratos comuns.
+Nova coluna JSONB exige justificar por que o valor é documento indivisível.
+Nova FK tenant-aware exige o guard de organização. Nova tabela sincronizada só
+entra junto com publicação, shape, autorização e schema de coleção. Alterações
+aceitas no modelo são registradas em novo ADR; não reescrevem decisões antigas.

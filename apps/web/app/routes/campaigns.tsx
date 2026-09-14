@@ -1,15 +1,15 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
-import { useTagsByEntity } from "../lib/tags.client";
+import { useTagCatalog, useTagsByEntity } from "../lib/tags.client";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Badge, Button, Checkbox, CollectionToolbar, DashboardGrid, DataTable, EmptyState, Field, Icon, Input, Label, MetricCard, PageFrame, PageHeader, ProgressBar, RecordIdentity, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client"; import { requireCapability } from "../lib/route-access.client"; import { getContactsCollection } from "../lib/contacts-collection.client";
-import { getAudiencesCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
+import { getAudienceLeadStatusesCollection, getAudiencesCollection, getAudienceTagsCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
 
 const LEAD_STATUSES = [{ value: "new", label: "Novo" }, { value: "qualified", label: "Qualificado" }, { value: "customer", label: "Cliente" }, { value: "lost", label: "Perdido" }];
-export async function clientLoader() { await requireCapability("campaigns:read"); void Promise.allSettled([getAudiencesCollection().preload(), getCampaignsCollection().preload(), getCampaignRecipientsCollection().preload(), getContactsCollection().preload()]); return null; }
+export async function clientLoader() { await requireCapability("campaigns:read"); void Promise.allSettled([getAudiencesCollection().preload(), getAudienceLeadStatusesCollection().preload(), getAudienceTagsCollection().preload(), getCampaignsCollection().preload(), getCampaignRecipientsCollection().preload(), getContactsCollection().preload()]); return null; }
 export default function Campaigns() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -18,11 +18,26 @@ export default function Campaigns() {
   const canWrite = capabilities.includes("campaigns:write");
   const canImportContacts = capabilities.includes("contacts:write");
   const canConfigureEmail = capabilities.includes("integrations:manage");
-  const { data: audiences, isLoading: audiencesLoading } = useLiveQuery({ query: (q) => q.from({ audiences: getAudiencesCollection() }).orderBy(({ audiences: item }) => item.updatedAt, "desc") });
+  const { data: audienceRows, isLoading: audiencesLoading } = useLiveQuery({ query: (q) => q.from({ audiences: getAudiencesCollection() }).orderBy(({ audiences: item }) => item.updatedAt, "desc") });
+  const { data: audienceStatusRows } = useLiveQuery({ query: (q) => q.from({ statuses: getAudienceLeadStatusesCollection() }) });
+  const { data: audienceTagRows } = useLiveQuery({ query: (q) => q.from({ tags: getAudienceTagsCollection() }) });
   const { data: campaigns, isLoading } = useLiveQuery({ query: (q) => q.from({ campaigns: getCampaignsCollection() }).orderBy(({ campaigns: item }) => item.createdAt, "desc") });
   const { data: contacts } = useLiveQuery({ query: (q) => q.from({ contacts: getContactsCollection() }) });
   // As marcações vêm das tabelas, não de coluna jsonb (ADR-0035).
   const tagsByContact = useTagsByEntity("contact");
+  const tagCatalog = useTagCatalog();
+  const audiences = useMemo<Audience[]>(() => {
+    const tagNameById = new Map(tagCatalog.map((tag) => [tag.id as string, tag.name]));
+    return audienceRows.map((row) => ({
+      ...row,
+      filter: {
+        operator: row.operator,
+        minimumScore: row.minimumScore,
+        leadStatuses: audienceStatusRows.filter((item) => item.audienceId === row.id).map((item) => item.leadStatus),
+        tags: audienceTagRows.filter((item) => item.audienceId === row.id).flatMap((item) => { const name = tagNameById.get(item.tagId); return name ? [name] : []; }),
+      },
+    }));
+  }, [audienceRows, audienceStatusRows, audienceTagRows, tagCatalog]);
   const [audienceOpen, setAudienceOpen] = useState(false); const [campaignOpen, setCampaignOpen] = useState(false); const [sending, setSending] = useState<string | null>(null);
   const [search, setSearch] = useState(""); const [statusFilter, setStatusFilter] = useState("all");
   const [audienceName, setAudienceName] = useState(""); const [description, setDescription] = useState(""); const [operator, setOperator] = useState<"all" | "any">("all"); const [statuses, setStatuses] = useState<string[]>([]); const [tags, setTags] = useState(""); const [minimumScore, setMinimumScore] = useState("");

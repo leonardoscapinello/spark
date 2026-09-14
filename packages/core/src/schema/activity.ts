@@ -41,13 +41,15 @@ export type Activity = z.infer<typeof ActivitySchema>;
 
 // orgId never comes from the client (docs/adr/0026); id does — optimistic
 // writes need the final key before the server responds (docs/adr/0030).
-export const CreateActivityInputSchema = ActivitySchema.omit({
+const ActivityCreateFieldsSchema = ActivitySchema.omit({
   orgId: true,
   completed: true,
   completedAt: true,
   createdAt: true,
   updatedAt: true,
 }).partial({ contactId: true, dealId: true, notes: true, durationMinutes: true, location: true, ownerId: true });
+export const CreateActivityInputSchema = ActivityCreateFieldsSchema
+  .refine((value) => Boolean(value.contactId || value.dealId), { error: "A atividade precisa estar ligada a uma pessoa ou negócio" });
 export type CreateActivityInput = z.infer<typeof CreateActivityInputSchema>;
 
 export const CreateActivityResponseSchema = z.object({
@@ -69,7 +71,7 @@ export const CompleteActivityResponseSchema = z.object({
 export type CompleteActivityResponse = z.infer<typeof CompleteActivityResponseSchema>;
 
 /** Editar uma atividade já criada — o Pipedrive permite mudar tudo menos o id. */
-export const UpdateActivityInputSchema = CreateActivityInputSchema.omit({ id: true }).partial();
+export const UpdateActivityInputSchema = ActivityCreateFieldsSchema.omit({ id: true }).partial();
 export type UpdateActivityInput = z.infer<typeof UpdateActivityInputSchema>;
 
 /** Fim de uma atividade a partir do seu início e duração — usado pelo calendário. */

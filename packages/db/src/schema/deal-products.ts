@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { bigint, integer, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, check, integer, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { APP_ROLE } from "../roles.js";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -29,6 +29,11 @@ export const dealProducts = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    check("deal_products_quantity_check", sql`${t.quantityMilli} > 0`),
+    check("deal_products_amount_check", sql`${t.unitAmount} >= 0`),
+    check("deal_products_discount_check", sql`${t.discountBasisPoints} BETWEEN 0 AND 10000`),
+    check("deal_products_tax_check", sql`${t.taxBasisPoints} BETWEEN 0 AND 10000`),
+    check("deal_products_sort_order_check", sql`${t.sortOrder} >= 0`),
     pgPolicy("deal_products_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

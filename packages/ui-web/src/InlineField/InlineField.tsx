@@ -6,7 +6,7 @@ export interface InlineFieldProps {
   label: string;
   /** O que se lê quando o campo está parado. */
   value: ReactNode;
-  /** Sem valor: o texto sai apagado e o leitor de tela ouve «vazio». */
+  /** Sem valor: o texto sai apagado e convida a preencher. */
   empty?: boolean;
   /** Só leitura: continua legível, deixa de ser clicável. */
   disabled?: boolean;
@@ -23,8 +23,13 @@ export interface InlineFieldProps {
  *
  * O que ele resolve, e por isso vive aqui e não numa tela: o valor parado tem
  * de parecer texto, o controle tem de aparecer no mesmo lugar sem empurrar
- * nada, e o foco tem de ir para o controle — senão quem usa teclado clica e
- * fica sem saber onde caiu.
+ * nada, o foco tem de ir para o controle — senão quem usa teclado clica e fica
+ * sem saber onde caiu — e **desistir tem de ser tão fácil quanto começar**,
+ * porque clicar no campo errado é o erro mais comum de uma coluna com dez
+ * campos empilhados.
+ *
+ * Desistir tem três saídas, e todas fecham sem gravar: `Esc`, clicar fora, e o
+ * botão de fechar ao lado do campo.
  */
 export function InlineField({ label, value, empty = false, disabled = false, children }: InlineFieldProps) {
   const [open, setOpen] = useState(false);
@@ -38,25 +43,63 @@ export function InlineField({ label, value, empty = false, disabled = false, chi
     focusable?.focus();
   }, [open]);
 
+  /* Clicar fora desiste. `pointerdown` e não `click`: o clique num item de
+   * menu suspenso chega depois de o menu já ter sumido do documento, e a
+   * verificação de «está dentro?» daria falso — fecharia antes de escolher. */
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (holder.current?.contains(target)) return;
+      // Menu e calendário são desenhados fora da linha, num portal: o que sai
+      // deles ainda é «dentro» da edição.
+      if (target instanceof Element && target.closest("[role='dialog'], [role='listbox'], [role='menu']")) return;
+      setOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [open]);
+
+  if (!open || disabled) {
+    return (
+      <div className={s.field}>
+        <div className={s.row}>
+          <span className={s.label}>{label}</span>
+          <div className={s.control}>
+            <button
+              type="button"
+              className={s.value}
+              data-empty={empty}
+              data-disabled={disabled}
+              aria-label={disabled ? `${label}: ${textOf(value)}` : `Alterar ${label}. Valor atual: ${textOf(value)}`}
+              disabled={disabled}
+              onClick={() => setOpen(true)}
+            >
+              <span>{value}</span>
+              {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name="pencil" /></span>}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={s.field}>
       <div className={s.row}>
-        <span className={s.label} id={`${label}-rotulo`}>{label}</span>
-        <div className={s.control} ref={holder}>
-          {open && !disabled
-            ? children(() => setOpen(false))
-            : <button
-                type="button"
-                className={s.value}
-                data-empty={empty}
-                data-disabled={disabled}
-                aria-label={disabled ? `${label}: ${textOf(value)}` : `Alterar ${label}. Valor atual: ${textOf(value)}`}
-                disabled={disabled}
-                onClick={() => setOpen(true)}
-              >
-                <span>{value}</span>
-                {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name="pencil" /></span>}
-              </button>}
+        <span className={s.label}>{label}</span>
+        <div
+          className={s.control}
+          ref={holder}
+          onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); setOpen(false); } }}
+        >
+          <div className={s.editing}>
+            <div className={s.editor}>{children(() => setOpen(false))}</div>
+            <button type="button" className={s.cancel} aria-label={`Cancelar edição de ${label}`} onClick={() => setOpen(false)}>
+              <Icon name="close" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

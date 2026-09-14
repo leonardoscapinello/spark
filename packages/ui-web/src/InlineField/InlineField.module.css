@@ -1,10 +1,51 @@
 /* Linha «rótulo · valor» que vira campo ao clicar — é como o Pipedrive deixa
- * mudar responsável, situação e previsão sem abrir formulário nenhum. Mesma
- * geometria da linha de campo personalizado, para o painel ficar homogêneo. */
+ * mudar responsável, situação e previsão sem abrir formulário nenhum.
+ *
+ * Mesma geometria de CustomFieldValue e da linha só de leitura da tela: a
+ * coluna do rótulo vem do mesmo token, e o recuo do valor é o mesmo. É isso
+ * que faz o painel inteiro alinhar em vez de ziguezaguear entre linha com
+ * campo e linha sem campo. */
 .field { container-type: inline-size; }
-.row { display: grid; grid-template-columns: minmax(var(--space-16), 34%) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-height: var(--ui-controlMedium); }
-.label { min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); overflow-wrap: anywhere; }
+
+.row {
+  display: grid;
+  grid-template-columns: var(--ui-fieldLabelColumn) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  border-top: var(--ui-hairline) solid var(--color-line);
+}
+.field:first-child .row { border-top: 0; padding-top: 0; }
+
+.label {
+  min-width: 0;
+  padding-top: var(--space-2);
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-sm);
+  line-height: var(--ui-tabLine);
+  overflow-wrap: break-word;
+}
 .control { min-width: 0; font-size: var(--typography-size-sm); }
+
+/* Em edição: o campo ocupa o espaço e o «fechar» fica ao lado, do tamanho
+ * dele. Desistir tem de ser visível, não só uma tecla que ninguém adivinha. */
+.editing { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.editor { flex: 1 1 auto; min-width: 0; }
+.cancel {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: var(--ui-controlMedium);
+  height: var(--ui-controlMedium);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-inkMuted);
+  cursor: pointer;
+}
+.cancel:hover { background: var(--ui-subtle); color: var(--color-ink); }
+.cancel:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 
 /* O valor parado parece texto; ao passar o mouse mostra que é editável. É o
  * meio-termo do Pipedrive: nada de campo desenhado o tempo todo, e nada de
@@ -26,26 +67,29 @@
   color: var(--color-ink);
   text-align: start;
   cursor: pointer;
-  /* `anywhere` (e não `break-word`) reduz a largura mínima do item flex ao
-   * caractere mais largo — dentro deste botão, o valor quebrava uma letra por
-   * linha. `break-word` quebra só quando a palavra não cabe. */
+  /* `anywhere` reduziria a largura mínima do item flex ao caractere mais
+   * largo, e o valor quebraria uma letra por linha. */
   overflow-wrap: break-word;
 }
-/* Só o texto cresce; o lápis fica do tamanho dele. Sem `min-width: 0`
- * de propósito: o piso automático do item flex é a palavra mais longa, e é
- * ele que impede o valor de virar uma coluna de letras. */
 .value > span:first-child { flex: 1 1 auto; }
-.value > .pencil { flex: 0 0 auto; }
 .value:hover { background: var(--ui-subtle); border-color: var(--color-line); }
 .value:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.value[data-empty="true"] { color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }
 .value[data-disabled="true"] { cursor: default; }
 .value[data-disabled="true"]:hover { background: transparent; border-color: transparent; }
 
-.pencil { display: flex; flex-shrink: 0; margin-inline-start: auto; opacity: 0; color: var(--color-inkMuted); }
+/* Campo vazio convida em vez de esconder — o «Clique aqui para adicionar» do
+ * Pipefy. Tracejado porque não é link de navegação. */
+.value[data-empty="true"] {
+  color: var(--color-inkMuted);
+  font-weight: var(--typography-weight-regular);
+  text-decoration: underline dashed;
+  text-underline-offset: var(--space-1);
+}
+
+.pencil { display: flex; flex: 0 0 auto; margin-inline-start: auto; opacity: 0; color: var(--color-inkMuted); }
 .value:hover .pencil, .value:focus-visible .pencil { opacity: 1; }
 
 @container (max-width: 240px) {
-  .row { grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: var(--space-1); }
-  .label { font-size: var(--typography-size-compact); }
+  .row { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+  .label { padding-top: 0; font-size: var(--typography-size-compact); }
 }

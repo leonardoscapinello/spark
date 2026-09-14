@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgPolicy, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { check, pgPolicy, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { APP_ROLE } from "../roles.js";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -24,6 +24,7 @@ export const stageFieldRules = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    check("stage_field_rules_level_check", sql`${t.level} = ANY (ARRAY['required', 'important'])`),
     unique("stage_field_rules_stage_field").on(t.orgId, t.stageId, t.fieldKey),
     pgPolicy("stage_field_rules_isolation_by_org", {
       for: "all",

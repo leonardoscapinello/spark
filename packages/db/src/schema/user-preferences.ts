@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, numeric, pgPolicy, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, numeric, pgPolicy, pgTable, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { APP_ROLE } from "../roles.js";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -25,6 +25,11 @@ export const userPreferences = pgTable(
   },
   (t) => [
     unique("user_preferences_user_key").on(t.orgId, t.userId, t.key),
+    check("user_preferences_typed_value_check", sql`
+      (${t.valueKind} = 'text' AND ${t.valueText} IS NOT NULL AND ${t.valueNumber} IS NULL AND ${t.valueBoolean} IS NULL) OR
+      (${t.valueKind} = 'number' AND ${t.valueText} IS NULL AND ${t.valueNumber} IS NOT NULL AND ${t.valueBoolean} IS NULL) OR
+      (${t.valueKind} = 'boolean' AND ${t.valueText} IS NULL AND ${t.valueNumber} IS NULL AND ${t.valueBoolean} IS NOT NULL) OR
+      (${t.valueKind} IN ('list', 'object') AND ${t.valueText} IS NULL AND ${t.valueNumber} IS NULL AND ${t.valueBoolean} IS NULL)`),
     pgPolicy("user_preferences_isolation_by_org", {
       for: "all",
       to: APP_ROLE,
@@ -51,6 +56,8 @@ export const userPreferenceItems = pgTable(
   (t) => [
     index("user_preference_items_preference_idx").on(t.orgId, t.preferenceId, t.sortOrder),
     index("user_preference_items_user_idx").on(t.orgId, t.userId, t.preferenceId, t.sortOrder),
+    uniqueIndex("user_preference_items_object_key_uidx").on(t.preferenceId, t.itemKey).where(sql`${t.itemKey} IS NOT NULL`),
+    uniqueIndex("user_preference_items_list_order_uidx").on(t.preferenceId, t.sortOrder).where(sql`${t.itemKey} IS NULL`),
     pgPolicy("user_preference_items_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

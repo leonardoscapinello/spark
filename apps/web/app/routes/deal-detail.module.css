@@ -38,13 +38,28 @@
 .details { display: grid; }
 /* A linha «rótulo · valor» é marcada por classe, NUNCA por `.details > div`.
  * Um seletor de descendente pegava também o invólucro de InlineField e de
- * CustomFieldValue, virava os dois num grid de duas colunas, e a linha inteira
- * do componente caía dentro da primeira — 38% do painel. Era isso que quebrava
- * «Implantação Acme» uma letra por linha. */
-.linha { display: grid; grid-template-columns: minmax(var(--space-16), 38%) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-width: 0; min-height: var(--ui-controlMedium); }
-.linha > span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
-.linha > strong, .linha > a { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: break-word; }
-.linha > a { color: var(--color-accent); }
+ * CustomFieldValue e virava os dois num grid de duas colunas — a linha inteira
+ * do componente caía dentro da primeira.
+ *
+ * A geometria é a MESMA dos componentes, vinda dos mesmos tokens: coluna de
+ * rótulo fixa, mesmo espaçamento, e o valor com o mesmo recuo do botão
+ * editável. Sem isso o valor de «Situação» começava 8px depois do valor de
+ * «Nome», e a coluna virava um ziguezague. */
+.linha {
+  display: grid;
+  grid-template-columns: var(--ui-fieldLabelColumn) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  border-top: var(--ui-hairline) solid var(--color-line);
+  min-width: 0;
+}
+.linha:first-child { border-top: 0; padding-top: 0; }
+.linha > span { padding-top: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); }
+/* Mesmo recuo do botão de edição, para o texto começar no mesmo x. */
+.linha > strong, .linha > a { min-height: var(--ui-controlMedium); padding: var(--space-1) var(--space-2); margin-inline-start: calc(-1 * var(--space-2)); display: flex; align-items: center; color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: break-word; }
+.linha > a { color: var(--color-accent); text-decoration: none; }
+.linha > a:hover { text-decoration: underline; }
 
 .editForm { display: grid; gap: var(--space-4); }
 .formActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }

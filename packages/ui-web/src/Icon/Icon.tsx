@@ -40,6 +40,12 @@ const paths = {
   exit: "M6 2H2v12h4m4-9 4 3-4 3m4-3H5",
   pushpin: "M6 2h4v4l2 3H4l2-3V2ZM8 9v5",
   filter: "M2 3h12L9.5 8.5V13l-3 1V8.5L2 3Z",
+  /* Glifos de TIPO DE CAMPO (Pipefy): quem varre o painel reconhece o campo
+   * pelo desenho antes de ler o rótulo. */
+  hash: "M6.5 2.5 5 13.5M11 2.5 9.5 13.5M2.5 6h11M2 10h11",
+  coin: "M8 2.2a5.8 5.8 0 1 0 0 11.6 5.8 5.8 0 0 0 0-11.6ZM10 5.8H7.3a1.3 1.3 0 0 0 0 2.5h1.4a1.3 1.3 0 0 1 0 2.6H6",
+  link: "M6.8 9.2a2.8 2.8 0 0 1 0-4l1.4-1.4a2.8 2.8 0 0 1 4 4l-.7.7M9.2 6.8a2.8 2.8 0 0 1 0 4l-1.4 1.4a2.8 2.8 0 0 1-4-4l.7-.7",
+  list: "M6 4h8M6 8h8M6 12h8M3 4h.01M3 8h.01M3 12h.01",
   /* Lápis: o sinal de «isto dá para mudar aqui mesmo». */
   pencil: "M11.5 2.5a1.4 1.4 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5Z",
 } as const;

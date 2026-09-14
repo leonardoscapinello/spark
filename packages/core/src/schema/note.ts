@@ -25,7 +25,8 @@ export const NoteSchema = z.object({
 export type Note = z.infer<typeof NoteSchema>;
 
 export const CreateNoteInputSchema = NoteSchema.omit({ orgId: true, authorId: true, createdAt: true, updatedAt: true })
-  .partial({ dealId: true, contactId: true, companyId: true, pinned: true });
+  .partial({ dealId: true, contactId: true, companyId: true, pinned: true })
+  .refine((value) => Boolean(value.dealId || value.contactId || value.companyId), { error: "A nota precisa estar ligada a um negócio, pessoa ou empresa" });
 export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>;
 
 export const UpdateNoteInputSchema = z.object({ body: z.string().trim().min(1).max(10_000).optional(), pinned: z.boolean().optional() });

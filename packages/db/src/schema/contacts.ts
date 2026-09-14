@@ -1,4 +1,4 @@
-import { pgTable, pgPolicy, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
+import { check, index, pgTable, pgPolicy, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -27,6 +27,9 @@ export const contacts = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (t) => [
+    check("contacts_score_check", sql`${t.score} BETWEEN 0 AND 100`),
+    index("contacts_org_email_idx").on(t.orgId, t.email).where(sql`${t.email} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    index("contacts_org_phone_idx").on(t.orgId, t.phone).where(sql`${t.phone} IS NOT NULL AND ${t.deletedAt} IS NULL`),
     pgPolicy("contacts_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

@@ -19,12 +19,22 @@ import type { SparkDb } from "./client.js";
  * create do mês, reinsert das linhas, attach.
  */
 export async function ensureEventPartitions(db: SparkDb, now = new Date(), monthsAhead = 3): Promise<string[]> {
+  return ensureMonthlyPartitions(db, "events", now, monthsAhead);
+}
+
+/** Mesma manutenção para o segundo fluxo append-heavy (ADR-0021). */
+export async function ensureMessagePartitions(db: SparkDb, now = new Date(), monthsAhead = 3): Promise<string[]> {
+  return ensureMonthlyPartitions(db, "messages", now, monthsAhead);
+}
+
+async function ensureMonthlyPartitions(db: SparkDb, table: "events" | "messages", now: Date, monthsAhead: number): Promise<string[]> {
   const ensured: string[] = [];
   for (const partition of eventPartitionsFor(now, monthsAhead)) {
+    const name = partition.name.replace("events_", `${table}_`);
     await db.execute(sql.raw(
-      `CREATE TABLE IF NOT EXISTS "${partition.name}" PARTITION OF "events" FOR VALUES FROM ('${partition.from}') TO ('${partition.to}')`,
+      `CREATE TABLE IF NOT EXISTS "${name}" PARTITION OF "${table}" FOR VALUES FROM ('${partition.from}') TO ('${partition.to}')`,
     ));
-    ensured.push(partition.name);
+    ensured.push(name);
   }
   return ensured;
 }

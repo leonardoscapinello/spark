@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, pgPolicy, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { check, index, integer, pgPolicy, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import type { CampaignRecipientStatus, CampaignStatus } from "@spark/core";
 import { APP_ROLE } from "../roles.js";
 import { idColumn } from "./_helpers.js";
@@ -13,7 +13,7 @@ export const audiences = pgTable("audiences", {
   description: text("description"), operator: text("operator").notNull().default("all"), minimumScore: integer("minimum_score"),
   createdBy: uuid("created_by").notNull().references(() => users.id), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [index("audiences_org_name_idx").on(t.orgId, t.name), pgPolicy("audiences_isolation_by_org", { for: "all", to: APP_ROLE, using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid` })]).enableRLS();
+}, (t) => [check("audiences_operator_check", sql`${t.operator} = ANY (ARRAY['all', 'any'])`), check("audiences_minimum_score_check", sql`${t.minimumScore} IS NULL OR ${t.minimumScore} BETWEEN 0 AND 100`), index("audiences_org_name_idx").on(t.orgId, t.name), pgPolicy("audiences_isolation_by_org", { for: "all", to: APP_ROLE, using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid` })]).enableRLS();
 
 export const campaigns = pgTable("campaigns", {
   id: idColumn(), orgId: uuid("org_id").notNull().references(() => organizations.id), audienceId: uuid("audience_id").notNull().references(() => audiences.id),

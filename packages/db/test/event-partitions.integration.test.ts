@@ -9,7 +9,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import postgres from "postgres";
 import { orgId as orgIdFactory, eventId as eventIdFactory } from "@spark/core";
-import { createDbClient, ensureEventPartitions } from "../src/index.js";
+import { createDbClient, ensureEventPartitions, ensureMessagePartitions } from "../src/index.js";
 
 const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 const admin = postgres(DATABASE_URL, { prepare: false });
@@ -20,6 +20,7 @@ const org = orgIdFactory.create();
 // colidir com partições que a rotina de verdade já criou.
 const FUTURE = new Date("2031-06-15T00:00:00Z");
 const created = ["events_y2031m06", "events_y2031m07"];
+const createdMessages = ["messages_y2031m06", "messages_y2031m07"];
 
 beforeAll(async () => {
   await admin`INSERT INTO organizations (id, name, slug) VALUES (${org}, 'Partition Org', ${"org-part-" + org})`;
@@ -28,6 +29,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await admin`DELETE FROM events WHERE org_id = ${org}`;
   for (const name of created) await admin.unsafe(`DROP TABLE IF EXISTS "${name}"`);
+  for (const name of createdMessages) await admin.unsafe(`DROP TABLE IF EXISTS "${name}"`);
   await admin`DELETE FROM organizations WHERE id = ${org}`;
   await admin.end();
 });
@@ -44,6 +46,11 @@ describe("packages/db — partições mensais de events", () => {
     expect(rows.map((row) => row.name).sort()).toEqual([...created].sort());
 
     await expect(ensureEventPartitions(db, FUTURE, 1)).resolves.toEqual(created);
+  });
+
+  it("maintains message partitions with the same monthly safety horizon", async () => {
+    await expect(ensureMessagePartitions(db, FUTURE, 1)).resolves.toEqual(createdMessages);
+    await expect(ensureMessagePartitions(db, FUTURE, 1)).resolves.toEqual(createdMessages);
   });
 
   it("uma linha do mês novo cai na partição do mês, não na DEFAULT", async () => {

@@ -251,8 +251,13 @@
     },
     "detailPanelWidth": {
       "$type": "dimension",
-      "$value": "360px",
-      "$description": "Painel de detalhes da tela de registro. Largo o bastante para rótulo e campo na mesma linha — a 320px tudo empilhava e cada linha virava duas."
+      "$value": "400px",
+      "$description": "Painel de detalhes da tela de registro. Cabe rótulo e campo na mesma linha sem o rótulo quebrar."
+    },
+    "fieldLabelColumn": {
+      "$type": "dimension",
+      "$value": "140px",
+      "$description": "Coluna do rótulo no painel de detalhes. Largura FIXA, não porcentagem: é o que faz o valor de toda linha começar no mesmo lugar, com campo ou sem campo."
     },
     "splitDividerOpacity": {
       "$type": "number",

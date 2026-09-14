@@ -81,6 +81,7 @@ O modelo inteiro gira em torno de duas tabelas. Se só estas duas estiverem cert
 ```mermaid
 erDiagram
     CONTACTS ||--o{ IDENTITIES : "é alcançável por"
+    CONTACTS ||--o{ CUSTOM_FIELD_VALUES : "tem valores tipados"
     CONTACTS ||--o{ EVENTS : "acumula"
     CONTACTS ||--o{ CONVERSATIONS : "participa de"
     CONTACTS ||--o{ DEALS : "origina"
@@ -93,7 +94,6 @@ erDiagram
         uuid id PK
         uuid org_id
         text nome
-        jsonb campos_customizados
         int score
         timestamptz updated_at
         timestamptz deleted_at
@@ -104,6 +104,17 @@ erDiagram
         text canal "email·whatsapp·instagram·messenger·telefone"
         text valor_externo "UNIQUE por (org,canal)"
         bool verificado
+    }
+    CUSTOM_FIELD_VALUES {
+        uuid id PK
+        uuid field_id FK
+        uuid entity_id
+        text value_text
+        numeric value_number
+        bigint value_money
+        date value_date
+        timestamptz value_timestamp
+        boolean value_boolean
     }
     EVENTS {
         uuid id PK

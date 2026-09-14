@@ -1,6 +1,6 @@
 import { Queue, type ConnectionOptions } from "bullmq";
 import { eq, sql } from "drizzle-orm";
-import { automationJobs, automationTimers, createDbClient, ensureEventPartitions, type SparkDb } from "@spark/db";
+import { automationJobs, automationTimers, createDbClient, ensureEventPartitions, ensureMessagePartitions, type SparkDb } from "@spark/db";
 import { automationJobId } from "@spark/core";
 
 export const APP_NAME = "@spark/scheduler" as const;
@@ -63,7 +63,7 @@ export function startAutomationScheduler(): { queue: Queue; stop: () => Promise<
  * de horizonte dão folga para o scheduler ficar fora do ar sem consequência.
  */
 export function startEventPartitionMaintenance(db: SparkDb): { stop: () => void } {
-  const run = () => ensureEventPartitions(db).catch((error: unknown) => process.stderr.write(`event partitions: ${error instanceof Error ? error.message : String(error)}\n`));
+  const run = () => Promise.all([ensureEventPartitions(db), ensureMessagePartitions(db)]).catch((error: unknown) => process.stderr.write(`monthly partitions: ${error instanceof Error ? error.message : String(error)}\n`));
   const interval = setInterval(() => { void run(); }, Number(process.env.EVENT_PARTITIONS_INTERVAL_MS ?? 24 * 60 * 60 * 1_000));
   void run();
   return { stop: () => clearInterval(interval) };
