@@ -19,7 +19,15 @@ export const UserPreferenceSchema = z.object({
   orgId: zOrgId,
   userId: zUserId,
   key: UserPreferenceKeySchema,
-  value: UserPreferenceValueSchema,
+  /* O valor mora em colunas (ADR-0035): escalar em `user_preferences`, lista e
+   * objeto em `user_preference_items`. A API devolve montado em `value`; a
+   * linha sincronizada traz as colunas, e a tela junta com
+   * `fromPreferenceStorage`. */
+  value: UserPreferenceValueSchema.optional(),
+  valueKind: z.enum(["text", "number", "boolean", "list", "object"]).optional(),
+  valueText: z.string().nullable().optional(),
+  valueNumber: z.union([z.number(), z.string()]).nullable().optional(),
+  valueBoolean: z.boolean().nullable().optional(),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
 });
@@ -31,3 +39,16 @@ export type UpsertUserPreferenceInput = z.infer<typeof UpsertUserPreferenceInput
 
 export const UserPreferenceWriteResponseSchema = z.object({ preference: UserPreferenceSchema, txid: z.number().int() });
 export type UserPreferenceWriteResponse = z.infer<typeof UserPreferenceWriteResponseSchema>;
+
+/** Um item de uma preferência que é lista ou objeto (ADR-0035). */
+export const UserPreferenceItemSchema = z.object({
+  id: z.string().min(1),
+  orgId: zOrgId,
+  preferenceId: zUserPreferenceId,
+  itemKey: z.string().nullable().default(null),
+  sortOrder: z.number().int().default(0),
+  valueText: z.string().nullable().default(null),
+  valueNumber: z.union([z.number(), z.string()]).nullable().default(null),
+  valueBoolean: z.boolean().nullable().default(null),
+});
+export type UserPreferenceItem = z.infer<typeof UserPreferenceItemSchema>;

@@ -1,11 +1,13 @@
 import { useCallback, useEffect } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { userId as userIdFactory, type UserPreferenceValue } from "@spark/core";
-import { createUserPreferencesCollection, optimisticUserPreference, type UserPreferencesCollection } from "@spark/data";
+import { fromPreferenceStorage, userId as userIdFactory, type PreferenceKind, type UserPreferenceValue } from "@spark/core";
+import { createUserPreferenceItemsCollection, createUserPreferencesCollection, optimisticUserPreference, type UserPreferenceItemsCollection, type UserPreferencesCollection } from "@spark/data";
 import { getSession } from "./auth.client";
 
 let preferences: UserPreferencesCollection | undefined;
 export function getUserPreferencesCollection(): UserPreferencesCollection { preferences ??= createUserPreferencesCollection(); return preferences; }
+let preferenceItems: UserPreferenceItemsCollection | undefined;
+export function getUserPreferenceItemsCollection(): UserPreferenceItemsCollection { preferenceItems ??= createUserPreferenceItemsCollection(); return preferenceItems; }
 
 const CACHE_PREFIX = "spark_pref:";
 function readCache<T>(key: string): T | undefined {
@@ -30,11 +32,37 @@ export function usePreference<T extends UserPreferenceValue>(key: string, fallba
   const collection = getUserPreferencesCollection();
   const { data } = useLiveQuery({ query: (q) => q.from({ preferences: collection }).where(({ preferences: preference }) => eq(preference.key, key)) }, [key]);
   const row = data?.[0];
+  // O valor não é coluna jsonb (ADR-0035): escalar vem da coluna do seu tipo e
+  // lista ou objeto vêm das linhas, juntadas aqui com a mesma função que o
+  // servidor usa para gravar.
+  const { data: items = [] } = useLiveQuery(
+    { query: (q) => row ? q.from({ items: getUserPreferenceItemsCollection() }).where(({ items: item }) => eq(item.preferenceId, row.id)) : undefined },
+    [row?.id],
+  );
+  const stored = row === undefined
+    ? undefined
+    : fromPreferenceStorage(
+      {
+        kind: (row.valueKind ?? "text") as PreferenceKind,
+        valueText: row.valueText ?? null,
+        valueNumber: row.valueNumber === null || row.valueNumber === undefined ? null : Number(row.valueNumber),
+        valueBoolean: row.valueBoolean ?? null,
+      },
+      items.map((item) => ({
+        itemKey: item.itemKey,
+        sortOrder: item.sortOrder,
+        valueText: item.valueText,
+        valueNumber: item.valueNumber === null ? null : Number(item.valueNumber),
+        valueBoolean: item.valueBoolean,
+      })),
+    );
+  // A escrita otimista preenche `value` antes da sincronização chegar.
+  const current = row?.value ?? stored;
   const cached = typeof window === "undefined" ? undefined : readCache<T>(key);
   const has = row !== undefined || cached !== undefined;
-  const value = (row ? row.value : cached ?? fallback) as T;
+  const value = (current ?? cached ?? fallback) as T;
 
-  useEffect(() => { if (row) writeCache(key, row.value); }, [key, row]);
+  useEffect(() => { if (current !== undefined) writeCache(key, current); }, [key, current]);
 
   const set = useCallback((next: T) => {
     writeCache(key, next);

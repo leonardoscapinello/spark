@@ -67,6 +67,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   teams: { column: "org_id" },
   saved_views: { column: "org_id", sharedUnless: { ownerColumn: "created_by", flagColumn: "visibility", sharedValue: "org" } },
   user_preferences: { column: "org_id", userColumn: "user_id" },
+  user_preference_items: { column: "org_id", userColumn: "user_id" },
 };
 
 export function isSyncableTable(table: string): table is SyncResource {

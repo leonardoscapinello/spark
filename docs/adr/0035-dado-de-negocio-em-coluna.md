@@ -58,11 +58,17 @@ Regras que acompanham:
 |---|---|---|
 | `custom_field_definitions.options` | `custom_field_options` | tabela criada (0038) |
 | `contacts/companies/deals.custom_fields` | `custom_field_values`, coluna por tipo | tabela criada (0038) |
-| `contacts/companies/products.tags` | `tags` + vínculo por entidade | a fazer |
-| `permission_groups.capabilities` | `permission_group_capabilities` | a fazer |
-| `lead_forms.fields` | `lead_form_fields` | a fazer |
-| `form_submissions.values` | `form_submission_values`, coluna por tipo | a fazer |
-| `integration_connections.config` | `integration_connection_settings` | a fazer |
+| `contacts/companies/products.tags` | `tags` + vínculo por entidade | feito (0040) |
+| `permission_groups.capabilities` | `permission_group_capabilities` | feito (0041) |
+| `lead_forms.fields` | `lead_form_fields` + opções | feito (0041, 0043) |
+| `form_submissions.values` | `form_submission_values`, coluna por tipo | feito (0041) |
+| `integration_connections.config` | `integration_connection_settings` | feito (0042) |
+| `user_preferences.value` | coluna por tipo + `user_preference_items` | feito (0045, 0046) |
+| `audiences.filter` | colunas + `audience_lead_statuses` e `audience_tags` | feito (0045) |
+| `email_verifications.mx_records` | `email_verification_mx_records` | feito (0045) |
+
+As colunas jsonb originais foram removidas nas migrations 0044 e 0045 — a
+parte "contract" do expand/contract.
 
 **Continua JSON** (documento, e o porquê):
 
@@ -72,9 +78,27 @@ Regras que acompanham:
 | `automation_runs.context`, `automation_run_steps.result` | payload de execução em fila — o caso que o JSON resolve bem |
 | `pages.draft_tree`, `page_versions.tree` | árvore de conteúdo da página |
 | `events.data`, `audit_logs.data` | registro append-only cujo formato varia por tipo de evento |
-| `email_verifications.raw_result`, `mx_records` | resposta crua de serviço externo, guardada como prova |
-| `audiences.filter` | definição de consulta, não dado consultado |
-| `user_preferences.value` | preferência de interface, por chave, sem relatório em cima |
+| `email_verifications.raw_result` | resposta crua de serviço externo, guardada como prova |
+
+### Revisão de setembro de 2026
+
+Três colunas listadas acima como "documento" foram reclassificadas depois de
+uma segunda passada com a mesma pergunta — «alguém vai querer filtrar, agrupar
+ou juntar por isso?»:
+
+- **`audiences.filter`** é a definição de um público: operador, etapas,
+  marcações e pontuação mínima. Cada um é dado, e a marcação passa a apontar
+  para o catálogo de `tags` — «quais públicos usam esta marcação?» vira junção.
+- **`user_preferences.value`** é escalar ou lista curta. Escalar foi para a
+  coluna do seu tipo; lista e objeto viraram `user_preference_items`. Uma
+  coluna `value_kind` separa lista vazia de objeto vazio, que nenhuma coluna
+  de valor conseguiria distinguir.
+- **`email_verifications.mx_records`** é uma lista de servidores.
+
+A régua que sobrou para o que continua JSON: **é documento quando só se lê e
+se grava inteiro, e quando a forma varia por linha.** Grafo de automação,
+árvore de página, contexto de execução em fila, registro de evento e de
+auditoria, e a resposta crua de um serviço externo.
 
 ## Consequências
 

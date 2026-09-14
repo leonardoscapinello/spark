@@ -1,5 +1,5 @@
 import { BadGatewayException, Injectable, ServiceUnavailableException } from "@nestjs/common";
-import { and, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import {
   EMAIL_VERIFICATION_STATUSES,
   EmailVerificationResultSchema,
@@ -11,7 +11,7 @@ import {
   type OrgId,
   type VerifyEmailResponse,
 } from "@spark/core";
-import { createDbClient, emailVerifications, withOrgContext, type SparkDb } from "@spark/db";
+import { createDbClient, emailVerificationMxRecords, emailVerifications, withOrgContext, type SparkDb } from "@spark/db";
 import { IntegrationRuntimeResolver } from "../../integrations/application/integration-runtime-resolver.service.js";
 
 const CACHE_DURATION_MS = 90 * 24 * 60 * 60 * 1_000;
@@ -38,9 +38,14 @@ export class EmailVerificationService {
           ),
         )
         .limit(1);
-      return row;
+      if (!row) return undefined;
+      // Os servidores MX vêm das linhas (ADR-0035), na ordem em que chegaram.
+      const hosts = await tx.select({ host: emailVerificationMxRecords.host }).from(emailVerificationMxRecords)
+        .where(and(eq(emailVerificationMxRecords.orgId, orgId), eq(emailVerificationMxRecords.email, email)))
+        .orderBy(asc(emailVerificationMxRecords.sortOrder));
+      return { row, mxRecords: hosts.map((item) => item.host) };
     });
-    if (cached) return responseFor(toResult(cached), true);
+    if (cached) return responseFor(toResult(cached.row, cached.mxRecords), true);
 
     const provider = await this.integrations.resolve(orgId, "reoon");
     if (!provider.secrets.apiKey) {
@@ -70,7 +75,7 @@ export class EmailVerificationService {
         .insert(emailVerifications)
         .values({
           orgId,
-          ...result,
+          ...withoutMxRecords(result),
           rawResult: raw as Record<string, unknown>,
           providerConnectionId: provider.connectionId,
           checkedAt,
@@ -94,7 +99,6 @@ export class EmailVerificationService {
             isSpamtrap: result.isSpamtrap,
             isFreeEmail: result.isFreeEmail,
             mxAcceptsMail: result.mxAcceptsMail,
-            mxRecords: result.mxRecords,
             rawResult: raw as Record<string, unknown>,
             providerConnectionId: provider.connectionId,
             checkedAt,
@@ -102,6 +106,12 @@ export class EmailVerificationService {
             updatedAt: checkedAt,
           },
         });
+
+      // Os servidores MX são linhas (ADR-0035); a lista é substituída inteira.
+      await tx.delete(emailVerificationMxRecords).where(and(eq(emailVerificationMxRecords.orgId, orgId), eq(emailVerificationMxRecords.email, result.email)));
+      if (result.mxRecords.length > 0) {
+        await tx.insert(emailVerificationMxRecords).values(result.mxRecords.map((host, index) => ({ orgId, email: result.email, host, sortOrder: index })));
+      }
     });
     return responseFor(result, false);
   }
@@ -157,11 +167,18 @@ function fromProvider(
   });
 }
 
-function toResult(row: typeof emailVerifications.$inferSelect): EmailVerificationResult {
+function toResult(row: typeof emailVerifications.$inferSelect, mxRecords: string[]): EmailVerificationResult {
   return EmailVerificationResultSchema.parse({
     ...row,
+    mxRecords,
     verificationMode: "power",
     checkedAt: row.checkedAt.toISOString(),
     expiresAt: row.expiresAt.toISOString(),
   });
+}
+
+/** `mxRecords` deixou de ser coluna: vai para `email_verification_mx_records`. */
+function withoutMxRecords(result: EmailVerificationResult): Omit<EmailVerificationResult, "mxRecords"> {
+  const { mxRecords: _mxRecords, ...columns } = result;
+  return columns;
 }
