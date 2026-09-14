@@ -24,3 +24,4 @@ export * from "./customField.js";
 export * from "./page.js";
 export * from "./savedView.js";
 export * from "./userPreference.js";
+export * from "./dealProduct.js";

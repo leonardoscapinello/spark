@@ -30,3 +30,4 @@ export * from "./pages.js";
 export * from "./canned-replies.js";
 export * from "./saved-views.js";
 export * from "./user-preferences.js";
+export * from "./deal-products.js";

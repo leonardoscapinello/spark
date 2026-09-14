@@ -86,3 +86,19 @@
 @media (max-width: 1000px) {
   .contentGrid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Itens do negócio: linha com nome e conta, valor à direita, resumo no pé —
+ * é onde o valor do negócio nasce (packages/core/rules/dealProducts). */
+.itens { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.itemList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.itemList li { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: var(--ui-hairline) solid var(--color-line); }
+.itemList li:first-child { border-top: 0; }
+.itemCorpo { display: grid; gap: var(--space-1); min-width: 0; }
+.itemCorpo strong { font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: anywhere; }
+.itemCorpo span { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.itemValor { display: flex; align-items: center; gap: var(--space-1); flex-shrink: 0; font-size: var(--typography-size-sm); font-variant-numeric: tabular-nums; }
+.itemResumo { display: grid; gap: var(--space-1); margin: 0; padding-top: var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); }
+.itemResumo > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.itemResumo dt { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.itemResumo dd { margin: 0; font-size: var(--typography-size-compact); font-variant-numeric: tabular-nums; }
+.itemResumo > div[data-total] dt, .itemResumo > div[data-total] dd { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }

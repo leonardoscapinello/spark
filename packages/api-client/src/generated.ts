@@ -1006,6 +1006,165 @@ export interface UpdateContactArchiveDto {
   archived: boolean;
 }
 
+export interface CreateDealProductDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  dealId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  productId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  variantId?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @maximum 1000000000
+     * @exclusiveMinimum 0
+     */
+  quantityMilli: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  unitAmount: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  discountBasisPoints?: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  taxBasisPoints?: number;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
+}
+
+/**
+ * @nullable
+ */
+export type DealProductWriteResponseDtoItem = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  dealId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  productId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  variantId: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @maximum 1000000000
+     * @exclusiveMinimum 0
+     */
+  quantityMilli: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  unitAmount: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  discountBasisPoints?: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  taxBasisPoints?: number;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
+  createdAt: string;
+  updatedAt: string;
+} | null;
+
+export interface DealProductWriteResponseDto {
+  /** @nullable */
+  item: DealProductWriteResponseDtoItem;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  dealAmount: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface UpdateDealProductDto {
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  productId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  variantId?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name?: string;
+  /**
+     * @maximum 1000000000
+     * @exclusiveMinimum 0
+     */
+  quantityMilli?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  unitAmount?: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  discountBasisPoints?: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  taxBasisPoints?: number;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
+}
+
 export interface CreatePipelineDto {
   /** @minLength 1 */
   id: string;
@@ -6129,6 +6288,191 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getContactsControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const dealProductsControllerAdd = (
+    createDealProductDto: CreateDealProductDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealProductWriteResponseDto>(
+      {url: `/v1/deal-products`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createDealProductDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealProductsControllerAddMutationKey = () => ['dealProductsControllerAdd'] as const;
+
+export const getDealProductsControllerAddMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerAdd>>, TError,DealProductsControllerAddMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerAdd>>, TError,DealProductsControllerAddMutationVariables, TContext> => {
+
+const mutationKey = getDealProductsControllerAddMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealProductsControllerAdd>>, DealProductsControllerAddMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  dealProductsControllerAdd(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealProductsControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof dealProductsControllerAdd>>>
+    export type DealProductsControllerAddMutationBody = CreateDealProductDto
+    export type DealProductsControllerAddMutationError = unknown
+    export type DealProductsControllerAddMutationVariables = {data: CreateDealProductDto}
+
+    export const useDealProductsControllerAdd = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerAdd>>, TError,DealProductsControllerAddMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealProductsControllerAdd>>,
+        TError,
+        DealProductsControllerAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealProductsControllerAddMutationOptions(options), queryClient);
+    }
+
+export const dealProductsControllerChange = (
+    id: string,
+    updateDealProductDto: UpdateDealProductDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealProductWriteResponseDto>(
+      {url: `/v1/deal-products/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDealProductDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealProductsControllerChangeMutationKey = () => ['dealProductsControllerChange'] as const;
+
+export const getDealProductsControllerChangeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerChange>>, TError,DealProductsControllerChangeMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerChange>>, TError,DealProductsControllerChangeMutationVariables, TContext> => {
+
+const mutationKey = getDealProductsControllerChangeMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealProductsControllerChange>>, DealProductsControllerChangeMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  dealProductsControllerChange(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealProductsControllerChangeMutationResult = NonNullable<Awaited<ReturnType<typeof dealProductsControllerChange>>>
+    export type DealProductsControllerChangeMutationBody = UpdateDealProductDto
+    export type DealProductsControllerChangeMutationError = unknown
+    export type DealProductsControllerChangeMutationVariables = {id: string;data: UpdateDealProductDto}
+
+    export const useDealProductsControllerChange = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerChange>>, TError,DealProductsControllerChangeMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealProductsControllerChange>>,
+        TError,
+        DealProductsControllerChangeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealProductsControllerChangeMutationOptions(options), queryClient);
+    }
+
+export const dealProductsControllerRemove = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealProductWriteResponseDto>(
+      {url: `/v1/deal-products/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealProductsControllerRemoveMutationKey = () => ['dealProductsControllerRemove'] as const;
+
+export const getDealProductsControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerRemove>>, TError,DealProductsControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerRemove>>, TError,DealProductsControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getDealProductsControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealProductsControllerRemove>>, DealProductsControllerRemoveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  dealProductsControllerRemove(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealProductsControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof dealProductsControllerRemove>>>
+
+    export type DealProductsControllerRemoveMutationError = unknown
+    export type DealProductsControllerRemoveMutationVariables = {id: string}
+
+    export const useDealProductsControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealProductsControllerRemove>>, TError,DealProductsControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealProductsControllerRemove>>,
+        TError,
+        DealProductsControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealProductsControllerRemoveMutationOptions(options), queryClient);
     }
 
 export const pipelinesControllerCreate = (

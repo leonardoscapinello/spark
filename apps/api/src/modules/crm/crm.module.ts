@@ -11,6 +11,8 @@ import { CloseDealUseCase } from "./application/close-deal.usecase.js";
 import { EditDealUseCase } from "./application/edit-deal.usecase.js";
 import { PipelinesRepository } from "./infrastructure/pipelines.repository.js";
 import { StagesRepository } from "./infrastructure/stages.repository.js";
+import { DealProductsRepository } from "./infrastructure/deal-products.repository.js";
+import { DealProductsController } from "./presentation/deal-products.controller.js";
 import { DealsRepository } from "./infrastructure/deals.repository.js";
 import { GetCurrentUserUseCase } from "../identity/application/get-current-user.usecase.js";
 import { UsersRepository } from "../identity/infrastructure/users.repository.js";
@@ -20,8 +22,8 @@ import { EventsModule } from "../events/events.module.js";
 
 @Module({
   imports: [EventsModule],
-  controllers: [PipelinesController, StagesController, DealsController],
-  providers: [
+  controllers: [DealProductsController, PipelinesController, StagesController, DealsController],
+  providers: [DealProductsRepository, 
     CreatePipelineUseCase,
     CreateStageUseCase,
     RenameStageUseCase,

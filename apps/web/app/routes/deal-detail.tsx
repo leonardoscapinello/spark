@@ -15,12 +15,22 @@ import {
   type Money,
   ACTIVITY_TYPES,
   ACTIVITY_TYPE_LABELS,
+  dealProductTotals,
+  dealProductsSummary,
+  formatQuantity,
+  parseQuantity,
+  formatBasisPoints,
+  parseBasisPoints,
+  productId as productIdFactory,
+  type DealProduct,
 } from "@spark/core";
-import { optimisticActivity, syncedAmount } from "@spark/data";
+import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert } from "@spark/data";
 import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, RecordPageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
+import { getDealProductsCollection } from "../lib/deal-products-collection.client";
+import { getProductsCollection } from "../lib/catalog-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
@@ -44,6 +54,8 @@ export async function clientLoader() {
     getPipelinesCollection().preload(),
     getStagesCollection().preload(),
     getUsersCollection().preload(),
+    getDealProductsCollection().preload(),
+    ...(session.capabilities.includes("catalog:read") ? [getProductsCollection().preload()] : []),
     getEventsCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
@@ -60,6 +72,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const contactsCollection = getContactsCollection();
   const usersCollection = getUsersCollection();
   const activitiesCollection = getActivitiesCollection();
+  const itemsCollection = getDealProductsCollection();
   const companiesCollection = getCompaniesCollection();
   const session = getSession();
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
@@ -81,6 +94,9 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: activities = [] } = useLiveQuery({
     query: (q) => canReadActivities ? q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc") : undefined,
   });
+  const canReadCatalog = session?.capabilities.includes("catalog:read") ?? false;
+  const { data: dealItems = [] } = useLiveQuery({ query: (q) => q.from({ items: getDealProductsCollection() }).where(({ items: item }) => eq(item.dealId, params.dealId)).orderBy(({ items: item }) => item.sortOrder, "asc") });
+  const { data: catalog = [] } = useLiveQuery({ query: (q) => canReadCatalog ? q.from({ products: getProductsCollection() }).orderBy(({ products: product }) => product.name, "asc") : undefined });
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: field }) => eq(field.entityType, "deal")).orderBy(({ fields: field }) => field.label, "asc") });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox && deal?.contactId ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, deal.contactId!)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
@@ -102,6 +118,14 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [activityLocation, setActivityLocation] = useState("");
   const [activityOwnerId, setActivityOwnerId] = useState("");
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [itemProductId, setItemProductId] = useState("");
+  const [itemName, setItemName] = useState("");
+  const [itemQuantity, setItemQuantity] = useState("1");
+  const [itemUnitAmount, setItemUnitAmount] = useState<Money | null>(null);
+  const [itemDiscount, setItemDiscount] = useState("0");
+  const [itemTax, setItemTax] = useState("0");
   const [busyActivityId, setBusyActivityId] = useState<string | null>(null);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [lossReason, setLossReason] = useState("");
@@ -114,6 +138,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
   const isOpen = deal?.status === "open";
+  const itemsSummary = useMemo(() => dealProductsSummary(dealItems.map((item) => ({ ...item, unitAmount: syncedAmount(item.unitAmount) }))), [dealItems]);
   // «Foco» é o que ainda não foi feito, do mais antigo para o mais novo — o que
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
   const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
@@ -127,6 +152,64 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       notify({ title: "Responsável atualizado", tone: "success" });
     } catch {
       notify({ title: "Não foi possível trocar o responsável", tone: "error" });
+    }
+  }
+
+  function openItemModal(item?: DealProduct) {
+    if (item) {
+      setEditingItemId(item.id);
+      setItemProductId(item.productId ?? "");
+      setItemName(item.name);
+      setItemQuantity(formatQuantity(item.quantityMilli));
+      setItemUnitAmount(syncedAmount(item.unitAmount));
+      setItemDiscount(formatBasisPoints(item.discountBasisPoints));
+      setItemTax(formatBasisPoints(item.taxBasisPoints));
+    } else {
+      setEditingItemId(null); setItemProductId(""); setItemName(""); setItemQuantity("1"); setItemUnitAmount(null); setItemDiscount("0"); setItemTax("0");
+    }
+    setItemModalOpen(true);
+  }
+
+  /** Escolher um produto do catálogo copia nome e preço — dali em diante o item é do negócio. */
+  function pickCatalogProduct(productId: string | null) {
+    setItemProductId(productId ?? "");
+    const product = catalog.find((item) => item.id === productId);
+    if (product) { setItemName(product.name); setItemUnitAmount(product.price); }
+  }
+
+  async function saveItem() {
+    if (!deal || !session) throw new Error("MISSING_FIELDS");
+    const quantityMilli = parseQuantity(itemQuantity);
+    const discountBasisPoints = parseBasisPoints(itemDiscount);
+    const taxBasisPoints = parseBasisPoints(itemTax);
+    if (!itemName.trim() || itemUnitAmount === null || quantityMilli === null || discountBasisPoints === null || taxBasisPoints === null) throw new Error("MISSING_FIELDS");
+    const fields = { name: itemName.trim(), quantityMilli, unitAmount: itemUnitAmount, discountBasisPoints, taxBasisPoints };
+    if (editingItemId) {
+      const transaction = itemsCollection.update(editingItemId, (draft) => { Object.assign(draft, { ...fields, unitAmount: toCents(fields.unitAmount) }); });
+      await transaction.isPersisted.promise;
+      notify({ title: "Item atualizado", description: fields.name, tone: "success" });
+    } else {
+      const item = optimisticDealProduct({
+        dealId: dealIdFactory.from(deal.id),
+        productId: itemProductId ? productIdFactory.from(itemProductId) : null,
+        variantId: null,
+        sortOrder: dealItems.length,
+        ...fields,
+      }, session.orgId);
+      const transaction = itemsCollection.insert(itemForInsert(item));
+      await transaction.isPersisted.promise;
+      notify({ title: "Item adicionado", description: item.name, tone: "success" });
+    }
+    setEditingItemId(null);
+  }
+
+  async function removeItem(item: DealProduct) {
+    try {
+      const transaction = itemsCollection.delete(item.id);
+      await transaction.isPersisted.promise;
+      notify({ title: "Item removido", description: item.name, tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível remover o item", tone: "error" });
     }
   }
 
@@ -298,7 +381,8 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       <aside className={styles.painel}>
         <Accordion defaultValue={["resumo", "detalhes"]} items={[
           { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, content: <div className={styles.details}>
-            <div><span>Valor</span><strong>{formatBRL(syncedAmount(deal.amount))}</strong></div>
+            <div><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
+            {dealItems.length > 0 && <div><span>Produtos</span><strong>{dealItems.length}</strong></div>}
             <div><span>Situação</span><strong>{statusLabel(deal.status)}</strong></div>
             <div><span>Previsão</span><strong>{deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"}</strong></div>
             <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
@@ -326,6 +410,35 @@ export default function DealDetail({ params }: Route.ComponentProps) {
                 />)}
                 {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
               </div> },
+          { value: "produtos", title: "Produtos", icon: <Icon name="briefcase" />, content: <div className={styles.itens}>
+            {dealItems.length === 0
+              ? <p className={styles.empty}>O valor do negócio é a soma dos produtos. Adicione o que está sendo vendido.</p>
+              : <>
+                  <ul className={styles.itemList}>{dealItems.map((item) => {
+                    const totals = dealProductTotals({ ...item, unitAmount: syncedAmount(item.unitAmount) });
+                    return <li key={item.id}>
+                      <div className={styles.itemCorpo}>
+                        <strong>{item.name}</strong>
+                        <span>{formatQuantity(item.quantityMilli)} × {formatBRL(syncedAmount(item.unitAmount))}{item.discountBasisPoints > 0 ? ` · −${formatBasisPoints(item.discountBasisPoints)}%` : ""}{item.taxBasisPoints > 0 ? ` · +${formatBasisPoints(item.taxBasisPoints)}% imp.` : ""}</span>
+                      </div>
+                      <div className={styles.itemValor}>
+                        <strong>{formatBRL(totals.net)}</strong>
+                        {canWrite && <span className={styles.activityActions}>
+                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="file" />} aria-label={`Editar ${item.name}`} onClick={() => openItemModal(item)} />
+                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} onClick={() => void removeItem(item)} />
+                        </span>}
+                      </div>
+                    </li>;
+                  })}</ul>
+                  <dl className={styles.itemResumo}>
+                    <div><dt>Subtotal</dt><dd>{formatBRL(itemsSummary.gross)}</dd></div>
+                    {toCents(itemsSummary.discount) > 0 && <div><dt>Descontos</dt><dd>−{formatBRL(itemsSummary.discount)}</dd></div>}
+                    {toCents(itemsSummary.tax) > 0 && <div><dt>Impostos</dt><dd>+{formatBRL(itemsSummary.tax)}</dd></div>}
+                    <div data-total="true"><dt>Valor do negócio</dt><dd>{formatBRL(itemsSummary.net)}</dd></div>
+                  </dl>
+                </>}
+            {canWrite && <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemModal()}>Adicionar produto</Button>}
+          </div> },
           { value: "pessoa", title: "Pessoa", icon: <Icon name="user" />, content: <div className={styles.details}>
             {linkedContact
               ? <><div><span>Nome</span><Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link></div>
@@ -401,6 +514,20 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <Field><Label>Local</Label><Input value={activityLocation} onChange={(event) => setActivityLocation(event.target.value)} placeholder="Sala, endereço ou link da chamada" /></Field>
         </div>
         <Field><Label>Observações</Label><Textarea value={activityNotes} onChange={(event) => setActivityNotes(event.target.value)} placeholder="Contexto para a equipe" /></Field>
+      </div>
+    </ActionModal>
+    <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Preencha nome, quantidade e preço — desconto e imposto vão de 0 a 100." onConfirm={saveItem}>
+      <div className={styles.modalFields}>
+        {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="dropdown" placeholder="Escolher um produto cadastrado (opcional)" options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(item.price)}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
+        <Field><Label>Nome do item</Label><Input value={itemName} onChange={(event) => setItemName(event.target.value)} placeholder="Escreva um item avulso ou escolha do catálogo" /></Field>
+        <div className={styles.modalLinha}>
+          <Field><Label>Quantidade</Label><Input inputMode="decimal" value={itemQuantity} onChange={(event) => setItemQuantity(event.target.value)} placeholder="1" /></Field>
+          <Field><Label>Preço unitário</Label><MoneyInput label="Preço unitário" value={itemUnitAmount} onValueChange={setItemUnitAmount} /></Field>
+        </div>
+        <div className={styles.modalLinha}>
+          <Field><Label>Desconto (%)</Label><Input inputMode="decimal" value={itemDiscount} onChange={(event) => setItemDiscount(event.target.value)} placeholder="0" /></Field>
+          <Field><Label>Imposto (%)</Label><Input inputMode="decimal" value={itemTax} onChange={(event) => setItemTax(event.target.value)} placeholder="0" /></Field>
+        </div>
       </div>
     </ActionModal>
     <ActionModal open={lossModalOpen} onOpenChange={setLossModalOpen} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Informe o motivo da perda." onConfirm={async () => { if (!lossReason.trim()) throw new Error("MISSING_REASON"); await closeDeal("lost", lossReason); setLossReason(""); }}>
