@@ -2,21 +2,35 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
-import { companyId as companyIdFactory, contactMatches, email as buildEmail, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
+import { companyId as companyIdFactory, contactMatches, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
+import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS, leadStatusLabel } from "../lib/lead-options";
 import styles from "./contacts.module.css";
+
+const HIDDEN_COLUMNS_KEY = "spark_contacts_hidden_columns";
+
+function readHiddenColumns(): string[] | null {
+  try {
+    const raw = localStorage.getItem(HIDDEN_COLUMNS_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function clientLoader() {
   const session = await requireCapability("contacts:read");
   void Promise.allSettled([
     getContactsCollection().preload(),
     getUsersCollection().preload(),
+    getCustomFieldsCollection().preload(),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
   ]);
   return null;
@@ -31,6 +45,7 @@ export default function Contacts() {
     query: (q) => q.from({ contacts: collection }).orderBy(({ contacts: c }) => c.createdAt, "desc"),
   });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }) });
+  const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).orderBy(({ fields: item }) => item.label, "asc") });
   const canReadCompanies = getSession()?.capabilities.includes("companies:read") ?? false;
   const canWrite = getSession()?.capabilities.includes("contacts:write") ?? false;
   const canReadIntegrations = getSession()?.capabilities.includes("integrations:read") ?? false;
@@ -51,6 +66,7 @@ export default function Contacts() {
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [archiveView, setArchiveView] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [storedHiddenColumns, setStoredHiddenColumns] = useState<string[] | null>(readHiddenColumns);
   const [bulkRunning, setBulkRunning] = useState(false);
   const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && ownerFilter === "all";
   const viewTitle = archiveView ? "Pessoas arquivadas" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Pessoas";
@@ -67,35 +83,47 @@ export default function Contacts() {
     {
       id: "name",
       label: "Pessoa",
+      alwaysVisible: true,
       cell: (contact) => <div className={styles.contactCell}><Avatar name={contact.name} /><div><strong>{contact.name}</strong><span className={styles.secondary}>{contact.email ?? "Sem e-mail"}</span></div></div>,
       sortValue: (contact) => contact.name,
     },
     {
       id: "company",
+      group: "Dados da pessoa",
       label: "Empresa",
       cell: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "Empresa indisponível" : <span className={styles.muted}>Não vinculada</span>,
       sortValue: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "" : "",
     },
     {
       id: "phone",
+      group: "Dados da pessoa",
       label: "Telefone",
       cell: (contact) => contact.phone ? formatPhone(contact.phone) : <span className={styles.muted}>Não informado</span>,
       sortValue: (contact) => contact.phone ?? "",
     },
     {
       id: "status",
+      group: "Dados da pessoa",
       label: "Etapa",
       cell: (contact) => <Badge tone={contact.leadStatus === "qualified" || contact.leadStatus === "customer" ? "success" : contact.leadStatus === "unqualified" ? "danger" : contact.leadStatus === "nurturing" ? "warning" : "neutral"}>{leadStatusLabel(contact.leadStatus)}</Badge>,
       sortValue: (contact) => leadStatusLabel(contact.leadStatus),
     },
     {
       id: "owner",
+      group: "Dados da pessoa",
       label: "Responsável",
       cell: (contact) => contact.ownerId ? userNames.get(contact.ownerId) ?? "Usuário indisponível" : <span className={styles.muted}>Não atribuído</span>,
       sortValue: (contact) => contact.ownerId ? userNames.get(contact.ownerId) ?? "" : "",
     },
+    ...customFields.filter((field) => field.entityType === "contact" && !field.archivedAt).map((field) => ({
+      id: `custom:${field.key}`,
+      group: "Campos personalizados",
+      label: field.label,
+      cell: (contact: Contact) => formatCustomFieldValue(field, contact.customFields[field.key]) || <span className={styles.muted}>—</span>,
+      sortValue: (contact: Contact) => formatCustomFieldValue(field, contact.customFields[field.key]),
+    })),
   ];
-  }, [companies, users]);
+  }, [companies, customFields, users]);
 
   function resetForm() {
     setName(""); setEmail(""); setPhone("");
@@ -143,6 +171,16 @@ export default function Contacts() {
     } catch {
       notify({ title: "Não foi possível atualizar a pessoa", tone: "error" });
     }
+  }
+
+  // Sem preferência gravada, campo personalizado começa escondido: a lista não
+  // pode nascer com uma coluna por campo que a organização tenha criado.
+  const customColumnIds = useMemo(() => columns.filter((column) => column.id.startsWith("custom:")).map((column) => column.id), [columns]);
+  const hiddenColumnIds = storedHiddenColumns ?? customColumnIds;
+
+  function changeHiddenColumns(ids: string[]) {
+    setStoredHiddenColumns(ids);
+    try { localStorage.setItem(HIDDEN_COLUMNS_KEY, JSON.stringify(ids)); } catch { /* modo privado: a escolha vale só nesta sessão */ }
   }
 
   const selectedContacts = useMemo(() => {
@@ -205,6 +243,8 @@ export default function Contacts() {
       rowLabel={(contact) => contact.name}
       state={isLoading && contacts.length === 0 ? "loading" : "ready"}
       {...(canWrite ? { selectedIds, onSelectionChange: setSelectedIds } : {})}
+      hiddenColumnIds={hiddenColumnIds}
+      onHiddenColumnsChange={changeHiddenColumns}
       emptyText={archiveView ? "Nenhuma pessoa arquivada." : search ? `Nenhuma pessoa encontrada para “${search}”.` : "Nenhuma pessoa cadastrada."}
       actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>}
     />}
