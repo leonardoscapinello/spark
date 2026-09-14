@@ -10,6 +10,7 @@ export const Interativas:StoryObj<typeof TableExamples>={};
 export const Carregando = () => <DataTable label="Pessoas" rows={[]} columns={[{id:"name",label:"Pessoa",cell:(row:{id:string})=>row.id},{id:"company",label:"Empresa",cell:(row:{id:string})=>row.id},{id:"stage",label:"Etapa",cell:(row:{id:string})=>row.id}]} rowKey={(row)=>row.id} state="loading" />;
 export const Selecao = () => <SelectionExample />;
 export const CatalogoDeColunas = () => <CatalogExample />;
+export const LarguraDeColuna = () => <ResizeExample />;
 
 const people=[
  {id:"1",name:"Ana Prado",company:"Vega",stage:"Novo lead"},
@@ -49,4 +50,17 @@ function CatalogExample(){
    {id:"owner",label:"Responsável",cell:()=>"Não atribuído",group:"Atendimento"},
   ]}
   hiddenColumnIds={hidden} onHiddenColumnsChange={setHidden}/>;
+}
+
+/** Arraste a borda direita do cabeçalho, ou use as setas com a alça focada.
+ * Home devolve a largura automática. A tabela não guarda a medida. */
+function ResizeExample(){
+ const [widths,setWidths]=useState<Record<string,number>>({});
+ return <DataTable label="Pessoas" rows={people} rowKey={row=>row.id} rowLabel={row=>row.name}
+  columns={[
+   {id:"name",label:"Pessoa",cell:row=>row.name,sortValue:row=>row.name},
+   {id:"company",label:"Empresa",cell:row=>row.company,sortValue:row=>row.company},
+   {id:"stage",label:"Etapa",cell:row=>row.stage},
+  ]}
+  columnWidths={widths} onColumnWidthsChange={setWidths}/>;
 }

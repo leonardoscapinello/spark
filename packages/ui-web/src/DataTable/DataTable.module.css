@@ -4,7 +4,7 @@
 .table { border-collapse: collapse; width: max-content; min-width: 100%; text-align: start; }
 .table caption { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .table th,.table td { padding: var(--space-3) var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); text-align: start; overflow-wrap: anywhere; max-width: var(--ui-popoverWidth); }
-.table th { padding-block: var(--space-2); background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); white-space: nowrap; }
+.table th { padding-block: var(--space-2); background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); white-space: nowrap;position: relative; }
 .table th .sortButton { padding-inline: 0; color: inherit; font-weight: inherit; }
 .sortIcon { width: var(--space-3); height: var(--space-3); color: var(--color-accent); }
 .visuallyHidden { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -15,6 +15,16 @@
 .actions { white-space: nowrap; }
 .select { width: var(--space-10); padding-inline: var(--space-4) var(--space-0); }
 .catalog { width: var(--space-10); padding-inline: var(--space-0) var(--space-2); }
+/* Largura declarada é a que se vê: sem border-box o padding somaria à medida
+   arrastada e a coluna pararia mais larga do que o ponteiro pediu. */
+.table[data-fixed] { table-layout: fixed; width: 100%; }
+.table[data-fixed] th,.table[data-fixed] td { box-sizing: border-box; }
+.table[data-fixed] td { overflow: hidden; text-overflow: ellipsis; }
+.resizer { position: absolute; inset-block: 0; inset-inline-end: calc(var(--space-1) * -1); width: var(--space-2); cursor: col-resize; touch-action: none; }
+.resizer::after { content: ""; position: absolute; inset-block: var(--space-1); inset-inline-start: 50%; width: var(--ui-hairline); background: var(--color-line); opacity: 0; transition: opacity var(--motion-duration-instant) var(--motion-ease-out); }
+.resizer:hover::after,.resizer:focus-visible::after { opacity: 1; background: var(--color-accent); }
+.resizer:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+@media (prefers-reduced-motion: reduce) { .resizer::after { transition: none; } }
 .catalogList { display: flex; flex-direction: column; gap: var(--space-2); max-height: var(--ui-previewHeight); overflow-y: auto; margin-top: var(--space-3); }
 .catalogGroup { margin: var(--space-2) 0 var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
 .catalogEmpty { margin: 0; color: var(--color-inkMuted); }

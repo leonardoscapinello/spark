@@ -62,3 +62,31 @@ it("não oferece catálogo quando o consumidor não trata colunas escondidas",()
  render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]}/>);
  expect(screen.queryByRole("button",{name:/Escolher colunas/})).not.toBeInTheDocument();
 });
+
+it("ajusta a largura da coluna pelo teclado e devolve a automática com Home",()=>{
+ const onColumnWidthsChange=vi.fn();
+ const render1=(widths:Record<string,number>)=>render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]} columnWidths={widths} onColumnWidthsChange={onColumnWidthsChange}/>);
+ const {rerender}=render1({});
+ const alca=screen.getByRole("separator",{name:"Redimensionar coluna Nome"});
+ fireEvent.keyDown(alca,{key:"ArrowRight"});
+ expect(onColumnWidthsChange).toHaveBeenCalledWith({name:expect.any(Number)});
+ rerender(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]} columnWidths={{name:200}} onColumnWidthsChange={onColumnWidthsChange}/>);
+ const ajustada=screen.getByRole("separator",{name:"Redimensionar coluna Nome"});
+ expect(ajustada).toHaveAttribute("aria-valuenow","200");
+ fireEvent.keyDown(ajustada,{key:"ArrowLeft"});
+ expect(onColumnWidthsChange).toHaveBeenLastCalledWith({name:184});
+ fireEvent.keyDown(ajustada,{key:"Home"});
+ expect(onColumnWidthsChange).toHaveBeenLastCalledWith({});
+});
+
+it("não desce abaixo da largura mínima",()=>{
+ const onColumnWidthsChange=vi.fn();
+ render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]} columnWidths={{name:70}} onColumnWidthsChange={onColumnWidthsChange}/>);
+ fireEvent.keyDown(screen.getByRole("separator",{name:"Redimensionar coluna Nome"}),{key:"ArrowLeft"});
+ expect(onColumnWidthsChange).toHaveBeenLastCalledWith({name:64});
+});
+
+it("não oferece alça quando o consumidor não trata largura",()=>{
+ render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]}/>);
+ expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+});
