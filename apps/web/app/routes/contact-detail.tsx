@@ -265,7 +265,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
         <div className={layout.profileColumn}>
       <h2 className={layout.columnTitle}>Detalhes</h2>
       {isEditing ? (
-        <form className={styles.camposEdicao} onSubmit={saveEdit}>
+        <form className={styles.campos} onSubmit={saveEdit}>
           <Field>
             <Label>Nome</Label>
             <Input value={nameEdit} onChange={(event) => setNameEdit(event.target.value)} />
