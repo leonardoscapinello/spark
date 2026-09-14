@@ -13,6 +13,10 @@
 .table tbody tr { transition: background-color var(--motion-duration-instant) var(--motion-ease-out); }
 .table tbody tr:hover { background: var(--ui-subtle); }
 .actions { white-space: nowrap; }
+.select { width: var(--space-10); padding-inline: var(--space-4) var(--space-0); }
+.select :global(label) { gap: var(--space-0); }
+.table tbody tr[data-selected] { background: var(--color-accentWash); }
+.table tbody tr[data-selected]:hover { background: var(--color-accentWash); }
 .emptyState { box-sizing: border-box; width: 100%; padding: var(--space-8) var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); text-align: center; line-height: var(--ui-bodyLine); overflow-wrap: anywhere; }
 .hint { font-size: var(--typography-size-compact); color: var(--color-inkMuted); margin: var(--space-2) 0 0; }
 .loadingLine { display: block; width: 100%; max-width: var(--ui-menuWidth); height: var(--space-3); border-radius: var(--radius-full); background: var(--color-surface2); }
@@ -32,8 +36,12 @@
 }
 
 @media (max-width: 720px) {
+  /* A coluna de identidade acompanha a rolagem lateral. Com seleção ligada ela é a
+     segunda, deslocada pela largura fixa da caixa de seleção. */
   .table th:first-child,
-  .table tbody tr > td:first-child:not([colspan]) {
+  .table tbody tr > td:first-child:not([colspan]),
+  .table[data-selectable] th:nth-child(2),
+  .table[data-selectable] tbody tr > td:nth-child(2):not([colspan]) {
     position: sticky;
     inset-inline-start: 0;
     z-index: 1;
@@ -41,6 +49,14 @@
     background: var(--color-surface);
     box-shadow: var(--ui-hairline) 0 0 var(--color-line);
   }
-  .table th:first-child { z-index: 2; }
-  .table tbody tr:hover > td:first-child:not([colspan]) { background: var(--color-surface2); }
+  .table[data-selectable] th:nth-child(2),
+  .table[data-selectable] tbody tr > td:nth-child(2):not([colspan]) { inset-inline-start: var(--space-10); }
+  .table[data-selectable] th:first-child,
+  .table[data-selectable] tbody tr > td:first-child:not([colspan]) { box-shadow: none; }
+  .table th:first-child,
+  .table[data-selectable] th:nth-child(2) { z-index: 2; }
+  .table tbody tr:hover > td:first-child:not([colspan]),
+  .table[data-selectable] tbody tr:hover > td:nth-child(2):not([colspan]) { background: var(--color-surface2); }
+  .table tbody tr[data-selected] > td:first-child:not([colspan]),
+  .table[data-selectable] tbody tr[data-selected] > td:nth-child(2):not([colspan]) { background: var(--color-accentWash); }
 }

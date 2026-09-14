@@ -21,3 +21,25 @@ it("expande a linha correta e mantém sua identidade após ordenar",()=>{
  fireEvent.click(screen.getByRole("button",{name:"Recolher detalhes de Maria"}));
  expect(screen.queryByText("Detalhes de Maria")).not.toBeInTheDocument();
 });
+
+it("seleciona linha e tudo pela chave, sem depender da ordem exibida",()=>{
+ const rows=[{id:"m",name:"Maria"},{id:"a",name:"Ana"}];const onSelectionChange=vi.fn();
+ const view=(selectedIds:string[])=><DataTable label="Contatos" rows={rows} rowKey={r=>r.id} rowLabel={r=>r.name} columns={[{id:"name",label:"Nome",cell:r=>r.name,sortValue:r=>r.name}]} selectedIds={selectedIds} onSelectionChange={onSelectionChange}/>;
+ const {rerender}=render(view([]));
+ fireEvent.click(screen.getByRole("checkbox",{name:"Selecionar Ana"}));
+ expect(onSelectionChange).toHaveBeenCalledWith(["a"]);
+ rerender(view(["a"]));
+ const todas=screen.getByRole("checkbox",{name:"Selecionar todas as linhas de Contatos"});
+ expect(todas).toHaveAttribute("data-indeterminate");
+ fireEvent.click(todas);
+ expect(onSelectionChange).toHaveBeenLastCalledWith(["m","a"]);
+ rerender(view(["m","a"]));
+ fireEvent.click(screen.getByRole("button",{name:"Nome"}));
+ fireEvent.click(screen.getByRole("checkbox",{name:`Limpar seleção de Contatos`}));
+ expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+});
+
+it("não mostra caixas de seleção quando o consumidor não trata seleção",()=>{
+ render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]}/>);
+ expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+});
