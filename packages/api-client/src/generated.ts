@@ -3851,6 +3851,66 @@ export interface ArchiveCustomFieldDto {
   archived: boolean;
 }
 
+export type CreateSavedViewDtoEntityType = typeof CreateSavedViewDtoEntityType[keyof typeof CreateSavedViewDtoEntityType];
+
+
+export const CreateSavedViewDtoEntityType = {
+  contact: 'contact',
+} as const;
+
+export interface CreateSavedViewDto {
+  /** @minLength 1 */
+  id: string;
+  entityType: CreateSavedViewDtoEntityType;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  /** @maxLength 4000 */
+  filters?: string;
+}
+
+export type SavedViewWriteResponseDtoViewEntityType = typeof SavedViewWriteResponseDtoViewEntityType[keyof typeof SavedViewWriteResponseDtoViewEntityType];
+
+
+export const SavedViewWriteResponseDtoViewEntityType = {
+  contact: 'contact',
+} as const;
+
+export type SavedViewWriteResponseDtoView = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  entityType: SavedViewWriteResponseDtoViewEntityType;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  /** @maxLength 4000 */
+  filters: string;
+  /** @minLength 1 */
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+};
+
+export interface SavedViewWriteResponseDto {
+  view: SavedViewWriteResponseDtoView;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface ArchiveSavedViewDto {
+  archived: boolean;
+}
+
 export interface CreatePageDto {
   /** @minLength 1 */
   id: string;
@@ -8842,6 +8902,131 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getSettingsControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const savedViewsControllerCreate = (
+    createSavedViewDto: CreateSavedViewDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<SavedViewWriteResponseDto>(
+      {url: `/v1/saved-views`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSavedViewDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getSavedViewsControllerCreateMutationKey = () => ['savedViewsControllerCreate'] as const;
+
+export const getSavedViewsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savedViewsControllerCreate>>, TError,SavedViewsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof savedViewsControllerCreate>>, TError,SavedViewsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getSavedViewsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof savedViewsControllerCreate>>, SavedViewsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  savedViewsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SavedViewsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof savedViewsControllerCreate>>>
+    export type SavedViewsControllerCreateMutationBody = CreateSavedViewDto
+    export type SavedViewsControllerCreateMutationError = unknown
+    export type SavedViewsControllerCreateMutationVariables = {data: CreateSavedViewDto}
+
+    export const useSavedViewsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savedViewsControllerCreate>>, TError,SavedViewsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof savedViewsControllerCreate>>,
+        TError,
+        SavedViewsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSavedViewsControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const savedViewsControllerArchive = (
+    id: string,
+    archiveSavedViewDto: ArchiveSavedViewDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<SavedViewWriteResponseDto>(
+      {url: `/v1/saved-views/${id}/archive`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: archiveSavedViewDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getSavedViewsControllerArchiveMutationKey = () => ['savedViewsControllerArchive'] as const;
+
+export const getSavedViewsControllerArchiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savedViewsControllerArchive>>, TError,SavedViewsControllerArchiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof savedViewsControllerArchive>>, TError,SavedViewsControllerArchiveMutationVariables, TContext> => {
+
+const mutationKey = getSavedViewsControllerArchiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof savedViewsControllerArchive>>, SavedViewsControllerArchiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  savedViewsControllerArchive(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SavedViewsControllerArchiveMutationResult = NonNullable<Awaited<ReturnType<typeof savedViewsControllerArchive>>>
+    export type SavedViewsControllerArchiveMutationBody = ArchiveSavedViewDto
+    export type SavedViewsControllerArchiveMutationError = unknown
+    export type SavedViewsControllerArchiveMutationVariables = {id: string;data: ArchiveSavedViewDto}
+
+    export const useSavedViewsControllerArchive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savedViewsControllerArchive>>, TError,SavedViewsControllerArchiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof savedViewsControllerArchive>>,
+        TError,
+        SavedViewsControllerArchiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSavedViewsControllerArchiveMutationOptions(options), queryClient);
     }
 
 export const pagesControllerCreate = (

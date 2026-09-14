@@ -32,3 +32,9 @@ export const CreateSavedViewInputSchema = z.object({
   filters: z.string().max(4000).default(""),
 });
 export type CreateSavedViewInput = z.infer<typeof CreateSavedViewInputSchema>;
+
+export const ArchiveSavedViewInputSchema = z.object({ archived: z.boolean() });
+export type ArchiveSavedViewInput = z.infer<typeof ArchiveSavedViewInputSchema>;
+
+export const SavedViewWriteResponseSchema = z.object({ view: SavedViewSchema, txid: z.number().int() });
+export type SavedViewWriteResponse = z.infer<typeof SavedViewWriteResponseSchema>;
