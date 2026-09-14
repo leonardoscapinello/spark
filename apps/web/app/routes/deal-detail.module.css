@@ -15,12 +15,16 @@
 .contentGrid > * { min-width: 0; }
 /* Cada bloco é um cartão: fundo branco, borda fina, raio 8 — o mesmo
  * tratamento dos painéis da lista de conversas. */
-.painel { min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
+/* Rola sozinho e acompanha a página: os campos do negócio ficam à vista
+ * enquanto o histórico corre do lado — é o que o Pipedrive faz, e o motivo é
+ * prático: consultar um campo não pode custar voltar ao topo. */
+.painel { position: sticky; top: var(--space-4); max-height: calc(100vh - var(--space-16) - var(--space-8)); overflow-y: auto; overscroll-behavior: contain; min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
 .fluxo { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
 
 /* Cabeçalho: responsável, Ganho e Perdido à direita do título — decidir o
  * desfecho é a ação principal da tela, não algo no fim de um cartão. */
-.owner { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; margin-inline-end: var(--space-2); font-size: var(--typography-size-sm); }
+.owner { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; height: auto; margin-inline-end: var(--space-2); padding: var(--space-1) var(--space-2); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-regular); text-align: start; }
+.owner:hover:not([data-disabled]) { background: var(--ui-subtle); }
 .owner > span { display: grid; min-width: 0; line-height: var(--ui-tabLine); }
 .owner small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .lostButton { color: var(--color-statusDanger); }
@@ -43,7 +47,10 @@
 
 /* Compositor: onde se agenda o próximo passo, no topo da coluna da direita. */
 .compositor { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) var(--space-4); background: var(--color-accentWash); border: var(--ui-hairline) solid color-mix(in srgb, var(--color-accent) 20%, transparent); border-radius: var(--radius-md); }
-.compositorDica { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.compositorRotulo { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); }
+.modalLinha { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); }
+.activityActions { display: inline-flex; align-items: center; gap: var(--space-1); flex-shrink: 0; }
+@media (max-width: 640px) { .modalLinha { grid-template-columns: minmax(0, 1fr); } }
 
 .bloco { display: flex; flex-direction: column; min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
 /* Cabeçalho do cartão com divisor — separa o nome do bloco do conteúdo. */

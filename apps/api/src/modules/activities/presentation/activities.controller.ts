@@ -5,8 +5,9 @@ import { SupabaseJwtGuard, CapabilityGuard, RequireCapability, CurrentSupabaseUs
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { CreateActivityUseCase } from "../application/create-activity.usecase.js";
 import { CompleteActivityUseCase } from "../application/complete-activity.usecase.js";
+import { ActivitiesRepository } from "../infrastructure/activities.repository.js";
 import {
-  CreateActivityDto,
+  CreateActivityDto, UpdateActivityDto,
   CreateActivityResponseDto,
   CompleteActivityDto,
   CompleteActivityResponseDto,
@@ -19,6 +20,7 @@ export class ActivitiesController {
     private readonly getCurrentUser: GetCurrentUserUseCase,
     private readonly createActivity: CreateActivityUseCase,
     private readonly completeActivity: CompleteActivityUseCase,
+    private readonly activities: ActivitiesRepository,
   ) {}
 
   @Post()
@@ -34,6 +36,22 @@ export class ActivitiesController {
     const { activity, txid } = await this.createActivity.execute(user.orgId, body);
     return { activity, txid } as CreateActivityResponseDto;
   }
+
+  @Patch(":id")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("activities:write")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: CreateActivityResponseDto })
+  async update(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Param("id") id: string,
+    @Body() body: UpdateActivityDto,
+  ): Promise<CreateActivityResponseDto> {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const { activity, txid } = await this.activities.update(user.orgId, activityIdFactory.from(id), body);
+    return { activity, txid } as CreateActivityResponseDto;
+  }
+
 
   @Patch(":id/complete")
   @UseGuards(SupabaseJwtGuard, CapabilityGuard)

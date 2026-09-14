@@ -13,9 +13,11 @@ import {
   type ActivityType,
   type DealStatus,
   type Money,
+  ACTIVITY_TYPES,
+  ACTIVITY_TYPE_LABELS,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount } from "@spark/data";
-import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, RecordPageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -30,12 +32,10 @@ import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./deal-detail.module.css";
 
-const ACTIVITY_TYPES: ReadonlyArray<{ value: ActivityType; label: string }> = [
-  { value: "task", label: "Tarefa" },
-  { value: "call", label: "Ligação" },
-  { value: "meeting", label: "Reunião" },
-  { value: "email", label: "E-mail" },
-];
+const ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPES.map((value) => ({ value, label: ACTIVITY_TYPE_LABELS[value] }));
+const ACTIVITY_TYPE_ICONS: Record<ActivityType, IconName> = { task: "check", call: "phone", meeting: "team", email: "mail", lunch: "calendar", deadline: "bolt" };
+/* Durações que o Pipedrive oferece por padrão — quem precisa de outra escreve. */
+const DURATIONS = [{ value: "0", label: "Sem duração" }, { value: "15", label: "15 min" }, { value: "30", label: "30 min" }, { value: "60", label: "1 hora" }, { value: "90", label: "1h30" }, { value: "120", label: "2 horas" }];
 
 export async function clientLoader() {
   const session = await requireCapability("deals:read");
@@ -98,6 +98,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [activityTitle, setActivityTitle] = useState("");
   const [activityNotes, setActivityNotes] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [activityDuration, setActivityDuration] = useState("30");
+  const [activityLocation, setActivityLocation] = useState("");
+  const [activityOwnerId, setActivityOwnerId] = useState("");
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [busyActivityId, setBusyActivityId] = useState<string | null>(null);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [lossReason, setLossReason] = useState("");
@@ -114,6 +118,17 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
   const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
   const doneActivities = useMemo(() => orderedActivities.filter((activity) => activity.completed).reverse(), [orderedActivities]);
+
+  async function changeOwner(nextOwnerId: string | null) {
+    if (!deal || !canWrite) return;
+    try {
+      const transaction = dealsCollection.update(deal.id, (draft) => { draft.ownerId = nextOwnerId ? userIdFactory.from(nextOwnerId) : null; });
+      await transaction.isPersisted.promise;
+      notify({ title: "Responsável atualizado", tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível trocar o responsável", tone: "error" });
+    }
+  }
 
   /** Desfazer o fechamento: volta para em aberto e limpa o motivo da perda. */
   async function reopenDeal() {
@@ -182,20 +197,46 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     notify({ title: status === "won" ? "Negócio ganho" : "Negócio perdido", tone: status === "won" ? "success" : "warning" });
   }
 
-  async function createActivity() {
+  function openActivityModal(activity?: Activity) {
+    if (activity) {
+      setEditingActivityId(activity.id);
+      setActivityType(activity.type);
+      setActivityTitle(activity.title);
+      setActivityNotes(activity.notes ?? "");
+      setScheduledAt(activity.scheduledAt.slice(0, 16));
+      setActivityDuration(String(activity.durationMinutes));
+      setActivityLocation(activity.location ?? "");
+      setActivityOwnerId(activity.ownerId ?? "");
+    } else {
+      setEditingActivityId(null);
+      setActivityTitle(""); setActivityNotes(""); setScheduledAt(""); setActivityType("task");
+      setActivityDuration("30"); setActivityLocation(""); setActivityOwnerId(deal?.ownerId ?? session?.userId ?? "");
+    }
+    setActivityModalOpen(true);
+  }
+
+  async function saveActivity() {
     if (!deal || !session || !activityTitle.trim() || !scheduledAt) throw new Error("MISSING_FIELDS");
-    const activity = optimisticActivity({
-      contactId: deal.contactId,
-      dealId: dealIdFactory.from(deal.id),
+    const fields = {
       type: activityType,
       title: activityTitle.trim(),
       notes: activityNotes.trim() || null,
       scheduledAt: new Date(scheduledAt).toISOString(),
-    }, session.orgId);
-    const transaction = activitiesCollection.insert(activity);
-    await transaction.isPersisted.promise;
-    notify({ title: "Atividade agendada", description: activity.title, tone: "success" });
-    setActivityTitle(""); setActivityNotes(""); setScheduledAt(""); setActivityType("task");
+      durationMinutes: Number(activityDuration),
+      location: activityLocation.trim() || null,
+      ownerId: activityOwnerId ? userIdFactory.from(activityOwnerId) : null,
+    };
+    if (editingActivityId) {
+      const transaction = activitiesCollection.update(editingActivityId, (draft) => { Object.assign(draft, fields); });
+      await transaction.isPersisted.promise;
+      notify({ title: "Atividade atualizada", description: fields.title, tone: "success" });
+    } else {
+      const activity = optimisticActivity({ contactId: deal.contactId, dealId: dealIdFactory.from(deal.id), ...fields }, session.orgId);
+      const transaction = activitiesCollection.insert(activity);
+      await transaction.isPersisted.promise;
+      notify({ title: "Atividade agendada", description: activity.title, tone: "success" });
+    }
+    setEditingActivityId(null);
   }
 
   async function toggleActivity(activity: Activity) {
@@ -222,7 +263,14 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       title={deal.name}
       description={`${formatBRL(syncedAmount(deal.amount))}${deal.expectedCloseDate ? ` · previsão ${formatDate(deal.expectedCloseDate)}` : ""}`}
       actions={<>
-        {owner && <span className={styles.owner}><Avatar name={owner.name} size="small" /><span><small>Responsável</small>{owner.name}</span></span>}
+        {/* Trocar o responsável é um clique no próprio nome — sem abrir o formulário de edição. */}
+        <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
+          {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<Avatar name={item.name} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
+          {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
+        </MenuGroup>}>
+          {owner ? <Avatar name={owner.name} size="small" /> : <Icon name="account" />}
+          <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
+        </MenuButton>
         {isOpen && canMove && <>
           <Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
           <Button variant="secondary" className={styles.lostButton} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
@@ -301,8 +349,8 @@ export default function DealDetail({ params }: Route.ComponentProps) {
 
       <section className={styles.fluxo}>
         {canWriteActivities && <div className={styles.compositor}>
-          <Button variant="secondary" icon={<Icon name="calendar" />} onClick={() => setActivityModalOpen(true)}>Agendar atividade</Button>
-          <span className={styles.compositorDica}>Toda atividade agendada aqui também aparece no calendário da equipe.</span>
+          <span className={styles.compositorRotulo}>Registrar</span>
+          {ACTIVITY_TYPE_OPTIONS.map((option) => <Button key={option.value} size="sm" variant="secondary" shape="rounded" icon={<Icon name={ACTIVITY_TYPE_ICONS[option.value]} />} onClick={() => { openActivityModal(); setActivityType(option.value); }}>{option.label}</Button>)}
         </div>}
 
         {canReadActivities && <section className={styles.bloco} aria-labelledby="deal-foco">
@@ -314,7 +362,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             ? <p className={styles.empty}>Nenhum próximo passo agendado.</p>
             : <ul className={styles.activityList}>{focusActivities.map((activity) => <li key={activity.id} data-completed="false" data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>
                 <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.notes && <p>{activity.notes}</p>}<time data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>{activity.scheduledAt < new Date().toISOString() ? "Atrasada · " : ""}{formatDateTime(activity.scheduledAt)}</time></div>
-                {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Concluir</Button>}
+                {canWriteActivities && <span className={styles.activityActions}>
+                  <Button size="sm" variant="ghost" onClick={() => openActivityModal(activity)}>Editar</Button>
+                  <Button size="sm" variant="secondary" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Concluir</Button>
+                </span>}
               </li>)}</ul>}</div>
         </section>}
 
@@ -337,11 +388,18 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       </section>
     </div>
 
-    <ActionModal open={activityModalOpen} onOpenChange={(open) => setActivityModalOpen(open)} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha título, tipo, data e hora." onConfirm={createActivity}>
+    <ActionModal open={activityModalOpen} onOpenChange={(open) => { setActivityModalOpen(open); if (!open) setEditingActivityId(null); }} title={editingActivityId ? "Editar atividade" : "Nova atividade"} confirmLabel={editingActivityId ? "Salvar" : "Agendar"} errorText="Preencha título, data e hora." onConfirm={saveActivity}>
       <div className={styles.modalFields}>
-        <Field><Label>Tipo</Label><Select label="Tipo de atividade" value={activityType} options={ACTIVITY_TYPES} onValueChange={(value) => { if (value) setActivityType(value as ActivityType); }} /></Field>
-        <Field><Label>Título</Label><Input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Qual é o próximo passo?" /></Field>
-        <Field><Label>Data e hora</Label><DateTimePicker label="Data e hora" mode="datetime" value={scheduledAt} onValueChange={setScheduledAt} /></Field>
+        <SegmentedControl label="Tipo de atividade" value={activityType} options={ACTIVITY_TYPE_OPTIONS} onValueChange={(value) => setActivityType(value)} />
+        <Field><Label>Título</Label><Input autoFocus value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Qual é o próximo passo?" /></Field>
+        <div className={styles.modalLinha}>
+          <Field><Label>Data e hora</Label><DateTimePicker label="Data e hora" mode="datetime" value={scheduledAt} onValueChange={setScheduledAt} /></Field>
+          <Field><Label>Duração</Label><Select label="Duração da atividade" value={activityDuration} options={DURATIONS} onValueChange={(value) => { if (value) setActivityDuration(value); }} /></Field>
+        </div>
+        <div className={styles.modalLinha}>
+          <Field><Label>Responsável</Label><Select label="Responsável pela atividade" value={activityOwnerId || null} placeholder="Ninguém" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setActivityOwnerId(value ?? "")} /></Field>
+          <Field><Label>Local</Label><Input value={activityLocation} onChange={(event) => setActivityLocation(event.target.value)} placeholder="Sala, endereço ou link da chamada" /></Field>
+        </div>
         <Field><Label>Observações</Label><Textarea value={activityNotes} onChange={(event) => setActivityNotes(event.target.value)} placeholder="Contexto para a equipe" /></Field>
       </div>
     </ActionModal>
@@ -360,7 +418,7 @@ function daysInStage(since: string): string {
 }
 
 function statusLabel(status: DealStatus): string { return status === "open" ? "Em aberto" : status === "won" ? "Ganho" : "Perdido"; }
-function activityTypeLabel(type: ActivityType): string { return ACTIVITY_TYPES.find((item) => item.value === type)?.label ?? type; }
+function activityTypeLabel(type: ActivityType): string { return ACTIVITY_TYPE_LABELS[type]; }
 function conversationChannelLabel(channel: string): string { return ({ manual: "Interno", email: "E-mail", instagram: "Instagram", whatsapp: "WhatsApp", messenger: "Messenger" } as Record<string, string>)[channel] ?? channel; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value)); }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }

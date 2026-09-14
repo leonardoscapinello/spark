@@ -1533,6 +1533,8 @@ export const CreateActivityDtoType = {
   call: 'call',
   meeting: 'meeting',
   email: 'email',
+  lunch: 'lunch',
+  deadline: 'deadline',
 } as const;
 
 export interface CreateActivityDto {
@@ -1560,6 +1562,21 @@ export interface CreateActivityDto {
      */
   notes?: string | null;
   scheduledAt: string;
+  /**
+     * @minimum 0
+     * @maximum 1440
+     */
+  durationMinutes?: number;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  location?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
 }
 
 export type CreateActivityResponseDtoActivityType = typeof CreateActivityResponseDtoActivityType[keyof typeof CreateActivityResponseDtoActivityType];
@@ -1570,6 +1587,8 @@ export const CreateActivityResponseDtoActivityType = {
   call: 'call',
   meeting: 'meeting',
   email: 'email',
+  lunch: 'lunch',
+  deadline: 'deadline',
 } as const;
 
 export type CreateActivityResponseDtoActivity = {
@@ -1599,6 +1618,21 @@ export type CreateActivityResponseDtoActivity = {
      */
   notes: string | null;
   scheduledAt: string;
+  /**
+     * @minimum 0
+     * @maximum 1440
+     */
+  durationMinutes?: number;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  location: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId: string | null;
   completed?: boolean;
   completedAt: string | null;
   createdAt: string;
@@ -1614,6 +1648,58 @@ export interface CreateActivityResponseDto {
   txid: number;
 }
 
+export type UpdateActivityDtoType = typeof UpdateActivityDtoType[keyof typeof UpdateActivityDtoType];
+
+
+export const UpdateActivityDtoType = {
+  task: 'task',
+  call: 'call',
+  meeting: 'meeting',
+  email: 'email',
+  lunch: 'lunch',
+  deadline: 'deadline',
+} as const;
+
+export interface UpdateActivityDto {
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  dealId?: string | null;
+  type?: UpdateActivityDtoType;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title?: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  notes?: string | null;
+  scheduledAt?: string;
+  /**
+     * @minimum 0
+     * @maximum 1440
+     */
+  durationMinutes?: number;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  location?: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId?: string | null;
+}
+
 export interface CompleteActivityDto {
   completed: boolean;
 }
@@ -1626,6 +1712,8 @@ export const CompleteActivityResponseDtoActivityType = {
   call: 'call',
   meeting: 'meeting',
   email: 'email',
+  lunch: 'lunch',
+  deadline: 'deadline',
 } as const;
 
 export type CompleteActivityResponseDtoActivity = {
@@ -1655,6 +1743,21 @@ export type CompleteActivityResponseDtoActivity = {
      */
   notes: string | null;
   scheduledAt: string;
+  /**
+     * @minimum 0
+     * @maximum 1440
+     */
+  durationMinutes?: number;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  location: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId: string | null;
   completed?: boolean;
   completedAt: string | null;
   createdAt: string;
@@ -6526,6 +6629,69 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getActivitiesControllerCreateMutationOptions(options), queryClient);
+    }
+
+export const activitiesControllerUpdate = (
+    id: string,
+    updateActivityDto: UpdateActivityDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CreateActivityResponseDto>(
+      {url: `/v1/activities/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateActivityDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getActivitiesControllerUpdateMutationKey = () => ['activitiesControllerUpdate'] as const;
+
+export const getActivitiesControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerUpdate>>, TError,ActivitiesControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerUpdate>>, TError,ActivitiesControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getActivitiesControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activitiesControllerUpdate>>, ActivitiesControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  activitiesControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivitiesControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof activitiesControllerUpdate>>>
+    export type ActivitiesControllerUpdateMutationBody = UpdateActivityDto
+    export type ActivitiesControllerUpdateMutationError = unknown
+    export type ActivitiesControllerUpdateMutationVariables = {id: string;data: UpdateActivityDto}
+
+    export const useActivitiesControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activitiesControllerUpdate>>, TError,ActivitiesControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof activitiesControllerUpdate>>,
+        TError,
+        ActivitiesControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActivitiesControllerUpdateMutationOptions(options), queryClient);
     }
 
 export const activitiesControllerComplete = (

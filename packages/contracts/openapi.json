@@ -1286,6 +1286,51 @@
         ]
       }
     },
+    "/v1/activities/{id}": {
+      "patch": {
+        "operationId": "ActivitiesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateActivityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateActivityResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "activities"
+        ]
+      }
+    },
     "/v1/activities/{id}/complete": {
       "patch": {
         "operationId": "ActivitiesController_complete",
@@ -6231,7 +6276,9 @@
               "task",
               "call",
               "meeting",
-              "email"
+              "email",
+              "lunch",
+              "deadline"
             ]
           },
           "title": {
@@ -6256,6 +6303,22 @@
                 "minLength": 1
               }
             ]
+          },
+          "durationMinutes": {
+            "default": 30,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1440
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 300,
+            "nullable": true
+          },
+          "ownerId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
           }
         },
         "required": [
@@ -6295,7 +6358,9 @@
                   "task",
                   "call",
                   "meeting",
-                  "email"
+                  "email",
+                  "lunch",
+                  "deadline"
                 ]
               },
               "title": {
@@ -6320,6 +6385,22 @@
                     "minLength": 1
                   }
                 ]
+              },
+              "durationMinutes": {
+                "default": 30,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1440
+              },
+              "location": {
+                "type": "string",
+                "maxLength": 300,
+                "nullable": true
+              },
+              "ownerId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
               },
               "completed": {
                 "default": false,
@@ -6375,6 +6456,8 @@
               "title",
               "notes",
               "scheduledAt",
+              "location",
+              "ownerId",
               "completedAt",
               "createdAt",
               "updatedAt"
@@ -6390,6 +6473,71 @@
           "activity",
           "txid"
         ]
+      },
+      "UpdateActivityDto": {
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "dealId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "task",
+              "call",
+              "meeting",
+              "email",
+              "lunch",
+              "deadline"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "scheduledAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ]
+          },
+          "durationMinutes": {
+            "default": 30,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1440
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 300,
+            "nullable": true
+          },
+          "ownerId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          }
+        }
       },
       "CompleteActivityDto": {
         "type": "object",
@@ -6432,7 +6580,9 @@
                   "task",
                   "call",
                   "meeting",
-                  "email"
+                  "email",
+                  "lunch",
+                  "deadline"
                 ]
               },
               "title": {
@@ -6457,6 +6607,22 @@
                     "minLength": 1
                   }
                 ]
+              },
+              "durationMinutes": {
+                "default": 30,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1440
+              },
+              "location": {
+                "type": "string",
+                "maxLength": 300,
+                "nullable": true
+              },
+              "ownerId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
               },
               "completed": {
                 "default": false,
@@ -6512,6 +6678,8 @@
               "title",
               "notes",
               "scheduledAt",
+              "location",
+              "ownerId",
               "completedAt",
               "createdAt",
               "updatedAt"

@@ -1,8 +1,13 @@
 import { z } from "zod";
-import { zOrgId, zActivityId, zContactId, zDealId, zServerTimestamp } from "./zodHelpers.js";
+import { zOrgId, zActivityId, zContactId, zDealId, zServerTimestamp, zUserId } from "./zodHelpers.js";
 
 /** Pipedrive parity — the actual product vocabulary of the tool we're replacing. */
-export const ActivityTypeSchema = z.enum(["task", "call", "meeting", "email"]);
+export const ACTIVITY_TYPES = ["task", "call", "meeting", "email", "lunch", "deadline"] as const;
+export const ActivityTypeSchema = z.enum(ACTIVITY_TYPES);
+/** Rótulo e ícone de cada tipo — um lugar só, para tela e automação concordarem. */
+export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
+  task: "Tarefa", call: "Ligação", meeting: "Reunião", email: "E-mail", lunch: "Almoço", deadline: "Prazo",
+};
 export type ActivityType = z.infer<typeof ActivityTypeSchema>;
 
 /**
@@ -20,6 +25,12 @@ export const ActivitySchema = z.object({
   title: z.string().min(1, { error: "Title is required" }).max(200),
   notes: z.string().max(2000).nullable(),
   scheduledAt: zServerTimestamp,
+  /** Quanto tempo reservar na agenda. 0 = compromisso sem duração (um prazo). */
+  durationMinutes: z.number().int().min(0).max(24 * 60).default(30),
+  /** Onde acontece — endereço, sala, link da chamada. */
+  location: z.string().max(300).nullable(),
+  /** Quem vai executar. Sem responsável a atividade é da equipe, não de ninguém. */
+  ownerId: zUserId.nullable(),
   completed: z.boolean().default(false),
   completedAt: zServerTimestamp.nullable(),
   createdAt: zServerTimestamp,
@@ -36,7 +47,7 @@ export const CreateActivityInputSchema = ActivitySchema.omit({
   completedAt: true,
   createdAt: true,
   updatedAt: true,
-}).partial({ contactId: true, dealId: true, notes: true });
+}).partial({ contactId: true, dealId: true, notes: true, durationMinutes: true, location: true, ownerId: true });
 export type CreateActivityInput = z.infer<typeof CreateActivityInputSchema>;
 
 export const CreateActivityResponseSchema = z.object({
@@ -56,3 +67,12 @@ export const CompleteActivityResponseSchema = z.object({
   txid: z.number().int(),
 });
 export type CompleteActivityResponse = z.infer<typeof CompleteActivityResponseSchema>;
+
+/** Editar uma atividade já criada — o Pipedrive permite mudar tudo menos o id. */
+export const UpdateActivityInputSchema = CreateActivityInputSchema.omit({ id: true }).partial();
+export type UpdateActivityInput = z.infer<typeof UpdateActivityInputSchema>;
+
+/** Fim de uma atividade a partir do seu início e duração — usado pelo calendário. */
+export function activityEndsAt(activity: Pick<Activity, "scheduledAt" | "durationMinutes">): string {
+  return new Date(new Date(activity.scheduledAt).getTime() + activity.durationMinutes * 60_000).toISOString();
+}

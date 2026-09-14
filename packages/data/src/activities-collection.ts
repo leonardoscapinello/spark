@@ -10,7 +10,7 @@ import { sparkShapeOptions } from "./shape-options.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { ActivitySchema, activityId, type Activity, type CreateActivityInput, type OrgId } from "@spark/core";
-import { activitiesControllerCreate, activitiesControllerComplete } from "@spark/api-client";
+import { activitiesControllerCreate, activitiesControllerComplete, activitiesControllerUpdate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 
 export function optimisticActivity(input: Omit<CreateActivityInput, "id">, orgId: OrgId): Activity {
@@ -24,6 +24,9 @@ export function optimisticActivity(input: Omit<CreateActivityInput, "id">, orgId
     title: input.title,
     notes: input.notes ?? null,
     scheduledAt: input.scheduledAt,
+    durationMinutes: input.durationMinutes ?? 30,
+    location: input.location ?? null,
+    ownerId: input.ownerId ?? null,
     completed: false,
     completedAt: null,
     createdAt: now,
@@ -60,17 +63,25 @@ export function createActivitiesCollection() {
         if (!mutation) throw new Error("onUpdate called with no pending mutation.");
 
         const changedFields = Object.keys(mutation.changes);
-        const isCompletion =
-          changedFields.includes("completed") &&
-          changedFields.every((field) => field === "completed" || field === "completedAt");
-        if (!isCompletion) {
-          throw new Error(
-            `Only completing or reopening an activity is possible today — changed field(s): ${changedFields.join(", ")}.`,
-          );
+        // Concluir/reabrir tem rota própria (grava completedAt e o evento certo);
+        // qualquer outra mudança é uma edição da atividade.
+        const isCompletion = changedFields.every((field) => field === "completed" || field === "completedAt");
+        if (isCompletion) {
+          const response = await activitiesControllerComplete(mutation.original.id, { completed: mutation.modified.completed });
+          return confirmed(response);
         }
 
-        const response = await activitiesControllerComplete(mutation.original.id, {
-          completed: mutation.modified.completed,
+        const next = mutation.modified;
+        const response = await activitiesControllerUpdate(mutation.original.id, {
+          type: next.type,
+          title: next.title,
+          notes: next.notes,
+          scheduledAt: next.scheduledAt,
+          durationMinutes: next.durationMinutes,
+          location: next.location,
+          ownerId: next.ownerId,
+          contactId: next.contactId,
+          dealId: next.dealId,
         });
         return confirmed(response);
       },
