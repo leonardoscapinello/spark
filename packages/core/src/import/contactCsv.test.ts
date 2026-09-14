@@ -14,3 +14,39 @@ describe("parseContactCsv", () => {
     expect(result.rows[2]?.errors).toContain("E-mail inválido");
   });
 });
+
+describe("parseContactCsv — exportação do Pipedrive", () => {
+  it("reads the Portuguese person export, taking the first filled e-mail and phone", () => {
+    const csv = [
+      "Nome,Email - Trabalho,Email - Casa,Telefone - Trabalho,Telefone - Celular,Organização,Etiquetas,Origem da fonte",
+      "Ana Souza,,ana@casa.com,,+55 11 91234-5678,Acme,Cliente|VIP,Indicação",
+    ].join("\n");
+    const result = parseContactCsv(csv);
+    expect(result.errors).toEqual([]);
+    expect(result.rows).toHaveLength(1);
+    const [row] = result.rows;
+    expect(row?.name).toBe("Ana Souza");
+    expect(row?.email).toBe("ana@casa.com");
+    expect(row?.phone).toBe("+5511912345678");
+    expect(row?.tags).toEqual(["Cliente", "VIP"]);
+    expect(row?.source).toBe("Indicação");
+    expect(row?.errors).toEqual([]);
+  });
+
+  it("reads the English person export and composes the name from first and last name", () => {
+    const csv = [
+      "First name,Last name,Email - Work,Phone - Mobile,Labels",
+      "John,Doe,john@work.com,+55 21 99876-5432,Lead",
+      ",Solo,solo@work.com,,",
+    ].join("\n");
+    const result = parseContactCsv(csv);
+    expect(result.errors).toEqual([]);
+    expect(result.rows.map((row) => row.name)).toEqual(["John Doe", "Solo"]);
+    expect(result.rows[0]?.email).toBe("john@work.com");
+    expect(result.rows[0]?.tags).toEqual(["Lead"]);
+  });
+
+  it("still requires a name column when neither a name nor first/last name exists", () => {
+    expect(parseContactCsv("Email - Work\na@b.com").errors).toEqual(["Inclua uma coluna Nome no arquivo."]);
+  });
+});
