@@ -9,7 +9,7 @@ ele; abrir o app em outro dispositivo é ver os mesmos dados.
 | Peça | Aponta para | Onde se configura |
 |---|---|---|
 | API (`apps/api`) | Postgres do Supabase, conexão direta (porta 5432) | `apps/api/.env` → `DATABASE_URL` |
-| Electric (sync) | o mesmo Postgres, `sslmode=require` | `.env` na raiz → `ELECTRIC_DATABASE_URL` (lido pelo `docker-compose.yml`) |
+| Electric do app (`electric-app`, porta 3011) | o mesmo Postgres, `sslmode=require`, IPv6 pela rede do host | `.env` na raiz → `ELECTRIC_DATABASE_URL` (lido pelo `docker-compose.yml`) |
 | Migrations (`pnpm db:migrate`) | `DATABASE_URL` | idem API |
 | Semeador (`pnpm seed:demo --org …`) | `DATABASE_URL` | idem — semeia o banco real, de propósito e com `--org` explícito |
 | Web (`apps/web`) | a API local (`:3000`) e o Supabase Auth | `apps/web/.env.local` |
@@ -25,6 +25,8 @@ variáveis apontam para o Postgres do job.
 
 O Docker (`docker compose up -d`) continua existindo por isso: Postgres e
 Electric locais servem aos testes, não ao app.
+
+Projeto Supabase do Spark: **`aiqbhzugqwbcraifhyxl`** (organização Human Studio, São Paulo) — criado em 14/09/2026; Auth e banco no mesmo projeto. A configuração de Auth (site URL, redirecionamentos) vive em `supabase/config.toml` e sobe com `supabase config push`.
 
 ## O que o Supabase exige
 

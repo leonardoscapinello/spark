@@ -1,0 +1,7 @@
+# Configuração remota do projeto Supabase do Spark (docs/operacao/ambientes.md).
+# Só a seção de Auth: para onde links de login e recuperação podem voltar.
+project_id = "aiqbhzugqwbcraifhyxl"
+
+[auth]
+site_url = "http://localhost:3100"
+additional_redirect_urls = ["http://localhost:3100/**"]

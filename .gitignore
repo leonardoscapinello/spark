@@ -44,3 +44,4 @@ storybook-static/
 
 # Lighthouse CI — relatórios locais de cada run
 .lighthouseci/
+supabase/.temp/

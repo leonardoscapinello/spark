@@ -44,16 +44,31 @@ services:
     volumes:
       - spark_valkey_data:/data
 
+  # Electric dos TESTES: acompanha o Postgres local. O app usa o electric-app.
   electric:
     image: electricsql/electric:1.5.1
     restart: unless-stopped
     ports: ["3010:3000"]
     environment:
-      DATABASE_URL: ${ELECTRIC_DATABASE_URL:-postgresql://postgres:spark_dev@postgres:5432/spark?sslmode=disable}
+      DATABASE_URL: postgresql://postgres:spark_dev@postgres:5432/spark?sslmode=disable
       ELECTRIC_INSECURE: "true"
     depends_on:
       postgres:
         condition: service_healthy
+
+  # Electric do APP: sincroniza o banco real (Postgres do projeto Supabase —
+  # docs/operacao/ambientes.md). Rede do host porque o endereço direto do
+  # Supabase só tem IPv6 e a rede interna do Docker não o alcança.
+  electric-app:
+    image: electricsql/electric:1.5.1
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DATABASE_URL: ${ELECTRIC_DATABASE_URL:?defina ELECTRIC_DATABASE_URL no .env da raiz}
+      ELECTRIC_PORT: "3011"
+      ELECTRIC_DATABASE_USE_IPV6: "true"
+      ELECTRIC_INSECURE: "true"
+      ELECTRIC_USAGE_REPORTING: "false"
 
   mailpit:
     image: axllent/mailpit:latest

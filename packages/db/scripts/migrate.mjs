@@ -7,7 +7,9 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import postgres from "postgres";
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
+// O banco do app é o da API (docs/operacao/ambientes.md): sem DATABASE_URL no ambiente, lê apps/api/.env.
+loadEnv({ path: ["../../apps/api/.env", ".env"] });
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";

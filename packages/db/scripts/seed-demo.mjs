@@ -12,7 +12,9 @@
  */
 import postgres from "postgres";
 import { v7 as uuidv7 } from "uuid";
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
+// O banco do app é o da API (docs/operacao/ambientes.md): sem DATABASE_URL no ambiente, lê apps/api/.env.
+loadEnv({ path: ["../../apps/api/.env", ".env"] });
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 const args = process.argv.slice(2);
