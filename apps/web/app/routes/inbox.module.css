@@ -30,7 +30,8 @@
 .listActions { display: flex; align-items: center; gap: var(--space-1); margin-inline-start: auto; }
 /* Busca do painel de lista: controle de 32px, como a barra da Intercom (captura 028). */
 .search { --ui-fieldHeight: var(--ui-controlMedium); padding: var(--space-2) var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.listControls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--ui-touchTarget); padding-inline: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+/* Linha de filtros da lista: 40px com chips de 24 (Intercom, medidas-inbox-shadow-dom: y=130 h=40, padding 8/16). */
+.listControls { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--ui-controlLarge); padding: var(--space-2) var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 .listControlActions,.layoutSwitch { display: flex; align-items: center; gap: var(--space-1); }
 .layoutSwitch { padding-inline-end: var(--space-2); border-inline-end: var(--ui-hairline) solid var(--color-line); }
 .listBody { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-2); }
