@@ -127,10 +127,23 @@ async function loadSession(): Promise<AppSession | null> {
   accessToken = data.session.access_token;
   try {
     return await resolveAppSession();
-  } catch {
-    await signOut();
-    return null;
+  } catch (error) {
+    // Só a API dizendo «não» derruba a sessão. Fora do ar, reiniciando ou
+    // sem rede, a sessão do Supabase continua válida: seguimos com o perfil
+    // guardado neste dispositivo. Derrubar aqui era o que deslogava a
+    // pessoa a cada restart da API ou queda do Docker.
+    if (apiRejected(error)) {
+      await signOut();
+      return null;
+    }
+    return readProfile();
   }
+}
+
+/** 401/403/404 da API: a conta não existe ou o token não vale — resposta definitiva, não indisponibilidade. */
+function apiRejected(error: unknown): boolean {
+  const status = (error as { response?: { status?: number } } | null)?.response?.status;
+  return status === 401 || status === 403 || status === 404;
 }
 
 export async function signIn(email: string, password: string, totpCode?: string): Promise<AppSession> {
@@ -162,9 +175,9 @@ export async function signIn(email: string, password: string, totpCode?: string)
 
   try {
     return await resolveAppSession();
-  } catch {
+  } catch (error) {
     await signOut();
-    throw new AuthFlowError("ACCOUNT_NOT_PROVISIONED");
+    throw new AuthFlowError(apiRejected(error) ? "ACCOUNT_NOT_PROVISIONED" : "AUTH_UNAVAILABLE");
   }
 }
 

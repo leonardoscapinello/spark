@@ -133,4 +133,33 @@ describe("auth.client — Supabase Auth session", () => {
     expect(mocks.signOut).toHaveBeenCalledWith({ scope: "global" });
     expect(getSession()).toBeNull();
   });
+
+  it("keeps the session when the API is down and restores the cached profile", async () => {
+    const orgId = orgIdFactory.create();
+    localStorage.setItem("leonardo_app_profile", JSON.stringify({ orgId, userId: "local-user", capabilities: ["contacts:read"] }));
+    mocks.getSession.mockResolvedValue({ data: { session: { access_token: "still-valid-jwt" } }, error: null });
+    mocks.me.mockRejectedValue(new Error("connect ECONNREFUSED"));
+
+    await expect(restoreSession()).resolves.toMatchObject({ orgId, userId: "local-user" });
+    expect(mocks.signOut).not.toHaveBeenCalled();
+    expect(getSession()).toMatchObject({ orgId });
+  });
+
+  it("drops the session only when the API rejects the account (401)", async () => {
+    localStorage.setItem("leonardo_app_profile", JSON.stringify({ orgId: orgIdFactory.create(), userId: "local-user", capabilities: [] }));
+    mocks.getSession.mockResolvedValue({ data: { session: { access_token: "revoked-jwt" } }, error: null });
+    mocks.me.mockRejectedValue(Object.assign(new Error("Unauthorized"), { response: { status: 401 } }));
+
+    await expect(restoreSession()).resolves.toBeNull();
+    expect(mocks.signOut).toHaveBeenCalled();
+    expect(getSession()).toBeNull();
+  });
+
+  it("reports the API as unavailable at sign-in instead of an unprovisioned account", async () => {
+    mocks.signInWithPassword.mockResolvedValue({ data: { session: { access_token: "real-jwt" } }, error: null });
+    mocks.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: "aal1", nextLevel: "aal1" }, error: null });
+    mocks.me.mockRejectedValue(new Error("connect ECONNREFUSED"));
+
+    await expect(signIn("person@company.com", "strong-password")).rejects.toMatchObject({ code: "AUTH_UNAVAILABLE" });
+  });
 });
