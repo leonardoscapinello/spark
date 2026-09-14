@@ -1,4 +1,5 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
+import { sparkShapeOptions } from "./shape-options.js";
 /**
  * Local-first activities collection — same pattern as
  * deals-collection.ts (docs/adr/0018, docs/adr/0026). `onUpdate` only
@@ -8,9 +9,8 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { ActivitySchema, activityId, type Activity, type CreateActivityInput, type OrgId } from "@spark/core";
-import { activitiesControllerCreate, activitiesControllerComplete, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { activitiesControllerCreate, activitiesControllerComplete } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 
 export function optimisticActivity(input: Omit<CreateActivityInput, "id">, orgId: OrgId): Activity {
@@ -37,19 +37,7 @@ export function createActivitiesCollection() {
       id: "activities",
       schema: ActivitySchema,
       getKey: (activity) => activity.id,
-      shapeOptions: {
-        url: `${getSparkApiBaseUrl()}/v1/shapes/activities`,
-        // Electric replicates the Postgres column (snake_case); the Zod
-        // schema is camelCase (ADR-0019) — see the same comment in
-        // contacts-collection.ts.
-        columnMapper: snakeCamelMapper(),
-        headers: {
-          authorization: () => {
-            const token = getSparkAuthToken();
-            return token ? `Bearer ${token}` : "";
-          },
-        },
-      },
+      shapeOptions: sparkShapeOptions("activities"),
       onInsert: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onInsert called with no pending mutation.");

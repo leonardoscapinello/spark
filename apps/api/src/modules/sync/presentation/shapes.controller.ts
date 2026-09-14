@@ -107,21 +107,37 @@ export class ShapesController {
     const columns = TABLE_COLUMNS.get(table);
     if (columns) upstream.searchParams.set("columns", columns.join(","));
 
-    const response = await fetch(upstream);
+    // The browser closing its request (tab closed, shape unsubscribed) must
+    // close ours to Electric too — otherwise every abandoned SSE stream
+    // stays open upstream for as long as the process lives.
+    const abort = new AbortController();
+    request.raw.on("close", () => abort.abort());
+    const response = await fetch(upstream, { signal: abort.signal });
 
-    reply.status(response.status);
+    // Streamed by hand (hijack): Node only sends headers with the first body
+    // byte, and an idle SSE stream (liveSse in packages/data) writes nothing
+    // until something changes — the client would sit waiting for headers that
+    // never come. flushHeaders() ships them at once; the body is piped as it
+    // arrives. Fastify's own headers (CORS) are merged in so they survive
+    // the hijack.
+    const headers: Record<string, string> = {};
+    for (const [name, value] of Object.entries(reply.getHeaders())) if (value !== undefined) headers[name] = String(value);
     for (const [name, value] of response.headers) {
       // content-encoding/length describe Electric's ORIGINAL compressed
-      // body; when relaying via stream, Fastify recalculates — a stale
-      // header here makes the client truncate or choke on the parse.
+      // body; relayed as a stream, a stale header makes the client
+      // truncate or choke on the parse.
       if (name === "content-encoding" || name === "content-length") continue;
-      reply.header(name, value);
+      // CORS is ours (enableCors, one origin) — Electric answers with "*" and must not override it.
+      if (name.startsWith("access-control-") && name !== "access-control-expose-headers") continue;
+      headers[name] = value;
     }
-
+    reply.hijack();
+    reply.raw.writeHead(response.status, headers);
+    reply.raw.flushHeaders();
     if (!response.body) {
-      await reply.send();
+      reply.raw.end();
       return;
     }
-    await reply.send(Readable.fromWeb(response.body as never));
+    Readable.fromWeb(response.body as never).pipe(reply.raw);
   }
 }

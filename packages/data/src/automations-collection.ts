@@ -1,9 +1,9 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
+import { sparkShapeOptions } from "./shape-options.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { AutomationSchema, automationId, type Automation, type OrgId } from "@spark/core";
-import { automationsControllerCreate, automationsControllerDraft, automationsControllerStatus, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { automationsControllerCreate, automationsControllerDraft, automationsControllerStatus } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 
 export function optimisticAutomation(name: string, orgId: OrgId): Automation {
@@ -16,7 +16,7 @@ export function createAutomationsCollection() {
     id: "automations",
     schema: AutomationSchema,
     getKey: (automation) => automation.id,
-    shapeOptions: { url: `${getSparkApiBaseUrl()}/v1/shapes/automations`, columnMapper: snakeCamelMapper(), headers: { authorization: () => bearer() } },
+    shapeOptions: sparkShapeOptions("automations"),
     onInsert: async ({ transaction }) => {
       const value = transaction.mutations[0]?.modified;
       if (!value) throw new Error("Automation insert has no mutation.");
@@ -48,5 +48,4 @@ export function createAutomationsCollection() {
   }));
 }
 
-function bearer(): string { const token = getSparkAuthToken(); return token ? `Bearer ${token}` : ""; }
 export type AutomationsCollection = ReturnType<typeof createAutomationsCollection>;
