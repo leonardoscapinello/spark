@@ -6,7 +6,6 @@
   height: 100dvh;
   min-height: 0;
   padding: var(--space-2);
-  padding-inline-start: 0;
   background: var(--color-ground);
   color: var(--color-ink);
 }
@@ -64,19 +63,37 @@
 
 .railLink { position: relative; }
 
-.railBrand {
-  position: relative;
+.railHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  width: var(--ui-controlMedium);
+  height: var(--ui-controlMedium);
   margin-bottom: var(--space-6);
   flex-shrink: 0;
+}
+
+.railBrand {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
   overflow: hidden;
 }
 
-/* Só cabe com o trilho expandido — recolhido, o ícone da marca já ocupa
-   toda a largura da coluna. Fica sobreposto ao topo do flyout, não dentro
-   do fluxo, para não empurrar os módulos para baixo quando aparece. */
+/* Percevejo, como no flyout da referência (captura 050): mesma linha do
+   logotipo, à direita, irmão de flex — nunca por cima do wordmark. Só
+   existe com o trilho expandido; recolhido, a coluna é só o símbolo.
+   Inclinado = solto (recolhe ao sair); em pé = fixado. Cor de tinta, não
+   de ação: é um estado que fica, não um botão que pede clique. */
 .railPin {
   display: none;
+  flex: 0 0 auto;
+  color: var(--color-inkMuted);
 }
+.railPin svg { transform: rotate(-45deg); transition: transform var(--motion-duration-fast) var(--motion-ease-out); }
+.railPin:hover, .railPin:focus-visible { color: var(--color-ink); }
 
 .railBrand .brandSymbol {
   width: var(--space-6);
@@ -167,7 +184,7 @@
 .mobileSecondaryNav { display: none; }
 
 @media (min-width: 761px) {
-  .railBrand, .railModules, .railBottom { transition: width var(--motion-duration-fast) var(--motion-ease-out); }
+  .railHeader, .railModules, .railBottom { transition: width var(--motion-duration-fast) var(--motion-ease-out); }
   /* packages/ui-web fixa a largura do <nav> em --ui-railWidth (o rail
      compartilhado); a tela precisa da própria largura para o botão de
      fixar se posicionar contra a borda certa — sem isto ele calculava a
@@ -175,12 +192,14 @@
      que os filhos já desenhavam por cima dela. */
   .rail[data-expanded] { width: var(--ui-railFlyoutWidth); align-items: flex-start; }
   .rail[data-expanded]::before { width: var(--ui-railFlyoutWidth); background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); }
-  .rail[data-expanded] .railBrand,
+  .rail[data-expanded] .railHeader,
   .rail[data-expanded] .railModules,
   .rail[data-expanded] .railBottom { box-sizing: border-box; width: var(--ui-railFlyoutWidth); padding-inline: var(--space-2); }
-  .rail[data-expanded] .railBrand { justify-content: flex-start; gap: var(--space-2); overflow: hidden; }
+  .rail[data-expanded] .railHeader { justify-content: flex-start; gap: var(--space-2); }
+  .rail[data-expanded] .railBrand { width: auto; justify-content: flex-start; gap: var(--space-2); }
   .rail[data-expanded] .brandSymbol { opacity: 1; }
-  .rail[data-expanded] .brandWordmark { position: static; flex: 0 1 auto; width: calc(var(--ui-railFlyoutWidth) - var(--space-4) - var(--space-6) - var(--space-2)); max-width: 100%; opacity: 1; visibility: visible; transform: none; }
+  /* O wordmark cede espaço ao percevejo: flyout − padding − símbolo − gaps − controle do pin. */
+  .rail[data-expanded] .brandWordmark { position: static; flex: 1 1 auto; min-width: 0; width: auto; max-width: calc(var(--ui-railFlyoutWidth) - var(--space-4) - var(--space-6) - var(--space-2) - var(--ui-controlSmall) - var(--space-2)); opacity: 1; visibility: visible; transform: none; }
   .rail[data-expanded] .railModules,
   .rail[data-expanded] .railBottom { align-items: stretch; }
   .rail[data-expanded] .railBottom { overflow: hidden; }
@@ -189,15 +208,19 @@
   .rail[data-expanded] .railLabel { opacity: 1; visibility: visible; transform: none; }
   .rail[data-expanded] .accountMenu { justify-content: flex-start; width: 100%; }
   .rail[data-expanded] .accountLink { border-radius: var(--radius-md); }
-  .rail[data-expanded] .railPin { display: flex; position: absolute; top: var(--space-2); inset-inline-end: var(--space-2); z-index: 1; }
-  .rail[data-pinned] .railPin { color: var(--color-accent); }
+  .rail[data-expanded] .railPin { display: inline-flex; }
+  .rail[data-pinned] .railPin svg { transform: none; }
 }
 
-@media (prefers-reduced-motion: reduce) { .railLink, .railLabel, .brandSymbol, .brandWordmark, .rail::before, .railBrand, .railModules, .railBottom { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .railLink, .railLabel, .brandSymbol, .brandWordmark, .rail::before, .railHeader, .railModules, .railBottom, .railPin svg { transition: none; } }
 
 .sidebar {
   height: 100%;
   min-height: 0;
+  /* Off-white, não branco puro: na referência (Intercom) o nav de módulos é
+     #fbfbf9 e o conteúdo é #ffffff — dois planos, não um bloco branco só.
+     Mesma cor que .mobileSecondaryNav já usa. */
+  background: var(--color-surface2);
 }
 
 .singleSection {
@@ -326,7 +349,7 @@
 
   .rail::before { display: none; }
 
-  .railBrand { margin: 0 var(--space-2) 0 0; flex-shrink: 0; }
+  .railHeader { margin: 0 var(--space-2) 0 0; flex-shrink: 0; }
   .railPin { display: none; }
   .railModules { display: none; }
   .mobileModuleMenu { display: flex; flex: 1 1 auto; min-width: 0; }

@@ -169,7 +169,7 @@ export async function clientLoader() {
 export function HydrateFallback() {
   return <div className={styles.shell} data-sidebar="hidden" aria-busy="true">
     <NavigationRail className={styles.rail} data-collapsed>
-      <div className={styles.railBrand}><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="Leonardo Scapinello" /></div>
+      <div className={styles.railHeader}><div className={styles.railBrand}><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="Leonardo Scapinello" /></div></div>
       <div className={styles.railModules} aria-hidden="true">{modules.filter((module) => module.id !== "admin").map((module) => <div key={module.id} className={styles.railPlaceholder} />)}</div>
     </NavigationRail>
     <main className={styles.conteudo}>
@@ -329,8 +329,10 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   return (
     <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
       <NavigationRail className={styles.rail} data-expanded={railExpanded || undefined} data-pinned={railPinned || undefined} onPointerEnter={(event) => { if (event.pointerType === "mouse") setRailHovered(true); }} onPointerLeave={(event) => { if (event.pointerType === "mouse") setRailHovered(false); }} onFocusCapture={() => setRailHovered(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setRailHovered(false); }}>
-        <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><img className={styles.brandWordmark} src="/brand/leonardo-scapinello-ink.svg" alt="" /></Link>
-        <Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railPin} aria-label={railPinned ? "Recolher módulos automaticamente" : "Fixar módulos sempre abertos"} aria-pressed={railPinned} onClick={toggleRailPinned} icon={<Icon name="pin" />} />
+        <div className={styles.railHeader}>
+          <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><img className={styles.brandWordmark} src="/brand/leonardo-scapinello-ink.svg" alt="" /></Link>
+          <Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railPin} aria-label={railPinned ? "Recolher módulos automaticamente" : "Fixar módulos sempre abertos"} aria-pressed={railPinned} onClick={toggleRailPinned} icon={<Icon name="pushpin" />} />
+        </div>
         <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
         <div className={styles.mobileModuleMenu}>
           <MenuButton variant="ghost" shape="rounded" className={styles.mobileModuleTrigger} icon={<Icon name={current.icon} />} aria-label={`Módulo atual: ${current.title}. Mudar módulo`} menu={<MenuGroup label="Módulos">{visibleModules.filter((module) => module.id !== "admin").map((module) => {
