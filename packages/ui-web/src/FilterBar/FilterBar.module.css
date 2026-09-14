@@ -1,0 +1,9 @@
+.root { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.chip { display: inline-flex; align-items: center; gap: var(--space-1); padding-inline-end: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); background: var(--color-surface); }
+.chip:hover { border-color: var(--color-lineStrong); }
+.chipLabel { border-radius: var(--radius-full); }
+.editor { display: flex; flex-direction: column; gap: var(--space-3); }
+.fieldList { display: flex; flex-direction: column; gap: var(--space-1); max-height: var(--ui-previewHeight); overflow-y: auto; margin-top: var(--space-3); }
+.fieldOption { justify-content: flex-start; width: 100%; }
+.group { margin: var(--space-2) 0 var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
+.empty { margin: 0; color: var(--color-inkMuted); }
