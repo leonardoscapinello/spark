@@ -33,3 +33,5 @@ export * from "./user-preferences.js";
 export * from "./deal-products.js";
 export * from "./stage-field-rules.js";
 export * from "./notes.js";
+export * from "./tags.js";
+export * from "./custom-field-data.js";
