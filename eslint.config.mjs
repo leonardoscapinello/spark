@@ -2,6 +2,7 @@
 // Isto não é estilo: é o mecanismo que impede a arquitetura de virar o Twenty.
 import boundaries from "eslint-plugin-boundaries";
 import tseslint from "typescript-eslint";
+import { cssModuleClasses } from "./eslint-rules/css-module-classes.mjs";
 
 const ELEMENTS = [
   { type: "app-api", pattern: "apps/api/**" },
@@ -86,6 +87,13 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // Classe de módulo CSS que não existe. O tipo Record<string,string> deixa
+    // passar; o bundler entrega undefined e a tela renderiza sem estilo.
+    files: ["**/*.tsx"],
+    plugins: { spark: { rules: { "css-module-classes": cssModuleClasses } } },
+    rules: { "spark/css-module-classes": "error" },
   },
   {
     // ADR-0020 (elemento nativo) e ADR-0025 (backdrop-filter) — UM bloco só.
