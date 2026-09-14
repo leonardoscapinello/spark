@@ -7,6 +7,9 @@
 .filterRow { --ui-fieldHeight: var(--ui-controlMedium); }
 .search { flex: 0 1 var(--ui-menuWidth); min-width: min(100%, var(--ui-menuWidth)); }
 .filters { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+/* Intercom separa busca e filtros com um divisor vertical de 16px de respiro
+ * de cada lado (captura 028). */
+.search + .filters { margin-inline-start: var(--space-2); padding-inline-start: var(--space-4); border-inline-start: var(--ui-hairline) solid var(--color-line); }
 .filters > * { width: var(--ui-menuWidth); }
 .filters > [data-appearance="filter"] { width: auto; min-width: 0; }
 .summaryRow { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); min-width: 0; }
@@ -19,5 +22,6 @@
   .filters { width: 100%; min-width: 0; flex-wrap: wrap; }
   .filters > * { flex: 1 1 var(--ui-menuWidth); width: auto; min-width: 0; }
   .search { flex: none; }
+  .search + .filters { margin-inline-start: 0; padding-inline-start: 0; border-inline-start: 0; }
   .actions { margin-inline-start: 0; }
 }

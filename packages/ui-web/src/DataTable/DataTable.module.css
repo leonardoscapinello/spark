@@ -3,8 +3,12 @@
 .scroll:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .table { border-collapse: collapse; width: max-content; min-width: 100%; text-align: start; }
 .table caption { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.table th,.table td { padding: var(--space-3) var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); text-align: start; overflow-wrap: anywhere; max-width: var(--ui-popoverWidth); }
-.table th { padding-block: var(--space-2); background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); white-space: nowrap;position: relative; }
+/* Medidas da tabela Intercom (docs/inspiration/intercom, captura 028): cabeçalho
+ * 40px com rótulo 14px semibold apagado; linhas 14px regular com ~16px de
+ * respiro vertical e hairline entre elas. Antes: rótulo 13px medium em ~30px,
+ * linhas com 12px — mais apertado e mais "planilha" que a referência. */
+.table th,.table td { padding: var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); text-align: start; overflow-wrap: anywhere; max-width: var(--ui-popoverWidth); line-height: var(--ui-tabLine); }
+.table th { height: var(--ui-controlLarge); padding-block: 0; vertical-align: middle; background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); white-space: nowrap;position: relative; }
 .table th .sortButton { padding-inline: 0; color: inherit; font-weight: inherit; }
 .sortIcon { width: var(--space-3); height: var(--space-3); color: var(--color-accent); }
 .visuallyHidden { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
