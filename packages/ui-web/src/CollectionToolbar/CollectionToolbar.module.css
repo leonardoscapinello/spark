@@ -1,6 +1,11 @@
 .root { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .filterRow { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); min-width: 0; }
-.search { flex: 0 1 var(--ui-popoverWidth); min-width: min(100%, var(--ui-menuWidth)); }
+/* Na barra de coleção, campo e filtro são controles de 32px (Intercom: busca
+ * ~220×32, filtro pílula 32) — não campos de formulário de 40px. O token de
+ * altura é re-escopado aqui, então Input e Select encolhem sem prop nova e
+ * sem cada tela lembrar de passar size (ADR-0020). */
+.filterRow { --ui-fieldHeight: var(--ui-controlMedium); }
+.search { flex: 0 1 var(--ui-menuWidth); min-width: min(100%, var(--ui-menuWidth)); }
 .filters { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
 .filters > * { width: var(--ui-menuWidth); }
 .filters > [data-appearance="filter"] { width: auto; min-width: 0; }

@@ -7,7 +7,11 @@
   min-height: var(--space-16);
   margin: calc(var(--space-8) * -1) calc(var(--space-8) * -1) 0;
   padding: var(--space-4) var(--space-8);
-  border-bottom: var(--ui-hairline) solid var(--color-line);
+  /* Intercom não risca uma linha sob o título: a linha de título (64px) e a
+   * barra de busca se encostam com ~8px de respiro (docs/inspiration/intercom,
+   * captura 028, medidas-inbox-shadow-dom). A margem negativa come metade do
+   * gap do frame para chegar nesses 8px sem mexer no gap dos demais blocos. */
+  margin-bottom: calc(var(--space-2) * -1);
 }
 @media (max-width: 760px) {
   .root { padding: var(--space-4); }

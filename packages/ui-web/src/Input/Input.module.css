@@ -44,8 +44,10 @@
   .root { transition: none; }
 }
 
-.adorned { display: flex; align-items: center; min-width: 0; gap: var(--space-2); padding-inline: var(--space-3); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); }
-.adorned > input { flex: 1; min-width: 0; border: 0; padding-inline: 0; background: transparent; }
+/* O contêiner adornado É o campo: tem a altura do campo (com a borda dentro dela),
+ * e o input preenche — senão um campo com ícone sai 2px mais alto que um sem. */
+.adorned { box-sizing: border-box; display: flex; align-items: center; height: var(--ui-fieldHeight); min-width: 0; gap: var(--space-2); padding-inline: var(--space-3); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); }
+.adorned > input { flex: 1; height: 100%; min-width: 0; border: 0; padding-inline: 0; background: transparent; }
 /* o anel de um campo adornado vive no contêiner (:focus-within); o input interno nunca desenha o seu. */
 .adorned > input, .adorned > input:focus { outline: none; box-shadow: none; }
 .adorned:focus-within { border-color: var(--color-focusRing); box-shadow: 0 0 0 var(--ui-hairline) var(--color-focusRing); outline: var(--ui-focusWidth) solid transparent; outline-offset: 0; }
