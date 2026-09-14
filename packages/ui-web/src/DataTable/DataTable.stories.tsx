@@ -9,6 +9,7 @@ export default meta;
 export const Interativas:StoryObj<typeof TableExamples>={};
 export const Carregando = () => <DataTable label="Pessoas" rows={[]} columns={[{id:"name",label:"Pessoa",cell:(row:{id:string})=>row.id},{id:"company",label:"Empresa",cell:(row:{id:string})=>row.id},{id:"stage",label:"Etapa",cell:(row:{id:string})=>row.id}]} rowKey={(row)=>row.id} state="loading" />;
 export const Selecao = () => <SelectionExample />;
+export const CatalogoDeColunas = () => <CatalogExample />;
 
 const people=[
  {id:"1",name:"Ana Prado",company:"Vega",stage:"Novo lead"},
@@ -34,4 +35,18 @@ function SelectionExample(){
    columns={[{id:"name",label:"Pessoa",cell:row=>row.name,sortValue:row=>row.name},{id:"company",label:"Empresa",cell:row=>row.company,sortValue:row=>row.company},{id:"stage",label:"Etapa",cell:row=>row.stage}]}
    selectedIds={selected} onSelectionChange={setSelected}/>
  </>;
+}
+
+/** O «+» no fim do cabeçalho abre o catálogo. A coluna de identidade é
+ * alwaysVisible: escondê-la deixaria a linha sem como ser reconhecida. */
+function CatalogExample(){
+ const [hidden,setHidden]=useState<string[]>(["stage"]);
+ return <DataTable label="Pessoas" rows={people} rowKey={row=>row.id} rowLabel={row=>row.name}
+  columns={[
+   {id:"name",label:"Pessoa",cell:row=>row.name,sortValue:row=>row.name,alwaysVisible:true},
+   {id:"company",label:"Empresa",cell:row=>row.company,sortValue:row=>row.company,group:"Geral"},
+   {id:"stage",label:"Etapa",cell:row=>row.stage,group:"Geral"},
+   {id:"owner",label:"Responsável",cell:()=>"Não atribuído",group:"Atendimento"},
+  ]}
+  hiddenColumnIds={hidden} onHiddenColumnsChange={setHidden}/>;
 }

@@ -14,6 +14,10 @@
 .table tbody tr:hover { background: var(--ui-subtle); }
 .actions { white-space: nowrap; }
 .select { width: var(--space-10); padding-inline: var(--space-4) var(--space-0); }
+.catalog { width: var(--space-10); padding-inline: var(--space-0) var(--space-2); }
+.catalogList { display: flex; flex-direction: column; gap: var(--space-2); max-height: var(--ui-previewHeight); overflow-y: auto; margin-top: var(--space-3); }
+.catalogGroup { margin: var(--space-2) 0 var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
+.catalogEmpty { margin: 0; color: var(--color-inkMuted); }
 .select :global(label) { gap: var(--space-0); }
 .table tbody tr[data-selected] { background: var(--color-accentWash); }
 .table tbody tr[data-selected]:hover { background: var(--color-accentWash); }

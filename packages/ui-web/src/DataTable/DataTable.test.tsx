@@ -43,3 +43,22 @@ it("não mostra caixas de seleção quando o consumidor não trata seleção",()
  render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]}/>);
  expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
 });
+
+it("esconde a coluna escolhida no catálogo e protege a coluna de identidade",async()=>{
+ const rows=[{id:"a",name:"Ana",company:"Vega"}];const onHiddenColumnsChange=vi.fn();
+ const columns=[{id:"name",label:"Nome",cell:(r:typeof rows[number])=>r.name,alwaysVisible:true},{id:"company",label:"Empresa",cell:(r:typeof rows[number])=>r.company,group:"Geral"}];
+ const {rerender}=render(<DataTable label="Contatos" rows={rows} rowKey={r=>r.id} columns={columns} hiddenColumnIds={[]} onHiddenColumnsChange={onHiddenColumnsChange}/>);
+ fireEvent.click(screen.getByRole("button",{name:"Escolher colunas de Contatos"}));
+ expect(await screen.findByText("Geral")).toBeInTheDocument();
+ expect(screen.getByRole("checkbox",{name:"Nome"})).toHaveAttribute("aria-disabled","true");
+ fireEvent.click(screen.getByRole("checkbox",{name:"Empresa"}));
+ expect(onHiddenColumnsChange).toHaveBeenCalledWith(["company"]);
+ rerender(<DataTable label="Contatos" rows={rows} rowKey={r=>r.id} columns={columns} hiddenColumnIds={["company"]} onHiddenColumnsChange={onHiddenColumnsChange}/>);
+ expect(screen.queryByRole("columnheader",{name:"Empresa"})).not.toBeInTheDocument();
+ expect(screen.getByRole("columnheader",{name:"Nome"})).toBeInTheDocument();
+});
+
+it("não oferece catálogo quando o consumidor não trata colunas escondidas",()=>{
+ render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]}/>);
+ expect(screen.queryByRole("button",{name:/Escolher colunas/})).not.toBeInTheDocument();
+});
