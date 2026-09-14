@@ -56,12 +56,6 @@ jobs:
       # (ver packages/db/scripts/migrate.mjs) — usamos o script próprio.
       - run: pnpm db:migrate
 
-      - name: DEBUG env visibility (temporary — remove after diagnosing)
-        run: |
-          echo "shell sees SUPABASE_JWT_SECRET length: ${#SUPABASE_JWT_SECRET}"
-          node -e 'console.log("node sees SUPABASE_JWT_SECRET length:", (process.env.SUPABASE_JWT_SECRET||"").length)'
-          cd apps/api && node -e 'console.log("apps/api cwd node sees length:", (process.env.SUPABASE_JWT_SECRET||"").length)'
-
       # ADR-0024 — mesmo comando do dia a dia, mesmo orçamento de tempo (60s local;
       # aqui rodamos check:full porque é a esteira que protege a main.
       - run: pnpm check:full
