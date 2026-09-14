@@ -5,6 +5,7 @@ import type { Capability } from "@spark/core";
 import { Alert, Avatar, Button, Icon, MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
+import { usePreference } from "../lib/preferences.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import { sendQueueNotice, useSendQueue } from "../lib/send-queue.client";
@@ -111,16 +112,11 @@ const accountModule: NavModule = { id: "account", title: "Perfil", icon: "accoun
   { title: "Conta", items: [{ label: "Segurança", to: "/security", icon: "settings" }] },
 ] };
 
-const RAIL_PINNED_KEY = "spark_rail_pinned";
 
 // Fixar o trilho é preferência de quem usa a máquina, não da organização —
 // mora no navegador, não sincroniza (diferente das colunas escondidas de
 // contacts.tsx, que também são por navegador pelo mesmo motivo: escolha de
 // tela, não regra de negócio).
-function readRailPinned(): boolean {
-  try { return localStorage.getItem(RAIL_PINNED_KEY) === "true"; } catch { return false; }
-}
-
 function pathMatches(pathname: string, to: string, search = "") {
   const [route, query] = to.split("?");
   const routeMatches = route === "/"
@@ -205,16 +201,13 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
   const [accountProfile, setAccountProfile] = useState(session);
   const [quickNavigationOpen, setQuickNavigationOpen] = useState(false);
-  const [railPinned, setRailPinned] = useState(readRailPinned);
+  // segue a pessoa entre dispositivos (app/lib/preferences.client.ts)
+  const [railPinned, setRailPinned] = usePreference<boolean>("rail.pinned", false);
   const [railHovered, setRailHovered] = useState(false);
   const railExpanded = railPinned || railHovered;
 
   function toggleRailPinned() {
-    setRailPinned((current) => {
-      const next = !current;
-      try { localStorage.setItem(RAIL_PINNED_KEY, String(next)); } catch { /* modo privado: a escolha vale só nesta sessão */ }
-      return next;
-    });
+    setRailPinned(!railPinned);
   }
   const [tabIndicator, setTabIndicator] = useState<{ left: number; width: number } | null>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;

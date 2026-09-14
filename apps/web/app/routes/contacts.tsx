@@ -5,6 +5,7 @@ import { optimisticContact, optimisticSavedView } from "@spark/data";
 import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus } from "@spark/core";
 import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
+import { usePreference } from "../lib/preferences.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
@@ -14,17 +15,6 @@ import { requireCapability } from "../lib/route-access.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS, leadStatusLabel } from "../lib/lead-options";
 import styles from "./contacts.module.css";
 
-const HIDDEN_COLUMNS_KEY = "spark_contacts_hidden_columns";
-
-function readHiddenColumns(): string[] | null {
-  try {
-    const raw = localStorage.getItem(HIDDEN_COLUMNS_KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : null;
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : null;
-  } catch {
-    return null;
-  }
-}
 
 export async function clientLoader() {
   const session = await requireCapability("contacts:read");
@@ -135,7 +125,8 @@ export default function Contacts() {
   }
   const [archiveView, setArchiveView] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [storedHiddenColumns, setStoredHiddenColumns] = useState<string[] | null>(readHiddenColumns);
+  // segue a pessoa entre dispositivos (app/lib/preferences.client.ts)
+  const [storedHiddenColumns, setStoredHiddenColumns, hasHiddenColumns] = usePreference<string[]>("contacts.hiddenColumns", []);
   const [bulkRunning, setBulkRunning] = useState(false);
   const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && filterCount === 0;
   const viewTitle = archiveView ? "Pessoas arquivadas" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Pessoas";
@@ -261,11 +252,10 @@ export default function Contacts() {
   // Sem preferência gravada, campo personalizado começa escondido: a lista não
   // pode nascer com uma coluna por campo que a organização tenha criado.
   const customColumnIds = useMemo(() => columns.filter((column) => column.id.startsWith("custom:")).map((column) => column.id), [columns]);
-  const hiddenColumnIds = storedHiddenColumns ?? customColumnIds;
+  const hiddenColumnIds = hasHiddenColumns ? storedHiddenColumns : customColumnIds;
 
   function changeHiddenColumns(ids: string[]) {
     setStoredHiddenColumns(ids);
-    try { localStorage.setItem(HIDDEN_COLUMNS_KEY, JSON.stringify(ids)); } catch { /* modo privado: a escolha vale só nesta sessão */ }
   }
 
   const selectedContacts = useMemo(() => {
