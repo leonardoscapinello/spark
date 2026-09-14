@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, phone as buildPhone, userId as userIdFactory, type Company } from "@spark/core";
@@ -48,6 +48,8 @@ export default function Companies() {
   const [ownerId, setOwnerId] = useState("");
   const [parentCompanyId, setParentCompanyId] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkRunning, setBulkRunning] = useState(false);
 
   const contactCounts = useMemo(() => countBy(contacts.map((item) => item.companyId)), [contacts]);
   const dealCounts = useMemo(() => countBy(deals.filter((item) => !item.deletedAt).map((item) => item.companyId)), [deals]);
@@ -99,6 +101,33 @@ export default function Companies() {
     finally { setBusyId(null); }
   }
 
+  const selectedCompanies = useMemo(() => {
+    const chosen = new Set(selectedIds);
+    return filtered.filter((company) => chosen.has(company.id));
+  }, [filtered, selectedIds]);
+  // Com «Todas» visíveis a seleção pode misturar ativas e arquivadas: restaurar
+  // só quando toda a seleção já está arquivada, senão a ação seria ambígua.
+  const bulkArchives = selectedCompanies.some((company) => company.deletedAt === null);
+
+  // Trocar de visão muda o conjunto à vista; seleção antiga agiria às cegas.
+  useEffect(() => { setSelectedIds([]); }, [visibility, search]);
+
+  async function toggleArchiveMany(companies: readonly Company[], archived: boolean) {
+    setBulkRunning(true);
+    try {
+      await Promise.all(companies.map(async (company) => {
+        const transaction = collection.update(company.id, (draft) => { draft.deletedAt = archived ? new Date().toISOString() : null; });
+        await transaction.isPersisted.promise;
+      }));
+      setSelectedIds([]);
+      notify({ title: `${companies.length} ${companies.length === 1 ? (archived ? "empresa arquivada" : "empresa restaurada") : (archived ? "empresas arquivadas" : "empresas restauradas")}`, description: companies.map((company) => company.name).slice(0, 3).join(", ") + (companies.length > 3 ? ` e mais ${companies.length - 3}` : ""), tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível atualizar todas as empresas", description: "Nenhuma, algumas ou todas podem ter mudado. Confira a lista.", tone: "error" });
+    } finally {
+      setBulkRunning(false);
+    }
+  }
+
   return <PageFrame>
     <PageHeader icon="building" title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="building" title="Cadastre sua primeira empresa" description="Reúna as pessoas e oportunidades de uma organização em um único perfil." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
@@ -109,9 +138,13 @@ export default function Companies() {
     {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar empresas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />}
       filters={<Select appearance="filter" label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
-      count={isLoading ? "Carregando empresas…" : `${filtered.length} ${filtered.length === 1 ? "empresa" : "empresas"}`}
+      actions={selectedCompanies.length > 0 ? <>
+        <Button variant="secondary" loading={bulkRunning} onClick={() => void toggleArchiveMany(selectedCompanies, bulkArchives)}>{bulkArchives ? "Arquivar" : "Restaurar"}</Button>
+        <Button variant="ghost" disabled={bulkRunning} onClick={() => setSelectedIds([])}>Limpar seleção</Button>
+      </> : undefined}
+      count={<span role="status">{isLoading ? "Carregando empresas…" : selectedCompanies.length > 0 ? `${selectedCompanies.length} de ${filtered.length} selecionadas` : `${filtered.length} ${filtered.length === 1 ? "empresa" : "empresas"}`}</span>}
     />}
-    {!firstRun && <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} emptyText="Nenhuma empresa neste filtro." actions={(company) => <><TableIconAction label={`Abrir ${company.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${company.name}`} loading={busyId === company.id} menu={<MenuItem onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>} />}
+    {!firstRun && <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} {...(canWrite ? { selectedIds, onSelectionChange: setSelectedIds } : {})} emptyText="Nenhuma empresa neste filtro." actions={(company) => <><TableIconAction label={`Abrir ${company.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${company.name}`} loading={busyId === company.id} menu={<MenuItem onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>} />}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova empresa" confirmLabel="Criar empresa" errorText="Revise os dados da empresa." onConfirm={createCompany}>
       <div className={styles.form}>
         <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nome comercial" /></Field>
