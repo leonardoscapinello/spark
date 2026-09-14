@@ -1,4 +1,4 @@
-import { bigint, check, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, check, index, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -45,6 +45,7 @@ export const deals = pgTable(
   (t) => [
     check("deals_amount_check", sql`${t.amount} >= 0`),
     check("deals_status_check", sql`${t.status} = ANY (ARRAY['open', 'won', 'lost'])`),
+    index("deals_board_shape_idx").on(t.orgId, t.pipelineId, t.status, t.stageId, t.updatedAt).where(sql`${t.deletedAt} IS NULL`),
     pgPolicy("deals_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

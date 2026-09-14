@@ -5,7 +5,7 @@ import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFa
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
 import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
-import { getPipelinesCollection, getStagesCollection, getDealsCollection } from "../lib/deals-collections.client";
+import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -14,15 +14,11 @@ import { requireCapability } from "../lib/route-access.client";
 import styles from "./deals.module.css";
 
 export async function clientLoader() {
-  const session = await requireCapability("deals:read");
+  await requireCapability("deals:read");
   void Promise.allSettled([
     getPipelinesCollection().preload(),
     getStagesCollection().preload(),
-    getDealsCollection().preload(),
     getUsersCollection().preload(),
-    ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
-    ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
-    ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
   ]);
   return null;
 }
@@ -31,10 +27,14 @@ export default function Deals() {
   const [searchParams, setSearchParams] = useSearchParams();
   const pipelinesCollection = getPipelinesCollection();
   const stagesCollection = getStagesCollection();
-  const dealsCollection = getDealsCollection();
   const contactsCollection = getContactsCollection();
   const usersCollection = getUsersCollection();
   const companiesCollection = getCompaniesCollection();
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
+  const requestedStatus = searchParams.get("status");
+  const statusFilter: DealStatus | "all" = requestedStatus === "won" || requestedStatus === "lost" || requestedStatus === "all" ? requestedStatus : "open";
+  const [dealModalOpen, setDealModalOpen] = useState(false);
+  const [visibleByStage, setVisibleByStage] = useState<Record<string, number>>({});
 
   const { data: pipelines, isLoading: isLoadingPipelines } = useLiveQuery({
     query: (q) => q.from({ pipelines: pipelinesCollection }),
@@ -42,14 +42,19 @@ export default function Deals() {
   const { data: allStages } = useLiveQuery({
     query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: s }) => s.sortOrder, "asc"),
   });
-  const { data: allDeals } = useLiveQuery({ query: (q) => q.from({ deals: dealsCollection }) });
+  const mainPipeline = pipelines.find((pipeline) => pipeline.id === selectedPipelineId) ?? pipelines.find((pipeline) => pipeline.isDefault) ?? pipelines[0];
+  const dealsCollection = useMemo(() => mainPipeline ? getBoardDealsCollection(mainPipeline.id, statusFilter) : null, [mainPipeline, statusFilter]);
+  const { data: deals = [], isLoading: isLoadingDeals } = useLiveQuery({ query: (q) => dealsCollection ? q.from({ deals: dealsCollection }) : undefined }, [dealsCollection]);
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
-  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") : undefined });
+  // Relações volumosas entram somente depois do quadro e apenas para quadros
+  // razoáveis. Com milhares de cards, o detalhe continua no workspace do negócio.
+  const loadCardDetails = !isLoadingDeals && deals.length <= 2_000;
+  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts && (loadCardDetails || dealModalOpen) ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") : undefined }, [canReadContacts, loadCardDetails, dealModalOpen]);
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc") });
   const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
-  const { data: activities = [] } = useLiveQuery({ query: (q) => canReadActivities ? q.from({ activities: getActivitiesCollection() }).where(({ activities: item }) => eq(item.completed, false)) : undefined });
+  const { data: activities = [] } = useLiveQuery({ query: (q) => canReadActivities && loadCardDetails && !dealModalOpen ? q.from({ activities: getActivitiesCollection() }).where(({ activities: item }) => eq(item.completed, false)) : undefined }, [canReadActivities, loadCardDetails, dealModalOpen]);
   /* Próximo passo de cada negócio — o ponto colorido do card do Pipedrive:
    * vermelho quando a atividade venceu, azul quando está agendada, e a
    * ausência dele é o próprio aviso de que ninguém marcou o que vem depois. */
@@ -62,16 +67,13 @@ export default function Deals() {
     }
     return byDeal;
   }, [activities]);
-  const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: companiesCollection }).orderBy(({ companies: company }) => company.name, "asc") : undefined });
+  const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies && (loadCardDetails || dealModalOpen) ? q.from({ companies: companiesCollection }).orderBy(({ companies: company }) => company.name, "asc") : undefined }, [canReadCompanies, loadCardDetails, dealModalOpen]);
 
   const [dragging, setDragging] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [renamingStage, setRenamingStage] = useState<string | null>(null);
-  const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
   const [pipelineModalOpen, setPipelineModalOpen] = useState(false);
   const [pipelineName, setPipelineName] = useState("");
-  const statusFilter = searchParams.get("status") ?? "open";
-  const [dealModalOpen, setDealModalOpen] = useState(false);
   const [targetStageId, setTargetStageId] = useState<string | null>(null);
   const [dealName, setDealName] = useState("");
   const [dealAmount, setDealAmount] = useState<Money | null>(null);
@@ -83,15 +85,22 @@ export default function Deals() {
   const [lossReason, setLossReason] = useState("");
   const [busyDealId, setBusyDealId] = useState<string | null>(null);
 
-  const mainPipeline = pipelines.find((pipeline) => pipeline.id === selectedPipelineId) ?? pipelines.find((pipeline) => pipeline.isDefault) ?? pipelines[0];
   const stages = mainPipeline ? allStages.filter((s) => s.pipelineId === mainPipeline.id) : [];
-  const deals = mainPipeline ? allDeals.filter((deal) => deal.pipelineId === mainPipeline.id && !deal.deletedAt && (statusFilter === "all" || deal.status === statusFilter)) : [];
   const contactNames = new Map(contacts.map((contact) => [contact.id, contact.name]));
   const userNames = new Map(users.map((user) => [user.id, user.name]));
   const companyNames = new Map(companies.map((company) => [company.id, company.name]));
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
   const canMove = session?.capabilities.includes("deals:move") ?? false;
   const canManagePipeline = session?.capabilities.includes("pipelines:manage") ?? false;
+  const dealsByStage = useMemo(() => {
+    const grouped = new Map<string, Deal[]>();
+    for (const deal of deals) {
+      const stageDeals = grouped.get(deal.stageId) ?? [];
+      stageDeals.push(deal);
+      grouped.set(deal.stageId, stageDeals);
+    }
+    return grouped;
+  }, [deals]);
 
   useEffect(() => {
     const personId = searchParams.get("createFor");
@@ -144,6 +153,7 @@ export default function Deals() {
       amount: dealAmount,
       expectedCloseDate: expectedCloseDate || null,
     }, session.orgId);
+    if (!dealsCollection) throw new Error("DEALS_NOT_READY");
     const transaction = dealsCollection.insert(forInsert(deal));
     await transaction.isPersisted.promise;
     notify({ title: "Negócio criado", description: deal.name, tone: "success" });
@@ -151,7 +161,7 @@ export default function Deals() {
   }
 
   async function dropOn(stageId: string) {
-    if (dragging) {
+    if (dragging && dealsCollection) {
       const transaction = dealsCollection.update(dragging, (draft) => {
         draft.stageId = stageId;
       });
@@ -163,6 +173,7 @@ export default function Deals() {
   }
 
   async function closeDeal(deal: Deal, status: Extract<DealStatus, "won" | "lost">, reason?: string) {
+    if (!dealsCollection) return false;
     setBusyDealId(deal.id);
     try {
       const transaction = dealsCollection.update(deal.id, (draft) => {
@@ -224,8 +235,10 @@ export default function Deals() {
 
       <div className={styles.board}>
         {stages.map((stage) => {
-          const stageDeals = deals.filter((d) => d.stageId === stage.id);
-          const total = sum(stageDeals.map((d) => syncedAmount(d.amount)));
+          const allStageDeals = dealsByStage.get(stage.id) ?? [];
+          const visibleCount = visibleByStage[stage.id] ?? 50;
+          const stageDeals = allStageDeals.slice(0, visibleCount);
+          const total = sum(allStageDeals.map((d) => syncedAmount(d.amount)));
 
           return (
             <section
@@ -275,7 +288,7 @@ export default function Deals() {
                   </Button>
                 ) : <span className={styles.colunaNome}>{stage.name}</span>}
                 <span className={styles.colunaTotal}>
-                  {stageDeals.length} · {formatBRL(total)}
+                  {allStageDeals.length} · {formatBRL(total)}
                 </span>
               </div>
 
@@ -330,6 +343,8 @@ export default function Deals() {
                 })}
               </div>
 
+              {stageDeals.length < allStageDeals.length && <Button variant="ghost" size="sm" onClick={() => setVisibleByStage((current) => ({ ...current, [stage.id]: visibleCount + 50 }))}>Mostrar mais {Math.min(50, allStageDeals.length - stageDeals.length)}</Button>}
+
               {canWrite && <Button variant="ghost" size="sm" onClick={() => openDealModal(stage.id)}>+ Adicionar negócio</Button>}
             </section>
           );
@@ -348,7 +363,7 @@ export default function Deals() {
       <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
         <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
       </ActionModal>
-      <ActionModal open={dealModalOpen} onOpenChange={(open) => { setDealModalOpen(open); if (!open) resetDealForm(); }} title="Novo negócio" confirmLabel="Criar negócio" errorText="Preencha nome, valor, pessoa e etapa para criar o negócio." onConfirm={addDeal}>
+      {dealModalOpen && <ActionModal open onOpenChange={(open) => { setDealModalOpen(open); if (!open) resetDealForm(); }} title="Novo negócio" confirmLabel="Criar negócio" errorText="Preencha nome, valor, pessoa e etapa para criar o negócio." onConfirm={addDeal}>
         <div className={styles.modalFields}>
           <Field><Label>Nome</Label><Input value={dealName} onChange={(event) => setDealName(event.target.value)} placeholder="Ex.: Contrato anual Acme" /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={dealAmount} onValueChange={setDealAmount} /></Field>
@@ -358,7 +373,7 @@ export default function Deals() {
           <Field><Label>Etapa inicial</Label><Select label="Etapa inicial" value={targetStageId} options={stages.map((stage) => ({ value: stage.id, label: stage.name }))} onValueChange={setTargetStageId} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
         </div>
-      </ActionModal>
+      </ActionModal>}
       <ActionModal open={closingDeal !== null} onOpenChange={(open) => { if (!open) { setClosingDeal(null); setLossReason(""); } }} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Não foi possível fechar o negócio." onConfirm={async () => { if (!closingDeal) return; const closed = await closeDeal(closingDeal, "lost", lossReason); if (!closed) throw new Error("CLOSE_FAILED"); setClosingDeal(null); }}>
         <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
       </ActionModal>

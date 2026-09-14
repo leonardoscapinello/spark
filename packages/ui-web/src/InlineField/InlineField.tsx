@@ -40,7 +40,8 @@ export interface InlineFieldProps {
  * campos empilhados.
  *
  * Desistir tem três saídas, e todas fecham sem gravar: `Esc`, clicar fora, e o
- * botão de fechar ao lado do campo.
+ * botão de fechar ao lado do campo. Gravar tem duas: sair do campo e `Enter`
+ * (`Ctrl`/`Cmd`+`Enter` no texto longo, onde `Enter` é quebra de linha).
  */
 export function InlineField({ label, value, empty = false, disabled = false, required = false, block = false, href, children }: InlineFieldProps) {
   const [open, setOpen] = useState(false);
@@ -131,7 +132,23 @@ export function InlineField({ label, value, empty = false, disabled = false, req
         <div
           className={s.control}
           ref={holder}
-          onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); setOpen(false); } }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") { event.stopPropagation(); setOpen(false); return; }
+            if (event.key !== "Enter") return;
+            const alvo = event.target;
+            if (!(alvo instanceof HTMLElement)) return;
+            /* Enter grava. Em vez de um botão «confirmar» por linha — que é o
+             * que tinha antes e comia metade da largura do painel — o Enter
+             * tira o foco, e sair do campo já é o gesto que grava. Uma regra
+             * só para teclado e mouse.
+             *
+             * Em texto longo, Enter é quebra de linha: ali grava com
+             * Ctrl/Cmd+Enter, que é a convenção de todo campo multilinha. */
+            const multilinha = alvo.tagName === "TEXTAREA";
+            if (multilinha && !(event.metaKey || event.ctrlKey)) return;
+            event.preventDefault();
+            alvo.blur();
+          }}
         >
           <div className={s.editing}>
             <div className={s.editor}>{children(() => setOpen(false))}</div>

@@ -1,4 +1,4 @@
-import { Controller, ForbiddenException, Get, NotFoundException, Param, Res, UseGuards } from "@nestjs/common";
+import { BadRequestException, Controller, ForbiddenException, Get, NotFoundException, Param, Res, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiExcludeEndpoint } from "@nestjs/swagger";
 import { ConfigService } from "@nestjs/config";
 import type { FastifyReply, FastifyRequest } from "fastify";
@@ -72,7 +72,7 @@ export class ShapesController {
     }
     const request = reply.request as FastifyRequest;
 
-    const electricBase = this.config.get<string>("ELECTRIC_URL") ?? "http://localhost:3010";
+    const electricBase = this.config.getOrThrow<string>("ELECTRIC_URL");
     const upstream = new URL("/v1/shape", electricBase);
 
     // only Electric's own protocol parameters pass through from the
@@ -92,26 +92,48 @@ export class ShapesController {
     }
     const { column, userColumn, sharedUnless } = tableConfig;
     upstream.searchParams.set("table", table);
+    const filters = [`"${column}" = $1`];
+    const params: string[] = [user.orgId];
     const eventPrefixes = table === "events" ? readableEventPrefixes(capabilities) : [];
-    const eventFilter = eventPrefixes.length > 0
-      ? ` AND (${eventPrefixes.map((_, index) => `"type" LIKE $${index + 2}`).join(" OR ")})`
-      : "";
+    if (eventPrefixes.length > 0) {
+      const clauses = eventPrefixes.map((prefix) => {
+        params.push(`${prefix}.%`);
+        return `"type" LIKE $${params.length}`;
+      });
+      filters.push(`(${clauses.join(" OR ")})`);
+    }
     // Personal tables (user_preferences) narrow to the requester too — the
     // server decides this, never the client, for the same reason as the org.
-    const userParam = eventPrefixes.length + 2;
-    const userFilter = userColumn ? ` AND "${userColumn}" = $${userParam}` : "";
+    if (userColumn) {
+      params.push(user.id);
+      filters.push(`"${userColumn}" = $${params.length}`);
+    }
     // Shared-unless-private rows (saved views): everyone gets the org-wide
     // ones, only the owner gets their private ones — decided here, so a
     // private view never leaves the server for anyone else.
-    const sharedFilter = sharedUnless ? ` AND ("${sharedUnless.flagColumn}" = $${userParam} OR "${sharedUnless.ownerColumn}" = $${userParam + 1})` : "";
-    upstream.searchParams.set("where", `"${column}" = $1${eventFilter}${userFilter}${sharedFilter}`);
-    upstream.searchParams.set("params[1]", user.orgId);
-    eventPrefixes.forEach((prefix, index) => upstream.searchParams.set(`params[${index + 2}]`, `${prefix}.%`));
-    if (userColumn) upstream.searchParams.set(`params[${userParam}]`, user.id);
     if (sharedUnless) {
-      upstream.searchParams.set(`params[${userParam}]`, sharedUnless.sharedValue);
-      upstream.searchParams.set(`params[${userParam + 1}]`, user.id);
+      params.push(sharedUnless.sharedValue);
+      const sharedParam = params.length;
+      params.push(user.id);
+      filters.push(`("${sharedUnless.flagColumn}" = $${sharedParam} OR "${sharedUnless.ownerColumn}" = $${params.length})`);
     }
+    if (table === "deals") {
+      filters.push('"deleted_at" IS NULL');
+      const pipelineId = query.pipelineId;
+      if (pipelineId !== undefined) {
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pipelineId)) throw new BadRequestException("Invalid pipelineId.");
+        params.push(pipelineId);
+        filters.push(`"pipeline_id" = $${params.length}`);
+      }
+      const status = query.status;
+      if (status !== undefined) {
+        if (!(["open", "won", "lost"] as const).includes(status as "open" | "won" | "lost")) throw new BadRequestException("Invalid deal status.");
+        params.push(status);
+        filters.push(`"status" = $${params.length}`);
+      }
+    }
+    upstream.searchParams.set("where", filters.join(" AND "));
+    params.forEach((value, index) => upstream.searchParams.set(`params[${index + 1}]`, value));
     const columns = TABLE_COLUMNS.get(table);
     if (columns) upstream.searchParams.set("columns", columns.join(","));
 

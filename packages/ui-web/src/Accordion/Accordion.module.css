@@ -1,14 +1,17 @@
+/* Recuo lateral igual ao do Card (--space-5): os dois aparecem lado a lado na
+ * mesma tela, e 24px contra 20px fazia a coluna da esquerda parecer centrada
+ * de um jeito estranho. Uma medida só para bloco de conteúdo. */
 .root { font-family: var(--typography-fontFamily-body); color: var(--color-ink); }
 .item { border-bottom: var(--ui-hairline) solid var(--color-line); }
 .header { margin: 0; }
-.trigger { display: flex; align-items: center; width: 100%; gap: var(--space-4); padding: var(--space-3) var(--space-6); border: 0; background: transparent; color: inherit; font-family: inherit; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); line-height: var(--ui-bodyLine); text-align: left; cursor: pointer; }
+.trigger { display: flex; align-items: center; width: 100%; gap: var(--space-4); padding: var(--space-3) var(--space-5); border: 0; background: transparent; color: inherit; font-family: inherit; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); line-height: var(--ui-bodyLine); text-align: left; cursor: pointer; }
 .title { flex: 1; }
 .chevron { display: flex; transform: rotate(-0.25turn); }
 .trigger[data-panel-open] .chevron { transform: none; }
 .trigger:hover { background: var(--ui-subtle); }
 .trigger[data-disabled] { color: var(--ui-disabledInk); cursor: not-allowed; }
 .trigger:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
-.content { padding: calc(var(--ui-focusWidth) + var(--ui-focusOffset)) var(--space-6) var(--space-4); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.content { padding: calc(var(--ui-focusWidth) + var(--ui-focusOffset)) var(--space-5) var(--space-4); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
 
 .panel { height: var(--accordion-panel-height); overflow: hidden; transition: height var(--motion-duration-fast) var(--motion-ease-out), opacity var(--motion-duration-fast) var(--motion-ease-out); }
 .panel[data-starting-style],.panel[data-ending-style] { height: 0; opacity: 0; }

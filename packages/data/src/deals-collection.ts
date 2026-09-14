@@ -9,7 +9,7 @@ import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
 import { z } from "zod";
-import { DealSchema, dealId, money, toCents, type Deal, type Money, type CreateDealInput, type OrgId } from "@spark/core";
+import { DealSchema, dealId, money, toCents, type Deal, type DealStatus, type Money, type CreateDealInput, type OrgId, type PipelineId } from "@spark/core";
 import { confirmed } from "./confirmed.js";
 import {
   dealsControllerCreate,
@@ -111,14 +111,23 @@ const DealCollectionSchema = DealSchema.extend({
   }),
 });
 
-export function createDealsCollection() {
+export interface DealsCollectionScope {
+  pipelineId?: PipelineId;
+  status?: DealStatus | "all";
+  collectionId?: string;
+}
+
+export function createDealsCollection(scope: DealsCollectionScope = {}) {
+  const shapeUrl = new URL(`${getSparkApiBaseUrl()}/v1/shapes/deals`);
+  if (scope.pipelineId) shapeUrl.searchParams.set("pipelineId", scope.pipelineId);
+  if (scope.status && scope.status !== "all") shapeUrl.searchParams.set("status", scope.status);
   return createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
-      id: "deals",
+      id: scope.collectionId ?? "deals",
       schema: DealCollectionSchema,
       getKey: (deal) => deal.id,
       shapeOptions: {
-        url: `${getSparkApiBaseUrl()}/v1/shapes/deals`,
+        url: shapeUrl.toString(),
         // Electric replicates the Postgres column (snake_case); the Zod
         // schema is camelCase (ADR-0019) — see the same comment in
         // contacts-collection.ts.
