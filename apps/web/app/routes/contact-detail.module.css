@@ -1,28 +1,33 @@
+/* Cartão de detalhes do perfil da Intercom (captura 051): raio 8, 16px de
+ * padding, cada campo numa linha «rótulo · valor» de 14px, rótulo apagado à
+ * esquerda. Antes: raio 10, 24px, rótulo em caixa alta 12px sobre valor 16px. */
 .campos {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-6);
-  border-radius: var(--radius-md);
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
-  border: 1px solid var(--color-line);
+  border: var(--ui-hairline) solid var(--color-line);
 }
 
 .campo {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  display: grid;
+  grid-template-columns: minmax(var(--space-16), 30%) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-3);
+  min-height: var(--space-6);
 }
 
 .rotulo {
   color: var(--color-inkMuted);
-  font-size: var(--typography-size-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: var(--typography-size-sm);
 }
 
 .valor {
-  font-size: var(--typography-size-md);
+  min-width: 0;
+  font-size: var(--typography-size-sm);
+  overflow-wrap: anywhere;
 }
 
 .acoesEdicao {

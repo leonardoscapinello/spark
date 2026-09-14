@@ -5,7 +5,8 @@
 .identity { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); width: 100%; min-width: 0; }
 .copy { min-width: 0; display: grid; gap: var(--space-2); }
 .titleLine { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); min-width: 0; }
-.titleLine h1 { margin: 0; color: var(--color-ink); font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); line-height: var(--typography-lineHeight-tight); overflow-wrap: anywhere; }
+/* Herói do perfil da Intercom (captura 051): avatar 72, nome 24/600, metadados 14 com ícone. */
+.titleLine h1 { margin: 0; color: var(--color-ink); font-size: var(--typography-size-xl); font-weight: var(--typography-weight-semibold); line-height: var(--typography-lineHeight-tight); overflow-wrap: anywhere; }
 .context { display: inline-flex; align-items: center; min-height: var(--space-5); padding-inline: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); }
 .actions { display: flex; align-items: center; justify-content: flex-end; align-self: end; gap: var(--space-2); flex-wrap: wrap; }
 .description { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); line-height: var(--ui-bodyLine); overflow-wrap: anywhere; }
@@ -13,9 +14,9 @@
 .avatar svg { width: var(--space-6); height: var(--space-6); }
 .metrics { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin: var(--space-2) 0 0; }
 .metrics > div { display: inline-flex; align-items: baseline; gap: var(--space-1); min-width: 0; }
-.metrics svg { align-self: center; flex: 0 0 var(--space-3); width: var(--space-3); height: var(--space-3); color: var(--color-inkMuted); }
-.metrics dt { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.metrics dd { margin: 0; color: var(--color-ink); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metrics svg { align-self: center; flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); color: var(--color-inkMuted); }
+.metrics dt { color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+.metrics dd { margin: 0; color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .metrics dd[data-tone="success"] { color: var(--color-statusSuccess); }
 .metrics dd[data-tone="danger"] { color: var(--color-statusDanger); }
 @media (max-width: 760px) {

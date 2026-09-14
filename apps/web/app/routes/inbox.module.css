@@ -1,6 +1,8 @@
 .page { box-sizing: border-box; height: 100%; min-width: 0; padding-inline-end: var(--space-2); display: grid; grid-template-columns: var(--ui-sidebarWidth) minmax(0, 1fr); gap: var(--space-2); overflow: hidden; }
 .queueSidebar { height: 100%; min-height: 0; }
-.queueSearch { width: 100%; justify-content: flex-start; color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }
+/* «Buscar conversas» é um item da lista, como o «Pesquisar» da Intercom (captura 028): mesma altura dos
+ * outros, 8px de respiro até o primeiro grupo. Antes parecia um campo cinza colado no item de baixo. */
+.queueSearch { margin-bottom: var(--space-2); }
 .setupCard { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
 .setupCardIcon { display: inline-flex; align-items: center; justify-content: center; width: var(--ui-controlSmall); height: var(--ui-controlSmall); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
 .setupCard strong { color: var(--color-ink); font-size: var(--typography-size-sm); }
@@ -26,7 +28,8 @@
 .conversationList > header strong { font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); }
 .conversationList > header span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .listActions { display: flex; align-items: center; gap: var(--space-1); margin-inline-start: auto; }
-.search { padding: var(--space-2) var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
+/* Busca do painel de lista: controle de 32px, como a barra da Intercom (captura 028). */
+.search { --ui-fieldHeight: var(--ui-controlMedium); padding: var(--space-2) var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .listControls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--ui-touchTarget); padding-inline: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 .listControlActions,.layoutSwitch { display: flex; align-items: center; gap: var(--space-1); }
 .layoutSwitch { padding-inline-end: var(--space-2); border-inline-end: var(--ui-hairline) solid var(--color-line); }

@@ -8,7 +8,12 @@ export function Sidebar({ title, children, actions, footer, className }: Sidebar
 export function SidebarItem({ active, icon, count, children, className, render, ...props }: ComponentProps<"a"> & { active?: boolean; icon?: ReactNode; count?: number | undefined; render?: ReactElement }) {
   const content = <>{icon}<span className={styles.label}>{children}</span>{count !== undefined && <span className={styles.count}>{count}</span>}</>;
   const linkProps = { ...props, className: [styles.item, className].filter(Boolean).join(" "), "aria-current": active ? "page" as const : undefined, children: content };
-  return render ? cloneElement(render as ReactElement<ComponentProps<"a">>, linkProps) : <a {...linkProps} />;
+  if (render) return cloneElement(render as ReactElement<ComponentProps<"a">>, linkProps);
+  // Item que age em vez de navegar (ex.: «Buscar conversas» abre a busca do
+  // painel): mesma cara dos outros itens, mas é um botão — o app não escreve
+  // <button> nativo (CLAUDE.md, regra 2), então ele nasce aqui.
+  if (!props.href && props.onClick) return <button type="button" {...(linkProps as unknown as ComponentProps<"button">)} />;
+  return <a {...linkProps} />;
 }
 export function SidebarSection({ title, icon, children, collapsible = false, defaultOpen = false }: { title: string; icon?: ReactNode; children: ReactNode; collapsible?: boolean; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
