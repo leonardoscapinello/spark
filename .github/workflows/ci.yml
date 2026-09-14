@@ -56,6 +56,24 @@ jobs:
       # (ver packages/db/scripts/migrate.mjs) — usamos o script próprio.
       - run: pnpm db:migrate
 
+      # packages/data's integration tests sync through Electric (the shape
+      # proxy in apps/api forwards to ELECTRIC_URL, default localhost:3010 —
+      # exactly what docker-compose.yml maps). Without this container those
+      # tests only ever time out waiting for a row that never replicates.
+      # Started after db:migrate so the publication it reconciles already
+      # has the tables.
+      - run: docker compose up -d electric
+      - name: Aguardar Electric saudável
+        run: |
+          for i in $(seq 1 30); do
+            status=$(docker inspect --format='{{.State.Health.Status}}' spark-dev-electric-1 2>/dev/null || echo starting)
+            [ "$status" = "healthy" ] && exit 0
+            sleep 2
+          done
+          echo "Electric não ficou saudável a tempo" >&2
+          docker logs spark-dev-electric-1
+          exit 1
+
       # ADR-0024 — mesmo comando do dia a dia, mesmo orçamento de tempo (60s local;
       # aqui rodamos check:full porque é a esteira que protege a main.
       - run: pnpm check:full
