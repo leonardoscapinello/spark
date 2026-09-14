@@ -18,11 +18,11 @@
 
 /* Base UI expõe o estado via data-attribute — estilizamos por atributo,
  * nunca reimplementamos o estado em React (docs/adr/0020). */
-.root[data-focused] {
-  outline: var(--ui-focusWidth) solid var(--color-focusRing);
-  outline-offset: var(--ui-hairline);
-  border-color: var(--color-focusRing);
-}
+/* Anel de foco único: borda azul + box-shadow encostado (sem outline-offset,
+ * que criava um segundo anel separado por 1px). O outline transparente é só
+ * a rede de forced-colors. Mesmo tratamento no .trigger de shared/surfaces —
+ * todo campo com borda foca igual (ADR-0020). */
+.root[data-focused] { border-color: var(--color-focusRing); box-shadow: 0 0 0 var(--ui-hairline) var(--color-focusRing); outline: var(--ui-focusWidth) solid transparent; outline-offset: 0; }
 
 .root[data-invalid] {
   border-color: var(--color-statusDanger);
@@ -43,8 +43,8 @@
 
 .adorned { display: flex; align-items: center; min-width: 0; gap: var(--space-2); padding-inline: var(--space-3); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); }
 .adorned > input { flex: 1; min-width: 0; border: 0; padding-inline: 0; background: transparent; }
-.adorned > input[data-focused] { outline: none; }
-.adorned:focus-within { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-hairline); border-color: var(--color-focusRing); }
+.adorned > input[data-focused] { outline: none; box-shadow: none; border-color: transparent; }
+.adorned:focus-within { border-color: var(--color-focusRing); box-shadow: 0 0 0 var(--ui-hairline) var(--color-focusRing); outline: var(--ui-focusWidth) solid transparent; outline-offset: 0; }
 .adorned:has([data-invalid]) { border-color: var(--color-statusDanger); }
 .adorned[data-disabled] { background: var(--color-surface2); }
 .adornment { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); color: var(--color-inkMuted); }
