@@ -195,7 +195,7 @@
     },
     "modalWidth": {
       "$type": "dimension",
-      "$value": "560px"
+      "$value": "640px"
     },
     "drawerWidth": {
       "$type": "dimension",

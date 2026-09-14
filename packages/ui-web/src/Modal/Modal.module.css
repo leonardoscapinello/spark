@@ -1,12 +1,16 @@
 .backdrop { position: fixed; inset: 0; background: var(--ui-scrim); z-index: var(--ui-modalLayer); transition: opacity var(--motion-duration-moderate) var(--motion-ease-out); }
 .backdrop[data-starting-style],.backdrop[data-ending-style] { opacity: 0; }
 .viewport { box-sizing: border-box; min-width: 0; min-height: 0; position: fixed; inset: 0; z-index: var(--ui-modalLayer); display: grid; place-items: center; padding: var(--space-6); overflow: clip; }
-.popup { min-width: 0; min-height: 0; box-sizing: border-box; width: min(var(--ui-modalWidth), 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--color-surface); color: var(--color-ink); border-radius: var(--radius-lg); box-shadow: var(--ui-popupShadow); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); outline: none; transition: opacity var(--motion-duration-moderate) var(--motion-ease-out), transform var(--motion-duration-moderate) var(--motion-ease-out); }
+.popup { min-width: 0; min-height: 0; box-sizing: border-box; width: min(var(--ui-modalWidth), 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--color-surface); color: var(--color-ink); border-radius: var(--ui-popupRadius); box-shadow: var(--ui-popupShadow); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); outline: none; transition: opacity var(--motion-duration-moderate) var(--motion-ease-out), transform var(--motion-duration-moderate) var(--motion-ease-out); }
 .popup[data-starting-style],.popup[data-ending-style] { opacity: 0; transform: scale(var(--motion-scale-popup)); }
-.header { flex-shrink: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); padding: var(--space-6); }
-.title { font-size: var(--typography-size-lg); margin: 0; font-weight: var(--typography-weight-semibold); }
+/* Medidas da modal Intercom (docs/inspiration/intercom, captura 031): 640px,
+ * raio 12, cabeçalho de 64px com título 16px e hairline embaixo, corpo com 24px,
+ * rodapé de 64px com hairline em cima. Antes: 560px, raio 16, cabeçalho solto
+ * de 24px com título 19px e sem linha. */
+.header { box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--space-16); padding: var(--space-4) var(--space-6); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.title { font-size: var(--typography-size-md); line-height: var(--ui-tabLine); margin: 0; font-weight: var(--typography-weight-semibold); }
 .description { margin: var(--space-2) 0 0; line-height: var(--ui-bodyLine); color: var(--color-inkMuted); }
-.body { min-height: 0; overflow: auto; padding: 0 var(--space-6) var(--space-6); }
+.body { min-height: 0; overflow: auto; padding: var(--space-6); }
 .footer { flex-shrink: 0; flex-wrap: wrap; display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4) var(--space-6); border-top: var(--ui-hairline) solid var(--color-line); }
 
 .popup[data-size="wide"] { width: min(var(--ui-modalWide), 100%); }
