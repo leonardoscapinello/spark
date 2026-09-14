@@ -3,13 +3,14 @@ import { and, eq, sql } from "drizzle-orm";
 import { createDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
 import type { IntegrationConnection, IntegrationConnectionId, IntegrationWriteResponse, OrgId, UpdateIntegrationStatusInput, UpsertIntegrationInput, UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
+import { ConnectionSettingsRepository } from "./connection-settings.repository.js";
 import { IntegrationProviderRegistry } from "./provider-registry.service.js";
 import { SecretVault } from "./secret-vault.service.js";
 
 @Injectable()
 export class IntegrationsRepository {
   private readonly db: SparkDb;
-  constructor(private readonly vault: SecretVault, private readonly providers: IntegrationProviderRegistry, private readonly events: DomainEventWriter) { this.db = createDbClient(process.env.DATABASE_URL ?? ""); }
+  constructor(private readonly vault: SecretVault, private readonly providers: IntegrationProviderRegistry, private readonly events: DomainEventWriter, private readonly settings: ConnectionSettingsRepository) { this.db = createDbClient(process.env.DATABASE_URL ?? ""); }
   upsert(orgId: OrgId, actorUserId: UserId, input: UpsertIntegrationInput): Promise<IntegrationWriteResponse> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const existing = await tx.select().from(integrationConnections).where(and(eq(integrationConnections.id, input.id), eq(integrationConnections.orgId, orgId))).limit(1);
@@ -21,6 +22,7 @@ export class IntegrationsRepository {
         ? await tx.update(integrationConnections).set({ provider: input.provider, name: input.name, config: input.config, ...(encrypted ? { credentialsConfigured: true, credentialHint: hint } : {}), status: "not_configured", lastError: null, updatedAt: new Date() }).where(eq(integrationConnections.id, input.id)).returning()
         : await tx.insert(integrationConnections).values({ id: input.id, orgId, provider: input.provider, name: input.name, config: input.config, credentialsConfigured: Boolean(encrypted), credentialHint: hint }).returning();
       if (!row) throw new Error("Integration upsert returned no row.");
+      await this.settings.replace(tx, orgId, row.id, input.config);
       if (encrypted) await tx.insert(integrationSecrets).values({ connectionId: input.id, orgId, ...encrypted }).onConflictDoUpdate({ target: integrationSecrets.connectionId, set: { ...encrypted, updatedAt: new Date() } });
       const txid = await captureTxid(tx);
       await this.events.append(tx, { orgId, type: "integration.configured", data: { connectionId: input.id, provider: input.provider, actorUserId } });
@@ -32,7 +34,7 @@ export class IntegrationsRepository {
       const [connection] = await tx.select().from(integrationConnections).where(and(eq(integrationConnections.id, id), eq(integrationConnections.orgId, orgId))).limit(1);
       if (!connection) throw new NotFoundException(`Integration ${id} not found.`);
       const [secret] = await tx.select().from(integrationSecrets).where(and(eq(integrationSecrets.connectionId, id), eq(integrationSecrets.orgId, orgId))).limit(1);
-      return { connection, secrets: secret ? this.vault.decrypt(secret) : {} };
+      return { connection: { ...connection, config: await this.settings.read(tx, connection.id) }, secrets: secret ? this.vault.decrypt(secret) : {} };
     });
     let error: string | null = null;
     try { await this.providers.check(loaded.connection.provider as IntegrationConnection["provider"], loaded.connection.config, loaded.secrets); }

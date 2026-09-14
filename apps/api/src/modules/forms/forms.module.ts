@@ -6,5 +6,6 @@ import { PermissionGroupsRepository } from "../identity/infrastructure/permissio
 import { UsersRepository } from "../identity/infrastructure/users.repository.js";
 import { FormsService } from "./application/forms.service.js";
 import { FormsRepository } from "./infrastructure/forms.repository.js";
+import { LeadFormFieldsRepository } from "./infrastructure/lead-form-fields.repository.js";
 import { FormsController, PublicFormsController } from "./presentation/forms.controller.js";
-@Module({ imports: [EventsModule], controllers: [FormsController, PublicFormsController], providers: [FormsService, FormsRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard] }) export class FormsModule {}
+@Module({ imports: [EventsModule], controllers: [FormsController, PublicFormsController], providers: [FormsService, FormsRepository, LeadFormFieldsRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard] }) export class FormsModule {}

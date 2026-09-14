@@ -17,6 +17,7 @@ import {
   permissionGroupId as permissionGroupIdFactory,
 } from "@spark/core";
 import { AppModule } from "../src/app.module.js";
+import { seedPermissionGroup } from "./permissions.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
@@ -50,9 +51,8 @@ beforeAll(async () => {
 
   const managerGroup = permissionGroupIdFactory.create();
   const viewerGroup = permissionGroupIdFactory.create();
-  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-    (${managerGroup}, ${org}, 'Gerente', ${admin.json(["contacts:write", "activities:read", "activities:write"])}),
-    (${viewerGroup}, ${org}, 'Visualizador', ${admin.json(["activities:read"])})`;
+  await seedPermissionGroup(admin, org, managerGroup, "Gerente", ["contacts:write", "activities:read", "activities:write"]);
+  await seedPermissionGroup(admin, org, viewerGroup, "Visualizador", ["activities:read"]);
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
     (${org}, ${manager}, ${managerGroup}),
     (${org}, ${viewer}, ${viewerGroup})`;

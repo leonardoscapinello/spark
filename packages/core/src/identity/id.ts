@@ -50,6 +50,11 @@ export type SavedViewId = Id<"SavedView">;
 export type DealProductId = Id<"DealProduct">;
 export type StageFieldRuleId = Id<"StageFieldRule">;
 export type NoteId = Id<"Note">;
+export type CustomFieldOptionId = Id<"CustomFieldOption">;
+export type TagId = Id<"Tag">;
+export type LeadFormFieldId = Id<"LeadFormField">;
+export type IntegrationSettingId = Id<"IntegrationSetting">;
+export type CustomFieldValueId = Id<"CustomFieldValue">;
 export type UserPreferenceId = Id<"UserPreference">;
 
 export class InvalidIdError extends Error {
@@ -115,4 +120,9 @@ export const savedViewId = makeIdFactory("SavedView");
 export const dealProductId = makeIdFactory("DealProduct");
 export const stageFieldRuleId = makeIdFactory("StageFieldRule");
 export const noteId = makeIdFactory("Note");
+export const customFieldOptionId = makeIdFactory("CustomFieldOption");
+export const tagId = makeIdFactory("Tag");
+export const leadFormFieldId = makeIdFactory("LeadFormField");
+export const integrationSettingId = makeIdFactory("IntegrationSetting");
+export const customFieldValueId = makeIdFactory("CustomFieldValue");
 export const userPreferenceId = makeIdFactory("UserPreference");

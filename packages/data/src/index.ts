@@ -30,3 +30,5 @@ export * from "./user-preferences-collection.js";
 export * from "./teams-collection.js";
 export { confirmed } from "./confirmed.js";
 export * from "./notes-collection.js";
+export * from "./custom-field-data-collections.js";
+export * from "./tag-collections.js";

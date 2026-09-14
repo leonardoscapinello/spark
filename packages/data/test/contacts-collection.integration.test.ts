@@ -86,8 +86,9 @@ beforeAll(async () => {
   // seeds the default groups on its own), so it needs the permission
   // itself, directly.
   const group = permissionGroupIdFactory.create();
-  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-    (${group}, ${org}, 'Gerente', ${admin.json(["contacts:read", "contacts:write"])})`;
+  await admin`INSERT INTO permission_groups (id, org_id, name) VALUES (${group}, ${org}, 'Gerente')`;
+  // A capacidade virou linha (ADR-0035): semear pelo jsonb daria um grupo sem capacidade nenhuma.
+  await admin`INSERT INTO permission_group_capabilities (org_id, group_id, capability) SELECT ${org}::uuid, ${group}::uuid, capability FROM unnest(ARRAY['contacts:read', 'contacts:write']::text[]) AS capability`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
     (${org}, ${localUserId}, ${group})`;
 
@@ -126,6 +127,7 @@ afterAll(async () => {
   apiProcess?.kill();
   await admin`DELETE FROM contacts WHERE org_id = ${org}`;
   await admin`DELETE FROM user_permission_groups WHERE org_id = ${org}`;
+  await admin`DELETE FROM permission_group_capabilities WHERE org_id = ${org}`;
   await admin`DELETE FROM permission_groups WHERE org_id = ${org}`;
   await admin`DELETE FROM users WHERE org_id = ${org}`;
   await admin`DELETE FROM organizations WHERE id = ${org}`;

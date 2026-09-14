@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { contacts, conversations, createDbClient, identities, integrationConnections, integrationSecrets, messages, withOrgContext, type SparkDb } from "@spark/db";
+import { contacts, conversations, createDbClient, identities, integrationConnectionSettings, integrationConnections, integrationSecrets, messages, withOrgContext, type SparkDb } from "@spark/db";
 import { contactId, conversationId, firstResponseDueAt, identityId, messageId, normalizeIdentityValue, parseInstagramInboundTexts, type IntegrationConnectionId, type OrgId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
@@ -12,14 +12,17 @@ export class InstagramWebhookRepository {
 
   async connection(id: IntegrationConnectionId): Promise<{ orgId: OrgId; appSecret: string; verifyToken: string; accountId?: string }> {
     // Public webhook bootstrap: resolve only the tenant and provider before entering org context.
-    const [route] = await this.db.select({ orgId: integrationConnections.orgId, provider: integrationConnections.provider, status: integrationConnections.status, config: integrationConnections.config }).from(integrationConnections).where(eq(integrationConnections.id, id)).limit(1);
+    const [route] = await this.db.select({ orgId: integrationConnections.orgId, provider: integrationConnections.provider, status: integrationConnections.status }).from(integrationConnections).where(eq(integrationConnections.id, id)).limit(1);
     if (!route || route.provider !== "instagram" || route.status === "disabled") throw new NotFoundException("Webhook indisponível.");
     const orgId = route.orgId as OrgId;
     const [stored] = await withOrgContext(this.db, orgId, (tx) => tx.select().from(integrationSecrets).where(and(eq(integrationSecrets.orgId, orgId), eq(integrationSecrets.connectionId, id))).limit(1));
     if (!stored) throw new NotFoundException("Webhook não configurado.");
     const secrets = this.vault.decrypt(stored);
+    // O identificador da conta mora em `integration_connection_settings` (ADR-0035).
+    const [setting] = await withOrgContext(this.db, orgId, (tx) => tx.select({ valueText: integrationConnectionSettings.valueText }).from(integrationConnectionSettings).where(and(eq(integrationConnectionSettings.connectionId, id), eq(integrationConnectionSettings.key, "accountId"))).limit(1));
+    const accountId = setting?.valueText ?? undefined;
     if (!secrets.appSecret || !secrets.verifyToken) throw new NotFoundException("Webhook não configurado.");
-    return { orgId, appSecret: secrets.appSecret, verifyToken: secrets.verifyToken, ...(typeof route.config.accountId === "string" ? { accountId: route.config.accountId } : {}) };
+    return { orgId, appSecret: secrets.appSecret, verifyToken: secrets.verifyToken, ...(accountId ? { accountId } : {}) };
   }
 
   async receive(orgId: OrgId, payload: unknown, accountId?: string): Promise<number> {

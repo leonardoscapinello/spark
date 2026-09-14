@@ -12,6 +12,7 @@ import { SignJWT } from "jose";
 import postgres from "postgres";
 import { orgId as orgIdFactory, userId as userIdFactory, contactId as contactIdFactory, permissionGroupId as permissionGroupIdFactory } from "@spark/core";
 import { AppModule } from "../src/app.module.js";
+import { seedPermissionGroup } from "./permissions.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL =
@@ -44,8 +45,7 @@ beforeAll(async () => {
     (${userWithGroup}, ${org}, ${supabaseIdWithGroup}, 'With Group', 'with-group@company.com')`;
 
   const group = permissionGroupIdFactory.create();
-  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-    (${group}, ${org}, 'Agente', ${admin.json(["contacts:write"])})`;
+  await seedPermissionGroup(admin, org, group, "Agente", ["contacts:write"]);
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES (${org}, ${userWithGroup}, ${group})`;
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();

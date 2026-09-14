@@ -18,6 +18,7 @@ import {
   permissionGroupId as permissionGroupIdFactory,
 } from "@spark/core";
 import { AppModule } from "../src/app.module.js";
+import { seedPermissionGroup } from "./permissions.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL =
@@ -55,10 +56,9 @@ beforeAll(async () => {
   const managerGroup = permissionGroupIdFactory.create();
   const agentGroup = permissionGroupIdFactory.create();
   const viewerGroup = permissionGroupIdFactory.create();
-  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-    (${managerGroup}, ${org}, 'Gerente', ${admin.json(["pipelines:manage", "deals:read", "deals:write", "deals:move"])}),
-    (${agentGroup}, ${org}, 'Agente', ${admin.json(["deals:read", "deals:write", "deals:move"])}),
-    (${viewerGroup}, ${org}, 'Visualizador', ${admin.json(["deals:read"])})`;
+  await seedPermissionGroup(admin, org, managerGroup, "Gerente", ["pipelines:manage", "deals:read", "deals:write", "deals:move"]);
+  await seedPermissionGroup(admin, org, agentGroup, "Agente", ["deals:read", "deals:write", "deals:move"]);
+  await seedPermissionGroup(admin, org, viewerGroup, "Visualizador", ["deals:read"]);
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES
     (${org}, ${manager}, ${managerGroup}),
     (${org}, ${agent}, ${agentGroup}),

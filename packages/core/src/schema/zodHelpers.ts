@@ -64,6 +64,11 @@ import {
   dealProductId as toDealProductId,
   stageFieldRuleId as toStageFieldRuleId,
   noteId as toNoteId,
+  customFieldOptionId as toCustomFieldOptionId,
+  customFieldValueId as toCustomFieldValueId,
+  tagId as toTagId,
+  leadFormFieldId as toLeadFormFieldId,
+  integrationSettingId as toIntegrationSettingId,
   userPreferenceId as toUserPreferenceId,
   type OrgId,
   type ContactId,
@@ -105,6 +110,11 @@ import {
   type DealProductId,
   type StageFieldRuleId,
   type NoteId,
+  type CustomFieldOptionId,
+  type TagId,
+  type LeadFormFieldId,
+  type IntegrationSettingId,
+  type CustomFieldValueId,
   type UserPreferenceId,
 } from "../identity/id.js";
 
@@ -172,6 +182,11 @@ export const zSavedViewId = bridged<SavedViewId>(toSavedViewId.from);
 export const zDealProductId = bridged<DealProductId>(toDealProductId.from);
 export const zStageFieldRuleId = bridged<StageFieldRuleId>(toStageFieldRuleId.from);
 export const zNoteId = bridged<NoteId>(toNoteId.from);
+export const zCustomFieldOptionId = bridged<CustomFieldOptionId>(toCustomFieldOptionId.from);
+export const zCustomFieldValueId = bridged<CustomFieldValueId>(toCustomFieldValueId.from);
+export const zTagId = bridged<TagId>(toTagId.from);
+export const zLeadFormFieldId = bridged<LeadFormFieldId>(toLeadFormFieldId.from);
+export const zIntegrationSettingId = bridged<IntegrationSettingId>(toIntegrationSettingId.from);
 export const zUserPreferenceId = bridged<UserPreferenceId>(toUserPreferenceId.from);
 
 /**

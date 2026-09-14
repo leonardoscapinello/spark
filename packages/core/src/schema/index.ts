@@ -27,3 +27,5 @@ export * from "./userPreference.js";
 export * from "./dealProduct.js";
 export * from "./stageFieldRule.js";
 export * from "./note.js";
+export * from "./customFieldData.js";
+export * from "./tag.js";

@@ -29,6 +29,8 @@ import { requireCapability } from "../lib/route-access.client";
 import styles from "./contact-detail.module.css";
 import layout from "./contact-profile-layout.module.css";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
+import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
+import { useCustomFieldValues } from "../lib/custom-fields.client";
 
 export async function clientLoader() {
   const session = await requireCapability("contacts:read");
@@ -38,6 +40,8 @@ export async function clientLoader() {
     getEventsCollection().preload(),
     getIdentitiesCollection().preload(),
     getCustomFieldsCollection().preload(),
+    getCustomFieldValuesCollection().preload(),
+    getCustomFieldOptionsCollection().preload(),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
     ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
@@ -119,6 +123,8 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.contactId, params.contactId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const { data: identities } = useLiveQuery({ query: (q) => q.from({ identities: getIdentitiesCollection() }).where(({ identities: item }) => eq(item.contactId, params.contactId)).orderBy(({ identities: item }) => item.createdAt, "asc") });
   const { data: customFields } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: item }) => eq(item.entityType, "contact")).orderBy(({ fields: item }) => item.label, "asc") });
+  // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
+  const customValues = useCustomFieldValues("contact", params.contactId, customFields);
   const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }).where(({ deals: item }) => eq(item.contactId, params.contactId)).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
   const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, params.contactId)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
 
@@ -340,7 +346,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
       {customFields.filter((field) => !field.archivedAt).length > 0 && <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Campos personalizados</h2>
         <div className={styles.campos}>
-          {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue key={field.id} field={field} value={data.customFields[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })} />)}
+          {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue key={field.id} field={field} value={customValues[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })} />)}
         </div>
       </section>}
 

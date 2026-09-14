@@ -8,6 +8,7 @@ import { CheckIntegrationUseCase } from "./application/check-integration.usecase
 import { UpdateIntegrationStatusUseCase } from "./application/update-integration-status.usecase.js";
 import { UpsertIntegrationUseCase } from "./application/upsert-integration.usecase.js";
 import { IntegrationsRepository } from "./infrastructure/integrations.repository.js";
+import { ConnectionSettingsRepository } from "./infrastructure/connection-settings.repository.js";
 import { IntegrationProviderRegistry } from "./infrastructure/provider-registry.service.js";
 import { SecretVault } from "./infrastructure/secret-vault.service.js";
 import { IntegrationsController } from "./presentation/integrations.controller.js";
@@ -21,6 +22,7 @@ import { EmailDeliveryService } from "./application/email-delivery.service.js";
     CheckIntegrationUseCase,
     UpdateIntegrationStatusUseCase,
     IntegrationsRepository,
+    ConnectionSettingsRepository,
     IntegrationProviderRegistry,
     SecretVault,
     IntegrationRuntimeResolver,

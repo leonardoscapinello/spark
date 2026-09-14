@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
+import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 import { eq, sql } from "drizzle-orm";
 import { companies, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
 import type { Company, CompanyId, CreateCompanyInput, OrgId, UpdateCompanyInput } from "@spark/core";
@@ -9,7 +10,7 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 export class CompaniesRepository {
   private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
 
-  constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter) {}
+  constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter, private readonly tagWriter: TagWriter) {}
 
   async create(orgId: OrgId, input: CreateCompanyInput): Promise<{ company: Company; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
@@ -34,6 +35,7 @@ export class CompaniesRepository {
       const company = toCompany(row);
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
       if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "company", company.id, input.customFields);
+      if (input.tags !== undefined) await this.tagWriter.write(tx, orgId, "company", company.id, input.tags);
       await this.eventWriter.append(tx, { orgId, companyId: company.id, type: "company.created", data: { name: company.name } });
       return { company, txid };
     });
@@ -47,6 +49,7 @@ export class CompaniesRepository {
       const company = toCompany(row);
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
       if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "company", company.id, input.customFields);
+      if (input.tags !== undefined) await this.tagWriter.write(tx, orgId, "company", company.id, input.tags);
       await this.eventWriter.append(tx, { orgId, companyId: company.id, type: "company.updated", data: { fields: Object.keys(input) } });
       return { company, txid };
     });

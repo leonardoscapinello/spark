@@ -9,6 +9,7 @@ import {
 } from "@spark/db";
 import type { IntegrationConnectionId, IntegrationProvider, OrgId } from "@spark/core";
 import { SecretVault } from "../infrastructure/secret-vault.service.js";
+import { ConnectionSettingsRepository } from "../infrastructure/connection-settings.repository.js";
 
 export interface ActiveIntegration {
   connectionId: IntegrationConnectionId;
@@ -21,7 +22,7 @@ export interface ActiveIntegration {
 export class IntegrationRuntimeResolver {
   private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
 
-  constructor(private readonly vault: SecretVault) {}
+  constructor(private readonly vault: SecretVault, private readonly settings: ConnectionSettingsRepository) {}
 
   async resolve(orgId: OrgId, provider: IntegrationProvider): Promise<ActiveIntegration> {
     const integration = await withOrgContext(this.db, orgId, async (tx) => {
@@ -48,7 +49,9 @@ export class IntegrationRuntimeResolver {
           ),
         )
         .limit(1);
-      return secret ? { connection, secret } : null;
+      // A configuração vem de `integration_connection_settings` (ADR-0035).
+      const config = await this.settings.read(tx, connection.id);
+      return secret ? { connection, secret, config } : null;
     });
     if (!integration)
       throw new ServiceUnavailableException(
@@ -57,7 +60,7 @@ export class IntegrationRuntimeResolver {
     return {
       connectionId: integration.connection.id as IntegrationConnectionId,
       provider: integration.connection.provider as IntegrationProvider,
-      config: integration.connection.config,
+      config: integration.config,
       secrets: this.vault.decrypt(integration.secret),
     };
   }

@@ -92,8 +92,9 @@ beforeAll(async () => {
     (${localUserId}, ${org}, ${supabaseUserId}, 'Deals Collection Person', 'deals-collection@company.com')`;
 
   const group = permissionGroupIdFactory.create();
-  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES
-    (${group}, ${org}, 'Gerente', ${admin.json(["deals:read", "deals:write", "deals:move"])})`;
+  await admin`INSERT INTO permission_groups (id, org_id, name) VALUES (${group}, ${org}, 'Gerente')`;
+  // A capacidade virou linha (ADR-0035): semear pelo jsonb daria um grupo sem capacidade nenhuma.
+  await admin`INSERT INTO permission_group_capabilities (org_id, group_id, capability) SELECT ${org}::uuid, ${group}::uuid, capability FROM unnest(ARRAY['deals:read', 'deals:write', 'deals:move']::text[]) AS capability`;
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES (${org}, ${localUserId}, ${group})`;
 
   await admin`INSERT INTO pipelines (id, org_id, name, is_default) VALUES (${pipeline}, ${org}, 'Test Funnel', true)`;
@@ -135,6 +136,7 @@ afterAll(async () => {
   await admin`DELETE FROM stages WHERE org_id = ${org}`;
   await admin`DELETE FROM pipelines WHERE org_id = ${org}`;
   await admin`DELETE FROM user_permission_groups WHERE org_id = ${org}`;
+  await admin`DELETE FROM permission_group_capabilities WHERE org_id = ${org}`;
   await admin`DELETE FROM permission_groups WHERE org_id = ${org}`;
   await admin`DELETE FROM users WHERE org_id = ${org}`;
   await admin`DELETE FROM organizations WHERE id = ${org}`;

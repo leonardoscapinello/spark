@@ -12,6 +12,7 @@ import { SignJWT } from "jose";
 import postgres from "postgres";
 import { orgId as orgIdFactory, userId as userIdFactory, contactId as contactIdFactory, permissionGroupId as permissionGroupIdFactory } from "@spark/core";
 import { AppModule } from "../src/app.module.js";
+import { seedPermissionGroup } from "./permissions.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
 const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
@@ -42,7 +43,7 @@ beforeAll(async () => {
     (${reader}, ${org}, ${readerSub}, 'Reader', 'reader@company.com'),
     (${nobody}, ${org}, ${nobodySub}, 'Nobody', 'nobody@company.com')`;
   const group = permissionGroupIdFactory.create();
-  await admin`INSERT INTO permission_groups (id, org_id, name, capabilities) VALUES (${group}, ${org}, 'Leitor', ${admin.json(["contacts:read"])})`;
+  await seedPermissionGroup(admin, org, group, "Leitor", ["contacts:read"]);
   await admin`INSERT INTO user_permission_groups (org_id, user_id, group_id) VALUES (${org}, ${reader}, ${group})`;
   await admin`INSERT INTO contacts (id, org_id, name, email, deleted_at) VALUES
     (${jose}, ${org}, 'José Conceição', 'jose@vega.com', NULL),

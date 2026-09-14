@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
+import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, contacts, type SparkDb } from "@spark/db";
 import type { Contact, CreateContactInput, ImportContactsInput, ImportContactsResponse, UpdateContactInput, OrgId, ContactId } from "@spark/core";
@@ -16,7 +17,7 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 export class ContactsRepository {
   private readonly db: SparkDb;
 
-  constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter) {
+  constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter, private readonly tagWriter: TagWriter) {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
@@ -56,6 +57,7 @@ export class ContactsRepository {
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
       if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "contact", contact.id, input.customFields);
+      if (input.tags !== undefined) await this.tagWriter.write(tx, orgId, "contact", contact.id, input.tags);
       await this.eventWriter.append(tx, { orgId, contactId: contact.id, companyId: contact.companyId, type: "contact.created", data: { name: contact.name, source: contact.source } });
       return { contact, txid: Number(txid) };
     });
@@ -114,6 +116,7 @@ export class ContactsRepository {
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
       if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "contact", contact.id, input.customFields);
+      if (input.tags !== undefined) await this.tagWriter.write(tx, orgId, "contact", contact.id, input.tags);
       await this.eventWriter.append(tx, { orgId, contactId: contact.id, companyId: contact.companyId, type: "contact.updated", data: { fields: Object.keys(input) } });
       return { contact, txid: Number(txid) };
     });

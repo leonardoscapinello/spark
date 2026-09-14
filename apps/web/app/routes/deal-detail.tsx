@@ -35,6 +35,8 @@ import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, Composer, Comp
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
+import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
+import { useCustomFieldValues } from "../lib/custom-fields.client";
 import { getDealProductsCollection } from "../lib/deal-products-collection.client";
 import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collection.client";
 import { getNotesCollection } from "../lib/notes-collection.client";
@@ -63,6 +65,8 @@ export async function clientLoader() {
     getUsersCollection().preload(),
     getDealProductsCollection().preload(),
     getStageFieldRulesCollection().preload(),
+    getCustomFieldValuesCollection().preload(),
+    getCustomFieldOptionsCollection().preload(),
     getNotesCollection().preload(),
     ...(session.capabilities.includes("catalog:read") ? [getProductsCollection().preload()] : []),
     getEventsCollection().preload(),
@@ -152,6 +156,8 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const owner = deal?.ownerId ? users.find((item) => item.id === deal.ownerId) : undefined;
   const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
+  // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
+  const customValues = useCustomFieldValues("deal", params.dealId, customFields);
   const isOpen = deal?.status === "open";
   /* Tempo em cada etapa, reconstruído do histórico (packages/core/rules/stageDuration) —
    * sem coluna nova: os eventos de mudança já contam essa história. */
@@ -165,7 +171,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     const totals = millisecondsByStage(stageVisits(deal.createdAt, firstStage, changes, new Date()), new Date());
     return Object.fromEntries([...totals].map(([stageId, ms]) => [stageId, formatStageDuration(ms)]));
   }, [deal, events, pipelineStages]);
-  const fieldWarnings = useMemo(() => (deal ? evaluateStageFields({ deal, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages }).warnings : []), [deal, dealItems.length, fieldRules, pipelineStages]);
+  const fieldWarnings = useMemo(() => (deal ? evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages }).warnings : []), [deal, dealItems.length, fieldRules, pipelineStages]);
   const itemsSummary = useMemo(() => dealProductsSummary(dealItems.map((item) => ({ ...item, unitAmount: syncedAmount(item.unitAmount) }))), [dealItems]);
   // «Foco» é o que ainda não foi feito, do mais antigo para o mais novo — o que
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
@@ -315,7 +321,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   async function moveDeal(value: string | null) {
     if (!deal || !value || !canMove) return;
     // Obrigatório é obrigatório: a etapa não muda com campo do caminho vazio.
-    const check = evaluateStageFields({ deal, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages, targetStageId: value });
+    const check = evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages, targetStageId: value });
     if (check.blocking.length > 0) {
       notify({
         title: "Campos obrigatórios para avançar",
@@ -465,7 +471,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
                 {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
                   key={field.id}
                   field={field}
-                  value={deal.customFields?.[field.key]}
+                  value={customValues[field.key]}
                   disabled={!canWrite}
                   onSave={async (value) => { const transaction = dealsCollection.update(deal.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }}
                   onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
