@@ -216,3 +216,11 @@
   .board { scroll-snap-type: x proximity; }
   .coluna, .colunaNova { flex-basis: 100%; scroll-snap-align: start; }
 }
+
+/* Próximo passo do card (Pipedrive, captura 020): ponto colorido + o que vem
+ * depois. Vermelho é atraso, azul é agendado, cinza é ninguém marcou nada. */
+.cartaoPasso { display: flex; align-items: center; gap: var(--space-2); min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cartaoPassoPonto { flex: 0 0 var(--space-2); width: var(--space-2); height: var(--space-2); border-radius: var(--radius-full); background: var(--color-line); }
+.cartaoPasso[data-state="overdue"] { color: var(--color-statusDanger); }
+.cartaoPasso[data-state="overdue"] .cartaoPassoPonto { background: var(--color-statusDanger); }
+.cartaoPasso[data-state="scheduled"] .cartaoPassoPonto { background: var(--color-accent); }

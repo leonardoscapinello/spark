@@ -1,6 +1,6 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { useLiveQuery } from "@tanstack/react-db";
+import { eq, useLiveQuery } from "@tanstack/react-db";
 import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
 import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type SelectOption } from "@spark/ui-web";
@@ -8,6 +8,7 @@ import { getSession } from "../lib/auth.client";
 import { getPipelinesCollection, getStagesCollection, getDealsCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
+import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./deals.module.css";
@@ -19,6 +20,7 @@ export async function clientLoader() {
     getStagesCollection().preload(),
     getDealsCollection().preload(),
     getUsersCollection().preload(),
+    ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
   ]);
@@ -46,6 +48,20 @@ export default function Deals() {
   const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
   const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc") });
+  const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
+  const { data: activities = [] } = useLiveQuery({ query: (q) => canReadActivities ? q.from({ activities: getActivitiesCollection() }).where(({ activities: item }) => eq(item.completed, false)) : undefined });
+  /* Próximo passo de cada negócio — o ponto colorido do card do Pipedrive:
+   * vermelho quando a atividade venceu, azul quando está agendada, e a
+   * ausência dele é o próprio aviso de que ninguém marcou o que vem depois. */
+  const nextActivity = useMemo(() => {
+    const byDeal = new Map<string, { title: string; scheduledAt: string }>();
+    for (const activity of activities) {
+      if (!activity.dealId) continue;
+      const current = byDeal.get(activity.dealId);
+      if (!current || activity.scheduledAt < current.scheduledAt) byDeal.set(activity.dealId, { title: activity.title, scheduledAt: activity.scheduledAt });
+    }
+    return byDeal;
+  }, [activities]);
   const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: companiesCollection }).orderBy(({ companies: company }) => company.name, "asc") : undefined });
 
   const [dragging, setDragging] = useState<string | null>(null);
@@ -289,6 +305,15 @@ export default function Deals() {
                       </div>
                       <span className={styles.cartaoValor}>{formatBRL(syncedAmount(deal.amount))}</span>
                       {(deal.contactId || deal.companyId) && <span className={styles.cartaoMeta}>{[deal.contactId ? contactNames.get(deal.contactId) ?? "Contato indisponível" : null, deal.companyId ? companyNames.get(deal.companyId) ?? "Empresa indisponível" : null].filter(Boolean).join(" · ")}</span>}
+                      {canReadActivities && (() => {
+                        const next = nextActivity.get(deal.id);
+                        if (!isOpen) return null;
+                        const overdue = next ? next.scheduledAt < new Date().toISOString() : false;
+                        return <span className={styles.cartaoPasso} data-state={!next ? "none" : overdue ? "overdue" : "scheduled"}>
+                          <span className={styles.cartaoPassoPonto} aria-hidden="true" />
+                          {next ? `${overdue ? "Atrasada" : "Próxima"}: ${next.title}` : "Sem próximo passo"}
+                        </span>;
+                      })()}
                       {(deal.ownerId || deal.expectedCloseDate) && <span className={styles.cartaoRodape}>{deal.ownerId && <span className={styles.cartaoMeta}>{userNames.get(deal.ownerId) ?? "Usuário indisponível"}</span>}{deal.expectedCloseDate && <span className={styles.cartaoMeta}>{formatDate(deal.expectedCloseDate)}</span>}</span>}
                       {!isOpen && (
                         <span
