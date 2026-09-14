@@ -2,8 +2,8 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact } from "@spark/data";
-import { companyId as companyIdFactory, contactMatches, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type LeadStatus } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, notify, type TableColumn } from "@spark/ui-web";
+import { companyId as companyIdFactory, contactMatches, contactMatchesFilters, decodeContactFilters, encodeContactFilters, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type LeadStatus } from "@spark/core";
+import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
@@ -63,18 +63,33 @@ export default function Contacts() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const statusFilter = searchParams.get("status") ?? "all";
-  const [ownerFilter, setOwnerFilter] = useState("all");
+  // A etapa continua morando em `?status=` porque o trilho de navegação aponta
+  // para esses links e destaca o item comparando a URL. As demais condições vão
+  // para `?f=`. Trocar tudo por `f` apagaria o destaque do menu.
+  const filters = useMemo<ContactFilter[]>(() => [
+    ...(statusFilter !== "all" ? [{ field: "leadStatus", operator: "is", value: statusFilter } as ContactFilter] : []),
+    ...decodeContactFilters(searchParams.get("f")),
+  ], [searchParams, statusFilter]);
+
+  function changeFilters(next: readonly ContactFilter[]) {
+    const stage = next.find((filter) => filter.field === "leadStatus" && filter.operator === "is" && filter.value);
+    const rest = next.filter((filter) => filter !== stage);
+    const params = new URLSearchParams();
+    if (stage?.value) params.set("status", stage.value);
+    const encoded = encodeContactFilters(rest);
+    if (encoded) params.set("f", encoded);
+    setSearchParams(params);
+  }
   const [archiveView, setArchiveView] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [storedHiddenColumns, setStoredHiddenColumns] = useState<string[] | null>(readHiddenColumns);
   const [bulkRunning, setBulkRunning] = useState(false);
-  const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && statusFilter === "all" && ownerFilter === "all";
+  const firstRun = !isLoading && contacts.length === 0 && !archiveView && !search && filters.length === 0;
   const viewTitle = archiveView ? "Pessoas arquivadas" : ({ new: "Novos leads", qualified: "Leads qualificados", nurturing: "Em nutrição", customer: "Clientes", unqualified: "Desqualificados" } as Record<string, string>)[statusFilter] ?? "Pessoas";
   const filteredContacts = contacts.filter((contact) =>
     (archiveView ? contact.deletedAt !== null : contact.deletedAt === null) &&
     contactMatches(contact, search) &&
-    (statusFilter === "all" || contact.leadStatus === statusFilter) &&
-    (ownerFilter === "all" || (ownerFilter === "unassigned" ? contact.ownerId === null : contact.ownerId === ownerFilter)),
+    contactMatchesFilters(contact, filters),
   );
   const columns = useMemo<TableColumn<Contact>[]>(() => {
     const userNames = new Map(users.map((user) => [user.id, user.name]));
@@ -173,6 +188,23 @@ export default function Contacts() {
     }
   }
 
+  const filterFields = useMemo<FilterFieldDefinition<ContactFilter["field"]>[]>(() => [
+    { id: "leadStatus", label: "Etapa", type: "select", group: "Pessoa", options: LEAD_STATUS_OPTIONS },
+    { id: "ownerId", label: "Responsável", type: "select", group: "Pessoa", options: users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name })) },
+    { id: "companyId", label: "Empresa", type: "select", group: "Pessoa", options: companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name })) },
+    { id: "source", label: "Origem", type: "select", group: "Pessoa", options: LEAD_SOURCE_OPTIONS },
+    { id: "score", label: "Pontuação", type: "number", group: "Pessoa" },
+    { id: "tags", label: "Marcações", type: "list", group: "Pessoa" },
+    { id: "createdAt", label: "Criada em", type: "date", group: "Pessoa" },
+    ...customFields.filter((field) => field.entityType === "contact" && !field.archivedAt).map((field): FilterFieldDefinition<ContactFilter["field"]> => ({
+      id: `custom:${field.key}`,
+      label: field.label,
+      group: "Campos personalizados",
+      type: field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "multi_select" ? "list" : field.type === "single_select" ? "select" : "text",
+      ...(field.options.length > 0 ? { options: field.options.map((option) => ({ value: option, label: option })) } : {}),
+    })),
+  ], [companies, customFields, users]);
+
   // Sem preferência gravada, campo personalizado começa escondido: a lista não
   // pode nascer com uma coluna por campo que a organização tenha criado.
   const customColumnIds = useMemo(() => columns.filter((column) => column.id.startsWith("custom:")).map((column) => column.id), [columns]);
@@ -190,7 +222,7 @@ export default function Contacts() {
 
   // Trocar de visão muda o conjunto à vista; manter a seleção antiga faria a
   // ação em lote agir sobre linha que a pessoa não está mais vendo.
-  useEffect(() => { setSelectedIds([]); }, [archiveView, statusFilter, ownerFilter, search]);
+  useEffect(() => { setSelectedIds([]); }, [archiveView, filters, search]);
 
   async function updateArchivedMany(contacts: readonly Contact[], archived: boolean, offerUndo = true) {
     setBulkRunning(true);
@@ -223,10 +255,7 @@ export default function Contacts() {
     </ActionCardGroup>}
     {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar pessoas" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}
-      filters={<>
-        <Select appearance="filter" label="Filtrar por etapa" value={statusFilter} options={[{ value: "all", label: "Todas as etapas" }, ...LEAD_STATUS_OPTIONS]} onValueChange={(value) => setSearchParams(value && value !== "all" ? { status: value } : {})} />
-        <Select appearance="filter" label="Filtrar por responsável" value={ownerFilter} options={[{ value: "all", label: "Todos os responsáveis" }, { value: "unassigned", label: "Não atribuídos" }, ...users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))]} onValueChange={(value) => setOwnerFilter(value ?? "all")} />
-      </>}
+      filters={<FilterBar fields={filterFields} filters={filters} onChange={changeFilters} />}
       actions={selectedContacts.length > 0
         ? <>
             <Button variant="secondary" loading={bulkRunning} onClick={() => void updateArchivedMany(selectedContacts, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</Button>

@@ -7,24 +7,24 @@ import { Popover, PopoverContent, PopoverTrigger } from "../Popover/Popover.js";
 import { Select } from "../Select/Select.js";
 import s from "./FilterBar.module.css";
 
-export interface FilterFieldDefinition {
-  id: string;
+export interface FilterFieldDefinition<Field extends string = string> {
+  id: Field;
   label: string;
   type: FilterValueType;
   group?: string;
   options?: readonly { value: string; label: string }[];
 }
 
-export interface FilterCondition { field: string; operator: FilterOperator; value: string | null }
+export interface FilterCondition<Field extends string = string> { field: Field; operator: FilterOperator; value: string | null }
 
-export interface FilterBarProps {
-  fields: readonly FilterFieldDefinition[];
-  filters: readonly FilterCondition[];
-  onChange: (filters: FilterCondition[]) => void;
+export interface FilterBarProps<Field extends string = string> {
+  fields: readonly FilterFieldDefinition<Field>[];
+  filters: readonly FilterCondition<Field>[];
+  onChange: (filters: FilterCondition<Field>[]) => void;
   addLabel?: string;
 }
 
-function describe(field: FilterFieldDefinition, condition: FilterCondition): string {
+function describe(field: FilterFieldDefinition<string>, condition: FilterCondition<string>): string {
   const operator = filterOperatorLabel(condition.operator);
   if (!filterOperatorNeedsValue(condition.operator)) return `${field.label} ${operator}`;
   const shown = field.options?.find((option) => option.value === condition.value)?.label ?? condition.value;
@@ -34,12 +34,12 @@ function describe(field: FilterFieldDefinition, condition: FilterCondition): str
 /** Filtros compostos: cada condição é uma etiqueta editável, e «Adicionar
  * filtro» abre o catálogo de campos. O estado é do consumidor — a barra não
  * decide o que filtrar nem onde a escolha é guardada. */
-export function FilterBar({ fields, filters, onChange, addLabel = "Adicionar filtro" }: FilterBarProps) {
+export function FilterBar<Field extends string = string>({ fields, filters, onChange, addLabel = "Adicionar filtro" }: FilterBarProps<Field>) {
   const [query, setQuery] = useState("");
   const search = query.trim().toLocaleLowerCase("pt-BR");
   const available = search ? fields.filter((field) => `${field.label} ${field.group ?? ""}`.toLocaleLowerCase("pt-BR").includes(search)) : fields;
 
-  function replace(index: number, condition: FilterCondition) {
+  function replace(index: number, condition: FilterCondition<Field>) {
     onChange(filters.map((existing, position) => position === index ? condition : existing));
   }
 
