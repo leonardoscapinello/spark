@@ -5,7 +5,7 @@
 /* Faixa branca do topo: título, trilha de etapas e caminho do funil moram
  * juntos, coladas ao cabeçalho da rota, e a linha embaixo fecha o bloco. */
 .page > header:first-child { background: var(--color-surface); }
-.topo { box-sizing: border-box; display: grid; gap: var(--space-3); margin: 0 calc(var(--space-8) * -1); padding: var(--space-4) var(--space-8); background: var(--color-surface); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.topo { box-sizing: border-box; display: grid; gap: var(--space-3); margin: 0 calc(var(--ui-pageGutter) * -1); padding: var(--space-4) var(--ui-pageGutter); background: var(--color-surface); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
 

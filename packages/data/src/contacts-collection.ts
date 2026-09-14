@@ -21,6 +21,7 @@ import { snakeCamelMapper } from "@electric-sql/client";
 import { ContactSchema, contactId, type Contact, type CreateContactInput, type OrgId } from "@spark/core";
 import { contactsControllerArchive, contactsControllerCreate, contactsControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
+import { serializedWrite } from "./serialized-write.js";
 
 /**
  * Builds the full row `collection.insert()` requires — the collection's
@@ -116,34 +117,31 @@ export function createContactsCollection() {
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onUpdate called with no pending mutation.");
+        return serializedWrite(`contact:${mutation.original.id}`, async () => {
+          const changedFields = Object.keys(mutation.changes);
+          if (changedFields.length === 1 && changedFields[0] === "deletedAt") {
+            const response = await contactsControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
+            return confirmed(response);
+          }
+          const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId", "companyId", "score", "tags", "customFields"]);
+          const isAllowed = changedFields.length > 0 && changedFields.every((field) => allowedFields.has(field));
+          if (!isAllowed) throw new Error(`Unsupported contact field(s): ${changedFields.join(", ")}.`);
 
-        const changedFields = Object.keys(mutation.changes);
-        if (changedFields.length === 1 && changedFields[0] === "deletedAt") {
-          const response = await contactsControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
+          const response = await contactsControllerUpdate(mutation.original.id, {
+            ...("name" in mutation.changes ? { name: mutation.modified.name } : {}),
+            ...("email" in mutation.changes ? { email: mutation.modified.email } : {}),
+            ...("phone" in mutation.changes ? { phone: mutation.modified.phone } : {}),
+            ...("leadStatus" in mutation.changes ? { leadStatus: mutation.modified.leadStatus } : {}),
+            ...("source" in mutation.changes ? { source: mutation.modified.source } : {}),
+            ...("ownerId" in mutation.changes ? { ownerId: mutation.modified.ownerId } : {}),
+            ...("companyId" in mutation.changes ? { companyId: mutation.modified.companyId } : {}),
+            ...("score" in mutation.changes ? { score: mutation.modified.score } : {}),
+            ...("tags" in mutation.changes ? { tags: mutation.modified.tags ?? [] } : {}),
+            ...("customFields" in mutation.changes ? { customFields: mutation.modified.customFields ?? {} } : {}),
+          });
+
           return confirmed(response);
-        }
-        const allowedFields = new Set(["name", "email", "phone", "leadStatus", "source", "ownerId", "companyId", "score", "tags", "customFields"]);
-        const isAllowed = changedFields.length > 0 && changedFields.every((field) => allowedFields.has(field));
-        if (!isAllowed) {
-          throw new Error(
-            `Unsupported contact field(s): ${changedFields.join(", ")}.`,
-          );
-        }
-
-        const response = await contactsControllerUpdate(mutation.original.id, {
-          ...("name" in mutation.changes ? { name: mutation.modified.name } : {}),
-          ...("email" in mutation.changes ? { email: mutation.modified.email } : {}),
-          ...("phone" in mutation.changes ? { phone: mutation.modified.phone } : {}),
-          ...("leadStatus" in mutation.changes ? { leadStatus: mutation.modified.leadStatus } : {}),
-          ...("source" in mutation.changes ? { source: mutation.modified.source } : {}),
-          ...("ownerId" in mutation.changes ? { ownerId: mutation.modified.ownerId } : {}),
-          ...("companyId" in mutation.changes ? { companyId: mutation.modified.companyId } : {}),
-          ...("score" in mutation.changes ? { score: mutation.modified.score } : {}),
-          ...("tags" in mutation.changes ? { tags: mutation.modified.tags ?? [] } : {}),
-          ...("customFields" in mutation.changes ? { customFields: mutation.modified.customFields ?? {} } : {}),
         });
-
-        return confirmed(response);
       },
     }),
   );

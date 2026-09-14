@@ -21,9 +21,15 @@ export class CustomFieldWriter {
     const keys = Object.keys(values);
     if (keys.length === 0) return;
 
-    const definitions = await tx.select().from(customFieldDefinitions)
-      .where(and(eq(customFieldDefinitions.orgId, orgId), eq(customFieldDefinitions.entityType, entityType)));
-    const wanted = definitions.filter((definition) => keys.includes(definition.key));
+    // O índice único (org_id, entity_type, key) torna a edição inline uma
+    // busca pontual. Não carregamos mais todas as definições da organização a
+    // cada blur de um único campo.
+    const wanted = await tx.select().from(customFieldDefinitions)
+      .where(and(
+        eq(customFieldDefinitions.orgId, orgId),
+        eq(customFieldDefinitions.entityType, entityType),
+        inArray(customFieldDefinitions.key, keys),
+      ));
     if (wanted.length === 0) return;
 
     const fieldIds = wanted.map((definition) => definition.id);

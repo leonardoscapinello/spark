@@ -1,7 +1,7 @@
 .pagina {
   box-sizing: border-box;
   min-width: 0;
-  padding: var(--space-8);
+  padding: var(--ui-pageGutter);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);

@@ -254,6 +254,11 @@
       "$value": "400px",
       "$description": "Painel de detalhes da tela de registro. Cabe rótulo e campo na mesma linha sem o rótulo quebrar."
     },
+    "pageGutter": {
+      "$type": "dimension",
+      "$value": "24px",
+      "$description": "Recuo lateral do quadro de página. É UM token e não um espaçamento solto porque quem avança até a borda — cabeçalho da rota, faixa de etapas — precisa reaplicar exatamente esta medida para o conteúdo continuar alinhado."
+    },
     "fieldLabelColumn": {
       "$type": "dimension",
       "$value": "140px",

@@ -11,6 +11,7 @@ import { snakeCamelMapper } from "@electric-sql/client";
 import { z } from "zod";
 import { DealSchema, dealId, money, toCents, type Deal, type DealStatus, type Money, type CreateDealInput, type OrgId, type PipelineId } from "@spark/core";
 import { confirmed } from "./confirmed.js";
+import { serializedWrite } from "./serialized-write.js";
 import {
   dealsControllerCreate,
   dealsControllerEdit,
@@ -166,48 +167,49 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onUpdate called with no pending mutation.");
+        return serializedWrite(`deal:${mutation.original.id}`, async () => {
+          const changedFields = Object.keys(mutation.changes);
 
-        const changedFields = Object.keys(mutation.changes);
+          if (changedFields.length === 1 && changedFields[0] === "stageId") {
+            const response = await dealsControllerMove(mutation.original.id, { stageId: mutation.modified.stageId });
+            return confirmed(response);
+          }
 
-        if (changedFields.length === 1 && changedFields[0] === "stageId") {
-          const response = await dealsControllerMove(mutation.original.id, { stageId: mutation.modified.stageId });
-          return confirmed(response);
-        }
+          // closing (won/lost) changes "status" and, only when lost, also
+          // "lossReason" alongside it — never lossReason alone.
+          const isClosing =
+            changedFields.includes("status") &&
+            changedFields.every((field) => field === "status" || field === "lossReason") &&
+            mutation.modified.status !== "open";
+          if (isClosing) {
+            const status = mutation.modified.status as "won" | "lost";
+            const response = await dealsControllerClose(
+              mutation.original.id,
+              status === "lost" ? { status, lossReason: mutation.modified.lossReason } : { status },
+            );
+            return confirmed(response);
+          }
 
-        // closing (won/lost) changes "status" and, only when lost, also
-        // "lossReason" alongside it — never lossReason alone.
-        const isClosing =
-          changedFields.includes("status") &&
-          changedFields.every((field) => field === "status" || field === "lossReason") &&
-          mutation.modified.status !== "open";
-        if (isClosing) {
-          const status = mutation.modified.status as "won" | "lost";
-          // `exactOptionalPropertyTypes` treats `lossReason: undefined` as
-          // different from omitting the key — that's why the body is built
-          // per branch, not with an explicit `undefined` in a single object.
-          const response = await dealsControllerClose(
-            mutation.original.id,
-            status === "lost" ? { status, lossReason: mutation.modified.lossReason } : { status },
+          const editableFields = ["name", "amount", "contactId", "companyId", "ownerId", "expectedCloseDate", "customFields"];
+          if (changedFields.length > 0 && changedFields.every((field) => editableFields.includes(field))) {
+            // Envia somente o delta. Mandar a linha inteira em cada blur fazia
+            // duas gravações concorrentes em campos distintos se sobrescreverem.
+            const response = await dealsControllerEdit(mutation.original.id, {
+              ...(changedFields.includes("name") ? { name: mutation.modified.name } : {}),
+              ...(changedFields.includes("amount") ? { amount: toCents(mutation.modified.amount) } : {}),
+              ...(changedFields.includes("contactId") ? { contactId: mutation.modified.contactId } : {}),
+              ...(changedFields.includes("companyId") ? { companyId: mutation.modified.companyId } : {}),
+              ...(changedFields.includes("ownerId") ? { ownerId: mutation.modified.ownerId } : {}),
+              ...(changedFields.includes("expectedCloseDate") ? { expectedCloseDate: mutation.modified.expectedCloseDate } : {}),
+              ...(changedFields.includes("customFields") ? { customFields: mutation.modified.customFields ?? {} } : {}),
+            });
+            return confirmed(response);
+          }
+
+          throw new Error(
+            `Unsupported deal update — changed field(s): ${changedFields.join(", ")}.`,
           );
-          return confirmed(response);
-        }
-
-        const editableFields = ["name", "amount", "contactId", "companyId", "ownerId", "expectedCloseDate"];
-        if (changedFields.length > 0 && changedFields.every((field) => editableFields.includes(field))) {
-          const response = await dealsControllerEdit(mutation.original.id, {
-            name: mutation.modified.name,
-            amount: toCents(mutation.modified.amount),
-            contactId: mutation.modified.contactId,
-            companyId: mutation.modified.companyId,
-            ownerId: mutation.modified.ownerId,
-            expectedCloseDate: mutation.modified.expectedCloseDate,
-          });
-          return confirmed(response);
-        }
-
-        throw new Error(
-          `Unsupported deal update — changed field(s): ${changedFields.join(", ")}.`,
-        );
+        });
       },
     }),
   );

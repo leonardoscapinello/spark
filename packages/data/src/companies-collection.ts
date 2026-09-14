@@ -5,6 +5,7 @@ import { snakeCamelMapper } from "@electric-sql/client";
 import { CompanySchema, companyId, type Company, type CreateCompanyInput, type OrgId } from "@spark/core";
 import { companiesControllerArchive, companiesControllerCreate, companiesControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
+import { serializedWrite } from "./serialized-write.js";
 
 export function optimisticCompany(input: Omit<CreateCompanyInput, "id">, orgId: OrgId): Company {
   const now = new Date().toISOString();
@@ -50,28 +51,30 @@ export function createCompaniesCollection() {
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0];
       if (!mutation) throw new Error("onUpdate called with no pending mutation.");
-      const changed = Object.keys(mutation.changes);
-      if (changed.length === 1 && changed[0] === "deletedAt") {
-        const response = await companiesControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
+      return serializedWrite(`company:${mutation.original.id}`, async () => {
+        const changed = Object.keys(mutation.changes);
+        if (changed.length === 1 && changed[0] === "deletedAt") {
+          const response = await companiesControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
+          return confirmed(response);
+        }
+        const allowed = new Set(["parentCompanyId", "ownerId", "name", "legalName", "taxId", "website", "industry", "email", "phone", "address", "customFields", "tags"]);
+        if (!changed.length || !changed.every((field) => allowed.has(field))) throw new Error(`Unsupported company field(s): ${changed.join(", ")}.`);
+        const response = await companiesControllerUpdate(mutation.original.id, {
+          ...(changed.includes("parentCompanyId") ? { parentCompanyId: mutation.modified.parentCompanyId } : {}),
+          ...(changed.includes("ownerId") ? { ownerId: mutation.modified.ownerId } : {}),
+          ...(changed.includes("name") ? { name: mutation.modified.name } : {}),
+          ...(changed.includes("legalName") ? { legalName: mutation.modified.legalName } : {}),
+          ...(changed.includes("taxId") ? { taxId: mutation.modified.taxId } : {}),
+          ...(changed.includes("website") ? { website: mutation.modified.website } : {}),
+          ...(changed.includes("industry") ? { industry: mutation.modified.industry } : {}),
+          ...(changed.includes("email") ? { email: mutation.modified.email } : {}),
+          ...(changed.includes("phone") ? { phone: mutation.modified.phone } : {}),
+          ...(changed.includes("address") ? { address: mutation.modified.address } : {}),
+          ...(changed.includes("customFields") ? { customFields: mutation.modified.customFields ?? {} } : {}),
+          ...(changed.includes("tags") ? { tags: mutation.modified.tags ?? [] } : {}),
+        });
         return confirmed(response);
-      }
-      const allowed = new Set(["parentCompanyId", "ownerId", "name", "legalName", "taxId", "website", "industry", "email", "phone", "address", "customFields", "tags"]);
-      if (!changed.length || !changed.every((field) => allowed.has(field))) throw new Error(`Unsupported company field(s): ${changed.join(", ")}.`);
-      const response = await companiesControllerUpdate(mutation.original.id, {
-        ...(changed.includes("parentCompanyId") ? { parentCompanyId: mutation.modified.parentCompanyId } : {}),
-        ...(changed.includes("ownerId") ? { ownerId: mutation.modified.ownerId } : {}),
-        ...(changed.includes("name") ? { name: mutation.modified.name } : {}),
-        ...(changed.includes("legalName") ? { legalName: mutation.modified.legalName } : {}),
-        ...(changed.includes("taxId") ? { taxId: mutation.modified.taxId } : {}),
-        ...(changed.includes("website") ? { website: mutation.modified.website } : {}),
-        ...(changed.includes("industry") ? { industry: mutation.modified.industry } : {}),
-        ...(changed.includes("email") ? { email: mutation.modified.email } : {}),
-        ...(changed.includes("phone") ? { phone: mutation.modified.phone } : {}),
-        ...(changed.includes("address") ? { address: mutation.modified.address } : {}),
-        ...(changed.includes("customFields") ? { customFields: mutation.modified.customFields ?? {} } : {}),
-        ...(changed.includes("tags") ? { tags: mutation.modified.tags ?? [] } : {}),
       });
-      return confirmed(response);
     },
   }));
 }

@@ -1,12 +1,12 @@
-.root { box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-4); width: 100%; min-width: 0; margin-inline: auto; padding: var(--space-8); }
+.root { box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-4); width: 100%; min-width: 0; margin-inline: auto; padding: var(--ui-pageGutter); }
 .content > :not(header:first-child) { box-sizing: border-box; width: 100%; max-width: var(--ui-settingsContentWidth); align-self: center; }
 .root > header:first-child {
   box-sizing: border-box;
   display: flex;
   align-items: center;
   min-height: var(--space-16);
-  margin: calc(var(--space-8) * -1) calc(var(--space-8) * -1) 0;
-  padding: var(--space-4) var(--space-8);
+  margin: calc(var(--ui-pageGutter) * -1) calc(var(--ui-pageGutter) * -1) 0;
+  padding: var(--space-4) var(--ui-pageGutter);
   /* Intercom não risca uma linha sob o título: a linha de título (64px) e a
    * barra de busca se encostam com ~8px de respiro (docs/inspiration/intercom,
    * captura 028, medidas-inbox-shadow-dom). A margem negativa come metade do
