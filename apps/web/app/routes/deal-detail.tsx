@@ -235,14 +235,16 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       </>}
     />
 
-    {pipelineStages.length > 0 && <StageProgress
-      stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
-      currentId={deal.stageId}
-      currentHint={daysInStage(events.find((item) => item.type === "deal.stage_changed")?.occurredAt ?? deal.createdAt)}
-      outcome={deal.status === "open" ? undefined : deal.status}
-      {...(canMove && isOpen ? { onSelect: (id: string) => void moveDeal(id) } : {})}
-    />}
-    <p className={styles.trilha}><Link to="/deals">{pipeline?.name ?? "Funil"}</Link> <Icon name="chevron" /> {stage?.name ?? "Etapa"}</p>
+    <div className={styles.topo}>
+      {pipelineStages.length > 0 && <StageProgress
+        stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
+        currentId={deal.stageId}
+        currentHint={daysInStage(events.find((item) => item.type === "deal.stage_changed")?.occurredAt ?? deal.createdAt)}
+        outcome={deal.status === "open" ? undefined : deal.status}
+        {...(canMove && isOpen ? { onSelect: (id: string) => void moveDeal(id) } : {})}
+      />}
+      <p className={styles.trilha}><Link to="/deals">{pipeline?.name ?? "Funil"}</Link> <Icon name="chevron" /> {stage?.name ?? "Etapa"}</p>
+    </div>
 
     <div className={styles.contentGrid}>
       <aside className={styles.painel}>
@@ -304,18 +306,24 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         </div>}
 
         {canReadActivities && <section className={styles.bloco} aria-labelledby="deal-foco">
-          <h2 id="deal-foco" className={styles.blocoTitulo}>Foco</h2>
-          {focusActivities.length === 0
+          <header className={styles.blocoCabecalho}>
+            <h2 id="deal-foco" className={styles.blocoTitulo}>Foco</h2>
+            <span className={styles.blocoContagem}>{focusActivities.length === 0 ? "nada pendente" : `${focusActivities.length} ${focusActivities.length === 1 ? "pendente" : "pendentes"}`}</span>
+          </header>
+          <div className={styles.blocoCorpo}>{focusActivities.length === 0
             ? <p className={styles.empty}>Nenhum próximo passo agendado.</p>
-            : <ul className={styles.activityList}>{focusActivities.map((activity) => <li key={activity.id} data-completed="false">
+            : <ul className={styles.activityList}>{focusActivities.map((activity) => <li key={activity.id} data-completed="false" data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>
                 <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.notes && <p>{activity.notes}</p>}<time data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>{activity.scheduledAt < new Date().toISOString() ? "Atrasada · " : ""}{formatDateTime(activity.scheduledAt)}</time></div>
                 {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Concluir</Button>}
-              </li>)}</ul>}
+              </li>)}</ul>}</div>
         </section>}
 
         <section className={styles.bloco} aria-labelledby="deal-historico">
-          <h2 id="deal-historico" className={styles.blocoTitulo}>Histórico</h2>
-          <Tabs label="Filtrar o histórico" defaultValue="tudo" items={[
+          <header className={styles.blocoCabecalho}>
+            <h2 id="deal-historico" className={styles.blocoTitulo}>Histórico</h2>
+            <span className={styles.blocoContagem}>{events.length} {events.length === 1 ? "registro" : "registros"}</span>
+          </header>
+          <div className={styles.blocoCorpo}><Tabs label="Filtrar o histórico" defaultValue="tudo" items={[
             { value: "tudo", label: "Tudo", content: <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
             ...(canReadActivities ? [{ value: "atividades", label: `Atividades (${doneActivities.length})`, content: doneActivities.length === 0
               ? <p className={styles.empty}>Nenhuma atividade concluída ainda.</p>
@@ -324,7 +332,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
                   {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Reabrir</Button>}
                 </li>)}</ul> }] : []),
             { value: "mudancas", label: "Mudanças", content: <Timeline items={events.filter((item) => item.type !== "activity.created").map(toTimelineItem)} emptyText="Nenhuma mudança registrada." /> },
-          ]} />
+          ]} /></div>
         </section>
       </section>
     </div>

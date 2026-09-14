@@ -1,4 +1,11 @@
-.page { gap: var(--space-4); }
+/* Fundo cinza com cartões brancos por cima, como Pipedrive e Intercom fazem:
+ * sem isso a tela inteira é uma folha branca e nada se separa de nada. */
+.page { gap: var(--space-4); background: var(--color-surface2); min-height: 100%; }
+
+/* Faixa branca do topo: título, trilha de etapas e caminho do funil moram
+ * juntos, coladas ao cabeçalho da rota, e a linha embaixo fecha o bloco. */
+.page > header:first-child { background: var(--color-surface); }
+.topo { box-sizing: border-box; display: grid; gap: var(--space-3); margin: 0 calc(var(--space-8) * -1); padding: var(--space-4) var(--space-8); background: var(--color-surface); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
 
@@ -6,7 +13,9 @@
  * seções à esquerda, o que aconteceu e o que vem a seguir à direita. */
 .contentGrid { display: grid; grid-template-columns: minmax(0, var(--ui-popoverWidth)) minmax(0, 1fr); align-items: start; gap: var(--space-5); min-width: 0; }
 .contentGrid > * { min-width: 0; }
-.painel { min-width: 0; }
+/* Cada bloco é um cartão: fundo branco, borda fina, raio 8 — o mesmo
+ * tratamento dos painéis da lista de conversas. */
+.painel { min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
 .fluxo { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
 
 /* Cabeçalho: responsável, Ganho e Perdido à direita do título — decidir o
@@ -17,7 +26,7 @@
 .lostButton { color: var(--color-statusDanger); }
 
 /* Caminho do funil abaixo da trilha: «Funil › Etapa». */
-.trilha { display: flex; align-items: center; gap: var(--space-1); margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.trilha { display: flex; margin: 0; align-items: center; gap: var(--space-1); margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 .trilha a { color: var(--color-accent); text-decoration: none; }
 .trilha a:hover { text-decoration: underline; }
 .trilha svg { width: var(--space-3); height: var(--space-3); transform: rotate(-90deg); }
@@ -33,14 +42,21 @@
 .empty { margin: 0; padding: var(--space-2) 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 
 /* Compositor: onde se agenda o próximo passo, no topo da coluna da direita. */
-.compositor { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); }
+.compositor { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) var(--space-4); background: var(--color-accentWash); border: var(--ui-hairline) solid color-mix(in srgb, var(--color-accent) 20%, transparent); border-radius: var(--radius-md); }
 .compositorDica { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 
-.bloco { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
-.blocoTitulo { margin: 0; font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
+.bloco { display: flex; flex-direction: column; min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
+/* Cabeçalho do cartão com divisor — separa o nome do bloco do conteúdo. */
+.blocoCabecalho { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--space-12); padding: 0 var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.blocoTitulo { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+.blocoContagem { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-variant-numeric: tabular-nums; }
+.blocoCorpo { padding: var(--space-4); min-width: 0; }
+.blocoCorpo:empty { display: none; }
 
 .activityList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
-.activityList li { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; border-top: var(--ui-hairline) solid var(--color-line); }
+.activityList li { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); margin-inline: calc(var(--space-4) * -1); border-top: var(--ui-hairline) solid var(--color-line); }
+/* Atrasada ganha uma barra vermelha na borda — dá para varrer a lista sem ler. */
+.activityList li[data-overdue="true"] { border-inline-start: var(--ui-focusWidth) solid var(--color-statusDanger); background: color-mix(in srgb, var(--color-statusDanger) 5%, transparent); }
 .activityList li:first-child { border-top: 0; }
 .activityList li > div { display: grid; gap: var(--space-1); min-width: 0; }
 .activityList li[data-completed="true"] strong { color: var(--color-inkMuted); text-decoration: line-through; }
