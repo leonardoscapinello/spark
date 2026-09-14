@@ -24,5 +24,6 @@ export * from "./custom-fields-collection.js";
 export * from "./pages-collections.js";
 export * from "./canned-replies-collection.js";
 export * from "./saved-views-collection.js";
+export * from "./user-preferences-collection.js";
 export * from "./teams-collection.js";
 export { confirmed } from "./confirmed.js";

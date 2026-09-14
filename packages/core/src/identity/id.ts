@@ -47,6 +47,7 @@ export type PageId = Id<"Page">;
 export type PageVersionId = Id<"PageVersion">;
 export type CannedReplyId = Id<"CannedReply">;
 export type SavedViewId = Id<"SavedView">;
+export type UserPreferenceId = Id<"UserPreference">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -108,3 +109,4 @@ export const pageId = makeIdFactory("Page");
 export const pageVersionId = makeIdFactory("PageVersion");
 export const cannedReplyId = makeIdFactory("CannedReply");
 export const savedViewId = makeIdFactory("SavedView");
+export const userPreferenceId = makeIdFactory("UserPreference");

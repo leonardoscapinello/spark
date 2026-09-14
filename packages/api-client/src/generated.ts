@@ -3977,6 +3977,42 @@ export interface ArchiveSavedViewDto {
   archived: boolean;
 }
 
+export type UpsertUserPreferenceDtoValue = boolean | number | string | string[] | {[key: string]: unknown};
+
+export interface UpsertUserPreferenceDto {
+  /** @minLength 1 */
+  id: string;
+  value: UpsertUserPreferenceDtoValue;
+}
+
+export type UserPreferenceWriteResponseDtoPreferenceValue = boolean | number | string | string[] | {[key: string]: unknown};
+
+export type UserPreferenceWriteResponseDtoPreference = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  userId: string;
+  /**
+     * @maxLength 80
+     * @pattern ^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$
+     */
+  key: string;
+  value: UserPreferenceWriteResponseDtoPreferenceValue;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface UserPreferenceWriteResponseDto {
+  preference: UserPreferenceWriteResponseDtoPreference;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export interface CreatePageDto {
   /** @minLength 1 */
   id: string;
@@ -9194,6 +9230,69 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getSavedViewsControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const userPreferencesControllerUpsert = (
+    key: string,
+    upsertUserPreferenceDto: UpsertUserPreferenceDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<UserPreferenceWriteResponseDto>(
+      {url: `/v1/preferences/${key}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertUserPreferenceDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getUserPreferencesControllerUpsertMutationKey = () => ['userPreferencesControllerUpsert'] as const;
+
+export const getUserPreferencesControllerUpsertMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userPreferencesControllerUpsert>>, TError,UserPreferencesControllerUpsertMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userPreferencesControllerUpsert>>, TError,UserPreferencesControllerUpsertMutationVariables, TContext> => {
+
+const mutationKey = getUserPreferencesControllerUpsertMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userPreferencesControllerUpsert>>, UserPreferencesControllerUpsertMutationVariables> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  userPreferencesControllerUpsert(key,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserPreferencesControllerUpsertMutationResult = NonNullable<Awaited<ReturnType<typeof userPreferencesControllerUpsert>>>
+    export type UserPreferencesControllerUpsertMutationBody = UpsertUserPreferenceDto
+    export type UserPreferencesControllerUpsertMutationError = unknown
+    export type UserPreferencesControllerUpsertMutationVariables = {key: string;data: UpsertUserPreferenceDto}
+
+    export const useUserPreferencesControllerUpsert = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userPreferencesControllerUpsert>>, TError,UserPreferencesControllerUpsertMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userPreferencesControllerUpsert>>,
+        TError,
+        UserPreferencesControllerUpsertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUserPreferencesControllerUpsertMutationOptions(options), queryClient);
     }
 
 export const pagesControllerCreate = (

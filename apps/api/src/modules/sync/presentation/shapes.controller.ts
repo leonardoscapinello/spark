@@ -90,15 +90,20 @@ export class ShapesController {
     if (!tableConfig) {
       throw new NotFoundException(`Table "${table}" is not syncable.`);
     }
-    const { column } = tableConfig;
+    const { column, userColumn } = tableConfig;
     upstream.searchParams.set("table", table);
     const eventPrefixes = table === "events" ? readableEventPrefixes(capabilities) : [];
     const eventFilter = eventPrefixes.length > 0
       ? ` AND (${eventPrefixes.map((_, index) => `"type" LIKE $${index + 2}`).join(" OR ")})`
       : "";
-    upstream.searchParams.set("where", `"${column}" = $1${eventFilter}`);
+    // Personal tables (user_preferences) narrow to the requester too — the
+    // server decides this, never the client, for the same reason as the org.
+    const userParam = eventPrefixes.length + 2;
+    const userFilter = userColumn ? ` AND "${userColumn}" = $${userParam}` : "";
+    upstream.searchParams.set("where", `"${column}" = $1${eventFilter}${userFilter}`);
     upstream.searchParams.set("params[1]", user.orgId);
     eventPrefixes.forEach((prefix, index) => upstream.searchParams.set(`params[${index + 2}]`, `${prefix}.%`));
+    if (userColumn) upstream.searchParams.set(`params[${userParam}]`, user.id);
     const columns = TABLE_COLUMNS.get(table);
     if (columns) upstream.searchParams.set("columns", columns.join(","));
 
