@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { freshToken } from "./auth.client";
 
 /**
  * Estado da fila de envio do service worker (app/sw.ts) mais o sinal do
@@ -22,6 +23,9 @@ export function useSendQueue(): SendQueueState {
     const onMessage = (event: MessageEvent) => {
       const data = event.data as { type?: string; size?: number } | null;
       if (data?.type === "spark:send-queue" && typeof data.size === "number") setPending(data.size);
+      // o SW vai repetir a fila e quer um token que ainda valha (app/sw.ts, replaySendQueue)
+      const port = event.ports[0];
+      if (data?.type === "spark:send-queue:token?" && port) void freshToken().then((token) => port.postMessage({ token }), () => port.postMessage({ token: null }));
     };
     worker?.addEventListener("message", onMessage);
     worker?.controller?.postMessage({ type: "spark:send-queue:query" });

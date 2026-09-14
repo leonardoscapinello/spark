@@ -96,6 +96,18 @@ export function getToken(): string | null {
   return accessToken;
 }
 
+/**
+ * Token válido agora — renovado se expirou. É o que a fila de envio do
+ * service worker pede antes de repetir uma escrita guardada (app/sw.ts):
+ * o Authorization gravado na hora do enfileiramento pode ter vencido
+ * enquanto a rede estava fora. getSession() do supabase-js renova sozinho.
+ */
+export async function freshToken(): Promise<string | null> {
+  const { data } = await getSupabaseClient().auth.getSession();
+  accessToken = data.session?.access_token ?? accessToken;
+  return accessToken;
+}
+
 export function restoreSession(): Promise<AppSession | null> {
   listenForTokenRotation();
   const activeProfile = getSession();

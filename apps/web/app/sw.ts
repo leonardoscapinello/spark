@@ -40,10 +40,8 @@ self.addEventListener("activate", () => {
  * coleções (packages/data confirmed()) leem isso como "sem txid ainda" e
  * mantêm o estado otimista; o Workbox repete a fila no evento `sync` (ou
  * ao religar o SW onde não há Background Sync) e o Electric traz a linha
- * real. Limite conhecido: a repetição leva o Authorization guardado na
- * hora do enfileiramento; se o token expirar antes de voltar a rede, a
- * API responde 401 e a entrada é descartada — a página segue com o dado
- * local e o usuário refaz. Retenção: 24 h.
+ * real, com um Authorization renovado pela página (replaySendQueue).
+ * Retenção: 24 h.
  */
 const API_ORIGIN = new URL(import.meta.env.VITE_API_BASE_URL || "http://localhost:3000").origin;
 const WRITE_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
@@ -52,10 +50,56 @@ const sendQueue = new Queue("spark-send-queue", {
   // Repete e, saia como sair, conta para a página o que ficou — é o que
   // alimenta o aviso "N envios aguardam sinal" (app/lib/send-queue.client.ts).
   onSync: async ({ queue }) => {
-    try { await queue.replayRequests(); }
+    try { await replaySendQueue(queue); }
     finally { await broadcastQueueSize(); }
   },
 });
+
+/**
+ * Repete a fila entrada por entrada com um Authorization que ainda valha:
+ * o token gravado na hora do enfileiramento pode ter vencido enquanto a
+ * rede estava fora. A página responde com um token renovado
+ * (app/lib/send-queue.client.ts → auth.client freshToken); sem janela
+ * aberta, ou sem resposta em 3 s, vai o token guardado mesmo. Falha de
+ * rede devolve a entrada à frente da fila e lança — é assim que o Workbox
+ * sabe que deve agendar outro `sync`. Resposta HTTP, qualquer uma, tira
+ * a entrada da fila: a API falou, e repetir um 4xx só repetiria o erro.
+ */
+async function replaySendQueue(queue: Queue): Promise<void> {
+  const token = await freshTokenFromPage();
+  let entry = await queue.shiftRequest();
+  while (entry) {
+    const request = token ? withAuthorization(entry.request, token) : entry.request.clone();
+    try {
+      await fetch(request);
+    } catch (error) {
+      await queue.unshiftRequest(entry);
+      throw new Error("Fila de envio: ainda sem rede, tentando de novo depois.", { cause: error });
+    }
+    entry = await queue.shiftRequest();
+  }
+}
+
+function withAuthorization(request: Request, token: string): Request {
+  const headers = new Headers(request.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  return new Request(request, { headers });
+}
+
+async function freshTokenFromPage(): Promise<string | null> {
+  const [client] = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  if (!client) return null;
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), 3000);
+    channel.port1.onmessage = (event) => {
+      clearTimeout(timer);
+      const data = event.data as { token?: string | null } | null;
+      resolve(typeof data?.token === "string" ? data.token : null);
+    };
+    client.postMessage({ type: "spark:send-queue:token?" }, [channel.port2]);
+  });
+}
 
 async function broadcastQueueSize(): Promise<void> {
   const size = await sendQueue.size();
