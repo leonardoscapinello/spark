@@ -23,7 +23,13 @@
 2. Ajustar diferenças encontradas de composição, largura, alinhamento, ícones, tipografia, estados de hover/foco, menus, painéis e transições. Confirmar que não surge rolagem horizontal da página ao abrir sobreposições.
 3. Revisar estados de dados vazios, carregamento, erro, leitura sem permissão e listas extensas em cada formato. Verificar acessibilidade de teclado e movimento reduzido nas interações ajustadas.
 4. Avaliar o tema escuro separadamente: o [ADR-0033](../adr/0033-interface-fiel-intercom.md) o registra como provisório. Não afirmar fidelidade dele sem referência e comparação.
-5. Consolidar o inventário em [`../especificacao/componentes-intercom.md`](../especificacao/componentes-intercom.md); parte das pendências ali pode já ter sido implementada, mas precisa ser conferida contra o código e a interface.
+5. ~~Consolidar o inventário em [`../especificacao/componentes-intercom.md`](../especificacao/componentes-intercom.md)~~ — feito em 13/09: a conferência contra o código está na seção «Consolidação do inventário». Restam ali, como faltando de fato, **resize e reordenação de coluna**, **editor rico**, **ícones exatos** e **hover/foco medidos sistematicamente**.
+
+## Retomada de 13/09
+
+Duas pendências da tabela foram fechadas: **seleção de linhas** e **catálogo de colunas** no `DataTable`, ambas controladas pela tela e cobertas por teste e história no Storybook. Também foi corrigida uma regressão em que o formulário de edição de pessoa ficava sem estilo — o módulo CSS não tinha as classes que a tela referenciava.
+
+O item 1 acima **não avançou**: comparar as telas renderizadas exige sessão autenticada, e o login depende do Supabase real. Enquanto não houver acesso, a comparação visual das telas compostas continua parada; o que dá para conferir sem sessão é o Storybook.
 
 ## Retomada e teste
 

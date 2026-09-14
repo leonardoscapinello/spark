@@ -56,3 +56,30 @@ Popover de formulário tem título e corpo próprios, largura de 320 px limitada
 ## Cores de marca e semântica
 
 Conforme ADR-0034, acentos, indicador de aba, foco e botão primário usam os azuis da marca existente. A referência Intercom orienta estrutura e interação, sem substituir a marca. Laranja/âmbar permanece permitido para atenção por `color.statusWarning`. Os componentes recebem conteúdo e callbacks por props e consomem os tokens compartilhados; não se cria uma versão exclusiva para o catálogo.
+
+## Consolidação do inventário — 13/09/2026
+
+Conferência do que as seções anteriores listavam como pendente, item por item, contra o código de `packages/ui-web/src`. A lista antiga era de 11/09 e envelheceu: parte já existia.
+
+| Pendência listada antes | Estado hoje | Onde |
+| --- | --- | --- |
+| Calendário próprio | Entregue | `CalendarMonth`, `CalendarWeek`, `DateTimePicker` |
+| Uploader | Entregue | `FilePicker` |
+| Toast | Entregue | `Notification`, `Toast` |
+| Estados de rede | Entregue na tabela | `DataTable` tem `state` de carregamento, erro e vazio |
+| Tabela com seleção | Entregue | `DataTable` com `selectedIds`/`onSelectionChange` |
+| Tabela com escolha de colunas | Entregue | `ColumnCatalog`, pelo `+` no fim do cabeçalho (captura 030) |
+| Tabela com resize e reordenação de coluna | **Falta** | — |
+| Editor rico | **Falta** | nenhum equivalente no pacote |
+| Ícones exatos | **Falta** | `Icon` usa silhuetas próprias, não reprodução |
+| Hover/foco medidos sistematicamente | **Falta** | medições existem para alguns estados, não para todos |
+| Tema escuro | **A avaliar** | `packages/tokens` já compila a paleta escura; [ADR-0033](../adr/0033-interface-fiel-intercom.md) registra o tema como provisório e sem referência |
+| Mobile | **Parcial** | tabela e atendimento adaptam; falta a varredura por tela |
+
+### Seleção e catálogo de colunas
+
+Ambos são controlados pela tela: a tabela informa o que mudou e não guarda preferência. Isso mantém a decisão de escopo — sessão, usuário ou visualização salva — fora do componente, e deixa as ações em lote com quem conhece a política de acesso ([ADR-0029](../adr/0029-paineis-e-grupos-de-permissao.md)).
+
+A seleção é indexada por `rowKey`, então ordenar não a desfaz. Uma coluna marcada `alwaysVisible` não pode ser escondida, e ordenar por coluna escondida deixa de valer.
+
+Diferenças conhecidas em relação à captura 030: os itens do catálogo ainda não têm ícone por coluna, e o popover tem título visível em vez de apenas o campo de busca. Nenhuma medição independente do popup de colunas da Intercom foi feita — a composição segue o primitivo `Popover` já existente.
