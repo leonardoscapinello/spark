@@ -58,7 +58,19 @@ export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: u
   if (field.type === "text" || field.type === "paragraph") return String(value).trim();
   if (field.type === "number") { const parsed = typeof value === "number" ? value : Number(value); if (!Number.isFinite(parsed)) throw new Error(`${field.label} precisa ser um número.`); return parsed; }
   // Moeda em centavos inteiros, como todo dinheiro no sistema (packages/core/money).
-  if (field.type === "currency") { const parsed = typeof value === "number" ? value : Number(String(value).replace(/\./g, "").replace(",", ".")); if (!Number.isFinite(parsed)) throw new Error(`${field.label} precisa ser um valor.`); return toCents(money(Math.round(parsed * 100))); }
+  /* Dinheiro: **número é centavo**, como em todo o sistema (packages/core/money,
+   * CLAUDE.md regra de dinheiro) — é o que o `MoneyInput` devolve. Texto é o
+   * que uma pessoa digitou em reais, com vírgula decimal. Sem essa distinção,
+   * o mesmo 1500 significaria R$ 15,00 num caminho e R$ 1.500,00 no outro. */
+  if (field.type === "currency") {
+    if (typeof value === "number") {
+      if (!Number.isInteger(value)) throw new Error(`${field.label} precisa ser um valor em centavos inteiros.`);
+      return toCents(money(value));
+    }
+    const parsed = Number(String(value).replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(parsed)) throw new Error(`${field.label} precisa ser um valor.`);
+    return toCents(money(Math.round(parsed * 100)));
+  }
   if (field.type === "boolean") return value === true;
   if (field.type === "date") { const parsed = new Date(String(value)); if (Number.isNaN(parsed.getTime())) throw new Error(`${field.label} precisa ser uma data.`); return parsed.toISOString().slice(0, 10); }
   if (field.type === "datetime") { const parsed = new Date(String(value)); if (Number.isNaN(parsed.getTime())) throw new Error(`${field.label} precisa ser uma data e hora.`); return parsed.toISOString(); }
@@ -89,3 +101,16 @@ export function formatCustomFieldValue(field: CustomFieldDefinition, value: unkn
   if (field.type === "multi_select") return Array.isArray(value) ? value.map(String).join(", ") : String(value);
   return String(value);
 }
+
+/**
+ * Trocar a lista de opções de um campo de seleção depois de criado.
+ *
+ * A lista chega inteira, na ordem em que deve aparecer: é assim que a tela
+ * mostra, e é a única forma que também diz o que foi REMOVIDO. Opção retirada
+ * é arquivada, nunca apagada — o valor que alguém já escolheu continua
+ * apontando para ela, e um relatório antigo não pode perder a legenda.
+ */
+export const UpdateCustomFieldOptionsInputSchema = z.object({
+  options: z.array(z.string().trim().min(1).max(100)).max(100),
+});
+export type UpdateCustomFieldOptionsInput = z.infer<typeof UpdateCustomFieldOptionsInputSchema>;

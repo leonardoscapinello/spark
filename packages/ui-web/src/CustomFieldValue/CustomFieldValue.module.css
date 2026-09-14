@@ -4,6 +4,13 @@
 .label { min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); overflow-wrap: anywhere; }
 .required { margin-inline-start: var(--space-1); color: var(--color-statusDanger); }
 .control { min-width: 0; font-size: var(--typography-size-sm); }
-.editor { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.editor > :first-child { flex: 1; min-width: 0; }
-@media (max-width: 640px) { .row { grid-template-columns: minmax(0, 1fr); align-items: stretch; } }
+.area { width: 100%; min-height: calc(3 * var(--ui-controlMedium)); resize: vertical; }
+/* Medir a LARGURA DA LINHA, não a da janela: o painel de detalhes é estreito
+ * mesmo numa tela grande, e é ele que decide se rótulo e campo cabem lado a
+ * lado. Só abaixo de 240px, quando nem o campo caberia, a linha empilha. */
+.field { container-type: inline-size; }
+@container (max-width: 240px) {
+  .row { grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: var(--space-1); }
+  .label { font-size: var(--typography-size-compact); }
+}
+

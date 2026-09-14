@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
@@ -29,9 +29,10 @@ import {
   evaluateStageFields,
   stageFieldLabel,
   type Note,
+  type Deal,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote } from "@spark/data";
-import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -117,14 +118,6 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox && deal?.contactId ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, deal.contactId!)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
 
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState<Money | null>(null);
-  const [contact, setContact] = useState<SelectOption | null>(null);
-  const [ownerId, setOwnerId] = useState("");
-  const [companyId, setCompanyId] = useState("");
-  const [expectedCloseDate, setExpectedCloseDate] = useState("");
-  const [saving, setSaving] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [activityType, setActivityType] = useState<ActivityType>("task");
   const [activityTitle, setActivityTitle] = useState("");
@@ -285,37 +278,21 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     }
   }
 
-  function beginEditing() {
-    if (!deal) return;
-    setName(deal.name);
-    setAmount(syncedAmount(deal.amount));
-    setContact(linkedContact ? { value: linkedContact.id, label: linkedContact.name, ...(linkedContact.email ? { description: linkedContact.email } : {}) } : null);
-    setOwnerId(deal.ownerId ?? "");
-    setCompanyId(deal.companyId ?? "");
-    setExpectedCloseDate(deal.expectedCloseDate?.slice(0, 10) ?? "");
-    setEditing(true);
-  }
+  type DealPatch = Partial<Pick<Deal, "name" | "ownerId" | "companyId" | "contactId" | "expectedCloseDate">>;
 
-  async function saveDeal(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!deal || !contact || !name.trim() || amount === null || saving) return;
-    setSaving(true);
+  /**
+   * Grava um campo do negócio direto da linha do painel (Pipedrive: sem
+   * formulário, sem modal). O valor NÃO está entre eles: ele é a soma dos
+   * produtos, e mudar um número solto faria a conta mentir.
+   */
+  async function saveField(patch: DealPatch, label: string) {
+    if (!deal || !canWrite) return;
     try {
-      const transaction = dealsCollection.update(deal.id, (draft) => {
-        draft.name = name.trim();
-        draft.amount = toCents(amount);
-        draft.contactId = contactIdFactory.from(contact.value);
-        draft.companyId = companyId ? companyIdFactory.from(companyId) : null;
-        draft.ownerId = ownerId ? userIdFactory.from(ownerId) : null;
-        draft.expectedCloseDate = expectedCloseDate ? new Date(`${expectedCloseDate}T12:00:00`).toISOString() : null;
-      });
+      const transaction = dealsCollection.update(deal.id, (draft) => { Object.assign(draft, patch); });
       await transaction.isPersisted.promise;
-      setEditing(false);
-      notify({ title: "Negócio atualizado", tone: "success" });
+      notify({ title: `${label} atualizado`, tone: "success" });
     } catch {
-      notify({ title: "Não foi possível salvar o negócio", tone: "error" });
-    } finally {
-      setSaving(false);
+      notify({ title: `Não foi possível alterar ${label.toLowerCase()}`, tone: "error" });
     }
   }
 
@@ -429,7 +406,6 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         </>}
         {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
         {canWrite && <MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} menu={<>
-          <MenuItem icon={<Icon name="file" />} onClick={beginEditing}>Editar negócio</MenuItem>
           {!isOpen && canMove && <MenuItem icon={<Icon name="briefcase" />} onClick={() => void reopenDeal()}>Reabrir negócio</MenuItem>}
         </>} />}
       </>}
@@ -451,36 +427,41 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         <Accordion defaultValue={["resumo", "detalhes"]} items={[
           { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, content: <div className={styles.details}>
             {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />Preencha para avançar melhor: {fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)).join(", ")}</p>}
+            {/* O valor é a soma dos produtos e por isso não se edita aqui: um
+              * número solto faria a conta do funil discordar do que foi vendido. */}
             <div><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
             {dealItems.length > 0 && <div><span>Produtos</span><strong>{dealItems.length}</strong></div>}
+            <InlineField label="Nome" value={deal.name} disabled={!canWrite}>
+              {(close) => <Input aria-label="Nome do negócio" defaultValue={deal.name} onBlur={(event) => { const next = event.target.value.trim(); close(); if (next && next !== deal.name) void saveField({ name: next }, "Nome"); }} />}
+            </InlineField>
             <div><span>Situação</span><strong>{statusLabel(deal.status)}</strong></div>
-            <div><span>Previsão</span><strong>{deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"}</strong></div>
-            <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
+            <InlineField label="Previsão" value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
+              {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => { close(); void saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"); }} />}
+            </InlineField>
+            <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>
+              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => { close(); void saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"); }} />}
+            </InlineField>
+            <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} empty={!linkedContact} disabled={!canWrite}>
+              {(close) => <SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onValueChange={(next) => { close(); if (next) void saveField({ contactId: contactIdFactory.from(next.value) }, "Pessoa"); }} />}
+            </InlineField>
+            <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} empty={!linkedCompany} disabled={!canWrite}>
+              {(close) => <Select label="Empresa do negócio" value={deal.companyId ?? null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => { close(); void saveField({ companyId: next ? companyIdFactory.from(next) : null }, "Empresa"); }} />}
+            </InlineField>
             {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           </div> },
-          { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, content: editing
-            ? <form className={styles.editForm} onSubmit={saveDeal}>
-                <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
-                <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={amount} onValueChange={setAmount} /></Field>
-                <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={companyId || null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
-                <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
-                <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={contact} onValueChange={setContact} /></Field>
-                <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
-                <div className={styles.formActions}><Button type="submit" loading={saving} disabled={!name.trim() || amount === null || !contact}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
-              </form>
-            : <div className={styles.details}>
-                {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
-                  options={fieldOptions.get(field.id) ?? []}
-                  key={field.id}
-                  field={field}
-                  value={customValues[field.key]}
-                  disabled={!canWrite}
-                  onSave={async (value) => { const transaction = dealsCollection.update(deal.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }}
-                  onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
-                  onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })}
-                />)}
-                {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
-              </div> },
+          { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, content: <div className={styles.details}>
+            {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
+              options={fieldOptions.get(field.id) ?? []}
+              key={field.id}
+              field={field}
+              value={customValues[field.key]}
+              disabled={!canWrite}
+              onSave={async (value) => { const transaction = dealsCollection.update(deal.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }}
+              onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
+              onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })}
+            />)}
+            {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
+          </div> },
           { value: "produtos", title: "Produtos", icon: <Icon name="briefcase" />, content: <div className={styles.itens}>
             {dealItems.length === 0
               ? <p className={styles.empty}>O valor do negócio é a soma dos produtos. Adicione o que está sendo vendido.</p>

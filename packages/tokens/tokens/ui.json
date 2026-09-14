@@ -194,11 +194,8 @@
       "$value": "6px"
     },
     "kanbanColumnWidth": {
-
       "$type": "dimension",
-
       "$value": "280px"
-
     },
     "modalWidth": {
       "$type": "dimension",
@@ -251,6 +248,11 @@
     "popoverWidth": {
       "$type": "dimension",
       "$value": "320px"
+    },
+    "detailPanelWidth": {
+      "$type": "dimension",
+      "$value": "360px",
+      "$description": "Painel de detalhes da tela de registro. Largo o bastante para rótulo e campo na mesma linha — a 320px tudo empilhava e cada linha virava duas."
     },
     "splitDividerOpacity": {
       "$type": "number",
@@ -327,6 +329,11 @@
     "clockSize": {
       "$type": "dimension",
       "$value": "120px"
+    },
+    "timeFieldWidth": {
+      "$type": "dimension",
+      "$value": "96px",
+      "$description": "Largura do seletor de hora e de minuto: cabem os dois dígitos e a seta sem truncar."
     },
     "helpBg": {
       "$type": "color",

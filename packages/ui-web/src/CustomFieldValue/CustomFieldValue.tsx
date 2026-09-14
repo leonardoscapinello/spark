@@ -1,10 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { customFieldOptions, normalizeCustomFieldValue, type CustomFieldDefinition } from "@spark/core";
-import { Button } from "../Button/Button.js";
+import { customFieldOptions, money, normalizeCustomFieldValue, type CustomFieldDefinition } from "@spark/core";
 import { Checkbox } from "../Checkbox/Checkbox.js";
 import { DatePicker, DateTimePicker } from "../DateTimePicker/DateTimePicker.js";
 import { Input } from "../Input/Input.js";
-import { MaskedInput } from "../MaskedInput/MaskedInput.js";
+import { MaskedInput, MoneyInput } from "../MaskedInput/MaskedInput.js";
 import { Select } from "../Select/Select.js";
 import { Textarea } from "../Textarea/Textarea.js";
 import s from "./CustomFieldValue.module.css";
@@ -58,27 +57,31 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
   }
 
   const busy = disabled || saving;
-  const row = (control: ReactNode) => <div className={s.row}><span className={s.label}>{field.label}{field.required && <span className={s.required} aria-label="obrigatório">*</span>}</span><div className={s.control}>{control}</div></div>;
+  const row = (control: ReactNode) => <div className={s.field}><div className={s.row}><span className={s.label}>{field.label}{field.required && <span className={s.required} aria-label="obrigatório">*</span>}</span><div className={s.control}>{control}</div></div></div>;
 
   if (field.type === "boolean") return row(<Checkbox checked={value === true} disabled={busy} onCheckedChange={(checked) => void save(checked === true)}>{value === true ? "Sim" : "Não"}</Checkbox>);
   if (field.type === "single_select") return row(<Select label={field.label} value={typeof value === "string" ? value : null} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
   if (field.type === "multi_select") return row(<Select<true> multiple label={field.label} value={Array.isArray(value) ? value.map(String) : []} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
   if (field.type === "date") return row(<DatePicker label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); void save(next); }} />);
   if (field.type === "datetime") return row(<DateTimePicker mode="datetime" label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); void save(next); }} />);
-  if (field.type === "paragraph") return row(<div className={s.editor}><Textarea aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} /><SaveButton saving={saving} disabled={disabled} onClick={() => void save(draft)} /></div>);
-  if (field.type === "phone") return row(<div className={s.editor}><MaskedInput format="(##) #####-####" aria-label={field.label} value={draft} disabled={busy} placeholder="(11) 90000-0000" onValueChange={setDraft} /><SaveButton saving={saving} disabled={disabled} onClick={() => void save(draft)} /></div>);
+  if (field.type === "paragraph") return row(<Textarea rows={3} className={s.area} aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} onBlur={() => { if (draft !== toDraft(field, value)) void save(draft); }} />);
+  if (field.type === "phone") return row(<MaskedInput format="(##) #####-####" aria-label={field.label} value={draft} disabled={busy} placeholder="(11) 90000-0000" onValueChange={setDraft} onBlur={() => { if (draft !== toDraft(field, value)) void save(draft); }} />);
+
+  // Dinheiro tem campo próprio: R$, separador de milhar e duas casas, e o valor
+  // já sai em centavos — nenhum campo de texto acerta isso sozinho.
+  if (field.type === "currency") {
+    const cents = typeof value === "number" ? money(value) : null;
+    return row(<MoneyInput label={field.label} value={cents} disabled={busy} onValueChange={(next) => void save(next)} />);
+  }
 
   const inputType = field.type === "number" ? "number" : field.type === "url" ? "url" : "text";
-  const placeholder = field.type === "currency" ? "0,00" : field.type === "url" ? "acme.com.br" : "Sem valor";
-  return row(<div className={s.editor}>
-    <Input type={inputType} inputMode={field.type === "currency" ? "decimal" : undefined} aria-label={field.label} value={draft} disabled={busy} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} />
-    <SaveButton saving={saving} disabled={disabled} onClick={() => void save(draft)} />
-  </div>);
+  const placeholder = field.type === "url" ? "acme.com.br" : "Sem valor";
+  // Grava ao sair do campo, como no Pipedrive. Um botão «Salvar» por linha
+  // roubava metade da largura do painel e pedia um clique a mais em cada
+  // campo — e o painel tem muitos.
+  return row(<Input type={inputType} aria-label={field.label} value={draft} disabled={busy} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} onBlur={() => { if (draft !== toDraft(field, value)) void save(draft); }} />);
 }
 
-function SaveButton({ saving, disabled, onClick }: { saving: boolean; disabled: boolean; onClick: () => void }) {
-  return <Button size="sm" variant="secondary" loading={saving} disabled={disabled} onClick={onClick}>Salvar</Button>;
-}
 
 /** Valor guardado → texto do controle. Moeda é centavo no banco e reais na tela. */
 function toDraft(field: CustomFieldDefinition, value: unknown): string {

@@ -73,6 +73,7 @@ export const DOMAIN_EVENT_TYPES = [
   "campaign.created",
   "campaign.sent",
   "custom_field.created",
+  "custom_field.updated",
   "custom_field.archived",
   "page.created",
   "page.updated",

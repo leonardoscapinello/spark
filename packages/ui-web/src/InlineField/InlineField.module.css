@@ -1,0 +1,47 @@
+/* Linha «rótulo · valor» que vira campo ao clicar — é como o Pipedrive deixa
+ * mudar responsável, situação e previsão sem abrir formulário nenhum. Mesma
+ * geometria da linha de campo personalizado, para o painel ficar homogêneo. */
+.field { container-type: inline-size; }
+.row { display: grid; grid-template-columns: minmax(var(--space-16), 34%) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-height: var(--ui-controlMedium); }
+.label { min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); overflow-wrap: anywhere; }
+.control { min-width: 0; font-size: var(--typography-size-sm); }
+
+/* O valor parado parece texto; ao passar o mouse mostra que é editável. É o
+ * meio-termo do Pipedrive: nada de campo desenhado o tempo todo, e nada de
+ * esconder que dá para mudar. */
+.value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--ui-controlMedium);
+  padding: var(--space-1) var(--space-2);
+  margin-inline-start: calc(-1 * var(--space-2));
+  border: var(--ui-hairline) solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-medium);
+  color: var(--color-ink);
+  text-align: start;
+  cursor: pointer;
+  /* `anywhere` (e não `break-word`) reduz a largura mínima do item flex ao
+   * caractere mais largo — dentro deste botão, o valor quebrava uma letra por
+   * linha. `break-word` quebra só quando a palavra não cabe. */
+  overflow-wrap: break-word;
+}
+.value > span { flex: 1 1 auto; min-width: 0; }
+.value:hover { background: var(--ui-subtle); border-color: var(--color-line); }
+.value:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+.value[data-empty="true"] { color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }
+.value[data-disabled="true"] { cursor: default; }
+.value[data-disabled="true"]:hover { background: transparent; border-color: transparent; }
+
+.pencil { display: flex; flex-shrink: 0; margin-inline-start: auto; opacity: 0; color: var(--color-inkMuted); }
+.value:hover .pencil, .value:focus-visible .pencil { opacity: 1; }
+
+@container (max-width: 240px) {
+  .row { grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: var(--space-1); }
+  .label { font-size: var(--typography-size-compact); }
+}

@@ -2,7 +2,7 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { snakeCamelMapper } from "@electric-sql/client";
-import { UserPreferenceItemSchema, UserPreferenceSchema, userPreferenceId, type OrgId, type UserId, type UserPreference, type UserPreferenceValue } from "@spark/core";
+import { UserPreferenceItemSchema, UserPreferenceRowSchema, userPreferenceId, type OrgId, type UserId, type UserPreference, type UserPreferenceValue } from "@spark/core";
 import { getSparkApiBaseUrl, getSparkAuthToken, userPreferencesControllerUpsert } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 
@@ -21,7 +21,7 @@ export function createUserPreferencesCollection() {
   return createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "user_preferences",
-      schema: UserPreferenceSchema,
+      schema: UserPreferenceRowSchema,
       getKey: (preference) => preference.id,
       shapeOptions: {
         url: `${getSparkApiBaseUrl()}/v1/shapes/user_preferences`,

@@ -75,4 +75,5 @@ export { FilePicker, type FilePickerProps } from "./FilePicker/FilePicker.js";
 export { LeadFormRenderer, type LeadFormRendererProps } from "./LeadForm/LeadForm.js";
 export * from "./StageProgress/StageProgress.js";
 export * from "./CustomFieldValue/CustomFieldValue.js";
+export * from "./InlineField/InlineField.js";
 export * from "./Composer/Composer.js";

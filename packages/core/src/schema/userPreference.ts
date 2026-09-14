@@ -19,15 +19,10 @@ export const UserPreferenceSchema = z.object({
   orgId: zOrgId,
   userId: zUserId,
   key: UserPreferenceKeySchema,
-  /* O valor mora em colunas (ADR-0035): escalar em `user_preferences`, lista e
-   * objeto em `user_preference_items`. A API devolve montado em `value`; a
-   * linha sincronizada traz as colunas, e a tela junta com
-   * `fromPreferenceStorage`. */
+  /* A API devolve o valor montado. Ele é opcional porque a LINHA sincronizada
+   * não o traz: lá o valor está nas colunas de `UserPreferenceRowSchema`, e a
+   * tela junta com `fromPreferenceStorage` (ADR-0035). */
   value: UserPreferenceValueSchema.optional(),
-  valueKind: z.enum(["text", "number", "boolean", "list", "object"]).optional(),
-  valueText: z.string().nullable().optional(),
-  valueNumber: z.union([z.number(), z.string()]).nullable().optional(),
-  valueBoolean: z.boolean().nullable().optional(),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
 });
@@ -52,3 +47,18 @@ export const UserPreferenceItemSchema = z.object({
   valueBoolean: z.boolean().nullable().default(null),
 });
 export type UserPreferenceItem = z.infer<typeof UserPreferenceItemSchema>;
+
+/**
+ * A linha como o Electric a entrega: o valor em colunas, não montado.
+ *
+ * Separada do contrato da API de propósito — `valueNumber` chega do Postgres
+ * como texto (`numeric` preserva escala assim), e uma união número-ou-texto
+ * não tem representação em JSON Schema, que é o que gera o cliente.
+ */
+export const UserPreferenceRowSchema = UserPreferenceSchema.extend({
+  valueKind: z.enum(["text", "number", "boolean", "list", "object"]).optional(),
+  valueText: z.string().nullable().optional(),
+  valueNumber: z.union([z.number(), z.string()]).nullable().optional(),
+  valueBoolean: z.boolean().nullable().optional(),
+});
+export type UserPreferenceRow = z.infer<typeof UserPreferenceRowSchema>;

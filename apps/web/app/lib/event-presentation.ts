@@ -66,6 +66,7 @@ const TITLES: Record<DomainEventType, string> = {
   "campaign.created": "Campanha criada",
   "campaign.sent": "Campanha enviada",
   "custom_field.created": "Campo personalizado criado",
+  "custom_field.updated": "Campo personalizado alterado",
   "custom_field.archived": "Campo personalizado arquivado",
   "page.created": "Página criada",
   "page.updated": "Página atualizada",

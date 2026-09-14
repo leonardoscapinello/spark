@@ -17,7 +17,7 @@ export function HydrateFallback() {
 }
 export default function PublicForm() {
   const form = useLoaderData<typeof clientLoader>();
-  const fields: LeadFormField[] = form.fields.map((field) => ({
+  const fields: LeadFormField[] = (form.fields ?? []).map((field) => ({
     ...field,
     required: field.required ?? false,
     options: Array.isArray(field.options) ? field.options : [],

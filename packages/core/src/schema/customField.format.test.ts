@@ -38,7 +38,9 @@ describe("tipos trazidos do Pipedrive", () => {
 
   it("moeda guarda centavos inteiros e exibe em reais", () => {
     expect(normalizeCustomFieldValue(def("currency"), "1.234,56")).toBe(123456);
-    expect(normalizeCustomFieldValue(def("currency"), 99.9)).toBe(9990);
+    // Número é centavo — é o que o MoneyInput devolve.
+    expect(normalizeCustomFieldValue(def("currency"), 9990)).toBe(9990);
+    expect(() => normalizeCustomFieldValue(def("currency"), 99.9)).toThrow(/centavos inteiros/i);
     // espaço fino não separável entre "R$" e o número — comparação por conteúdo, não por byte
     expect(formatCustomFieldValue(def("currency"), 123456).replace(/\s/g, " ")).toBe("R$ 1.234,56");
   });

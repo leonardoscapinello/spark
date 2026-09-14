@@ -40,6 +40,8 @@ const paths = {
   exit: "M6 2H2v12h4m4-9 4 3-4 3m4-3H5",
   pushpin: "M6 2h4v4l2 3H4l2-3V2ZM8 9v5",
   filter: "M2 3h12L9.5 8.5V13l-3 1V8.5L2 3Z",
+  /* Lápis: o sinal de «isto dá para mudar aqui mesmo». */
+  pencil: "M11.5 2.5a1.4 1.4 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5Z",
 } as const;
 export type IconName = keyof typeof paths;
 export function Icon({ name, ...props }: { name: IconName } & Omit<ComponentProps<"svg">, "children">) {

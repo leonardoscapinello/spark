@@ -962,6 +962,132 @@
         ]
       }
     },
+    "/v1/settings/custom-fields": {
+      "post": {
+        "operationId": "SettingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomFieldDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomFieldWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/v1/settings/custom-fields/{id}/options": {
+      "patch": {
+        "operationId": "SettingsController_setOptions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomFieldOptionsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomFieldWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/v1/settings/custom-fields/{id}/archive": {
+      "patch": {
+        "operationId": "SettingsController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveCustomFieldDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomFieldWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/v1/stage-field-rules": {
       "post": {
         "operationId": "StageFieldRulesController_save",
@@ -3040,87 +3166,6 @@
         ]
       }
     },
-    "/v1/settings/custom-fields": {
-      "post": {
-        "operationId": "SettingsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCustomFieldDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CustomFieldWriteResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "settings"
-        ]
-      }
-    },
-    "/v1/settings/custom-fields/{id}/archive": {
-      "patch": {
-        "operationId": "SettingsController_archive",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ArchiveCustomFieldDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CustomFieldWriteResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "settings"
-        ]
-      }
-    },
     "/v1/saved-views": {
       "post": {
         "operationId": "SavedViewsController_create",
@@ -4800,12 +4845,10 @@
                   "maximum": 100
                 },
                 "customFields": {
-                  "default": {},
                   "type": "object",
                   "additionalProperties": {}
                 },
                 "tags": {
-                  "default": [],
                   "type": "array",
                   "items": {
                     "type": "string"
@@ -4906,7 +4949,6 @@
                   "nullable": true
                 },
                 "tags": {
-                  "default": [],
                   "type": "array",
                   "items": {
                     "type": "string"
@@ -5099,12 +5141,10 @@
             "maximum": 100
           },
           "customFields": {
-            "default": {},
             "type": "object",
             "additionalProperties": {}
           },
           "tags": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -5180,12 +5220,10 @@
                 "maximum": 100
               },
               "customFields": {
-                "default": {},
                 "type": "object",
                 "additionalProperties": {}
               },
               "tags": {
-                "default": [],
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -5307,12 +5345,10 @@
             "maximum": 100
           },
           "customFields": {
-            "default": {},
             "type": "object",
             "additionalProperties": {}
           },
           "tags": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -5384,12 +5420,10 @@
                 "maximum": 100
               },
               "customFields": {
-                "default": {},
                 "type": "object",
                 "additionalProperties": {}
               },
               "tags": {
-                "default": [],
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -5459,6 +5493,228 @@
         ]
       },
       "UpdateContactArchiveDto": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "archived"
+        ]
+      },
+      "CreateCustomFieldDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "contact",
+              "company",
+              "deal",
+              "conversation",
+              "activity"
+            ]
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "paragraph",
+              "number",
+              "currency",
+              "date",
+              "datetime",
+              "phone",
+              "url",
+              "boolean",
+              "single_select",
+              "multi_select"
+            ]
+          },
+          "required": {
+            "default": false,
+            "type": "boolean"
+          },
+          "options": {
+            "default": [],
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        },
+        "required": [
+          "id",
+          "entityType",
+          "key",
+          "label",
+          "type"
+        ]
+      },
+      "CustomFieldWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "contact",
+                  "company",
+                  "deal",
+                  "conversation",
+                  "activity"
+                ]
+              },
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "paragraph",
+                  "number",
+                  "currency",
+                  "date",
+                  "datetime",
+                  "phone",
+                  "url",
+                  "boolean",
+                  "single_select",
+                  "multi_select"
+                ]
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "createdBy": {
+                "type": "string",
+                "minLength": 1
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "archivedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "entityType",
+              "key",
+              "label",
+              "type",
+              "required",
+              "createdBy",
+              "createdAt",
+              "updatedAt",
+              "archivedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "field",
+          "txid"
+        ]
+      },
+      "UpdateCustomFieldOptionsDto": {
+        "type": "object",
+        "properties": {
+          "options": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        },
+        "required": [
+          "options"
+        ]
+      },
+      "ArchiveCustomFieldDto": {
         "type": "object",
         "properties": {
           "archived": {
@@ -6189,7 +6445,6 @@
             "nullable": true
           },
           "customFields": {
-            "default": {},
             "type": "object",
             "additionalProperties": {}
           }
@@ -6271,7 +6526,6 @@
                 "nullable": true
               },
               "customFields": {
-                "default": {},
                 "type": "object",
                 "additionalProperties": {}
               },
@@ -6413,7 +6667,6 @@
             "nullable": true
           },
           "customFields": {
-            "default": {},
             "type": "object",
             "additionalProperties": {}
           }
@@ -6502,7 +6755,6 @@
                 "nullable": true
               },
               "customFields": {
-                "default": {},
                 "type": "object",
                 "additionalProperties": {}
               },
@@ -6663,7 +6915,6 @@
                 "nullable": true
               },
               "customFields": {
-                "default": {},
                 "type": "object",
                 "additionalProperties": {}
               },
@@ -6832,7 +7083,6 @@
                 "nullable": true
               },
               "customFields": {
-                "default": {},
                 "type": "object",
                 "additionalProperties": {}
               },
@@ -7410,12 +7660,10 @@
             "nullable": true
           },
           "customFields": {
-            "default": {},
             "type": "object",
             "additionalProperties": {}
           },
           "tags": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -7496,12 +7744,10 @@
                 "nullable": true
               },
               "customFields": {
-                "default": {},
                 "type": "object",
                 "additionalProperties": {}
               },
               "tags": {
-                "default": [],
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -7635,12 +7881,10 @@
             "nullable": true
           },
           "customFields": {
-            "default": {},
             "type": "object",
             "additionalProperties": {}
           },
           "tags": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -9589,7 +9833,6 @@
             "type": "boolean"
           },
           "tags": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -9659,7 +9902,6 @@
                 "type": "boolean"
               },
               "tags": {
-                "default": [],
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -9778,7 +10020,6 @@
             "type": "boolean"
           },
           "tags": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -10310,7 +10551,7 @@
                 ]
               },
               "fields": {
-                "minItems": 1,
+                "default": [],
                 "maxItems": 100,
                 "type": "array",
                 "items": {
@@ -10415,7 +10656,6 @@
               "description",
               "publicKey",
               "status",
-              "fields",
               "submitLabel",
               "successMessage",
               "createdAt",
@@ -10452,7 +10692,7 @@
             "nullable": true
           },
           "fields": {
-            "minItems": 1,
+            "default": [],
             "maxItems": 100,
             "type": "array",
             "items": {
@@ -10549,7 +10789,7 @@
             "nullable": true
           },
           "fields": {
-            "minItems": 1,
+            "default": [],
             "maxItems": 100,
             "type": "array",
             "items": {
@@ -10628,7 +10868,6 @@
         "required": [
           "title",
           "description",
-          "fields",
           "submitLabel",
           "successMessage",
           "publicKey"
@@ -11325,212 +11564,6 @@
           "txid"
         ]
       },
-      "CreateCustomFieldDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "entityType": {
-            "type": "string",
-            "enum": [
-              "contact",
-              "company",
-              "deal",
-              "conversation",
-              "activity"
-            ]
-          },
-          "key": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 63,
-            "pattern": "^[a-z][a-z0-9_]*$"
-          },
-          "label": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "text",
-              "paragraph",
-              "number",
-              "currency",
-              "date",
-              "datetime",
-              "phone",
-              "url",
-              "boolean",
-              "single_select",
-              "multi_select"
-            ]
-          },
-          "required": {
-            "default": false,
-            "type": "boolean"
-          },
-          "options": {
-            "default": [],
-            "maxItems": 100,
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 100
-            }
-          }
-        },
-        "required": [
-          "id",
-          "entityType",
-          "key",
-          "label",
-          "type"
-        ]
-      },
-      "CustomFieldWriteResponseDto": {
-        "type": "object",
-        "properties": {
-          "field": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "orgId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "entityType": {
-                "type": "string",
-                "enum": [
-                  "contact",
-                  "company",
-                  "deal",
-                  "conversation",
-                  "activity"
-                ]
-              },
-              "key": {
-                "type": "string",
-                "minLength": 1
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "text",
-                  "paragraph",
-                  "number",
-                  "currency",
-                  "date",
-                  "datetime",
-                  "phone",
-                  "url",
-                  "boolean",
-                  "single_select",
-                  "multi_select"
-                ]
-              },
-              "required": {
-                "type": "boolean"
-              },
-              "options": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "createdBy": {
-                "type": "string",
-                "minLength": 1
-              },
-              "createdAt": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                  },
-                  {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                ]
-              },
-              "updatedAt": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                  },
-                  {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                ]
-              },
-              "archivedAt": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                  },
-                  {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                ],
-                "nullable": true
-              }
-            },
-            "required": [
-              "id",
-              "orgId",
-              "entityType",
-              "key",
-              "label",
-              "type",
-              "required",
-              "options",
-              "createdBy",
-              "createdAt",
-              "updatedAt",
-              "archivedAt"
-            ]
-          },
-          "txid": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "field",
-          "txid"
-        ]
-      },
-      "ArchiveCustomFieldDto": {
-        "type": "object",
-        "properties": {
-          "archived": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "archived"
-        ]
-      },
       "CreateSavedViewDto": {
         "type": "object",
         "properties": {
@@ -11799,7 +11832,6 @@
               "orgId",
               "userId",
               "key",
-              "value",
               "createdAt",
               "updatedAt"
             ]
