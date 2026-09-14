@@ -1150,6 +1150,8 @@ export interface RenameStageResponseDto {
   txid: number;
 }
 
+export type EditDealDtoCustomFields = {[key: string]: unknown};
+
 export interface EditDealDto {
   /**
      * @minLength 1
@@ -1177,6 +1179,7 @@ export interface EditDealDto {
      */
   amount?: number;
   expectedCloseDate?: string | null;
+  customFields?: EditDealDtoCustomFields;
 }
 
 export type EditDealResponseDtoDealStatus = typeof EditDealResponseDtoDealStatus[keyof typeof EditDealResponseDtoDealStatus];
@@ -1187,6 +1190,8 @@ export const EditDealResponseDtoDealStatus = {
   won: 'won',
   lost: 'lost',
 } as const;
+
+export type EditDealResponseDtoDealCustomFields = {[key: string]: unknown};
 
 export type EditDealResponseDtoDeal = {
   /** @minLength 1 */
@@ -1229,6 +1234,7 @@ export type EditDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  customFields?: EditDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -1251,6 +1257,8 @@ export const CreateDealDtoStatus = {
   won: 'won',
   lost: 'lost',
 } as const;
+
+export type CreateDealDtoCustomFields = {[key: string]: unknown};
 
 export interface CreateDealDto {
   /** @minLength 1 */
@@ -1291,6 +1299,7 @@ export interface CreateDealDto {
      * @nullable
      */
   lossReason?: string | null;
+  customFields?: CreateDealDtoCustomFields;
 }
 
 export type CreateDealResponseDtoDealStatus = typeof CreateDealResponseDtoDealStatus[keyof typeof CreateDealResponseDtoDealStatus];
@@ -1301,6 +1310,8 @@ export const CreateDealResponseDtoDealStatus = {
   won: 'won',
   lost: 'lost',
 } as const;
+
+export type CreateDealResponseDtoDealCustomFields = {[key: string]: unknown};
 
 export type CreateDealResponseDtoDeal = {
   /** @minLength 1 */
@@ -1343,6 +1354,7 @@ export type CreateDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  customFields?: CreateDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -1370,6 +1382,8 @@ export const MoveDealResponseDtoDealStatus = {
   won: 'won',
   lost: 'lost',
 } as const;
+
+export type MoveDealResponseDtoDealCustomFields = {[key: string]: unknown};
 
 export type MoveDealResponseDtoDeal = {
   /** @minLength 1 */
@@ -1412,6 +1426,7 @@ export type MoveDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  customFields?: MoveDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -1451,6 +1466,8 @@ export const CloseDealResponseDtoDealStatus = {
   won: 'won',
   lost: 'lost',
 } as const;
+
+export type CloseDealResponseDtoDealCustomFields = {[key: string]: unknown};
 
 export type CloseDealResponseDtoDeal = {
   /** @minLength 1 */
@@ -1493,6 +1510,7 @@ export type CloseDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  customFields?: CloseDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -3824,6 +3842,8 @@ export const CreateCustomFieldDtoEntityType = {
   contact: 'contact',
   company: 'company',
   deal: 'deal',
+  conversation: 'conversation',
+  activity: 'activity',
 } as const;
 
 export type CreateCustomFieldDtoType = typeof CreateCustomFieldDtoType[keyof typeof CreateCustomFieldDtoType];
@@ -3875,6 +3895,8 @@ export const CustomFieldWriteResponseDtoFieldEntityType = {
   contact: 'contact',
   company: 'company',
   deal: 'deal',
+  conversation: 'conversation',
+  activity: 'activity',
 } as const;
 
 export type CustomFieldWriteResponseDtoFieldType = typeof CustomFieldWriteResponseDtoFieldType[keyof typeof CustomFieldWriteResponseDtoFieldType];

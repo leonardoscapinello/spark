@@ -41,6 +41,7 @@ export class DealsRepository {
           status: input.status ?? "open",
           expectedCloseDate: input.expectedCloseDate ? new Date(input.expectedCloseDate) : null,
           lossReason: input.lossReason ?? null,
+          customFields: input.customFields ?? {},
         })
         .returning();
 
@@ -85,6 +86,7 @@ export class DealsRepository {
           ...(input.expectedCloseDate !== undefined
             ? { expectedCloseDate: input.expectedCloseDate ? new Date(input.expectedCloseDate) : null }
             : {}),
+          ...(input.customFields !== undefined ? { customFields: input.customFields } : {}),
           updatedAt: new Date(),
         })
         .where(eq(deals.id, dealId))
@@ -141,6 +143,7 @@ function toDeal(row: {
   status: string;
   expectedCloseDate: Date | null;
   lossReason: string | null;
+  customFields: unknown;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -157,6 +160,7 @@ function toDeal(row: {
     amount: money(row.amount),
     status: row.status,
     expectedCloseDate: row.expectedCloseDate?.toISOString() ?? null,
+    customFields: (row.customFields ?? {}) as Record<string, unknown>,
     lossReason: row.lossReason,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

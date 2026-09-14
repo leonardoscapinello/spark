@@ -1,4 +1,4 @@
-import { pgTable, pgPolicy, text, timestamp, uuid, bigint } from "drizzle-orm/pg-core";
+import { bigint, jsonb, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -38,6 +38,7 @@ export const deals = pgTable(
     status: text("status").notNull().default("open"),
     expectedCloseDate: timestamp("expected_close_date", { withTimezone: true }),
     lossReason: text("loss_reason"),
+    customFields: jsonb("custom_fields").notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),

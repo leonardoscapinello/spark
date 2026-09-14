@@ -25,6 +25,9 @@ export const DealSchema = z.object({
   /** only meaningful when status is "lost" — not enforced here as a
    * cross-field schema rule; the screen decides whether to ask for it. */
   lossReason: z.string().max(500).nullable(),
+  /** Campos definidos pela organização (packages/core/schema/customField,
+   * entityType "deal") — como no Pipedrive, um negócio também carrega os seus. */
+  customFields: z.record(z.string(), z.unknown()).default({}),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
   deletedAt: zServerTimestamp.nullable(),
@@ -39,7 +42,7 @@ export const CreateDealInputSchema = DealSchema.omit({
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
-}).partial({ contactId: true, companyId: true, ownerId: true, status: true, expectedCloseDate: true, lossReason: true });
+}).partial({ contactId: true, companyId: true, ownerId: true, status: true, expectedCloseDate: true, lossReason: true, customFields: true });
 export type CreateDealInput = z.infer<typeof CreateDealInputSchema>;
 
 export const UpdateDealInputSchema = CreateDealInputSchema.omit({ id: true }).partial();

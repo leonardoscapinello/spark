@@ -15,30 +15,10 @@ import {
   type Money,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount } from "@spark/data";
-import {
-  ActionModal,
-  BackLink,
-  Button,
-  Card,
-  DatePicker,
-  DateTimePicker,
-  Field,
-  Icon,
-  Input,
-  Label,
-  MoneyInput,
-  PageFrame,
-  RecordPageHeader,
-  SearchSelect,
-  Select,
-  Skeleton,
-  Textarea,
-  Timeline,
-  notify,
-  type SelectOption,
-} from "@spark/ui-web";
+import { ActionModal, BackLink, Button, Card, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, Input, Label, MoneyInput, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, StageProgress, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
+import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
@@ -101,6 +81,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: activities = [] } = useLiveQuery({
     query: (q) => canReadActivities ? q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc") : undefined,
   });
+  const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: field }) => eq(field.entityType, "deal")).orderBy(({ fields: field }) => field.label, "asc") });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox && deal?.contactId ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, deal.contactId!)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
 
@@ -228,6 +209,14 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       metrics={[{ label: "Valor", value: formatBRL(syncedAmount(deal.amount)), icon: "chart" }, { label: "Situação", value: statusLabel(deal.status), icon: "check", ...(deal.status === "won" ? { tone: "success" as const } : deal.status === "lost" ? { tone: "danger" as const } : {}) }, { label: "Previsão", value: deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão", icon: "calendar" }]}
     />
 
+    {pipelineStages.length > 0 && <StageProgress
+      stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
+      currentId={deal.stageId}
+      currentHint={daysInStage(events.find((item) => item.type === "deal.stage_changed")?.occurredAt ?? deal.createdAt)}
+      outcome={deal.status === "open" ? undefined : deal.status}
+      {...(canMove && deal.status === "open" ? { onSelect: (id: string) => void moveDeal(id) } : {})}
+    />}
+
     <div className={styles.contentGrid} data-activities={canReadActivities || canReadInbox ? "visible" : "hidden"}>
         <div className={styles.profile}>{editing ? <Card title="Editar negócio"><form className={styles.editForm} onSubmit={saveDeal}>
           <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
@@ -241,8 +230,16 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <div><span>Pessoa</span>{linkedContact ? <Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link> : <strong>Não vinculada</strong>}</div>
           <div><span>Empresa</span>{linkedCompany ? <Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link> : <strong>Não vinculada</strong>}</div>
           <div><span>Responsável</span><strong>{owner?.name ?? "Não atribuído"}</strong></div>
-          <div><span>Etapa do funil</span><Select label="Etapa do funil" value={deal.stageId} options={pipelineStages.map((item) => ({ value: item.id, label: item.name }))} disabled={!canMove || deal.status !== "open"} onValueChange={(value) => void moveDeal(value)} /></div>
           {deal.status === "lost" && <div><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
+          {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
+            key={field.id}
+            field={field}
+            value={deal.customFields?.[field.key]}
+            disabled={!canWrite}
+            onSave={async (value) => { const transaction = dealsCollection.update(deal.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }}
+            onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
+            onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })}
+          />)}
           {deal.status === "open" && canMove && <div className={styles.closeActions}><Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Marcar como ganho</Button><Button variant="secondary" onClick={() => setLossModalOpen(true)}>Marcar como perdido</Button></div>}
         </div></Card>}
         </div>
@@ -274,6 +271,14 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
     </ActionModal>
   </PageFrame>;
+}
+
+/** Há quanto tempo o negócio está nesta etapa — o «6 dias» do Pipedrive.
+ * Sem coluna própria no banco: o último `deal.stage_changed` é o marco, e
+ * enquanto não houve mudança nenhuma vale a criação. */
+function daysInStage(since: string): string {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(since).getTime()) / 86_400_000));
+  return days === 0 ? "hoje" : days === 1 ? "1 dia aqui" : `${days} dias aqui`;
 }
 
 function statusLabel(status: DealStatus): string { return status === "open" ? "Em aberto" : status === "won" ? "Ganho" : "Perdido"; }

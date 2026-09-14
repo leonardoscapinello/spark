@@ -37,6 +37,7 @@ export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId)
     lossReason: input.lossReason ?? null,
     createdAt: now,
     updatedAt: now,
+    customFields: {},
     deletedAt: null,
   };
 }

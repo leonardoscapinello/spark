@@ -5490,6 +5490,11 @@
               }
             ],
             "nullable": true
+          },
+          "customFields": {
+            "default": {},
+            "type": "object",
+            "additionalProperties": {}
           }
         }
       },
@@ -5567,6 +5572,11 @@
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
+              },
+              "customFields": {
+                "default": {},
+                "type": "object",
+                "additionalProperties": {}
               },
               "createdAt": {
                 "anyOf": [
@@ -5704,6 +5714,11 @@
             "type": "string",
             "maxLength": 500,
             "nullable": true
+          },
+          "customFields": {
+            "default": {},
+            "type": "object",
+            "additionalProperties": {}
           }
         },
         "required": [
@@ -5788,6 +5803,11 @@
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
+              },
+              "customFields": {
+                "default": {},
+                "type": "object",
+                "additionalProperties": {}
               },
               "createdAt": {
                 "anyOf": [
@@ -5944,6 +5964,11 @@
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
+              },
+              "customFields": {
+                "default": {},
+                "type": "object",
+                "additionalProperties": {}
               },
               "createdAt": {
                 "anyOf": [
@@ -6108,6 +6133,11 @@
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
+              },
+              "customFields": {
+                "default": {},
+                "type": "object",
+                "additionalProperties": {}
               },
               "createdAt": {
                 "anyOf": [
@@ -10487,7 +10517,9 @@
             "enum": [
               "contact",
               "company",
-              "deal"
+              "deal",
+              "conversation",
+              "activity"
             ]
           },
           "key": {
@@ -10559,7 +10591,9 @@
                 "enum": [
                   "contact",
                   "company",
-                  "deal"
+                  "deal",
+                  "conversation",
+                  "activity"
                 ]
               },
               "key": {

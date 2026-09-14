@@ -2,7 +2,13 @@ import { z } from "zod";
 import { zCustomFieldDefinitionId, zOrgId, zServerTimestamp, zUserId } from "./zodHelpers.js";
 import { phone as normalizePhone } from "../format/phone.js";
 import { formatBRL, money, toCents } from "../money/index.js";
-export const CUSTOM_FIELD_ENTITIES = ["contact", "company", "deal"] as const;
+/* Cada módulo do sistema pode ter os seus campos — pessoa, empresa, negócio,
+ * conversa e atividade. Um campo pode alimentar outro numa automação desde que
+ * os dois sejam do mesmo tipo (packages/core/rules/customFieldMapping). */
+export const CUSTOM_FIELD_ENTITIES = ["contact", "company", "deal", "conversation", "activity"] as const;
+export const CUSTOM_FIELD_ENTITY_LABELS: Record<CustomFieldEntity, string> = {
+  contact: "Pessoa", company: "Empresa", deal: "Negócio", conversation: "Conversa", activity: "Atividade",
+};
 /* Tipos na ordem em que aparecem no seletor. Os cinco últimos foram trazidos do
  * Pipedrive (docs/inspiration/pipedrive): moeda, data e hora, telefone, endereço
  * web e texto longo — o que um CRM pede e "texto" não resolve. */
