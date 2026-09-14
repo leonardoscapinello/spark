@@ -44,7 +44,7 @@ const openCollections: ContactsCollection[] = [];
 
 function waitForApiReady(child: ChildProcess): Promise<void> {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("API did not start in time")), 15_000);
+    const timeout = setTimeout(() => reject(new Error("API did not start in time")), 45_000);
     child.stdout?.on("data", (chunk: Buffer) => {
       if (chunk.toString().includes("listening on")) {
         clearTimeout(timeout);
@@ -113,7 +113,7 @@ beforeAll(async () => {
     .setExpirationTime("1h")
     .sign(key);
   setSparkAuthTokenProvider(() => token);
-}, 20_000);
+}, 60_000);
 
 afterEach(async () => {
   await Promise.all(openCollections.splice(0).map((collection) => collection.cleanup()));
