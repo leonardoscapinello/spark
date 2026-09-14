@@ -193,6 +193,13 @@
       "$type": "dimension",
       "$value": "6px"
     },
+    "kanbanColumnWidth": {
+
+      "$type": "dimension",
+
+      "$value": "280px"
+
+    },
     "modalWidth": {
       "$type": "dimension",
       "$value": "640px"

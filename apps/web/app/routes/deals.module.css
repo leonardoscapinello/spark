@@ -18,7 +18,12 @@
 .loadingValue { width: var(--space-12); height: var(--space-3); }
 .loadingCard { height: var(--space-16); background: var(--color-surface); }
 
-/* Board rola na horizontal — nunca vidro aqui dentro (docs/adr/0025). */
+/* Board rola na horizontal — nunca vidro aqui dentro (docs/adr/0025).
+ * Medidas do Kanban do Pipedrive (docs/inspiration/pipedrive, captura 020 +
+ * medidas-kanban.json): coluna de ~280 com 8px de padding (card de 264), raio 8,
+ * 8px entre colunas; cabeçalho com nome 16/600 e soma 13 apagada; cards de raio
+ * 8 com 8px de padding e 4px entre eles. Antes: coluna 320/raio 16/padding 16,
+ * card raio 10/padding 12/gap 8 — mais gordo e menos denso que a referência. */
 .board {
   display: flex;
   gap: var(--space-2);
@@ -30,26 +35,26 @@
 
 .coluna {
   box-sizing: border-box;
-  flex: 0 0 var(--ui-cardMinWidth);
+  flex: 0 0 var(--ui-kanbanColumnWidth);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   background: var(--color-surface2);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
   min-height: 0;
 }
 
 .colunaNova {
   box-sizing: border-box;
-  flex: 0 0 var(--ui-cardMinWidth);
+  flex: 0 0 var(--ui-kanbanColumnWidth);
   align-self: flex-start;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   background: var(--color-surface2);
-  padding: var(--space-4);
+  padding: var(--space-2);
 }
 
 .colunaCabecalho {
@@ -57,6 +62,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-1);
+  padding: var(--space-1) var(--space-1) 0;
 }
 
 .colunaNome {
@@ -64,8 +70,8 @@
   height: auto;
   padding: var(--ui-focusWidth) var(--space-1);
   margin: calc(var(--ui-focusWidth) * -1) calc(var(--space-1) * -1);
-  font-weight: var(--typography-weight-medium);
-  font-size: var(--typography-size-sm);
+  font-weight: var(--typography-weight-semibold);
+  font-size: var(--typography-size-md);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -78,14 +84,14 @@
 
 .colunaTotal {
   color: var(--color-inkMuted);
-  font-size: var(--typography-size-xs);
+  font-size: var(--typography-size-compact);
   font-variant-numeric: tabular-nums;
 }
 
 .listaCartoes {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   overflow-y: auto;
   min-height: var(--ui-controlLarge);
 }
@@ -93,9 +99,9 @@
 .cartao {
   background: var(--color-surface);
   border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   box-shadow: var(--ui-panelShadow);
-  padding: var(--space-3);
+  padding: var(--space-2);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -150,7 +156,7 @@
 
 .cartaoMeta {
   color: var(--color-inkMuted);
-  font-size: var(--typography-size-xs);
+  font-size: var(--typography-size-compact);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
