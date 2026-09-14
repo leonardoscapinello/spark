@@ -17,7 +17,7 @@ import { setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client
 import { createSavedViewsCollection, optimisticSavedView, type SavedViewsCollection } from "../src/saved-views-collection.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 const PORT = 3214; // distinct from 3211 (api-client), 3212 (contacts), 3213 (deals), 3000 (dev)
 
 const admin = postgres(DATABASE_URL, { prepare: false });

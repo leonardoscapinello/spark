@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://postgres:spark_dev@localhost:5432/spark
+      TEST_DATABASE_URL: postgresql://postgres:spark_dev@localhost:5432/spark
       # Mesmo texto que os testes e2e já usam como fallback quando a
       # variável não está definida (apps/api/test/*.e2e.test.ts) — sem
       # isto o SupabaseJwtGuard (apps/api/src/auth/supabase-jwt.guard.ts)

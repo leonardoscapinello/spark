@@ -17,7 +17,7 @@ import {
 } from "@spark/core";
 
 const DATABASE_URL =
-  process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+  process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 const APP_DATABASE_URL = DATABASE_URL.replace(
   /postgres:([^@]+)@/,
   "app_user:app_user_dev_password@",

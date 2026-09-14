@@ -11,7 +11,7 @@ import postgres from "postgres";
 import { orgId as orgIdFactory, eventId as eventIdFactory } from "@spark/core";
 import { createDbClient, ensureEventPartitions } from "../src/index.js";
 
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 const admin = postgres(DATABASE_URL, { prepare: false });
 const db = createDbClient(DATABASE_URL);
 const org = orgIdFactory.create();

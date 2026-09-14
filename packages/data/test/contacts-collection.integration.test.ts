@@ -31,7 +31,7 @@ import { setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client
 import { createContactsCollection, optimisticContact, type ContactsCollection } from "../src/contacts-collection.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 const PORT = 3212; // dedicated to this test — distinct from 3211 (api-client) and 3000 (dev)
 
 const admin = postgres(DATABASE_URL, { prepare: false });

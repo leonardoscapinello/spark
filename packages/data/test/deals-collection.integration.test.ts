@@ -47,7 +47,7 @@ import {
 } from "../src/deals-collection.js";
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET ?? "dev-only-local-secret-do-not-use-in-production";
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
+const DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:spark_dev@localhost:5432/spark";
 const PORT = 3213; // dedicated to this test — distinct from 3211/3212/3000
 
 const admin = postgres(DATABASE_URL, { prepare: false });
