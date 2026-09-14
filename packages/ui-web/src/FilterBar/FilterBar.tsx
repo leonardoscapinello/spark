@@ -43,13 +43,14 @@ export function FilterBar<Field extends string = string>({ fields, filters, onCh
     onChange(filters.map((existing, position) => position === index ? condition : existing));
   }
 
-  return <div className={s.root} role="group" aria-label="Filtros aplicados">
+  // data-appearance="filter": a barra de coleção não impõe largura fixa a quem se declara filtro.
+  return <div className={s.root} role="group" aria-label="Filtros aplicados" data-appearance="filter">
     {filters.map((condition, index) => {
       const field = fields.find((item) => item.id === condition.field);
       if (!field) return null;
       return <span key={`${condition.field}-${index}`} className={s.chip}>
         <Popover>
-          <PopoverTrigger render={<Button size="sm" variant="ghost" className={s.chipLabel}>{describe(field, condition)}</Button>} />
+          <PopoverTrigger render={<Button variant="ghost" className={s.chipLabel}>{describe(field, condition)}<Icon name="chevron" className={s.caret} /></Button>} />
           <PopoverContent title={field.label}>
             <div className={s.editor}>
               <Select
@@ -68,7 +69,7 @@ export function FilterBar<Field extends string = string>({ fields, filters, onCh
       </span>;
     })}
     <Popover>
-      <PopoverTrigger render={<Button size="sm" variant="ghost" icon={<Icon name="plus" />}>{addLabel}</Button>} />
+      <PopoverTrigger render={<Button variant="ghost" className={s.add} icon={<Icon name="plus" />}>{addLabel}</Button>} />
       <PopoverContent title={addLabel}>
         <Input autoFocus aria-label="Pesquisar campo" value={query} startAdornment={<Icon name="search" />} placeholder="Pesquisar campo" onChange={(event) => setQuery(event.target.value)} />
         <div className={s.fieldList}>

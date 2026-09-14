@@ -10,8 +10,8 @@
 /* Intercom separa busca e filtros com um divisor vertical de 16px de respiro
  * de cada lado (captura 028). */
 .search + .filters { margin-inline-start: var(--space-2); padding-inline-start: var(--space-4); border-inline-start: var(--ui-hairline) solid var(--color-line); }
-.filters > * { width: var(--ui-menuWidth); }
-.filters > [data-appearance="filter"] { width: auto; min-width: 0; }
+/* Sem largura fixa nos filtros: cada um mede pelo conteúdo, como as pílulas da Intercom.
+ * A largura de 220px de antes esticava um botão solto e espremia a FilterBar em duas linhas. */
 .summaryRow { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); min-width: 0; }
 .filterRow + .summaryRow { padding-top: var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); }
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-inline-start: auto; }

@@ -1,7 +1,13 @@
 .root { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.chip { display: inline-flex; align-items: center; gap: var(--space-1); padding-inline-end: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); background: var(--color-surface); }
+/* Cada condição é uma pílula de 32px, como o "4 Aberto ▾" da Intercom (captura
+ * 028): rótulo + seta para editar, × para tirar, tudo dentro da mesma borda.
+ * «Adicionar filtro» fica na mesma linha, à altura das pílulas. */
+.chip { box-sizing: border-box; display: inline-flex; align-items: center; height: var(--ui-controlMedium); padding-inline-end: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); background: var(--color-surface); }
 .chip:hover { border-color: var(--color-lineStrong); }
-.chipLabel { border-radius: var(--radius-full); }
+.chipLabel { height: 100%; gap: var(--space-1); padding-inline: var(--space-3) var(--space-1); border-radius: var(--radius-full); }
+.chipLabel:hover:not([data-disabled]) { background: transparent; }
+.caret { width: var(--ui-icon); height: var(--ui-icon); color: var(--color-inkMuted); }
+.add { color: var(--color-ink); }
 .editor { display: flex; flex-direction: column; gap: var(--space-3); }
 .fieldList { display: flex; flex-direction: column; gap: var(--space-1); max-height: var(--ui-previewHeight); overflow-y: auto; margin-top: var(--space-3); }
 .fieldOption { justify-content: flex-start; width: 100%; }

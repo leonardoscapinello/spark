@@ -303,7 +303,7 @@ export default function Contacts() {
       filters={<>
         <FilterBar fields={filterFields} filters={filters} onChange={changeFilters} />
         <Popover open={savedViewsOpen} onOpenChange={setSavedViewsOpen}>
-          <PopoverTrigger render={<Button size="sm" variant="ghost" icon={<Icon name="star" />}>{savedViews.length > 0 ? `Visualizações (${savedViews.length})` : "Visualizações"}</Button>} />
+          <PopoverTrigger render={<Button variant="secondary" icon={<Icon name="star" />}>{savedViews.length > 0 ? `Visualizações (${savedViews.length})` : "Visualizações"}</Button>} />
           <PopoverContent title="Visualizações salvas">
             <div className={styles.savedViews}>
               {savedViews.length === 0
