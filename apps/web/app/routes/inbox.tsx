@@ -12,6 +12,7 @@ import { getCannedRepliesCollection } from "../lib/canned-replies-collection.cli
 import { getTeamsCollection } from "../lib/teams-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import { getUsersCollection } from "../lib/users-collection.client";
+import { LinkifiedText } from "../lib/link-previews.client";
 import styles from "./inbox.module.css";
 
 const CHANNELS: ReadonlyArray<{ value: ConversationChannel; label: string }> = [
@@ -268,7 +269,7 @@ export default function Inbox() {
             {messages.length === 0 && <div className={styles.threadEmpty}><Icon name="message" /><strong>Conversa iniciada</strong><span>Adicione uma nota interna para registrar o contexto do atendimento.</span></div>}
             {messages.map((message) => <article key={message.id} className={styles.message} data-direction={message.direction}>
               <header><strong>{message.direction === "internal" ? (message.authorUserId ? userNames.get(message.authorUserId) : null) ?? "Equipe" : message.direction === "inbound" ? contactNames.get(message.contactId) ?? "Pessoa" : "Equipe"}</strong><time>{formatDateTime(message.createdAt)}</time></header>
-              <p>{message.body}</p>
+              <p><LinkifiedText text={message.body} /></p>
               <small>{message.direction === "internal" ? "Nota interna" : message.status}</small>
             </article>)}
           </div>

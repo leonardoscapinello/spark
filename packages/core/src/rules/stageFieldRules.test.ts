@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateStageFields, stageFieldLabel, stageFieldMessage } from "./stageFieldRules.js";
+import { evaluateStageFields, stageFieldGaps, stageFieldLabel, stageFieldMessage } from "./stageFieldRules.js";
 import type { Deal } from "../schema/deal.js";
 import type { StageFieldRule } from "../schema/stageFieldRule.js";
 import type { CustomFieldDefinition } from "../schema/customField.js";
@@ -66,6 +66,20 @@ describe("campos exigidos por etapa", () => {
     // que é `origem_negocio`.
     expect(stageFieldLabel("custom:sumiu", [])).toBe("Sumiu");
     expect(stageFieldLabel("custom:origem_negocio", [])).toBe("Origem negocio");
+  });
+
+  it("lista o que falta na etapa atual, de qualquer nível", () => {
+    // É a pergunta «o que está faltando AQUI», que não depende de haver
+    // destino — diferente de evaluateStageFields, que responde «posso mover?».
+    const rules = [
+      rule("s1", "contactId", "required"),
+      rule("s1", "custom:origem", "important"),
+      rule("s1", "ownerId", "important"),
+      rule("s2", "expectedCloseDate", "required"),
+    ];
+    const gaps = stageFieldGaps({ deal: deal({ ownerId: "u1" as Deal["ownerId"] }), productCount: 0, rules });
+    expect(gaps.map((issue) => issue.fieldKey)).toEqual(["contactId", "custom:origem"]);
+    expect(gaps.map((issue) => issue.level)).toEqual(["required", "important"]);
   });
 
   it("separa a frase de obrigatório da de importante", () => {

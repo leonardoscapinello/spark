@@ -1,14 +1,53 @@
 import { NumericFormat, PatternFormat, type PatternFormatProps } from "react-number-format";
-import { moneyFromDecimal, moneyToDecimalString, type Money } from "@spark/core";
+import { money, toCents, type Money } from "@spark/core";
 import { Input, type InputProps } from "../Input/Input.js";
 import { Select } from "../Select/Select.js";
 import s from "./MaskedInput.module.css";
 export type MaskedInputProps = Omit<PatternFormatProps<InputProps>,"customInput"|"onValueChange"|"value"|"defaultValue"> & {value:string;onValueChange:(digits:string)=>void};
 /** Máscara visual; validação de CPF, CEP ou telefone pertence ao core. */
 export function MaskedInput({value,onValueChange,...props}:MaskedInputProps){return <PatternFormat {...props} customInput={Input} value={value} valueIsNumericString onValueChange={(values,source)=>{if(source.source==="event")onValueChange(values.value);}} />;}
+/**
+ * Dinheiro digitado da direita para a esquerda, como em caixa e em aplicativo
+ * de banco: cada dígito entra no centavo e empurra o resto. Digitar 9 e 0 dá
+ * R$ 0,90; mais um 0 dá R$ 9,00.
+ *
+ * Por que não uma máscara decimal comum: com casas fixas o cursor nasce antes
+ * da vírgula e vender algo por noventa centavos vira uma briga com o campo —
+ * era preciso apagar «0,00» e acertar a posição. Aqui o valor é só uma
+ * sequência de centavos, e a formatação é de saída.
+ */
 export function MoneyInput({value,onValueChange,label,currency="BRL",disabled=false,onBlur}:{value:Money|null;onValueChange:(value:Money|null)=>void;label:string;currency?:"BRL"|"USD";disabled?:boolean;onBlur?:()=>void}){
-  return <NumericFormat customInput={Input} aria-label={label} disabled={disabled} onBlur={onBlur} inputMode="decimal" value={value===null ? "" : moneyToDecimalString(value)} valueIsNumericString decimalScale={2} fixedDecimalScale decimalSeparator={currency==="BRL"?",":"."} thousandSeparator={currency==="BRL"?".":","} prefix={currency==="BRL"?"R$ ":"US$ "} allowNegative={false} isAllowed={({value:raw})=>{if(!raw)return true;try{moneyFromDecimal(raw);return true;}catch{return false;}}} onValueChange={(values,source)=>{if(source.source==="event")onValueChange(values.value ? moneyFromDecimal(values.value):null);}} />;
+  const centavos=value===null?null:toCents(value);
+  const prefixo=currency==="BRL"?"R$ ":"US$ ";
+  const texto=centavos===null?"":`${prefixo}${formatCents(centavos,currency)}`;
+  function digitar(bruto:string){
+    const digitos=bruto.replace(/\D/g,"").slice(0,15);
+    if(digitos==="")return onValueChange(null);
+    onValueChange(money(Number(digitos)));
+  }
+  return <Input
+    aria-label={label}
+    disabled={disabled}
+    inputMode="numeric"
+    value={texto}
+    placeholder={`${prefixo}0,00`}
+    onBlur={onBlur}
+    onChange={event=>digitar(event.target.value)}
+  />;
 }
+
+/** Centavos → «1.234,56», com o separador da moeda. */
+function formatCents(centavos:number,currency:"BRL"|"USD"):string{
+  const sinal=centavos<0?"-":"";
+  const absoluto=Math.abs(centavos);
+  const inteiro=Math.trunc(absoluto/100);
+  const resto=String(absoluto%100).padStart(2,"0");
+  const decimal=currency==="BRL"?",":".";
+  const milhar=currency==="BRL"?".":",";
+  const inteiroFormatado=String(inteiro).replace(/\B(?=(\d{3})+(?!\d))/g,milhar);
+  return `${sinal}${inteiroFormatado}${decimal}${resto}`;
+}
+
 /**
  * Porcentagem com duas casas e o símbolo no campo: «12,50 %».
  *

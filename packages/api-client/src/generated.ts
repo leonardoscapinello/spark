@@ -2500,6 +2500,8 @@ export type MessageWriteResponseDtoMessage = {
      */
   externalId: string | null;
   createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 };
 
 export type MessageWriteResponseDtoConversationChannel = typeof MessageWriteResponseDtoConversationChannel[keyof typeof MessageWriteResponseDtoConversationChannel];
@@ -4680,6 +4682,101 @@ export interface PublicPageDto {
   name: string;
   html: string;
   publicKey: string;
+}
+
+export interface ResolveLinkPreviewDto {
+  /**
+     * @minLength 1
+     * @maxLength 2048
+     */
+  url: string;
+}
+
+export type ResolveLinkPreviewResponseDtoPreviewStatus = typeof ResolveLinkPreviewResponseDtoPreviewStatus[keyof typeof ResolveLinkPreviewResponseDtoPreviewStatus];
+
+
+export const ResolveLinkPreviewResponseDtoPreviewStatus = {
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export type ResolveLinkPreviewResponseDtoPreview = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @maxLength 2048 */
+  url: string;
+  /**
+     * @minLength 64
+     * @maxLength 64
+     */
+  urlHash: string;
+  /**
+     * @maxLength 2048
+     * @nullable
+     */
+  canonicalUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  title: string | null;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  description: string | null;
+  /**
+     * @maxLength 2048
+     * @nullable
+     */
+  imageUrl: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  siteName: string | null;
+  /**
+     * @maxLength 2048
+     * @nullable
+     */
+  faviconUrl: string | null;
+  status: ResolveLinkPreviewResponseDtoPreviewStatus;
+  /**
+     * @minimum 100
+     * @maximum 599
+     * @nullable
+     */
+  httpStatus: number | null;
+  fetchedAt: string;
+  expiresAt: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  failureCount: number;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  etag: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  lastModified: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface ResolveLinkPreviewResponseDto {
+  preview: ResolveLinkPreviewResponseDtoPreview;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
 }
 
 export type ContactsControllerSearchParams = {
@@ -10633,3 +10730,71 @@ export function usePublicPagesControllerGet<TData = Awaited<ReturnType<typeof pu
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+
+
+
+
+
+
+export const linkPreviewsControllerResolve = (
+    resolveLinkPreviewDto: ResolveLinkPreviewDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ResolveLinkPreviewResponseDto>(
+      {url: `/v1/link-previews/resolve`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resolveLinkPreviewDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getLinkPreviewsControllerResolveMutationKey = () => ['linkPreviewsControllerResolve'] as const;
+
+export const getLinkPreviewsControllerResolveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkPreviewsControllerResolve>>, TError,LinkPreviewsControllerResolveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof linkPreviewsControllerResolve>>, TError,LinkPreviewsControllerResolveMutationVariables, TContext> => {
+
+const mutationKey = getLinkPreviewsControllerResolveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof linkPreviewsControllerResolve>>, LinkPreviewsControllerResolveMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  linkPreviewsControllerResolve(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LinkPreviewsControllerResolveMutationResult = NonNullable<Awaited<ReturnType<typeof linkPreviewsControllerResolve>>>
+    export type LinkPreviewsControllerResolveMutationBody = ResolveLinkPreviewDto
+    export type LinkPreviewsControllerResolveMutationError = unknown
+    export type LinkPreviewsControllerResolveMutationVariables = {data: ResolveLinkPreviewDto}
+
+    export const useLinkPreviewsControllerResolve = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkPreviewsControllerResolve>>, TError,LinkPreviewsControllerResolveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof linkPreviewsControllerResolve>>,
+        TError,
+        LinkPreviewsControllerResolveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLinkPreviewsControllerResolveMutationOptions(options), queryClient);
+    }

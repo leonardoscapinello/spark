@@ -17,3 +17,20 @@
 .panel[data-starting-style],.panel[data-ending-style] { height: 0; opacity: 0; }
 .chevron { transition: transform var(--motion-duration-fast) var(--motion-ease-out); }
 @media (prefers-reduced-motion: reduce) { .panel,.chevron { transition: none; } }
+
+/* Marca de campo em branco na aba fechada. Número, e não só um ponto: saber
+ * que faltam três muda a decisão de abrir agora ou depois. */
+.badge {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  min-width: var(--ui-icon);
+  height: var(--ui-icon);
+  padding-inline: var(--space-1);
+  border-radius: var(--radius-full);
+  font-size: var(--typography-size-xs);
+  font-weight: var(--typography-weight-semibold);
+  line-height: 1;
+}
+.badge[data-level="required"] { background: var(--color-statusDanger); color: var(--ui-buttonInk); }
+.badge[data-level="important"] { background: var(--color-statusWarning); color: var(--ui-buttonInk); }

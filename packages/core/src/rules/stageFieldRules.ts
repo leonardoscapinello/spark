@@ -136,3 +136,19 @@ export function evaluateStageFields({ deal, productCount, rules, stages, targetS
 
   return { blocking, warnings };
 }
+
+/**
+ * Os campos em branco exigidos na etapa ATUAL, de qualquer nível.
+ *
+ * `evaluateStageFields` responde «posso mover?», e por isso só devolve o que
+ * bloqueia quando há um destino. Esta responde outra pergunta: «o que está
+ * faltando aqui, agora?» — que é a que a tela usa para marcar em qual seção
+ * do painel a pessoa precisa entrar. Sem isso, avisar que «origem está vazia»
+ * obriga a abrir seção por seção para achar onde preencher.
+ */
+export function stageFieldGaps({ deal, productCount, rules }: Pick<EvaluateStageFieldsInput, "deal" | "productCount" | "rules">): StageFieldIssue[] {
+  return rules
+    .filter((rule) => rule.pipelineId === deal.pipelineId && rule.stageId === deal.stageId)
+    .filter((rule) => !isFilled(dealFieldValue(deal, rule.fieldKey, productCount)))
+    .map((rule) => ({ fieldKey: rule.fieldKey, stageId: rule.stageId, level: rule.level }));
+}

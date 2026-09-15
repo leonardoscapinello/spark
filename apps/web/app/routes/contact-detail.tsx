@@ -12,7 +12,7 @@ import {
   type IdentityChannel,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity } from "@spark/data";
-import { BackLink, Button, CustomFieldValue, DateTimePicker, ErrorText, Field, Input, Label, RecordPageHeader, Select, Skeleton, Timeline, notify } from "@spark/ui-web";
+import { BackLink, Button, DateTimePicker, ErrorText, Field, Input, Label, RecordPageHeader, Select, Skeleton, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -31,6 +31,7 @@ import layout from "./contact-profile-layout.module.css";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
 import { useCustomFieldOptions, useCustomFieldValues } from "../lib/custom-fields.client";
+import { PreviewedCustomFieldValue } from "../lib/link-previews.client";
 
 export async function clientLoader() {
   const session = await requireCapability("contacts:read");
@@ -70,6 +71,20 @@ function formatDateTime(iso: string): string {
 }
 
 export default function ContactDetail({ params }: Route.ComponentProps) {
+  return <ContactProfile contactId={params.contactId} />;
+}
+
+/**
+ * O perfil da pessoa, sem depender de ser uma rota.
+ *
+ * Existe separado porque a mesma tela aparece em dois lugares: como página e
+ * dentro do painel sobreposto do negócio. Duplicar seria garantir que as duas
+ * divergissem na primeira mudança.
+ *
+ * `embedded` some com o link de voltar: dentro do painel, voltar levaria para
+ * fora do negócio — que é justamente o que o painel evita.
+ */
+export function ContactProfile({ contactId, embedded = false }: { contactId: string; embedded?: boolean }) {
   const navigate = useNavigate();
   const collection = getContactsCollection();
   const activitiesCollection = getActivitiesCollection();
@@ -103,7 +118,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
     query: (q) =>
       q
         .from({ contacts: collection })
-        .where(({ contacts: c }) => eq(c.id, params.contactId))
+        .where(({ contacts: c }) => eq(c.id, contactId))
         .findOne(),
   });
 
@@ -111,7 +126,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
     query: (q) => canReadActivities
       ? q
         .from({ activities: activitiesCollection })
-        .where(({ activities: a }) => eq(a.contactId, params.contactId))
+        .where(({ activities: a }) => eq(a.contactId, contactId))
         .orderBy(({ activities: a }) => a.scheduledAt, "asc")
       : undefined,
   });
@@ -120,14 +135,14 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
     query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc"),
   });
   const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
-  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.contactId, params.contactId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
-  const { data: identities } = useLiveQuery({ query: (q) => q.from({ identities: getIdentitiesCollection() }).where(({ identities: item }) => eq(item.contactId, params.contactId)).orderBy(({ identities: item }) => item.createdAt, "asc") });
+  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.contactId, contactId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
+  const { data: identities } = useLiveQuery({ query: (q) => q.from({ identities: getIdentitiesCollection() }).where(({ identities: item }) => eq(item.contactId, contactId)).orderBy(({ identities: item }) => item.createdAt, "asc") });
   const { data: customFields } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: item }) => eq(item.entityType, "contact")).orderBy(({ fields: item }) => item.label, "asc") });
   // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
-  const customValues = useCustomFieldValues("contact", params.contactId, customFields);
+  const customValues = useCustomFieldValues("contact", contactId, customFields);
   const fieldOptions = useCustomFieldOptions();
-  const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }).where(({ deals: item }) => eq(item.contactId, params.contactId)).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
-  const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, params.contactId)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
+  const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }).where(({ deals: item }) => eq(item.contactId, contactId)).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
+  const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, contactId)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
 
   async function addIdentity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -136,7 +151,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
     if (!session || !value || identityPending) return;
     setIdentityPending(true);
     try {
-      const transaction = getIdentitiesCollection().insert(optimisticIdentity({ contactId: contactIdFactory.from(params.contactId), channel: identityChannel, externalValue: value }, session.orgId));
+      const transaction = getIdentitiesCollection().insert(optimisticIdentity({ contactId: contactIdFactory.from(contactId), channel: identityChannel, externalValue: value }, session.orgId));
       await transaction.isPersisted.promise;
       setIdentityValue("");
       notify({ title: "Canal adicionado", tone: "success" });
@@ -176,7 +191,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
 
     const activity = optimisticActivity(
       {
-        contactId: contactIdFactory.from(params.contactId),
+        contactId: contactIdFactory.from(contactId),
         dealId: null,
         type: selectedType,
         title,
@@ -257,7 +272,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
   if (!data) {
     return (
       <div className={layout.page}>
-        <BackLink render={<Link to="/" />}>Pessoas</BackLink>
+        {!embedded && <BackLink render={<Link to="/" />}>Pessoas</BackLink>}
         {isLoading ? <div className={layout.loading} role="status" aria-label="Carregando pessoa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Pessoa não encontrada.</p>}
       </div>
     );
@@ -265,7 +280,7 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
 
   return (
     <div className={layout.page}>
-      <RecordPageHeader back={<BackLink render={<Link to="/" />}>Pessoas</BackLink>} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={(canWrite && !isEditing) || canWriteInbox ? <>{canWrite && !isEditing && <Button variant="secondary" onClick={startEditing}>Editar pessoa</Button>}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${params.contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star" }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada", icon: "building" }]} />
+      <RecordPageHeader back={embedded ? null : <BackLink render={<Link to="/" />}>Pessoas</BackLink>} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={(canWrite && !isEditing) || canWriteInbox ? <>{canWrite && !isEditing && <Button variant="secondary" onClick={startEditing}>Editar pessoa</Button>}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star" }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada", icon: "building" }]} />
       <div className={layout.contentGrid}>
         <div className={layout.profileColumn}>
       <h2 className={layout.columnTitle}>Detalhes</h2>
@@ -347,14 +362,14 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
       {customFields.filter((field) => !field.archivedAt).length > 0 && <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Campos personalizados</h2>
         <div className={styles.campos}>
-          {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })} />)}
+          {customFields.filter((field) => !field.archivedAt).map((field) => <PreviewedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })} />)}
         </div>
       </section>}
 
         </div>
         <div className={layout.workColumn}>
       {canReadDeals && <section className={styles.atividades}>
-        <div className={styles.sectionHeading}><h2 className={styles.subtitulo}>Negócios</h2>{canWriteDeals && <Button size="sm" variant="secondary" onClick={() => void navigate(`/deals?createFor=${params.contactId}`)}>Novo negócio</Button>}</div>
+        <div className={styles.sectionHeading}><h2 className={styles.subtitulo}>Negócios</h2>{canWriteDeals && <Button size="sm" variant="secondary" onClick={() => void navigate(`/deals?createFor=${contactId}`)}>Novo negócio</Button>}</div>
         {deals.length === 0 ? <span className={styles.valor}>Nenhum negócio desta pessoa.</span> : <ul className={styles.listaAtividades}>{deals.map((deal) => <li key={deal.id} className={styles.atividade}><Link className={layout.recordLink} to={`/deals/${deal.id}`}><strong>{deal.name}</strong><span>{deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></Link></li>)}</ul>}
       </section>}
       {canReadInbox && <section className={styles.atividades}>
@@ -449,4 +464,3 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
     </div>
   );
 }
-

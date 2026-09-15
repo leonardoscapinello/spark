@@ -30,6 +30,25 @@
   text-overflow: ellipsis;
 }
 .control { min-width: 0; font-size: var(--typography-size-sm); }
+
+/* Valor e ação lado a lado: o valor cresce, a ação fica do tamanho dela. */
+.readRow { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
+.readRow > :first-child { flex: 1 1 auto; min-width: 0; }
+.action {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: var(--ui-controlMedium);
+  height: var(--ui-controlMedium);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-inkMuted);
+  cursor: pointer;
+}
+.action:hover { background: var(--ui-subtle); color: var(--color-accent); }
+.action:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .required { margin-inline-start: var(--space-1); color: var(--color-statusDanger); }
 
 /* Campo que precisa da largura toda (texto longo): o controle desce. */
@@ -40,6 +59,7 @@
  * dele. Desistir tem de ser visível, não só uma tecla que ninguém adivinha. */
 .editing { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
 .editor { flex: 1 1 auto; min-width: 0; }
+.shortcut { flex: 0 0 auto; color: var(--color-inkMuted); font-size: var(--typography-size-xs); white-space: nowrap; }
 .cancel {
   flex: 0 0 auto;
   display: grid;
@@ -100,10 +120,40 @@
   text-underline-offset: var(--space-1);
 }
 
+.confirmation {
+  position: fixed;
+  z-index: var(--ui-overlayLayer);
+  top: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: calc(100% - var(--space-6));
+  padding: var(--space-3) var(--space-4);
+  border: var(--ui-hairline) solid var(--color-line);
+  border-radius: var(--ui-popupRadius);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--ui-popupShadow);
+  font-size: var(--typography-size-sm);
+}
+.confirmationActions { display: flex; align-items: center; gap: var(--space-2); }
+.save,.discard { min-height: var(--ui-controlMedium); padding: 0 var(--space-3); border-radius: var(--radius-sm); font: inherit; font-weight: var(--typography-weight-semibold); cursor: pointer; }
+.save { border: var(--ui-hairline) solid var(--color-accent); background: var(--color-accent); color: var(--color-onAccent); }
+.discard { border: var(--ui-hairline) solid var(--color-line); background: var(--color-surface); color: var(--color-ink); }
+.save:focus-visible,.discard:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+.confirmation kbd { margin-inline-start: var(--space-1); color: inherit; font-family: var(--typography-fontFamily-mono); font-size: var(--typography-size-xs); }
+
 .pencil { display: flex; flex: 0 0 auto; margin-inline-start: auto; opacity: 0; color: var(--color-inkMuted); }
 .value:hover .pencil, .value:focus-visible .pencil { opacity: 1; }
 
 @container (max-width: 240px) {
   .row { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
   .label { padding-top: 0; font-size: var(--typography-size-compact); }
+}
+@media (max-width: 640px) {
+  .shortcut { display: none; }
+  .confirmation { right: var(--space-3); left: var(--space-3); transform: none; flex-direction: column; align-items: stretch; }
+  .confirmationActions { justify-content: flex-end; }
 }

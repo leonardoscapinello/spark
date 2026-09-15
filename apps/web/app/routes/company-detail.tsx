@@ -13,6 +13,7 @@ import { getSession } from "../lib/auth.client";
 import { getEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
+import { ExternalPreviewLink } from "../lib/link-previews.client";
 import styles from "./company-detail.module.css";
 
 export async function clientLoader() {
@@ -28,10 +29,15 @@ export async function clientLoader() {
 }
 
 export default function CompanyDetail({ params }: Route.ComponentProps) {
+  return <CompanyProfile companyId={params.companyId} />;
+}
+
+/** O perfil da empresa, sem depender de ser uma rota — ver ContactProfile. */
+export function CompanyProfile({ companyId, embedded = false }: { companyId: string; embedded?: boolean }) {
   const companiesCollection = getCompaniesCollection();
   const contactsCollection = getContactsCollection();
   const dealsCollection = getDealsCollection();
-  const { data: company, isLoading } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).where(({ companies: item }) => eq(item.id, params.companyId)).findOne() });
+  const { data: company, isLoading } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).where(({ companies: item }) => eq(item.id, companyId)).findOne() });
   const { data: companies } = useLiveQuery({ query: (q) => q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") });
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
@@ -40,7 +46,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
   const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
   const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: dealsCollection }).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
-  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.companyId, params.companyId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
+  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.companyId, companyId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const canWrite = session?.capabilities.includes("companies:write") ?? false;
   const canLinkContacts = canReadContacts && (session?.capabilities.includes("contacts:write") ?? false);
   const canLinkDeals = canReadDeals && (session?.capabilities.includes("deals:write") ?? false);
@@ -111,10 +117,10 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 
-  if (!company) return <PageFrame><BackLink render={<Link to="/companies" />}>Empresas</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</PageFrame>;
+  if (!company) return <PageFrame>{!embedded && <BackLink render={<Link to="/companies" />}>Empresas</BackLink>}{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</PageFrame>;
 
   return <PageFrame>
-    <RecordPageHeader back={<BackLink render={<Link to="/companies" />}>Empresas</BackLink>} icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Pessoas", value: linkedContacts.length, icon: "user" as const }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length, icon: "briefcase" as const }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)), icon: "chart" as const }] : [])]} />
+    <RecordPageHeader back={embedded ? null : <BackLink render={<Link to="/companies" />}>Empresas</BackLink>} icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Pessoas", value: linkedContacts.length, icon: "user" as const }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length, icon: "briefcase" as const }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)), icon: "chart" as const }] : [])]} />
 
     <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <Card title="Editar empresa"><form className={styles.editForm} onSubmit={saveCompany}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
@@ -154,5 +160,5 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
   </PageFrame>;
 }
 
-function Info({ label, value, link, wide = false }: { label: string; value: string; link?: string | null; wide?: boolean }) { return <div className={wide ? styles.wide : undefined}><span>{label}</span>{link ? <a href={link} target="_blank" rel="noreferrer">{value}</a> : <strong>{value}</strong>}</div>; }
+function Info({ label, value, link, wide = false }: { label: string; value: string; link?: string | null; wide?: boolean }) { return <div className={wide ? styles.wide : undefined}><span>{label}</span>{link ? <ExternalPreviewLink href={link}>{value}</ExternalPreviewLink> : <strong>{value}</strong>}</div>; }
 function formatRawAmount(value: unknown): number { return toCents(syncedAmount(value)); }

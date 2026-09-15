@@ -21,6 +21,8 @@ export interface CustomFieldValueProps {
   /** Como avisar a pessoa — a tela decide (toast, inline). */
   onError?: (message: string) => void;
   onSuccess?: (label: string) => void;
+  preview?: ReactNode;
+  onPreviewRequest?: () => void;
 }
 
 /**
@@ -33,19 +35,22 @@ export interface CustomFieldValueProps {
  * validação é a do core, a mesma da API: o que a tela recusa, o servidor
  * recusaria igual (ADR-0019).
  *
- * Os que salvam sozinhos (seleção, data, sim/não) gravam na escolha; os de
- * digitar mostram «Salvar», porque gravar a cada tecla mandaria valor pela
- * metade.
+ * Gravar é otimista: o valor exibido muda na hora e a confirmação vem depois,
+ * pela sincronização. Esperar a volta deixava o campo num limbo — a linha
+ * mostrando o valor antigo, o editor já com o novo, e nada dizendo o que estava
+ * acontecendo. Se a gravação falhar, o valor volta ao que era e o erro aparece.
  */
-export function CustomFieldValue({ field, value, options, disabled = false, onSave, onError, onSuccess }: CustomFieldValueProps) {
+export function CustomFieldValue({ field, value, options, disabled = false, onSave, onError, onSuccess, preview, onPreviewRequest }: CustomFieldValueProps) {
   const choices = options ?? customFieldOptions(field);
+  /* O valor que a tela mostra. Começa igual ao sincronizado e passa a ser o
+   * que esta pessoa gravou, na hora — a volta do servidor demora, e mostrar o
+   * antigo enquanto isso é o que criava o limbo. */
+  const [local, setLocal] = useState<unknown>(value);
   const [draft, setDraft] = useState(() => toDraft(field, value));
   const [saving, setSaving] = useState(false);
-  /* O que esta pessoa acabou de gravar. A confirmação vem pela sincronização e
-   * demora; até lá o valor gravado é a verdade da tela. */
   const gravado = useRef<unknown>(value);
 
-  /* Valor vindo de fora (outro dispositivo, outra pessoa) substitui o rascunho.
+  /* Valor vindo de fora (outro dispositivo, outra pessoa) assume.
    *
    * A dependência é o ID do campo, NÃO o objeto `field`: ele é recriado a cada
    * render do painel, e com ele na lista o efeito rodava sempre — apagando a
@@ -54,6 +59,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
     if (saving) return;
     if (Object.is(value, gravado.current)) return;
     gravado.current = value;
+    setLocal(value);
     setDraft(toDraft(field, value));
   }, [field.id, field.type, value, saving]);
 
@@ -62,20 +68,24 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
     try {
       const normalized = normalizeCustomFieldValue(field, raw, choices);
       gravado.current = normalized;
+      setLocal(normalized);
       setDraft(toDraft(field, normalized));
       await onSave(normalized);
       onSuccess?.(field.label);
     } catch (cause) {
       onError?.(cause instanceof Error ? cause.message : "Revise o campo.");
       gravado.current = value;
+      setLocal(value);
       setDraft(toDraft(field, value));
     } finally {
       setSaving(false);
     }
   }
 
-  const busy = disabled || saving;
-  const shown = formatCustomFieldValue(field, value);
+  /* NÃO desabilita enquanto grava: a escrita é local primeiro e a ida ao
+   * servidor entra numa fila, então travar o campo só faz parecer quebrado. */
+  const busy = disabled;
+  const shown = formatCustomFieldValue(field, local);
   /* Endereço web se lê como link: um clique edita, dois abrem (InlineField). */
   const href = field.type === "url" && shown !== "" ? shown : undefined;
 
@@ -90,15 +100,16 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
     empty={shown === ""}
     disabled={disabled}
     {...(href === undefined ? {} : { href })}
+    {...(href === undefined || preview === undefined ? {} : { preview, onPreviewRequest })}
   >{control}</InlineField>;
 
-  if (field.type === "boolean") return row((close) => <Checkbox checked={value === true} disabled={busy} onCheckedChange={(checked) => { close(); void save(checked === true); }}>{value === true ? "Sim" : "Não"}</Checkbox>);
-  if (field.type === "single_select") return row((close) => <Select label={field.label} value={typeof value === "string" ? value : null} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => { close(); void save(next); }} />);
-  if (field.type === "multi_select") return row(() => <Select<true> multiple label={field.label} value={Array.isArray(value) ? value.map(String) : []} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
+  if (field.type === "boolean") return row((close) => <Checkbox checked={local === true} disabled={busy} onCheckedChange={(checked) => { close(); void save(checked === true); }}>{local === true ? "Sim" : "Não"}</Checkbox>);
+  if (field.type === "single_select") return row((close) => <Select label={field.label} value={typeof local === "string" ? local : null} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => { close(); void save(next); }} />);
+  if (field.type === "multi_select") return row(() => <Select<true> multiple label={field.label} value={Array.isArray(local) ? local.map(String) : []} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
   if (field.type === "date") return row((close) => <DatePicker label={field.label} value={draft} disabled={busy} onValueChange={(next) => { close(); setDraft(next); void save(next); }} />);
   if (field.type === "datetime") return row((close) => <DateTimePicker mode="datetime" label={field.label} value={draft} disabled={busy} onValueChange={(next) => { close(); setDraft(next); void save(next); }} />);
-  if (field.type === "paragraph") return row((close) => <Textarea rows={3} className={s.area} aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} onBlur={() => { close(); if (draft !== toDraft(field, value)) void save(draft); }} />);
-  if (field.type === "phone") return row((close) => <MaskedInput format="(##) #####-####" aria-label={field.label} value={draft} disabled={busy} placeholder="(11) 90000-0000" onValueChange={setDraft} onBlur={() => { close(); if (draft !== toDraft(field, value)) void save(draft); }} />);
+  if (field.type === "paragraph") return row((close) => <Textarea rows={3} className={s.area} aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} onBlur={() => { close(); if (draft !== toDraft(field, local)) void save(draft); }} />);
+  if (field.type === "phone") return row((close) => <MaskedInput format="(##) #####-####" aria-label={field.label} value={draft} disabled={busy} placeholder="(11) 90000-0000" onValueChange={setDraft} onBlur={() => { close(); if (draft !== toDraft(field, local)) void save(draft); }} />);
 
   // Dinheiro tem campo próprio: R$, separador de milhar e duas casas, e o valor
   // já sai em centavos — nenhum campo de texto acerta isso sozinho.
@@ -116,7 +127,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
       value={digitado}
       disabled={busy}
       onValueChange={(next) => setDraft(next === null ? "" : String(next))}
-      onBlur={() => { close(); if (draft !== toDraft(field, value)) void save(digitado); }}
+      onBlur={() => { close(); if (draft !== toDraft(field, local)) void save(digitado); }}
     />);
   }
 
@@ -125,7 +136,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
   // Grava ao sair do campo, como no Pipedrive. Um botão «Salvar» por linha
   // roubava metade da largura do painel e pedia um clique a mais em cada
   // campo — e o painel tem muitos.
-  return row((close) => <Input type={inputType} aria-label={field.label} value={draft} disabled={busy} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} onBlur={() => { close(); if (draft !== toDraft(field, value)) void save(draft); }} />);
+  return row((close) => <Input type={inputType} aria-label={field.label} value={draft} disabled={busy} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} onBlur={() => { close(); if (draft !== toDraft(field, local)) void save(draft); }} />);
 }
 
 

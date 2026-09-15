@@ -9,6 +9,7 @@ import { usePreference } from "../lib/preferences.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import { sendQueueNotice, useSendQueue } from "../lib/send-queue.client";
+import { LinkPreviewDataProvider } from "../lib/link-previews.client";
 import styles from "./app-layout.module.css";
 
 type NavItem = { label: string; to: string; icon: IconName; capability?: Capability };
@@ -371,7 +372,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {tabIndicator && <span className={styles.moduleIndicator} style={{ left: tabIndicator.left, width: tabIndicator.width }} aria-hidden="true" />}
         </nav>}
         {queueNotice && <div className={styles.sendQueueNotice}><Alert tone="warning" title={queueNotice.title}>{queueNotice.description}</Alert></div>}
-        <Outlet />
+        <LinkPreviewDataProvider><Outlet /></LinkPreviewDataProvider>
       </main>
       <QuickNavigation open={quickNavigationOpen} onOpenChange={setQuickNavigationOpen} items={quickNavigationItems} onSelect={(to) => { markNavigation(to); void navigate(to); }} />
     </div>

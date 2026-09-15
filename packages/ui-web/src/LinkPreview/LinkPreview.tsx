@@ -1,0 +1,43 @@
+import { lightTheme } from "@spark/tokens/native-theme";
+import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip";
+import { useId, type ReactElement, type ReactNode } from "react";
+import s from "../shared/surfaces.module.css";
+import styles from "./LinkPreview.module.css";
+
+export interface LinkPreviewData {
+  url: string;
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  siteName: string | null;
+  faviconUrl: string | null;
+  status: "ready" | "failed";
+}
+
+export function LinkPreviewCard({ preview, loading = false }: { preview?: LinkPreviewData | null; loading?: boolean }) {
+  if (loading && !preview) return <div className={styles.card} role="status" aria-label="Buscando prévia do link"><div className={styles.imagePlaceholder} /><div className={styles.body}><span className={styles.loadingLine} /><span className={styles.loadingLine} /></div></div>;
+  if (!preview || preview.status === "failed") return <div className={styles.unavailable}>Prévia indisponível</div>;
+  return <div className={styles.card}>
+    {preview.imageUrl && <img className={styles.image} src={preview.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" />}
+    <div className={styles.body}>
+      <span className={styles.site}>{preview.faviconUrl && <img src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" />}{preview.siteName ?? new URL(preview.url).hostname}</span>
+      <strong>{preview.title ?? preview.url}</strong>
+      {preview.description && <span className={styles.description}>{preview.description}</span>}
+    </div>
+  </div>;
+}
+
+export function LinkPreviewTooltip({ children, preview, loading, onRequest }: { children: ReactElement; preview?: LinkPreviewData | null; loading?: boolean; onRequest?: () => void }) {
+  const triggerId = useId();
+  const tooltipId = useId();
+  return <BaseTooltip.Root onOpenChange={(open) => { if (open) onRequest?.(); }}>
+    <BaseTooltip.Trigger id={triggerId} aria-describedby={tooltipId} delay={0} render={children} />
+    <BaseTooltip.Portal><BaseTooltip.Positioner side="top" sideOffset={Number.parseFloat(lightTheme["space-2"])} className={s.positioner}>
+      <BaseTooltip.Popup id={tooltipId} role="tooltip" className={`${s.popup} ${styles.popup}`}><LinkPreviewCard {...(preview === undefined ? {} : { preview })} {...(loading === undefined ? {} : { loading })} /></BaseTooltip.Popup>
+    </BaseTooltip.Positioner></BaseTooltip.Portal>
+  </BaseTooltip.Root>;
+}
+
+export function PreviewLink({ href, children, preview, loading, onRequest, className }: { href: string; children: ReactNode; preview?: LinkPreviewData | null; loading?: boolean; onRequest?: () => void; className?: string }) {
+  return <LinkPreviewTooltip {...(preview === undefined ? {} : { preview })} {...(loading === undefined ? {} : { loading })} {...(onRequest === undefined ? {} : { onRequest })}><a className={className} href={href} target="_blank" rel="noreferrer">{children}</a></LinkPreviewTooltip>;
+}

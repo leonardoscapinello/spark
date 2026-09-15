@@ -25,6 +25,12 @@
 .viewport[data-placement="top"] { align-items: start; }
 .viewport[data-placement="bottom"] { align-items: end; }
 .popup:is([data-placement="right"],[data-placement="left"]) { width: min(var(--ui-drawerWidth), 100%); height: 100%; }
+/* Painel de registro: ocupa quase a tela toda, mas deixa ver o que está por
+ * baixo — quem abriu a pessoa a partir de um negócio precisa lembrar que não
+ * saiu do negócio. É o padrão do Google Analytics, e o motivo é esse.
+ * Em tela estreita não sobra nada para mostrar por baixo: vai a 100%. */
+.popup[data-placement="right"][data-size="record"] { width: 85%; }
+@media (max-width: 760px) { .popup[data-placement="right"][data-size="record"] { width: 100%; } }
 .popup:is([data-placement="top"],[data-placement="bottom"]) { width: 100%; height: min(var(--ui-modalWidth), 100%); }
 .popup[data-placement="right"]:is([data-starting-style],[data-ending-style]) { transform: translateX(calc(100% + var(--space-2))); }
 .popup[data-placement="left"]:is([data-starting-style],[data-ending-style]) { transform: translateX(calc(-100% - var(--space-2))); }

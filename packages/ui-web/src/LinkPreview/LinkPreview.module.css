@@ -1,0 +1,11 @@
+.popup { width: var(--ui-popoverWidth); padding: 0; overflow: hidden; background: var(--color-surface); color: var(--color-ink); }
+.card { display: flex; flex-direction: column; min-width: 0; }
+.image,.imagePlaceholder { display: block; width: 100%; height: var(--ui-avatarXl); object-fit: cover; background: var(--ui-subtle); }
+.body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; padding: var(--space-3); }
+.body strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); }
+.site { display: flex; align-items: center; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site img { width: var(--ui-iconSm); height: var(--ui-iconSm); object-fit: contain; }
+.description { display: -webkit-box; overflow: hidden; color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.unavailable { padding: var(--space-3); color: var(--color-inkMuted); }
+.loadingLine { height: var(--space-3); border-radius: var(--radius-sm); background: var(--ui-subtle); }
+.loadingLine:last-child { width: var(--ui-previewColumn); max-width: 70%; }

@@ -21,6 +21,6 @@
 .empty:empty { display: none; }
 @media (prefers-reduced-motion: reduce) { .popup { transition-property: opacity; } .popup[data-starting-style],.popup[data-ending-style] { transform: none; } }
 
-.selectValue { min-width: 0; flex: 1; text-align: start; }
+.selectValue { min-width: 0; flex: 1; text-align: start; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .triggerIcon { display: flex; align-items: center; justify-content: center; width: var(--ui-icon); height: var(--ui-icon); flex-shrink: 0; line-height: 0; }
 .triggerIcon > svg { display: block; }

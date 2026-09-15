@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Icon } from "../Icon/Icon.js";
+import { Icon, type IconName } from "../Icon/Icon.js";
 import { Tooltip } from "../Tooltip/Tooltip.js";
 import s from "./InlineField.module.css";
 
@@ -21,6 +21,15 @@ export interface InlineFieldProps {
    * entrar em modo de edição para descobrir.
    */
   href?: string;
+  preview?: ReactNode;
+  onPreviewRequest?: () => void;
+  /**
+   * Ação ao lado do valor, além de editar. É como «Pessoa» e «Empresa» abrem a
+   * ficha sem trocar de tela: clicar no valor continua editando o vínculo, e o
+   * botão ao lado abre o registro. Botão irmão, nunca dentro do valor — um
+   * botão dentro de outro não é HTML válido nem navegável por teclado.
+   */
+  action?: { label: string; icon: IconName; onClick: () => void };
   /**
    * O campo de edição. Recebe `close`, que a tela chama depois de gravar —
    * um `Select` fecha ao escolher, um texto fecha ao sair do campo.
@@ -34,18 +43,28 @@ export interface InlineFieldProps {
  *
  * O que ele resolve, e por isso vive aqui e não numa tela: o valor parado tem
  * de parecer texto, o controle tem de aparecer no mesmo lugar sem empurrar
- * nada, o foco tem de ir para o controle — senão quem usa teclado clica e fica
- * sem saber onde caiu — e **desistir tem de ser tão fácil quanto começar**,
- * porque clicar no campo errado é o erro mais comum de uma coluna com dez
- * campos empilhados.
+ * nada, e o foco tem de ir para o controle — senão quem usa teclado clica e
+ * fica sem saber onde caiu.
  *
- * Desistir tem três saídas, e todas fecham sem gravar: `Esc`, clicar fora, e o
- * botão de fechar ao lado do campo. Gravar tem duas: sair do campo e `Enter`
- * (`Ctrl`/`Cmd`+`Enter` no texto longo, onde `Enter` é quebra de linha).
+ * **Sair do campo grava.** É a regra única: `Enter`, clicar fora e o botão de
+ * fechar fazem a mesma coisa — tiram o foco do controle, e é o `onBlur` dele
+ * que grava. Clicou por engano e não digitou nada? Nada muda, porque não há o
+ * que gravar.
+ *
+ * Não há passo de confirmação. Ele existiu por um tempo e fazia duas coisas
+ * erradas: ocupava a largura do campo com um aviso de atalho, e segurava o
+ * clique de fora para perguntar — com isso o `onBlur` nunca disparava, e
+ * link, data e dinheiro simplesmente não gravavam.
  */
-export function InlineField({ label, value, empty = false, disabled = false, required = false, block = false, href, children }: InlineFieldProps) {
+export function InlineField({ label, value, empty = false, disabled = false, required = false, block = false, href, action, preview, onPreviewRequest, children }: InlineFieldProps) {
   const [open, setOpen] = useState(false);
   const holder = useRef<HTMLDivElement>(null);
+
+  /** Tira o foco do controle — é o `onBlur` dele que grava — e fecha. */
+  function close() {
+    holder.current?.querySelector<HTMLElement>("input, textarea, select, [contenteditable='true']")?.blur();
+    setOpen(false);
+  }
 
   /* O controle acabou de substituir um botão: sem levar o foco junto, quem
    * navega por teclado perde o lugar na tela.
@@ -65,9 +84,10 @@ export function InlineField({ label, value, empty = false, disabled = false, req
     if (control.tagName === "BUTTON" || control.getAttribute("aria-haspopup") !== null) control.click();
   }, [open]);
 
-  /* Clicar fora desiste. `pointerdown` e não `click`: o clique num item de
-   * menu suspenso chega depois de o menu já ter sumido do documento, e a
-   * verificação de «está dentro?» daria falso — fecharia antes de escolher. */
+  /* Clicar fora fecha, e fechar grava — a mesma coisa que sair do campo com
+   * Tab faria. `pointerdown` e não `click`: o clique num item de menu suspenso
+   * chega depois de o menu já ter saído do documento, e a verificação de «está
+   * dentro?» daria falso, fechando antes de escolher. */
   useEffect(() => {
     if (!open) return;
     function onPointerDown(event: PointerEvent) {
@@ -77,11 +97,12 @@ export function InlineField({ label, value, empty = false, disabled = false, req
       // Menu e calendário são desenhados fora da linha, num portal: o que sai
       // deles ainda é «dentro» da edição.
       if (target instanceof Element && target.closest("[role='dialog'], [role='listbox'], [role='menu']")) return;
-      setOpen(false);
+      close();
     }
     document.addEventListener("pointerdown", onPointerDown, true);
     return () => document.removeEventListener("pointerdown", onPointerDown, true);
   }, [open]);
+
 
   /* Rótulo em UMA linha, cortado com reticências, e a dica mostra o inteiro.
    *
@@ -95,30 +116,35 @@ export function InlineField({ label, value, empty = false, disabled = false, req
   );
 
   if (!open || disabled) {
+    const valueButton = (
+      <button
+        type="button"
+        className={s.value}
+        data-empty={empty}
+        data-disabled={disabled}
+        data-link={href !== undefined}
+        aria-label={disabled ? `${label}: ${textOf(value)}` : `Alterar ${label}. Valor atual: ${textOf(value)}${href ? ". Dois cliques abrem o endereço." : ""}`}
+        disabled={disabled}
+        onClick={() => setOpen(true)}
+        onDoubleClick={() => {
+          if (href === undefined) return;
+          setOpen(false);
+          window.open(href, "_blank", "noopener,noreferrer");
+        }}
+      >
+        <span>{value}</span>
+        {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name={href === undefined ? "pencil" : "link"} /></span>}
+      </button>
+    );
     return (
       <div className={s.field}>
         <div className={s.row} data-block={block}>
           {rotulo}
           <div className={s.control}>
-            <button
-              type="button"
-              className={s.value}
-              data-empty={empty}
-              data-disabled={disabled}
-              data-link={href !== undefined}
-              aria-label={disabled ? `${label}: ${textOf(value)}` : `Alterar ${label}. Valor atual: ${textOf(value)}${href ? ". Dois cliques abrem o endereço." : ""}`}
-              disabled={disabled}
-              onClick={() => setOpen(true)}
-              onDoubleClick={() => {
-                if (href === undefined) return;
-                // Abrir ganha do editar: quem clicou duas vezes queria o destino.
-                setOpen(false);
-                window.open(href, "_blank", "noopener,noreferrer");
-              }}
-            >
-              <span>{value}</span>
-              {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name={href === undefined ? "pencil" : "link"} /></span>}
-            </button>
+            <div className={s.readRow}>
+              {preview ? <Tooltip content={preview} pinOnClick={false} {...(onPreviewRequest ? { onOpen: onPreviewRequest } : {})}>{valueButton}</Tooltip> : valueButton}
+              {action && !empty && <button type="button" className={s.action} aria-label={action.label} onClick={action.onClick}><Icon name={action.icon} /></button>}
+            </div>
           </div>
         </div>
       </div>
@@ -133,7 +159,7 @@ export function InlineField({ label, value, empty = false, disabled = false, req
           className={s.control}
           ref={holder}
           onKeyDown={(event) => {
-            if (event.key === "Escape") { event.stopPropagation(); setOpen(false); return; }
+            if (event.key === "Escape") { event.stopPropagation(); close(); return; }
             if (event.key !== "Enter") return;
             const alvo = event.target;
             if (!(alvo instanceof HTMLElement)) return;
@@ -151,8 +177,8 @@ export function InlineField({ label, value, empty = false, disabled = false, req
           }}
         >
           <div className={s.editing}>
-            <div className={s.editor}>{children(() => setOpen(false))}</div>
-            <button type="button" className={s.cancel} aria-label={`Cancelar edição de ${label}`} onClick={() => setOpen(false)}>
+            <div className={s.editor}>{children(close)}</div>
+            <button type="button" className={s.cancel} aria-label={`Fechar edição de ${label}`} onPointerDown={(event) => event.preventDefault()} onClick={close}>
               <Icon name="close" />
             </button>
           </div>

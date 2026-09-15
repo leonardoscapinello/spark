@@ -28,11 +28,12 @@ import {
   evaluateStageFields,
   stageFieldLabel,
   stageFieldMessage,
+  stageFieldGaps,
   type Note,
   type Deal,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote } from "@spark/data";
-import { Accordion, ActionModal, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, CustomFieldValue, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -51,6 +52,9 @@ import { getEventsCollection } from "../lib/events-collection.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
+import { PreviewedCustomFieldValue } from "../lib/link-previews.client";
+import { ContactProfile } from "./contact-detail";
+import { CompanyProfile } from "./company-detail";
 import styles from "./deal-detail.module.css";
 
 const ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPES.map((value) => ({ value, label: ACTIVITY_TYPE_LABELS[value] }));
@@ -166,6 +170,26 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     return Object.fromEntries([...totals].map(([stageId, ms]) => [stageId, formatStageDuration(ms)]));
   }, [deal, events, pipelineStages]);
   const fieldWarnings = useMemo(() => (deal ? evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages }).warnings : []), [deal, dealItems.length, fieldRules, pipelineStages]);
+
+  /* O que falta na etapa atual, agrupado pela seção do painel onde se
+   * preenche. É isso que vira a marca na aba fechada: dizer que «origem está
+   * vazia» sem dizer onde obriga a abrir seção por seção. */
+  const faltando = useMemo(() => {
+    if (!deal) return { resumo: null, detalhes: null };
+    const gaps = stageFieldGaps({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules });
+    const marca = (dentro: typeof gaps) => {
+      if (dentro.length === 0) return null;
+      const obrigatorios = dentro.filter((issue) => issue.level === "required").length;
+      const level = obrigatorios > 0 ? "required" as const : "important" as const;
+      const quantos = obrigatorios > 0 ? obrigatorios : dentro.length;
+      const nomes = dentro.map((issue) => stageFieldLabel(issue.fieldKey, customFields));
+      return { level, count: quantos, label: stageFieldMessage(level, nomes) };
+    };
+    return {
+      resumo: marca(gaps.filter((issue) => !issue.fieldKey.startsWith("custom:"))),
+      detalhes: marca(gaps.filter((issue) => issue.fieldKey.startsWith("custom:"))),
+    };
+  }, [customFields, customValues, deal, dealItems.length, fieldRules]);
   const itemsSummary = useMemo(() => dealProductsSummary(dealItems.map((item) => ({ ...item, unitAmount: syncedAmount(item.unitAmount) }))), [dealItems]);
   // «Foco» é o que ainda não foi feito, do mais antigo para o mais novo — o que
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
@@ -283,6 +307,11 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       notify({ title: "Não foi possível reabrir o negócio", tone: "error" });
     }
   }
+
+  /* Abrir a pessoa ou a empresa NÃO troca de tela: entra por cima, num painel
+   * que deixa ver o negócio por baixo. Sair de um negócio para consultar um
+   * telefone e ter de voltar é o atrito que isso remove. */
+  const [ficha, setFicha] = useState<{ tipo: "contato" | "empresa"; id: string } | null>(null);
 
   type DealPatch = Partial<Pick<Deal, "name" | "ownerId" | "companyId" | "contactId" | "expectedCloseDate">>;
 
@@ -431,32 +460,30 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     <div className={styles.contentGrid}>
       <aside className={styles.painel}>
         <Accordion defaultValue={["resumo", "detalhes"]} items={[
-          { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, content: <div className={styles.details}>
+          { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: <div className={styles.details}>
             {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))}</p>}
             {/* O valor é a soma dos produtos e por isso não se edita aqui: um
               * número solto faria a conta do funil discordar do que foi vendido. */}
             <div className={styles.linha}><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
-            {dealItems.length > 0 && <div className={styles.linha}><span>Produtos</span><strong>{dealItems.length}</strong></div>}
             <InlineField label="Nome" value={deal.name} disabled={!canWrite}>
               {(close) => <Input aria-label="Nome do negócio" defaultValue={deal.name} onBlur={(event) => { const next = event.target.value.trim(); close(); if (next && next !== deal.name) void saveField({ name: next }, "Nome"); }} />}
             </InlineField>
-            <div className={styles.linha}><span>Situação</span><strong>{statusLabel(deal.status)}</strong></div>
             <InlineField label="Previsão" value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
               {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => { close(); void saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"); }} />}
             </InlineField>
             <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>
               {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => { close(); void saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"); }} />}
             </InlineField>
-            <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} empty={!linkedContact} disabled={!canWrite}>
+            <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} empty={!linkedContact} disabled={!canWrite} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
               {(close) => <SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onValueChange={(next) => { close(); if (next) void saveField({ contactId: contactIdFactory.from(next.value) }, "Pessoa"); }} />}
             </InlineField>
-            <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} empty={!linkedCompany} disabled={!canWrite}>
+            <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} empty={!linkedCompany} disabled={!canWrite} {...(linkedCompany ? { action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})}>
               {(close) => <Select label="Empresa do negócio" value={deal.companyId ?? null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => { close(); void saveField({ companyId: next ? companyIdFactory.from(next) : null }, "Empresa"); }} />}
             </InlineField>
             {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           </div> },
-          { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, content: <div className={styles.details}>
-            {customFields.filter((field) => !field.archivedAt).map((field) => <CustomFieldValue
+          { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: <div className={styles.details}>
+            {customFields.filter((field) => !field.archivedAt).map((field) => <PreviewedCustomFieldValue
               options={fieldOptions.get(field.id) ?? []}
               key={field.id}
               field={field}
@@ -497,19 +524,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
                 </>}
             {canWrite && <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemModal()}>Adicionar produto</Button>}
           </div> },
-          { value: "pessoa", title: "Pessoa", icon: <Icon name="user" />, content: <div className={styles.details}>
-            {linkedContact
-              ? <><div className={styles.linha}><span>Nome</span><Link to={`/contacts/${linkedContact.id}`}>{linkedContact.name}</Link></div>
-                  {linkedContact.email && <div className={styles.linha}><span>E-mail</span><strong>{linkedContact.email}</strong></div>}
-                  {linkedContact.phone && <div className={styles.linha}><span>Telefone</span><strong>{linkedContact.phone}</strong></div>}</>
-              : <p className={styles.empty}>Nenhuma pessoa vinculada.</p>}
-          </div> },
-          { value: "empresa", title: "Empresa", icon: <Icon name="building" />, content: <div className={styles.details}>
-            {linkedCompany
-              ? <><div className={styles.linha}><span>Nome</span><Link to={`/companies/${linkedCompany.id}`}>{linkedCompany.name}</Link></div>
-                  {linkedCompany.industry && <div className={styles.linha}><span>Segmento</span><strong>{linkedCompany.industry}</strong></div>}</>
-              : <p className={styles.empty}>Nenhuma empresa vinculada.</p>}
-          </div> },
+          /* Pessoa e Empresa não têm seção própria: o resumo já mostra as duas,
+           * e o botão ao lado abre a ficha inteira por cima. Repetir o nome
+           * numa seção logo abaixo era ocupar o painel com o que já estava à
+           * vista três linhas acima. */
           ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId
             ? <p className={styles.empty}>Vincule uma pessoa para ver o atendimento.</p>
             : conversations.length === 0
@@ -611,6 +629,20 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     <ActionModal open={lossModalOpen} onOpenChange={setLossModalOpen} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Informe o motivo da perda." onConfirm={async () => { if (!lossReason.trim()) throw new Error("MISSING_REASON"); await closeDeal("lost", lossReason); setLossReason(""); }}>
       <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
     </ActionModal>
+
+    {/* A ficha entra por cima, ocupando 85% da largura: o negócio continua
+      * visível atrás, e fechar devolve exatamente onde se estava. */}
+    <Modal open={ficha !== null} onOpenChange={(aberta) => { if (!aberta) setFicha(null); }}>
+      <ModalContent
+        placement="right"
+        size="record"
+        title={ficha?.tipo === "empresa" ? "Empresa" : "Pessoa"}
+        closeLabel="Fechar e voltar ao negócio"
+      >
+        {ficha?.tipo === "contato" && <ContactProfile contactId={ficha.id} embedded />}
+        {ficha?.tipo === "empresa" && <CompanyProfile companyId={ficha.id} embedded />}
+      </ModalContent>
+    </Modal>
   </PageFrame>;
 }
 
