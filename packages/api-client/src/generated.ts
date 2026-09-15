@@ -1046,12 +1046,6 @@ export interface CreateCustomFieldDto {
   entityType: CreateCustomFieldDtoEntityType;
   /**
      * @minLength 1
-     * @maxLength 63
-     * @pattern ^[a-z][a-z0-9_]*$
-     */
-  key: string;
-  /**
-     * @minLength 1
      * @maxLength 120
      */
   label: string;

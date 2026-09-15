@@ -5749,12 +5749,6 @@
               "activity"
             ]
           },
-          "key": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 63,
-            "pattern": "^[a-z][a-z0-9_]*$"
-          },
           "label": {
             "type": "string",
             "minLength": 1,
@@ -5794,7 +5788,6 @@
         "required": [
           "id",
           "entityType",
-          "key",
           "label",
           "type"
         ]
@@ -7289,7 +7282,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:29:18.320Z",
+                "default": "2026-09-15T03:54:03.844Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7532,7 +7525,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:29:18.324Z",
+                "default": "2026-09-15T03:54:03.849Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7706,7 +7699,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:29:18.325Z",
+                "default": "2026-09-15T03:54:03.849Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7888,7 +7881,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:29:18.326Z",
+                "default": "2026-09-15T03:54:03.851Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8050,7 +8043,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:29:18.327Z",
+                "default": "2026-09-15T03:54:03.852Z",
                 "anyOf": [
                   {
                     "type": "string",

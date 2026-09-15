@@ -6,5 +6,6 @@ export * from "./stageFieldRules.js";
 export * from "./stageWorkflow.js";
 export * from "./auditTrail.js";
 export * from "./customFieldStorage.js";
+export * from "./customFieldKey.js";
 export * from "./tag.js";
 export * from "./preferenceStorage.js";
