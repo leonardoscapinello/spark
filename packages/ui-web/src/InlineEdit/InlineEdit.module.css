@@ -2,6 +2,24 @@
 .value:hover:not(:disabled) { background: var(--color-accentWash); text-decoration: underline; }
 .value:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .value:disabled { color: var(--ui-disabledInk); cursor: default; }
+.value[data-appearance="title"] {
+  max-width: 100%;
+  padding: var(--ui-focusWidth) var(--space-1);
+  margin: calc(var(--ui-focusWidth) * -1) 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+.value[data-appearance="title"]:hover:not(:disabled) { color: var(--color-accent); }
+.editor[data-appearance="title"] { width: min(var(--ui-panelWidth), 100%); }
+.editor[data-appearance="title"] .control > :is(input, [role="combobox"]) {
+  height: var(--ui-controlLarge);
+  min-height: var(--ui-controlLarge);
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
 .editor { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-1); }
 .control { min-width: 0; }
 .control > :is(input, [role="combobox"]) { width: 100%; min-width: 0; height: var(--ui-controlMedium); min-height: var(--ui-controlMedium); }

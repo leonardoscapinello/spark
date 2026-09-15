@@ -12,9 +12,13 @@ export interface InlineEditProps {
   placeholder?: string;
   disabled?: boolean;
   errorText?: string;
+  /** Salva quando o foco deixa o editor, como os campos da ficha do CRM. */
+  saveOnBlur?: boolean;
+  /** Mantém a hierarquia tipográfica quando o editor ocupa um título de página. */
+  appearance?: "default" | "title";
 }
 /** Apresentação e rascunho locais; validação e persistência ficam no consumidor. */
-export function InlineEdit({ label, value, onSave, options, placeholder = "Não informado", disabled = false, errorText = "Não foi possível salvar. Tente novamente." }: InlineEditProps) {
+export function InlineEdit({ label, value, onSave, options, placeholder = "Não informado", disabled = false, errorText = "Não foi possível salvar. Tente novamente.", saveOnBlur = false, appearance = "default" }: InlineEditProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [pending, setPending] = useState(false);
@@ -31,10 +35,10 @@ export function InlineEdit({ label, value, onSave, options, placeholder = "Não 
     catch { setError(true); }
     finally { busy.current = false; setPending(false); }
   }
-  if (!editing) return <button type="button" className={s.value} disabled={disabled} aria-label={`Editar ${label}: ${options?.find(o=>o.value===value)?.label || value || placeholder}`} ref={node=>{if(node && restoreFocus.current){restoreFocus.current=false;node.focus();}}} onClick={()=>{setDraft(value);setError(false);setEditing(true);}}>{options?.find(o=>o.value===value)?.label || value || placeholder}</button>;
-  return <div className={s.editor} role="group" aria-label={`Editar ${label}`} aria-busy={pending} onKeyDown={event=>{if(event.defaultPrevented || busy.current)return;if(event.key === "Escape"){event.preventDefault();close();}else if(event.key === "Enter" && !options && !event.nativeEvent.isComposing){event.preventDefault();void save();}}}>
+  if (!editing) return <button type="button" className={s.value} data-appearance={appearance} disabled={disabled} aria-label={`Editar ${label}: ${options?.find(o=>o.value===value)?.label || value || placeholder}`} ref={node=>{if(node && restoreFocus.current){restoreFocus.current=false;node.focus();}}} onClick={()=>{setDraft(value);setError(false);setEditing(true);}}>{options?.find(o=>o.value===value)?.label || value || placeholder}</button>;
+  return <div className={s.editor} data-appearance={appearance} role="group" aria-label={`Editar ${label}`} aria-busy={pending} onBlur={event=>{if(!saveOnBlur || busy.current)return;const next=event.relatedTarget;if(next instanceof Node && event.currentTarget.contains(next))return;void save();}} onKeyDown={event=>{if(event.defaultPrevented || busy.current)return;if(event.key === "Escape"){event.preventDefault();close();}else if(event.key === "Enter" && !options && !event.nativeEvent.isComposing){event.preventDefault();void save();}}}>
     <div className={s.control}>{options ? <Select label={label} options={options} value={draft} onValueChange={next=>{if(next!==null)setDraft(next);}} disabled={pending} defaultOpen /> : <Input aria-label={label} value={draft} onChange={event=>setDraft(event.target.value)} autoFocus disabled={pending} aria-invalid={error} aria-describedby={error ? errorId : undefined} />}</div>
-    <div className={s.actions}><Button type="button" size="sm" shape="rounded" iconOnly icon={<Icon name="check" />} aria-label="Salvar" title="Salvar" loading={pending} onClick={()=>void save()} /><Button type="button" size="sm" shape="rounded" iconOnly icon={<Icon name="close" />} aria-label="Cancelar" title="Cancelar" variant="ghost" disabled={pending} onClick={close} /></div>
+    <div className={s.actions}><Button type="button" size="sm" shape="rounded" iconOnly icon={<Icon name="check" />} aria-label="Salvar" title="Salvar" loading={pending} onClick={()=>void save()} /><Button type="button" size="sm" shape="rounded" iconOnly icon={<Icon name="close" />} aria-label="Cancelar" title="Cancelar" variant="ghost" disabled={pending} onPointerDown={event=>event.preventDefault()} onClick={close} /></div>
     {error && <p id={errorId} role="alert" className={s.error}>{errorText}</p>}
   </div>;
 }

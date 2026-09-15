@@ -4,7 +4,7 @@ import styles from "./PageHeader.module.css";
 
 export interface PageHeaderProps {
   eyebrow?: string;
-  title: string;
+  title: ReactNode;
   icon?: IconName;
   description?: string;
   actions?: ReactNode;

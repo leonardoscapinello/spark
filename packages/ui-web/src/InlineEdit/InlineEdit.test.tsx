@@ -19,4 +19,17 @@ describe("InlineEdit",()=>{
     fireEvent.click(screen.getByRole("button",{name:"Salvar"}));
     await waitFor(()=>expect(screen.queryByRole("textbox")).not.toBeInTheDocument());expect(save).toHaveBeenLastCalledWith("Ana");
   });
+  it("salva ao sair do título e cancela sem gravar",async()=>{
+    const save=vi.fn().mockResolvedValue(undefined);
+    render(<><InlineEdit label="Título do negócio" value="Proposta" onSave={save} saveOnBlur appearance="title" /><button type="button">Fora</button></>);
+    fireEvent.click(await screen.findByRole("button",{name:"Editar Título do negócio: Proposta"}));
+    fireEvent.change(screen.getByRole("textbox"),{target:{value:"Renovação"}});
+    fireEvent.blur(screen.getByRole("textbox"),{relatedTarget:screen.getByRole("button",{name:"Fora"})});
+    await waitFor(()=>expect(save).toHaveBeenCalledWith("Renovação"));
+
+    fireEvent.click(await screen.findByRole("button",{name:"Editar Título do negócio: Proposta"}));
+    fireEvent.change(screen.getByRole("textbox"),{target:{value:"Descartar"}});
+    fireEvent.click(screen.getByRole("button",{name:"Cancelar"}));
+    expect(save).toHaveBeenCalledTimes(1);
+  });
 });

@@ -41,7 +41,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -605,7 +605,19 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     <PageHeader
       back={<BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
       icon="briefcase"
-      title={deal.name}
+      title={<InlineEdit
+        label="Título do negócio"
+        value={deal.name}
+        disabled={!canWrite}
+        appearance="title"
+        saveOnBlur
+        errorText="O título não pode ficar vazio e precisa ter até 200 caracteres."
+        onSave={async (draft) => {
+          const next = draft.trim();
+          if (!next || next.length > 200) throw new Error("INVALID_DEAL_TITLE");
+          if (next !== deal.name) await saveField({ name: next }, "Título");
+        }}
+      />}
       actions={<div className={styles.headerActions}>
         <div className={styles.headerPeople}>
           {/* Uma identidade única para o responsável. A presença mostra apenas outras pessoas. */}
