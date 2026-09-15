@@ -1129,6 +1129,39 @@ export interface ArchiveCustomFieldDto {
   archived: boolean;
 }
 
+export interface AddDealFollowerDto {
+  /** @minLength 1 */
+  userId: string;
+}
+
+/**
+ * @nullable
+ */
+export type DealFollowerWriteResponseDtoFollower = {
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  dealId: string;
+  /** @minLength 1 */
+  userId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  createdBy: string | null;
+  createdAt: string;
+} | null;
+
+export interface DealFollowerWriteResponseDto {
+  /** @nullable */
+  follower: DealFollowerWriteResponseDtoFollower;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export interface SaveBusinessHourDto {
   /** @minLength 1 */
   id: string;
@@ -7172,6 +7205,130 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getSettingsControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const dealFollowersControllerAdd = (
+    dealId: string,
+    addDealFollowerDto: AddDealFollowerDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealFollowerWriteResponseDto>(
+      {url: `/v1/deals/${dealId}/followers`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addDealFollowerDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealFollowersControllerAddMutationKey = () => ['dealFollowersControllerAdd'] as const;
+
+export const getDealFollowersControllerAddMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealFollowersControllerAdd>>, TError,DealFollowersControllerAddMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealFollowersControllerAdd>>, TError,DealFollowersControllerAddMutationVariables, TContext> => {
+
+const mutationKey = getDealFollowersControllerAddMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealFollowersControllerAdd>>, DealFollowersControllerAddMutationVariables> = (props) => {
+          const {dealId,data} = props ?? {};
+
+          return  dealFollowersControllerAdd(dealId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealFollowersControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof dealFollowersControllerAdd>>>
+    export type DealFollowersControllerAddMutationBody = AddDealFollowerDto
+    export type DealFollowersControllerAddMutationError = unknown
+    export type DealFollowersControllerAddMutationVariables = {dealId: string;data: AddDealFollowerDto}
+
+    export const useDealFollowersControllerAdd = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealFollowersControllerAdd>>, TError,DealFollowersControllerAddMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealFollowersControllerAdd>>,
+        TError,
+        DealFollowersControllerAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealFollowersControllerAddMutationOptions(options), queryClient);
+    }
+
+export const dealFollowersControllerRemove = (
+    dealId: string,
+    userId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealFollowerWriteResponseDto>(
+      {url: `/v1/deals/${dealId}/followers/${userId}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealFollowersControllerRemoveMutationKey = () => ['dealFollowersControllerRemove'] as const;
+
+export const getDealFollowersControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealFollowersControllerRemove>>, TError,DealFollowersControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealFollowersControllerRemove>>, TError,DealFollowersControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getDealFollowersControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealFollowersControllerRemove>>, DealFollowersControllerRemoveMutationVariables> = (props) => {
+          const {dealId,userId} = props ?? {};
+
+          return  dealFollowersControllerRemove(dealId,userId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealFollowersControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof dealFollowersControllerRemove>>>
+
+    export type DealFollowersControllerRemoveMutationError = unknown
+    export type DealFollowersControllerRemoveMutationVariables = {dealId: string;userId: string}
+
+    export const useDealFollowersControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealFollowersControllerRemove>>, TError,DealFollowersControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealFollowersControllerRemove>>,
+        TError,
+        DealFollowersControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealFollowersControllerRemoveMutationOptions(options), queryClient);
     }
 
 export const businessCalendarControllerSaveHour = (

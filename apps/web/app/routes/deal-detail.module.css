@@ -29,6 +29,10 @@
 .owner:hover:not([data-disabled]) { background: var(--ui-subtle); }
 .owner > span { display: grid; min-width: 0; line-height: var(--ui-tabLine); }
 .owner small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.followers { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; height: auto; padding: var(--space-1) var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-regular); }
+.followerFaces { display: inline-flex; align-items: center; flex: 0 0 auto; color: var(--color-inkMuted); }
+.followerFaces > * + * { margin-inline-start: calc(var(--space-2) * -1); }
+.followerFaces > span { outline: var(--ui-hairline) solid var(--color-surface); }
 .lostButton { color: var(--color-statusDanger); }
 
 /* Caminho do funil abaixo da trilha: «Funil › Etapa». */

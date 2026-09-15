@@ -13,6 +13,7 @@ import { GetCurrentUserUseCase } from "../../identity/application/get-current-us
 import { SHAPE_TABLES, isSyncableTable } from "../application/shape-tables.js";
 import { PermissionGroupsRepository } from "../../identity/infrastructure/permission-groups.repository.js";
 import { appendDealShapeScope } from "./deal-shape-scope.js";
+import { appendDealFollowerShapeScope } from "./deal-follower-shape-scope.js";
 import { appendEventShapeScope } from "./event-shape-scope.js";
 
 /**
@@ -120,6 +121,7 @@ export class ShapesController {
       filters.push(`("${sharedUnless.flagColumn}" = $${sharedParam} OR "${sharedUnless.ownerColumn}" = $${params.length})`);
     }
     if (table === "deals") appendDealShapeScope(query, filters, params);
+    if (table === "deal_followers") appendDealFollowerShapeScope(query, filters, params);
     if (table === "events") appendEventShapeScope(query, filters, params);
     upstream.searchParams.set("where", filters.join(" AND "));
     params.forEach((value, index) => upstream.searchParams.set(`params[${index + 1}]`, value));

@@ -17,6 +17,8 @@ const TITLES: Record<DomainEventType, string> = {
   "deal.won": "Negócio ganho",
   "deal.lost": "Negócio perdido",
   "deal.reopened": "Negócio reaberto",
+  "deal.follower_added": "Seguidor adicionado",
+  "deal.follower_removed": "Seguidor removido",
   "activity.created": "Atividade agendada",
   "activity.updated": "Atividade atualizada",
   "note.created": "Nota registrada",
@@ -150,6 +152,7 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   body: "Nota",
   pinned: "Fixada",
   products: "Produto",
+  followers: "Seguidores",
   "product:name": "Nome do produto",
   "product:quantityMilli": "Quantidade",
   "product:unitAmount": "Valor unitário",
@@ -167,6 +170,7 @@ function formatAuditValue(field: string, value: unknown, context: TimelinePresen
   if (value === null || value === undefined || value === "") return "Sem valor";
   if (field === "stageId" && typeof value === "string") return context.stages?.find((item) => item.id === value)?.name ?? value;
   if (field === "ownerId" && typeof value === "string") return context.users?.find((item) => item.id === value)?.name ?? value;
+  if (field === "followers" && typeof value === "string") return context.users?.find((item) => item.id === value)?.name ?? value;
   if (field === "contactId" && typeof value === "string") return context.contacts?.find((item) => item.id === value)?.name ?? value;
   if (field === "companyId" && typeof value === "string") return context.companies?.find((item) => item.id === value)?.name ?? value;
   if ((field === "amount" || field === "product:unitAmount") && (typeof value === "number" || typeof value === "string")) {

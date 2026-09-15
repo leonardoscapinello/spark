@@ -40,14 +40,15 @@ import {
   type CalendarEvent,
   type User,
 } from "@spark/core";
-import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
+import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
+import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
 import { useCustomFieldOptions, useCustomFieldValues } from "../lib/custom-fields.client";
 import { getDealProductsCollection } from "../lib/deal-products-collection.client";
+import { getDealFollowersCollection } from "../lib/deal-followers-collection.client";
 import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collection.client";
 import { getNotesCollection } from "../lib/notes-collection.client";
 import { getProductsCollection } from "../lib/catalog-collections.client";
@@ -98,6 +99,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     getStagesCollection().preload(),
     getUsersCollection().preload(),
     getDealProductsCollection().preload(),
+    getDealFollowersCollection(dealIdFactory.from(params.dealId)).preload(),
     getStageFieldRulesCollection().preload(),
     getCustomFieldValuesCollection().preload(),
     getCustomFieldOptionsCollection().preload(),
@@ -140,6 +142,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const usersCollection = getUsersCollection();
   const activitiesCollection = getActivitiesCollection();
   const itemsCollection = getDealProductsCollection();
+  const followersCollection = getDealFollowersCollection(dealIdFactory.from(params.dealId));
   const notesCollection = getNotesCollection();
   const companiesCollection = getCompaniesCollection();
   const session = getSession();
@@ -159,6 +162,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: pipelines } = useLiveQuery({ query: (q) => q.from({ pipelines: pipelinesCollection }) });
   const { data: contacts = [], isLoading: contactsLoading } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }).orderBy(({ users: item }) => item.name, "asc") });
+  const { data: followers = [] } = useLiveQuery({ query: (q) => q.from({ followers: followersCollection }).orderBy(({ followers: item }) => item.createdAt, "asc") });
   const { data: companies = [], isLoading: companiesLoading } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
   const { data: activities = [] } = useLiveQuery({
     query: (q) => canReadActivities ? q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc") : undefined,
@@ -210,6 +214,9 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [busyActivityId, setBusyActivityId] = useState<string | null>(null);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [followerModalOpen, setFollowerModalOpen] = useState(false);
+  const [selectedFollower, setSelectedFollower] = useState<SelectOption | null>(null);
+  const [busyFollowerId, setBusyFollowerId] = useState<string | null>(null);
   const [lossReason, setLossReason] = useState("");
   const [reopening, setReopening] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
@@ -221,6 +228,11 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const stage = deal ? stages.find((item) => item.id === deal.stageId) : undefined;
   const linkedContact = deal?.contactId ? contacts.find((item) => item.id === deal.contactId) : undefined;
   const owner = deal?.ownerId ? users.find((item) => item.id === deal.ownerId) : undefined;
+  const followerUsers = followers.flatMap((follower) => {
+    const user = users.find((item) => item.id === follower.userId);
+    return user ? [user] : [];
+  });
+  const followerOptions = users.filter((item) => !item.deactivatedAt && !followers.some((follower) => follower.userId === item.id)).map((item) => ({ value: item.id, label: item.name, description: item.email, avatar: item.avatarUrl }));
   const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
   const contactOptions = useMemo(() => contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, description: [item.email, item.phone].filter(Boolean).join(" · "), avatar: null })), [contacts]);
   const companyOptions = useMemo(() => companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, description: [item.taxId, item.website ?? item.email ?? item.legalName].filter(Boolean).join(" · "), avatar: null })), [companies]);
@@ -345,6 +357,33 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       notify({ title: "Responsável atualizado", tone: "success" });
     } catch {
       notify({ title: "Não foi possível trocar o responsável", tone: "error" });
+    }
+  }
+
+  async function addFollower(nextUserId = selectedFollower?.value) {
+    if (!deal || !session || !nextUserId || !canWrite) throw new Error("Escolha uma pessoa para seguir o negócio.");
+    setBusyFollowerId(nextUserId);
+    try {
+      const user = userIdFactory.from(nextUserId);
+      const follower = optimisticDealFollower(dealIdFactory.from(deal.id), user, session.orgId, userIdFactory.from(session.userId));
+      await followersCollection.insert(follower).isPersisted.promise;
+      setSelectedFollower(null);
+      notify({ title: "Seguidor adicionado", description: users.find((item) => item.id === nextUserId)?.name ?? "Usuário", tone: "success" });
+    } finally {
+      setBusyFollowerId(null);
+    }
+  }
+
+  async function removeFollower(followerUserId: string) {
+    if (!deal || !canWrite) return;
+    setBusyFollowerId(followerUserId);
+    try {
+      await followersCollection.delete(`${deal.id}:${followerUserId}`).isPersisted.promise;
+      notify({ title: "Seguidor removido", description: users.find((item) => item.id === followerUserId)?.name ?? "Usuário", tone: "success" });
+    } catch {
+      notify({ title: "Não foi possível remover o seguidor", tone: "error" });
+    } finally {
+      setBusyFollowerId(null);
     }
   }
 
@@ -630,6 +669,19 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             {owner ? <UserAvatar user={owner} size="small" /> : <Icon name="account" />}
             <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
           </MenuButton>
+          <MenuButton variant="ghost" shape="rounded" className={styles.followers} disabled={!canWrite} aria-label={`${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}. Gerenciar`} menu={<>
+            <MenuGroup label="Seguidores">
+              {followerUsers.length === 0 && <MenuItem disabled>Ninguém segue este negócio</MenuItem>}
+              {followerUsers.map((user) => <MenuItem key={user.id} icon={<UserAvatar user={user} size="small" />} shortcut="Remover" disabled={busyFollowerId === user.id} onClick={() => void removeFollower(user.id)}>{user.name}</MenuItem>)}
+            </MenuGroup>
+            <MenuGroup label="Ações">
+              {session && !followers.some((follower) => follower.userId === session.userId) && <MenuItem icon={<Icon name="eye" />} disabled={busyFollowerId !== null} onClick={() => void addFollower(session.userId)}>Seguir este negócio</MenuItem>}
+              <MenuItem icon={<Icon name="plus" />} disabled={followerOptions.length === 0} onClick={() => setFollowerModalOpen(true)}>Adicionar seguidor</MenuItem>
+            </MenuGroup>
+          </>}>
+            <span className={styles.followerFaces} aria-hidden="true">{followerUsers.slice(0, 3).map((user) => <UserAvatar key={user.id} user={user} size="small" />)}{followerUsers.length === 0 && <Icon name="team" />}</span>
+            <span>{followers.length === 0 ? "Seguidores" : `${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}`}</span>
+          </MenuButton>
           <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
         </div>
         <div className={styles.headerOutcome}>
@@ -817,6 +869,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         {selectedStageId !== deal.stageId && selectedStageCheck && selectedStageCheck.blocking.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("required", selectedStageCheck.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)), selectedStage?.name)}</p>}
         {selectedStageId !== deal.stageId && (!selectedStageCheck || selectedStageCheck.blocking.length === 0) && <p>A alteração será salva imediatamente e registrada no histórico do negócio.</p>}
       </div>
+    </ActionModal>
+
+    <ActionModal open={followerModalOpen} onOpenChange={(open) => { setFollowerModalOpen(open); if (!open) setSelectedFollower(null); }} title="Adicionar seguidor" confirmLabel="Adicionar" errorText="Não foi possível adicionar o seguidor." onConfirm={() => addFollower()}>
+      <Field><Label>Pessoa</Label><SearchSelect label="Pessoa que seguirá o negócio" searchPlacement="dropdown" placeholder="Buscar pelo nome ou e-mail" emptyText="Todos os usuários ativos já seguem este negócio." options={followerOptions} value={selectedFollower} onValueChange={setSelectedFollower} /></Field>
     </ActionModal>
 
     <ActionModal open={activityModalOpen} onOpenChange={(open) => { setActivityModalOpen(open); if (!open) setEditingActivityId(null); }} title={editingActivityId ? "Editar atividade" : "Nova atividade"} confirmLabel={editingActivityId ? "Salvar" : "Agendar"} errorText="Não foi possível salvar a atividade." onConfirm={saveActivity} size="workspace">

@@ -9,6 +9,7 @@ export * from "./stage-field-rules-collection.js";
 export * from "./stage-workflow-collections.js";
 export * from "./deals-collection.js";
 export * from "./deal-products-collection.js";
+export * from "./deal-followers-collection.js";
 export * from "./activities-collection.js";
 export * from "./users-collection.js";
 export * from "./conversations-collection.js";

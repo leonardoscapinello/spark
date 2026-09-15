@@ -28,11 +28,13 @@ import { DealPresenceService } from "./infrastructure/deal-presence.service.js";
 import { DealPresenceController } from "./presentation/deal-presence.controller.js";
 import { BusinessCalendarController } from "./presentation/business-calendar.controller.js";
 import { BusinessCalendarRepository } from "./infrastructure/business-calendar.repository.js";
+import { DealFollowersController } from "./presentation/deal-followers.controller.js";
+import { DealFollowersRepository } from "./infrastructure/deal-followers.repository.js";
 
 @Module({
   imports: [SettingsModule, EventsModule],
-  controllers: [BusinessCalendarController, DealPresenceController, StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
-  providers: [BusinessCalendarRepository, DealPresenceService, StageFieldRulesRepository, DealProductsRepository, 
+  controllers: [DealFollowersController, BusinessCalendarController, DealPresenceController, StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
+  providers: [DealFollowersRepository, BusinessCalendarRepository, DealPresenceService, StageFieldRulesRepository, DealProductsRepository,
     CreatePipelineUseCase,
     CreateStageUseCase,
     RenameStageUseCase,

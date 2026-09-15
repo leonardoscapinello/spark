@@ -8,6 +8,7 @@ export * from "./event.js";
 export * from "./pipeline.js";
 export * from "./stage.js";
 export * from "./deal.js";
+export * from "./dealFollower.js";
 export * from "./activity.js";
 export * from "./calendarEvent.js";
 export * from "./auditLog.js";

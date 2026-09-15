@@ -1088,6 +1088,94 @@
         ]
       }
     },
+    "/v1/deals/{dealId}/followers": {
+      "post": {
+        "operationId": "DealFollowersController_add",
+        "parameters": [
+          {
+            "name": "dealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddDealFollowerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealFollowerWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/deals/{dealId}/followers/{userId}": {
+      "delete": {
+        "operationId": "DealFollowersController_remove",
+        "parameters": [
+          {
+            "name": "dealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealFollowerWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
     "/v1/business-calendar/hours": {
       "post": {
         "operationId": "BusinessCalendarController_saveHour",
@@ -5947,6 +6035,75 @@
           "archived"
         ]
       },
+      "AddDealFollowerDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "DealFollowerWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "follower": {
+            "type": "object",
+            "properties": {
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "dealId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "userId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "createdBy": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "orgId",
+              "dealId",
+              "userId",
+              "createdBy",
+              "createdAt"
+            ],
+            "nullable": true
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "follower",
+          "txid"
+        ]
+      },
       "SaveBusinessHourDto": {
         "type": "object",
         "properties": {
@@ -7282,7 +7439,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:54:03.844Z",
+                "default": "2026-09-15T03:58:24.416Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7525,7 +7682,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:54:03.849Z",
+                "default": "2026-09-15T03:58:24.419Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7699,7 +7856,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:54:03.849Z",
+                "default": "2026-09-15T03:58:24.419Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7881,7 +8038,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:54:03.851Z",
+                "default": "2026-09-15T03:58:24.420Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8043,7 +8200,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:54:03.852Z",
+                "default": "2026-09-15T03:58:24.421Z",
                 "anyOf": [
                   {
                     "type": "string",
