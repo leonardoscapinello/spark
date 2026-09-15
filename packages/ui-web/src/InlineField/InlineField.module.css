@@ -30,6 +30,8 @@
   text-overflow: ellipsis;
 }
 .control { min-width: 0; font-size: var(--typography-size-sm); }
+.identity { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.identity > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Valor e ação lado a lado: o valor cresce, a ação fica do tamanho dela. */
 .readRow { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }

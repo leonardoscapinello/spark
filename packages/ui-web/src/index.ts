@@ -69,6 +69,7 @@ export { CalendarMonth, type CalendarMonthProps, type CalendarMonthItem } from "
 export { CalendarWeek, type CalendarWeekProps, type CalendarWeekItem } from "./CalendarWeek/CalendarWeek.js";
 export { Avatar, type AvatarProps } from "./Avatar/Avatar.js";
 export { PersonChoice, type PersonChoiceProps } from "./PersonChoice/PersonChoice.js";
+export { RecordSelect, type RecordSelectProps } from "./RecordSelect/RecordSelect.js";
 export { QuickNavigation, type QuickNavigationProps, type QuickNavigationItem } from "./QuickNavigation/QuickNavigation.js";
 export { Timeline, type TimelineItem } from "./Timeline/Timeline.js";
 export { FilePicker, type FilePickerProps } from "./FilePicker/FilePicker.js";

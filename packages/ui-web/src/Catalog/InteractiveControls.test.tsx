@@ -17,7 +17,11 @@ describe("controles reutilizáveis", () => {
     const action = vi.fn();
     render(<DropdownButton trigger={<Button>Opções</Button>}><MenuItem onClick={action}>Exportar</MenuItem></DropdownButton>);
     await userEvent.click(screen.getByRole("button", {name:"Opções"}));
-    await userEvent.keyboard("{ArrowDown}{Enter}");
+    const item = await screen.findByRole("menuitem", {name:"Exportar"});
+    await waitFor(() => expect(screen.getByRole("menu")).toHaveFocus());
+    await userEvent.keyboard("{ArrowDown}");
+    await waitFor(() => expect(item).toHaveFocus());
+    await userEvent.keyboard("{Enter}");
     expect(action).toHaveBeenCalledOnce();
     await waitFor(()=>expect(screen.getByRole("button",{name:"Opções"})).toHaveFocus());
   });

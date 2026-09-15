@@ -181,6 +181,14 @@
       "$type": "dimension",
       "$value": "220px"
     },
+    "recordPickerWidth": {
+      "$type": "dimension",
+      "$value": "360px"
+    },
+    "recordPickerListHeight": {
+      "$type": "dimension",
+      "$value": "320px"
+    },
     "popupMaxWidth": {
       "$type": "dimension",
       "$value": "480px"

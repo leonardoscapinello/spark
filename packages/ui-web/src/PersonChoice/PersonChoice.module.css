@@ -26,7 +26,7 @@
 .copy {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 0;
   min-width: 0;
 }
 
@@ -37,5 +37,5 @@
   white-space: nowrap;
 }
 
-.copy strong { font-weight: var(--typography-weight-medium); }
-.copy small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.copy strong { font-weight: var(--typography-weight-medium); line-height: var(--ui-tabLine); }
+.copy small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-tabLine); }

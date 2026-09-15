@@ -2,7 +2,7 @@
 .contactCell > div { min-width: 0; }
 .contactCell strong, .secondary { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .secondary, .muted { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.secondary { margin-top: var(--space-1); }
+.secondary { margin-top: 0; line-height: var(--ui-tabLine); }
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
 
 .savedViews { display: flex; flex-direction: column; gap: var(--space-1); max-height: var(--ui-previewHeight); overflow-y: auto; margin-block: var(--space-3); }

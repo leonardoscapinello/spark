@@ -7,6 +7,8 @@ export interface InlineFieldProps {
   label: string;
   /** O que se lê quando o campo está parado. */
   value: ReactNode;
+  /** Identidade visual ao lado do texto, sem perder o nome acessível do campo. */
+  leading?: ReactNode;
   /** Sem valor: o texto sai apagado e convida a preencher. */
   empty?: boolean;
   /** Só leitura: continua legível, deixa de ser clicável. */
@@ -60,7 +62,7 @@ type PersistenceState = "idle" | "saving" | "saved" | "error";
  * clique de fora para perguntar — com isso o `onBlur` nunca disparava, e
  * link, data e dinheiro simplesmente não gravavam.
  */
-export function InlineField({ label, value, empty = false, disabled = false, required = false, block = false, href, action, preview, onPreviewRequest, onCancel, children }: InlineFieldProps) {
+export function InlineField({ label, value, leading, empty = false, disabled = false, required = false, block = false, href, action, preview, onPreviewRequest, onCancel, children }: InlineFieldProps) {
   const [open, setOpen] = useState(false);
   const [persistenceState, setPersistenceState] = useState<PersistenceState>("idle");
   const holder = useRef<HTMLDivElement>(null);
@@ -132,7 +134,7 @@ export function InlineField({ label, value, empty = false, disabled = false, req
       if (holder.current?.contains(target)) return;
       // Menu e calendário são desenhados fora da linha, num portal: o que sai
       // deles ainda é «dentro» da edição.
-      if (target instanceof Element && target.closest("[role='dialog'], [role='listbox'], [role='menu']")) return;
+      if (target instanceof Element && target.closest("[role='dialog'], [role='listbox'], [role='menu'], [data-inline-editor]")) return;
       close();
     }
     document.addEventListener("pointerdown", onPointerDown, true);
@@ -168,7 +170,7 @@ export function InlineField({ label, value, empty = false, disabled = false, req
           window.open(href, "_blank", "noopener,noreferrer");
         }}
       >
-        <span>{value}</span>
+        {leading ? <span className={s.identity}>{leading}<span>{value}</span></span> : <span>{value}</span>}
         {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name={href === undefined ? "pencil" : "link"} /></span>}
       </button>
     );

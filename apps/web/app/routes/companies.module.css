@@ -1,7 +1,7 @@
 .companyCell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 .companyCell > div { min-width: 0; }
 .companyCell strong, .secondary { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.secondary { margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
+.secondary { margin-top: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); line-height: var(--ui-tabLine); }
 .form { display: flex; flex-direction: column; gap: var(--space-4); }
 .formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 @media (max-width: 720px) { .formGrid { grid-template-columns: 1fr; } }

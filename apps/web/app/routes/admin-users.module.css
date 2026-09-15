@@ -1,8 +1,9 @@
 .email {
   display: block;
-  margin-top: var(--space-1);
+  margin-top: 0;
   color: var(--color-inkMuted);
   font-size: var(--typography-size-xs);
+  line-height: var(--ui-tabLine);
 }
 
 .person { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }

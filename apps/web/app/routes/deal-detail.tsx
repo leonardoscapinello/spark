@@ -54,7 +54,7 @@ import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { PreviewedCustomFieldValue } from "../lib/link-previews.client";
 import { useDealPresence } from "../lib/deal-presence.client";
-import { ViewerStack } from "@spark/ui-web";
+import { ViewerStack, RecordSelect } from "@spark/ui-web";
 import { ContactProfile } from "./contact-detail";
 import { CompanyProfile } from "./company-detail";
 import styles from "./deal-detail.module.css";
@@ -110,9 +110,9 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const presence = useDealPresence(deal?.id);
   const { data: stages } = useLiveQuery({ query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: item }) => item.sortOrder, "asc") });
   const { data: pipelines } = useLiveQuery({ query: (q) => q.from({ pipelines: pipelinesCollection }) });
-  const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
+  const { data: contacts = [], isLoading: contactsLoading } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: usersCollection }).orderBy(({ users: item }) => item.name, "asc") });
-  const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
+  const { data: companies = [], isLoading: companiesLoading } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: companiesCollection }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
   const { data: activities = [] } = useLiveQuery({
     query: (q) => canReadActivities ? q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc") : undefined,
   });
@@ -155,6 +155,8 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const linkedContact = deal?.contactId ? contacts.find((item) => item.id === deal.contactId) : undefined;
   const owner = deal?.ownerId ? users.find((item) => item.id === deal.ownerId) : undefined;
   const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
+  const contactOptions = useMemo(() => contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, description: [item.email, item.phone].filter(Boolean).join(" · "), avatar: null })), [contacts]);
+  const companyOptions = useMemo(() => companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, description: [item.taxId, item.website ?? item.email ?? item.legalName].filter(Boolean).join(" · "), avatar: null })), [companies]);
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
   // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
   const customValues = useCustomFieldValues("deal", params.dealId, customFields);
@@ -428,10 +430,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
         {/* Trocar o responsável é um clique no próprio nome — sem abrir o formulário de edição. */}
         <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
-          {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<Avatar name={item.name} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
+          {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<Avatar name={item.name} src={item.avatarUrl} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
           {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
         </MenuGroup>}>
-          {owner ? <Avatar name={owner.name} size="small" /> : <Icon name="account" />}
+          {owner ? <Avatar name={owner.name} src={owner.avatarUrl} size="small" /> : <Icon name="account" />}
           <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
         </MenuButton>
         {isOpen && canMove && <>
@@ -471,13 +473,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
               {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
             </InlineField>
             <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>
-              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
+              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
             </InlineField>
-            <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} empty={!linkedContact} disabled={!canWrite} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
-              {(close) => <SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onValueChange={(next) => close(next ? saveField({ contactId: contactIdFactory.from(next.value) }, "Pessoa") : undefined)} />}
+            <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} empty={!linkedContact} disabled={!canWrite || !canReadContacts} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
+              {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"))} />}
             </InlineField>
-            <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} empty={!linkedCompany} disabled={!canWrite} {...(linkedCompany ? { action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})}>
-              {(close) => <Select label="Empresa do negócio" value={deal.companyId ?? null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => close(saveField({ companyId: next ? companyIdFactory.from(next) : null }, "Empresa"))} />}
+            <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} leading={linkedCompany && <Avatar name={linkedCompany.name} size="small" />} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies} {...(linkedCompany ? { action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})}>
+              {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : saveField({ companyId: next ? companyIdFactory.from(next.value) : null }, "Empresa"))} />}
             </InlineField>
             {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           </div> },
