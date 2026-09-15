@@ -23,6 +23,8 @@ export interface InlineFieldProps {
   href?: string;
   preview?: ReactNode;
   onPreviewRequest?: () => void;
+  /** Descarta o rascunho antes de fechar por Escape ou pelo botão cancelar. */
+  onCancel?: () => void;
   /**
    * Ação ao lado do valor, além de editar. É como «Pessoa» e «Empresa» abrem a
    * ficha sem trocar de tela: clicar no valor continua editando o vínculo, e o
@@ -58,7 +60,7 @@ type PersistenceState = "idle" | "saving" | "saved" | "error";
  * clique de fora para perguntar — com isso o `onBlur` nunca disparava, e
  * link, data e dinheiro simplesmente não gravavam.
  */
-export function InlineField({ label, value, empty = false, disabled = false, required = false, block = false, href, action, preview, onPreviewRequest, children }: InlineFieldProps) {
+export function InlineField({ label, value, empty = false, disabled = false, required = false, block = false, href, action, preview, onPreviewRequest, onCancel, children }: InlineFieldProps) {
   const [open, setOpen] = useState(false);
   const [persistenceState, setPersistenceState] = useState<PersistenceState>("idle");
   const holder = useRef<HTMLDivElement>(null);
@@ -87,6 +89,12 @@ export function InlineField({ label, value, empty = false, disabled = false, req
   function close(persistence?: Promise<unknown>) {
     if (persistence) trackPersistence(persistence);
     holder.current?.querySelector<HTMLElement>("input, textarea, select, [contenteditable='true']")?.blur();
+    setOpen(false);
+  }
+
+  /** Cancela sem tirar o foco primeiro: `blur` é o gesto de salvar. */
+  function cancel() {
+    onCancel?.();
     setOpen(false);
   }
 
@@ -188,7 +196,7 @@ export function InlineField({ label, value, empty = false, disabled = false, req
           className={s.control}
           ref={holder}
           onKeyDown={(event) => {
-            if (event.key === "Escape") { event.stopPropagation(); close(); return; }
+            if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); return; }
             if (event.key !== "Enter") return;
             const alvo = event.target;
             if (!(alvo instanceof HTMLElement)) return;
@@ -208,7 +216,7 @@ export function InlineField({ label, value, empty = false, disabled = false, req
           <div className={s.editing}>
             <div className={s.editor}>{children(close, trackPersistence)}</div>
             <PersistenceFeedback state={persistenceState} label={label} />
-            <button type="button" className={s.cancel} aria-label={`Fechar edição de ${label}`} onPointerDown={(event) => event.preventDefault()} onClick={() => close()}>
+            <button type="button" className={s.cancel} aria-label={`Cancelar alteração em ${label}`} onPointerDown={(event) => event.preventDefault()} onClick={cancel}>
               <Icon name="close" />
             </button>
           </div>

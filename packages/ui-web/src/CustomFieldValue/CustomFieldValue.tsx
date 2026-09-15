@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { customFieldOptions, formatCustomFieldValue, money, normalizeCustomFieldValue, type CustomFieldDefinition } from "@spark/core";
+import { customFieldOptions, formatCustomFieldValue, money, normalizeCustomFieldValue, toCents, type CustomFieldDefinition } from "@spark/core";
 import { Checkbox } from "../Checkbox/Checkbox.js";
 import { DatePicker, DateTimePicker } from "../DateTimePicker/DateTimePicker.js";
 import { Input } from "../Input/Input.js";
@@ -90,6 +90,10 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
   /* Endereço web se lê como link: um clique edita, dois abrem (InlineField). */
   const href = field.type === "url" && shown !== "" ? shown : undefined;
 
+  function discardDraft() {
+    setDraft(toDraft(field, local));
+  }
+
   /* Parado é texto; clicou, vira campo. O mesmo comportamento das linhas do
    * resumo, porque quem usa não distingue «campo do sistema» de «campo que a
    * organização criou» — e não deveria mesmo. */
@@ -100,6 +104,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
     value={shown === "" ? "Clique para adicionar" : shown}
     empty={shown === ""}
     disabled={disabled}
+    onCancel={discardDraft}
     {...(href === undefined ? {} : { href })}
     {...(href === undefined || preview === undefined ? {} : { preview, onPreviewRequest })}
   >{control}</InlineField>;
@@ -127,7 +132,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
       label={field.label}
       value={digitado}
       disabled={busy}
-      onValueChange={(next) => setDraft(next === null ? "" : String(next))}
+      onValueChange={(next) => setDraft(next === null ? "" : String(toCents(next)))}
       onBlur={() => close(draft !== toDraft(field, local) ? save(digitado) : undefined)}
     />);
   }
