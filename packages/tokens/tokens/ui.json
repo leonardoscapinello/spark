@@ -249,6 +249,16 @@
       "$type": "dimension",
       "$value": "320px"
     },
+    "linkPreviewImage": {
+      "$type": "dimension",
+      "$value": "160px",
+      "$description": "Faixa de imagem do cartão de prévia de link. Altura fixa, com ou sem imagem: sem ela o cartão mudava de tamanho a cada link e a dica pulava na tela."
+    },
+    "linkPreviewHeight": {
+      "$type": "dimension",
+      "$value": "268px",
+      "$description": "Altura total do cartão de prévia de link. Fixa pelo mesmo motivo da faixa de imagem."
+    },
     "detailPanelWidth": {
       "$type": "dimension",
       "$value": "400px",

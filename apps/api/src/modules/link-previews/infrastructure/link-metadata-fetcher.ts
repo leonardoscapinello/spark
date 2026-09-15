@@ -24,11 +24,14 @@ export interface LinkMetadata {
 export class LinkMetadataFetcher {
   async fetch(url: string, validators?: { etag: string | null; lastModified: string | null }): Promise<LinkMetadata | { notModified: true; maxAgeSeconds: number | null }> {
     let current = url;
+    // Um prazo cobre DNS, redirecionamentos, cabeçalhos e corpo inteiro.
+    // Reiniciar cinco segundos a cada redirect permitia uma espera longa.
+    const signal = AbortSignal.timeout(3_500);
     for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
-      await assertPublicUrl(current);
+      await assertPublicUrl(current, signal);
       const response = await fetch(current, {
         redirect: "manual",
-        signal: AbortSignal.timeout(5_000),
+        signal,
         headers: {
           accept: "text/html,application/xhtml+xml",
           "user-agent": "SparkLinkPreview/1.0",
@@ -62,12 +65,22 @@ export class LinkMetadataFetcher {
   }
 }
 
-async function assertPublicUrl(raw: string): Promise<void> {
+async function assertPublicUrl(raw: string, signal: AbortSignal): Promise<void> {
   const parsed = new URL(normalizeLinkPreviewUrl(raw));
   const hostname = parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase();
   if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) throw new BadRequestException("Esse endereço não pode ser consultado.");
-  const addresses = isIP(hostname) ? [{ address: hostname }] : await lookup(hostname, { all: true, verbatim: true });
+  const addresses = isIP(hostname) ? [{ address: hostname }] : await Promise.race([
+    lookup(hostname, { all: true, verbatim: true }),
+    aborted(signal),
+  ]);
   if (addresses.length === 0 || addresses.some(({ address }) => isPrivateAddress(address))) throw new BadRequestException("Esse endereço não pode ser consultado.");
+}
+
+function aborted(signal: AbortSignal): Promise<never> {
+  return new Promise((_, reject) => {
+    if (signal.aborted) { reject(signal.reason); return; }
+    signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+  });
 }
 
 function isPrivateAddress(address: string): boolean {

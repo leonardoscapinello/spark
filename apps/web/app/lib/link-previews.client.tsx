@@ -12,6 +12,7 @@ const inflight = new Map<string, Promise<unknown>>();
 interface LinkPreviewContextValue {
   previews: ReadonlyMap<string, LinkPreview>;
   pending: ReadonlySet<string>;
+  failures: ReadonlySet<string>;
   request: (url: string) => void;
 }
 const LinkPreviewContext = createContext<LinkPreviewContextValue | null>(null);
@@ -19,23 +20,35 @@ const LinkPreviewContext = createContext<LinkPreviewContextValue | null>(null);
 export function LinkPreviewDataProvider({ children }: { children: ReactNode }) {
   const { data = [] } = useLiveQuery({ query: (q) => q.from({ previews: getCollection() }) });
   const [pending, setPending] = useState<ReadonlySet<string>>(() => new Set());
-  const previews = useMemo(() => new Map(data.map((preview) => [preview.url, preview])), [data]);
+  const [resolved, setResolved] = useState<ReadonlyMap<string, LinkPreview>>(() => new Map());
+  const [failures, setFailures] = useState<ReadonlySet<string>>(() => new Set());
+  // A resposta da API entra na tela imediatamente; o Electric consolida a
+  // mesma linha depois. Esperar esse eco era o que prendia o tooltip no loader.
+  const previews = useMemo(() => new Map([...data.map((preview) => [preview.url, preview] as const), ...resolved]), [data, resolved]);
   const request = useCallback((rawUrl: string) => {
     let url: string;
     try { url = normalizeLinkPreviewUrl(rawUrl); } catch { return; }
     const current = previews.get(url);
     if (current && !linkPreviewNeedsRefresh(current) || inflight.has(url)) return;
+    setFailures((items) => { const next = new Set(items); next.delete(url); return next; });
     setPending((items) => {
       if (items.has(url)) return items;
       const next = new Set(items); next.add(url); return next;
     });
-    const operation = linkPreviewsControllerResolve({ url }).finally(() => {
+    const abort = new AbortController();
+    const timeout = window.setTimeout(() => abort.abort(), 5_000);
+    const operation = linkPreviewsControllerResolve({ url }, abort.signal).then(({ preview }) => {
+      setResolved((items) => { const next = new Map(items); next.set(url, preview as LinkPreview); return next; });
+    }).catch(() => {
+      setFailures((items) => { const next = new Set(items); next.add(url); return next; });
+    }).finally(() => {
+      window.clearTimeout(timeout);
       inflight.delete(url);
       setPending((items) => { const next = new Set(items); next.delete(url); return next; });
     });
     inflight.set(url, operation);
   }, [previews]);
-  return <LinkPreviewContext.Provider value={{ previews, pending, request }}>{children}</LinkPreviewContext.Provider>;
+  return <LinkPreviewContext.Provider value={{ previews, pending, failures, request }}>{children}</LinkPreviewContext.Provider>;
 }
 
 export function useLinkPreview(rawUrl: string | null | undefined) {
@@ -43,7 +56,13 @@ export function useLinkPreview(rawUrl: string | null | undefined) {
   if (!context) throw new Error("useLinkPreview must be used inside LinkPreviewDataProvider.");
   let url: string | null = null;
   try { if (rawUrl) url = normalizeLinkPreviewUrl(rawUrl); } catch { url = null; }
-  return { preview: url ? context.previews.get(url) ?? null : null, loading: url ? context.pending.has(url) : false, request: () => { if (url) context.request(url); } };
+  const preview = url ? context.previews.get(url) ?? (context.failures.has(url) ? failedPreview(url) : null) : null;
+  return { preview, loading: url ? context.pending.has(url) : false, request: () => { if (url) context.request(url); } };
+}
+
+function failedPreview(url: string): LinkPreview {
+  const now = new Date().toISOString();
+  return { id: "00000000-0000-7000-8000-000000000000", orgId: "00000000-0000-7000-8000-000000000000", url, urlHash: "0".repeat(64), canonicalUrl: null, title: null, description: null, imageUrl: null, siteName: null, faviconUrl: null, status: "failed", httpStatus: null, fetchedAt: now, expiresAt: now, failureCount: 1, etag: null, lastModified: null, createdAt: now, updatedAt: now } as LinkPreview;
 }
 
 export function ExternalPreviewLink({ href, children, className }: { href: string; children: ReactNode; className?: string }) {

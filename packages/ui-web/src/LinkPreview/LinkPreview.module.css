@@ -1,11 +1,24 @@
+/* O cartão tem SEMPRE o mesmo tamanho. Sem isso a dica pulava na tela a cada
+ * link — um com imagem e descrição longa, o seguinte só com título — e ler uma
+ * lista de links virava um sobe e desce. A faixa de imagem existe mesmo sem
+ * imagem: quando falta, mostra o ícone do site sobre um fundo neutro. */
 .popup { width: var(--ui-popoverWidth); padding: 0; overflow: hidden; background: var(--color-surface); color: var(--color-ink); }
-.card { display: flex; flex-direction: column; min-width: 0; }
-.image,.imagePlaceholder { display: block; width: 100%; height: var(--ui-avatarXl); object-fit: cover; background: var(--ui-subtle); }
-.body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; padding: var(--space-3); }
+.card { display: flex; flex-direction: column; min-width: 0; height: var(--ui-linkPreviewHeight); background: var(--color-surface); color: var(--color-ink); }
+
+.image, .imagePlaceholder { display: block; flex: 0 0 auto; width: 100%; height: var(--ui-linkPreviewImage); object-fit: cover; background: var(--ui-subtle); }
+/* Sem imagem: o ícone do site no meio, grande o bastante para identificar. */
+.imagePlaceholder { display: grid; place-items: center; color: var(--color-inkFaint); }
+.imagePlaceholder img { width: var(--ui-icon); height: var(--ui-icon); object-fit: contain; }
+
+.body { display: flex; flex: 1 1 auto; flex-direction: column; gap: var(--space-1); min-width: 0; min-height: 0; padding: var(--space-3); }
 .body strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); }
 .site { display: flex; align-items: center; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .site img { width: var(--ui-iconSm); height: var(--ui-iconSm); object-fit: contain; }
 .description { display: -webkit-box; overflow: hidden; color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-.unavailable { padding: var(--space-3); color: var(--color-inkMuted); }
+
+/* Indisponível e carregando usam a MESMA caixa: trocar de forma no meio da
+ * espera é a própria coisa que se quer evitar. */
+.unavailable { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; gap: var(--space-1); padding: var(--space-3); background: var(--color-surface); color: var(--color-inkMuted); }
+.unavailable strong { color: var(--color-ink); }
 .loadingLine { height: var(--space-3); border-radius: var(--radius-sm); background: var(--ui-subtle); }
 .loadingLine:last-child { width: var(--ui-previewColumn); max-width: 70%; }

@@ -16,9 +16,11 @@ export interface LinkPreviewData {
 
 export function LinkPreviewCard({ preview, loading = false }: { preview?: LinkPreviewData | null; loading?: boolean }) {
   if (loading && !preview) return <div className={styles.card} role="status" aria-label="Buscando prévia do link"><div className={styles.imagePlaceholder} /><div className={styles.body}><span className={styles.loadingLine} /><span className={styles.loadingLine} /></div></div>;
-  if (!preview || preview.status === "failed") return <div className={styles.unavailable}>Prévia indisponível</div>;
+  if (!preview || preview.status === "failed") return <div className={styles.card}><div className={styles.imagePlaceholder} /><div className={styles.unavailable}><strong>Prévia indisponível</strong><span>Não foi possível obter os dados deste endereço.</span></div></div>;
   return <div className={styles.card}>
-    {preview.imageUrl && <img className={styles.image} src={preview.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" />}
+    {preview.imageUrl
+      ? <img className={styles.image} src={preview.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" />
+      : <div className={styles.imagePlaceholder}>{preview.faviconUrl ? <img src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" /> : null}</div>}
     <div className={styles.body}>
       <span className={styles.site}>{preview.faviconUrl && <img src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" />}{preview.siteName ?? new URL(preview.url).hostname}</span>
       <strong>{preview.title ?? preview.url}</strong>

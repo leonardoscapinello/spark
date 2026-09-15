@@ -142,7 +142,7 @@ export function InlineField({ label, value, empty = false, disabled = false, req
           {rotulo}
           <div className={s.control}>
             <div className={s.readRow}>
-              {preview ? <Tooltip content={preview} pinOnClick={false} {...(onPreviewRequest ? { onOpen: onPreviewRequest } : {})}>{valueButton}</Tooltip> : valueButton}
+              {preview ? <Tooltip content={preview} appearance="surface" pinOnClick={false} {...(onPreviewRequest ? { onOpen: onPreviewRequest } : {})}>{valueButton}</Tooltip> : valueButton}
               {action && !empty && <button type="button" className={s.action} aria-label={action.label} onClick={action.onClick}><Icon name={action.icon} /></button>}
             </div>
           </div>
