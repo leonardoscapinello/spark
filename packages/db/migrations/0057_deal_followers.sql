@@ -13,4 +13,4 @@ CREATE POLICY deal_followers_isolation_by_org ON deal_followers
   FOR ALL TO app_user
   USING (org_id = current_setting('app.current_org_id', true)::uuid);
 GRANT SELECT, INSERT, UPDATE, DELETE ON deal_followers TO app_user;
-ALTER PUBLICATION electric_publication ADD TABLE deal_followers;
+ALTER PUBLICATION electric_publication_default ADD TABLE deal_followers;
