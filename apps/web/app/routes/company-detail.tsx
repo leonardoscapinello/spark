@@ -2,7 +2,7 @@ import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
-import { syncedAmount } from "@spark/data";
+import { syncedAmount, writeAccepted } from "@spark/data";
 import { ActionModal, Avatar, BackLink, Badge, Button, Card, Field, Input, Label, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
@@ -82,12 +82,11 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
       const parsedWebsite = website.trim() ? new URL(/^https?:\/\//i.test(website.trim()) ? website.trim() : `https://${website.trim()}`).toString() : null;
       const parsedEmail = email.trim() ? buildEmail(email) : null;
       const parsedPhone = phone.trim() ? buildPhone(phone) : null;
-      const transaction = companiesCollection.update(company.id, (draft) => {
+      await writeAccepted((metadata) => companiesCollection.update(company.id, { metadata }, (draft) => {
         draft.name = name.trim(); draft.legalName = legalName.trim() || null; draft.industry = industry.trim() || null; draft.taxId = taxId.trim() || null;
         draft.website = parsedWebsite; draft.email = parsedEmail; draft.phone = parsedPhone; draft.address = address.trim() || null;
         draft.ownerId = ownerId ? userIdFactory.from(ownerId) : null; draft.parentCompanyId = parentCompanyId ? companyIdFactory.from(parentCompanyId) : null;
-      });
-      await transaction.isPersisted.promise;
+      }));
       setEditing(false); notify({ title: "Empresa atualizada", tone: "success" });
     } catch { notify({ title: "Não foi possível salvar a empresa", description: "Revise site, e-mail e telefone.", tone: "error" }); }
     finally { setSaving(false); }
@@ -95,25 +94,25 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
 
   async function linkContact() {
     if (!company || !selectedContact) throw new Error("MISSING_CONTACT");
-    const transaction = contactsCollection.update(selectedContact.value, (draft) => { draft.companyId = companyIdFactory.from(company.id); });
-    await transaction.isPersisted.promise; setSelectedContact(null); notify({ title: "Pessoa vinculada", tone: "success" });
+    await writeAccepted((metadata) => contactsCollection.update(selectedContact.value, { metadata }, (draft) => { draft.companyId = companyIdFactory.from(company.id); }));
+    setSelectedContact(null); notify({ title: "Pessoa vinculada", tone: "success" });
   }
 
   async function unlinkContact(id: string) {
     setBusyLink(id);
-    try { const tx = contactsCollection.update(id, (draft) => { draft.companyId = null; }); await tx.isPersisted.promise; notify({ title: "Pessoa desvinculada", tone: "success" }); }
+    try { await writeAccepted((metadata) => contactsCollection.update(id, { metadata }, (draft) => { draft.companyId = null; })); notify({ title: "Pessoa desvinculada", tone: "success" }); }
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 
   async function linkDeal() {
     if (!company || !selectedDeal) throw new Error("MISSING_DEAL");
-    const transaction = dealsCollection.update(selectedDeal.value, (draft) => { draft.companyId = companyIdFactory.from(company.id); });
-    await transaction.isPersisted.promise; setSelectedDeal(null); notify({ title: "Negócio vinculado", tone: "success" });
+    await writeAccepted((metadata) => dealsCollection.update(selectedDeal.value, { metadata }, (draft) => { draft.companyId = companyIdFactory.from(company.id); }));
+    setSelectedDeal(null); notify({ title: "Negócio vinculado", tone: "success" });
   }
 
   async function unlinkDeal(id: string) {
     setBusyLink(id);
-    try { const tx = dealsCollection.update(id, (draft) => { draft.companyId = null; }); await tx.isPersisted.promise; notify({ title: "Negócio desvinculado", tone: "success" }); }
+    try { await writeAccepted((metadata) => dealsCollection.update(id, { metadata }, (draft) => { draft.companyId = null; })); notify({ title: "Negócio desvinculado", tone: "success" }); }
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 

@@ -11,7 +11,7 @@ import {
   type ActivityType,
   type IdentityChannel,
 } from "@spark/core";
-import { optimisticActivity, optimisticIdentity } from "@spark/data";
+import { optimisticActivity, optimisticIdentity, writeAccepted } from "@spark/data";
 import { BackLink, Button, DateTimePicker, ErrorText, Field, Input, Label, RecordPageHeader, Select, Skeleton, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -166,13 +166,12 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
     if (!data || contactFieldPending) return;
     setContactFieldPending(field);
     try {
-      const transaction = collection.update(data.id, (draft) => {
+      await writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => {
         if (field === "leadStatus") draft.leadStatus = value as typeof draft.leadStatus;
         if (field === "source") draft.source = value;
         if (field === "ownerId") draft.ownerId = value ? userIdFactory.from(value) : null;
         if (field === "companyId") draft.companyId = value ? companyIdFactory.from(value) : null;
-      });
-      await transaction.isPersisted.promise;
+      }));
       notify({ title: "Lead atualizado", tone: "success" });
     } catch {
       notify({ title: "Não foi possível atualizar o lead", tone: "error" });
@@ -362,7 +361,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
       {customFields.filter((field) => !field.archivedAt).length > 0 && <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Campos personalizados</h2>
         <div className={styles.campos}>
-          {customFields.filter((field) => !field.archivedAt).map((field) => <PreviewedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
+          {customFields.filter((field) => !field.archivedAt).map((field) => <PreviewedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
         </div>
       </section>}
 

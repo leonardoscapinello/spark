@@ -21,6 +21,7 @@ import { ContactSchema, contactId, type Contact, type CreateContactInput, type O
 import { contactsControllerArchive, contactsControllerCreate, contactsControllerUpdate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 import { serializedWrite } from "./serialized-write.js";
+import { reportWriteAcceptance } from "./write-acceptance.js";
 import { sparkShapeOptions } from "./shape-options.js";
 
 /**
@@ -108,7 +109,7 @@ export function createContactsCollection() {
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onUpdate called with no pending mutation.");
-        return serializedWrite(`contact:${mutation.original.id}`, async () => {
+        return reportWriteAcceptance(mutation.metadata, () => serializedWrite(`contact:${mutation.original.id}`, async () => {
           const changedFields = Object.keys(mutation.changes);
           if (changedFields.length === 1 && changedFields[0] === "deletedAt") {
             const response = await contactsControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
@@ -132,7 +133,7 @@ export function createContactsCollection() {
           });
 
           return confirmed(response);
-        });
+        }));
       },
     }),
   );

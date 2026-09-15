@@ -32,7 +32,7 @@ import {
   type Note,
   type Deal,
 } from "@spark/core";
-import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote } from "@spark/data";
+import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, writeAccepted } from "@spark/data";
 import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -199,8 +199,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   async function changeOwner(nextOwnerId: string | null) {
     if (!deal || !canWrite) return;
     try {
-      const transaction = dealsCollection.update(deal.id, (draft) => { draft.ownerId = nextOwnerId ? userIdFactory.from(nextOwnerId) : null; });
-      await transaction.isPersisted.promise;
+      await writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.ownerId = nextOwnerId ? userIdFactory.from(nextOwnerId) : null; }));
       notify({ title: "Responsável atualizado", tone: "success" });
     } catch {
       notify({ title: "Não foi possível trocar o responsável", tone: "error" });
@@ -300,8 +299,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   async function reopenDeal() {
     if (!deal || !canMove) return;
     try {
-      const transaction = dealsCollection.update(deal.id, (draft) => { draft.status = "open"; draft.lossReason = null; });
-      await transaction.isPersisted.promise;
+      await writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.status = "open"; draft.lossReason = null; }));
       notify({ title: "Negócio reaberto", tone: "success" });
     } catch {
       notify({ title: "Não foi possível reabrir o negócio", tone: "error" });
@@ -323,8 +321,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   async function saveField(patch: DealPatch, label: string) {
     if (!deal || !canWrite) return;
     try {
-      const transaction = dealsCollection.update(deal.id, (draft) => { Object.assign(draft, patch); });
-      await transaction.isPersisted.promise;
+      await writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { Object.assign(draft, patch); }));
     } catch (cause) {
       notify({ title: `Não foi possível alterar ${label.toLowerCase()}`, tone: "error" });
       throw cause;
@@ -344,8 +341,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       return;
     }
     try {
-      const transaction = dealsCollection.update(deal.id, (draft) => { draft.stageId = stageIdFactory.from(value); });
-      await transaction.isPersisted.promise;
+      await writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.stageId = stageIdFactory.from(value); }));
       notify({ title: "Etapa atualizada", tone: "success" });
     } catch {
       notify({ title: "Não foi possível mudar a etapa", tone: "error" });
@@ -354,11 +350,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
 
   async function closeDeal(status: Extract<DealStatus, "won" | "lost">, reason?: string) {
     if (!deal || !canMove) throw new Error("FORBIDDEN");
-    const transaction = dealsCollection.update(deal.id, (draft) => {
+    await writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => {
       draft.status = status;
       draft.lossReason = status === "lost" ? reason?.trim() || null : null;
-    });
-    await transaction.isPersisted.promise;
+    }));
     notify({ title: status === "won" ? "Negócio ganho" : "Negócio perdido", tone: status === "won" ? "success" : "warning" });
   }
 
@@ -489,7 +484,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
               field={field}
               value={customValues[field.key]}
               disabled={!canWrite}
-              onSave={async (value) => { const transaction = dealsCollection.update(deal.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }}
+              onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
               onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
             />)}
             {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}

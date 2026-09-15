@@ -11,6 +11,7 @@ import { z } from "zod";
 import { DealSchema, dealId, money, toCents, type Deal, type DealStatus, type Money, type CreateDealInput, type OrgId, type PipelineId } from "@spark/core";
 import { confirmed } from "./confirmed.js";
 import { serializedWrite } from "./serialized-write.js";
+import { reportWriteAcceptance } from "./write-acceptance.js";
 import { sparkShapeOptions } from "./shape-options.js";
 import {
   dealsControllerCreate,
@@ -157,7 +158,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
       onUpdate: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onUpdate called with no pending mutation.");
-        return serializedWrite(`deal:${mutation.original.id}`, async () => {
+        return reportWriteAcceptance(mutation.metadata, () => serializedWrite(`deal:${mutation.original.id}`, async () => {
           const changedFields = Object.keys(mutation.changes);
 
           if (changedFields.length === 1 && changedFields[0] === "stageId") {
@@ -199,7 +200,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
           throw new Error(
             `Unsupported deal update — changed field(s): ${changedFields.join(", ")}.`,
           );
-        });
+        }));
       },
     }),
   );

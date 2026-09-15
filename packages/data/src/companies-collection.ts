@@ -5,6 +5,7 @@ import { CompanySchema, companyId, type Company, type CreateCompanyInput, type O
 import { companiesControllerArchive, companiesControllerCreate, companiesControllerUpdate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 import { serializedWrite } from "./serialized-write.js";
+import { reportWriteAcceptance } from "./write-acceptance.js";
 import { sparkShapeOptions } from "./shape-options.js";
 
 export function optimisticCompany(input: Omit<CreateCompanyInput, "id">, orgId: OrgId): Company {
@@ -47,7 +48,7 @@ export function createCompaniesCollection() {
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0];
       if (!mutation) throw new Error("onUpdate called with no pending mutation.");
-      return serializedWrite(`company:${mutation.original.id}`, async () => {
+      return reportWriteAcceptance(mutation.metadata, () => serializedWrite(`company:${mutation.original.id}`, async () => {
         const changed = Object.keys(mutation.changes);
         if (changed.length === 1 && changed[0] === "deletedAt") {
           const response = await companiesControllerArchive(mutation.original.id, { archived: mutation.modified.deletedAt !== null });
@@ -70,7 +71,7 @@ export function createCompaniesCollection() {
           ...(changed.includes("tags") ? { tags: mutation.modified.tags ?? [] } : {}),
         });
         return confirmed(response);
-      });
+      }));
     },
   }));
 }
