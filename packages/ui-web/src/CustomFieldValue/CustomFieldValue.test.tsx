@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { CustomFieldDefinition, CustomFieldType } from "@spark/core";
 import { TooltipProvider } from "../Tooltip/Tooltip.js";
@@ -9,6 +9,33 @@ function field(type: CustomFieldType, label: string): CustomFieldDefinition {
 }
 
 describe("CustomFieldValue", () => {
+  it("salva dinheiro como centavos e mantém a confirmação antes de a réplica chegar", async () => {
+    const save = vi.fn(async () => undefined);
+    const definition = field("currency", "Ticket");
+    const { rerender } = render(<TooltipProvider><CustomFieldValue field={definition} value={null} onSave={save} /></TooltipProvider>);
+    fireEvent.click(screen.getByRole("button", { name: /Alterar Ticket/ }));
+    const input = screen.getByRole("textbox", { name: "Ticket" });
+    fireEvent.change(input, { target: { value: "12345" } });
+    await act(async () => { fireEvent.blur(input); });
+    expect(save).toHaveBeenCalledWith(12345);
+    expect(screen.getByRole("button", { name: /Alterar Ticket.*123,45/ })).toBeInTheDocument();
+    rerender(<TooltipProvider><CustomFieldValue field={definition} value={null} onSave={save} /></TooltipProvider>);
+    expect(screen.getByRole("button", { name: /Alterar Ticket.*123,45/ })).toBeInTheDocument();
+    rerender(<TooltipProvider><CustomFieldValue field={definition} value={20000} onSave={save} /></TooltipProvider>);
+    expect(screen.getByRole("button", { name: /Alterar Ticket.*200,00/ })).toBeInTheDocument();
+  });
+
+  it("uma falha real restaura o valor confirmado e informa o erro", async () => {
+    const onError = vi.fn();
+    render(<TooltipProvider><CustomFieldValue field={field("currency", "Ticket")} value={10000} onSave={vi.fn(async () => { throw new Error("Sem conexão"); })} onError={onError} /></TooltipProvider>);
+    fireEvent.click(screen.getByRole("button", { name: /Alterar Ticket/ }));
+    const input = screen.getByRole("textbox", { name: "Ticket" });
+    fireEvent.change(input, { target: { value: "20000" } });
+    await act(async () => { fireEvent.blur(input); });
+    expect(onError).toHaveBeenCalledWith("Sem conexão");
+    expect(screen.getByRole("button", { name: /Alterar Ticket.*100,00/ })).toBeInTheDocument();
+  });
+
   it("mantém cada dígito digitado no campo monetário", () => {
     render(<TooltipProvider><CustomFieldValue field={field("currency", "Ticket")} value={null} onSave={vi.fn()} /></TooltipProvider>);
     fireEvent.click(screen.getByRole("button", { name: /Alterar Ticket/ }));

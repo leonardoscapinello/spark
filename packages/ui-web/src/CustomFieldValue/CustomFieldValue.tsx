@@ -47,8 +47,9 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
    * antigo enquanto isso é o que criava o limbo. */
   const [local, setLocal] = useState<unknown>(value);
   const [draft, setDraft] = useState(() => toDraft(field, value));
-  const [saving, setSaving] = useState(false);
-  const gravado = useRef<unknown>(value);
+  const observed = useRef<unknown>(value);
+  const confirmed = useRef<unknown>(value);
+  const revision = useRef(0);
 
   /* Valor vindo de fora (outro dispositivo, outra pessoa) assume.
    *
@@ -56,30 +57,34 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
    * render do painel, e com ele na lista o efeito rodava sempre — apagando a
    * data recém-escolhida antes de a gravação voltar. */
   useEffect(() => {
-    if (saving) return;
-    if (Object.is(value, gravado.current)) return;
-    gravado.current = value;
+    // Encerrar o spinner não é uma nova leitura: a prop pode continuar sendo
+    // a versão anterior até o Electric entregar a confirmação. Só uma mudança
+    // efetiva vinda da coleção pode substituir o valor que acabamos de salvar.
+    if (sameValue(value, observed.current)) return;
+    observed.current = value;
+    confirmed.current = value;
+    revision.current += 1;
     setLocal(value);
     setDraft(toDraft(field, value));
-  }, [field.id, field.type, value, saving]);
+  }, [field.id, field.type, value]);
 
   async function save(raw: unknown) {
-    setSaving(true);
+    const currentRevision = ++revision.current;
     try {
       const normalized = normalizeCustomFieldValue(field, raw, choices);
-      gravado.current = normalized;
       setLocal(normalized);
       setDraft(toDraft(field, normalized));
       await onSave(normalized);
+      if (revision.current === currentRevision) confirmed.current = normalized;
       onSuccess?.(field.label);
     } catch (cause) {
       onError?.(cause instanceof Error ? cause.message : "Revise o campo.");
-      gravado.current = value;
-      setLocal(value);
-      setDraft(toDraft(field, value));
+      // Uma falha antiga não desfaz uma edição ou atualização mais recente.
+      if (revision.current === currentRevision) {
+        setLocal(confirmed.current);
+        setDraft(toDraft(field, confirmed.current));
+      }
       throw cause;
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -133,7 +138,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
       value={digitado}
       disabled={busy}
       onValueChange={(next) => setDraft(next === null ? "" : String(toCents(next)))}
-      onBlur={() => close(draft !== toDraft(field, local) ? save(digitado) : undefined)}
+      onBlur={() => close(draft !== toDraft(field, local) ? save(digitado === null ? null : toCents(digitado)) : undefined)}
     />);
   }
 
@@ -145,6 +150,10 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
   return row((close) => <Input type={inputType} aria-label={field.label} value={draft} disabled={busy} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
 }
 
+function sameValue(left: unknown, right: unknown): boolean {
+  return Object.is(left, right) || (Array.isArray(left) && Array.isArray(right)
+    && left.length === right.length && left.every((item, index) => Object.is(item, right[index])));
+}
 
 /** Valor guardado → texto do controle. Moeda fica em centavo: é a unidade
  * que o `MoneyInput` recebe e devolve, e a que o banco guarda. */
