@@ -10,6 +10,8 @@ import {
   stageId as stageIdFactory,
   userId as userIdFactory,
   type Activity,
+  type ActivityAvailability,
+  type ActivityPriority,
   type ActivityType,
   type DealStatus,
   type Money,
@@ -33,7 +35,7 @@ import {
   type Deal,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -60,8 +62,19 @@ import { CompanyProfile } from "./company-detail";
 import styles from "./deal-detail.module.css";
 
 const ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPES.map((value) => ({ value, label: ACTIVITY_TYPE_LABELS[value] }));
+const ACTIVITY_COMPOSER_TABS: readonly { id: ActivityType | "note"; label: string; icon: IconName }[] = [
+  { id: "call", label: "Ligação", icon: "phone" },
+  { id: "meeting", label: "Reunião", icon: "team" },
+  { id: "task", label: "Tarefa", icon: "check" },
+  { id: "deadline", label: "Prazo", icon: "pushpin" },
+  { id: "email", label: "E-mail", icon: "mail" },
+  { id: "lunch", label: "Almoço", icon: "calendar" },
+  { id: "note", label: "Nota", icon: "file" },
+];
 /* Durações que o Pipedrive oferece por padrão — quem precisa de outra escreve. */
 const DURATIONS = [{ value: "0", label: "Sem duração" }, { value: "15", label: "15 min" }, { value: "30", label: "30 min" }, { value: "60", label: "1 hora" }, { value: "90", label: "1h30" }, { value: "120", label: "2 horas" }];
+const PRIORITIES = [{ value: "none", label: "Sem prioridade" }, { value: "high", label: "Alta" }, { value: "medium", label: "Média" }, { value: "low", label: "Baixa" }];
+const AVAILABILITIES = [{ value: "free", label: "Livre — permite sobreposição" }, { value: "busy", label: "Ocupado — reserva o horário" }];
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("deals:read");
@@ -129,13 +142,17 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [activityType, setActivityType] = useState<ActivityType>("task");
   const [activityTitle, setActivityTitle] = useState("");
+  const [activityDescription, setActivityDescription] = useState("");
   const [activityNotes, setActivityNotes] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [activityDuration, setActivityDuration] = useState("30");
   const [activityLocation, setActivityLocation] = useState("");
+  const [activityVideoCallUrl, setActivityVideoCallUrl] = useState("");
+  const [activityPriority, setActivityPriority] = useState<ActivityPriority>("none");
+  const [activityAvailability, setActivityAvailability] = useState<ActivityAvailability>("free");
   const [activityOwnerId, setActivityOwnerId] = useState("");
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
-  const [composerTab, setComposerTab] = useState<"atividade" | "nota">("atividade");
+  const [composerTab, setComposerTab] = useState<ActivityType | "note">("call");
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -362,33 +379,49 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     notify({ title: status === "won" ? "Negócio ganho" : "Negócio perdido", tone: status === "won" ? "success" : "warning" });
   }
 
-  function openActivityModal(activity?: Activity) {
+  function openActivityModal(activity?: Activity, requestedType: ActivityType = "task") {
     if (activity) {
       setEditingActivityId(activity.id);
       setActivityType(activity.type);
       setActivityTitle(activity.title);
+      setActivityDescription(activity.description ?? "");
       setActivityNotes(activity.notes ?? "");
-      setScheduledAt(activity.scheduledAt.slice(0, 16));
+      setScheduledAt(toLocalDateTimeValue(activity.scheduledAt));
       setActivityDuration(String(activity.durationMinutes));
       setActivityLocation(activity.location ?? "");
+      setActivityVideoCallUrl(activity.videoCallUrl ?? "");
+      setActivityPriority(activity.priority);
+      setActivityAvailability(activity.availability);
       setActivityOwnerId(activity.ownerId ?? "");
     } else {
       setEditingActivityId(null);
-      setActivityTitle(""); setActivityNotes(""); setScheduledAt(""); setActivityType("task");
-      setActivityDuration("30"); setActivityLocation(""); setActivityOwnerId(deal?.ownerId ?? session?.userId ?? "");
+      setActivityType(requestedType);
+      setActivityTitle(ACTIVITY_TYPE_LABELS[requestedType]);
+      setActivityDescription(""); setActivityNotes(""); setScheduledAt(nextHalfHourValue());
+      setActivityDuration(requestedType === "deadline" ? "0" : "30"); setActivityLocation(""); setActivityVideoCallUrl("");
+      setActivityPriority("none"); setActivityAvailability("free"); setActivityOwnerId(deal?.ownerId ?? session?.userId ?? "");
     }
     setActivityModalOpen(true);
   }
 
   async function saveActivity() {
-    if (!deal || !session || !activityTitle.trim() || !scheduledAt) throw new Error("MISSING_FIELDS");
+    if (!deal || !session) throw new Error("Sessão expirada. Entre de novo para agendar.");
+    if (!activityTitle.trim()) throw new Error("Escreva o título da atividade.");
+    if (!scheduledAt || Number.isNaN(new Date(scheduledAt).getTime())) throw new Error("Escolha uma data e hora válidas.");
+    if (activityVideoCallUrl.trim()) {
+      try { new URL(activityVideoCallUrl.trim()); } catch { throw new Error("Informe um link completo e válido para a videochamada."); }
+    }
     const fields = {
       type: activityType,
       title: activityTitle.trim(),
+      description: activityDescription.trim() || null,
       notes: activityNotes.trim() || null,
       scheduledAt: new Date(scheduledAt).toISOString(),
       durationMinutes: Number(activityDuration),
       location: activityLocation.trim() || null,
+      videoCallUrl: activityVideoCallUrl.trim() || null,
+      priority: activityPriority,
+      availability: activityAvailability,
       ownerId: activityOwnerId ? userIdFactory.from(activityOwnerId) : null,
     };
     if (editingActivityId) {
@@ -542,11 +575,11 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           label="Registrar no negócio"
           value={composerTab}
           onValueChange={setComposerTab}
-          tabs={[{ id: "atividade", label: "Atividade", icon: "calendar", disabled: !canWriteActivities }, { id: "nota", label: "Nota", icon: "file" }]}
+          tabs={ACTIVITY_COMPOSER_TABS.map((tab) => ({ ...tab, disabled: tab.id !== "note" && !canWriteActivities }))}
         >
-          {composerTab === "atividade"
-            ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal()}>
-                {canWriteActivities ? "Clique aqui para agendar uma atividade…" : "Você não pode agendar atividades."}
+          {composerTab !== "note"
+            ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal(undefined, composerTab)}>
+                {canWriteActivities ? `Clique aqui para agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}…` : "Você não pode agendar atividades."}
               </ComposerPrompt>
             : <div className={styles.compositorNota}>
                 <Textarea aria-label="Nova nota" rows={noteDraft ? 4 : 2} value={noteDraft} placeholder="Clique aqui para escrever uma nota…" onChange={(event) => setNoteDraft(event.target.value)} />
@@ -565,7 +598,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <div className={styles.blocoCorpo}>{focusActivities.length === 0
             ? <p className={styles.empty}>Nenhum próximo passo agendado.</p>
             : <ul className={styles.activityList}>{focusActivities.map((activity) => <li key={activity.id} data-completed="false" data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>
-                <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.notes && <p>{activity.notes}</p>}<time data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>{activity.scheduledAt < new Date().toISOString() ? "Atrasada · " : ""}{formatDateTime(activity.scheduledAt)}</time></div>
+                <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.description && <p>{activity.description}</p>}<time data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>{activity.scheduledAt < new Date().toISOString() ? "Atrasada · " : ""}{formatDateTime(activity.scheduledAt)}</time></div>
                 {canWriteActivities && <span className={styles.activityActions}>
                   <Button size="sm" variant="ghost" onClick={() => openActivityModal(activity)}>Editar</Button>
                   <Button size="sm" variant="secondary" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Concluir</Button>
@@ -598,7 +631,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       </section>
     </div>
 
-    <ActionModal open={activityModalOpen} onOpenChange={(open) => { setActivityModalOpen(open); if (!open) setEditingActivityId(null); }} title={editingActivityId ? "Editar atividade" : "Nova atividade"} confirmLabel={editingActivityId ? "Salvar" : "Agendar"} errorText="Preencha título, data e hora." onConfirm={saveActivity}>
+    <ActionModal open={activityModalOpen} onOpenChange={(open) => { setActivityModalOpen(open); if (!open) setEditingActivityId(null); }} title={editingActivityId ? "Editar atividade" : "Nova atividade"} confirmLabel={editingActivityId ? "Salvar" : "Agendar"} errorText="Não foi possível salvar a atividade." onConfirm={saveActivity} size="wide">
       <div className={styles.modalFields}>
         <SegmentedControl label="Tipo de atividade" value={activityType} options={ACTIVITY_TYPE_OPTIONS} onValueChange={(value) => setActivityType(value)} />
         <Field><Label>Título</Label><Input autoFocus value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Qual é o próximo passo?" /></Field>
@@ -607,10 +640,24 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <Field><Label>Duração</Label><Select label="Duração da atividade" value={activityDuration} options={DURATIONS} onValueChange={(value) => { if (value) setActivityDuration(value); }} /></Field>
         </div>
         <div className={styles.modalLinha}>
+          <Field><Label>Prioridade</Label><Select label="Prioridade da atividade" value={activityPriority} options={PRIORITIES} onValueChange={(value) => { if (value) setActivityPriority(value as ActivityPriority); }} /></Field>
+          <Field><Label>Disponibilidade</Label><Select label="Disponibilidade no calendário" value={activityAvailability} options={AVAILABILITIES} onValueChange={(value) => { if (value) setActivityAvailability(value as ActivityAvailability); }} /></Field>
+        </div>
+        <div className={styles.modalLinha}>
           <Field><Label>Responsável</Label><Select label="Responsável pela atividade" value={activityOwnerId || null} placeholder="Ninguém" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setActivityOwnerId(value ?? "")} /></Field>
           <Field><Label>Local</Label><Input value={activityLocation} onChange={(event) => setActivityLocation(event.target.value)} placeholder="Sala, endereço ou link da chamada" /></Field>
         </div>
-        <Field><Label>Observações</Label><Textarea value={activityNotes} onChange={(event) => setActivityNotes(event.target.value)} placeholder="Contexto para a equipe" /></Field>
+        <Field><Label>Link da videochamada</Label><Input type="url" value={activityVideoCallUrl} onChange={(event) => setActivityVideoCallUrl(event.target.value)} placeholder="https://meet.google.com/…" /></Field>
+        <Field><Label>Descrição para participantes</Label><Textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Pauta e informações que podem aparecer no convite do calendário" /></Field>
+        <Field><Label>Nota interna</Label><Textarea value={activityNotes} onChange={(event) => setActivityNotes(event.target.value)} placeholder="Contexto privado, visível apenas para a equipe" /></Field>
+        <section className={styles.activityContext} aria-label="Vínculos da atividade">
+          <strong>Vínculos</strong>
+          <div className={styles.activityContextItems}>
+            <span><Icon name="briefcase" />{deal.name}</span>
+            {linkedContact && <span><Avatar name={linkedContact.name} size="small" />{linkedContact.name}</span>}
+            {linkedCompany && <span><Icon name="building" />{linkedCompany.name}</span>}
+          </div>
+        </section>
       </div>
     </ActionModal>
     <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>
@@ -652,6 +699,19 @@ function activityTypeLabel(type: ActivityType): string { return ACTIVITY_TYPE_LA
 function conversationChannelLabel(channel: string): string { return ({ manual: "Interno", email: "E-mail", instagram: "Instagram", whatsapp: "WhatsApp", messenger: "Messenger" } as Record<string, string>)[channel] ?? channel; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value)); }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+
+function toLocalDateTimeValue(value: string | Date): string {
+  const date = new Date(value);
+  const part = (number: number) => String(number).padStart(2, "0");
+  return `${date.getFullYear()}-${part(date.getMonth() + 1)}-${part(date.getDate())}T${part(date.getHours())}:${part(date.getMinutes())}`;
+}
+
+function nextHalfHourValue(): string {
+  const date = new Date();
+  date.setSeconds(0, 0);
+  date.setMinutes(date.getMinutes() < 30 ? 30 : 60);
+  return toLocalDateTimeValue(date);
+}
 
 /** Nota no histórico: papel amarelo, como o do Pipedrive — fala de gente, não registro do sistema. */
 function NoteCard({ note, authorName, onRemove }: { note: Note; authorName?: string | undefined; onRemove?: (() => void) | undefined }) {

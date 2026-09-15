@@ -1882,6 +1882,24 @@ export const CreateActivityDtoType = {
   deadline: 'deadline',
 } as const;
 
+export type CreateActivityDtoPriority = typeof CreateActivityDtoPriority[keyof typeof CreateActivityDtoPriority];
+
+
+export const CreateActivityDtoPriority = {
+  none: 'none',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type CreateActivityDtoAvailability = typeof CreateActivityDtoAvailability[keyof typeof CreateActivityDtoAvailability];
+
+
+export const CreateActivityDtoAvailability = {
+  free: 'free',
+  busy: 'busy',
+} as const;
+
 export interface CreateActivityDto {
   /** @minLength 1 */
   id: string;
@@ -1902,6 +1920,11 @@ export interface CreateActivityDto {
      */
   title: string;
   /**
+     * @maxLength 5000
+     * @nullable
+     */
+  description?: string | null;
+  /**
      * @maxLength 2000
      * @nullable
      */
@@ -1917,6 +1940,13 @@ export interface CreateActivityDto {
      * @nullable
      */
   location?: string | null;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  videoCallUrl?: string | null;
+  priority?: CreateActivityDtoPriority;
+  availability?: CreateActivityDtoAvailability;
   /**
      * @minLength 1
      * @nullable
@@ -1934,6 +1964,24 @@ export const CreateActivityResponseDtoActivityType = {
   email: 'email',
   lunch: 'lunch',
   deadline: 'deadline',
+} as const;
+
+export type CreateActivityResponseDtoActivityPriority = typeof CreateActivityResponseDtoActivityPriority[keyof typeof CreateActivityResponseDtoActivityPriority];
+
+
+export const CreateActivityResponseDtoActivityPriority = {
+  none: 'none',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type CreateActivityResponseDtoActivityAvailability = typeof CreateActivityResponseDtoActivityAvailability[keyof typeof CreateActivityResponseDtoActivityAvailability];
+
+
+export const CreateActivityResponseDtoActivityAvailability = {
+  free: 'free',
+  busy: 'busy',
 } as const;
 
 export type CreateActivityResponseDtoActivity = {
@@ -1958,6 +2006,11 @@ export type CreateActivityResponseDtoActivity = {
      */
   title: string;
   /**
+     * @maxLength 5000
+     * @nullable
+     */
+  description: string | null;
+  /**
      * @maxLength 2000
      * @nullable
      */
@@ -1973,6 +2026,13 @@ export type CreateActivityResponseDtoActivity = {
      * @nullable
      */
   location: string | null;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  videoCallUrl: string | null;
+  priority?: CreateActivityResponseDtoActivityPriority;
+  availability?: CreateActivityResponseDtoActivityAvailability;
   /**
      * @minLength 1
      * @nullable
@@ -2005,6 +2065,24 @@ export const UpdateActivityDtoType = {
   deadline: 'deadline',
 } as const;
 
+export type UpdateActivityDtoPriority = typeof UpdateActivityDtoPriority[keyof typeof UpdateActivityDtoPriority];
+
+
+export const UpdateActivityDtoPriority = {
+  none: 'none',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type UpdateActivityDtoAvailability = typeof UpdateActivityDtoAvailability[keyof typeof UpdateActivityDtoAvailability];
+
+
+export const UpdateActivityDtoAvailability = {
+  free: 'free',
+  busy: 'busy',
+} as const;
+
 export interface UpdateActivityDto {
   /**
      * @minLength 1
@@ -2023,6 +2101,11 @@ export interface UpdateActivityDto {
      */
   title?: string;
   /**
+     * @maxLength 5000
+     * @nullable
+     */
+  description?: string | null;
+  /**
      * @maxLength 2000
      * @nullable
      */
@@ -2038,6 +2121,13 @@ export interface UpdateActivityDto {
      * @nullable
      */
   location?: string | null;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  videoCallUrl?: string | null;
+  priority?: UpdateActivityDtoPriority;
+  availability?: UpdateActivityDtoAvailability;
   /**
      * @minLength 1
      * @nullable
@@ -2059,6 +2149,24 @@ export const CompleteActivityResponseDtoActivityType = {
   email: 'email',
   lunch: 'lunch',
   deadline: 'deadline',
+} as const;
+
+export type CompleteActivityResponseDtoActivityPriority = typeof CompleteActivityResponseDtoActivityPriority[keyof typeof CompleteActivityResponseDtoActivityPriority];
+
+
+export const CompleteActivityResponseDtoActivityPriority = {
+  none: 'none',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type CompleteActivityResponseDtoActivityAvailability = typeof CompleteActivityResponseDtoActivityAvailability[keyof typeof CompleteActivityResponseDtoActivityAvailability];
+
+
+export const CompleteActivityResponseDtoActivityAvailability = {
+  free: 'free',
+  busy: 'busy',
 } as const;
 
 export type CompleteActivityResponseDtoActivity = {
@@ -2083,6 +2191,11 @@ export type CompleteActivityResponseDtoActivity = {
      */
   title: string;
   /**
+     * @maxLength 5000
+     * @nullable
+     */
+  description: string | null;
+  /**
      * @maxLength 2000
      * @nullable
      */
@@ -2098,6 +2211,13 @@ export type CompleteActivityResponseDtoActivity = {
      * @nullable
      */
   location: string | null;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  videoCallUrl: string | null;
+  priority?: CompleteActivityResponseDtoActivityPriority;
+  availability?: CompleteActivityResponseDtoActivityAvailability;
   /**
      * @minLength 1
      * @nullable

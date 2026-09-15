@@ -10,6 +10,14 @@ export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
 };
 export type ActivityType = z.infer<typeof ActivityTypeSchema>;
 
+export const ACTIVITY_PRIORITIES = ["none", "low", "medium", "high"] as const;
+export const ActivityPrioritySchema = z.enum(ACTIVITY_PRIORITIES);
+export type ActivityPriority = z.infer<typeof ActivityPrioritySchema>;
+
+export const ACTIVITY_AVAILABILITIES = ["free", "busy"] as const;
+export const ActivityAvailabilitySchema = z.enum(ACTIVITY_AVAILABILITIES);
+export type ActivityAvailability = z.infer<typeof ActivityAvailabilitySchema>;
+
 /**
  * Activity — linked to a contact and/or a deal (at least one of the two;
  * not enforced here as a cross-field schema rule, same choice already
@@ -23,12 +31,19 @@ export const ActivitySchema = z.object({
   dealId: zDealId.nullable(),
   type: ActivityTypeSchema,
   title: z.string().min(1, { error: "Title is required" }).max(200),
+  /** Descrição compartilhável com calendário e participantes. */
+  description: z.string().max(5000).nullable(),
+  /** Nota privada da equipe — não deve sair em convite de calendário. */
   notes: z.string().max(2000).nullable(),
   scheduledAt: zServerTimestamp,
   /** Quanto tempo reservar na agenda. 0 = compromisso sem duração (um prazo). */
   durationMinutes: z.number().int().min(0).max(24 * 60).default(30),
   /** Onde acontece — endereço, sala, link da chamada. */
   location: z.string().max(300).nullable(),
+  videoCallUrl: z.string().url().max(2000).nullable(),
+  priority: ActivityPrioritySchema.default("none"),
+  /** Livre permite sobreposição; ocupado reserva o horário do responsável. */
+  availability: ActivityAvailabilitySchema.default("free"),
   /** Quem vai executar. Sem responsável a atividade é da equipe, não de ninguém. */
   ownerId: zUserId.nullable(),
   completed: z.boolean().default(false),
@@ -47,7 +62,7 @@ const ActivityCreateFieldsSchema = ActivitySchema.omit({
   completedAt: true,
   createdAt: true,
   updatedAt: true,
-}).partial({ contactId: true, dealId: true, notes: true, durationMinutes: true, location: true, ownerId: true });
+}).partial({ contactId: true, dealId: true, description: true, notes: true, durationMinutes: true, location: true, videoCallUrl: true, priority: true, availability: true, ownerId: true });
 export const CreateActivityInputSchema = ActivityCreateFieldsSchema
   .refine((value) => Boolean(value.contactId || value.dealId), { error: "A atividade precisa estar ligada a uma pessoa ou negócio" });
 export type CreateActivityInput = z.infer<typeof CreateActivityInputSchema>;

@@ -25,10 +25,14 @@ export class ActivitiesRepository {
           dealId: input.dealId ?? null,
           type: input.type,
           title: input.title,
+          description: input.description ?? null,
           notes: input.notes ?? null,
           scheduledAt: new Date(input.scheduledAt),
           durationMinutes: input.durationMinutes ?? 30,
           location: input.location ?? null,
+          videoCallUrl: input.videoCallUrl ?? null,
+          priority: input.priority ?? "none",
+          availability: input.availability ?? "free",
           ownerId: input.ownerId ?? null,
         })
         .returning();
@@ -50,10 +54,14 @@ export class ActivitiesRepository {
         .set({
           ...(input.type !== undefined ? { type: input.type } : {}),
           ...(input.title !== undefined ? { title: input.title } : {}),
+          ...(input.description !== undefined ? { description: input.description } : {}),
           ...(input.notes !== undefined ? { notes: input.notes } : {}),
           ...(input.scheduledAt !== undefined ? { scheduledAt: new Date(input.scheduledAt) } : {}),
           ...(input.durationMinutes !== undefined ? { durationMinutes: input.durationMinutes } : {}),
           ...(input.location !== undefined ? { location: input.location } : {}),
+          ...(input.videoCallUrl !== undefined ? { videoCallUrl: input.videoCallUrl } : {}),
+          ...(input.priority !== undefined ? { priority: input.priority } : {}),
+          ...(input.availability !== undefined ? { availability: input.availability } : {}),
           ...(input.ownerId !== undefined ? { ownerId: input.ownerId } : {}),
           ...(input.contactId !== undefined ? { contactId: input.contactId } : {}),
           ...(input.dealId !== undefined ? { dealId: input.dealId } : {}),
@@ -102,10 +110,14 @@ function toActivity(row: {
   dealId: string | null;
   type: string;
   title: string;
+  description: string | null;
   notes: string | null;
   scheduledAt: Date;
   durationMinutes: number;
   location: string | null;
+  videoCallUrl: string | null;
+  priority: string;
+  availability: string;
   ownerId: string | null;
   completed: boolean;
   completedAt: Date | null;
@@ -119,10 +131,14 @@ function toActivity(row: {
     dealId: row.dealId,
     type: row.type,
     title: row.title,
+    description: row.description,
     notes: row.notes,
     scheduledAt: row.scheduledAt.toISOString(),
     durationMinutes: row.durationMinutes,
     location: row.location,
+    videoCallUrl: row.videoCallUrl,
+    priority: row.priority,
+    availability: row.availability,
     ownerId: row.ownerId,
     completed: row.completed,
     completedAt: row.completedAt?.toISOString() ?? null,

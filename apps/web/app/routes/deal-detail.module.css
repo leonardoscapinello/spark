@@ -108,6 +108,11 @@
 .conversationList span { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
+.activityContext { display: grid; gap: var(--space-2); padding: var(--space-3); background: var(--color-surface2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); }
+.activityContext > strong { font-size: var(--typography-size-sm); }
+.activityContextItems { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.activityContextItems > span { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding-inline: var(--space-3); color: var(--color-inkMuted); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); font-size: var(--typography-size-sm); }
+.activityContextItems svg { flex: 0 0 var(--ui-icon); }
 
 /* Numa coluna só, a página volta a rolar inteira: duas áreas de rolagem
  * empilhadas numa tela estreita é pior que uma. */
