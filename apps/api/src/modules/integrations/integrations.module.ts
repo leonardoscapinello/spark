@@ -14,6 +14,7 @@ import { SecretVault } from "./infrastructure/secret-vault.service.js";
 import { IntegrationsController } from "./presentation/integrations.controller.js";
 import { IntegrationRuntimeResolver } from "./application/integration-runtime-resolver.service.js";
 import { EmailDeliveryService } from "./application/email-delivery.service.js";
+import { CalendarFeedSyncService } from "./application/calendar-feed-sync.service.js";
 @Module({
   imports: [EventsModule],
   controllers: [IntegrationsController],
@@ -27,6 +28,7 @@ import { EmailDeliveryService } from "./application/email-delivery.service.js";
     SecretVault,
     IntegrationRuntimeResolver,
     EmailDeliveryService,
+    CalendarFeedSyncService,
     GetCurrentUserUseCase,
     UsersRepository,
     PermissionGroupsRepository,

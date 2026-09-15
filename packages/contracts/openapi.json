@@ -4653,6 +4653,9 @@
             "enum": [
               "smtp",
               "google_workspace",
+              "google_calendar",
+              "outlook_calendar",
+              "apple_calendar",
               "instagram",
               "buffer",
               "s3",
@@ -4702,6 +4705,9 @@
                 "enum": [
                   "smtp",
                   "google_workspace",
+                  "google_calendar",
+                  "outlook_calendar",
+                  "apple_calendar",
                   "instagram",
                   "buffer",
                   "s3",

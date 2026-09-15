@@ -35,6 +35,8 @@ import {
   stageFieldGaps,
   type Note,
   type Deal,
+  type CalendarEvent,
+  type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, writeAccepted } from "@spark/data";
 import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
@@ -50,6 +52,7 @@ import { getProductsCollection } from "../lib/catalog-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDetailDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
+import { getCalendarEventsCollection } from "../lib/calendar-events-collection.client";
 import { getSession } from "../lib/auth.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getEventsCollection } from "../lib/events-collection.client";
@@ -100,9 +103,29 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     getEventsCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
+    ...(session.capabilities.includes("activities:read") ? [getCalendarEventsCollection().preload()] : []),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
   ]);
   return null;
+}
+
+function activityOwnerOption(users: User[], ownerId: string) {
+  const owner = users.find((user) => user.id === ownerId);
+  return owner ? { value: owner.id, label: owner.name, description: owner.email, avatar: owner.avatarUrl } : null;
+}
+
+function ExternalScheduleItem({ event, conflict }: { event: CalendarEvent; conflict: boolean }) {
+  const provider = { google_calendar: "Google", outlook_calendar: "Outlook", apple_calendar: "Apple" }[event.provider];
+  return <div className={styles.scheduleItem} data-conflict={conflict || undefined}>
+    <time>{formatExternalTimeRange(event.startsAt, event.endsAt, event.allDay)}</time>
+    <div><strong>{event.title}</strong><span>{event.calendarName} · {provider}</span></div>
+  </div>;
+}
+
+function formatExternalTimeRange(startsAt: string, endsAt: string, allDay: boolean): string {
+  if (allDay) return "Dia todo";
+  const formatter = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${formatter.format(new Date(startsAt))}–${formatter.format(new Date(endsAt))}`;
 }
 
 export default function DealDetail({ params }: Route.ComponentProps) {
@@ -138,6 +161,15 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: activities = [] } = useLiveQuery({
     query: (q) => canReadActivities ? q.from({ activities: activitiesCollection }).where(({ activities: item }) => eq(item.dealId, params.dealId)).orderBy(({ activities: item }) => item.scheduledAt, "asc") : undefined,
   });
+  /* A ficha mostra só as atividades deste negócio, mas disponibilidade é da
+   * pessoa inteira: um compromisso de outro negócio também ocupa a agenda.
+   * A consulta continua local-first; abrir a modal não faz request. */
+  const { data: calendarActivities = [] } = useLiveQuery({
+    query: (q) => canReadActivities ? q.from({ activities: activitiesCollection }).orderBy(({ activities: item }) => item.scheduledAt, "asc") : undefined,
+  }, [canReadActivities]);
+  const { data: externalCalendarEvents = [] } = useLiveQuery({
+    query: (q) => canReadActivities ? q.from({ calendarEvents: getCalendarEventsCollection() }).orderBy(({ calendarEvents: item }) => item.startsAt, "asc") : undefined,
+  }, [canReadActivities]);
   const canReadCatalog = session?.capabilities.includes("catalog:read") ?? false;
   const { data: dealItems = [] } = useLiveQuery({ query: (q) => q.from({ items: getDealProductsCollection() }).where(({ items: item }) => eq(item.dealId, params.dealId)).orderBy(({ items: item }) => item.sortOrder, "asc") });
   const { data: catalog = [], isLoading: catalogLoading } = useLiveQuery({ query: (q) => canReadCatalog && itemModalOpen ? q.from({ products: getProductsCollection() }).orderBy(({ products: product }) => product.name, "asc") : undefined }, [canReadCatalog, itemModalOpen]);
@@ -235,10 +267,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     ? Math.max(0, Math.round((new Date(activityEndsAtValue).getTime() - scheduledDate.getTime()) / 60_000))
     : 0;
   const scheduledDayActivities = useMemo(() => scheduledDate && !Number.isNaN(scheduledDate.getTime())
-    ? orderedActivities.filter((activity) => isSameLocalDay(new Date(activity.scheduledAt), scheduledDate)
+    ? calendarActivities.filter((activity) => isSameLocalDay(new Date(activity.scheduledAt), scheduledDate)
       && activity.id !== editingActivityId
       && (!activityOwnerId || activity.ownerId === activityOwnerId))
-    : [], [activityOwnerId, editingActivityId, orderedActivities, scheduledAt]);
+    : [], [activityOwnerId, calendarActivities, editingActivityId, scheduledAt]);
+  const scheduledDayExternal = useMemo(() => scheduledDate && !Number.isNaN(scheduledDate.getTime())
+    ? externalCalendarEvents.filter((event) => event.status !== "cancelled" && isSameLocalDay(new Date(event.startsAt), scheduledDate) && (!activityOwnerId || event.ownerId === activityOwnerId))
+    : [], [activityOwnerId, externalCalendarEvents, scheduledAt]);
   const scheduleConflicts = useMemo(() => {
     if (!scheduledDate || Number.isNaN(scheduledDate.getTime()) || !activityEndsAtValue) return new Set<string>();
     const candidate = {
@@ -248,15 +283,17 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       endsAt: new Date(activityEndsAtValue).toISOString(),
       availability: activityAvailability,
     };
-    const conflicts = overlappingScheduleIntervals(candidate, orderedActivities.filter((activity) => !activity.completed).map((activity) => ({
+    const internalIntervals = calendarActivities.filter((activity) => !activity.completed).map((activity) => ({
       id: activity.id,
       ownerId: activity.ownerId,
       startsAt: activity.scheduledAt,
       endsAt: activityEndsAt(activity),
       availability: activity.availability,
-    })));
+    }));
+    const externalIntervals = externalCalendarEvents.filter((event) => event.status !== "cancelled").map((event) => ({ id: event.id, ownerId: event.ownerId, startsAt: event.startsAt, endsAt: event.endsAt, availability: event.availability }));
+    const conflicts = overlappingScheduleIntervals(candidate, [...internalIntervals, ...externalIntervals]);
     return new Set(conflicts.map((conflict) => conflict.id));
-  }, [activityAvailability, activityEndsAtValue, activityOwnerId, editingActivityId, orderedActivities, scheduledAt]);
+  }, [activityAvailability, activityEndsAtValue, activityOwnerId, calendarActivities, editingActivityId, externalCalendarEvents, scheduledAt]);
 
   async function changeOwner(nextOwnerId: string | null) {
     if (!deal || !canWrite) return;
@@ -708,20 +745,22 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         <SegmentedControl label="Tipo de atividade" value={activityType} options={ACTIVITY_TYPE_OPTIONS} onValueChange={changeActivityType} />
         <p className={styles.activityHint}>{ACTIVITY_FORM_HINTS[activityType]}</p>
         <Field><Label>Título</Label><Input autoFocus value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Qual é o próximo passo?" /></Field>
-        <div className={styles.activityInterval}>
+        <section className={styles.activityTiming} aria-label="Data, hora e duração">
+          <header><strong>Data e hora</strong><Badge tone="neutral">{formatDuration(activityDuration)}</Badge></header>
+          <div className={styles.activityInterval}>
           <Field><Label>Data de início</Label><DatePicker label="Data de início" value={activityStartDate} onValueChange={(value) => changeActivityStart(value, activityStartTime)} /></Field>
           <Field><Label>Hora de início</Label><TimePicker label="Hora de início" value={activityStartTime} onValueChange={(value) => changeActivityStart(activityStartDate, value)} /></Field>
           <span className={styles.activityIntervalArrow} aria-hidden="true">→</span>
           <Field><Label>Data de fim</Label><DatePicker label="Data de fim" value={activityEndDate} onValueChange={setActivityEndDate} /></Field>
           <Field><Label>Hora de fim</Label><TimePicker label="Hora de fim" value={activityEndTime} onValueChange={setActivityEndTime} /></Field>
-          <span className={styles.activityDuration}>{formatDuration(activityDuration)}</span>
-        </div>
+          </div>
+        </section>
         <div className={styles.modalLinha}>
           <Field><Label>Prioridade</Label><Select label="Prioridade da atividade" value={activityPriority} options={PRIORITIES} onValueChange={(value) => { if (value) setActivityPriority(value as ActivityPriority); }} /></Field>
           {activityType !== "deadline" && activityType !== "task" && activityType !== "email" && <Field><Label>Disponibilidade</Label><Select label="Disponibilidade no calendário" value={activityAvailability} options={AVAILABILITIES} onValueChange={(value) => { if (value) setActivityAvailability(value as ActivityAvailability); }} /></Field>}
         </div>
         <div className={styles.modalLinha}>
-          <Field><Label>Responsável</Label><Select label="Responsável pela atividade" value={activityOwnerId || null} placeholder="Ninguém" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setActivityOwnerId(value ?? "")} /></Field>
+          <Field><Label>Responsável</Label><SearchSelect label="Responsável pela atividade" searchPlacement="dropdown" placeholder="Buscar usuário" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, description: item.email, avatar: item.avatarUrl }))} value={activityOwnerOption(users, activityOwnerId)} onValueChange={(option) => setActivityOwnerId(option?.value ?? "")} /></Field>
           {(activityType === "meeting" || activityType === "lunch") && <Field><Label>Local</Label><Input value={activityLocation} onChange={(event) => setActivityLocation(event.target.value)} placeholder="Sala ou endereço" /></Field>}
         </div>
         {activityType === "meeting" && <Field><Label>Link da videochamada</Label><Input type="url" value={activityVideoCallUrl} onChange={(event) => setActivityVideoCallUrl(event.target.value)} placeholder="https://meet.google.com/…" /></Field>}
@@ -742,14 +781,14 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           <Badge tone={scheduleConflicts.size > 0 ? "danger" : "success"}>{scheduleConflicts.size > 0 ? `${scheduleConflicts.size} conflito${scheduleConflicts.size > 1 ? "s" : ""}` : "Horário livre"}</Badge>
         </header>
         <div className={styles.dayScheduleBody}>
-          {scheduledDayActivities.length === 0
+          {scheduledDayActivities.length === 0 && scheduledDayExternal.length === 0
             ? <p className={styles.empty}>Nenhum compromisso neste dia.</p>
-            : scheduledDayActivities.map((activity) => <div key={activity.id} className={styles.scheduleItem} data-conflict={scheduleConflicts.has(activity.id) || undefined}>
+            : <>{scheduledDayActivities.map((activity) => <div key={activity.id} className={styles.scheduleItem} data-conflict={scheduleConflicts.has(activity.id) || undefined}>
                 <time>{formatTimeRange(activity.scheduledAt, activity.durationMinutes)}</time>
                 <div><strong>{activity.title}</strong><span>{activityTypeLabel(activity.type)} · Spark</span></div>
-              </div>)}
+              </div>)}{scheduledDayExternal.map((event) => <ExternalScheduleItem key={event.id} event={event} conflict={scheduleConflicts.has(event.id)} />)}</>}
         </div>
-        <footer><Icon name="calendar" /><span>Compromissos conectados de Google, Outlook e Apple aparecerão nesta mesma agenda após a sincronização da conta.</span></footer>
+        <footer><Icon name="calendar" /><span>{externalCalendarEvents.length} compromisso{externalCalendarEvents.length === 1 ? "" : "s"} externo{externalCalendarEvents.length === 1 ? "" : "s"} sincronizado{externalCalendarEvents.length === 1 ? "" : "s"} de Google, Outlook ou Apple.</span></footer>
       </aside>
       </div>
     </ActionModal>

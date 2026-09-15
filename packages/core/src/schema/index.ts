@@ -9,6 +9,7 @@ export * from "./pipeline.js";
 export * from "./stage.js";
 export * from "./deal.js";
 export * from "./activity.js";
+export * from "./calendarEvent.js";
 export * from "./auditLog.js";
 export * from "./team.js";
 export * from "./inbox.js";

@@ -6,11 +6,12 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 import { ConnectionSettingsRepository } from "./connection-settings.repository.js";
 import { IntegrationProviderRegistry } from "./provider-registry.service.js";
 import { SecretVault } from "./secret-vault.service.js";
+import { CalendarFeedSyncService } from "../application/calendar-feed-sync.service.js";
 
 @Injectable()
 export class IntegrationsRepository {
   private readonly db: SparkDb;
-  constructor(private readonly vault: SecretVault, private readonly providers: IntegrationProviderRegistry, private readonly events: DomainEventWriter, private readonly settings: ConnectionSettingsRepository) { this.db = createDbClient(process.env.DATABASE_URL ?? ""); }
+  constructor(private readonly vault: SecretVault, private readonly providers: IntegrationProviderRegistry, private readonly calendarSync: CalendarFeedSyncService, private readonly events: DomainEventWriter, private readonly settings: ConnectionSettingsRepository) { this.db = createDbClient(process.env.DATABASE_URL ?? ""); }
   upsert(orgId: OrgId, actorUserId: UserId, input: UpsertIntegrationInput): Promise<IntegrationWriteResponse> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const existing = await tx.select().from(integrationConnections).where(and(eq(integrationConnections.id, input.id), eq(integrationConnections.orgId, orgId))).limit(1);
@@ -37,7 +38,10 @@ export class IntegrationsRepository {
       return { connection: { ...connection, config: await this.settings.read(tx, connection.id) }, secrets: secret ? this.vault.decrypt(secret) : {} };
     });
     let error: string | null = null;
-    try { await this.providers.check(loaded.connection.provider as IntegrationConnection["provider"], loaded.connection.config, loaded.secrets); }
+    try {
+      await this.providers.check(loaded.connection.provider as IntegrationConnection["provider"], loaded.connection.config, loaded.secrets);
+      await this.calendarSync.sync(orgId, id, loaded.connection.provider, loaded.connection.config, loaded.secrets);
+    }
     catch (cause) { error = cause instanceof Error ? cause.message : "Connection check failed."; }
     return withOrgContext(this.db, orgId, async (tx) => {
       const now = new Date(); const txid = await captureTxid(tx);

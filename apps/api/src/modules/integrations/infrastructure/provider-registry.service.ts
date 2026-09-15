@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 import nodemailer from "nodemailer";
 import { S3ObjectStorage } from "@spark/storage";
 import type { IntegrationProvider } from "@spark/core";
+import { CALENDAR_PROVIDERS, type CalendarProvider } from "@spark/core";
+import { loadCalendarFeed } from "./calendar-feed.js";
 
 type PublicConfig = Record<string, unknown>;
 @Injectable()
@@ -11,6 +13,10 @@ export class IntegrationProviderRegistry {
     config: PublicConfig,
     secrets: Record<string, string>,
   ): Promise<void> {
+    if (CALENDAR_PROVIDERS.includes(provider as CalendarProvider)) {
+      await loadCalendarFeed(provider as CalendarProvider, requiredSecret(secrets, "feedUrl"));
+      return;
+    }
     if (provider === "smtp") return this.checkSmtp(config, secrets);
     if (provider === "s3") return this.checkS3(config, secrets);
     if (provider === "reoon") return this.checkReoon(config, secrets);

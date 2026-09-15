@@ -75,9 +75,11 @@
 .nota header time { flex: 1; }
 .nota p { margin: 0; font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); white-space: pre-wrap; overflow-wrap: anywhere; }
 .modalLinha { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); }
-.activityInterval { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: var(--space-2); }
+.activityTiming { display: grid; gap: var(--space-2); }
+.activityTiming > header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.activityTiming > header > strong { font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
+.activityInterval { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr); align-items: end; gap: var(--space-2); }
 .activityIntervalArrow { display: grid; place-items: center; min-height: var(--ui-fieldHeight); color: var(--color-inkFaint); }
-.activityDuration { display: inline-flex; align-items: center; min-height: var(--ui-fieldHeight); padding-inline: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-compact); white-space: nowrap; }
 .activityActions { display: inline-flex; align-items: center; gap: var(--space-1); flex-shrink: 0; }
 @media (max-width: 640px) { .modalLinha { grid-template-columns: minmax(0, 1fr); } }
 
@@ -142,7 +144,7 @@
   .painel, .fluxo { overflow: visible; }
   .activityModalLayout { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 760px) { .activityInterval { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .activityIntervalArrow { display: none; } .activityDuration { min-height: auto; padding: 0; } }
+@media (max-width: 760px) { .activityInterval { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .activityIntervalArrow { display: none; } }
 
 /* Itens do negócio: linha com nome e conta, valor à direita, resumo no pé —
  * é onde o valor do negócio nasce (packages/core/rules/dealProducts). */

@@ -7,6 +7,7 @@ import { ActionModal, Badge, Button, CalendarWeek, CollectionToolbar, DataTable,
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getSession } from "../lib/auth.client";
+import { getCalendarEventsCollection } from "../lib/calendar-events-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./activities.module.css";
 
@@ -21,6 +22,7 @@ export async function clientLoader() {
   const session = await requireCapability("activities:read");
   void Promise.allSettled([
     getActivitiesCollection().preload(),
+    getCalendarEventsCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
   ]);
   return null;
@@ -31,6 +33,7 @@ export default function Activities() {
   const collection = getActivitiesCollection();
   const contactsCollection = getContactsCollection();
   const { data: activities, isLoading } = useLiveQuery({ query: (q) => q.from({ activities: collection }).orderBy(({ activities: activity }) => activity.scheduledAt, "asc") });
+  const { data: externalEvents } = useLiveQuery({ query: (q) => q.from({ events: getCalendarEventsCollection() }).orderBy(({ events: event }) => event.startsAt, "asc") });
   const canReadContacts = getSession()?.capabilities.includes("contacts:read") ?? false;
   const { data: contacts = [], isLoading: loadingContacts } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: contact }) => contact.name, "asc") : undefined });
   const [modalOpen, setModalOpen] = useState(false);
@@ -69,7 +72,7 @@ export default function Activities() {
     { value: "completed", label: "Concluídas", count: completed },
     { value: "all", label: "Todas", count: activities.length },
   ];
-  const calendarItems = filtered.map((activity) => ({
+  const calendarItems = [...filtered.map((activity) => ({
     id: activity.id,
     date: localDateKey(activity.scheduledAt),
     hour: new Date(activity.scheduledAt).getHours(),
@@ -79,7 +82,17 @@ export default function Activities() {
       <span>{activity.contactId ? contactNames.get(activity.contactId) ?? "Pessoa indisponível" : typeLabel(activity.type)}</span>
       <Badge tone={activity.completed ? "success" : isOverdue(activity, now) ? "danger" : "neutral"}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : typeLabel(activity.type)}</Badge>
     </div>,
-  }));
+  })), ...externalEvents.filter((event) => event.status !== "cancelled").map((event) => ({
+    id: event.id,
+    date: localDateKey(event.startsAt),
+    hour: new Date(event.startsAt).getHours(),
+    content: <div className={styles.calendarActivity}>
+      <span className={styles.calendarTime}>{event.allDay ? "Dia todo" : formatTimeRange(event.startsAt, event.endsAt)}</span>
+      <strong>{event.title}</strong>
+      <span>{event.calendarName}</span>
+      <Badge tone={event.status === "tentative" ? "warning" : "neutral"}>{providerLabel(event.provider)}</Badge>
+    </div>,
+  }))];
   const columns: TableColumn<Activity>[] = [
     { id: "title", label: "Atividade", cell: (activity) => <div className={styles.activityCell}><span className={styles.typeIcon}><Icon name={activity.type === "call" ? "phone" : activity.type === "meeting" ? "team" : activity.type === "email" ? "mail" : "check"} /></span><div><strong>{activity.title}</strong><span className={styles.secondary}>{typeLabel(activity.type)}</span></div></div>, sortValue: (activity) => activity.title },
     { id: "contact", label: "Pessoa", cell: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "Pessoa indisponível" : "—", sortValue: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "" : "" },
@@ -143,3 +156,5 @@ function isSameDay(left: Date, right: Date): boolean { return left.getFullYear()
 function isOverdue(activity: Activity, now: Date): boolean { return !activity.completed && new Date(activity.scheduledAt) < startOfToday(now); }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
 function localDateKey(value: string): string { const date = new Date(value); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
+function formatTimeRange(start: string, end: string): string { const formatter = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }); return `${formatter.format(new Date(start))}–${formatter.format(new Date(end))}`; }
+function providerLabel(provider: string): string { return provider === "google_calendar" ? "Google" : provider === "outlook_calendar" ? "Outlook" : "Apple"; }

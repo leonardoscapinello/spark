@@ -10,6 +10,7 @@ import {
   integrationConnectionId,
   type IntegrationConnection,
   type IntegrationProvider,
+  type User,
 } from "@spark/core";
 import {
   ActionModal,
@@ -25,6 +26,7 @@ import {
   MenuItem,
   PageFrame,
   PageHeader,
+  SearchSelect,
   Select,
   SettingsSection,
   Switch,
@@ -32,6 +34,7 @@ import {
   type IconName,
 } from "@spark/ui-web";
 import { getIntegrationConnectionsCollection } from "../lib/integration-connections.client";
+import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./integrations.module.css";
@@ -41,10 +44,22 @@ interface ProviderDefinition {
   name: string;
   icon: IconName;
   description: string;
-  category: "Comunicação" | "Redes sociais" | "Dados e arquivos";
+  category: "Comunicação" | "Calendários" | "Redes sociais" | "Dados e arquivos";
 }
-const CATEGORIES = ["Comunicação", "Redes sociais", "Dados e arquivos"] as const;
+const CATEGORIES = ["Comunicação", "Calendários", "Redes sociais", "Dados e arquivos"] as const;
 const PROVIDERS: ProviderDefinition[] = [
+  {
+    provider: "google_calendar", name: "Google Calendar", icon: "calendar",
+    description: "Compromissos e disponibilidade do calendário Google dentro do CRM.", category: "Calendários",
+  },
+  {
+    provider: "outlook_calendar", name: "Outlook Calendar", icon: "calendar",
+    description: "Agenda do Microsoft Outlook unificada aos compromissos do CRM.", category: "Calendários",
+  },
+  {
+    provider: "apple_calendar", name: "Calendário Apple", icon: "calendar",
+    description: "Eventos do iCloud exibidos na agenda e na verificação de conflitos.", category: "Calendários",
+  },
   {
     provider: "google_workspace",
     name: "Google Workspace",
@@ -91,7 +106,7 @@ const PROVIDERS: ProviderDefinition[] = [
 
 export async function clientLoader() {
   await requireCapability("integrations:read");
-  void getIntegrationConnectionsCollection().preload().catch(() => undefined);
+  void Promise.allSettled([getIntegrationConnectionsCollection().preload(), getUsersCollection().preload()]);
   return null;
 }
 
@@ -104,6 +119,7 @@ export default function Integrations() {
         .from({ connections: getIntegrationConnectionsCollection() })
         .orderBy(({ connections: item }) => item.updatedAt, "desc"),
   });
+  const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
   const [editing, setEditing] = useState<ProviderDefinition | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [config, setConfig] = useState<Record<string, string | number | boolean>>({});
@@ -128,7 +144,7 @@ export default function Integrations() {
     setEditingId(connection?.id ?? null);
     setConfig(
       (connection?.config as Record<string, string | number | boolean>) ??
-        defaults(definition.provider),
+        defaults(definition.provider, session?.userId),
     );
     setCredentials({});
   }
@@ -256,6 +272,7 @@ export default function Integrations() {
             setCredentials={setCredentials}
             hasExistingCredentials={Boolean(editingId)}
             connectionId={editingId}
+            users={users}
           />
         )}
       </ActionModal>
@@ -271,6 +288,7 @@ function IntegrationFields({
   setCredentials,
   hasExistingCredentials,
   connectionId,
+  users,
 }: {
   provider: IntegrationProvider;
   config: Record<string, string | number | boolean>;
@@ -279,11 +297,20 @@ function IntegrationFields({
   setCredentials: (value: Record<string, string>) => void;
   hasExistingCredentials: boolean;
   connectionId: string | null;
+  users: User[];
 }) {
   const publicField = (key: string, value: string | number | boolean) =>
     setConfig({ ...config, [key]: value });
   const secretField = (key: string, value: string) =>
     setCredentials({ ...credentials, [key]: value });
+  if (provider === "google_calendar" || provider === "outlook_calendar" || provider === "apple_calendar") {
+    const options = users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, description: user.email, avatar: user.avatarUrl }));
+    return <div className={styles.fields}>
+      <Field><Label>Responsável pela agenda</Label><SearchSelect label="Responsável pela agenda" searchPlacement="dropdown" placeholder="Buscar usuário" options={options} value={options.find((option) => option.value === config.ownerId) ?? null} onValueChange={(option) => publicField("ownerId", option?.value ?? "")} /></Field>
+      <Field><Label>Nome da agenda</Label><Input value={text(config.calendarName)} placeholder="Agenda principal" onChange={(event) => publicField("calendarName", event.target.value)} /></Field>
+      <Field><Label>Endereço privado iCal (.ics)</Label><Input type="password" value={credentials.feedUrl ?? ""} placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Cole o endereço privado da agenda"} onChange={(event) => secretField("feedUrl", event.target.value)} /><span className={styles.fieldHint}>O endereço fica criptografado e os eventos são copiados para a agenda local do CRM.</span></Field>
+    </div>;
+  }
   if (provider === "smtp")
     return (
       <div className={styles.fields}>
@@ -536,10 +563,11 @@ function SecretToken({
     </Field>
   );
 }
-function defaults(provider: IntegrationProvider): Record<string, string | number | boolean> {
+function defaults(provider: IntegrationProvider, currentUserId?: string): Record<string, string | number | boolean> {
   if (provider === "smtp") return { port: 587, secure: false };
   if (provider === "s3") return { region: "auto", forcePathStyle: true };
   if (provider === "instagram") return { apiVersion: "v23.0" };
+  if (provider === "google_calendar" || provider === "outlook_calendar" || provider === "apple_calendar") return { ownerId: currentUserId ?? "", calendarName: "Agenda principal" };
   return {};
 }
 function text(value: unknown): string {

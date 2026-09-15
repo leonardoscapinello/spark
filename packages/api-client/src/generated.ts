@@ -495,6 +495,9 @@ export type UpsertIntegrationDtoProvider = typeof UpsertIntegrationDtoProvider[k
 export const UpsertIntegrationDtoProvider = {
   smtp: 'smtp',
   google_workspace: 'google_workspace',
+  google_calendar: 'google_calendar',
+  outlook_calendar: 'outlook_calendar',
+  apple_calendar: 'apple_calendar',
   instagram: 'instagram',
   buffer: 'buffer',
   s3: 's3',
@@ -524,6 +527,9 @@ export type IntegrationWriteResponseDtoConnectionProvider = typeof IntegrationWr
 export const IntegrationWriteResponseDtoConnectionProvider = {
   smtp: 'smtp',
   google_workspace: 'google_workspace',
+  google_calendar: 'google_calendar',
+  outlook_calendar: 'outlook_calendar',
+  apple_calendar: 'apple_calendar',
   instagram: 'instagram',
   buffer: 'buffer',
   s3: 's3',

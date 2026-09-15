@@ -71,6 +71,7 @@ import {
   integrationSettingId as toIntegrationSettingId,
   userPreferenceId as toUserPreferenceId,
   linkPreviewId as toLinkPreviewId,
+  calendarEventId as toCalendarEventId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -118,6 +119,7 @@ import {
   type CustomFieldValueId,
   type UserPreferenceId,
   type LinkPreviewId,
+  type CalendarEventId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -191,6 +193,7 @@ export const zLeadFormFieldId = bridged<LeadFormFieldId>(toLeadFormFieldId.from)
 export const zIntegrationSettingId = bridged<IntegrationSettingId>(toIntegrationSettingId.from);
 export const zUserPreferenceId = bridged<UserPreferenceId>(toUserPreferenceId.from);
 export const zLinkPreviewId = bridged<LinkPreviewId>(toLinkPreviewId.from);
+export const zCalendarEventId = bridged<CalendarEventId>(toCalendarEventId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on
