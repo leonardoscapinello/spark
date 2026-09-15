@@ -110,6 +110,8 @@
   transition: opacity var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out);
 }
 
+/* O cartão inteiro leva ao negócio; arrastável, a mão de arrasto vence. */
+.cartao { cursor: pointer; }
 .cartao[data-draggable] { cursor: grab; }
 .cartao[data-draggable]:active {
   cursor: grabbing;

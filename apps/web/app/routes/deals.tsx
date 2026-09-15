@@ -1,9 +1,9 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
-import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, Select, Skeleton, Textarea, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -25,6 +25,7 @@ export async function clientLoader() {
 
 export default function Deals() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const pipelinesCollection = getPipelinesCollection();
   const stagesCollection = getStagesCollection();
   const contactsCollection = getContactsCollection();
@@ -311,6 +312,24 @@ export default function Deals() {
                         setDragging(null);
                         setDropTarget(null);
                       }}
+                      /* O cartão inteiro abre o negócio. Só o título era
+                       * clicável, e num quadro cheio isso é mirar em duas
+                       * palavras entre valor, pessoa, próximo passo e data —
+                       * clicar no cartão parecia não fazer nada.
+                       *
+                       * O título continua sendo um link de verdade: é ele que
+                       * o teclado alcança, que abre em nova aba e que o leitor
+                       * de tela anuncia. Aqui só se acrescenta o alvo do
+                       * mouse. Quem já tem comportamento próprio — o menu de
+                       * ações — fica de fora, e texto selecionado também: quem
+                       * acabou de marcar um valor para copiar não quer navegar
+                       * ao soltar. */
+                      onClick={(event) => {
+                        const alvo = event.target;
+                        if (alvo instanceof Element && alvo.closest("a, button, input, [role='menu']")) return;
+                        if (window.getSelection()?.toString()) return;
+                        void navigate(`/deals/${deal.id}`);
+                      }}
                     >
                       <div className={styles.cartaoCabecalho}>
                         <Link className={styles.cartaoNome} to={`/deals/${deal.id}`}>{deal.name}</Link>
@@ -369,7 +388,7 @@ export default function Deals() {
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={dealAmount} onValueChange={setDealAmount} /></Field>
           <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={dealContact} onValueChange={setDealContact} /></Field>
           <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={dealCompanyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setDealCompanyId(value ?? "")} /></Field>
-          <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={dealOwnerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} onValueChange={(value) => setDealOwnerId(value ?? "")} /></Field>
+          <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={dealOwnerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => setDealOwnerId(value ?? "")} /></Field>
           <Field><Label>Etapa inicial</Label><Select label="Etapa inicial" value={targetStageId} options={stages.map((stage) => ({ value: stage.id, label: stage.name }))} onValueChange={setTargetStageId} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
         </div>
