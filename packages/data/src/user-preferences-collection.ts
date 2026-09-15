@@ -1,10 +1,10 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { UserPreferenceItemSchema, UserPreferenceRowSchema, userPreferenceId, type OrgId, type UserId, type UserPreference, type UserPreferenceValue } from "@spark/core";
-import { getSparkApiBaseUrl, getSparkAuthToken, userPreferencesControllerUpsert } from "@spark/api-client";
+import { userPreferencesControllerUpsert } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
+import { sparkShapeOptions } from "./shape-options.js";
 
 /** Linha otimista até o Postgres confirmar (mesmo padrão de optimisticSavedView). */
 export function optimisticUserPreference(key: string, value: UserPreferenceValue, orgId: OrgId, userId: UserId): UserPreference {
@@ -23,11 +23,7 @@ export function createUserPreferencesCollection() {
       id: "user_preferences",
       schema: UserPreferenceRowSchema,
       getKey: (preference) => preference.id,
-      shapeOptions: {
-        url: `${getSparkApiBaseUrl()}/v1/shapes/user_preferences`,
-        columnMapper: snakeCamelMapper(),
-        headers: { authorization: () => { const token = getSparkAuthToken(); return token ? `Bearer ${token}` : ""; } },
-      },
+      shapeOptions: sparkShapeOptions("user_preferences"),
       onInsert: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onInsert called with no pending mutation.");
@@ -53,11 +49,7 @@ export function createUserPreferenceItemsCollection() {
       id: "user_preference_items",
       schema: UserPreferenceItemSchema,
       getKey: (item) => item.id,
-      shapeOptions: {
-        url: `${getSparkApiBaseUrl()}/v1/shapes/user_preference_items`,
-        columnMapper: snakeCamelMapper(),
-        headers: { authorization: () => { const token = getSparkAuthToken(); return token ? `Bearer ${token}` : ""; } },
-      },
+      shapeOptions: sparkShapeOptions("user_preference_items"),
     }),
   );
 }

@@ -1,5 +1,5 @@
 import type { Capability, OrgId } from "@spark/core";
-import { meControllerMe, setSparkApiBaseUrl, setSparkAuthTokenProvider } from "@spark/api-client";
+import { meControllerMe, setSparkApiBaseUrl, setSparkAuthTokenProvider, setSparkAuthTokenRefreshProvider } from "@spark/api-client";
 import { getImplicitRecoveryClient, getSupabaseClient } from "./supabase.client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -281,3 +281,4 @@ export async function signOutEverywhere(): Promise<void> {
 }
 
 setSparkAuthTokenProvider(getToken);
+setSparkAuthTokenRefreshProvider(freshToken);

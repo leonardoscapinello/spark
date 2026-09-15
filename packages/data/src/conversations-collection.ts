@@ -1,10 +1,10 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { ConversationSchema, conversationId, firstResponseDueAt, type Conversation, type CreateConversationInput, type OrgId } from "@spark/core";
-import { getSparkApiBaseUrl, getSparkAuthToken, inboxControllerCreate, inboxControllerUpdate } from "@spark/api-client";
+import { inboxControllerCreate, inboxControllerUpdate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
+import { sparkShapeOptions } from "./shape-options.js";
 
 export function optimisticConversation(input: Omit<CreateConversationInput, "id">, orgId: OrgId, assigneeId: Conversation["assigneeId"]): Conversation {
   const now = new Date().toISOString();
@@ -16,7 +16,7 @@ export function createConversationsCollection() {
     id: "conversations",
     schema: ConversationSchema,
     getKey: (conversation) => conversation.id,
-    shapeOptions: { url: `${getSparkApiBaseUrl()}/v1/shapes/conversations`, columnMapper: snakeCamelMapper(), headers: { authorization: () => bearer() } },
+    shapeOptions: sparkShapeOptions("conversations"),
     onInsert: async ({ transaction }) => {
       const value = transaction.mutations[0]?.modified;
       if (!value) throw new Error("Conversation insert has no mutation.");
@@ -39,11 +39,6 @@ export function createConversationsCollection() {
       return confirmed(response);
     },
   }));
-}
-
-function bearer(): string {
-  const token = getSparkAuthToken();
-  return token ? `Bearer ${token}` : "";
 }
 
 export type ConversationsCollection = ReturnType<typeof createConversationsCollection>;

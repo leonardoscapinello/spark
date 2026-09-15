@@ -3,6 +3,7 @@ import { orgId as orgIdFactory } from "@spark/core";
 
 const mocks = vi.hoisted(() => ({
   apiTokenProvider: undefined as (() => string | null) | undefined,
+  apiTokenRefresher: undefined as (() => Promise<string | null>) | undefined,
   me: vi.fn(),
   getSession: vi.fn(),
   signInWithPassword: vi.fn(),
@@ -20,6 +21,9 @@ vi.mock("@spark/api-client", () => ({
   setSparkApiBaseUrl: vi.fn(),
   setSparkAuthTokenProvider: (provider: () => string | null) => {
     mocks.apiTokenProvider = provider;
+  },
+  setSparkAuthTokenRefreshProvider: (provider: () => Promise<string | null>) => {
+    mocks.apiTokenRefresher = provider;
   },
 }));
 
@@ -85,6 +89,12 @@ describe("auth.client — Supabase Auth session", () => {
     await expect(restoreSession()).resolves.toEqual(profile);
     expect(mocks.getSession).not.toHaveBeenCalled();
     expect(mocks.me).toHaveBeenCalledTimes(1);
+  });
+
+  it("renews the token used by writes and synchronized collections", async () => {
+    mocks.getSession.mockResolvedValue({ data: { session: { access_token: "renewed-jwt" } }, error: null });
+    await expect(mocks.apiTokenRefresher?.()).resolves.toBe("renewed-jwt");
+    expect(mocks.apiTokenProvider?.()).toBe("renewed-jwt");
   });
 
   it("shares session restoration between the layout and page loaders", async () => {

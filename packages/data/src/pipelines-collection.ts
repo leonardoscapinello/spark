@@ -5,10 +5,10 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { PipelineSchema, pipelineId, type Pipeline, type CreatePipelineInput, type OrgId } from "@spark/core";
-import { pipelinesControllerCreate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { pipelinesControllerCreate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
+import { sparkShapeOptions } from "./shape-options.js";
 
 export function optimisticPipeline(input: Omit<CreatePipelineInput, "id">, orgId: OrgId): Pipeline {
   const now = new Date().toISOString();
@@ -29,19 +29,7 @@ export function createPipelinesCollection() {
       id: "pipelines",
       schema: PipelineSchema,
       getKey: (pipeline) => pipeline.id,
-      shapeOptions: {
-        url: `${getSparkApiBaseUrl()}/v1/shapes/pipelines`,
-        // Electric replicates the Postgres column (snake_case); the Zod
-        // schema is camelCase (ADR-0019) — see the same comment in
-        // contacts-collection.ts.
-        columnMapper: snakeCamelMapper(),
-        headers: {
-          authorization: () => {
-            const token = getSparkAuthToken();
-            return token ? `Bearer ${token}` : "";
-          },
-        },
-      },
+      shapeOptions: sparkShapeOptions("pipelines"),
       onInsert: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onInsert called with no pending mutation.");

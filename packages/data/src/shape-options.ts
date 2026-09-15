@@ -1,6 +1,6 @@
-import { snakeCamelMapper } from "@electric-sql/client";
+import { FetchError, snakeCamelMapper } from "@electric-sql/client";
 import type { ShapeStreamOptions } from "@electric-sql/client";
-import { getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { getSparkApiBaseUrl, getSparkAuthToken, refreshSparkAuthToken } from "@spark/api-client";
 
 /**
  * Opções de shape de TODAS as coleções — um lugar só (ADR-0020 vale para
@@ -19,6 +19,16 @@ export function sparkShapeOptions(table: string) {
     columnMapper: snakeCamelMapper(),
     parser: SPARK_PARSER,
     headers: { authorization: () => { const token = getSparkAuthToken(); return token ? `Bearer ${token}` : ""; } },
+    onError: async (error: Error) => {
+      if (error instanceof FetchError && error.status === 401) {
+        const token = await refreshSparkAuthToken();
+        return token ? { headers: { authorization: `Bearer ${token}` } } : undefined;
+      }
+      // Rede e servidor indisponíveis são recuperáveis; os demais 4xx são
+      // respostas definitivas e não devem entrar num ciclo de tentativas.
+      if (!(error instanceof FetchError) || error.status >= 500) return {};
+      return undefined;
+    },
   };
 }
 
@@ -42,4 +52,3 @@ const SPARK_PARSER: SparkParser = {
   jsonb: parseJson,
   json: parseJson,
 };
-

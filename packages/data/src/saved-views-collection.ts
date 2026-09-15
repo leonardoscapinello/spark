@@ -1,10 +1,10 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { SavedViewSchema, savedViewId, type OrgId, type SavedView, type SavedViewEntity, type SavedViewVisibility, type UserId } from "@spark/core";
-import { getSparkApiBaseUrl, getSparkAuthToken, savedViewsControllerArchive, savedViewsControllerCreate } from "@spark/api-client";
+import { savedViewsControllerArchive, savedViewsControllerCreate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
+import { sparkShapeOptions } from "./shape-options.js";
 
 /** Same shape the create endpoint needs; orgId/timestamps are only the
  * optimistic placeholder — Electric replaces them once Postgres confirms
@@ -31,11 +31,7 @@ export function createSavedViewsCollection() {
       id: "saved_views",
       schema: SavedViewSchema,
       getKey: (view) => view.id,
-      shapeOptions: {
-        url: `${getSparkApiBaseUrl()}/v1/shapes/saved_views`,
-        columnMapper: snakeCamelMapper(),
-        headers: { authorization: () => { const token = getSparkAuthToken(); return token ? `Bearer ${token}` : ""; } },
-      },
+      shapeOptions: sparkShapeOptions("saved_views"),
       onInsert: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onInsert called with no pending mutation.");

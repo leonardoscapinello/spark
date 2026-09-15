@@ -13,10 +13,24 @@ import axios, { type AxiosRequestConfig } from "axios";
 const instance = axios.create({ baseURL: "http://localhost:3000" });
 
 let getToken: (() => string | null) | undefined;
+let refreshToken: (() => Promise<string | null>) | undefined;
+let refreshInFlight: Promise<string | null> | null = null;
 
 /** Called once per app, with the real JWT source (e.g. the Supabase Auth session). */
 export function setSparkAuthTokenProvider(fn: () => string | null): void {
   getToken = fn;
+}
+
+/** Renovação configurada pelo app dono da sessão (Supabase no web). */
+export function setSparkAuthTokenRefreshProvider(fn: () => Promise<string | null>): void {
+  refreshToken = fn;
+}
+
+/** Uma renovação compartilhada: todas as shapes podem receber 401 juntas. */
+export function refreshSparkAuthToken(): Promise<string | null> {
+  if (!refreshToken) return Promise.resolve(getToken?.() ?? null);
+  refreshInFlight ??= refreshToken().finally(() => { refreshInFlight = null; });
+  return refreshInFlight;
 }
 
 /** Called once per app — already correct in local dev (localhost:3000). */
@@ -39,13 +53,16 @@ export function getSparkAuthToken(): string | null {
 }
 
 export async function sparkHttpClient<T>(config: AxiosRequestConfig): Promise<T> {
-  const token = getToken?.();
-  const res = await instance.request<T>({
+  const request = (token: string | null | undefined) => instance.request<T>({
     ...config,
-    headers: {
-      ...config.headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { ...config.headers, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
-  return res.data;
+  try {
+    return (await request(getToken?.())).data;
+  } catch (error) {
+    if (!axios.isAxiosError(error) || error.response?.status !== 401 || !refreshToken) throw error;
+    const renewed = await refreshSparkAuthToken();
+    if (!renewed) throw error;
+    return (await request(renewed)).data;
+  }
 }

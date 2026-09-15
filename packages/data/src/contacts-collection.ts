@@ -17,11 +17,11 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { ContactSchema, contactId, type Contact, type CreateContactInput, type OrgId } from "@spark/core";
-import { contactsControllerArchive, contactsControllerCreate, contactsControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { contactsControllerArchive, contactsControllerCreate, contactsControllerUpdate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 import { serializedWrite } from "./serialized-write.js";
+import { sparkShapeOptions } from "./shape-options.js";
 
 /**
  * Builds the full row `collection.insert()` requires — the collection's
@@ -60,22 +60,13 @@ export function createContactsCollection() {
       schema: ContactSchema,
       getKey: (contact) => contact.id,
       shapeOptions: {
-        url: `${getSparkApiBaseUrl()}/v1/shapes/contacts`,
+        ...sparkShapeOptions("contacts"),
         // Electric replicates the Postgres column (snake_case) — our Zod
         // schema is all camelCase (ADR-0019). Without this, a composite
         // field name (orgId, createdAt...) arrives undefined at runtime,
         // with no type error at all (found testing for real in the
         // browser, not just the compiler — the test suite only exercised
         // single-word fields, where snake_case and camelCase are identical).
-        columnMapper: snakeCamelMapper(),
-        headers: {
-          // function, not string — re-evaluated on every stream request,
-          // to track token renewal without recreating the whole collection.
-          authorization: () => {
-            const token = getSparkAuthToken();
-            return token ? `Bearer ${token}` : "";
-          },
-        },
       },
       onInsert: async ({ transaction }) => {
         const mutation = transaction.mutations[0];

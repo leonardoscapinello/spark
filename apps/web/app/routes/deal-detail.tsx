@@ -325,7 +325,6 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     try {
       const transaction = dealsCollection.update(deal.id, (draft) => { Object.assign(draft, patch); });
       await transaction.isPersisted.promise;
-      notify({ title: `${label} atualizado`, tone: "success" });
     } catch (cause) {
       notify({ title: `Não foi possível alterar ${label.toLowerCase()}`, tone: "error" });
       throw cause;
@@ -492,7 +491,6 @@ export default function DealDetail({ params }: Route.ComponentProps) {
               disabled={!canWrite}
               onSave={async (value) => { const transaction = dealsCollection.update(deal.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }}
               onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
-              onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })}
             />)}
             {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
           </div> },

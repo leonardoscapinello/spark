@@ -362,7 +362,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
       {customFields.filter((field) => !field.archivedAt).length > 0 && <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Campos personalizados</h2>
         <div className={styles.campos}>
-          {customFields.filter((field) => !field.archivedAt).map((field) => <PreviewedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} onSuccess={(label) => notify({ title: `${label} atualizado`, tone: "success" })} />)}
+          {customFields.filter((field) => !field.archivedAt).map((field) => <PreviewedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={async (value) => { const transaction = collection.update(data.id, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }); await transaction.isPersisted.promise; }} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
         </div>
       </section>}
 

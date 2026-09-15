@@ -1,11 +1,11 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { CompanySchema, companyId, type Company, type CreateCompanyInput, type OrgId } from "@spark/core";
-import { companiesControllerArchive, companiesControllerCreate, companiesControllerUpdate, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { companiesControllerArchive, companiesControllerCreate, companiesControllerUpdate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 import { serializedWrite } from "./serialized-write.js";
+import { sparkShapeOptions } from "./shape-options.js";
 
 export function optimisticCompany(input: Omit<CreateCompanyInput, "id">, orgId: OrgId): Company {
   const now = new Date().toISOString();
@@ -32,11 +32,7 @@ export function createCompaniesCollection() {
     id: "companies",
     schema: CompanySchema,
     getKey: (company) => company.id,
-    shapeOptions: {
-      url: `${getSparkApiBaseUrl()}/v1/shapes/companies`,
-      columnMapper: snakeCamelMapper(),
-      headers: { authorization: () => { const token = getSparkAuthToken(); return token ? `Bearer ${token}` : ""; } },
-    },
+    shapeOptions: sparkShapeOptions("companies"),
     onInsert: async ({ transaction }) => {
       const company = transaction.mutations[0]?.modified;
       if (!company) throw new Error("onInsert called with no pending mutation.");

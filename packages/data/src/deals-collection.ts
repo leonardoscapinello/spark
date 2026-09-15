@@ -7,18 +7,16 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { z } from "zod";
 import { DealSchema, dealId, money, toCents, type Deal, type DealStatus, type Money, type CreateDealInput, type OrgId, type PipelineId } from "@spark/core";
 import { confirmed } from "./confirmed.js";
 import { serializedWrite } from "./serialized-write.js";
+import { sparkShapeOptions } from "./shape-options.js";
 import {
   dealsControllerCreate,
   dealsControllerEdit,
   dealsControllerMove,
   dealsControllerClose,
-  getSparkApiBaseUrl,
-  getSparkAuthToken,
 } from "@spark/api-client";
 
 export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId): Deal {
@@ -119,7 +117,8 @@ export interface DealsCollectionScope {
 }
 
 export function createDealsCollection(scope: DealsCollectionScope = {}) {
-  const shapeUrl = new URL(`${getSparkApiBaseUrl()}/v1/shapes/deals`);
+  const sharedShapeOptions = sparkShapeOptions("deals");
+  const shapeUrl = new URL(sharedShapeOptions.url);
   if (scope.pipelineId) shapeUrl.searchParams.set("pipelineId", scope.pipelineId);
   if (scope.status && scope.status !== "all") shapeUrl.searchParams.set("status", scope.status);
   return createCollection(
@@ -128,17 +127,8 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
       schema: DealCollectionSchema,
       getKey: (deal) => deal.id,
       shapeOptions: {
+        ...sharedShapeOptions,
         url: shapeUrl.toString(),
-        // Electric replicates the Postgres column (snake_case); the Zod
-        // schema is camelCase (ADR-0019) — see the same comment in
-        // contacts-collection.ts.
-        columnMapper: snakeCamelMapper(),
-        headers: {
-          authorization: () => {
-            const token = getSparkAuthToken();
-            return token ? `Bearer ${token}` : "";
-          },
-        },
       },
       onInsert: async ({ transaction }) => {
         const mutation = transaction.mutations[0];

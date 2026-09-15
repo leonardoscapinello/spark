@@ -1,22 +1,8 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { SocialChannelSchema, SocialPostSchema } from "@spark/core";
-import { getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
-
-function shape(id: string) {
-  return {
-    url: `${getSparkApiBaseUrl()}/v1/shapes/${id}`,
-    columnMapper: snakeCamelMapper(),
-    headers: {
-      authorization: () => {
-        const token = getSparkAuthToken();
-        return token ? `Bearer ${token}` : "";
-      },
-    },
-  };
-}
+import { sparkShapeOptions } from "./shape-options.js";
 
 export function createSocialChannelsCollection() {
   return createCollection(
@@ -24,7 +10,7 @@ export function createSocialChannelsCollection() {
       id: "social_channels",
       schema: SocialChannelSchema,
       getKey: (item) => item.id,
-      shapeOptions: shape("social_channels"),
+      shapeOptions: sparkShapeOptions("social_channels"),
     }),
   );
 }
@@ -34,7 +20,7 @@ export function createSocialPostsCollection() {
       id: "social_posts",
       schema: SocialPostSchema,
       getKey: (item) => item.id,
-      shapeOptions: shape("social_posts"),
+      shapeOptions: sparkShapeOptions("social_posts"),
     }),
   );
 }

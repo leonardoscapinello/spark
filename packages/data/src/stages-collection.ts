@@ -5,10 +5,10 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { snakeCamelMapper } from "@electric-sql/client";
 import { StageSchema, stageId, type Stage, type CreateStageInput, type OrgId } from "@spark/core";
-import { stagesControllerCreate, stagesControllerRename, getSparkApiBaseUrl, getSparkAuthToken } from "@spark/api-client";
+import { stagesControllerCreate, stagesControllerRename } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
+import { sparkShapeOptions } from "./shape-options.js";
 
 export function optimisticStage(input: Omit<CreateStageInput, "id">, orgId: OrgId): Stage {
   const now = new Date().toISOString();
@@ -31,19 +31,7 @@ export function createStagesCollection() {
       id: "stages",
       schema: StageSchema,
       getKey: (stage) => stage.id,
-      shapeOptions: {
-        url: `${getSparkApiBaseUrl()}/v1/shapes/stages`,
-        // Electric replicates the Postgres column (snake_case); the Zod
-        // schema is camelCase (ADR-0019) — see the same comment in
-        // contacts-collection.ts.
-        columnMapper: snakeCamelMapper(),
-        headers: {
-          authorization: () => {
-            const token = getSparkAuthToken();
-            return token ? `Bearer ${token}` : "";
-          },
-        },
-      },
+      shapeOptions: sparkShapeOptions("stages"),
       onInsert: async ({ transaction }) => {
         const mutation = transaction.mutations[0];
         if (!mutation) throw new Error("onInsert called with no pending mutation.");
