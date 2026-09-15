@@ -72,6 +72,9 @@ import {
   userPreferenceId as toUserPreferenceId,
   linkPreviewId as toLinkPreviewId,
   calendarEventId as toCalendarEventId,
+  stageTransitionId as toStageTransitionId,
+  businessHourId as toBusinessHourId,
+  holidayId as toHolidayId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -120,6 +123,9 @@ import {
   type UserPreferenceId,
   type LinkPreviewId,
   type CalendarEventId,
+  type StageTransitionId,
+  type BusinessHourId,
+  type HolidayId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -194,6 +200,9 @@ export const zIntegrationSettingId = bridged<IntegrationSettingId>(toIntegration
 export const zUserPreferenceId = bridged<UserPreferenceId>(toUserPreferenceId.from);
 export const zLinkPreviewId = bridged<LinkPreviewId>(toLinkPreviewId.from);
 export const zCalendarEventId = bridged<CalendarEventId>(toCalendarEventId.from);
+export const zStageTransitionId = bridged<StageTransitionId>(toStageTransitionId.from);
+export const zBusinessHourId = bridged<BusinessHourId>(toBusinessHourId.from);
+export const zHolidayId = bridged<HolidayId>(toHolidayId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

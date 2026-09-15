@@ -1,6 +1,9 @@
 /* Trilha de etapas do Pipedrive (captura 001): faixa de 24px, setas encaixadas,
  * etapa atual sólida. Aqui com a paleta da casa — azul de marca no lugar do
  * verde, âmbar/vermelho só no desfecho (ADR-0033, ADR-0034). */
+.frame { display: grid; gap: var(--space-1); min-width: 0; }
+.cooldown { display: grid; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); text-align: end; }
+.cooldown i { display: block; justify-self: end; width: var(--cooldown-progress); height: var(--space-1); border-radius: var(--radius-full); background: var(--color-accent); transition: width var(--motion-duration-fast) linear; }
 .root {
   display: flex;
   align-items: stretch;
@@ -58,7 +61,10 @@ button.action:hover { background: var(--color-line); color: var(--color-ink); }
 .root[data-tone="won"] .step[data-state="done"] .action { background: color-mix(in srgb, var(--color-statusSuccess) 16%, transparent); color: var(--color-statusSuccess); }
 .root[data-tone="lost"] .step[data-state="current"] .action { background: var(--color-statusDanger); color: var(--ui-buttonInk); }
 
-.label { display: block; max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.label { display: flex; align-items: center; justify-content: center; gap: var(--space-1); max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.label svg { flex: 0 0 var(--space-3); width: var(--space-3); height: var(--space-3); }
+.lockReason { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.lockReason svg { flex: 0 0 var(--space-4); width: var(--space-4); height: var(--space-4); }
 /* O tempo fica numa cápsula translúcida, para separar do nome da etapa sem
  * competir com ele — é o que o Pipedrive faz dentro da seta. */
 .hint { flex-shrink: 0; color: currentColor; font-weight: var(--typography-weight-regular); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }

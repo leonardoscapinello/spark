@@ -58,6 +58,9 @@ export type CustomFieldValueId = Id<"CustomFieldValue">;
 export type UserPreferenceId = Id<"UserPreference">;
 export type LinkPreviewId = Id<"LinkPreview">;
 export type CalendarEventId = Id<"CalendarEvent">;
+export type StageTransitionId = Id<"StageTransition">;
+export type BusinessHourId = Id<"BusinessHour">;
+export type HolidayId = Id<"Holiday">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -130,3 +133,6 @@ export const customFieldValueId = makeIdFactory("CustomFieldValue");
 export const userPreferenceId = makeIdFactory("UserPreference");
 export const linkPreviewId = makeIdFactory("LinkPreview");
 export const calendarEventId = makeIdFactory("CalendarEvent");
+export const stageTransitionId = makeIdFactory("StageTransition");
+export const businessHourId = makeIdFactory("BusinessHour");
+export const holidayId = makeIdFactory("Holiday");

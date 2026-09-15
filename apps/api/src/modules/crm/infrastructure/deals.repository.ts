@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { and, eq, isNull, sql } from "drizzle-orm";
-import { createDbClient, withOrgContext, deals, stages, type SparkDb } from "@spark/db";
+import { createDbClient, withOrgContext, deals, stages, stageTransitions, type SparkDb } from "@spark/db";
 import {
   money,
   toCents,
@@ -12,6 +12,9 @@ import {
   type OrgId,
   type DealId,
   type StageId,
+  canCloseAtStage,
+  canMoveBetweenStages,
+  stageMoveCooldownRemaining,
 } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
@@ -50,6 +53,7 @@ export class DealsRepository {
           status: input.status ?? "open",
           expectedCloseDate: input.expectedCloseDate ? new Date(input.expectedCloseDate) : null,
           lossReason: input.lossReason ?? null,
+          stageEnteredAt: new Date(),
         })
         .returning();
 
@@ -69,14 +73,20 @@ export class DealsRepository {
   async move(orgId: OrgId, dealId: DealId, stageId: StageId): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
-      const [current] = await tx.select({ pipelineId: deals.pipelineId, stageId: deals.stageId }).from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
+      const [current] = await tx.select({ pipelineId: deals.pipelineId, stageId: deals.stageId, stageEnteredAt: deals.stageEnteredAt }).from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
       if (!current) throw new NotFoundException(`Deal ${dealId} not found.`);
-      const [target] = await tx.select({ id: stages.id }).from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, stageId), eq(stages.pipelineId, current.pipelineId))).limit(1);
+      const [source] = await tx.select().from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, current.stageId))).limit(1);
+      const [target] = await tx.select().from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, stageId), eq(stages.pipelineId, current.pipelineId))).limit(1);
       if (!target) throw new BadRequestException("A etapa não pertence ao funil deste negócio.");
+      if (!source) throw new BadRequestException("A etapa atual não existe mais.");
+      const cooldown = stageMoveCooldownRemaining(current.stageEnteredAt.toISOString(), new Date());
+      if (cooldown > 0) throw new ConflictException(`Aguarde ${Math.ceil(cooldown / 1_000)} s antes de mover novamente.`);
+      const transitionRows = source.restrictTransitions ? await tx.select().from(stageTransitions).where(and(eq(stageTransitions.orgId, orgId), eq(stageTransitions.fromStageId, source.id))) : [];
+      if (!canMoveBetweenStages(source, target, transitionRows)) throw new BadRequestException("Esta transição não está disponível a partir da etapa atual.");
 
       const [row] = await tx
         .update(deals)
-        .set({ stageId, updatedAt: new Date() })
+        .set({ stageId, stageEnteredAt: new Date(), updatedAt: new Date() })
         .where(eq(deals.id, dealId))
         .returning();
 
@@ -123,6 +133,9 @@ export class DealsRepository {
   async close(orgId: OrgId, dealId: DealId, input: CloseDealInput): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
+      const [current] = await tx.select({ allowWon: stages.allowWon, allowLost: stages.allowLost }).from(deals).innerJoin(stages, eq(stages.id, deals.stageId)).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
+      if (!current) throw new NotFoundException(`Deal ${dealId} not found.`);
+      if (!canCloseAtStage(current, input.status)) throw new BadRequestException(`Não é permitido marcar este negócio como ${input.status === "won" ? "ganho" : "perdido"} nesta etapa.`);
 
       const [row] = await tx
         .update(deals)
@@ -183,6 +196,7 @@ function toDeal(row: {
   status: string;
   expectedCloseDate: Date | null;
   lossReason: string | null;
+  stageEnteredAt: Date;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -200,6 +214,7 @@ function toDeal(row: {
     status: row.status,
     expectedCloseDate: row.expectedCloseDate?.toISOString() ?? null,
     lossReason: row.lossReason,
+    stageEnteredAt: row.stageEnteredAt.toISOString(),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,

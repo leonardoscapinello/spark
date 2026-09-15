@@ -36,6 +36,7 @@ export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId)
     status: input.status ?? "open",
     expectedCloseDate: input.expectedCloseDate ?? null,
     lossReason: input.lossReason ?? null,
+    stageEnteredAt: now,
     createdAt: now,
     updatedAt: now,
     customFields: {},

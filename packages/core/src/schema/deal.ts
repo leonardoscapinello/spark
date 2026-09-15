@@ -25,6 +25,8 @@ export const DealSchema = z.object({
   /** only meaningful when status is "lost" — not enforced here as a
    * cross-field schema rule; the screen decides whether to ask for it. */
   lossReason: z.string().max(500).nullable(),
+  /** Persisted anchor for the current-stage SLA; reset atomically on every move. */
+  stageEnteredAt: zServerTimestamp.default(() => new Date().toISOString()),
   /** Campos definidos pela organização (packages/core/schema/customField,
    * entityType "deal") — como no Pipedrive, um negócio também carrega os seus. */
   customFields: z.record(z.string(), z.unknown()).optional(),
@@ -42,6 +44,7 @@ export const CreateDealInputSchema = DealSchema.omit({
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
+  stageEnteredAt: true,
 }).partial({ contactId: true, companyId: true, ownerId: true, status: true, expectedCloseDate: true, lossReason: true, customFields: true });
 export type CreateDealInput = z.infer<typeof CreateDealInputSchema>;
 

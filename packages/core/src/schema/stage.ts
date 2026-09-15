@@ -22,6 +22,12 @@ export const StageSchema = z.object({
   /** win probability associated with this stage, 0–100 — used for
    * weighted revenue forecasting (Pipedrive parity). */
   probability: z.number().int().min(0).max(100).default(0),
+  /** Operational minutes allowed in this stage; null disables SLA. */
+  slaMinutes: z.number().int().min(1).nullable().default(null),
+  allowWon: z.boolean().default(true),
+  allowLost: z.boolean().default(true),
+  /** When false every stage in this pipeline is reachable (legacy-safe default). */
+  restrictTransitions: z.boolean().default(false),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
   archivedAt: zServerTimestamp.nullable(),
@@ -34,7 +40,7 @@ export const CreateStageInputSchema = StageSchema.omit({
   createdAt: true,
   updatedAt: true,
   archivedAt: true,
-}).partial({ probability: true });
+}).partial({ probability: true, slaMinutes: true, allowWon: true, allowLost: true, restrictTransitions: true });
 export type CreateStageInput = z.infer<typeof CreateStageInputSchema>;
 
 export const UpdateStageInputSchema = CreateStageInputSchema.omit({ id: true }).partial();
@@ -58,3 +64,15 @@ export const RenameStageResponseSchema = z.object({
   txid: z.number().int(),
 });
 export type RenameStageResponse = z.infer<typeof RenameStageResponseSchema>;
+
+export const ConfigureStageInputSchema = z.object({
+  slaMinutes: z.number().int().min(1).nullable(),
+  allowWon: z.boolean(),
+  allowLost: z.boolean(),
+  restrictTransitions: z.boolean(),
+  allowedDestinationStageIds: z.array(zStageId),
+});
+export type ConfigureStageInput = z.infer<typeof ConfigureStageInputSchema>;
+
+export const ConfigureStageResponseSchema = z.object({ stage: StageSchema, txid: z.number().int() });
+export type ConfigureStageResponse = z.infer<typeof ConfigureStageResponseSchema>;

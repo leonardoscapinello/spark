@@ -19,6 +19,10 @@ export function optimisticStage(input: Omit<CreateStageInput, "id">, orgId: OrgI
     name: input.name,
     sortOrder: input.sortOrder,
     probability: input.probability ?? 0,
+    slaMinutes: input.slaMinutes ?? null,
+    allowWon: input.allowWon ?? true,
+    allowLost: input.allowLost ?? true,
+    restrictTransitions: input.restrictTransitions ?? false,
     createdAt: now,
     updatedAt: now,
     archivedAt: null,
@@ -43,6 +47,10 @@ export function createStagesCollection() {
           name: stage.name,
           sortOrder: stage.sortOrder,
           probability: stage.probability,
+          slaMinutes: stage.slaMinutes,
+          allowWon: stage.allowWon,
+          allowLost: stage.allowLost,
+          restrictTransitions: stage.restrictTransitions,
         });
 
         return confirmed(response);

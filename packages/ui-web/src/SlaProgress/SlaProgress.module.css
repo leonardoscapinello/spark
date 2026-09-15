@@ -1,0 +1,8 @@
+.root { display: grid; gap: var(--space-1); min-width: 0; color: var(--color-accent); }
+.copy { overflow: hidden; color: currentColor; font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.track { height: var(--space-1); overflow: hidden; border-radius: var(--radius-full); background: var(--color-line); }
+.fill { display: block; width: var(--sla-progress); height: 100%; border-radius: inherit; background: currentColor; transition: width var(--motion-duration-fast) var(--motion-ease-out); }
+.root[data-state="due_soon"] { color: var(--color-statusWarning); }
+.root[data-state="breached"] { color: var(--color-statusDanger); }
+.root[data-compact] { width: 100%; }
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } }

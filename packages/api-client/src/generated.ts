@@ -1135,6 +1135,184 @@ export interface ArchiveCustomFieldDto {
   archived: boolean;
 }
 
+export interface SaveBusinessHourDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minimum 0
+     * @maximum 6
+     */
+  weekday: number;
+  enabled: boolean;
+  /** @pattern ^([01]\d|2[0-3]):[0-5]\d$ */
+  startTime: string;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  breakStartTime: string | null;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  breakEndTime: string | null;
+  /** @pattern ^([01]\d|2[0-3]):[0-5]\d$ */
+  endTime: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  timeZone: string;
+}
+
+export type BusinessHourWriteResponseDtoBusinessHour = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minimum 0
+     * @maximum 6
+     */
+  weekday: number;
+  enabled: boolean;
+  /** @pattern ^([01]\d|2[0-3]):[0-5]\d$ */
+  startTime: string;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  breakStartTime: string | null;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  breakEndTime: string | null;
+  /** @pattern ^([01]\d|2[0-3]):[0-5]\d$ */
+  endTime: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  timeZone: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface BusinessHourWriteResponseDto {
+  businessHour: BusinessHourWriteResponseDtoBusinessHour;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type SaveHolidayDtoKind = typeof SaveHolidayDtoKind[keyof typeof SaveHolidayDtoKind];
+
+
+export const SaveHolidayDtoKind = {
+  closed: 'closed',
+  reduced: 'reduced',
+} as const;
+
+export interface SaveHolidayDto {
+  /** @minLength 1 */
+  id: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$ */
+  startDate: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$ */
+  endDate: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  kind?: SaveHolidayDtoKind;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  startTime?: string | null;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  breakStartTime?: string | null;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  breakEndTime?: string | null;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  endTime?: string | null;
+  repeatsAnnually?: boolean;
+}
+
+export type HolidayWriteResponseDtoHolidayKind = typeof HolidayWriteResponseDtoHolidayKind[keyof typeof HolidayWriteResponseDtoHolidayKind];
+
+
+export const HolidayWriteResponseDtoHolidayKind = {
+  closed: 'closed',
+  reduced: 'reduced',
+} as const;
+
+/**
+ * @nullable
+ */
+export type HolidayWriteResponseDtoHoliday = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$ */
+  startDate: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$ */
+  endDate: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  kind?: HolidayWriteResponseDtoHolidayKind;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  startTime?: string | null;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  breakStartTime?: string | null;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  breakEndTime?: string | null;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  endTime?: string | null;
+  repeatsAnnually?: boolean;
+  createdAt: string;
+  updatedAt: string;
+} | null;
+
+export interface HolidayWriteResponseDto {
+  /** @nullable */
+  holiday: HolidayWriteResponseDtoHoliday;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type CreateStageFieldRuleDtoLevel = typeof CreateStageFieldRuleDtoLevel[keyof typeof CreateStageFieldRuleDtoLevel];
 
 
@@ -1419,6 +1597,15 @@ export interface CreateStageDto {
      * @maximum 100
      */
   probability?: number;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  slaMinutes?: number | null;
+  allowWon?: boolean;
+  allowLost?: boolean;
+  restrictTransitions?: boolean;
 }
 
 export type CreateStageResponseDtoStage = {
@@ -1443,6 +1630,15 @@ export type CreateStageResponseDtoStage = {
      * @maximum 100
      */
   probability?: number;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  slaMinutes?: number | null;
+  allowWon?: boolean;
+  allowLost?: boolean;
+  restrictTransitions?: boolean;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
@@ -1487,6 +1683,15 @@ export type RenameStageResponseDtoStage = {
      * @maximum 100
      */
   probability?: number;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  slaMinutes?: number | null;
+  allowWon?: boolean;
+  allowLost?: boolean;
+  restrictTransitions?: boolean;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
@@ -1494,6 +1699,65 @@ export type RenameStageResponseDtoStage = {
 
 export interface RenameStageResponseDto {
   stage: RenameStageResponseDtoStage;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface ConfigureStageDto {
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  slaMinutes: number | null;
+  allowWon: boolean;
+  allowLost: boolean;
+  restrictTransitions: boolean;
+  /** @items.minLength 1 */
+  allowedDestinationStageIds: string[];
+}
+
+export type ConfigureStageResponseDtoStage = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  probability?: number;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  slaMinutes?: number | null;
+  allowWon?: boolean;
+  allowLost?: boolean;
+  restrictTransitions?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+};
+
+export interface ConfigureStageResponseDto {
+  stage: ConfigureStageResponseDtoStage;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
@@ -1585,6 +1849,7 @@ export type EditDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  stageEnteredAt?: string;
   customFields?: EditDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -1705,6 +1970,7 @@ export type CreateDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  stageEnteredAt?: string;
   customFields?: CreateDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -1777,6 +2043,7 @@ export type MoveDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  stageEnteredAt?: string;
   customFields?: MoveDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -1861,6 +2128,7 @@ export type CloseDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  stageEnteredAt?: string;
   customFields?: CloseDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -1928,6 +2196,7 @@ export type ReopenDealResponseDtoDeal = {
      * @nullable
      */
   lossReason: string | null;
+  stageEnteredAt?: string;
   customFields?: ReopenDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -6911,6 +7180,190 @@ const {mutation: mutationOptions} = options ?
       return useMutation(getSettingsControllerArchiveMutationOptions(options), queryClient);
     }
 
+export const businessCalendarControllerSaveHour = (
+    saveBusinessHourDto: SaveBusinessHourDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<BusinessHourWriteResponseDto>(
+      {url: `/v1/business-calendar/hours`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveBusinessHourDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getBusinessCalendarControllerSaveHourMutationKey = () => ['businessCalendarControllerSaveHour'] as const;
+
+export const getBusinessCalendarControllerSaveHourMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerSaveHour>>, TError,BusinessCalendarControllerSaveHourMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerSaveHour>>, TError,BusinessCalendarControllerSaveHourMutationVariables, TContext> => {
+
+const mutationKey = getBusinessCalendarControllerSaveHourMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof businessCalendarControllerSaveHour>>, BusinessCalendarControllerSaveHourMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  businessCalendarControllerSaveHour(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BusinessCalendarControllerSaveHourMutationResult = NonNullable<Awaited<ReturnType<typeof businessCalendarControllerSaveHour>>>
+    export type BusinessCalendarControllerSaveHourMutationBody = SaveBusinessHourDto
+    export type BusinessCalendarControllerSaveHourMutationError = unknown
+    export type BusinessCalendarControllerSaveHourMutationVariables = {data: SaveBusinessHourDto}
+
+    export const useBusinessCalendarControllerSaveHour = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerSaveHour>>, TError,BusinessCalendarControllerSaveHourMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof businessCalendarControllerSaveHour>>,
+        TError,
+        BusinessCalendarControllerSaveHourMutationVariables,
+        TContext
+      > => {
+      return useMutation(getBusinessCalendarControllerSaveHourMutationOptions(options), queryClient);
+    }
+
+export const businessCalendarControllerSaveHoliday = (
+    saveHolidayDto: SaveHolidayDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<HolidayWriteResponseDto>(
+      {url: `/v1/business-calendar/holidays`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveHolidayDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getBusinessCalendarControllerSaveHolidayMutationKey = () => ['businessCalendarControllerSaveHoliday'] as const;
+
+export const getBusinessCalendarControllerSaveHolidayMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerSaveHoliday>>, TError,BusinessCalendarControllerSaveHolidayMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerSaveHoliday>>, TError,BusinessCalendarControllerSaveHolidayMutationVariables, TContext> => {
+
+const mutationKey = getBusinessCalendarControllerSaveHolidayMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof businessCalendarControllerSaveHoliday>>, BusinessCalendarControllerSaveHolidayMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  businessCalendarControllerSaveHoliday(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BusinessCalendarControllerSaveHolidayMutationResult = NonNullable<Awaited<ReturnType<typeof businessCalendarControllerSaveHoliday>>>
+    export type BusinessCalendarControllerSaveHolidayMutationBody = SaveHolidayDto
+    export type BusinessCalendarControllerSaveHolidayMutationError = unknown
+    export type BusinessCalendarControllerSaveHolidayMutationVariables = {data: SaveHolidayDto}
+
+    export const useBusinessCalendarControllerSaveHoliday = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerSaveHoliday>>, TError,BusinessCalendarControllerSaveHolidayMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof businessCalendarControllerSaveHoliday>>,
+        TError,
+        BusinessCalendarControllerSaveHolidayMutationVariables,
+        TContext
+      > => {
+      return useMutation(getBusinessCalendarControllerSaveHolidayMutationOptions(options), queryClient);
+    }
+
+export const businessCalendarControllerRemoveHoliday = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<HolidayWriteResponseDto>(
+      {url: `/v1/business-calendar/holidays/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getBusinessCalendarControllerRemoveHolidayMutationKey = () => ['businessCalendarControllerRemoveHoliday'] as const;
+
+export const getBusinessCalendarControllerRemoveHolidayMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerRemoveHoliday>>, TError,BusinessCalendarControllerRemoveHolidayMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerRemoveHoliday>>, TError,BusinessCalendarControllerRemoveHolidayMutationVariables, TContext> => {
+
+const mutationKey = getBusinessCalendarControllerRemoveHolidayMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof businessCalendarControllerRemoveHoliday>>, BusinessCalendarControllerRemoveHolidayMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  businessCalendarControllerRemoveHoliday(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BusinessCalendarControllerRemoveHolidayMutationResult = NonNullable<Awaited<ReturnType<typeof businessCalendarControllerRemoveHoliday>>>
+
+    export type BusinessCalendarControllerRemoveHolidayMutationError = unknown
+    export type BusinessCalendarControllerRemoveHolidayMutationVariables = {id: string}
+
+    export const useBusinessCalendarControllerRemoveHoliday = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof businessCalendarControllerRemoveHoliday>>, TError,BusinessCalendarControllerRemoveHolidayMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof businessCalendarControllerRemoveHoliday>>,
+        TError,
+        BusinessCalendarControllerRemoveHolidayMutationVariables,
+        TContext
+      > => {
+      return useMutation(getBusinessCalendarControllerRemoveHolidayMutationOptions(options), queryClient);
+    }
+
 export const stageFieldRulesControllerSave = (
     createStageFieldRuleDto: CreateStageFieldRuleDto,
  signal?: AbortSignal
@@ -7403,6 +7856,69 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getStagesControllerRenameMutationOptions(options), queryClient);
+    }
+
+export const stagesControllerConfigure = (
+    id: string,
+    configureStageDto: ConfigureStageDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ConfigureStageResponseDto>(
+      {url: `/v1/stages/${id}/configure`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: configureStageDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getStagesControllerConfigureMutationKey = () => ['stagesControllerConfigure'] as const;
+
+export const getStagesControllerConfigureMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerConfigure>>, TError,StagesControllerConfigureMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof stagesControllerConfigure>>, TError,StagesControllerConfigureMutationVariables, TContext> => {
+
+const mutationKey = getStagesControllerConfigureMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stagesControllerConfigure>>, StagesControllerConfigureMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  stagesControllerConfigure(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StagesControllerConfigureMutationResult = NonNullable<Awaited<ReturnType<typeof stagesControllerConfigure>>>
+    export type StagesControllerConfigureMutationBody = ConfigureStageDto
+    export type StagesControllerConfigureMutationError = unknown
+    export type StagesControllerConfigureMutationVariables = {id: string;data: ConfigureStageDto}
+
+    export const useStagesControllerConfigure = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerConfigure>>, TError,StagesControllerConfigureMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof stagesControllerConfigure>>,
+        TError,
+        StagesControllerConfigureMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStagesControllerConfigureMutationOptions(options), queryClient);
     }
 
 export const dealsControllerEdit = (

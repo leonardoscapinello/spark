@@ -11,6 +11,7 @@ import { MoveDealUseCase } from "./application/move-deal.usecase.js";
 import { CloseDealUseCase } from "./application/close-deal.usecase.js";
 import { EditDealUseCase } from "./application/edit-deal.usecase.js";
 import { ReopenDealUseCase } from "./application/reopen-deal.usecase.js";
+import { ConfigureStageUseCase } from "./application/configure-stage.usecase.js";
 import { PipelinesRepository } from "./infrastructure/pipelines.repository.js";
 import { StagesRepository } from "./infrastructure/stages.repository.js";
 import { StageFieldRulesRepository } from "./infrastructure/stage-field-rules.repository.js";
@@ -25,11 +26,13 @@ import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
 import { EventsModule } from "../events/events.module.js";
 import { DealPresenceService } from "./infrastructure/deal-presence.service.js";
 import { DealPresenceController } from "./presentation/deal-presence.controller.js";
+import { BusinessCalendarController } from "./presentation/business-calendar.controller.js";
+import { BusinessCalendarRepository } from "./infrastructure/business-calendar.repository.js";
 
 @Module({
   imports: [SettingsModule, EventsModule],
-  controllers: [DealPresenceController, StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
-  providers: [DealPresenceService, StageFieldRulesRepository, DealProductsRepository, 
+  controllers: [BusinessCalendarController, DealPresenceController, StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
+  providers: [BusinessCalendarRepository, DealPresenceService, StageFieldRulesRepository, DealProductsRepository, 
     CreatePipelineUseCase,
     CreateStageUseCase,
     RenameStageUseCase,
@@ -38,6 +41,7 @@ import { DealPresenceController } from "./presentation/deal-presence.controller.
     CloseDealUseCase,
     EditDealUseCase,
     ReopenDealUseCase,
+    ConfigureStageUseCase,
     PipelinesRepository,
     StagesRepository,
     DealsRepository,

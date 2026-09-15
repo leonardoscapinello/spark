@@ -1088,6 +1088,113 @@
         ]
       }
     },
+    "/v1/business-calendar/hours": {
+      "post": {
+        "operationId": "BusinessCalendarController_saveHour",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveBusinessHourDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessHourWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/business-calendar/holidays": {
+      "post": {
+        "operationId": "BusinessCalendarController_saveHoliday",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveHolidayDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HolidayWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/business-calendar/holidays/{id}": {
+      "delete": {
+        "operationId": "BusinessCalendarController_removeHoliday",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HolidayWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
     "/v1/stage-field-rules": {
       "post": {
         "operationId": "StageFieldRulesController_save",
@@ -1375,6 +1482,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RenameStageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/stages/{id}/configure": {
+      "patch": {
+        "operationId": "StagesController_configure",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigureStageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigureStageResponseDto"
                 }
               }
             }
@@ -5802,6 +5954,333 @@
           "archived"
         ]
       },
+      "SaveBusinessHourDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "weekday": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "startTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "breakStartTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "nullable": true
+          },
+          "breakEndTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "nullable": true
+          },
+          "endTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "timeZone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "weekday",
+          "enabled",
+          "startTime",
+          "breakStartTime",
+          "breakEndTime",
+          "endTime",
+          "timeZone"
+        ]
+      },
+      "BusinessHourWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "businessHour": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "weekday": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "startTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "breakStartTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "nullable": true
+              },
+              "breakEndTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "nullable": true
+              },
+              "endTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+              },
+              "timeZone": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "weekday",
+              "enabled",
+              "startTime",
+              "breakStartTime",
+              "breakEndTime",
+              "endTime",
+              "timeZone",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "businessHour",
+          "txid"
+        ]
+      },
+      "SaveHolidayDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "kind": {
+            "default": "closed",
+            "type": "string",
+            "enum": [
+              "closed",
+              "reduced"
+            ]
+          },
+          "startTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "default": null,
+            "nullable": true
+          },
+          "breakStartTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "default": null,
+            "nullable": true
+          },
+          "breakEndTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "default": null,
+            "nullable": true
+          },
+          "endTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "default": null,
+            "nullable": true
+          },
+          "repeatsAnnually": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "startDate",
+          "endDate",
+          "name"
+        ]
+      },
+      "HolidayWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "holiday": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "kind": {
+                "default": "closed",
+                "type": "string",
+                "enum": [
+                  "closed",
+                  "reduced"
+                ]
+              },
+              "startTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "default": null,
+                "nullable": true
+              },
+              "breakStartTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "default": null,
+                "nullable": true
+              },
+              "breakEndTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "default": null,
+                "nullable": true
+              },
+              "endTime": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "default": null,
+                "nullable": true
+              },
+              "repeatsAnnually": {
+                "default": false,
+                "type": "boolean"
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "startDate",
+              "endDate",
+              "name",
+              "createdAt",
+              "updatedAt"
+            ],
+            "nullable": true
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "holiday",
+          "txid"
+        ]
+      },
       "CreateStageFieldRuleDto": {
         "type": "object",
         "properties": {
@@ -6263,6 +6742,25 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 100
+          },
+          "slaMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "default": null,
+            "nullable": true
+          },
+          "allowWon": {
+            "default": true,
+            "type": "boolean"
+          },
+          "allowLost": {
+            "default": true,
+            "type": "boolean"
+          },
+          "restrictTransitions": {
+            "default": false,
+            "type": "boolean"
           }
         },
         "required": [
@@ -6305,6 +6803,25 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 100
+              },
+              "slaMinutes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991,
+                "default": null,
+                "nullable": true
+              },
+              "allowWon": {
+                "default": true,
+                "type": "boolean"
+              },
+              "allowLost": {
+                "default": true,
+                "type": "boolean"
+              },
+              "restrictTransitions": {
+                "default": false,
+                "type": "boolean"
               },
               "createdAt": {
                 "anyOf": [
@@ -6415,6 +6932,175 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 100
+              },
+              "slaMinutes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991,
+                "default": null,
+                "nullable": true
+              },
+              "allowWon": {
+                "default": true,
+                "type": "boolean"
+              },
+              "allowLost": {
+                "default": true,
+                "type": "boolean"
+              },
+              "restrictTransitions": {
+                "default": false,
+                "type": "boolean"
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "archivedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "pipelineId",
+              "name",
+              "sortOrder",
+              "createdAt",
+              "updatedAt",
+              "archivedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "stage",
+          "txid"
+        ]
+      },
+      "ConfigureStageDto": {
+        "type": "object",
+        "properties": {
+          "slaMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "allowWon": {
+            "type": "boolean"
+          },
+          "allowLost": {
+            "type": "boolean"
+          },
+          "restrictTransitions": {
+            "type": "boolean"
+          },
+          "allowedDestinationStageIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "slaMinutes",
+          "allowWon",
+          "allowLost",
+          "restrictTransitions",
+          "allowedDestinationStageIds"
+        ]
+      },
+      "ConfigureStageResponseDto": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pipelineId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "sortOrder": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "probability": {
+                "default": 0,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "slaMinutes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991,
+                "default": null,
+                "nullable": true
+              },
+              "allowWon": {
+                "default": true,
+                "type": "boolean"
+              },
+              "allowLost": {
+                "default": true,
+                "type": "boolean"
+              },
+              "restrictTransitions": {
+                "default": false,
+                "type": "boolean"
               },
               "createdAt": {
                 "anyOf": [
@@ -6601,6 +7287,20 @@
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
+              },
+              "stageEnteredAt": {
+                "default": "2026-09-15T03:29:18.320Z",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
               "customFields": {
                 "type": "object",
@@ -6831,6 +7531,20 @@
                 "maxLength": 500,
                 "nullable": true
               },
+              "stageEnteredAt": {
+                "default": "2026-09-15T03:29:18.324Z",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
               "customFields": {
                 "type": "object",
                 "additionalProperties": {}
@@ -6990,6 +7704,20 @@
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
+              },
+              "stageEnteredAt": {
+                "default": "2026-09-15T03:29:18.325Z",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
               "customFields": {
                 "type": "object",
@@ -7159,6 +7887,20 @@
                 "maxLength": 500,
                 "nullable": true
               },
+              "stageEnteredAt": {
+                "default": "2026-09-15T03:29:18.326Z",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
               "customFields": {
                 "type": "object",
                 "additionalProperties": {}
@@ -7306,6 +8048,20 @@
                 "type": "string",
                 "maxLength": 500,
                 "nullable": true
+              },
+              "stageEnteredAt": {
+                "default": "2026-09-15T03:29:18.327Z",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
               },
               "customFields": {
                 "type": "object",

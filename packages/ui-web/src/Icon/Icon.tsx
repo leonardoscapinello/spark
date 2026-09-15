@@ -7,6 +7,7 @@ const paths = {
   close: "m4 4 8 8M12 4l-8 8",
   right: "m6 4 4 4-4 4",
   undo: "M5 5H2V2m0 3 3-3m-3 3h7a5 5 0 0 1 0 10H6",
+  lock: "M4 7V5a4 4 0 0 1 8 0v2M3 7h10v7H3V7Zm5 3v2",
   plus: "M8 3v10M3 8h10",
   chevron: "m5 6.5 3 3 3-3",
   search: "M7 2a5 5 0 1 0 0 10A5 5 0 0 0 7 2Zm4 9 3 3",

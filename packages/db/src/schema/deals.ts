@@ -38,6 +38,7 @@ export const deals = pgTable(
     status: text("status").notNull().default("open"),
     expectedCloseDate: timestamp("expected_close_date", { withTimezone: true }),
     lossReason: text("loss_reason"),
+    stageEnteredAt: timestamp("stage_entered_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
