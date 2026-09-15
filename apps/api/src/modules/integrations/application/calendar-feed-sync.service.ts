@@ -1,12 +1,46 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common";
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
-import { calendarEvents, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
-import { CALENDAR_PROVIDERS, calendarEventId, userId, type CalendarProvider, type IntegrationConnectionId, type OrgId } from "@spark/core";
+import { calendarEvents, createDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
+import { CALENDAR_PROVIDERS, calendarEventId, integrationConnectionId, orgId as orgIdFactory, userId, type CalendarProvider, type IntegrationConnectionId, type OrgId } from "@spark/core";
 import { loadCalendarFeed, normalizeCalendarFeed } from "../infrastructure/calendar-feed.js";
+import { ConnectionSettingsRepository } from "../infrastructure/connection-settings.repository.js";
+import { SecretVault } from "../infrastructure/secret-vault.service.js";
 
 @Injectable()
-export class CalendarFeedSyncService {
+export class CalendarFeedSyncService implements OnModuleInit, OnModuleDestroy {
   private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private timer?: ReturnType<typeof setInterval>;
+
+  constructor(private readonly settings: ConnectionSettingsRepository, private readonly vault: SecretVault) {}
+
+  onModuleInit(): void {
+    if (process.env.NODE_ENV === "test") return;
+    const run = () => void this.syncConnectedCalendars().catch((error: unknown) => process.stderr.write(`calendar sync: ${error instanceof Error ? error.message : String(error)}\n`));
+    run();
+    this.timer = setInterval(run, Number(process.env.CALENDAR_SYNC_INTERVAL_MS ?? 5 * 60 * 1_000));
+    this.timer.unref();
+  }
+
+  onModuleDestroy(): void { if (this.timer) clearInterval(this.timer); }
+
+  async syncConnectedCalendars(): Promise<number> {
+    const connections = await this.db.select({ id: integrationConnections.id, orgId: integrationConnections.orgId, provider: integrationConnections.provider }).from(integrationConnections).where(and(eq(integrationConnections.status, "connected"), inArray(integrationConnections.provider, CALENDAR_PROVIDERS)));
+    let total = 0;
+    for (const connection of connections) {
+      const orgId = orgIdFactory.from(connection.orgId);
+      const id = integrationConnectionId.from(connection.id);
+      try {
+        const loaded = await withOrgContext(this.db, orgId, async (tx) => {
+          const [secret] = await tx.select().from(integrationSecrets).where(and(eq(integrationSecrets.orgId, orgId), eq(integrationSecrets.connectionId, id))).limit(1);
+          return { config: await this.settings.read(tx, id), secrets: secret ? this.vault.decrypt(secret) : {} };
+        });
+        total += await this.sync(orgId, id, connection.provider, loaded.config, loaded.secrets);
+      } catch (error) {
+        await withOrgContext(this.db, orgId, async (tx) => { await tx.update(integrationConnections).set({ lastError: error instanceof Error ? error.message : "Falha ao sincronizar agenda.", updatedAt: new Date() }).where(eq(integrationConnections.id, id)); });
+      }
+    }
+    return total;
+  }
 
   async sync(orgId: OrgId, connectionId: IntegrationConnectionId, provider: string, config: Record<string, unknown>, secrets: Record<string, string>): Promise<number> {
     if (!CALENDAR_PROVIDERS.includes(provider as CalendarProvider)) return 0;
