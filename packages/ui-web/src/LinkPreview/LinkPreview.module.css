@@ -1,11 +1,10 @@
-/* O cartão tem SEMPRE o mesmo tamanho. Sem isso a dica pulava na tela a cada
- * link — um com imagem e descrição longa, o seguinte só com título — e ler uma
- * lista de links virava um sobe e desce. A faixa de imagem existe mesmo sem
- * imagem: quando falta, mostra o ícone do site sobre um fundo neutro. */
+/* A largura pertence ao cartão, não só ao tooltip especializado. A prévia
+ * também aparece dentro do tooltip genérico de InlineField; sem largura aqui,
+ * ela colapsava enquanto mantinha a altura e virava uma faixa vertical. */
 .popup { width: var(--ui-popoverWidth); padding: 0; overflow: hidden; background: var(--color-surface); color: var(--color-ink); }
-.card { display: flex; flex-direction: column; min-width: 0; height: var(--ui-linkPreviewHeight); background: var(--color-surface); color: var(--color-ink); }
+.card { display: flex; flex-direction: column; width: var(--ui-popoverWidth); max-width: 100%; min-width: 0; background: var(--color-surface); color: var(--color-ink); }
 
-.image, .imagePlaceholder { display: block; flex: 0 0 auto; width: 100%; height: var(--ui-linkPreviewImage); object-fit: cover; background: var(--ui-subtle); }
+.image, .imagePlaceholder { display: block; flex: 0 0 auto; width: 100%; aspect-ratio: var(--ui-linkPreviewAspectRatio); object-fit: cover; background: var(--ui-subtle); }
 /* Sem imagem: o ícone do site no meio, grande o bastante para identificar. */
 .imagePlaceholder { display: grid; place-items: center; color: var(--color-inkFaint); }
 .imagePlaceholder img { width: var(--ui-icon); height: var(--ui-icon); object-fit: contain; }

@@ -76,6 +76,37 @@
 .cancel:hover { background: var(--ui-subtle); color: var(--color-ink); }
 .cancel:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 
+/* Feedback colado ao valor: aparece no instante em que o editor fecha e fica
+ * até a Promise real da escrita confirmar. Não desloca nem bloqueia a linha. */
+.persistence {
+  position: absolute;
+  z-index: 1;
+  inset-inline-end: var(--space-2);
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--ui-icon);
+  height: var(--ui-icon);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-inkMuted);
+  transform: translateY(-50%);
+  box-shadow: var(--ui-panelShadow);
+}
+.persistence[data-state="saved"] { color: var(--color-statusSuccess); }
+.persistence[data-state="error"] { color: var(--color-statusDanger); }
+.persistence > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
+.spinner {
+  box-sizing: border-box;
+  width: var(--space-3);
+  height: var(--space-3);
+  border: var(--ui-focusWidth) solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-full);
+  animation: spin var(--ui-spinDuration) linear infinite;
+}
+.control { position: relative; }
+
 /* O valor parado parece texto; ao passar o mouse mostra que é editável. É o
  * meio-termo do Pipedrive: nada de campo desenhado o tempo todo, e nada de
  * esconder que dá para mudar. */
@@ -157,3 +188,5 @@
   .confirmation { right: var(--space-3); left: var(--space-3); transform: none; flex-direction: column; align-items: stretch; }
   .confirmationActions { justify-content: flex-end; }
 }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: var(--ui-spinReducedDuration); } }
+@keyframes spin { to { transform: rotate(1turn); } }

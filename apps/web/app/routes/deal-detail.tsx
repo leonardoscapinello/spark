@@ -326,8 +326,9 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       const transaction = dealsCollection.update(deal.id, (draft) => { Object.assign(draft, patch); });
       await transaction.isPersisted.promise;
       notify({ title: `${label} atualizado`, tone: "success" });
-    } catch {
+    } catch (cause) {
       notify({ title: `Não foi possível alterar ${label.toLowerCase()}`, tone: "error" });
+      throw cause;
     }
   }
 
@@ -466,19 +467,19 @@ export default function DealDetail({ params }: Route.ComponentProps) {
               * número solto faria a conta do funil discordar do que foi vendido. */}
             <div className={styles.linha}><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
             <InlineField label="Nome" value={deal.name} disabled={!canWrite}>
-              {(close) => <Input aria-label="Nome do negócio" defaultValue={deal.name} onBlur={(event) => { const next = event.target.value.trim(); close(); if (next && next !== deal.name) void saveField({ name: next }, "Nome"); }} />}
+              {(close) => <Input aria-label="Nome do negócio" defaultValue={deal.name} onBlur={(event) => { const next = event.target.value.trim(); close(next && next !== deal.name ? saveField({ name: next }, "Nome") : undefined); }} />}
             </InlineField>
             <InlineField label="Previsão" value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
-              {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => { close(); void saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"); }} />}
+              {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
             </InlineField>
             <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>
-              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => { close(); void saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"); }} />}
+              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
             </InlineField>
             <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} empty={!linkedContact} disabled={!canWrite} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
-              {(close) => <SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onValueChange={(next) => { close(); if (next) void saveField({ contactId: contactIdFactory.from(next.value) }, "Pessoa"); }} />}
+              {(close) => <SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onValueChange={(next) => close(next ? saveField({ contactId: contactIdFactory.from(next.value) }, "Pessoa") : undefined)} />}
             </InlineField>
             <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} empty={!linkedCompany} disabled={!canWrite} {...(linkedCompany ? { action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})}>
-              {(close) => <Select label="Empresa do negócio" value={deal.companyId ?? null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => { close(); void saveField({ companyId: next ? companyIdFactory.from(next) : null }, "Empresa"); }} />}
+              {(close) => <Select label="Empresa do negócio" value={deal.companyId ?? null} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(next) => close(saveField({ companyId: next ? companyIdFactory.from(next) : null }, "Empresa"))} />}
             </InlineField>
             {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           </div> },

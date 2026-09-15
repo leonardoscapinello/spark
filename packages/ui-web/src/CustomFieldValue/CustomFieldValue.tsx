@@ -77,6 +77,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
       gravado.current = value;
       setLocal(value);
       setDraft(toDraft(field, value));
+      throw cause;
     } finally {
       setSaving(false);
     }
@@ -92,7 +93,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
   /* Parado é texto; clicou, vira campo. O mesmo comportamento das linhas do
    * resumo, porque quem usa não distingue «campo do sistema» de «campo que a
    * organização criou» — e não deveria mesmo. */
-  const row = (control: (close: () => void) => ReactNode) => <InlineField
+  const row = (control: (close: (persistence?: Promise<unknown>) => void, trackPersistence: (persistence: Promise<unknown>) => void) => ReactNode) => <InlineField
     label={field.label}
     required={field.required}
     block={field.type === "paragraph"}
@@ -103,13 +104,13 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
     {...(href === undefined || preview === undefined ? {} : { preview, onPreviewRequest })}
   >{control}</InlineField>;
 
-  if (field.type === "boolean") return row((close) => <Checkbox checked={local === true} disabled={busy} onCheckedChange={(checked) => { close(); void save(checked === true); }}>{local === true ? "Sim" : "Não"}</Checkbox>);
-  if (field.type === "single_select") return row((close) => <Select label={field.label} value={typeof local === "string" ? local : null} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => { close(); void save(next); }} />);
-  if (field.type === "multi_select") return row(() => <Select<true> multiple label={field.label} value={Array.isArray(local) ? local.map(String) : []} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => void save(next)} />);
-  if (field.type === "date") return row((close) => <DatePicker label={field.label} value={draft} disabled={busy} onValueChange={(next) => { close(); setDraft(next); void save(next); }} />);
-  if (field.type === "datetime") return row((close) => <DateTimePicker mode="datetime" label={field.label} value={draft} disabled={busy} onValueChange={(next) => { close(); setDraft(next); void save(next); }} />);
-  if (field.type === "paragraph") return row((close) => <Textarea rows={3} className={s.area} aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} onBlur={() => { close(); if (draft !== toDraft(field, local)) void save(draft); }} />);
-  if (field.type === "phone") return row((close) => <MaskedInput format="(##) #####-####" aria-label={field.label} value={draft} disabled={busy} placeholder="(11) 90000-0000" onValueChange={setDraft} onBlur={() => { close(); if (draft !== toDraft(field, local)) void save(draft); }} />);
+  if (field.type === "boolean") return row((close) => <Checkbox checked={local === true} disabled={busy} onCheckedChange={(checked) => close(save(checked === true))}>{local === true ? "Sim" : "Não"}</Checkbox>);
+  if (field.type === "single_select") return row((close) => <Select label={field.label} value={typeof local === "string" ? local : null} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => close(save(next))} />);
+  if (field.type === "multi_select") return row((_close, trackPersistence) => <Select<true> multiple label={field.label} value={Array.isArray(local) ? local.map(String) : []} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => trackPersistence(save(next))} />);
+  if (field.type === "date") return row((close) => <DatePicker label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); close(save(next)); }} />);
+  if (field.type === "datetime") return row((close) => <DateTimePicker mode="datetime" label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); close(save(next)); }} />);
+  if (field.type === "paragraph") return row((close) => <Textarea rows={3} className={s.area} aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
+  if (field.type === "phone") return row((close) => <MaskedInput format="(##) #####-####" aria-label={field.label} value={draft} disabled={busy} placeholder="(11) 90000-0000" onValueChange={setDraft} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
 
   // Dinheiro tem campo próprio: R$, separador de milhar e duas casas, e o valor
   // já sai em centavos — nenhum campo de texto acerta isso sozinho.
@@ -127,7 +128,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
       value={digitado}
       disabled={busy}
       onValueChange={(next) => setDraft(next === null ? "" : String(next))}
-      onBlur={() => { close(); if (draft !== toDraft(field, local)) void save(digitado); }}
+      onBlur={() => close(draft !== toDraft(field, local) ? save(digitado) : undefined)}
     />);
   }
 
@@ -136,7 +137,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
   // Grava ao sair do campo, como no Pipedrive. Um botão «Salvar» por linha
   // roubava metade da largura do painel e pedia um clique a mais em cada
   // campo — e o painel tem muitos.
-  return row((close) => <Input type={inputType} aria-label={field.label} value={draft} disabled={busy} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} onBlur={() => { close(); if (draft !== toDraft(field, local)) void save(draft); }} />);
+  return row((close) => <Input type={inputType} aria-label={field.label} value={draft} disabled={busy} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
 }
 
 

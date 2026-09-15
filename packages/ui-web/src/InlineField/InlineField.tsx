@@ -34,8 +34,10 @@ export interface InlineFieldProps {
    * O campo de edição. Recebe `close`, que a tela chama depois de gravar —
    * um `Select` fecha ao escolher, um texto fecha ao sair do campo.
    */
-  children: (close: () => void) => ReactNode;
+  children: (close: (persistence?: Promise<unknown>) => void, trackPersistence: (persistence: Promise<unknown>) => void) => ReactNode;
 }
+
+type PersistenceState = "idle" | "saving" | "saved" | "error";
 
 /**
  * Campo que vira campo ao clicar (Pipedrive: responsável, situação e previsão
@@ -58,13 +60,39 @@ export interface InlineFieldProps {
  */
 export function InlineField({ label, value, empty = false, disabled = false, required = false, block = false, href, action, preview, onPreviewRequest, children }: InlineFieldProps) {
   const [open, setOpen] = useState(false);
+  const [persistenceState, setPersistenceState] = useState<PersistenceState>("idle");
   const holder = useRef<HTMLDivElement>(null);
+  const persistenceRevision = useRef(0);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** Tira o foco do controle — é o `onBlur` dele que grava — e fecha. */
-  function close() {
+  function trackPersistence(persistence: Promise<unknown>) {
+    const revision = ++persistenceRevision.current;
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    setPersistenceState("saving");
+    void persistence.then(
+      () => {
+        if (revision !== persistenceRevision.current) return;
+        setPersistenceState("saved");
+        feedbackTimer.current = setTimeout(() => setPersistenceState("idle"), 1_200);
+      },
+      () => {
+        if (revision !== persistenceRevision.current) return;
+        setPersistenceState("error");
+        feedbackTimer.current = setTimeout(() => setPersistenceState("idle"), 3_000);
+      },
+    );
+  }
+
+  /** Tira o foco do controle, acompanha a gravação real e fecha. */
+  function close(persistence?: Promise<unknown>) {
+    if (persistence) trackPersistence(persistence);
     holder.current?.querySelector<HTMLElement>("input, textarea, select, [contenteditable='true']")?.blur();
     setOpen(false);
   }
+
+  useEffect(() => () => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+  }, []);
 
   /* O controle acabou de substituir um botão: sem levar o foco junto, quem
    * navega por teclado perde o lugar na tela.
@@ -144,6 +172,7 @@ export function InlineField({ label, value, empty = false, disabled = false, req
             <div className={s.readRow}>
               {preview ? <Tooltip content={preview} appearance="surface" pinOnClick={false} {...(onPreviewRequest ? { onOpen: onPreviewRequest } : {})}>{valueButton}</Tooltip> : valueButton}
               {action && !empty && <button type="button" className={s.action} aria-label={action.label} onClick={action.onClick}><Icon name={action.icon} /></button>}
+              <PersistenceFeedback state={persistenceState} label={label} />
             </div>
           </div>
         </div>
@@ -177,8 +206,9 @@ export function InlineField({ label, value, empty = false, disabled = false, req
           }}
         >
           <div className={s.editing}>
-            <div className={s.editor}>{children(close)}</div>
-            <button type="button" className={s.cancel} aria-label={`Fechar edição de ${label}`} onPointerDown={(event) => event.preventDefault()} onClick={close}>
+            <div className={s.editor}>{children(close, trackPersistence)}</div>
+            <PersistenceFeedback state={persistenceState} label={label} />
+            <button type="button" className={s.cancel} aria-label={`Fechar edição de ${label}`} onPointerDown={(event) => event.preventDefault()} onClick={() => close()}>
               <Icon name="close" />
             </button>
           </div>
@@ -186,6 +216,14 @@ export function InlineField({ label, value, empty = false, disabled = false, req
       </div>
     </div>
   );
+}
+
+function PersistenceFeedback({ state, label }: { state: PersistenceState; label: string }) {
+  if (state === "idle") return null;
+  const text = state === "saving" ? `Salvando ${label}` : state === "saved" ? `${label} salvo` : `Falha ao salvar ${label}`;
+  return <span className={s.persistence} data-state={state} role="status" aria-label={text} title={text}>
+    {state === "saving" ? <span className={s.spinner} aria-hidden="true" /> : <Icon name={state === "saved" ? "check" : "close"} />}
+  </span>;
 }
 
 /** O rótulo acessível precisa de texto; um nó React vira o que dá. */

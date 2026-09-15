@@ -19,7 +19,7 @@ export function LinkPreviewCard({ preview, loading = false }: { preview?: LinkPr
   if (!preview || preview.status === "failed") return <div className={styles.card}><div className={styles.imagePlaceholder} /><div className={styles.unavailable}><strong>Prévia indisponível</strong><span>Não foi possível obter os dados deste endereço.</span></div></div>;
   return <div className={styles.card}>
     {preview.imageUrl
-      ? <img className={styles.image} src={preview.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" />
+      ? <img className={styles.image} src={preview.imageUrl} alt="" loading="lazy" decoding="async" fetchPriority="low" referrerPolicy="no-referrer" />
       : <div className={styles.imagePlaceholder}>{preview.faviconUrl ? <img src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" /> : null}</div>}
     <div className={styles.body}>
       <span className={styles.site}>{preview.faviconUrl && <img src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" />}{preview.siteName ?? new URL(preview.url).hostname}</span>
