@@ -8,6 +8,7 @@ describe("ViewerStack", () => {
   it("identifica pessoas por nome e limita o empilhamento", () => {
     const viewers = ["Ana", "Bruno", "Carla", "Daniel", "Elisa"].map((name) => ({ userId: userId.create(), name, avatarUrl: null }));
     render(<TooltipProvider><ViewerStack viewers={viewers} currentUserId={viewers[0]!.userId} status="connected" /></TooltipProvider>);
+    expect(screen.getByText("Visualizando")).toBeVisible();
     expect(screen.getByRole("button", { name: "Ana (você) está visualizando" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mais 1 pessoas visualizando" })).toBeInTheDocument();
   });
