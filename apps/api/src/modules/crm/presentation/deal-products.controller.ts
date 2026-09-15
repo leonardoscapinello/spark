@@ -22,20 +22,20 @@ export class DealProductsController {
   @ApiCreatedResponse({ type: DealProductWriteResponseDto })
   async add(@CurrentSupabaseUser() claims: SupabaseJwtClaims, @Body() body: CreateDealProductDto) {
     const user = await this.getCurrentUser.execute(claims.sub);
-    return this.items.add(user.orgId, body) as Promise<DealProductWriteResponseDto>;
+    return this.items.add(user.orgId, user.id, body) as Promise<DealProductWriteResponseDto>;
   }
 
   @Patch(":id")
   @ApiOkResponse({ type: DealProductWriteResponseDto })
   async change(@CurrentSupabaseUser() claims: SupabaseJwtClaims, @Param("id") id: string, @Body() body: UpdateDealProductDto) {
     const user = await this.getCurrentUser.execute(claims.sub);
-    return this.items.change(user.orgId, dealProductIdFactory.from(id), body) as Promise<DealProductWriteResponseDto>;
+    return this.items.change(user.orgId, user.id, dealProductIdFactory.from(id), body) as Promise<DealProductWriteResponseDto>;
   }
 
   @Delete(":id")
   @ApiOkResponse({ type: DealProductWriteResponseDto })
   async remove(@CurrentSupabaseUser() claims: SupabaseJwtClaims, @Param("id") id: string) {
     const user = await this.getCurrentUser.execute(claims.sub);
-    return this.items.remove(user.orgId, dealProductIdFactory.from(id)) as Promise<DealProductWriteResponseDto>;
+    return this.items.remove(user.orgId, user.id, dealProductIdFactory.from(id)) as Promise<DealProductWriteResponseDto>;
   }
 }

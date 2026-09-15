@@ -41,7 +41,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -57,7 +57,7 @@ import { getUsersCollection } from "../lib/users-collection.client";
 import { getCalendarEventsCollection } from "../lib/calendar-events-collection.client";
 import { getSession } from "../lib/auth.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
-import { getEventsCollection } from "../lib/events-collection.client";
+import { getDealEventsCollection } from "../lib/events-collection.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
@@ -102,7 +102,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     getCustomFieldValuesCollection().preload(),
     getCustomFieldOptionsCollection().preload(),
     getNotesCollection().preload(),
-    getEventsCollection().preload(),
+    getDealEventsCollection(dealIdFactory.from(params.dealId)).preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
     ...(session.capabilities.includes("activities:read") ? [getCalendarEventsCollection().preload()] : []),
@@ -178,7 +178,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: dealNotes = [] } = useLiveQuery({ query: (q) => q.from({ notes: getNotesCollection() }).where(({ notes: note }) => eq(note.dealId, params.dealId)).orderBy(({ notes: note }) => note.createdAt, "desc") });
   const { data: fieldRules = [] } = useLiveQuery({ query: (q) => q.from({ rules: getStageFieldRulesCollection() }) });
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: field }) => eq(field.entityType, "deal")).orderBy(({ fields: field }) => field.label, "asc") });
-  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
+  const { data: events = [] } = useLiveQuery({ query: (q) => q.from({ events: getDealEventsCollection(dealIdFactory.from(params.dealId)) }).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const showConversations = openSections.includes("conversas");
   const { data: conversations = [], isLoading: conversationsLoading } = useLiveQuery({ query: (q) => canReadInbox && showConversations && deal?.contactId ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, deal.contactId!)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined }, [canReadInbox, showConversations, deal?.contactId]);
 
@@ -209,6 +209,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [itemTax, setItemTax] = useState<number | null>(0);
   const [busyActivityId, setBusyActivityId] = useState<string | null>(null);
   const [lossModalOpen, setLossModalOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [lossReason, setLossReason] = useState("");
   const [reopening, setReopening] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
@@ -301,6 +302,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
   const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
   const doneActivities = useMemo(() => orderedActivities.filter((activity) => activity.completed).reverse(), [orderedActivities]);
+  const timelineItems = useMemo(() => events.map((event) => toTimelineItem(event, { users, stages, contacts, companies, customFields })), [companies, contacts, customFields, events, stages, users]);
   const scheduledAt = activityStartDate && activityStartTime ? `${activityStartDate}T${activityStartTime}` : "";
   const activityEndsAtValue = activityEndDate && activityEndTime ? `${activityEndDate}T${activityEndTime}` : "";
   const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
@@ -622,10 +624,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         <div className={styles.headerPeople}>
           {/* Uma identidade única para o responsável. A presença mostra apenas outras pessoas. */}
           <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
-            {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<Avatar name={item.name} src={item.avatarUrl} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
+            {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<UserAvatar user={item} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
             {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
           </MenuGroup>}>
-            {owner ? <Avatar name={owner.name} src={owner.avatarUrl} size="small" /> : <Icon name="account" />}
+            {owner ? <UserAvatar user={owner} size="small" /> : <Icon name="account" />}
             <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
           </MenuButton>
           <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
@@ -773,13 +775,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
         <section className={styles.bloco} aria-labelledby="deal-historico">
           <header className={styles.blocoCabecalho}>
             <h2 id="deal-historico" className={styles.blocoTitulo}>Histórico</h2>
-            <span className={styles.blocoContagem}>{events.length} {events.length === 1 ? "registro" : "registros"}</span>
+            <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(true)}>Ver histórico completo</Button>
           </header>
           <div className={styles.blocoCorpo}><Tabs label="Filtrar o histórico" defaultValue="tudo" items={[
-            { value: "tudo", label: "Tudo", content: <>
-              {dealNotes.length > 0 && <ul className={styles.notaList}>{dealNotes.slice(0, 3).map((note) => <li key={note.id}><NoteCard note={note} authorName={users.find((user) => user.id === note.authorId)?.name} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} /></li>)}</ul>}
-              <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações deste negócio aparecerão aqui." />
-            </> },
+            { value: "tudo", label: "Tudo", content: <Timeline items={timelineItems.slice(0, 10)} emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
             { value: "notas", label: `Notas (${dealNotes.length})`, content: dealNotes.length === 0
               ? <p className={styles.empty}>Nenhuma nota ainda. Use o campo acima para registrar o que foi conversado.</p>
               : <ul className={styles.notaList}>{dealNotes.map((note) => <li key={note.id}><NoteCard note={note} authorName={users.find((user) => user.id === note.authorId)?.name} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} /></li>)}</ul> },
@@ -789,7 +788,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
                   <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong><time>{formatDateTime(activity.scheduledAt)}</time></div>
                   {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Reabrir</Button>}
                 </li>)}</ul> }] : []),
-            { value: "mudancas", label: "Mudanças", content: <Timeline items={events.filter((item) => item.type !== "activity.created").map(toTimelineItem)} emptyText="Nenhuma mudança registrada." /> },
+            { value: "mudancas", label: "Mudanças", content: <Timeline items={events.filter((item) => item.type !== "activity.created").map((event) => toTimelineItem(event, { users, stages, contacts, companies, customFields })).slice(0, 10)} emptyText="Nenhuma mudança registrada." /> },
           ]} /></div>
         </section>
       </section>
@@ -890,6 +889,12 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     <ActionModal open={lossModalOpen} onOpenChange={setLossModalOpen} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Informe o motivo da perda." onConfirm={async () => { if (!lossReason.trim()) throw new Error("MISSING_REASON"); await closeDeal("lost", lossReason); setLossReason(""); }}>
       <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
     </ActionModal>
+
+    <Panel open={historyOpen} onOpenChange={setHistoryOpen}>
+      <PanelContent side="right" title="Histórico completo" description={`${events.length} ${events.length === 1 ? "evento registrado" : "eventos registrados"}`} closeLabel="Fechar histórico">
+        <Timeline items={timelineItems} initialCount={25} pageSize={25} emptyText="Nenhuma alteração registrada." />
+      </PanelContent>
+    </Panel>
 
     {/* A ficha entra por cima, ocupando 85% da largura: o negócio continua
       * visível atrás, e fechar devolve exatamente onde se estava. */}

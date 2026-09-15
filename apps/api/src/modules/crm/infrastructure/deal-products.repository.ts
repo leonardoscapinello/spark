@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { createDbClient, dealProducts, deals, withOrgContext, type SparkDb } from "@spark/db";
-import { dealProductsTotal, money, toCents, type CreateDealProductInput, type DealId, type DealProduct, type DealProductId, type Money, type OrgId, type UpdateDealProductInput } from "@spark/core";
+import { auditChanges, dealProductsTotal, money, toCents, type CreateDealProductInput, type DealId, type DealProduct, type DealProductId, type Money, type OrgId, type UpdateDealProductInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 /**
@@ -18,7 +18,7 @@ export class DealProductsRepository {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
-  add(orgId: OrgId, input: CreateDealProductInput): Promise<{ item: DealProduct; dealAmount: Money; txid: number }> {
+  add(orgId: OrgId, actorUserId: UserId, input: CreateDealProductInput): Promise<{ item: DealProduct; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const [row] = await tx.insert(dealProducts).values({
         id: input.id,
@@ -36,13 +36,15 @@ export class DealProductsRepository {
       if (!row) throw new Error("Deal product insert returned no row.");
       const item = toItem(row);
       const dealAmount = await this.syncDealAmount(tx, orgId, item.dealId);
-      await this.eventWriter.append(tx, { orgId, dealId: item.dealId, type: "deal.updated", data: { fields: ["products"], product: item.name } });
+      await this.eventWriter.append(tx, { orgId, actorUserId, dealId: item.dealId, type: "deal.updated", data: { fields: ["products"], changes: [{ field: "products", before: null, after: item.name }] } });
       return { item, dealAmount, txid: await captureTxid(tx) };
     });
   }
 
-  change(orgId: OrgId, id: DealProductId, input: UpdateDealProductInput): Promise<{ item: DealProduct; dealAmount: Money; txid: number }> {
+  change(orgId: OrgId, actorUserId: UserId, id: DealProductId, input: UpdateDealProductInput): Promise<{ item: DealProduct; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      const [before] = await tx.select().from(dealProducts).where(eq(dealProducts.id, id)).limit(1);
+      if (!before) throw new NotFoundException(`Deal product ${id} not found.`);
       const [row] = await tx.update(dealProducts).set({
         ...(input.name !== undefined ? { name: input.name } : {}),
         ...(input.quantityMilli !== undefined ? { quantityMilli: input.quantityMilli } : {}),
@@ -57,15 +59,18 @@ export class DealProductsRepository {
       if (!row) throw new NotFoundException(`Deal product ${id} not found.`);
       const item = toItem(row);
       const dealAmount = await this.syncDealAmount(tx, orgId, item.dealId);
+      const fields = Object.keys(input);
+      await this.eventWriter.append(tx, { orgId, actorUserId, dealId: item.dealId, type: "deal.updated", data: { fields: fields.map((field) => `product:${field}`), changes: auditChanges(before, row, fields).map((change) => ({ ...change, field: `product:${change.field}` })) } });
       return { item, dealAmount, txid: await captureTxid(tx) };
     });
   }
 
-  remove(orgId: OrgId, id: DealProductId): Promise<{ item: null; dealAmount: Money; txid: number }> {
+  remove(orgId: OrgId, actorUserId: UserId, id: DealProductId): Promise<{ item: null; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const [row] = await tx.delete(dealProducts).where(eq(dealProducts.id, id)).returning();
       if (!row) throw new NotFoundException(`Deal product ${id} not found.`);
       const dealAmount = await this.syncDealAmount(tx, orgId, row.dealId as DealId);
+      await this.eventWriter.append(tx, { orgId, actorUserId, dealId: row.dealId as DealId, type: "deal.updated", data: { fields: ["products"], changes: [{ field: "products", before: row.name, after: null }] } });
       return { item: null, dealAmount, txid: await captureTxid(tx) };
     });
   }

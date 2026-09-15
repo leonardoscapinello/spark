@@ -15,6 +15,8 @@ import {
   canCloseAtStage,
   canMoveBetweenStages,
   stageMoveCooldownRemaining,
+  auditChanges,
+  type UserId,
 } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
@@ -34,7 +36,7 @@ export class DealsRepository {
     });
   }
 
-  async create(orgId: OrgId, input: CreateDealInput): Promise<{ deal: Deal; txid: number }> {
+  async create(orgId: OrgId, actorUserId: UserId, input: CreateDealInput): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
 
@@ -64,13 +66,13 @@ export class DealsRepository {
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
       if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "deal", deal.id, input.customFields);
-      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.created", data: { name: deal.name, stageId: deal.stageId } });
+      await this.eventWriter.append(tx, { orgId, actorUserId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.created", data: { name: deal.name, stageId: deal.stageId } });
       return { deal, txid };
     });
   }
 
   /** The drag-and-drop action: only changes stageId, nothing else (roadmap.md, Fase 1). */
-  async move(orgId: OrgId, dealId: DealId, stageId: StageId): Promise<{ deal: Deal; txid: number }> {
+  async move(orgId: OrgId, actorUserId: UserId, dealId: DealId, stageId: StageId): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
       const [current] = await tx.select({ pipelineId: deals.pipelineId, stageId: deals.stageId, stageEnteredAt: deals.stageEnteredAt }).from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
@@ -96,14 +98,16 @@ export class DealsRepository {
 
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
-      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.stage_changed", data: { fromStageId: current.stageId, stageId: deal.stageId } });
+      await this.eventWriter.append(tx, { orgId, actorUserId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.stage_changed", data: { fromStageId: current.stageId, stageId: deal.stageId, changes: [{ field: "stageId", before: current.stageId, after: deal.stageId }] } });
       return { deal, txid };
     });
   }
 
-  async edit(orgId: OrgId, dealId: DealId, input: EditDealInput): Promise<{ deal: Deal; txid: number }> {
+  async edit(orgId: OrgId, actorUserId: UserId, dealId: DealId, input: EditDealInput): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
+      const [before] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
+      if (!before) throw new NotFoundException(`Deal ${dealId} not found.`);
       const [row] = await tx
         .update(deals)
         .set({
@@ -123,14 +127,16 @@ export class DealsRepository {
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
       const deal = toDeal(row);
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
-      if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "deal", deal.id, input.customFields);
-      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.updated", data: { fields: Object.keys(input) } });
+      const customChanges = input.customFields !== undefined ? await this.customFields.write(tx, orgId, "deal", deal.id, input.customFields) : [];
+      const fields = Object.keys(input).filter((field) => field !== "customFields");
+      const changes = [...auditChanges(before, row, fields), ...customChanges];
+      if (changes.length > 0) await this.eventWriter.append(tx, { orgId, actorUserId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.updated", data: { fields: changes.map((change) => change.field), changes } });
       return { deal, txid };
     });
   }
 
   /** Close as won or lost — the board's other central action. */
-  async close(orgId: OrgId, dealId: DealId, input: CloseDealInput): Promise<{ deal: Deal; txid: number }> {
+  async close(orgId: OrgId, actorUserId: UserId, dealId: DealId, input: CloseDealInput): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
       const [current] = await tx.select({ allowWon: stages.allowWon, allowLost: stages.allowLost }).from(deals).innerJoin(stages, eq(stages.id, deals.stageId)).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
@@ -153,15 +159,18 @@ export class DealsRepository {
 
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
-      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: input.status === "won" ? "deal.won" : "deal.lost", data: input.status === "lost" ? { reason: input.lossReason ?? null } : {} });
+      await this.eventWriter.append(tx, { orgId, actorUserId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: input.status === "won" ? "deal.won" : "deal.lost", data: { ...(input.status === "lost" ? { reason: input.lossReason ?? null } : {}), changes: [{ field: "status", before: "open", after: input.status }] } });
       return { deal, txid };
     });
   }
 
   /** Reopen a won/lost deal and clear closing-only data. */
-  async reopen(orgId: OrgId, dealId: DealId): Promise<{ deal: Deal; txid: number }> {
+  async reopen(orgId: OrgId, actorUserId: UserId, dealId: DealId): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
+      const [before] = await tx.select({ status: deals.status }).from(deals)
+        .where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
+      if (!before) throw new NotFoundException(`Deal ${dealId} not found.`);
       const [row] = await tx
         .update(deals)
         .set({ status: "open", lossReason: null, updatedAt: new Date() })
@@ -170,7 +179,7 @@ export class DealsRepository {
 
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
       const deal = toDeal(row);
-      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.reopened" });
+      await this.eventWriter.append(tx, { orgId, actorUserId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.reopened", data: { changes: [{ field: "status", before: before.status, after: "open" }] } });
       return { deal, txid };
     });
   }

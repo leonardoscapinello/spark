@@ -20,7 +20,7 @@ import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
-import { getEventsCollection } from "../lib/events-collection.client";
+import { getContactEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { getIdentitiesCollection } from "../lib/identities-collection.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
@@ -33,12 +33,12 @@ import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from 
 import { useCustomFieldOptions, useCustomFieldValues } from "../lib/custom-fields.client";
 import { PreviewedCustomFieldValue } from "../lib/link-previews.client";
 
-export async function clientLoader() {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("contacts:read");
   void Promise.allSettled([
     getContactsCollection().preload(),
     getUsersCollection().preload(),
-    getEventsCollection().preload(),
+    getContactEventsCollection(contactIdFactory.from(params.contactId)).preload(),
     getIdentitiesCollection().preload(),
     getCustomFieldsCollection().preload(),
     getCustomFieldValuesCollection().preload(),
@@ -135,7 +135,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
     query: (q) => q.from({ users: usersCollection }).orderBy(({ users: user }) => user.name, "asc"),
   });
   const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: getCompaniesCollection() }).orderBy(({ companies: item }) => item.name, "asc") : undefined });
-  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.contactId, contactId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
+  const { data: events = [] } = useLiveQuery({ query: (q) => q.from({ events: getContactEventsCollection(contactIdFactory.from(contactId)) }).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const { data: identities } = useLiveQuery({ query: (q) => q.from({ identities: getIdentitiesCollection() }).where(({ identities: item }) => eq(item.contactId, contactId)).orderBy(({ identities: item }) => item.createdAt, "asc") });
   const { data: customFields } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: item }) => eq(item.entityType, "contact")).orderBy(({ fields: item }) => item.label, "asc") });
   // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
@@ -377,7 +377,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
       </section>}
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Histórico</h2>
-        <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
+        <Timeline items={events.map((event) => toTimelineItem(event, { users, companies, customFields }))} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
       </section>
 
       {canReadActivities && <section className={styles.atividades}>

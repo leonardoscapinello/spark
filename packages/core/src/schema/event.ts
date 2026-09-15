@@ -6,6 +6,7 @@ import {
   zEventId,
   zOrgId,
   zServerTimestamp,
+  zUserId,
 } from "./zodHelpers.js";
 
 export const DOMAIN_EVENT_TYPES = [
@@ -27,6 +28,8 @@ export const DOMAIN_EVENT_TYPES = [
   "activity.created",
   "activity.updated",
   "note.created",
+  "note.updated",
+  "note.deleted",
   "activity.completed",
   "activity.reopened",
   "conversation.created",
@@ -97,6 +100,8 @@ export const EventSchema = z.object({
   contactId: zContactId.nullable(),
   dealId: zDealId.nullable(),
   companyId: zCompanyId.nullable(),
+  /** Autor humano da ação. Nulo somente para automações e integrações. */
+  actorUserId: zUserId.nullable().default(null),
   type: DomainEventTypeSchema,
   data: z.record(z.string(), z.unknown()).default({}),
   occurredAt: zServerTimestamp,
@@ -109,6 +114,7 @@ export const CreateEventInputSchema = EventSchema.omit({ id: true, orgId: true }
   contactId: true,
   dealId: true,
   companyId: true,
+  actorUserId: true,
   data: true,
   occurredAt: true,
 });

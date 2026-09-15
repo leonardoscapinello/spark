@@ -33,7 +33,7 @@ export class ActivitiesController {
     @Body() body: CreateActivityDto,
   ): Promise<CreateActivityResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
-    const { activity, txid } = await this.createActivity.execute(user.orgId, body);
+    const { activity, txid } = await this.createActivity.execute(user.orgId, user.id, body);
     return { activity, txid } as CreateActivityResponseDto;
   }
 
@@ -48,7 +48,7 @@ export class ActivitiesController {
     @Body() body: UpdateActivityDto,
   ): Promise<CreateActivityResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
-    const { activity, txid } = await this.activities.update(user.orgId, activityIdFactory.from(id), body);
+    const { activity, txid } = await this.activities.update(user.orgId, user.id, activityIdFactory.from(id), body);
     return { activity, txid } as CreateActivityResponseDto;
   }
 
@@ -66,6 +66,7 @@ export class ActivitiesController {
     const user = await this.getCurrentUser.execute(claims.sub);
     const { activity, txid } = await this.completeActivity.execute(
       user.orgId,
+      user.id,
       activityIdFactory.from(id),
       body.completed,
     );

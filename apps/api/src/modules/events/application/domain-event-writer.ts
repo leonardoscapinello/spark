@@ -1,12 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { events, type SparkDb } from "@spark/db";
-import { eventId, type CompanyId, type ContactId, type DealId, type DomainEventType, type OrgId } from "@spark/core";
+import { eventId, type CompanyId, type ContactId, type DealId, type DomainEventType, type OrgId, type UserId } from "@spark/core";
 
 export interface AppendDomainEventInput {
   orgId: OrgId;
   contactId?: ContactId | null;
   dealId?: DealId | null;
   companyId?: CompanyId | null;
+  actorUserId?: UserId | null;
   type: DomainEventType;
   data?: Record<string, unknown>;
 }
@@ -21,6 +22,7 @@ export class DomainEventWriter {
       contactId: input.contactId ?? null,
       dealId: input.dealId ?? null,
       companyId: input.companyId ?? null,
+      actorUserId: input.actorUserId ?? null,
       type: input.type,
       data: input.data ?? {},
     });
@@ -34,6 +36,7 @@ export class DomainEventWriter {
       contactId: input.contactId ?? null,
       dealId: input.dealId ?? null,
       companyId: input.companyId ?? null,
+      actorUserId: input.actorUserId ?? null,
       type: input.type,
       data: input.data ?? {},
     })));

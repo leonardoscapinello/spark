@@ -1,4 +1,4 @@
-import type { DomainEventType, Event } from "@spark/core";
+import type { Company, Contact, CustomFieldDefinition, DomainEventType, Event, Stage, User } from "@spark/core";
 import type { TimelineItem } from "@spark/ui-web";
 
 const TITLES: Record<DomainEventType, string> = {
@@ -20,6 +20,8 @@ const TITLES: Record<DomainEventType, string> = {
   "activity.created": "Atividade agendada",
   "activity.updated": "Atividade atualizada",
   "note.created": "Nota registrada",
+  "note.updated": "Nota atualizada",
+  "note.deleted": "Nota excluída",
   "activity.completed": "Atividade concluída",
   "activity.reopened": "Atividade reaberta",
   "conversation.created": "Conversa criada",
@@ -77,15 +79,31 @@ const TITLES: Record<DomainEventType, string> = {
   "canned_reply.archived": "Resposta pronta arquivada",
 };
 
-export function toTimelineItem(event: Event): TimelineItem {
+export interface TimelinePresentationContext {
+  users?: readonly User[];
+  stages?: readonly Stage[];
+  contacts?: readonly Contact[];
+  companies?: readonly Company[];
+  customFields?: readonly CustomFieldDefinition[];
+}
+
+export function toTimelineItem(event: Event, context: TimelinePresentationContext = {}): TimelineItem {
   const name = stringData(event, "name");
   const title = stringData(event, "title");
   const reason = stringData(event, "reason");
+  const actor = event.actorUserId ? context.users?.find((user) => user.id === event.actorUserId) : undefined;
+  const changes = readChanges(event).map((change) => ({
+    label: fieldLabel(change.field, context.customFields),
+    before: formatAuditValue(change.field, change.before, context),
+    after: formatAuditValue(change.field, change.after, context),
+  }));
   return {
     id: event.id,
     title: TITLES[event.type],
     timestamp: event.occurredAt,
     ...(reason || title || name ? { description: reason ?? title ?? name } : {}),
+    ...(actor ? { actor: { name: actor.name, email: actor.email, avatarUrl: actor.avatarUrl } } : {}),
+    ...(changes.length > 0 ? { changes } : {}),
     tone:
       event.type === "deal.won" || event.type === "deal.reopened" || event.type === "activity.completed"
         ? "positive"
@@ -95,6 +113,76 @@ export function toTimelineItem(event: Event): TimelineItem {
             ? "accent"
             : "neutral",
   };
+}
+
+interface RawChange { field: string; before: unknown; after: unknown }
+
+function readChanges(event: Event): RawChange[] {
+  const raw = event.data.changes;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((value): value is RawChange => {
+    if (!value || typeof value !== "object") return false;
+    const candidate = value as Record<string, unknown>;
+    return typeof candidate.field === "string" && "before" in candidate && "after" in candidate;
+  });
+}
+
+const FIELD_LABELS: Readonly<Record<string, string>> = {
+  name: "Título",
+  amount: "Valor",
+  status: "Situação",
+  stageId: "Etapa",
+  ownerId: "Responsável",
+  contactId: "Pessoa",
+  companyId: "Empresa",
+  expectedCloseDate: "Fechamento previsto",
+  completed: "Conclusão",
+  type: "Tipo",
+  title: "Título",
+  description: "Descrição",
+  notes: "Observações",
+  scheduledAt: "Início",
+  durationMinutes: "Duração",
+  location: "Local",
+  videoCallUrl: "Videochamada",
+  priority: "Prioridade",
+  availability: "Disponibilidade",
+  body: "Nota",
+  pinned: "Fixada",
+  products: "Produto",
+  "product:name": "Nome do produto",
+  "product:quantityMilli": "Quantidade",
+  "product:unitAmount": "Valor unitário",
+  "product:discountBasisPoints": "Desconto",
+  "product:taxBasisPoints": "Imposto",
+  "product:sortOrder": "Ordem",
+};
+
+function fieldLabel(field: string, customFields: readonly CustomFieldDefinition[] = []): string {
+  if (field.startsWith("custom:")) return customFields.find((item) => item.key === field.slice(7))?.label ?? field.slice(7);
+  return FIELD_LABELS[field] ?? field.replace(/^product:/, "Produto · ");
+}
+
+function formatAuditValue(field: string, value: unknown, context: TimelinePresentationContext): string {
+  if (value === null || value === undefined || value === "") return "Sem valor";
+  if (field === "stageId" && typeof value === "string") return context.stages?.find((item) => item.id === value)?.name ?? value;
+  if (field === "ownerId" && typeof value === "string") return context.users?.find((item) => item.id === value)?.name ?? value;
+  if (field === "contactId" && typeof value === "string") return context.contacts?.find((item) => item.id === value)?.name ?? value;
+  if (field === "companyId" && typeof value === "string") return context.companies?.find((item) => item.id === value)?.name ?? value;
+  if ((field === "amount" || field === "product:unitAmount") && (typeof value === "number" || typeof value === "string")) {
+    const cents = Number(value);
+    if (Number.isFinite(cents)) return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+  }
+  if (field === "durationMinutes" && typeof value === "number") return `${value} min`;
+  if (field.endsWith("BasisPoints") && typeof value === "number") return `${value / 100}%`;
+  if (field === "status" && typeof value === "string") return ({ open: "Aberto", won: "Ganho", lost: "Perdido" } as Record<string, string>)[value] ?? value;
+  if (typeof value === "boolean") return value ? "Sim" : "Não";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}(T.*)?$/.test(value)) {
+    const date = new Date(value);
+    if (!Number.isNaN(date.valueOf())) return new Intl.DateTimeFormat("pt-BR", value.includes("T") ? { dateStyle: "short", timeStyle: "short" } : { dateStyle: "short" }).format(date);
+  }
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  return JSON.stringify(value);
 }
 
 function stringData(event: Event, key: string): string | undefined {

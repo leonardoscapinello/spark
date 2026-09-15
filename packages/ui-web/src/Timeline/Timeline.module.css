@@ -8,4 +8,18 @@
 .content { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .content strong { color: var(--color-ink); font-size: var(--typography-size-sm); }
 .description, .content time { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.actor { min-width: 0; display: inline-flex; align-items: center; gap: var(--space-1); border: 0; padding: 0; background: transparent; color: var(--color-inkMuted); font: inherit; cursor: pointer; }
+.actor > span:last-child { max-width: var(--ui-menuWidth); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-xs); }
+.profile { display: flex; align-items: center; gap: var(--space-2); min-width: var(--ui-menuWidth); }
+.profile > span { display: flex; min-width: 0; flex-direction: column; }
+.profile small { color: var(--color-inkMuted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.changes { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--space-2) 0; padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surfaceSubtle); }
+.changes > div { display: grid; grid-template-columns: minmax(var(--ui-timeFieldWidth), 0.5fr) minmax(0, 1fr); gap: var(--space-3); }
+.changes dt, .changes dd { min-width: 0; margin: 0; font-size: var(--typography-size-xs); }
+.changes dt { color: var(--color-inkMuted); }
+.changes dd { display: flex; flex-wrap: wrap; gap: var(--space-1); color: var(--color-inkMuted); overflow-wrap: anywhere; }
+.changes dd > span:first-child { text-decoration: line-through; }
+.changes dd strong { font-size: inherit; }
+.sentinel { height: var(--space-1); }
 .empty { padding: var(--space-4) 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }

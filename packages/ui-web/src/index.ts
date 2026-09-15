@@ -68,10 +68,11 @@ export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } fr
 export { CalendarMonth, type CalendarMonthProps, type CalendarMonthItem } from "./CalendarMonth/CalendarMonth.js";
 export { CalendarWeek, type CalendarWeekProps, type CalendarWeekItem } from "./CalendarWeek/CalendarWeek.js";
 export { Avatar, type AvatarProps } from "./Avatar/Avatar.js";
+export { UserAvatar, type UserAvatarProps } from "./UserAvatar/UserAvatar.js";
 export { PersonChoice, type PersonChoiceProps } from "./PersonChoice/PersonChoice.js";
 export { RecordSelect, type RecordSelectProps } from "./RecordSelect/RecordSelect.js";
 export { QuickNavigation, type QuickNavigationProps, type QuickNavigationItem } from "./QuickNavigation/QuickNavigation.js";
-export { Timeline, type TimelineItem } from "./Timeline/Timeline.js";
+export { Timeline, type TimelineItem, type TimelineActor, type TimelineChange } from "./Timeline/Timeline.js";
 export { FilePicker, type FilePickerProps } from "./FilePicker/FilePicker.js";
 export { LeadFormRenderer, type LeadFormRendererProps } from "./LeadForm/LeadForm.js";
 export * from "./StageProgress/StageProgress.js";

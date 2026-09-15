@@ -5,6 +5,7 @@ import { organizations } from "./organizations.js";
 import { contacts } from "./contacts.js";
 import { deals } from "./deals.js";
 import { companies } from "./companies.js";
+import { users } from "./users.js";
 import { APP_ROLE } from "../roles.js";
 
 /**
@@ -28,6 +29,7 @@ export const events = pgTable(
     contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "cascade" }),
     dealId: uuid("deal_id").references(() => deals.id, { onDelete: "cascade" }),
     companyId: uuid("company_id").references(() => companies.id, { onDelete: "cascade" }),
+    actorUserId: uuid("actor_user_id").references(() => users.id, { onDelete: "set null" }),
     type: text("type").notNull(),
     data: jsonb("data").notNull().default({}),
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),

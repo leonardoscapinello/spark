@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, activities, type SparkDb } from "@spark/db";
-import type { Activity, CreateActivityInput, OrgId, ActivityId, UpdateActivityInput } from "@spark/core";
+import { auditChanges, type Activity, type CreateActivityInput, type OrgId, type ActivityId, type UpdateActivityInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
@@ -12,7 +12,7 @@ export class ActivitiesRepository {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
   }
 
-  async create(orgId: OrgId, input: CreateActivityInput): Promise<{ activity: Activity; txid: number }> {
+  async create(orgId: OrgId, actorUserId: UserId, input: CreateActivityInput): Promise<{ activity: Activity; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
 
@@ -40,15 +40,17 @@ export class ActivitiesRepository {
       if (!row) throw new Error("Activity insert returned no row.");
 
       const activity = toActivity(row);
-      await this.eventWriter.append(tx, { orgId, contactId: activity.contactId, dealId: activity.dealId, type: "activity.created", data: { activityId: activity.id, title: activity.title, activityType: activity.type, scheduledAt: activity.scheduledAt } });
+      await this.eventWriter.append(tx, { orgId, actorUserId, contactId: activity.contactId, dealId: activity.dealId, type: "activity.created", data: { activityId: activity.id, title: activity.title, activityType: activity.type, scheduledAt: activity.scheduledAt } });
       return { activity, txid };
     });
   }
 
   /** Editar uma atividade já criada — reagendar, trocar quem executa, corrigir o local. */
-  async update(orgId: OrgId, id: ActivityId, input: UpdateActivityInput): Promise<{ activity: Activity; txid: number }> {
+  async update(orgId: OrgId, actorUserId: UserId, id: ActivityId, input: UpdateActivityInput): Promise<{ activity: Activity; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
+      const [before] = await tx.select().from(activities).where(eq(activities.id, id)).limit(1);
+      if (!before) throw new NotFoundException(`Activity ${id} not found.`);
       const [row] = await tx
         .update(activities)
         .set({
@@ -71,13 +73,14 @@ export class ActivitiesRepository {
         .returning();
       if (!row) throw new NotFoundException(`Activity ${id} not found.`);
       const activity = toActivity(row);
-      await this.eventWriter.append(tx, { orgId, contactId: activity.contactId, dealId: activity.dealId, type: "activity.updated", data: { activityId: activity.id, fields: Object.keys(input) } });
+      const fields = Object.keys(input);
+      await this.eventWriter.append(tx, { orgId, actorUserId, contactId: activity.contactId, dealId: activity.dealId, type: "activity.updated", data: { activityId: activity.id, fields, changes: auditChanges(before, row, fields) } });
       return { activity, txid };
     });
   }
 
   /** Complete or reopen — the same route both ways (docs/core/schema/activity.ts). */
-  async complete(orgId: OrgId, id: ActivityId, completed: boolean): Promise<{ activity: Activity; txid: number }> {
+  async complete(orgId: OrgId, actorUserId: UserId, id: ActivityId, completed: boolean): Promise<{ activity: Activity; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
 
@@ -90,7 +93,7 @@ export class ActivitiesRepository {
       if (!row) throw new NotFoundException(`Activity ${id} not found.`);
 
       const activity = toActivity(row);
-      await this.eventWriter.append(tx, { orgId, contactId: activity.contactId, dealId: activity.dealId, type: completed ? "activity.completed" : "activity.reopened", data: { activityId: activity.id, title: activity.title } });
+      await this.eventWriter.append(tx, { orgId, actorUserId, contactId: activity.contactId, dealId: activity.dealId, type: completed ? "activity.completed" : "activity.reopened", data: { activityId: activity.id, title: activity.title, changes: [{ field: "completed", before: !completed, after: completed }] } });
       return { activity, txid };
     });
   }

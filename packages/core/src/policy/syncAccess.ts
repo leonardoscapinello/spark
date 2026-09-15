@@ -149,9 +149,9 @@ export function canReadSyncResource(
 /** Limits the shared event table to domains this user can actually read. */
 export function readableEventPrefixes(capabilities: readonly Capability[]): string[] {
   const prefixes: string[] = [];
-  if (capabilities.includes("contacts:read")) prefixes.push("contact", "identity");
+  if (capabilities.includes("contacts:read")) prefixes.push("contact", "identity", "note");
   if (capabilities.includes("companies:read")) prefixes.push("company");
-  if (capabilities.includes("deals:read")) prefixes.push("deal");
+  if (capabilities.includes("deals:read")) prefixes.push("deal", "note");
   if (capabilities.includes("activities:read")) prefixes.push("activity");
   if (capabilities.includes("inbox:read")) prefixes.push("conversation", "message", "canned_reply");
   if (capabilities.includes("automations:read")) prefixes.push("automation");
@@ -163,5 +163,5 @@ export function readableEventPrefixes(capabilities: readonly Capability[]): stri
   if (capabilities.includes("campaigns:read")) prefixes.push("campaign", "audience");
   if (capabilities.includes("settings:manage")) prefixes.push("custom_field");
   if (capabilities.includes("pages:read")) prefixes.push("page");
-  return prefixes;
+  return [...new Set(prefixes)];
 }

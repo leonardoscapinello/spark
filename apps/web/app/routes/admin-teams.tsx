@@ -10,7 +10,7 @@ import {
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
-import { ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonChoice, RecordIdentity, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonChoice, RecordIdentity, Select, Textarea, UserAvatar, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
 
@@ -44,7 +44,7 @@ export default function AdminTeams() {
     }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [reloadKey]);
-  const userNames = useMemo(() => new Map(users.map((user) => [user.id, user.name])), [users]);
+  const usersById = useMemo(() => new Map(users.map((user) => [user.id, user])), [users]);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const visibleTeams = teams.filter((team) =>
     (showArchived ? team.archivedAt !== null : team.archivedAt === null) &&
@@ -54,9 +54,10 @@ export default function AdminTeams() {
   const columns: TableColumn<TeamDto>[] = [
     { id: "name", label: "Time", cell: (team) => <RecordIdentity icon="team" title={team.name} subtitle={team.description || "Sem descrição"} />, sortValue: (team) => team.name },
     { id: "members", label: "Membros", cell: (team) => {
-      const names = team.memberIds.map((id) => userNames.get(id) ?? "Usuário indisponível");
-      return names.length ? <div className={styles.memberSummary} title={names.join(", ")} aria-label={names.join(", ")}>
-        <span className={styles.memberAvatars}>{names.slice(0, 3).map((person, index) => <Avatar key={`${team.id}:${index}`} name={person} size="small" />)}</span>
+      const members = team.memberIds.map((id) => usersById.get(id) ?? { name: "Usuário indisponível", avatarUrl: null });
+      const names = members.map((member) => member.name);
+      return members.length ? <div className={styles.memberSummary} title={names.join(", ")} aria-label={names.join(", ")}>
+        <span className={styles.memberAvatars}>{members.slice(0, 3).map((member, index) => <UserAvatar key={`${team.id}:${index}`} user={member} size="small" />)}</span>
         <span className={styles.memberNames}>{names.slice(0, 2).join(", ")}{names.length > 2 ? ` +${names.length - 2}` : ""}</span>
       </div> : "Nenhum membro";
     }, sortValue: (team) => team.memberIds.length },
@@ -138,7 +139,7 @@ export default function AdminTeams() {
         <Field><Label>Descrição</Label><Textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Responsabilidade principal deste time" /></Field>
         <div className={styles.members} role="group" aria-labelledby={membersLabelId}>
           <p id={membersLabelId}>Membros</p>
-          {users.filter((user) => !user.deactivatedAt).map((user) => <PersonChoice key={user.id} name={user.name} detail={user.email} checked={memberIds.includes(user.id)} onCheckedChange={(checked) => toggleMember(user.id, checked)} />)}
+          {users.filter((user) => !user.deactivatedAt).map((user) => <PersonChoice key={user.id} name={user.name} detail={user.email} avatarUrl={user.avatarUrl} checked={memberIds.includes(user.id)} onCheckedChange={(checked) => toggleMember(user.id, checked)} />)}
         </div>
       </div>
     </ActionModal>

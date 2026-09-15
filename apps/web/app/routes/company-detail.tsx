@@ -10,18 +10,18 @@ import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
-import { getEventsCollection } from "../lib/events-collection.client";
+import { getCompanyEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { ExternalPreviewLink, useLinkPreviewRequest } from "../lib/link-previews.client";
 import styles from "./company-detail.module.css";
 
-export async function clientLoader() {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("companies:read");
   void Promise.allSettled([
     getCompaniesCollection().preload(),
     getUsersCollection().preload(),
-    getEventsCollection().preload(),
+    getCompanyEventsCollection(companyIdFactory.from(params.companyId)).preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
   ]);
@@ -47,7 +47,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
   const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
   const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: dealsCollection }).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
-  const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.companyId, companyId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
+  const { data: events = [] } = useLiveQuery({ query: (q) => q.from({ events: getCompanyEventsCollection(companyIdFactory.from(companyId)) }).orderBy(({ events: item }) => item.occurredAt, "desc") });
   const canWrite = session?.capabilities.includes("companies:write") ?? false;
   const canLinkContacts = canReadContacts && (session?.capabilities.includes("contacts:write") ?? false);
   const canLinkDeals = canReadDeals && (session?.capabilities.includes("deals:write") ?? false);
@@ -148,7 +148,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
     </div>}
 
     <div className={`${styles.relationCard} ${styles.history}`}><Card title="Histórico" description="Mudanças registradas nesta empresa e em seus vínculos comerciais.">
-      <Timeline items={events.map(toTimelineItem)} emptyText="As próximas alterações desta empresa aparecerão aqui." />
+      <Timeline items={events.map((event) => toTimelineItem(event, { users, contacts, companies }))} emptyText="As próximas alterações desta empresa aparecerão aqui." />
     </Card></div>
     </div>
 

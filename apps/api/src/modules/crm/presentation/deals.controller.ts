@@ -44,7 +44,7 @@ export class DealsController {
     @Body() body: EditDealDto,
   ): Promise<EditDealResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.editDeal.execute(user.orgId, dealIdFactory.from(id), body);
+    const { deal, txid } = await this.editDeal.execute(user.orgId, user.id, dealIdFactory.from(id), body);
     return { deal: toDealDto(deal), txid } as EditDealResponseDto;
   }
 
@@ -58,7 +58,7 @@ export class DealsController {
     @Body() body: CreateDealDto,
   ): Promise<CreateDealResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.createDeal.execute(user.orgId, body);
+    const { deal, txid } = await this.createDeal.execute(user.orgId, user.id, body);
     return { deal: toDealDto(deal), txid } as CreateDealResponseDto;
   }
 
@@ -73,7 +73,7 @@ export class DealsController {
     @Body() body: MoveDealDto,
   ): Promise<MoveDealResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.moveDeal.execute(user.orgId, dealIdFactory.from(id), body.stageId);
+    const { deal, txid } = await this.moveDeal.execute(user.orgId, user.id, dealIdFactory.from(id), body.stageId);
     return { deal: toDealDto(deal), txid } as MoveDealResponseDto;
   }
 
@@ -88,7 +88,7 @@ export class DealsController {
     @Body() body: CloseDealDto,
   ): Promise<CloseDealResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.closeDeal.execute(user.orgId, dealIdFactory.from(id), body);
+    const { deal, txid } = await this.closeDeal.execute(user.orgId, user.id, dealIdFactory.from(id), body);
     return { deal: toDealDto(deal), txid } as CloseDealResponseDto;
   }
 
@@ -102,7 +102,7 @@ export class DealsController {
     @Param("id") id: string,
   ): Promise<ReopenDealResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.reopenDeal.execute(user.orgId, dealIdFactory.from(id));
+    const { deal, txid } = await this.reopenDeal.execute(user.orgId, user.id, dealIdFactory.from(id));
     return { deal: toDealDto(deal), txid } as ReopenDealResponseDto;
   }
 }

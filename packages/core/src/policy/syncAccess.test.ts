@@ -9,6 +9,6 @@ describe("sync access", () => {
   });
 
   it("only exposes timeline domains granted to the user", () => {
-    expect(readableEventPrefixes(["contacts:read", "activities:read"])).toEqual(["contact", "identity", "activity"]);
+    expect(readableEventPrefixes(["contacts:read", "activities:read"])).toEqual(["contact", "identity", "note", "activity"]);
   });
 });
