@@ -10,7 +10,7 @@
 .row {
   display: grid;
   grid-template-columns: var(--ui-fieldLabelColumn) minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   gap: var(--space-3);
   padding-block: var(--space-3);
   border-top: var(--ui-hairline) solid var(--color-line);
@@ -20,7 +20,6 @@
 .label {
   display: block;
   min-width: 0;
-  padding-top: var(--space-2);
   color: var(--color-inkMuted);
   font-size: var(--typography-size-sm);
   line-height: var(--ui-tabLine);
@@ -55,7 +54,6 @@
 
 /* Campo que precisa da largura toda (texto longo): o controle desce. */
 .row[data-block="true"] { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
-.row[data-block="true"] .label { padding-top: 0; }
 
 /* Em edição: o campo ocupa o espaço e o «fechar» fica ao lado, do tamanho
  * dele. Desistir tem de ser visível, não só uma tecla que ninguém adivinha. */
@@ -183,7 +181,7 @@
 
 @container (max-width: 240px) {
   .row { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
-  .label { padding-top: 0; font-size: var(--typography-size-compact); }
+  .label { font-size: var(--typography-size-compact); }
 }
 @media (max-width: 640px) {
   .shortcut { display: none; }

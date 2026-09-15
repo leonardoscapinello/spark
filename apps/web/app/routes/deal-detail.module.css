@@ -51,14 +51,14 @@
 .linha {
   display: grid;
   grid-template-columns: var(--ui-fieldLabelColumn) minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   gap: var(--space-3);
   padding-block: var(--space-3);
   border-top: var(--ui-hairline) solid var(--color-line);
   min-width: 0;
 }
 .linha:first-child { border-top: 0; padding-top: 0; }
-.linha > span { padding-top: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); }
+.linha > span { color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); }
 /* Mesmo recuo do botão de edição, para o texto começar no mesmo x. */
 .linha > strong, .linha > a { min-height: var(--ui-controlMedium); padding: var(--space-1) var(--space-2); margin-inline-start: calc(-1 * var(--space-2)); display: flex; align-items: center; color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: break-word; }
 .linha > a { color: var(--color-accent); text-decoration: none; }
