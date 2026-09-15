@@ -24,7 +24,17 @@ export function LinkPreviewDataProvider({ children }: { children: ReactNode }) {
   const [failures, setFailures] = useState<ReadonlySet<string>>(() => new Set());
   // A resposta da API entra na tela imediatamente; o Electric consolida a
   // mesma linha depois. Esperar esse eco era o que prendia o tooltip no loader.
-  const previews = useMemo(() => new Map([...data.map((preview) => [preview.url, preview] as const), ...resolved]), [data, resolved]);
+  const previews = useMemo(() => {
+    const merged = new Map<string, LinkPreview>(data.map((preview) => [preview.url, preview] as const));
+    for (const [url, immediate] of resolved) {
+      const synced = merged.get(url);
+      // A resposta HTTP deixa o primeiro hover instantâneo; assim que uma
+      // versão mais nova chega pelo Electric, ela assume. Manter para sempre a
+      // resposta antiga aqui fazia toda abertura considerar o cache vencido.
+      if (!synced || new Date(immediate.updatedAt).getTime() >= new Date(synced.updatedAt).getTime()) merged.set(url, immediate);
+    }
+    return merged;
+  }, [data, resolved]);
   const request = useCallback((rawUrl: string) => {
     let url: string;
     try { url = normalizeLinkPreviewUrl(rawUrl); } catch { return; }
@@ -60,6 +70,12 @@ export function useLinkPreview(rawUrl: string | null | undefined) {
   return { preview, loading: url ? context.pending.has(url) : false, request: () => { if (url) context.request(url); } };
 }
 
+export function useLinkPreviewRequest(): (url: string) => void {
+  const context = useContext(LinkPreviewContext);
+  if (!context) throw new Error("useLinkPreviewRequest must be used inside LinkPreviewDataProvider.");
+  return context.request;
+}
+
 function failedPreview(url: string): LinkPreview {
   const now = new Date().toISOString();
   return { id: "00000000-0000-7000-8000-000000000000", orgId: "00000000-0000-7000-8000-000000000000", url, urlHash: "0".repeat(64), canonicalUrl: null, title: null, description: null, imageUrl: null, siteName: null, faviconUrl: null, status: "failed", httpStatus: null, fetchedAt: now, expiresAt: now, failureCount: 1, etag: null, lastModified: null, createdAt: now, updatedAt: now } as LinkPreview;
@@ -72,13 +88,20 @@ export function ExternalPreviewLink({ href, children, className }: { href: strin
 
 export function LinkPreviewForUrl({ url }: { url: string }) {
   const state = useLinkPreview(url);
-  return <LinkPreviewCard preview={state.preview} loading={state.loading} />;
+  return <LinkPreviewCard url={url} preview={state.preview} loading={state.loading} />;
 }
 
 export function PreviewedCustomFieldValue(props: ComponentProps<typeof CustomFieldValue>) {
   const url = props.field.type === "url" && typeof props.value === "string" ? props.value : null;
   const state = useLinkPreview(url);
-  return <CustomFieldValue {...props} {...(url ? { preview: <LinkPreviewCard preview={state.preview} loading={state.loading} />, onPreviewRequest: state.request } : {})} />;
+  const request = useLinkPreviewRequest();
+  const save = async (value: unknown) => {
+    await props.onSave(value);
+    // O enriquecimento começa no ato de gravar o endereço. Quando a pessoa
+    // passar o mouse, o trabalho caro normalmente já terminou e veio do cache.
+    if (props.field.type === "url" && typeof value === "string") request(value);
+  };
+  return <CustomFieldValue {...props} onSave={save} {...(url ? { preview: <LinkPreviewCard url={url} preview={state.preview} loading={state.loading} />, onPreviewRequest: state.request } : {})} />;
 }
 
 export function LinkifiedText({ text }: { text: string }) {

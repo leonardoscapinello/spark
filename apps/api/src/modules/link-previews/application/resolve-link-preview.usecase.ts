@@ -10,6 +10,8 @@ const MAX_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 @Injectable()
 export class ResolveLinkPreviewUseCase {
+  private readonly refreshes = new Map<string, Promise<void>>();
+
   constructor(private readonly previews: LinkPreviewsRepository, private readonly fetcher: LinkMetadataFetcher) {}
 
   async execute(orgId: OrgId, rawUrl: string): Promise<{ preview: LinkPreview; txid: number }> {
@@ -17,8 +19,27 @@ export class ResolveLinkPreviewUseCase {
     const urlHash = createHash("sha256").update(url).digest("hex");
     const existing = await this.previews.find(orgId, urlHash);
     if (existing && existing.url !== url) throw new Error("Conflito de hash de endereço.");
-    if (existing && !linkPreviewNeedsRefresh(existing)) return { preview: existing, txid: 0 };
+    if (existing) {
+      // Stale-while-revalidate de verdade: a coleção local continua exibindo a
+      // prévia conhecida e esta chamada responde sem esperar o site externo.
+      if (linkPreviewNeedsRefresh(existing)) this.refreshInBackground(orgId, url, urlHash, existing);
+      return { preview: existing, txid: 0 };
+    }
 
+    return this.resolveFresh(orgId, url, urlHash, null);
+  }
+
+  private refreshInBackground(orgId: OrgId, url: string, urlHash: string, existing: LinkPreview): void {
+    const key = `${orgId}:${urlHash}`;
+    if (this.refreshes.has(key)) return;
+    const operation = this.resolveFresh(orgId, url, urlHash, existing)
+      .then(() => undefined)
+      .catch(() => undefined)
+      .finally(() => this.refreshes.delete(key));
+    this.refreshes.set(key, operation);
+  }
+
+  private async resolveFresh(orgId: OrgId, url: string, urlHash: string, existing: LinkPreview | null): Promise<{ preview: LinkPreview; txid: number }> {
     const fetchedAt = new Date();
     try {
       const metadata = await this.fetcher.fetch(url, existing ? { etag: existing.etag, lastModified: existing.lastModified } : undefined);

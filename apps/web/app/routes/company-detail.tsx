@@ -13,7 +13,7 @@ import { getSession } from "../lib/auth.client";
 import { getEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
-import { ExternalPreviewLink } from "../lib/link-previews.client";
+import { ExternalPreviewLink, useLinkPreviewRequest } from "../lib/link-previews.client";
 import styles from "./company-detail.module.css";
 
 export async function clientLoader() {
@@ -34,6 +34,7 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
 
 /** O perfil da empresa, sem depender de ser uma rota — ver ContactProfile. */
 export function CompanyProfile({ companyId, embedded = false }: { companyId: string; embedded?: boolean }) {
+  const requestLinkPreview = useLinkPreviewRequest();
   const companiesCollection = getCompaniesCollection();
   const contactsCollection = getContactsCollection();
   const dealsCollection = getDealsCollection();
@@ -87,6 +88,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
         draft.website = parsedWebsite; draft.email = parsedEmail; draft.phone = parsedPhone; draft.address = address.trim() || null;
         draft.ownerId = ownerId ? userIdFactory.from(ownerId) : null; draft.parentCompanyId = parentCompanyId ? companyIdFactory.from(parentCompanyId) : null;
       }));
+      if (parsedWebsite) requestLinkPreview(parsedWebsite);
       setEditing(false); notify({ title: "Empresa atualizada", tone: "success" });
     } catch { notify({ title: "Não foi possível salvar a empresa", description: "Revise site, e-mail e telefone.", tone: "error" }); }
     finally { setSaving(false); }

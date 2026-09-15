@@ -105,6 +105,17 @@ async function limitedText(response: Response): Promise<string> {
     bytes += value.byteLength;
     if (bytes > MAX_HTML_BYTES) { await reader.cancel(); break; }
     html += decoder.decode(value, { stream: true });
+    // Open Graph, Twitter Cards, canonical e favicon vivem no <head>. Sites
+    // podem manter o corpo aberto ou enviar megabytes depois dele; esperar esse
+    // restante não melhora a prévia e era o maior custo do caminho sem cache.
+    const headEnd = html.search(/<\/head\s*>/i);
+    const bodyStart = html.search(/<body(?:\s|>)/i);
+    const boundary = headEnd >= 0 ? headEnd + (html.slice(headEnd).match(/^<\/head\s*>/i)?.[0].length ?? 0) : bodyStart;
+    if (boundary >= 0) {
+      html = html.slice(0, boundary);
+      await reader.cancel();
+      break;
+    }
   }
   return html + decoder.decode();
 }
