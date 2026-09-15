@@ -5,12 +5,13 @@
  */
 import { createPipelinesCollection, createStagesCollection, createDealsCollection } from "@spark/data";
 import type { PipelinesCollection, StagesCollection, DealsCollection } from "@spark/data";
-import type { DealStatus, PipelineId } from "@spark/core";
+import type { DealId, DealStatus, PipelineId } from "@spark/core";
 
 let pipelines: PipelinesCollection | undefined;
 let stages: StagesCollection | undefined;
 let deals: DealsCollection | undefined;
 const boardDeals = new Map<string, DealsCollection>();
+const detailDeals = new Map<DealId, DealsCollection>();
 
 export function getPipelinesCollection(): PipelinesCollection {
   pipelines ??= createPipelinesCollection();
@@ -25,6 +26,16 @@ export function getStagesCollection(): StagesCollection {
 export function getDealsCollection(): DealsCollection {
   deals ??= createDealsCollection();
   return deals;
+}
+
+/** A ficha sincroniza só o negócio aberto, não todos os negócios da org. */
+export function getDetailDealsCollection(dealId: DealId): DealsCollection {
+  let collection = detailDeals.get(dealId);
+  if (!collection) {
+    collection = createDealsCollection({ dealId, collectionId: `deal-detail-${dealId}` });
+    detailDeals.set(dealId, collection);
+  }
+  return collection;
 }
 
 /** Um shape por visão do quadro: nunca baixa negócios de outros funis/estados. */

@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, ForbiddenException, Get, NotFoundException, Param, Res, UseGuards } from "@nestjs/common";
+import { Controller, ForbiddenException, Get, NotFoundException, Param, Res, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiExcludeEndpoint } from "@nestjs/swagger";
 import { ConfigService } from "@nestjs/config";
 import type { FastifyReply, FastifyRequest } from "fastify";
@@ -12,6 +12,7 @@ import { SupabaseJwtGuard, CurrentSupabaseUser, type SupabaseJwtClaims } from ".
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { SHAPE_TABLES, isSyncableTable } from "../application/shape-tables.js";
 import { PermissionGroupsRepository } from "../../identity/infrastructure/permission-groups.repository.js";
+import { appendDealShapeScope } from "./deal-shape-scope.js";
 
 /**
  * Authorization proxy in front of Electric (docs/adr/0018, docs/adr/0026).
@@ -117,21 +118,7 @@ export class ShapesController {
       params.push(user.id);
       filters.push(`("${sharedUnless.flagColumn}" = $${sharedParam} OR "${sharedUnless.ownerColumn}" = $${params.length})`);
     }
-    if (table === "deals") {
-      filters.push('"deleted_at" IS NULL');
-      const pipelineId = query.pipelineId;
-      if (pipelineId !== undefined) {
-        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pipelineId)) throw new BadRequestException("Invalid pipelineId.");
-        params.push(pipelineId);
-        filters.push(`"pipeline_id" = $${params.length}`);
-      }
-      const status = query.status;
-      if (status !== undefined) {
-        if (!(["open", "won", "lost"] as const).includes(status as "open" | "won" | "lost")) throw new BadRequestException("Invalid deal status.");
-        params.push(status);
-        filters.push(`"status" = $${params.length}`);
-      }
-    }
+    if (table === "deals") appendDealShapeScope(query, filters, params);
     upstream.searchParams.set("where", filters.join(" AND "));
     params.forEach((value, index) => upstream.searchParams.set(`params[${index + 1}]`, value));
     const columns = TABLE_COLUMNS.get(table);

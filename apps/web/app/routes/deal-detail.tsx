@@ -44,7 +44,7 @@ import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collectio
 import { getNotesCollection } from "../lib/notes-collection.client";
 import { getProductsCollection } from "../lib/catalog-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
-import { getDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
+import { getDetailDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
@@ -61,10 +61,10 @@ const ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPES.map((value) => ({ value, label: ACT
 /* Durações que o Pipedrive oferece por padrão — quem precisa de outra escreve. */
 const DURATIONS = [{ value: "0", label: "Sem duração" }, { value: "15", label: "15 min" }, { value: "30", label: "30 min" }, { value: "60", label: "1 hora" }, { value: "90", label: "1h30" }, { value: "120", label: "2 horas" }];
 
-export async function clientLoader() {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("deals:read");
   void Promise.allSettled([
-    getDealsCollection().preload(),
+    getDetailDealsCollection(dealIdFactory.from(params.dealId)).preload(),
     getPipelinesCollection().preload(),
     getStagesCollection().preload(),
     getUsersCollection().preload(),
@@ -73,18 +73,18 @@ export async function clientLoader() {
     getCustomFieldValuesCollection().preload(),
     getCustomFieldOptionsCollection().preload(),
     getNotesCollection().preload(),
-    ...(session.capabilities.includes("catalog:read") ? [getProductsCollection().preload()] : []),
     getEventsCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
-    ...(session.capabilities.includes("inbox:read") ? [getConversationsCollection().preload()] : []),
   ]);
   return null;
 }
 
 export default function DealDetail({ params }: Route.ComponentProps) {
-  const dealsCollection = getDealsCollection();
+  const dealsCollection = getDetailDealsCollection(dealIdFactory.from(params.dealId));
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [openSections, setOpenSections] = useState<string[]>(["resumo", "detalhes"]);
   const stagesCollection = getStagesCollection();
   const pipelinesCollection = getPipelinesCollection();
   const contactsCollection = getContactsCollection();
@@ -104,7 +104,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
 
   const { data: deal, isLoading } = useLiveQuery({
     query: (q) => q.from({ deals: dealsCollection }).where(({ deals: item }) => eq(item.id, params.dealId)).findOne(),
-  });
+  }, [dealsCollection, params.dealId]);
   const { data: stages } = useLiveQuery({ query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: item }) => item.sortOrder, "asc") });
   const { data: pipelines } = useLiveQuery({ query: (q) => q.from({ pipelines: pipelinesCollection }) });
   const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
@@ -115,12 +115,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   });
   const canReadCatalog = session?.capabilities.includes("catalog:read") ?? false;
   const { data: dealItems = [] } = useLiveQuery({ query: (q) => q.from({ items: getDealProductsCollection() }).where(({ items: item }) => eq(item.dealId, params.dealId)).orderBy(({ items: item }) => item.sortOrder, "asc") });
-  const { data: catalog = [] } = useLiveQuery({ query: (q) => canReadCatalog ? q.from({ products: getProductsCollection() }).orderBy(({ products: product }) => product.name, "asc") : undefined });
+  const { data: catalog = [], isLoading: catalogLoading } = useLiveQuery({ query: (q) => canReadCatalog && itemModalOpen ? q.from({ products: getProductsCollection() }).orderBy(({ products: product }) => product.name, "asc") : undefined }, [canReadCatalog, itemModalOpen]);
   const { data: dealNotes = [] } = useLiveQuery({ query: (q) => q.from({ notes: getNotesCollection() }).where(({ notes: note }) => eq(note.dealId, params.dealId)).orderBy(({ notes: note }) => note.createdAt, "desc") });
   const { data: fieldRules = [] } = useLiveQuery({ query: (q) => q.from({ rules: getStageFieldRulesCollection() }) });
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: field }) => eq(field.entityType, "deal")).orderBy(({ fields: field }) => field.label, "asc") });
   const { data: events } = useLiveQuery({ query: (q) => q.from({ events: getEventsCollection() }).where(({ events: item }) => eq(item.dealId, params.dealId)).orderBy(({ events: item }) => item.occurredAt, "desc") });
-  const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox && deal?.contactId ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, deal.contactId!)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
+  const showConversations = openSections.includes("conversas");
+  const { data: conversations = [], isLoading: conversationsLoading } = useLiveQuery({ query: (q) => canReadInbox && showConversations && deal?.contactId ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, deal.contactId!)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined }, [canReadInbox, showConversations, deal?.contactId]);
 
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [activityType, setActivityType] = useState<ActivityType>("task");
@@ -134,7 +135,6 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [composerTab, setComposerTab] = useState<"atividade" | "nota">("atividade");
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
-  const [itemModalOpen, setItemModalOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [itemProductId, setItemProductId] = useState("");
   const [itemName, setItemName] = useState("");
@@ -454,7 +454,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
 
     <div className={styles.contentGrid}>
       <aside className={styles.painel}>
-        <Accordion defaultValue={["resumo", "detalhes"]} items={[
+        <Accordion value={openSections} onValueChange={setOpenSections} items={[
           { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: <div className={styles.details}>
             {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))}</p>}
             {/* O valor é a soma dos produtos e por isso não se edita aqui: um
@@ -524,6 +524,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
            * vista três linhas acima. */
           ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId
             ? <p className={styles.empty}>Vincule uma pessoa para ver o atendimento.</p>
+            : conversationsLoading ? <Skeleton />
             : conversations.length === 0
               ? <p className={styles.empty}>Nenhuma conversa desta pessoa ainda.</p>
               : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?conversation=${conversation.id}`}><div className={styles.conversationBody}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {formatDateTime(conversation.lastMessageAt)}</span></div><Icon name="chevron" /></Link></li>)}</ul> }] : []),
@@ -608,7 +609,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     </ActionModal>
     <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>
       <div className={styles.modalFields}>
-        {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="dropdown" placeholder="Escolher um produto cadastrado (opcional)" options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(item.price)}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
+        {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="dropdown" placeholder={catalogLoading ? "Carregando catálogo…" : "Escolher um produto cadastrado (opcional)"} options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(item.price)}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
         <Field><Label>Nome do item</Label><Input value={itemName} onChange={(event) => setItemName(event.target.value)} placeholder="Escreva um item avulso ou escolha do catálogo" /></Field>
         <div className={styles.modalLinha}>
           <Field><Label>Quantidade</Label><Input inputMode="decimal" value={itemQuantity} onChange={(event) => setItemQuantity(event.target.value)} placeholder="1" /></Field>

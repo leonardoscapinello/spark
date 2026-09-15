@@ -8,7 +8,7 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { z } from "zod";
-import { DealSchema, dealId, money, toCents, type Deal, type DealStatus, type Money, type CreateDealInput, type OrgId, type PipelineId } from "@spark/core";
+import { DealSchema, dealId, money, toCents, type Deal, type DealId, type DealStatus, type Money, type CreateDealInput, type OrgId, type PipelineId } from "@spark/core";
 import { confirmed } from "./confirmed.js";
 import { serializedWrite } from "./serialized-write.js";
 import { reportWriteAcceptance } from "./write-acceptance.js";
@@ -112,6 +112,7 @@ const DealCollectionSchema = DealSchema.extend({
 });
 
 export interface DealsCollectionScope {
+  dealId?: DealId;
   pipelineId?: PipelineId;
   status?: DealStatus | "all";
   collectionId?: string;
@@ -120,6 +121,7 @@ export interface DealsCollectionScope {
 export function createDealsCollection(scope: DealsCollectionScope = {}) {
   const sharedShapeOptions = sparkShapeOptions("deals");
   const shapeUrl = new URL(sharedShapeOptions.url);
+  if (scope.dealId) shapeUrl.searchParams.set("dealId", scope.dealId);
   if (scope.pipelineId) shapeUrl.searchParams.set("pipelineId", scope.pipelineId);
   if (scope.status && scope.status !== "all") shapeUrl.searchParams.set("status", scope.status);
   return createCollection(
