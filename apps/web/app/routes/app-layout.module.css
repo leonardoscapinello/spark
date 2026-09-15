@@ -248,17 +248,6 @@
   box-shadow: var(--ui-panelShadow);
 }
 
-/* Superfície de altura fixa: o quadro mantém a moldura branca, mas NÃO rola —
- * quem rola são as colunas de dentro. É o que a tela de registro precisa para
- * o painel de detalhes ter uma altura real em vez de uma altura calculada por
- * suposição, que é o que deixava o fim do painel fora do alcance.
- *
- * Só acima de 1000px: abaixo disso a tela vira uma coluna só e volta a rolar
- * inteira, senão nada rolaria. */
-@media (min-width: 1001px) {
-  .conteudo[data-surface="fixed"] { overflow: hidden; }
-}
-
 .conteudo[data-surface="workspace"] {
   overflow: hidden;
   background: transparent;
