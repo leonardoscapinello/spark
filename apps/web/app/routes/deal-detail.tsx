@@ -17,6 +17,8 @@ import {
   type Money,
   ACTIVITY_TYPES,
   ACTIVITY_TYPE_LABELS,
+  activityEndsAt,
+  overlappingScheduleIntervals,
   dealProductTotals,
   dealProductsSummary,
   formatQuantity,
@@ -35,7 +37,7 @@ import {
   type Deal,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, DateTimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -71,10 +73,17 @@ const ACTIVITY_COMPOSER_TABS: readonly { id: ActivityType | "note"; label: strin
   { id: "lunch", label: "Almoço", icon: "calendar" },
   { id: "note", label: "Nota", icon: "file" },
 ];
-/* Durações que o Pipedrive oferece por padrão — quem precisa de outra escreve. */
-const DURATIONS = [{ value: "0", label: "Sem duração" }, { value: "15", label: "15 min" }, { value: "30", label: "30 min" }, { value: "60", label: "1 hora" }, { value: "90", label: "1h30" }, { value: "120", label: "2 horas" }];
 const PRIORITIES = [{ value: "none", label: "Sem prioridade" }, { value: "high", label: "Alta" }, { value: "medium", label: "Média" }, { value: "low", label: "Baixa" }];
 const AVAILABILITIES = [{ value: "free", label: "Livre — permite sobreposição" }, { value: "busy", label: "Ocupado — reserva o horário" }];
+
+const ACTIVITY_FORM_HINTS: Record<ActivityType, string> = {
+  call: "Reserve o horário da ligação e use a pessoa vinculada como contato.",
+  meeting: "Defina duração, local ou videochamada e o que vai no convite.",
+  task: "Registre uma entrega objetiva com data e prioridade.",
+  deadline: "Marque um prazo sem reservar um bloco na agenda.",
+  email: "Programe o acompanhamento por e-mail para a pessoa vinculada.",
+  lunch: "Reserve o período e informe o local do encontro.",
+};
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("deals:read");
@@ -144,8 +153,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [activityTitle, setActivityTitle] = useState("");
   const [activityDescription, setActivityDescription] = useState("");
   const [activityNotes, setActivityNotes] = useState("");
-  const [scheduledAt, setScheduledAt] = useState("");
-  const [activityDuration, setActivityDuration] = useState("30");
+  const [activityStartDate, setActivityStartDate] = useState("");
+  const [activityStartTime, setActivityStartTime] = useState("");
+  const [activityEndDate, setActivityEndDate] = useState("");
+  const [activityEndTime, setActivityEndTime] = useState("");
   const [activityLocation, setActivityLocation] = useState("");
   const [activityVideoCallUrl, setActivityVideoCallUrl] = useState("");
   const [activityPriority, setActivityPriority] = useState<ActivityPriority>("none");
@@ -217,6 +228,35 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
   const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
   const doneActivities = useMemo(() => orderedActivities.filter((activity) => activity.completed).reverse(), [orderedActivities]);
+  const scheduledAt = activityStartDate && activityStartTime ? `${activityStartDate}T${activityStartTime}` : "";
+  const activityEndsAtValue = activityEndDate && activityEndTime ? `${activityEndDate}T${activityEndTime}` : "";
+  const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
+  const activityDuration = scheduledDate && activityEndsAtValue
+    ? Math.max(0, Math.round((new Date(activityEndsAtValue).getTime() - scheduledDate.getTime()) / 60_000))
+    : 0;
+  const scheduledDayActivities = useMemo(() => scheduledDate && !Number.isNaN(scheduledDate.getTime())
+    ? orderedActivities.filter((activity) => isSameLocalDay(new Date(activity.scheduledAt), scheduledDate)
+      && activity.id !== editingActivityId
+      && (!activityOwnerId || activity.ownerId === activityOwnerId))
+    : [], [activityOwnerId, editingActivityId, orderedActivities, scheduledAt]);
+  const scheduleConflicts = useMemo(() => {
+    if (!scheduledDate || Number.isNaN(scheduledDate.getTime()) || !activityEndsAtValue) return new Set<string>();
+    const candidate = {
+      id: editingActivityId ?? "draft",
+      ownerId: activityOwnerId || null,
+      startsAt: scheduledDate.toISOString(),
+      endsAt: new Date(activityEndsAtValue).toISOString(),
+      availability: activityAvailability,
+    };
+    const conflicts = overlappingScheduleIntervals(candidate, orderedActivities.filter((activity) => !activity.completed).map((activity) => ({
+      id: activity.id,
+      ownerId: activity.ownerId,
+      startsAt: activity.scheduledAt,
+      endsAt: activityEndsAt(activity),
+      availability: activity.availability,
+    })));
+    return new Set(conflicts.map((conflict) => conflict.id));
+  }, [activityAvailability, activityEndsAtValue, activityOwnerId, editingActivityId, orderedActivities, scheduledAt]);
 
   async function changeOwner(nextOwnerId: string | null) {
     if (!deal || !canWrite) return;
@@ -386,8 +426,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       setActivityTitle(activity.title);
       setActivityDescription(activity.description ?? "");
       setActivityNotes(activity.notes ?? "");
-      setScheduledAt(toLocalDateTimeValue(activity.scheduledAt));
-      setActivityDuration(String(activity.durationMinutes));
+      const start = toLocalDateTimeParts(activity.scheduledAt);
+      const end = toLocalDateTimeParts(activityEndsAt(activity));
+      setActivityStartDate(start.date); setActivityStartTime(start.time);
+      setActivityEndDate(end.date); setActivityEndTime(end.time);
       setActivityLocation(activity.location ?? "");
       setActivityVideoCallUrl(activity.videoCallUrl ?? "");
       setActivityPriority(activity.priority);
@@ -397,17 +439,46 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       setEditingActivityId(null);
       setActivityType(requestedType);
       setActivityTitle(ACTIVITY_TYPE_LABELS[requestedType]);
-      setActivityDescription(""); setActivityNotes(""); setScheduledAt(nextHalfHourValue());
-      setActivityDuration(requestedType === "deadline" ? "0" : "30"); setActivityLocation(""); setActivityVideoCallUrl("");
+      const start = nextHalfHour();
+      const end = new Date(start.getTime() + defaultDurationFor(requestedType) * 60_000);
+      const startParts = toLocalDateTimeParts(start); const endParts = toLocalDateTimeParts(end);
+      setActivityDescription(""); setActivityNotes(""); setActivityStartDate(startParts.date); setActivityStartTime(startParts.time);
+      setActivityEndDate(endParts.date); setActivityEndTime(endParts.time); setActivityLocation(""); setActivityVideoCallUrl("");
       setActivityPriority("none"); setActivityAvailability("free"); setActivityOwnerId(deal?.ownerId ?? session?.userId ?? "");
     }
     setActivityModalOpen(true);
   }
 
+  function changeActivityType(nextType: ActivityType) {
+    setActivityType(nextType);
+    if (!editingActivityId && activityTitle === ACTIVITY_TYPE_LABELS[activityType]) setActivityTitle(ACTIVITY_TYPE_LABELS[nextType]);
+    if (!editingActivityId && scheduledDate) {
+      const end = new Date(scheduledDate.getTime() + defaultDurationFor(nextType) * 60_000);
+      const parts = toLocalDateTimeParts(end);
+      setActivityEndDate(parts.date); setActivityEndTime(parts.time);
+    }
+    if (nextType !== "meeting") setActivityVideoCallUrl("");
+    if (nextType !== "meeting" && nextType !== "lunch") setActivityLocation("");
+  }
+
+  function changeActivityStart(date: string, time: string) {
+    const previousStart = scheduledAt ? new Date(scheduledAt) : null;
+    const previousEnd = activityEndsAtValue ? new Date(activityEndsAtValue) : null;
+    const preservedDuration = previousStart && previousEnd ? Math.max(0, previousEnd.getTime() - previousStart.getTime()) : defaultDurationFor(activityType) * 60_000;
+    setActivityStartDate(date); setActivityStartTime(time);
+    if (!date || !time) return;
+    const nextStart = new Date(`${date}T${time}`);
+    if (Number.isNaN(nextStart.getTime())) return;
+    const nextEnd = toLocalDateTimeParts(new Date(nextStart.getTime() + preservedDuration));
+    setActivityEndDate(nextEnd.date); setActivityEndTime(nextEnd.time);
+  }
+
   async function saveActivity() {
     if (!deal || !session) throw new Error("Sessão expirada. Entre de novo para agendar.");
     if (!activityTitle.trim()) throw new Error("Escreva o título da atividade.");
-    if (!scheduledAt || Number.isNaN(new Date(scheduledAt).getTime())) throw new Error("Escolha uma data e hora válidas.");
+    if (!scheduledAt || Number.isNaN(new Date(scheduledAt).getTime())) throw new Error("Escolha a data e a hora de início.");
+    if (!activityEndsAtValue || Number.isNaN(new Date(activityEndsAtValue).getTime())) throw new Error("Escolha a data e a hora de fim.");
+    if (new Date(activityEndsAtValue) < new Date(scheduledAt)) throw new Error("O fim não pode acontecer antes do início.");
     if (activityVideoCallUrl.trim()) {
       try { new URL(activityVideoCallUrl.trim()); } catch { throw new Error("Informe um link completo e válido para a videochamada."); }
     }
@@ -417,7 +488,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       description: activityDescription.trim() || null,
       notes: activityNotes.trim() || null,
       scheduledAt: new Date(scheduledAt).toISOString(),
-      durationMinutes: Number(activityDuration),
+      durationMinutes: activityDuration,
       location: activityLocation.trim() || null,
       videoCallUrl: activityVideoCallUrl.trim() || null,
       priority: activityPriority,
@@ -631,24 +702,30 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       </section>
     </div>
 
-    <ActionModal open={activityModalOpen} onOpenChange={(open) => { setActivityModalOpen(open); if (!open) setEditingActivityId(null); }} title={editingActivityId ? "Editar atividade" : "Nova atividade"} confirmLabel={editingActivityId ? "Salvar" : "Agendar"} errorText="Não foi possível salvar a atividade." onConfirm={saveActivity} size="wide">
+    <ActionModal open={activityModalOpen} onOpenChange={(open) => { setActivityModalOpen(open); if (!open) setEditingActivityId(null); }} title={editingActivityId ? "Editar atividade" : "Nova atividade"} confirmLabel={editingActivityId ? "Salvar" : "Agendar"} errorText="Não foi possível salvar a atividade." onConfirm={saveActivity} size="workspace">
+      <div className={styles.activityModalLayout}>
       <div className={styles.modalFields}>
-        <SegmentedControl label="Tipo de atividade" value={activityType} options={ACTIVITY_TYPE_OPTIONS} onValueChange={(value) => setActivityType(value)} />
+        <SegmentedControl label="Tipo de atividade" value={activityType} options={ACTIVITY_TYPE_OPTIONS} onValueChange={changeActivityType} />
+        <p className={styles.activityHint}>{ACTIVITY_FORM_HINTS[activityType]}</p>
         <Field><Label>Título</Label><Input autoFocus value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Qual é o próximo passo?" /></Field>
-        <div className={styles.modalLinha}>
-          <Field><Label>Data e hora</Label><DateTimePicker label="Data e hora" mode="datetime" value={scheduledAt} onValueChange={setScheduledAt} /></Field>
-          <Field><Label>Duração</Label><Select label="Duração da atividade" value={activityDuration} options={DURATIONS} onValueChange={(value) => { if (value) setActivityDuration(value); }} /></Field>
+        <div className={styles.activityInterval}>
+          <Field><Label>Data de início</Label><DatePicker label="Data de início" value={activityStartDate} onValueChange={(value) => changeActivityStart(value, activityStartTime)} /></Field>
+          <Field><Label>Hora de início</Label><TimePicker label="Hora de início" value={activityStartTime} onValueChange={(value) => changeActivityStart(activityStartDate, value)} /></Field>
+          <span className={styles.activityIntervalArrow} aria-hidden="true">→</span>
+          <Field><Label>Data de fim</Label><DatePicker label="Data de fim" value={activityEndDate} onValueChange={setActivityEndDate} /></Field>
+          <Field><Label>Hora de fim</Label><TimePicker label="Hora de fim" value={activityEndTime} onValueChange={setActivityEndTime} /></Field>
+          <span className={styles.activityDuration}>{formatDuration(activityDuration)}</span>
         </div>
         <div className={styles.modalLinha}>
           <Field><Label>Prioridade</Label><Select label="Prioridade da atividade" value={activityPriority} options={PRIORITIES} onValueChange={(value) => { if (value) setActivityPriority(value as ActivityPriority); }} /></Field>
-          <Field><Label>Disponibilidade</Label><Select label="Disponibilidade no calendário" value={activityAvailability} options={AVAILABILITIES} onValueChange={(value) => { if (value) setActivityAvailability(value as ActivityAvailability); }} /></Field>
+          {activityType !== "deadline" && activityType !== "task" && activityType !== "email" && <Field><Label>Disponibilidade</Label><Select label="Disponibilidade no calendário" value={activityAvailability} options={AVAILABILITIES} onValueChange={(value) => { if (value) setActivityAvailability(value as ActivityAvailability); }} /></Field>}
         </div>
         <div className={styles.modalLinha}>
           <Field><Label>Responsável</Label><Select label="Responsável pela atividade" value={activityOwnerId || null} placeholder="Ninguém" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setActivityOwnerId(value ?? "")} /></Field>
-          <Field><Label>Local</Label><Input value={activityLocation} onChange={(event) => setActivityLocation(event.target.value)} placeholder="Sala, endereço ou link da chamada" /></Field>
+          {(activityType === "meeting" || activityType === "lunch") && <Field><Label>Local</Label><Input value={activityLocation} onChange={(event) => setActivityLocation(event.target.value)} placeholder="Sala ou endereço" /></Field>}
         </div>
-        <Field><Label>Link da videochamada</Label><Input type="url" value={activityVideoCallUrl} onChange={(event) => setActivityVideoCallUrl(event.target.value)} placeholder="https://meet.google.com/…" /></Field>
-        <Field><Label>Descrição para participantes</Label><Textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Pauta e informações que podem aparecer no convite do calendário" /></Field>
+        {activityType === "meeting" && <Field><Label>Link da videochamada</Label><Input type="url" value={activityVideoCallUrl} onChange={(event) => setActivityVideoCallUrl(event.target.value)} placeholder="https://meet.google.com/…" /></Field>}
+        <Field><Label>{activityType === "email" ? "Assunto e contexto" : "Descrição para participantes"}</Label><Textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder={activityType === "email" ? "O que deve ser tratado no acompanhamento" : "Pauta e informações que podem aparecer no convite do calendário"} /></Field>
         <Field><Label>Nota interna</Label><Textarea value={activityNotes} onChange={(event) => setActivityNotes(event.target.value)} placeholder="Contexto privado, visível apenas para a equipe" /></Field>
         <section className={styles.activityContext} aria-label="Vínculos da atividade">
           <strong>Vínculos</strong>
@@ -658,6 +735,22 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             {linkedCompany && <span><Icon name="building" />{linkedCompany.name}</span>}
           </div>
         </section>
+      </div>
+      <aside className={styles.daySchedule} aria-label="Agenda do dia selecionado">
+        <header>
+          <div><strong>{scheduledDate && !Number.isNaN(scheduledDate.getTime()) ? new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).format(scheduledDate) : "Escolha uma data"}</strong><span>Agenda de {users.find((item) => item.id === activityOwnerId)?.name ?? "ninguém"}</span></div>
+          <Badge tone={scheduleConflicts.size > 0 ? "danger" : "success"}>{scheduleConflicts.size > 0 ? `${scheduleConflicts.size} conflito${scheduleConflicts.size > 1 ? "s" : ""}` : "Horário livre"}</Badge>
+        </header>
+        <div className={styles.dayScheduleBody}>
+          {scheduledDayActivities.length === 0
+            ? <p className={styles.empty}>Nenhum compromisso neste dia.</p>
+            : scheduledDayActivities.map((activity) => <div key={activity.id} className={styles.scheduleItem} data-conflict={scheduleConflicts.has(activity.id) || undefined}>
+                <time>{formatTimeRange(activity.scheduledAt, activity.durationMinutes)}</time>
+                <div><strong>{activity.title}</strong><span>{activityTypeLabel(activity.type)} · Spark</span></div>
+              </div>)}
+        </div>
+        <footer><Icon name="calendar" /><span>Compromissos conectados de Google, Outlook e Apple aparecerão nesta mesma agenda após a sincronização da conta.</span></footer>
+      </aside>
       </div>
     </ActionModal>
     <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>
@@ -699,18 +792,33 @@ function activityTypeLabel(type: ActivityType): string { return ACTIVITY_TYPE_LA
 function conversationChannelLabel(channel: string): string { return ({ manual: "Interno", email: "E-mail", instagram: "Instagram", whatsapp: "WhatsApp", messenger: "Messenger" } as Record<string, string>)[channel] ?? channel; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value)); }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
-
-function toLocalDateTimeValue(value: string | Date): string {
-  const date = new Date(value);
-  const part = (number: number) => String(number).padStart(2, "0");
-  return `${date.getFullYear()}-${part(date.getMonth() + 1)}-${part(date.getDate())}T${part(date.getHours())}:${part(date.getMinutes())}`;
+function isSameLocalDay(left: Date, right: Date): boolean { return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate(); }
+function formatTimeRange(startsAt: string, durationMinutes: number): string {
+  const start = new Date(startsAt);
+  const end = new Date(start.getTime() + durationMinutes * 60_000);
+  const format = (date: Date) => new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date);
+  return durationMinutes > 0 ? `${format(start)}–${format(end)}` : format(start);
 }
 
-function nextHalfHourValue(): string {
+function toLocalDateTimeParts(value: string | Date): { date: string; time: string } {
+  const date = new Date(value);
+  const part = (number: number) => String(number).padStart(2, "0");
+  return { date: `${date.getFullYear()}-${part(date.getMonth() + 1)}-${part(date.getDate())}`, time: `${part(date.getHours())}:${part(date.getMinutes())}` };
+}
+
+function nextHalfHour(): Date {
   const date = new Date();
   date.setSeconds(0, 0);
   date.setMinutes(date.getMinutes() < 30 ? 30 : 60);
-  return toLocalDateTimeValue(date);
+  return date;
+}
+
+function defaultDurationFor(type: ActivityType): number { return type === "deadline" ? 0 : type === "lunch" ? 60 : 30; }
+function formatDuration(minutes: number): string {
+  if (minutes <= 0) return "Sem duração";
+  const hours = Math.floor(minutes / 60); const rest = minutes % 60;
+  if (hours === 0) return `${rest} min`;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
 
 /** Nota no histórico: papel amarelo, como o do Pipedrive — fala de gente, não registro do sistema. */

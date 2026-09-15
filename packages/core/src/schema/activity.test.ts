@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CreateActivityInputSchema } from "./activity.js";
+import { CreateActivityInputSchema, overlappingScheduleIntervals } from "./activity.js";
 
 const baseActivity = {
   id: "00000000-0000-7000-8000-000000000001",
@@ -26,5 +26,14 @@ describe("atividade", () => {
       videoCallUrl: "https://meet.google.com/abc-defg-hij",
     }).success).toBe(true);
     expect(CreateActivityInputSchema.safeParse({ ...baseActivity, videoCallUrl: "meet sem protocolo" }).success).toBe(false);
+  });
+
+  it("detecta sobreposição apenas para o mesmo responsável ocupado", () => {
+    const candidate = { id: "new", ownerId: "ana", startsAt: "2026-09-15T13:30:00.000Z", endsAt: "2026-09-15T14:00:00.000Z", availability: "busy" as const };
+    const busy = { id: "busy", ownerId: "ana", startsAt: "2026-09-15T13:45:00.000Z", endsAt: "2026-09-15T14:15:00.000Z", availability: "busy" as const };
+    const touches = { id: "touches", ownerId: "ana", startsAt: "2026-09-15T14:00:00.000Z", endsAt: "2026-09-15T15:00:00.000Z", availability: "busy" as const };
+    const anotherOwner = { ...busy, id: "bia", ownerId: "bia" };
+    expect(overlappingScheduleIntervals(candidate, [busy, touches, anotherOwner])).toEqual([busy]);
+    expect(overlappingScheduleIntervals({ ...candidate, availability: "free" }, [busy])).toEqual([]);
   });
 });

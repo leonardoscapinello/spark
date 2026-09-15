@@ -258,6 +258,8 @@
   box-shadow: none;
 }
 
+.conteudo[data-surface="record"] { overflow: hidden; }
+
 .shell[data-navigating] .conteudo::before {
   content: "";
   position: sticky;

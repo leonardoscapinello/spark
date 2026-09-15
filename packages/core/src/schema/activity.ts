@@ -93,3 +93,26 @@ export type UpdateActivityInput = z.infer<typeof UpdateActivityInputSchema>;
 export function activityEndsAt(activity: Pick<Activity, "scheduledAt" | "durationMinutes">): string {
   return new Date(new Date(activity.scheduledAt).getTime() + activity.durationMinutes * 60_000).toISOString();
 }
+
+export interface ScheduleInterval {
+  id: string;
+  ownerId: string | null;
+  startsAt: string;
+  endsAt: string;
+  availability: ActivityAvailability;
+}
+
+/**
+ * Agenda unificada: funciona para atividades Spark e para blocos normalizados
+ * de Google, Microsoft ou CalDAV. Intervalos encostados não conflitam.
+ */
+export function overlappingScheduleIntervals(candidate: ScheduleInterval, intervals: readonly ScheduleInterval[]): ScheduleInterval[] {
+  if (!candidate.ownerId || candidate.availability === "free") return [];
+  const candidateStart = new Date(candidate.startsAt).getTime();
+  const candidateEnd = new Date(candidate.endsAt).getTime();
+  return intervals.filter((interval) => interval.id !== candidate.id
+    && interval.ownerId === candidate.ownerId
+    && interval.availability === "busy"
+    && new Date(interval.startsAt).getTime() < candidateEnd
+    && new Date(interval.endsAt).getTime() > candidateStart);
+}

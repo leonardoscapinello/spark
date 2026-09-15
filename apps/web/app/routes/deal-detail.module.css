@@ -1,8 +1,8 @@
 /* Fundo cinza com cartões brancos por cima, como Pipedrive e Intercom fazem:
  * sem isso a tela inteira é uma folha branca e nada se separa de nada. */
-/* A moldura do aplicativo é a única área de rolagem. As colunas crescem com o
- * conteúdo em vez de disputar a altura restante e comprimir os cartões. */
-.page { gap: var(--space-4); min-height: 100%; background: var(--color-surface2); }
+/* Cabeçalho e etapas ficam presos. A ficha lateral e o fluxo têm alturas
+ * estáveis e rolam por dentro, como a tela de negócio do Pipedrive. */
+.page { gap: var(--space-4); height: 100%; min-height: 0; overflow: hidden; background: var(--color-surface2); }
 
 /* Faixa branca do topo: título, trilha de etapas e caminho do funil moram
  * juntos, coladas ao cabeçalho da rota, e a linha embaixo fecha o bloco. */
@@ -13,12 +13,12 @@
 
 /* Duas colunas, como a tela de negócio do Pipedrive (captura 001): painel de
  * seções à esquerda, o que aconteceu e o que vem a seguir à direita. */
-.contentGrid { display: grid; grid-template-columns: minmax(0, var(--ui-detailPanelWidth)) minmax(0, 1fr); align-items: start; gap: var(--space-5); flex: none; min-width: 0; }
+.contentGrid { display: grid; grid-template-columns: minmax(0, var(--ui-detailPanelWidth)) minmax(0, 1fr); align-items: stretch; gap: var(--space-5); flex: 1; min-width: 0; min-height: 0; }
 .contentGrid > * { min-width: 0; }
 /* Cada bloco é um cartão: fundo branco, borda fina, raio 8 — o mesmo
  * tratamento dos painéis da lista de conversas. */
-.painel { min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
-.fluxo { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; padding-bottom: var(--space-4); }
+.painel { min-width: 0; min-height: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: auto; overscroll-behavior: contain; }
+.fluxo { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; min-height: 0; padding-bottom: var(--space-4); overflow: auto; overscroll-behavior: contain; }
 
 /* Cabeçalho: responsável, Ganho e Perdido à direita do título — decidir o
  * desfecho é a ação principal da tela, não algo no fim de um cartão. */
@@ -75,6 +75,9 @@
 .nota header time { flex: 1; }
 .nota p { margin: 0; font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); white-space: pre-wrap; overflow-wrap: anywhere; }
 .modalLinha { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); }
+.activityInterval { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: var(--space-2); }
+.activityIntervalArrow { display: grid; place-items: center; min-height: var(--ui-fieldHeight); color: var(--color-inkFaint); }
+.activityDuration { display: inline-flex; align-items: center; min-height: var(--ui-fieldHeight); padding-inline: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-compact); white-space: nowrap; }
 .activityActions { display: inline-flex; align-items: center; gap: var(--space-1); flex-shrink: 0; }
 @media (max-width: 640px) { .modalLinha { grid-template-columns: minmax(0, 1fr); } }
 
@@ -108,17 +111,38 @@
 .conversationList span { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
+.activityModalLayout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(var(--ui-modalColumn), var(--ui-detailPanelWidth)); gap: var(--space-5); align-items: start; }
+.activityHint { margin: calc(var(--space-2) * -1) 0 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 .activityContext { display: grid; gap: var(--space-2); padding: var(--space-3); background: var(--color-surface2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); }
 .activityContext > strong { font-size: var(--typography-size-sm); }
 .activityContextItems { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .activityContextItems > span { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding-inline: var(--space-3); color: var(--color-inkMuted); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); font-size: var(--typography-size-sm); }
 .activityContextItems svg { flex: 0 0 var(--ui-icon); }
+.daySchedule { display: flex; flex-direction: column; min-height: var(--ui-previewHeight); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; background: var(--color-surface); }
+.daySchedule > header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.daySchedule > header > div { display: grid; gap: var(--space-1); min-width: 0; }
+.daySchedule > header strong { text-transform: capitalize; font-size: var(--typography-size-sm); }
+.daySchedule > header span { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.dayScheduleBody { flex: 1; display: flex; flex-direction: column; padding: var(--space-2) var(--space-4); }
+.scheduleItem { display: grid; grid-template-columns: var(--space-16) minmax(0, 1fr); gap: var(--space-3); padding-block: var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); }
+.scheduleItem:first-child { border-top: 0; }
+.scheduleItem[data-conflict] { color: var(--color-statusDanger); }
+.scheduleItem time { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-variant-numeric: tabular-nums; }
+.scheduleItem > div { display: grid; gap: var(--space-1); min-width: 0; }
+.scheduleItem strong { overflow-wrap: anywhere; font-size: var(--typography-size-sm); }
+.scheduleItem span { color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.daySchedule > footer { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--color-surface2); border-top: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); font-size: var(--typography-size-compact); line-height: var(--ui-bodyLine); }
+.daySchedule > footer svg { flex: 0 0 var(--ui-icon); }
 
 /* Numa coluna só, a página volta a rolar inteira: duas áreas de rolagem
  * empilhadas numa tela estreita é pior que uma. */
 @media (max-width: 1000px) {
+  .page { height: auto; min-height: 100%; overflow: visible; }
   .contentGrid { grid-template-columns: minmax(0, 1fr); }
+  .painel, .fluxo { overflow: visible; }
+  .activityModalLayout { grid-template-columns: minmax(0, 1fr); }
 }
+@media (max-width: 760px) { .activityInterval { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .activityIntervalArrow { display: none; } .activityDuration { min-height: auto; padding: 0; } }
 
 /* Itens do negócio: linha com nome e conta, valor à direita, resumo no pé —
  * é onde o valor do negócio nasce (packages/core/rules/dealProducts). */
