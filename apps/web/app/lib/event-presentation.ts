@@ -1,3 +1,4 @@
+import { formatCustomFieldValue } from "@spark/core";
 import type { Company, Contact, CustomFieldDefinition, DomainEventType, Event, Stage, User } from "@spark/core";
 import type { TimelineItem } from "@spark/ui-web";
 
@@ -168,6 +169,14 @@ function fieldLabel(field: string, customFields: readonly CustomFieldDefinition[
 
 function formatAuditValue(field: string, value: unknown, context: TimelinePresentationContext): string {
   if (value === null || value === undefined || value === "") return "Sem valor";
+  // Campo personalizado se lê pela definição dele, e a regra é a MESMA que
+  // pinta o valor no painel (packages/core). Sem isto o histórico mostrava o
+  // que está no banco em vez do que a pessoa vê: moeda em centavo cru
+  // («700000»), data em ISO, seleção múltipla em lista JSON.
+  if (field.startsWith("custom:")) {
+    const definition = context.customFields?.find((item) => item.key === field.slice(7));
+    if (definition) return formatCustomFieldValue(definition, value) || "Sem valor";
+  }
   if (field === "stageId" && typeof value === "string") return context.stages?.find((item) => item.id === value)?.name ?? value;
   if (field === "ownerId" && typeof value === "string") return context.users?.find((item) => item.id === value)?.name ?? value;
   if (field === "followers" && typeof value === "string") return context.users?.find((item) => item.id === value)?.name ?? value;
