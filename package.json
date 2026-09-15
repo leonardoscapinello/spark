@@ -8,7 +8,8 @@
   },
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "pnpm dev:services && turbo run dev",
+    "dev:services": "node scripts/dev-services.mjs",
     "dev:gateway": "pnpm --filter @spark/dev-gateway dev",
     "build": "turbo run build",
     "check": "turbo run typecheck lint test --filter=...[HEAD~1] --concurrency=2",

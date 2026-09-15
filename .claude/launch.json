@@ -2,21 +2,42 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "gateway",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev:gateway"
+      ],
+      "port": 3001,
+      "url": "https://localhost:3001"
+    },
+    {
       "name": "web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@spark/web", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@spark/web",
+        "dev"
+      ],
       "port": 3100
     },
     {
       "name": "api",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@spark/api", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@spark/api",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "storybook",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@spark/ui-web", "storybook"],
+      "runtimeArgs": [
+        "--filter",
+        "@spark/ui-web",
+        "storybook"
+      ],
       "port": 6006
     }
   ]

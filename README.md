@@ -131,6 +131,12 @@ incluindo a confiança explícita no certificado de desenvolvimento, e rode:
 pnpm dev
 ```
 
+`pnpm dev` sobe o `docker-compose` da raiz (Electric, Valkey, Mailpit),
+espera o Electric responder e só então inicia os apps e o gateway. É de
+propósito: sem esses serviços nada na tela diz o que faltou — a área de
+trabalho fica em esqueleto e o erro só aparece no console do navegador.
+Para conferir os serviços sem subir os apps, use `pnpm dev:services`.
+
 Requisitos: Node 24+, pnpm 9+, Caddy e acesso aos serviços configurados.
 Web: `http://localhost:3100`. API pública de desenvolvimento:
 `https://localhost:3001` — não apontar o navegador diretamente para a porta
