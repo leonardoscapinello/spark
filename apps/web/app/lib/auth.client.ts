@@ -5,10 +5,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const PROFILE_KEY = "leonardo_app_profile";
 
-// import.meta.env.VITE_API_BASE_URL is empty in local dev — the default
-// in packages/api-client/src/http-client.ts (http://localhost:3000) is
-// already correct. Staging/production sets the env var at build time.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Development also needs HTTP/2: HTTP/1.1 SSE streams starve API writes.
+// See apps/dev-gateway. Production sets its public HTTPS URL at build time.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "https://localhost:3001" : undefined);
 if (API_BASE_URL) setSparkApiBaseUrl(API_BASE_URL);
 
 export interface AppSession {

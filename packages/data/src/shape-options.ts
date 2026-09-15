@@ -11,6 +11,9 @@ import { getSparkApiBaseUrl, getSparkAuthToken, refreshSparkAuthToken } from "@s
  * que reabria uma requisição a cada ~20 s por tabela mesmo com o sistema
  * parado. É o modelo push (docs/adr/0017: sistema saudável, não cansativo).
  * O proxy de shapes (apps/api sync) repassa o fluxo sem bufferizar.
+ * Requer HTTP/2 ou HTTP/3 até o navegador, inclusive em desenvolvimento
+ * (apps/dev-gateway). HTTP/1.1 satura seis conexões e bloqueia a própria
+ * API de escrita; trocar SSE por long-poll mantém o mesmo gargalo.
  */
 export function sparkShapeOptions(table: string) {
   return {

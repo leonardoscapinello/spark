@@ -114,13 +114,24 @@ O critério que orienta todas as decisões:
 
 ---
 
-## Começando (quando o código existir)
+## Começando
 
 ```bash
 pnpm install
 cp .env.example .env
-pnpm db:migrate
+cp apps/web/.env.example apps/web/.env.local
+```
+
+Preencha as credenciais do **Postgres remoto de produção** e do Supabase.
+Não existe banco local. Não execute migrations ou seeds como passo de boot.
+Configure uma vez o [gateway HTTP/2 local](apps/dev-gateway/README.md),
+incluindo a confiança explícita no certificado de desenvolvimento, e rode:
+
+```bash
 pnpm dev
 ```
 
-Requisitos: Node 22+, pnpm 9+, Docker, Supabase CLI.
+Requisitos: Node 24+, pnpm 9+, Caddy e acesso aos serviços configurados.
+Web: `http://localhost:3100`. API pública de desenvolvimento:
+`https://localhost:3001` — não apontar o navegador diretamente para a porta
+3000, pois HTTP/1.1 deixa sincronizações bloquearem salvamentos e previews.

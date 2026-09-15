@@ -1,0 +1,18 @@
+{
+	# Trust is an explicit, one-time setup step, never an automatic OS change.
+	skip_install_trust
+	auto_https disable_redirects
+	admin localhost:2019
+}
+
+https://localhost:3001 {
+	bind 127.0.0.1 ::1
+	tls internal
+
+	# A single HTTP/2 connection multiplexes all Electric streams AND writes.
+	# Forward through the authorization proxy, never expose Electric directly.
+	reverse_proxy localhost:3000 {
+		# Do not hold SSE events in the proxy waiting for a larger buffer.
+		flush_interval -1
+	}
+}

@@ -9,6 +9,7 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "turbo run dev",
+    "dev:gateway": "pnpm --filter @spark/dev-gateway dev",
     "build": "turbo run build",
     "check": "turbo run typecheck lint test --filter=...[HEAD~1] --concurrency=2",
     "check:full": "turbo run typecheck lint test",

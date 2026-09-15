@@ -150,6 +150,8 @@ importers:
 
   apps/desktop: {}
 
+  apps/dev-gateway: {}
+
   apps/mobile: {}
 
   apps/scheduler:

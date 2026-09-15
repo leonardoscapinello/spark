@@ -1,0 +1,9 @@
+{
+  "name": "@spark/dev-gateway",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "caddy run --config Caddyfile"
+  }
+}
