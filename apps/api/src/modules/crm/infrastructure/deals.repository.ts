@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { createDbClient, withOrgContext, deals, type SparkDb } from "@spark/db";
 import {
   money,
@@ -21,6 +21,14 @@ export class DealsRepository {
 
   constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter) {
     this.db = createDbClient(process.env.DATABASE_URL ?? "");
+  }
+
+  exists(orgId: OrgId, id: DealId): Promise<boolean> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const rows = await tx.select({ id: deals.id }).from(deals)
+        .where(and(eq(deals.orgId, orgId), eq(deals.id, id), isNull(deals.deletedAt))).limit(1);
+      return rows.length > 0;
+    });
   }
 
   async create(orgId: OrgId, input: CreateDealInput): Promise<{ deal: Deal; txid: number }> {

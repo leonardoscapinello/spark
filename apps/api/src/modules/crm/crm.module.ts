@@ -22,11 +22,13 @@ import { UsersRepository } from "../identity/infrastructure/users.repository.js"
 import { PermissionGroupsRepository } from "../identity/infrastructure/permission-groups.repository.js";
 import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
 import { EventsModule } from "../events/events.module.js";
+import { DealPresenceService } from "./infrastructure/deal-presence.service.js";
+import { DealPresenceController } from "./presentation/deal-presence.controller.js";
 
 @Module({
   imports: [SettingsModule, EventsModule],
-  controllers: [StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
-  providers: [StageFieldRulesRepository, DealProductsRepository, 
+  controllers: [DealPresenceController, StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
+  providers: [DealPresenceService, StageFieldRulesRepository, DealProductsRepository, 
     CreatePipelineUseCase,
     CreateStageUseCase,
     RenameStageUseCase,

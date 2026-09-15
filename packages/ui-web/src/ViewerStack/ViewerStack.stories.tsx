@@ -1,0 +1,10 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { userId } from "@spark/core";
+import { ViewerStack } from "./ViewerStack.js";
+const meta = { title: "Dados/Pessoas visualizando", component: ViewerStack } satisfies Meta<typeof ViewerStack>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+const viewers = ["Ana", "Bruno", "Carla", "Daniel", "Elisa"].map((name) => ({ userId: userId.create(), name, avatarUrl: null }));
+export const Compartilhado: Story = { args: { viewers, status: "connected" } };
+export const Conectando: Story = { args: { viewers: [], status: "connecting" } };
+export const SemConexao: Story = { args: { viewers: [], status: "unavailable" } };

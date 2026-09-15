@@ -53,6 +53,8 @@ import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { PreviewedCustomFieldValue } from "../lib/link-previews.client";
+import { useDealPresence } from "../lib/deal-presence.client";
+import { ViewerStack } from "@spark/ui-web";
 import { ContactProfile } from "./contact-detail";
 import { CompanyProfile } from "./company-detail";
 import styles from "./deal-detail.module.css";
@@ -105,6 +107,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const { data: deal, isLoading } = useLiveQuery({
     query: (q) => q.from({ deals: dealsCollection }).where(({ deals: item }) => eq(item.id, params.dealId)).findOne(),
   }, [dealsCollection, params.dealId]);
+  const presence = useDealPresence(deal?.id);
   const { data: stages } = useLiveQuery({ query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: item }) => item.sortOrder, "asc") });
   const { data: pipelines } = useLiveQuery({ query: (q) => q.from({ pipelines: pipelinesCollection }) });
   const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: contactsCollection }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
@@ -422,6 +425,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       icon="briefcase"
       title={deal.name}
       actions={<>
+        <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
         {/* Trocar o responsável é um clique no próprio nome — sem abrir o formulário de edição. */}
         <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
           {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<Avatar name={item.name} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
