@@ -122,7 +122,15 @@ async function limitedText(response: Response): Promise<string> {
 
 function extractMetadata(html: string, baseUrl: string): Omit<LinkMetadata, "finalUrl" | "httpStatus" | "etag" | "lastModified" | "maxAgeSeconds"> {
   const metas = [...html.matchAll(/<meta\s+[^>]*>/gi)].map((match) => attributes(match[0] ?? ""));
-  const value = (...names: string[]) => metas.find((attrs) => names.includes((attrs.property ?? attrs.name ?? "").toLowerCase()))?.content ?? null;
+  // A prioridade é Open Graph → Twitter → HTML, não a posição da tag no
+  // documento. Tags vazias não escondem uma alternativa preenchida depois.
+  const value = (...names: string[]) => {
+    for (const name of names) {
+      const content = metas.find((attrs) => (attrs.property ?? attrs.name ?? "").toLowerCase() === name && attrs.content?.trim())?.content;
+      if (content) return content;
+    }
+    return null;
+  };
   const links = [...html.matchAll(/<link\s+[^>]*>/gi)].map((match) => attributes(match[0] ?? ""));
   const titleTag = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? null;
   const title = clipped(decodeHtml(value("og:title", "twitter:title") ?? titleTag), 500);
@@ -144,7 +152,10 @@ function attributes(tag: string): Record<string, string> {
 
 function decodeHtml(value: string | null): string | null {
   if (!value) return null;
-  return value.replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/\s+/g, " ").trim() || null;
+  return value.replace(/&#(x[0-9a-f]+|\d+);/gi, (entity, digits: string) => {
+    const code = digits[0]?.toLowerCase() === "x" ? Number.parseInt(digits.slice(1), 16) : Number(digits);
+    return code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff) ? String.fromCodePoint(code) : entity;
+  }).replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim() || null;
 }
 
 function absoluteUrl(value: string | null, base: string): string | null {

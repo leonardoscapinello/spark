@@ -23,9 +23,9 @@ export function LinkPreviewCard({ preview, loading = false, url }: { preview?: L
   return <div className={styles.card}>
     {preview.imageUrl
       ? <img className={styles.image} src={preview.imageUrl} alt="" loading="lazy" decoding="async" fetchPriority="low" referrerPolicy="no-referrer" />
-      : <div className={styles.imagePlaceholder}>{preview.faviconUrl ? <img src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" /> : null}</div>}
+      : <div className={styles.imagePlaceholder}>{preview.faviconUrl ? <img className={styles.favicon} src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" /> : null}</div>}
     <div className={styles.body}>
-      <span className={styles.site}>{preview.faviconUrl && <img src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" />}{preview.siteName ?? new URL(preview.url).hostname}</span>
+      <span className={styles.site}>{preview.faviconUrl && <img className={styles.favicon} src={preview.faviconUrl} alt="" referrerPolicy="no-referrer" />}{preview.siteName ?? previewHost(preview.url)}</span>
       <strong>{preview.title ?? preview.url}</strong>
       {preview.description && <span className={styles.description}>{preview.description}</span>}
     </div>

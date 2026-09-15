@@ -4,6 +4,18 @@ import { LinkMetadataFetcher } from "./link-metadata-fetcher.js";
 describe("LinkMetadataFetcher", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("prioriza Open Graph, ignora tags vazias e decodifica acentos numéricos", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(`<html><head>
+      <meta name="description" content="Texto genérico">
+      <meta name="twitter:title" content="Título alternativo">
+      <meta property="og:title" content="">
+      <meta property="og:title" content="Automa&#231;&#227;o &amp; CRM">
+      <meta property="og:description" content="Descri&#xE7;&#xE3;o específica">
+      </head></html>`, { headers: { "content-type": "text/html" } })));
+    const result = await new LinkMetadataFetcher().fetch("https://93.184.216.34/article");
+    expect(result).toMatchObject({ title: "Automação & CRM", description: "Descrição específica" });
+  });
+
   it("para de baixar assim que recebe o head completo", async () => {
     const encoder = new TextEncoder();
     let cancelled = false;
