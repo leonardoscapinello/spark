@@ -10,6 +10,7 @@ import { CreateDealUseCase } from "./application/create-deal.usecase.js";
 import { MoveDealUseCase } from "./application/move-deal.usecase.js";
 import { CloseDealUseCase } from "./application/close-deal.usecase.js";
 import { EditDealUseCase } from "./application/edit-deal.usecase.js";
+import { ReopenDealUseCase } from "./application/reopen-deal.usecase.js";
 import { PipelinesRepository } from "./infrastructure/pipelines.repository.js";
 import { StagesRepository } from "./infrastructure/stages.repository.js";
 import { StageFieldRulesRepository } from "./infrastructure/stage-field-rules.repository.js";
@@ -36,6 +37,7 @@ import { DealPresenceController } from "./presentation/deal-presence.controller.
     MoveDealUseCase,
     CloseDealUseCase,
     EditDealUseCase,
+    ReopenDealUseCase,
     PipelinesRepository,
     StagesRepository,
     DealsRepository,

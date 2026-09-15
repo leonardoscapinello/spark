@@ -6,6 +6,7 @@ import { GetCurrentUserUseCase } from "../../identity/application/get-current-us
 import { CreateDealUseCase } from "../application/create-deal.usecase.js";
 import { MoveDealUseCase } from "../application/move-deal.usecase.js";
 import { CloseDealUseCase } from "../application/close-deal.usecase.js";
+import { ReopenDealUseCase } from "../application/reopen-deal.usecase.js";
 import { EditDealUseCase } from "../application/edit-deal.usecase.js";
 import {
   CreateDealDto,
@@ -14,6 +15,7 @@ import {
   MoveDealResponseDto,
   CloseDealDto,
   CloseDealResponseDto,
+  ReopenDealResponseDto,
   EditDealDto,
   EditDealResponseDto,
   toDealDto,
@@ -27,6 +29,7 @@ export class DealsController {
     private readonly createDeal: CreateDealUseCase,
     private readonly moveDeal: MoveDealUseCase,
     private readonly closeDeal: CloseDealUseCase,
+    private readonly reopenDeal: ReopenDealUseCase,
     private readonly editDeal: EditDealUseCase,
   ) {}
 
@@ -87,5 +90,19 @@ export class DealsController {
     const user = await this.getCurrentUser.execute(claims.sub);
     const { deal, txid } = await this.closeDeal.execute(user.orgId, dealIdFactory.from(id), body);
     return { deal: toDealDto(deal), txid } as CloseDealResponseDto;
+  }
+
+  @Patch(":id/reopen")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard)
+  @RequireCapability("deals:move")
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: ReopenDealResponseDto })
+  async reopen(
+    @CurrentSupabaseUser() claims: SupabaseJwtClaims,
+    @Param("id") id: string,
+  ): Promise<ReopenDealResponseDto> {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    const { deal, txid } = await this.reopenDeal.execute(user.orgId, dealIdFactory.from(id));
+    return { deal: toDealDto(deal), txid } as ReopenDealResponseDto;
   }
 }

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Icon, type IconName } from "../Icon/Icon.js";
 import s from "./Composer.module.css";
 
@@ -28,6 +28,8 @@ export interface ComposerProps<Id extends string = string> {
  * composição, e a aba muda o que se escreve, não o que se lê.
  */
 export function Composer<Id extends string = string>({ tabs, value, onValueChange, children, label = "Registrar" }: ComposerProps<Id>) {
+  const activeTab = useRef<HTMLButtonElement>(null);
+  useEffect(() => { if (typeof activeTab.current?.scrollIntoView === "function") activeTab.current.scrollIntoView({ block: "nearest", inline: "nearest" }); }, [value]);
   return <section className={s.root} aria-label={label}>
     <div className={s.tabs} role="tablist" aria-label={label}>
       {tabs.map((tab) => <button
@@ -36,6 +38,7 @@ export function Composer<Id extends string = string>({ tabs, value, onValueChang
         role="tab"
         aria-selected={value === tab.id}
         disabled={tab.disabled}
+        ref={value === tab.id ? activeTab : undefined}
         className={s.tab}
         onClick={() => onValueChange(tab.id)}
       >

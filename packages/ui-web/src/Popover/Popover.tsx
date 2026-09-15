@@ -6,6 +6,6 @@ import s from "../shared/surfaces.module.css";
 export const Popover = BasePopover.Root;
 export const PopoverTrigger = BasePopover.Trigger;
 export const PopoverClose = BasePopover.Close;
-export function PopoverContent({ title, children, className, ...props }: Omit<ComponentProps<typeof BasePopover.Popup>, "title"> & { title: ReactNode }) {
-  return <BasePopover.Portal><BasePopover.Positioner sideOffset={Number.parseFloat(lightTheme["space-1"])} className={s.positioner}><BasePopover.Popup className={[s.popup, styles.popup, className].filter(Boolean).join(" ")} {...props}><BasePopover.Title className={styles.title}>{title}</BasePopover.Title><div className={styles.content}>{children}</div></BasePopover.Popup></BasePopover.Positioner></BasePopover.Portal>;
+export function PopoverContent({ title, children, className, contentClassName, ...props }: Omit<ComponentProps<typeof BasePopover.Popup>, "title"> & { title: ReactNode; contentClassName?: string }) {
+  return <BasePopover.Portal><BasePopover.Positioner sideOffset={Number.parseFloat(lightTheme["space-1"])} className={s.positioner}><BasePopover.Popup className={[s.popup, styles.popup, className].filter(Boolean).join(" ")} {...props}><BasePopover.Title className={styles.title}>{title}</BasePopover.Title><div className={[styles.content, contentClassName].filter(Boolean).join(" ")}>{children}</div></BasePopover.Popup></BasePopover.Positioner></BasePopover.Portal>;
 }

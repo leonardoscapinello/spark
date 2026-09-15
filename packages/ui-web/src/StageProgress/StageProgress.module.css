@@ -14,18 +14,20 @@
 }
 .root::-webkit-scrollbar { display: none; }
 
-.step { flex: 1 1 0; min-width: var(--space-16); display: flex; }
+.step { flex: 1 0 calc(var(--space-16) + var(--space-8)); min-width: calc(var(--space-16) + var(--space-8)); display: flex; }
 
 .action {
+  position: relative;
   box-sizing: border-box;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1);
+  flex-direction: column;
+  gap: var(--space-0);
   min-width: 0;
-  height: var(--ui-controlSmall);
-  padding-inline: var(--space-4);
+  min-height: var(--space-12);
+  padding: var(--space-1) var(--space-4);
   border: 0;
   font-family: var(--typography-fontFamily-body);
   font-size: var(--typography-size-compact);
@@ -56,10 +58,40 @@ button.action:hover { background: var(--color-line); color: var(--color-ink); }
 .root[data-tone="won"] .step[data-state="done"] .action { background: color-mix(in srgb, var(--color-statusSuccess) 16%, transparent); color: var(--color-statusSuccess); }
 .root[data-tone="lost"] .step[data-state="current"] .action { background: var(--color-statusDanger); color: var(--ui-buttonInk); }
 
-.label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.label { display: block; max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* O tempo fica numa cápsula translúcida, para separar do nome da etapa sem
  * competir com ele — é o que o Pipedrive faz dentro da seta. */
-.hint { flex-shrink: 0; padding-inline: var(--space-1); border-radius: var(--radius-full); background: color-mix(in srgb, currentColor 14%, transparent); font-weight: var(--typography-weight-regular); font-size: var(--typography-size-xs); }
-.check { flex: 0 0 var(--space-3); width: var(--space-3); height: var(--space-3); }
+.hint { flex-shrink: 0; color: currentColor; font-weight: var(--typography-weight-regular); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
+.tooltip { display: grid; gap: var(--space-1); min-width: var(--ui-menuWidth); padding: var(--space-3); }
+.tooltip > strong { font-size: var(--typography-size-sm); }
+.tooltip > span, .tooltip > small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.tooltip > b { font-size: var(--typography-size-sm); font-variant-numeric: tabular-nums; }
+.stagePopover { display: flex; flex-direction: column; width: var(--ui-drawerWidth); overflow: hidden; }
+.stagePopoverContent { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.summary { display: grid; gap: var(--space-1); padding: var(--space-3); border-radius: var(--ui-fieldRadius); background: var(--color-accentWash); }
+.summary > span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.summary > strong { color: var(--color-accent); font-size: var(--typography-size-md); font-variant-numeric: tabular-nums; }
+.summary > small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
+.passages { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.passages > li { display: grid; gap: var(--space-2); padding-block-end: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
+.passages > li:last-child { padding-block-end: 0; border-bottom: 0; }
+.passageMeta { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: var(--space-3); }
+.passageMeta > strong { font-size: var(--typography-size-sm); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.passageMeta > span { min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); text-align: end; white-space: nowrap; }
+.transitions { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.transitions > li { display: grid; grid-template-columns: var(--space-5) minmax(0, 1fr); align-items: center; gap: var(--space-2); }
+.directionIcon { display: grid; place-items: center; width: var(--space-5); height: var(--space-5); border-radius: var(--radius-full); color: var(--color-accent); background: var(--color-accentWash); }
+.directionIcon svg { width: var(--space-3); height: var(--space-3); }
+.directionIcon[data-direction="forward"] { color: var(--color-statusSuccess); background: color-mix(in srgb, var(--color-statusSuccess) 14%, var(--color-surface)); }
+.directionIcon[data-direction="backward"] { color: var(--color-statusWarning); background: color-mix(in srgb, var(--color-statusWarning) 16%, var(--color-surface)); }
+.directionIcon[data-direction="backward"] svg { transform: rotate(180deg); }
+.transitions div { display: grid; min-width: 0; }
+.transitions small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.transitions strong { font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); }
+.error { margin: 0; color: var(--color-statusDanger); font-size: var(--typography-size-xs); line-height: var(--ui-buttonLine); }
+
+@media (max-width: 760px) {
+  .step { flex-basis: calc(var(--space-16) + var(--space-16)); min-width: calc(var(--space-16) + var(--space-16)); }
+}
 
 @media (prefers-reduced-motion: reduce) { .action { transition: none; } }

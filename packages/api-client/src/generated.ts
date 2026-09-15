@@ -1876,6 +1876,73 @@ export interface CloseDealResponseDto {
   txid: number;
 }
 
+export type ReopenDealResponseDtoDealStatus = typeof ReopenDealResponseDtoDealStatus[keyof typeof ReopenDealResponseDtoDealStatus];
+
+
+export const ReopenDealResponseDtoDealStatus = {
+  open: 'open',
+  won: 'won',
+  lost: 'lost',
+} as const;
+
+export type ReopenDealResponseDtoDealCustomFields = {[key: string]: unknown};
+
+export type ReopenDealResponseDtoDeal = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /** @minLength 1 */
+  stageId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  contactId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  companyId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  ownerId: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount: number;
+  status?: ReopenDealResponseDtoDealStatus;
+  expectedCloseDate: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  lossReason: string | null;
+  customFields?: ReopenDealResponseDtoDealCustomFields;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export interface ReopenDealResponseDto {
+  deal: ReopenDealResponseDtoDeal;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type CreateActivityDtoType = typeof CreateActivityDtoType[keyof typeof CreateActivityDtoType];
 
 
@@ -7587,6 +7654,66 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getDealsControllerCloseMutationOptions(options), queryClient);
+    }
+
+export const dealsControllerReopen = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ReopenDealResponseDto>(
+      {url: `/v1/deals/${id}/reopen`, method: 'PATCH', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealsControllerReopenMutationKey = () => ['dealsControllerReopen'] as const;
+
+export const getDealsControllerReopenMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerReopen>>, TError,DealsControllerReopenMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealsControllerReopen>>, TError,DealsControllerReopenMutationVariables, TContext> => {
+
+const mutationKey = getDealsControllerReopenMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealsControllerReopen>>, DealsControllerReopenMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  dealsControllerReopen(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealsControllerReopenMutationResult = NonNullable<Awaited<ReturnType<typeof dealsControllerReopen>>>
+
+    export type DealsControllerReopenMutationError = unknown
+    export type DealsControllerReopenMutationVariables = {id: string}
+
+    export const useDealsControllerReopen = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealsControllerReopen>>, TError,DealsControllerReopenMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealsControllerReopen>>,
+        TError,
+        DealsControllerReopenMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealsControllerReopenMutationOptions(options), queryClient);
     }
 
 export const activitiesControllerCreate = (

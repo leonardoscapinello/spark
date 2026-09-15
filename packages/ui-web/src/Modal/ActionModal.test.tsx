@@ -10,4 +10,8 @@ describe("ActionModal",()=>{
     fireEvent.click(screen.getByRole("button",{name:"Confirmar"}));
     await waitFor(()=>expect(change).toHaveBeenCalledWith(false));
   });
+  it("permite nomear a saída sem confirmação",()=>{
+    render(<ActionModal open onOpenChange={()=>{}} title="Revisar etapa" cancelLabel="Só visualizar" onConfirm={()=>{}}>Detalhes</ActionModal>);
+    expect(screen.getByRole("button",{name:"Só visualizar"})).toBeInTheDocument();
+  });
 });

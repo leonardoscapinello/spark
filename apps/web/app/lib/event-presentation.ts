@@ -16,6 +16,7 @@ const TITLES: Record<DomainEventType, string> = {
   "deal.stage_changed": "Negócio movido de etapa",
   "deal.won": "Negócio ganho",
   "deal.lost": "Negócio perdido",
+  "deal.reopened": "Negócio reaberto",
   "activity.created": "Atividade agendada",
   "activity.updated": "Atividade atualizada",
   "note.created": "Nota registrada",
@@ -86,7 +87,7 @@ export function toTimelineItem(event: Event): TimelineItem {
     timestamp: event.occurredAt,
     ...(reason || title || name ? { description: reason ?? title ?? name } : {}),
     tone:
-      event.type === "deal.won" || event.type === "activity.completed"
+      event.type === "deal.won" || event.type === "deal.reopened" || event.type === "activity.completed"
         ? "positive"
         : event.type === "deal.lost"
           ? "negative"

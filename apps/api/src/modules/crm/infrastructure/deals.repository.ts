@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { and, eq, isNull, sql } from "drizzle-orm";
-import { createDbClient, withOrgContext, deals, type SparkDb } from "@spark/db";
+import { createDbClient, withOrgContext, deals, stages, type SparkDb } from "@spark/db";
 import {
   money,
   toCents,
@@ -69,6 +69,10 @@ export class DealsRepository {
   async move(orgId: OrgId, dealId: DealId, stageId: StageId): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
+      const [current] = await tx.select({ pipelineId: deals.pipelineId, stageId: deals.stageId }).from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
+      if (!current) throw new NotFoundException(`Deal ${dealId} not found.`);
+      const [target] = await tx.select({ id: stages.id }).from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, stageId), eq(stages.pipelineId, current.pipelineId))).limit(1);
+      if (!target) throw new BadRequestException("A etapa não pertence ao funil deste negócio.");
 
       const [row] = await tx
         .update(deals)
@@ -82,7 +86,7 @@ export class DealsRepository {
 
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
-      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.stage_changed", data: { stageId: deal.stageId } });
+      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.stage_changed", data: { fromStageId: current.stageId, stageId: deal.stageId } });
       return { deal, txid };
     });
   }
@@ -137,6 +141,23 @@ export class DealsRepository {
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
       await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: input.status === "won" ? "deal.won" : "deal.lost", data: input.status === "lost" ? { reason: input.lossReason ?? null } : {} });
+      return { deal, txid };
+    });
+  }
+
+  /** Reopen a won/lost deal and clear closing-only data. */
+  async reopen(orgId: OrgId, dealId: DealId): Promise<{ deal: Deal; txid: number }> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const txid = await captureTxid(tx);
+      const [row] = await tx
+        .update(deals)
+        .set({ status: "open", lossReason: null, updatedAt: new Date() })
+        .where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt)))
+        .returning();
+
+      if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
+      const deal = toDeal(row);
+      await this.eventWriter.append(tx, { orgId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.reopened" });
       return { deal, txid };
     });
   }

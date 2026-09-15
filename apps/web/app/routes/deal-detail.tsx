@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
@@ -27,8 +27,10 @@ import {
   productId as productIdFactory,
   type DealProduct,
   millisecondsByStage,
+  millisecondsOfLatestVisitByStage,
   stageVisits,
   formatStageDuration,
+  formatDetailedStageDuration,
   evaluateStageFields,
   stageFieldLabel,
   stageFieldMessage,
@@ -39,7 +41,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, PercentInput, Avatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -208,6 +210,10 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const [busyActivityId, setBusyActivityId] = useState<string | null>(null);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [lossReason, setLossReason] = useState("");
+  const [reopening, setReopening] = useState(false);
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
+  const [stageClock, setStageClock] = useState(() => Date.now());
+  const compactStageUi = useCompactStageViewport();
 
   const pipelineStages = deal ? stages.filter((stage) => stage.pipelineId === deal.pipelineId) : [];
   const pipeline = deal ? pipelines.find((item) => item.id === deal.pipelineId) : undefined;
@@ -222,18 +228,53 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   const customValues = useCustomFieldValues("deal", params.dealId, customFields);
   const fieldOptions = useCustomFieldOptions();
   const isOpen = deal?.status === "open";
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = window.setInterval(() => setStageClock(Date.now()), 1_000);
+    return () => window.clearInterval(timer);
+  }, [isOpen]);
   /* Tempo em cada etapa, reconstruído do histórico (packages/core/rules/stageDuration) —
    * sem coluna nova: os eventos de mudança já contam essa história. */
-  const stageDurations = useMemo(() => {
-    if (!deal) return {};
+  const stageTiming = useMemo(() => {
+    if (!deal) return { durations: {}, details: {} };
     const changes = events
       .filter((event) => event.type === "deal.stage_changed")
-      .map((event) => ({ stageId: String((event.data as { stageId?: string } | null)?.stageId ?? ""), occurredAt: event.occurredAt }))
+      .map((event) => ({ stageId: String((event.data as { stageId?: string } | null)?.stageId ?? ""), occurredAt: event.occurredAt, sequence: event.id }))
       .filter((change) => change.stageId);
-    const firstStage = changes.length > 0 ? pipelineStages[0]?.id ?? deal.stageId : deal.stageId;
-    const totals = millisecondsByStage(stageVisits(deal.createdAt, firstStage, changes, new Date()), new Date());
-    return Object.fromEntries([...totals].map(([stageId, ms]) => [stageId, formatStageDuration(ms)]));
-  }, [deal, events, pipelineStages]);
+    const createdEvent = events.find((event) => event.type === "deal.created");
+    const createdStageId = String((createdEvent?.data as { stageId?: string } | undefined)?.stageId ?? "");
+    const firstStage = createdStageId || pipelineStages[0]?.id || deal.stageId;
+    const now = new Date(stageClock);
+    const visits = stageVisits(deal.createdAt, firstStage, changes, now);
+    const totals = millisecondsByStage(visits, now);
+    const latestByStage = millisecondsOfLatestVisitByStage(visits, now);
+    return {
+      durations: Object.fromEntries([...latestByStage].map(([stageId, ms]) => [stageId, formatStageDuration(ms)])),
+      details: Object.fromEntries([...totals].map(([stageId, ms]) => {
+        const stageVisitsForId = visits.filter((visit) => visit.stageId === stageId);
+        const latest = stageVisitsForId.at(-1);
+        const passages = stageVisitsForId.map((visit) => {
+          const end = visit.leftAt ? new Date(visit.leftAt) : now;
+          return {
+            duration: formatDetailedStageDuration(Math.max(0, end.getTime() - new Date(visit.enteredAt).getTime())),
+            period: visit.leftAt ? formatStagePeriod(visit.enteredAt, visit.leftAt) : formatStageSince(visit.enteredAt),
+            current: visit.leftAt === null,
+            arrival: visit.enteredFromStageId ? transitionDescription(visit.enteredFromStageId, visit.stageId, pipelineStages) : { direction: "created" as const, label: "Negócio criado nesta etapa" },
+            ...(visit.leftToStageId ? { departure: transitionDescription(visit.stageId, visit.leftToStageId, pipelineStages) } : {}),
+          };
+        }).reverse();
+        return [stageId, {
+          duration: formatDetailedStageDuration(latestByStage.get(stageId) ?? 0),
+          totalDuration: formatDetailedStageDuration(ms),
+          ...(latest ? { period: latest.leftAt ? `Última passagem: ${formatStagePeriod(latest.enteredAt, latest.leftAt)}` : formatStageSince(latest.enteredAt) } : {}),
+          passages,
+        }];
+      })),
+    };
+  }, [deal, events, pipelineStages, stageClock]);
+  const selectedStage = pipelineStages.find((item) => item.id === selectedStageId);
+  const selectedStageDetails = selectedStageId ? stageTiming.details[selectedStageId] : undefined;
+  const selectedStageCheck = deal && selectedStageId ? evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages, targetStageId: selectedStageId }) : null;
   const fieldWarnings = useMemo(() => (deal ? evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages }).warnings : []), [deal, dealItems.length, fieldRules, pipelineStages]);
 
   /* O que falta na etapa atual, agrupado pela seção do painel onde se
@@ -397,11 +438,14 @@ export default function DealDetail({ params }: Route.ComponentProps) {
   /** Desfazer o fechamento: volta para em aberto e limpa o motivo da perda. */
   async function reopenDeal() {
     if (!deal || !canMove) return;
+    setReopening(true);
     try {
       await writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.status = "open"; draft.lossReason = null; }));
       notify({ title: "Negócio reaberto", tone: "success" });
     } catch {
       notify({ title: "Não foi possível reabrir o negócio", tone: "error" });
+    } finally {
+      setReopening(false);
     }
   }
 
@@ -432,18 +476,13 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     // Obrigatório é obrigatório: a etapa não muda com campo do caminho vazio.
     const check = evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages, targetStageId: value });
     if (check.blocking.length > 0) {
-      notify({
-        title: "Faltam campos obrigatórios",
-        description: stageFieldMessage("required", check.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)), pipelineStages.find((item) => item.id === value)?.name),
-        tone: "warning",
-      });
-      return;
+      throw new Error(stageFieldMessage("required", check.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)), pipelineStages.find((item) => item.id === value)?.name));
     }
     try {
       await writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.stageId = stageIdFactory.from(value); }));
       notify({ title: "Etapa atualizada", tone: "success" });
-    } catch {
-      notify({ title: "Não foi possível mudar a etapa", tone: "error" });
+    } catch (cause) {
+      throw new Error(cause instanceof Error && cause.message ? cause.message : "Não foi possível mudar a etapa.");
     }
   }
 
@@ -567,34 +606,39 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       back={<BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
       icon="briefcase"
       title={deal.name}
-      actions={<>
-        <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
-        {/* Trocar o responsável é um clique no próprio nome — sem abrir o formulário de edição. */}
-        <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
-          {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<Avatar name={item.name} src={item.avatarUrl} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
-          {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
-        </MenuGroup>}>
-          {owner ? <Avatar name={owner.name} src={owner.avatarUrl} size="small" /> : <Icon name="account" />}
-          <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
-        </MenuButton>
-        {isOpen && canMove && <>
-          <Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
-          <Button variant="secondary" className={styles.lostButton} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
-        </>}
-        {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
-        {canWrite && <MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} menu={<>
-          {!isOpen && canMove && <MenuItem icon={<Icon name="briefcase" />} onClick={() => void reopenDeal()}>Reabrir negócio</MenuItem>}
-        </>} />}
-      </>}
+      actions={<div className={styles.headerActions}>
+        <div className={styles.headerPeople}>
+          {/* Uma identidade única para o responsável. A presença mostra apenas outras pessoas. */}
+          <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
+            {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<Avatar name={item.name} src={item.avatarUrl} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
+            {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
+          </MenuGroup>}>
+            {owner ? <Avatar name={owner.name} src={owner.avatarUrl} size="small" /> : <Icon name="account" />}
+            <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
+          </MenuButton>
+          <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
+        </div>
+        <div className={styles.headerOutcome}>
+          {isOpen && canMove && <>
+            <Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
+            <Button variant="secondary" className={styles.lostButton} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
+          </>}
+          {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
+          {!isOpen && canMove && <Button variant="secondary" icon={<Icon name="undo" />} loading={reopening} onClick={() => void reopenDeal()}>Reabrir</Button>}
+        </div>
+      </div>}
     />
 
     <div className={styles.topo}>
       {pipelineStages.length > 0 && <StageProgress
         stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
         currentId={deal.stageId}
-        durations={stageDurations}
+        durations={stageTiming.durations}
+        details={stageTiming.details}
         outcome={deal.status === "open" ? undefined : deal.status}
-        {...(canMove && isOpen ? { onSelect: (id: string) => void moveDeal(id) } : {})}
+        interaction={compactStageUi ? "modal" : "popover"}
+        {...(canMove && isOpen && compactStageUi ? { onSelect: (id: string) => setSelectedStageId(id) } : {})}
+        {...(canMove && isOpen && !compactStageUi ? { onMove: (id: string) => moveDeal(id) } : {})}
       />}
       <p className={styles.trilha}><Link to="/deals">{pipeline?.name ?? "Funil"}</Link> <Icon name="chevron" /> {stage?.name ?? "Etapa"}</p>
     </div>
@@ -739,6 +783,31 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       </section>
     </div>
 
+    <ActionModal
+      open={selectedStage !== undefined}
+      onOpenChange={(open) => { if (!open) setSelectedStageId(null); }}
+      title={selectedStage ? selectedStage.name : "Etapa"}
+      confirmLabel={selectedStageId === deal.stageId ? "Fechar" : "Mudar para esta etapa"}
+      cancelLabel={selectedStageId === deal.stageId ? "Voltar" : "Só visualizar"}
+      errorText="Não foi possível mudar a etapa."
+      onConfirm={async () => {
+        if (!selectedStageId || selectedStageId === deal.stageId) return;
+        await moveDeal(selectedStageId);
+        setSelectedStageId(null);
+      }}
+    >
+      <div className={styles.stageReview}>
+        <div className={styles.stageReviewSummary}>
+          <Icon name={selectedStageId === deal.stageId ? "calendar" : "right"} />
+          <div><strong>{selectedStageId === deal.stageId ? "Tempo nesta passagem" : `Mover de ${stage?.name ?? "etapa atual"}`}</strong><span>{selectedStageDetails?.duration ?? "Ainda sem tempo registrado"}</span>{selectedStageDetails?.totalDuration && selectedStageDetails.totalDuration !== selectedStageDetails.duration && <small>Acumulado nesta etapa: {selectedStageDetails.totalDuration}</small>}</div>
+        </div>
+        {selectedStageDetails?.period && <p>{selectedStageDetails.period}</p>}
+        {selectedStageDetails?.passages?.length ? <StagePassageHistory passages={selectedStageDetails.passages} /> : null}
+        {selectedStageId !== deal.stageId && selectedStageCheck && selectedStageCheck.blocking.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("required", selectedStageCheck.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)), selectedStage?.name)}</p>}
+        {selectedStageId !== deal.stageId && (!selectedStageCheck || selectedStageCheck.blocking.length === 0) && <p>A alteração será salva imediatamente e registrada no histórico do negócio.</p>}
+      </div>
+    </ActionModal>
+
     <ActionModal open={activityModalOpen} onOpenChange={(open) => { setActivityModalOpen(open); if (!open) setEditingActivityId(null); }} title={editingActivityId ? "Editar atividade" : "Nova atividade"} confirmLabel={editingActivityId ? "Salvar" : "Agendar"} errorText="Não foi possível salvar a atividade." onConfirm={saveActivity} size="workspace">
       <div className={styles.activityModalLayout}>
       <div className={styles.modalFields}>
@@ -831,6 +900,37 @@ function activityTypeLabel(type: ActivityType): string { return ACTIVITY_TYPE_LA
 function conversationChannelLabel(channel: string): string { return ({ manual: "Interno", email: "E-mail", instagram: "Instagram", whatsapp: "WhatsApp", messenger: "Messenger" } as Record<string, string>)[channel] ?? channel; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value)); }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function formatStageSince(value: string): string {
+  const date = new Date(value);
+  return `Desde ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(date)} · ${new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date)}`;
+}
+function formatStagePeriod(startValue: string, endValue: string): string {
+  const start = new Date(startValue);
+  const end = new Date(endValue);
+  const date = (value: Date) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(value);
+  const time = (value: Date) => new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(value);
+  return isSameLocalDay(start, end) ? `${date(start)} · ${time(start)}–${time(end)}` : `${date(start)} · ${time(start)} → ${date(end)} · ${time(end)}`;
+}
+function transitionDescription(fromId: string, toId: string, stages: readonly { id: string; name: string }[]) {
+  const fromIndex = stages.findIndex((stage) => stage.id === fromId);
+  const toIndex = stages.findIndex((stage) => stage.id === toId);
+  const direction = toIndex >= fromIndex ? "forward" as const : "backward" as const;
+  const fromName = stages.find((stage) => stage.id === fromId)?.name ?? "outra etapa";
+  const toName = stages.find((stage) => stage.id === toId)?.name ?? "outra etapa";
+  return { direction, label: `${direction === "forward" ? "Avançou" : "Voltou"} de ${fromName} para ${toName}` };
+}
+
+function useCompactStageViewport(): boolean {
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 760px)");
+    const update = () => setCompact(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return compact;
+}
 function isSameLocalDay(left: Date, right: Date): boolean { return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate(); }
 function formatTimeRange(startsAt: string, durationMinutes: number): string {
   const start = new Date(startsAt);

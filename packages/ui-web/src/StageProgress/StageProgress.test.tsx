@@ -13,7 +13,7 @@ it("marca a etapa atual e trata as anteriores como vencidas", () => {
 
 it("move o negócio pelo clique na etapa quando pode mover", () => {
   const onSelect = vi.fn();
-  render(<StageProgress stages={stages} currentId="a" onSelect={onSelect} />);
+  render(<StageProgress stages={stages} currentId="a" interaction="modal" onSelect={onSelect} />);
   fireEvent.click(screen.getByRole("button", { name: "Proposta" }));
   expect(onSelect).toHaveBeenCalledWith("c");
 });
@@ -33,4 +33,9 @@ it("mostra o tempo de cada etapa já vivida, e não das que faltam", () => {
   expect(screen.getByText("3 dias").closest("li")).toHaveAttribute("data-state", "done");
   expect(screen.getByText("6 dias").closest("li")).toHaveAttribute("data-state", "current");
   expect(screen.queryByText("1 dia")).toBeNull();
+});
+
+it("expõe detalhes sem mover até o clique ser confirmado pela tela", () => {
+  render(<StageProgress stages={stages} currentId="b" durations={{ b: "42 s" }} details={{ b: { duration: "42 segundos", period: "Desde 10:30" } }} onSelect={() => {}} />);
+  expect(screen.getByRole("button", { name: /Qualificado/ })).toHaveAttribute("aria-current", "step");
 });

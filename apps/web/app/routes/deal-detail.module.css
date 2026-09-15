@@ -22,7 +22,10 @@
 
 /* Cabeçalho: responsável, Ganho e Perdido à direita do título — decidir o
  * desfecho é a ação principal da tela, não algo no fim de um cartão. */
-.owner { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; height: auto; margin-inline-end: var(--space-2); padding: var(--space-1) var(--space-2); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-regular); text-align: start; }
+.headerActions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+.headerPeople, .headerOutcome { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.headerOutcome { padding-inline-start: var(--space-3); border-inline-start: var(--ui-hairline) solid var(--color-line); }
+.owner { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; height: auto; padding: var(--space-1) var(--space-2); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-regular); text-align: start; }
 .owner:hover:not([data-disabled]) { background: var(--ui-subtle); }
 .owner > span { display: grid; min-width: 0; line-height: var(--ui-tabLine); }
 .owner small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
@@ -81,7 +84,28 @@
 .activityInterval { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr); align-items: end; gap: var(--space-2); }
 .activityIntervalArrow { display: grid; place-items: center; min-height: var(--ui-fieldHeight); color: var(--color-inkFaint); }
 .activityActions { display: inline-flex; align-items: center; gap: var(--space-1); flex-shrink: 0; }
-@media (max-width: 640px) { .modalLinha { grid-template-columns: minmax(0, 1fr); } }
+.stageReview { display: grid; gap: var(--space-4); }
+.stageReview > p { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.stageReviewSummary { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border-radius: var(--ui-fieldRadius); background: var(--color-accentWash); color: var(--color-accent); }
+.stageReviewSummary > svg { flex: 0 0 var(--ui-icon); }
+.stageReviewSummary > div { display: grid; gap: var(--space-1); min-width: 0; }
+.stageReviewSummary span, .stageReviewSummary small { font-size: var(--typography-size-compact); font-variant-numeric: tabular-nums; }
+.stageReviewSummary small { color: var(--color-inkMuted); }
+.stagePassageList { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.stagePassageList > li { display: grid; grid-template-columns: var(--ui-icon) minmax(0, 1fr); gap: var(--space-2); align-items: start; }
+.stagePassageList > li > span { display: grid; place-items: center; width: var(--ui-icon); height: var(--ui-icon); margin-top: var(--space-1); border-radius: var(--radius-full); color: var(--ui-buttonInk); background: var(--color-accent); }
+.stagePassageList > li > span[data-direction="forward"] { background: var(--color-statusSuccess); }
+.stagePassageList > li > span[data-direction="backward"] { background: var(--color-statusWarning); }
+.stagePassageList > li > span[data-direction="backward"] svg { transform: rotate(180deg); }
+.stagePassageList > li > div { display: grid; gap: var(--space-1); }
+.stagePassageList strong { font-size: var(--typography-size-sm); }
+.stagePassageList small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-buttonLine); }
+@media (max-width: 640px) {
+  .modalLinha { grid-template-columns: minmax(0, 1fr); }
+  .headerActions { width: 100%; align-items: stretch; }
+  .headerPeople, .headerOutcome { flex: 1 1 100%; justify-content: space-between; }
+  .headerOutcome { padding-block-start: var(--space-2); padding-inline-start: 0; border-block-start: var(--ui-hairline) solid var(--color-line); border-inline-start: 0; }
+}
 
 .bloco { display: flex; flex: none; flex-direction: column; min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
 /* Cabeçalho do cartão com divisor — separa o nome do bloco do conteúdo. */

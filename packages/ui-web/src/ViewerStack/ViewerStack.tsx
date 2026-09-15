@@ -8,12 +8,14 @@ export interface ViewerStackProps { viewers: readonly DealViewer[]; currentUserI
 
 export function ViewerStack({ viewers, currentUserId, status }: ViewerStackProps) {
   if (status !== "connected") return <span className={styles.notice} role="status">{status === "connecting" ? "Conectando presença…" : "Presença indisponível"}</span>;
-  const label = (viewer: DealViewer) => `${viewer.name}${viewer.userId === currentUserId ? " (você)" : ""} está visualizando`;
-  const overflow = viewers.slice(4);
+  const otherViewers = currentUserId ? viewers.filter((viewer) => viewer.userId !== currentUserId) : viewers;
+  if (otherViewers.length === 0) return null;
+  const label = (viewer: DealViewer) => `${viewer.name} também está visualizando`;
+  const overflow = otherViewers.slice(4);
   return <div className={styles.root} role="group" aria-label="Pessoas visualizando este negócio">
-    <span className={styles.label}><Icon name="eye" />Visualizando</span>
+    <span className={styles.label}><Icon name="eye" />Também aqui</span>
     <span className={styles.stack}>
-      {viewers.slice(0, 4).map((viewer) => <Tooltip key={viewer.userId} content={label(viewer)}>
+      {otherViewers.slice(0, 4).map((viewer) => <Tooltip key={viewer.userId} content={label(viewer)}>
         <button type="button" className={styles.viewer} aria-label={label(viewer)}><Avatar name={viewer.name} src={viewer.avatarUrl} size="small" /></button>
       </Tooltip>)}
       {overflow.length > 0 && <Tooltip content={overflow.map((viewer) => viewer.name).join(", ")}><button type="button" className={styles.more} aria-label={`Mais ${overflow.length} pessoas visualizando`}>+{overflow.length}</button></Tooltip>}

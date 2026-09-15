@@ -23,6 +23,7 @@ export const DOMAIN_EVENT_TYPES = [
   "deal.stage_changed",
   "deal.won",
   "deal.lost",
+  "deal.reopened",
   "activity.created",
   "activity.updated",
   "note.created",

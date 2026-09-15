@@ -18,6 +18,7 @@ import {
   dealsControllerEdit,
   dealsControllerMove,
   dealsControllerClose,
+  dealsControllerReopen,
 } from "@spark/api-client";
 
 export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId): Deal {
@@ -180,6 +181,15 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
               mutation.original.id,
               status === "lost" ? { status, lossReason: mutation.modified.lossReason } : { status },
             );
+            return confirmed(response);
+          }
+
+          const isReopening =
+            changedFields.includes("status") &&
+            changedFields.every((field) => field === "status" || field === "lossReason") &&
+            mutation.modified.status === "open";
+          if (isReopening) {
+            const response = await dealsControllerReopen(mutation.original.id);
             return confirmed(response);
           }
 

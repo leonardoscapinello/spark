@@ -208,6 +208,15 @@ describe("End-to-end CRM — pipeline → stage → deal → move (docs/adr/0029
     expect(wonRes.json().deal.status).toBe("won");
     expect(wonRes.json().deal.lossReason).toBeNull();
 
+    const reopenRes = await app.inject({
+      method: "PATCH",
+      url: `/v1/deals/${wonDeal}/reopen`,
+      headers: { authorization: `Bearer ${managerToken}` },
+    });
+    expect(reopenRes.statusCode).toBe(200);
+    expect(reopenRes.json().deal.status).toBe("open");
+    expect(reopenRes.json().deal.lossReason).toBeNull();
+
     const lostDeal = await createDeal("Lost Deal");
     const lostRes = await app.inject({
       method: "PATCH",

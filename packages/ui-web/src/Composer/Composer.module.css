@@ -1,7 +1,7 @@
 /* Cartão do compositor: barra de abas + corpo (Pipedrive, captura 001). */
-.root { background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
+.root { min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
 
-.tabs { display: flex; align-items: stretch; border-bottom: var(--ui-hairline) solid var(--color-line); overflow-x: auto; scrollbar-width: none; }
+.tabs { display: flex; align-items: stretch; min-width: 0; border-bottom: var(--ui-hairline) solid var(--color-line); overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: inline proximity; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 
 .tab {
@@ -13,6 +13,7 @@
   background: transparent; color: var(--color-inkMuted);
   font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium);
   cursor: pointer;
+  scroll-snap-align: start;
   transition: color var(--motion-duration-instant) var(--motion-ease-out), background-color var(--motion-duration-instant) var(--motion-ease-out);
 }
 .tab svg { width: var(--ui-icon); height: var(--ui-icon); }

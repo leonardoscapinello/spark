@@ -11,6 +11,7 @@ import {
   EditDealResponseSchema,
   CloseDealInputSchema,
   CloseDealResponseSchema,
+  ReopenDealResponseSchema,
 } from "@spark/core";
 
 export class DealDto extends createZodDto(DealSchema) {}
@@ -22,6 +23,7 @@ export class EditDealDto extends createZodDto(EditDealInputSchema) {}
 export class EditDealResponseDto extends createZodDto(EditDealResponseSchema) {}
 export class CloseDealDto extends createZodDto(CloseDealInputSchema) {}
 export class CloseDealResponseDto extends createZodDto(CloseDealResponseSchema) {}
+export class ReopenDealResponseDto extends createZodDto(ReopenDealResponseSchema) {}
 
 /**
  * `Deal.amount` is `Money` — a genuinely opaque type, Symbol-keyed

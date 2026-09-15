@@ -102,3 +102,10 @@ export const CloseDealResponseSchema = z.object({
   txid: z.number().int(),
 });
 export type CloseDealResponse = z.infer<typeof CloseDealResponseSchema>;
+
+/** Reopening is an explicit lifecycle command, not a generic field edit. */
+export const ReopenDealResponseSchema = z.object({
+  deal: DealSchema,
+  txid: z.number().int(),
+});
+export type ReopenDealResponse = z.infer<typeof ReopenDealResponseSchema>;
