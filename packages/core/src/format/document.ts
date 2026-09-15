@@ -92,6 +92,42 @@ export function formatCnpj(v: CNPJ): string {
   return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
 }
 
+/**
+ * Máscara pelo tamanho, sem validar. Exibir não é validar: um documento vindo
+ * de importação antiga precisa aparecer na tela, não derrubá-la. Devolve o
+ * valor como veio quando não tem 11 nem 14 dígitos.
+ */
+export function formatTaxDocument(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 11) return formatCpf(digits as CPF);
+  if (digits.length === 14) return formatCnpj(digits as CNPJ);
+  return value;
+}
+
+/**
+ * Máscara PROGRESSIVA, para enquanto a pessoa digita: acompanha o número em
+ * vez de esperar ele ficar completo. Até 11 dígitos desenha CPF; do 12º em
+ * diante, CNPJ.
+ *
+ * Existe separada de `formatTaxDocument` porque as duas respondem perguntas
+ * diferentes. Exibir um valor guardado só faz sentido quando ele está inteiro;
+ * digitar passa obrigatoriamente por todos os tamanhos incompletos. Uma máscara
+ * de tamanho fixo em CPF recusava o 12º dígito — e um CNPJ nunca chegava a ser
+ * digitado.
+ */
+export function maskTaxDocumentInput(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 14);
+  if (d.length <= 11) {
+    const inicio = [d.slice(0, 3), d.slice(3, 6), d.slice(6, 9)].filter(Boolean).join(".");
+    const verificador = d.slice(9, 11);
+    return verificador ? `${inicio}-${verificador}` : inicio;
+  }
+  const raiz = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 8)].filter(Boolean).join(".");
+  const ordem = d.slice(8, 12);
+  const verificador = d.slice(12, 14);
+  return verificador ? `${raiz}/${ordem}-${verificador}` : `${raiz}/${ordem}`;
+}
+
 /** A contact can be identified by CPF (individual) or CNPJ (company). */
 export type TaxDocument = { type: "cpf"; value: CPF } | { type: "cnpj"; value: CNPJ };
 

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { and, eq, isNull, useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact, optimisticSavedView } from "@spark/data";
 import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus, type SavedViewVisibility } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, userSelectOption, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { usePreference } from "../lib/preferences.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -351,7 +351,7 @@ export default function Contacts() {
         <Field invalid={Boolean(phoneError)}><Label>Telefone</Label><Input type="tel" autoComplete="tel" value={phone} onChange={(event) => { setPhone(event.target.value); setPhoneError(null); }} placeholder="(11) 99999-9999" /><ErrorText>{phoneError}</ErrorText></Field>
         <Field><Label>Etapa</Label><Select label="Etapa do relacionamento" value={leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) setLeadStatus(value as LeadStatus); }} /></Field>
         <Field><Label>Origem</Label><Select label="Origem do lead" value={source} options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => setSource(value ?? "manual")} /></Field>
-        <Field><Label>Responsável</Label><Select label="Responsável pelo lead" value={ownerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
+        <Field><Label>Responsável</Label><Select label="Responsável pelo lead" value={ownerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
         <Field><Label>Empresa</Label><Select label="Empresa da pessoa" value={companyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setCompanyId(value ?? "")} /></Field>
       </form>
     </ActionModal>

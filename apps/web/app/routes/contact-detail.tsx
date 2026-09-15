@@ -12,7 +12,7 @@ import {
   type IdentityChannel,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity, writeAccepted } from "@spark/data";
-import { BackLink, Button, DateTimePicker, ErrorText, Field, Input, Label, RecordPageHeader, Select, Skeleton, Timeline, notify } from "@spark/ui-web";
+import { BackLink, Button, DateTimePicker, ErrorText, Field, Input, Label, RecordPageHeader, Select, Skeleton, Timeline, userSelectOption, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -350,7 +350,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Responsável</span>
-          <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, avatar: user.avatarUrl }))} disabled={!canWrite || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("ownerId", value)} />
+          <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} disabled={!canWrite || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("ownerId", value)} />
         </div>
         <div className={styles.campo}>
           <span className={styles.rotulo}>Empresa</span>

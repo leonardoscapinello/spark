@@ -9,13 +9,15 @@ import type { CustomFieldDefinition, CustomFieldType } from "../schema/customFie
  * não vira número), e é isso que a tabela abaixo diz.
  */
 const ACCEPTS: Record<CustomFieldType, readonly CustomFieldType[]> = {
-  text: ["text", "paragraph", "number", "currency", "date", "datetime", "phone", "url", "single_select", "multi_select"],
-  paragraph: ["text", "paragraph", "number", "currency", "date", "datetime", "phone", "url", "single_select", "multi_select"],
+  text: ["text", "paragraph", "number", "currency", "date", "datetime", "phone", "email", "document", "url", "single_select", "multi_select"],
+  paragraph: ["text", "paragraph", "number", "currency", "date", "datetime", "phone", "email", "document", "url", "single_select", "multi_select"],
   number: ["number", "currency"],
   currency: ["currency", "number"],
   date: ["date", "datetime"],
   datetime: ["datetime", "date"],
   phone: ["phone"],
+  email: ["email"],
+  document: ["document"],
   url: ["url"],
   boolean: ["boolean"],
   single_select: ["single_select", "text"],

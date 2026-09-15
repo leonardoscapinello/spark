@@ -15,6 +15,8 @@ export const CUSTOM_FIELD_COLUMN: Record<CustomFieldType, StorageColumn> = {
   text: "valueText",
   paragraph: "valueText",
   phone: "valueText",
+  email: "valueText",
+  document: "valueText",
   url: "valueText",
   number: "valueNumber",
   currency: "valueMoney",

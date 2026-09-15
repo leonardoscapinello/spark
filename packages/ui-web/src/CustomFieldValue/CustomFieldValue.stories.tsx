@@ -11,12 +11,13 @@ const define = (type: CustomFieldType, label: string, options: string[] = []): C
 
 const LABELS: Record<CustomFieldType, string> = {
   text: "Cargo", paragraph: "Observações", number: "Assentos", currency: "Ticket médio",
-  date: "Renovação", datetime: "Próxima reunião", phone: "Telefone comercial", url: "Site",
+  date: "Renovação", datetime: "Próxima reunião", phone: "Telefone comercial",
+  email: "E-mail de cobrança", document: "CNPJ", url: "Site",
   boolean: "Contrato assinado", single_select: "Plano", multi_select: "Interesses",
 };
 
 export const TodosOsTipos = () => {
-  const [values, setValues] = useState<Record<string, unknown>>({ currency: 249900, boolean: true, single_select: "Pro" });
+  const [values, setValues] = useState<Record<string, unknown>>({ currency: 249900, boolean: true, single_select: "Pro", document: "11222333000181" });
   return <div style={{ display: "grid", gap: 8, maxWidth: 560 }}>
     {CUSTOM_FIELD_TYPES.map((type) => {
       const field = define(type, LABELS[type], type.includes("select") ? ["Básico", "Pro", "Enterprise"] : []);

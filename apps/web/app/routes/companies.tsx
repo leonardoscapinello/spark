@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, phone as buildPhone, userId as userIdFactory, type Company } from "@spark/core";
 import { optimisticCompany } from "@spark/data";
-import { ActionCard, ActionCardGroup, ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, Textarea, userSelectOption, notify, type TableColumn } from "@spark/ui-web";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -153,7 +153,7 @@ export default function Companies() {
         <Field><Label>Site</Label><Input value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="empresa.com.br" /></Field>
         <div className={styles.formGrid}><Field><Label>E-mail</Label><Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="contato@empresa.com" /></Field><Field><Label>Telefone</Label><Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(11) 99999-9999" /></Field></div>
         <Field><Label>Endereço</Label><Textarea value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Endereço comercial" /></Field>
-        <div className={styles.formGrid}><Field><Label>Responsável</Label><Select label="Responsável pela empresa" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field><Field><Label>Empresa controladora</Label><Select label="Empresa controladora" value={parentCompanyId || null} placeholder="Nenhuma" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setParentCompanyId(value ?? "")} /></Field></div>
+        <div className={styles.formGrid}><Field><Label>Responsável</Label><Select label="Responsável pela empresa" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(value) => setOwnerId(value ?? "")} /></Field><Field><Label>Empresa controladora</Label><Select label="Empresa controladora" value={parentCompanyId || null} placeholder="Nenhuma" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setParentCompanyId(value ?? "")} /></Field></div>
       </div>
     </ActionModal>
   </PageFrame>;

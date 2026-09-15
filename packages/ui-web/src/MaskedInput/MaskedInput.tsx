@@ -1,5 +1,5 @@
 import { NumericFormat, PatternFormat, type PatternFormatProps } from "react-number-format";
-import { money, toCents, type Money } from "@spark/core";
+import { maskTaxDocumentInput, money, toCents, type Money } from "@spark/core";
 import { Input, type InputProps } from "../Input/Input.js";
 import { Select } from "../Select/Select.js";
 import s from "./MaskedInput.module.css";
@@ -61,6 +61,28 @@ export function PercentInput({value,onValueChange,label,disabled=false,onBlur}:{
     decimalScale={2} fixedDecimalScale decimalSeparator="," thousandSeparator="." suffix=" %" allowNegative={false}
     isAllowed={({floatValue})=>floatValue===undefined || (floatValue>=0 && floatValue<=100)}
     onValueChange={(values,source)=>{if(source.source!=="event")return;onValueChange(values.value===""?null:Math.round(Number(values.value)*100));}} />;
+}
+
+/**
+ * CPF ou CNPJ no mesmo campo. A máscara troca sozinha ao passar de 11 dígitos:
+ * o próprio número diz qual documento é, e pedir para escolher antes de digitar
+ * é uma pergunta que o dado já responde.
+ *
+ * Devolve só os DÍGITOS, como `MoneyInput` devolve centavos — a máscara é de
+ * saída. Assim «11.222.333/0001-81» e «11222333000181» são a mesma linha, e
+ * procurar por um CNPJ encontra todo registro que o cita.
+ */
+export function DocumentInput({value,onValueChange,label,disabled=false,onBlur}:{value:string;onValueChange:(digits:string)=>void;label:string;disabled?:boolean;onBlur?:()=>void}){
+  return <Input
+    aria-label={label}
+    disabled={disabled}
+    inputMode="numeric"
+    autoComplete="off"
+    value={maskTaxDocumentInput(value)}
+    placeholder="000.000.000-00"
+    onBlur={onBlur}
+    onChange={event=>onValueChange(event.target.value.replace(/\D/g,"").slice(0,14))}
+  />;
 }
 
 export interface PhoneCountry {id:string;label:string;dialCode:string;format:string}

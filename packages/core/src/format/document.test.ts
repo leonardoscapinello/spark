@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cpf, cnpj, isValidCpf, isValidCnpj, formatCpf, formatCnpj, taxDocument } from "./document.js";
+import { cpf, cnpj, isValidCpf, isValidCnpj, formatCpf, formatCnpj, formatTaxDocument, maskTaxDocumentInput, taxDocument } from "./document.js";
 
 describe("CPF", () => {
   // Valid CPFs generated algorithmically — not real people's.
@@ -55,5 +55,36 @@ describe("taxDocument (CPF or CNPJ)", () => {
 
   it("rejects a length that is neither CPF nor CNPJ", () => {
     expect(() => taxDocument("123456")).toThrow();
+  });
+});
+
+/** Exibir não é validar: um documento fora de padrão aparece, não derruba a tela. */
+describe("formatTaxDocument", () => {
+  it("põe a máscara pelo tamanho e devolve o resto como veio", () => {
+    expect(formatTaxDocument("12345678909")).toBe("123.456.789-09");
+    expect(formatTaxDocument("11222333000181")).toBe("11.222.333/0001-81");
+    expect(formatTaxDocument("12345")).toBe("12345");
+  });
+});
+
+/**
+ * A máscara de digitação acompanha o número em vez de esperar ele ficar
+ * completo. Uma máscara de tamanho fixo em CPF recusava o 12º dígito, e um
+ * CNPJ nunca chegava a ser digitado no campo.
+ */
+describe("maskTaxDocumentInput", () => {
+  it("desenha CPF até 11 dígitos", () => {
+    expect(maskTaxDocumentInput("123")).toBe("123");
+    expect(maskTaxDocumentInput("1234567")).toBe("123.456.7");
+    expect(maskTaxDocumentInput("12345678909")).toBe("123.456.789-09");
+  });
+
+  it("vira CNPJ a partir do 12º dígito", () => {
+    expect(maskTaxDocumentInput("112223330001")).toBe("11.222.333/0001");
+    expect(maskTaxDocumentInput("11222333000181")).toBe("11.222.333/0001-81");
+  });
+
+  it("descarta o que passa de 14 dígitos e ignora o que não é número", () => {
+    expect(maskTaxDocumentInput("11.222.333/0001-81999")).toBe("11.222.333/0001-81");
   });
 });

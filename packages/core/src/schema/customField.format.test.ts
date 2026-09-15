@@ -56,6 +56,31 @@ describe("tipos trazidos do Pipedrive", () => {
     expect(() => normalizeCustomFieldValue(def("phone"), "abc")).toThrow(/telefone/i);
   });
 
+  it("e-mail guarda minúsculo e recusa o que não é e-mail", () => {
+    expect(normalizeCustomFieldValue(def("email"), "  Ana@Acme.COM.br ")).toBe("ana@acme.com.br");
+    expect(() => normalizeCustomFieldValue(def("email"), "ana@acme")).toThrow(/e-mail/i);
+  });
+
+  /* Guardar só os dígitos é o que faz «123.456.789-09» e «12345678909» serem a
+   * mesma linha — e é o que permite, depois, procurar todo registro que cita um
+   * CNPJ. A máscara é de saída, como em dinheiro. */
+  it("documento guarda dígitos, exibe com máscara e confere o dígito verificador", () => {
+    expect(normalizeCustomFieldValue(def("document"), "123.456.789-09")).toBe("12345678909");
+    expect(formatCustomFieldValue(def("document"), "12345678909")).toBe("123.456.789-09");
+    expect(normalizeCustomFieldValue(def("document"), "11.222.333/0001-81")).toBe("11222333000181");
+    expect(formatCustomFieldValue(def("document"), "11222333000181")).toBe("11.222.333/0001-81");
+  });
+
+  it("documento com dígito verificador errado não entra", () => {
+    expect(() => normalizeCustomFieldValue(def("document"), "123.456.789-00")).toThrow(/CPF/);
+    expect(() => normalizeCustomFieldValue(def("document"), "11.222.333/0001-00")).toThrow(/CNPJ/);
+    expect(() => normalizeCustomFieldValue(def("document"), "123")).toThrow(/11 dígitos/);
+  });
+
+  it("documento antigo fora de padrão aparece como veio em vez de derrubar a tela", () => {
+    expect(formatCustomFieldValue(def("document"), "12345")).toBe("12345");
+  });
+
   it("endereço web completa o esquema e recusa o que não é endereço", () => {
     expect(normalizeCustomFieldValue(def("url"), "acme.com.br")).toBe("https://acme.com.br");
     expect(normalizeCustomFieldValue(def("url"), "http://acme.com.br/planos")).toBe("http://acme.com.br/planos");

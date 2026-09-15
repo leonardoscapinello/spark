@@ -5852,6 +5852,8 @@
               "date",
               "datetime",
               "phone",
+              "email",
+              "document",
               "url",
               "boolean",
               "single_select",
@@ -5922,6 +5924,8 @@
                   "date",
                   "datetime",
                   "phone",
+                  "email",
+                  "document",
                   "url",
                   "boolean",
                   "single_select",
@@ -7439,7 +7443,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:58:24.416Z",
+                "default": "2026-09-15T20:32:23.395Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7682,7 +7686,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:58:24.419Z",
+                "default": "2026-09-15T20:32:23.399Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7856,7 +7860,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:58:24.419Z",
+                "default": "2026-09-15T20:32:23.400Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8038,7 +8042,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:58:24.420Z",
+                "default": "2026-09-15T20:32:23.401Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8200,7 +8204,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T03:58:24.421Z",
+                "default": "2026-09-15T20:32:23.403Z",
                 "anyOf": [
                   {
                     "type": "string",

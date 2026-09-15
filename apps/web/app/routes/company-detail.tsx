@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount, writeAccepted } from "@spark/data";
-import { ActionModal, Avatar, BackLink, Badge, Button, Card, Field, Input, Label, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, Textarea, Timeline, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Avatar, BackLink, Badge, Button, Card, Field, Input, Label, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, Textarea, Timeline, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -127,7 +127,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
       <Field><Label>Segmento</Label><Input value={industry} onChange={(event) => setIndustry(event.target.value)} /></Field><Field><Label>Documento fiscal</Label><Input value={taxId} onChange={(event) => setTaxId(event.target.value)} /></Field>
       <Field><Label>Site</Label><Input value={website} onChange={(event) => setWebsite(event.target.value)} /></Field><Field><Label>E-mail</Label><Input value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
-      <Field><Label>Telefone</Label><Input value={phone} onChange={(event) => setPhone(event.target.value)} /></Field><Field><Label>Responsável</Label><Select label="Responsável" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
+      <Field><Label>Telefone</Label><Input value={phone} onChange={(event) => setPhone(event.target.value)} /></Field><Field><Label>Responsável</Label><Select label="Responsável" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
       <Field><Label>Empresa controladora</Label><Select label="Empresa controladora" value={parentCompanyId || null} placeholder="Nenhuma" options={companies.filter((item) => item.id !== company.id && !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setParentCompanyId(value ?? "")} /></Field>
       <Field><Label>Endereço</Label><Textarea value={address} onChange={(event) => setAddress(event.target.value)} /></Field>
       <div className={styles.formActions}><Button type="submit" loading={saving}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>

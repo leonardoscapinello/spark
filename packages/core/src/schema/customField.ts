@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { zCustomFieldDefinitionId, zOrgId, zServerTimestamp, zUserId } from "./zodHelpers.js";
 import { phone as normalizePhone } from "../format/phone.js";
+import { email as normalizeEmail } from "../format/email.js";
+import { formatTaxDocument, isValidCnpj, isValidCpf } from "../format/document.js";
 import { formatBRL, money, toCents } from "../money/index.js";
 /* Cada módulo do sistema pode ter os seus campos — pessoa, empresa, negócio,
  * conversa e atividade. Um campo pode alimentar outro numa automação desde que
@@ -12,10 +14,10 @@ export const CUSTOM_FIELD_ENTITY_LABELS: Record<CustomFieldEntity, string> = {
 /* Tipos na ordem em que aparecem no seletor. Os cinco últimos foram trazidos do
  * Pipedrive (docs/inspiration/pipedrive): moeda, data e hora, telefone, endereço
  * web e texto longo — o que um CRM pede e "texto" não resolve. */
-export const CUSTOM_FIELD_TYPES = ["text", "paragraph", "number", "currency", "date", "datetime", "phone", "url", "boolean", "single_select", "multi_select"] as const;
+export const CUSTOM_FIELD_TYPES = ["text", "paragraph", "number", "currency", "date", "datetime", "phone", "email", "document", "url", "boolean", "single_select", "multi_select"] as const;
 export const CUSTOM_FIELD_TYPE_LABELS: Record<CustomFieldType, string> = {
   text: "Texto", paragraph: "Texto longo", number: "Número", currency: "Moeda (R$)",
-  date: "Data", datetime: "Data e hora", phone: "Telefone", url: "Endereço web",
+  date: "Data", datetime: "Data e hora", phone: "Telefone", email: "E-mail", document: "CPF ou CNPJ", url: "Endereço web",
   boolean: "Sim/Não", single_select: "Seleção única", multi_select: "Seleção múltipla",
 };
 export type CustomFieldEntity = (typeof CUSTOM_FIELD_ENTITIES)[number]; export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
@@ -76,6 +78,20 @@ export function normalizeCustomFieldValue(field: CustomFieldDefinition, value: u
   if (field.type === "datetime") { const parsed = new Date(String(value)); if (Number.isNaN(parsed.getTime())) throw new Error(`${field.label} precisa ser uma data e hora.`); return parsed.toISOString(); }
   // Telefone passa pela mesma regra do telefone da pessoa — um formato só no sistema.
   if (field.type === "phone") { try { return normalizePhone(String(value)); } catch { throw new Error(`${field.label} precisa ser um telefone válido.`); } }
+  // E-mail pelo mesmo caminho do e-mail da pessoa: minúsculo, sem espaço.
+  if (field.type === "email") { try { return String(normalizeEmail(String(value))); } catch { throw new Error(`${field.label} precisa ser um e-mail válido.`); } }
+  /* Documento guarda só os dígitos — a máscara é de saída, como em dinheiro.
+   * Assim «123.456.789-09» e «12345678909» são a mesma linha no banco, e
+   * procurar por um CNPJ encontra todos os registros que o citam.
+   *
+   * O dígito verificador é conferido, não só o tamanho: aceitar um CPF que não
+   * fecha é gravar dado que nenhuma consulta vai reconhecer depois. */
+  if (field.type === "document") {
+    const digits = String(value).replace(/\D/g, "");
+    if (digits.length === 11) { if (!isValidCpf(digits)) throw new Error(`${field.label}: esse CPF não confere. Revise os números.`); return digits; }
+    if (digits.length === 14) { if (!isValidCnpj(digits)) throw new Error(`${field.label}: esse CNPJ não confere. Revise os números.`); return digits; }
+    throw new Error(`${field.label} precisa ter 11 dígitos (CPF) ou 14 (CNPJ).`);
+  }
   // Sem `new URL`: o core não depende de plataforma (roda em Node, navegador e RN).
   if (field.type === "url") { const raw = String(value).trim().replace(/\s/g, ""); const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`; if (!/^https?:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/[^\s]*)?$/i.test(withScheme)) throw new Error(`${field.label} precisa ser um endereço web.`); return withScheme; }
   if (field.type === "single_select") { const selected = String(value); if (!allowedOptions.includes(selected)) throw new Error(`Opção inválida em ${field.label}.`); return selected; }
@@ -98,6 +114,7 @@ export function formatCustomFieldValue(field: CustomFieldDefinition, value: unkn
   if (field.type === "date") { const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value)); return match ? `${match[3]}/${match[2]}/${match[1]}` : String(value); }
   if (field.type === "currency") return typeof value === "number" && Number.isFinite(value) ? formatBRL(money(value)) : String(value);
   if (field.type === "datetime") { const parsed = new Date(String(value)); return Number.isNaN(parsed.getTime()) ? String(value) : new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(parsed); }
+  if (field.type === "document") return formatTaxDocument(String(value));
   if (field.type === "multi_select") return Array.isArray(value) ? value.map(String).join(", ") : String(value);
   return String(value);
 }

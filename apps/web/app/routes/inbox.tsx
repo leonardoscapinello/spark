@@ -4,7 +4,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, formatPhone, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -207,7 +207,7 @@ export default function Inbox() {
     return <div className={styles.detailTabs}><Tabs label="Informações do atendimento" items={[
       { value: "conversation", label: "Detalhes", content: <>
         <div className={styles.assignment}>
-          <div className={styles.assignmentRow}><span>Responsável</span><Select appearance="filter" label="Responsável pela conversa" value={selected.assigneeId} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))]} onValueChange={(value) => void updateConversation({ assigneeId: value ? userId.from(value) : null })} disabled={!canWrite || saving} /></div>
+          <div className={styles.assignmentRow}><span>Responsável</span><Select appearance="filter" label="Responsável pela conversa" value={selected.assigneeId} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map(userSelectOption)]} onValueChange={(value) => void updateConversation({ assigneeId: value ? userId.from(value) : null })} disabled={!canWrite || saving} /></div>
           <div className={styles.assignmentRow}><span>Equipe</span><Select appearance="filter" label="Equipe responsável" value={selected.teamId} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => void updateConversation({ teamId: value ? teamId.from(value) : null })} disabled={!canWrite || saving} /></div>
         </div>
         <Accordion defaultValue={["attributes"]} items={[

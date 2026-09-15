@@ -41,7 +41,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -115,7 +115,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 function activityOwnerOption(users: User[], ownerId: string) {
   const owner = users.find((user) => user.id === ownerId);
-  return owner ? { value: owner.id, label: owner.name, description: owner.email, avatar: owner.avatarUrl } : null;
+  return owner ? userSelectOption(owner) : null;
 }
 
 function ExternalScheduleItem({ event, conflict }: { event: CalendarEvent; conflict: boolean }) {
@@ -232,7 +232,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     const user = users.find((item) => item.id === follower.userId);
     return user ? [user] : [];
   });
-  const followerOptions = users.filter((item) => !item.deactivatedAt && !followers.some((follower) => follower.userId === item.id)).map((item) => ({ value: item.id, label: item.name, description: item.email, avatar: item.avatarUrl }));
+  const followerOptions = users.filter((item) => !item.deactivatedAt && !followers.some((follower) => follower.userId === item.id)).map(userSelectOption);
   const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
   const contactOptions = useMemo(() => contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, description: [item.email, item.phone].filter(Boolean).join(" · "), avatar: null })), [contacts]);
   const companyOptions = useMemo(() => companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, description: [item.taxId, item.website ?? item.email ?? item.legalName].filter(Boolean).join(" · "), avatar: null })), [companies]);
@@ -724,7 +724,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
               {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
             </InlineField>
             <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>
-              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, avatar: item.avatarUrl }))} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
+              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
             </InlineField>
             <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} empty={!linkedContact} disabled={!canWrite || !canReadContacts} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
               {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"))} />}
@@ -896,7 +896,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
           {activityType !== "deadline" && activityType !== "task" && activityType !== "email" && <Field><Label>Disponibilidade</Label><Select label="Disponibilidade no calendário" value={activityAvailability} options={AVAILABILITIES} onValueChange={(value) => { if (value) setActivityAvailability(value as ActivityAvailability); }} /></Field>}
         </div>
         <div className={styles.modalLinha}>
-          <Field><Label>Responsável</Label><SearchSelect label="Responsável pela atividade" searchPlacement="dropdown" placeholder="Buscar usuário" options={users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name, description: item.email, avatar: item.avatarUrl }))} value={activityOwnerOption(users, activityOwnerId)} onValueChange={(option) => setActivityOwnerId(option?.value ?? "")} /></Field>
+          <Field><Label>Responsável</Label><SearchSelect label="Responsável pela atividade" searchPlacement="dropdown" placeholder="Buscar usuário" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} value={activityOwnerOption(users, activityOwnerId)} onValueChange={(option) => setActivityOwnerId(option?.value ?? "")} /></Field>
           {(activityType === "meeting" || activityType === "lunch") && <Field><Label>Local</Label><Input value={activityLocation} onChange={(event) => setActivityLocation(event.target.value)} placeholder="Sala ou endereço" /></Field>}
         </div>
         {activityType === "meeting" && <Field><Label>Link da videochamada</Label><Input type="url" value={activityVideoCallUrl} onChange={(event) => setActivityVideoCallUrl(event.target.value)} placeholder="https://meet.google.com/…" /></Field>}

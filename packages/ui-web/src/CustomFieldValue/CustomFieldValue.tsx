@@ -3,7 +3,7 @@ import { customFieldOptions, formatCustomFieldValue, money, normalizeCustomField
 import { Checkbox } from "../Checkbox/Checkbox.js";
 import { DatePicker, DateTimePicker } from "../DateTimePicker/DateTimePicker.js";
 import { Input } from "../Input/Input.js";
-import { MaskedInput, MoneyInput } from "../MaskedInput/MaskedInput.js";
+import { DocumentInput, MaskedInput, MoneyInput } from "../MaskedInput/MaskedInput.js";
 import { Select } from "../Select/Select.js";
 import { Textarea } from "../Textarea/Textarea.js";
 import { InlineField } from "../InlineField/InlineField.js";
@@ -121,6 +121,11 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
   if (field.type === "datetime") return row((close) => <DateTimePicker mode="datetime" label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); close(save(next)); }} />);
   if (field.type === "paragraph") return row((close) => <Textarea rows={3} className={s.area} aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
   if (field.type === "phone") return row((close) => <MaskedInput format="(##) #####-####" aria-label={field.label} value={draft} disabled={busy} placeholder="(11) 90000-0000" onValueChange={setDraft} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
+  /* CPF e CNPJ no mesmo campo: a máscara troca sozinha ao passar de 11
+   * dígitos. Pedir para escolher antes de digitar é uma decisão que o próprio
+   * número já toma — e quem cadastra uma carteira mista não quer dois campos
+   * para a mesma coluna. */
+  if (field.type === "document") return row((close) => <DocumentInput label={field.label} value={draft} disabled={busy} onValueChange={setDraft} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
 
   // Dinheiro tem campo próprio: R$, separador de milhar e duas casas, e o valor
   // já sai em centavos — nenhum campo de texto acerta isso sozinho.
@@ -142,8 +147,8 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
     />);
   }
 
-  const inputType = field.type === "number" ? "number" : field.type === "url" ? "url" : "text";
-  const placeholder = field.type === "url" ? "acme.com.br" : "Sem valor";
+  const inputType = field.type === "number" ? "number" : field.type === "url" ? "url" : field.type === "email" ? "email" : "text";
+  const placeholder = field.type === "url" ? "acme.com.br" : field.type === "email" ? "nome@empresa.com.br" : "Sem valor";
   // Grava ao sair do campo, como no Pipedrive. Um botão «Salvar» por linha
   // roubava metade da largura do painel e pedia um clique a mais em cada
   // campo — e o painel tem muitos.

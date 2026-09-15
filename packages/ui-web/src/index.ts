@@ -37,7 +37,7 @@ export { ActionModal } from "./Modal/ActionModal.js";
 export { Notification, NotificationList, type NotificationProps, type NotificationEntry } from "./Notification/Notification.js";
 export { Toaster, notify, dismissNotification } from "./Notification/Toast.js";
 
-export { MaskedInput, MoneyInput, PercentInput, PhoneInput, type MaskedInputProps, type PhoneCountry, type PhoneDraft } from "./MaskedInput/MaskedInput.js";
+export { DocumentInput, MaskedInput, MoneyInput, PercentInput, PhoneInput, type MaskedInputProps, type PhoneCountry, type PhoneDraft } from "./MaskedInput/MaskedInput.js";
 
 export { Panel, PanelTrigger, PanelClose, PanelContent, type PanelSide, type PanelContentProps } from "./Panel/Panel.js";
 
@@ -68,7 +68,7 @@ export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } fr
 export { CalendarMonth, type CalendarMonthProps, type CalendarMonthItem } from "./CalendarMonth/CalendarMonth.js";
 export { CalendarWeek, type CalendarWeekProps, type CalendarWeekItem } from "./CalendarWeek/CalendarWeek.js";
 export { Avatar, type AvatarProps } from "./Avatar/Avatar.js";
-export { UserAvatar, type UserAvatarProps } from "./UserAvatar/UserAvatar.js";
+export { UserAvatar, userSelectOption, type UserAvatarProps } from "./UserAvatar/UserAvatar.js";
 export { PersonChoice, type PersonChoiceProps } from "./PersonChoice/PersonChoice.js";
 export { RecordSelect, type RecordSelectProps } from "./RecordSelect/RecordSelect.js";
 export { QuickNavigation, type QuickNavigationProps, type QuickNavigationItem } from "./QuickNavigation/QuickNavigation.js";

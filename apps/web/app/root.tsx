@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse } from "react-router";
 import type { Route } from "./+types/root";
-import { TooltipProvider } from "@spark/ui-web";
+import { Toaster, TooltipProvider } from "@spark/ui-web";
 import "@spark/tokens/css";
 import "./app.css";
 
@@ -28,7 +28,11 @@ export default function Root() {
   /* Uma dica só por vez em toda a aplicação: o provedor coordena o atraso de
    * abertura entre elas, senão cada campo abriria a sua com o tempo cheio e a
    * coluna piscaria a cada passada de mouse. */
-  return <TooltipProvider><Outlet /></TooltipProvider>;
+  /* O `Toaster` mora aqui, uma vez só: é ele que desenha o que `notify()`
+   * manda. Sem ele montado, as 115 chamadas espalhadas pelas telas não
+   * apareciam em lugar nenhum — um CPF recusado, uma escrita que falhou e uma
+   * importação concluída eram todos o mesmo silêncio. */
+  return <TooltipProvider><Outlet /><Toaster /></TooltipProvider>;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

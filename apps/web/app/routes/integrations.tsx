@@ -30,6 +30,7 @@ import {
   Select,
   SettingsSection,
   Switch,
+  userSelectOption,
   notify,
   type IconName,
 } from "@spark/ui-web";
@@ -304,7 +305,7 @@ function IntegrationFields({
   const secretField = (key: string, value: string) =>
     setCredentials({ ...credentials, [key]: value });
   if (provider === "google_calendar" || provider === "outlook_calendar" || provider === "apple_calendar") {
-    const options = users.filter((user) => !user.deactivatedAt).map((user) => ({ value: user.id, label: user.name, description: user.email, avatar: user.avatarUrl }));
+    const options = users.filter((user) => !user.deactivatedAt).map(userSelectOption);
     return <div className={styles.fields}>
       <Field><Label>Responsável pela agenda</Label><SearchSelect label="Responsável pela agenda" searchPlacement="dropdown" placeholder="Buscar usuário" options={options} value={options.find((option) => option.value === config.ownerId) ?? null} onValueChange={(option) => publicField("ownerId", option?.value ?? "")} /></Field>
       <Field><Label>Nome da agenda</Label><Input value={text(config.calendarName)} placeholder="Agenda principal" onChange={(event) => publicField("calendarName", event.target.value)} /></Field>
