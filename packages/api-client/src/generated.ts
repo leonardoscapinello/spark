@@ -5272,6 +5272,358 @@ export interface ResolveLinkPreviewResponseDto {
   txid: number;
 }
 
+export interface ResolveCompanyRegistrationDto {
+  /**
+     * @minLength 1
+     * @maxLength 20
+     */
+  taxId: string;
+  refresh?: boolean;
+}
+
+export type ResolveCompanyRegistrationResponseDtoRegistrationStatus = typeof ResolveCompanyRegistrationResponseDtoRegistrationStatus[keyof typeof ResolveCompanyRegistrationResponseDtoRegistrationStatus];
+
+
+export const ResolveCompanyRegistrationResponseDtoRegistrationStatus = {
+  ready: 'ready',
+  not_found: 'not_found',
+  failed: 'failed',
+} as const;
+
+export type ResolveCompanyRegistrationResponseDtoRegistration = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 14
+     * @maxLength 14
+     */
+  taxId: string;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  legalName: string | null;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  tradeName: string | null;
+  /**
+     * @maxLength 60
+     * @nullable
+     */
+  registrationStatus: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  registrationStatusCode: number | null;
+  /**
+     * @maxLength 10
+     * @nullable
+     */
+  registrationStatusDate: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  registrationStatusReason: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  specialStatus: string | null;
+  /**
+     * @maxLength 10
+     * @nullable
+     */
+  specialStatusDate: string | null;
+  /** @nullable */
+  headOffice: boolean | null;
+  /**
+     * @maxLength 10
+     * @nullable
+     */
+  openedOn: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  legalNature: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  legalNatureCode: number | null;
+  /**
+     * @maxLength 60
+     * @nullable
+     */
+  size: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  sizeCode: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  shareCapital: number | null;
+  /**
+     * @maxLength 60
+     * @nullable
+     */
+  streetKind: string | null;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  street: string | null;
+  /**
+     * @maxLength 60
+     * @nullable
+     */
+  streetNumber: string | null;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  complement: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  district: string | null;
+  /**
+     * @maxLength 8
+     * @nullable
+     */
+  postalCode: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  city: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  cityIbgeCode: number | null;
+  /**
+     * @maxLength 2
+     * @nullable
+     */
+  state: string | null;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  country: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  foreignCity: string | null;
+  /**
+     * @maxLength 20
+     * @nullable
+     */
+  phone: string | null;
+  /**
+     * @maxLength 20
+     * @nullable
+     */
+  secondaryPhone: string | null;
+  /**
+     * @maxLength 20
+     * @nullable
+     */
+  fax: string | null;
+  /**
+     * @maxLength 320
+     * @nullable
+     */
+  email: string | null;
+  /** @nullable */
+  simplesOptant: boolean | null;
+  /**
+     * @maxLength 10
+     * @nullable
+     */
+  simplesOptedOn: string | null;
+  /**
+     * @maxLength 10
+     * @nullable
+     */
+  simplesLeftOn: string | null;
+  /** @nullable */
+  meiOptant: boolean | null;
+  /**
+     * @maxLength 10
+     * @nullable
+     */
+  meiOptedOn: string | null;
+  /**
+     * @maxLength 10
+     * @nullable
+     */
+  meiLeftOn: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  federativeEntity: string | null;
+  /** @maxLength 200 */
+  source: string;
+  status: ResolveCompanyRegistrationResponseDtoRegistrationStatus;
+  /**
+     * @minimum 100
+     * @maximum 599
+     * @nullable
+     */
+  httpStatus: number | null;
+  fetchedAt: string;
+  expiresAt: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  failureCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ResolveCompanyRegistrationResponseDtoActivitiesItem = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  registrationId: string;
+  /** @maxLength 10 */
+  code: string;
+  /** @maxLength 400 */
+  description: string;
+  main: boolean;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+};
+
+export type ResolveCompanyRegistrationResponseDtoMembersItem = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  registrationId: string;
+  /** @maxLength 300 */
+  name: string;
+  /**
+     * @maxLength 20
+     * @nullable
+     */
+  maskedTaxId: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  role: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  roleCode: number | null;
+  /**
+     * @maxLength 10
+     * @nullable
+     */
+  joinedOn: string | null;
+  /**
+     * @maxLength 60
+     * @nullable
+     */
+  ageRange: string | null;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  country: string | null;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  legalRepresentative: string | null;
+  /**
+     * @maxLength 20
+     * @nullable
+     */
+  legalRepresentativeMaskedTaxId: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  legalRepresentativeRole: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+};
+
+export type ResolveCompanyRegistrationResponseDtoTaxRegimesItem = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  registrationId: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  year: number;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  taxation: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  bookkeepingCount: number | null;
+  /**
+     * @maxLength 14
+     * @nullable
+     */
+  scpTaxId: string | null;
+};
+
+export interface ResolveCompanyRegistrationResponseDto {
+  registration: ResolveCompanyRegistrationResponseDtoRegistration;
+  activities: ResolveCompanyRegistrationResponseDtoActivitiesItem[];
+  members: ResolveCompanyRegistrationResponseDtoMembersItem[];
+  taxRegimes: ResolveCompanyRegistrationResponseDtoTaxRegimesItem[];
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type ContactsControllerSearchParams = {
 /**
  * @minLength 1
@@ -11721,4 +12073,66 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getLinkPreviewsControllerResolveMutationOptions(options), queryClient);
+    }
+
+export const companyRegistrationsControllerResolve = (
+    resolveCompanyRegistrationDto: ResolveCompanyRegistrationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ResolveCompanyRegistrationResponseDto>(
+      {url: `/v1/company-registrations/resolve`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resolveCompanyRegistrationDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCompanyRegistrationsControllerResolveMutationKey = () => ['companyRegistrationsControllerResolve'] as const;
+
+export const getCompanyRegistrationsControllerResolveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof companyRegistrationsControllerResolve>>, TError,CompanyRegistrationsControllerResolveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof companyRegistrationsControllerResolve>>, TError,CompanyRegistrationsControllerResolveMutationVariables, TContext> => {
+
+const mutationKey = getCompanyRegistrationsControllerResolveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof companyRegistrationsControllerResolve>>, CompanyRegistrationsControllerResolveMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  companyRegistrationsControllerResolve(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompanyRegistrationsControllerResolveMutationResult = NonNullable<Awaited<ReturnType<typeof companyRegistrationsControllerResolve>>>
+    export type CompanyRegistrationsControllerResolveMutationBody = ResolveCompanyRegistrationDto
+    export type CompanyRegistrationsControllerResolveMutationError = unknown
+    export type CompanyRegistrationsControllerResolveMutationVariables = {data: ResolveCompanyRegistrationDto}
+
+    export const useCompanyRegistrationsControllerResolve = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof companyRegistrationsControllerResolve>>, TError,CompanyRegistrationsControllerResolveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof companyRegistrationsControllerResolve>>,
+        TError,
+        CompanyRegistrationsControllerResolveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCompanyRegistrationsControllerResolveMutationOptions(options), queryClient);
     }

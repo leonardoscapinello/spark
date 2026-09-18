@@ -61,6 +61,10 @@ export type CalendarEventId = Id<"CalendarEvent">;
 export type StageTransitionId = Id<"StageTransition">;
 export type BusinessHourId = Id<"BusinessHour">;
 export type HolidayId = Id<"Holiday">;
+export type CompanyRegistrationId = Id<"CompanyRegistration">;
+export type CompanyRegistrationActivityId = Id<"CompanyRegistrationActivity">;
+export type CompanyRegistrationMemberId = Id<"CompanyRegistrationMember">;
+export type CompanyRegistrationTaxRegimeId = Id<"CompanyRegistrationTaxRegime">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -136,3 +140,7 @@ export const calendarEventId = makeIdFactory("CalendarEvent");
 export const stageTransitionId = makeIdFactory("StageTransition");
 export const businessHourId = makeIdFactory("BusinessHour");
 export const holidayId = makeIdFactory("Holiday");
+export const companyRegistrationId = makeIdFactory("CompanyRegistration");
+export const companyRegistrationActivityId = makeIdFactory("CompanyRegistrationActivity");
+export const companyRegistrationMemberId = makeIdFactory("CompanyRegistrationMember");
+export const companyRegistrationTaxRegimeId = makeIdFactory("CompanyRegistrationTaxRegime");

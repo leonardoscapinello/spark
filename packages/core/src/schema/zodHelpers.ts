@@ -75,6 +75,10 @@ import {
   stageTransitionId as toStageTransitionId,
   businessHourId as toBusinessHourId,
   holidayId as toHolidayId,
+  companyRegistrationId as toCompanyRegistrationId,
+  companyRegistrationActivityId as toCompanyRegistrationActivityId,
+  companyRegistrationMemberId as toCompanyRegistrationMemberId,
+  companyRegistrationTaxRegimeId as toCompanyRegistrationTaxRegimeId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -126,6 +130,10 @@ import {
   type StageTransitionId,
   type BusinessHourId,
   type HolidayId,
+  type CompanyRegistrationId,
+  type CompanyRegistrationActivityId,
+  type CompanyRegistrationMemberId,
+  type CompanyRegistrationTaxRegimeId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -203,6 +211,10 @@ export const zCalendarEventId = bridged<CalendarEventId>(toCalendarEventId.from)
 export const zStageTransitionId = bridged<StageTransitionId>(toStageTransitionId.from);
 export const zBusinessHourId = bridged<BusinessHourId>(toBusinessHourId.from);
 export const zHolidayId = bridged<HolidayId>(toHolidayId.from);
+export const zCompanyRegistrationId = bridged<CompanyRegistrationId>(toCompanyRegistrationId.from);
+export const zCompanyRegistrationActivityId = bridged<CompanyRegistrationActivityId>(toCompanyRegistrationActivityId.from);
+export const zCompanyRegistrationMemberId = bridged<CompanyRegistrationMemberId>(toCompanyRegistrationMemberId.from);
+export const zCompanyRegistrationTaxRegimeId = bridged<CompanyRegistrationTaxRegimeId>(toCompanyRegistrationTaxRegimeId.from);
 
 /**
  * Accepts integer cents — the wire format, never decimal. Stays strict on

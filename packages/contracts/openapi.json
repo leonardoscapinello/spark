@@ -3862,6 +3862,42 @@
           "link-previews"
         ]
       }
+    },
+    "/v1/company-registrations/resolve": {
+      "post": {
+        "operationId": "CompanyRegistrationsController_resolve",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveCompanyRegistrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveCompanyRegistrationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "company-registrations"
+        ]
+      }
     }
   },
   "info": {
@@ -7443,7 +7479,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T20:32:23.395Z",
+                "default": "2026-09-18T02:16:35.583Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7686,7 +7722,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T20:32:23.399Z",
+                "default": "2026-09-18T02:16:35.595Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -7860,7 +7896,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T20:32:23.400Z",
+                "default": "2026-09-18T02:16:35.598Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8042,7 +8078,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T20:32:23.401Z",
+                "default": "2026-09-18T02:16:35.599Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8204,7 +8240,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-15T20:32:23.403Z",
+                "default": "2026-09-18T02:16:35.600Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -14099,6 +14135,556 @@
         },
         "required": [
           "preview",
+          "txid"
+        ]
+      },
+      "ResolveCompanyRegistrationDto": {
+        "type": "object",
+        "properties": {
+          "taxId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "refresh": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "taxId"
+        ]
+      },
+      "ResolveCompanyRegistrationResponseDto": {
+        "type": "object",
+        "properties": {
+          "registration": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "taxId": {
+                "type": "string",
+                "minLength": 14,
+                "maxLength": 14
+              },
+              "legalName": {
+                "type": "string",
+                "maxLength": 300,
+                "nullable": true
+              },
+              "tradeName": {
+                "type": "string",
+                "maxLength": 300,
+                "nullable": true
+              },
+              "registrationStatus": {
+                "type": "string",
+                "maxLength": 60,
+                "nullable": true
+              },
+              "registrationStatusCode": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "nullable": true
+              },
+              "registrationStatusDate": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true
+              },
+              "registrationStatusReason": {
+                "type": "string",
+                "maxLength": 200,
+                "nullable": true
+              },
+              "specialStatus": {
+                "type": "string",
+                "maxLength": 200,
+                "nullable": true
+              },
+              "specialStatusDate": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true
+              },
+              "headOffice": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "openedOn": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true
+              },
+              "legalNature": {
+                "type": "string",
+                "maxLength": 200,
+                "nullable": true
+              },
+              "legalNatureCode": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "nullable": true
+              },
+              "size": {
+                "type": "string",
+                "maxLength": 60,
+                "nullable": true
+              },
+              "sizeCode": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "nullable": true
+              },
+              "shareCapital": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "nullable": true
+              },
+              "streetKind": {
+                "type": "string",
+                "maxLength": 60,
+                "nullable": true
+              },
+              "street": {
+                "type": "string",
+                "maxLength": 300,
+                "nullable": true
+              },
+              "streetNumber": {
+                "type": "string",
+                "maxLength": 60,
+                "nullable": true
+              },
+              "complement": {
+                "type": "string",
+                "maxLength": 300,
+                "nullable": true
+              },
+              "district": {
+                "type": "string",
+                "maxLength": 200,
+                "nullable": true
+              },
+              "postalCode": {
+                "type": "string",
+                "maxLength": 8,
+                "nullable": true
+              },
+              "city": {
+                "type": "string",
+                "maxLength": 200,
+                "nullable": true
+              },
+              "cityIbgeCode": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "nullable": true
+              },
+              "state": {
+                "type": "string",
+                "maxLength": 2,
+                "nullable": true
+              },
+              "country": {
+                "type": "string",
+                "maxLength": 100,
+                "nullable": true
+              },
+              "foreignCity": {
+                "type": "string",
+                "maxLength": 200,
+                "nullable": true
+              },
+              "phone": {
+                "type": "string",
+                "maxLength": 20,
+                "nullable": true
+              },
+              "secondaryPhone": {
+                "type": "string",
+                "maxLength": 20,
+                "nullable": true
+              },
+              "fax": {
+                "type": "string",
+                "maxLength": 20,
+                "nullable": true
+              },
+              "email": {
+                "type": "string",
+                "maxLength": 320,
+                "nullable": true
+              },
+              "simplesOptant": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "simplesOptedOn": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true
+              },
+              "simplesLeftOn": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true
+              },
+              "meiOptant": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "meiOptedOn": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true
+              },
+              "meiLeftOn": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true
+              },
+              "federativeEntity": {
+                "type": "string",
+                "maxLength": 200,
+                "nullable": true
+              },
+              "source": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ready",
+                  "not_found",
+                  "failed"
+                ]
+              },
+              "httpStatus": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 599,
+                "nullable": true
+              },
+              "fetchedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "expiresAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "failureCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "taxId",
+              "legalName",
+              "tradeName",
+              "registrationStatus",
+              "registrationStatusCode",
+              "registrationStatusDate",
+              "registrationStatusReason",
+              "specialStatus",
+              "specialStatusDate",
+              "headOffice",
+              "openedOn",
+              "legalNature",
+              "legalNatureCode",
+              "size",
+              "sizeCode",
+              "shareCapital",
+              "streetKind",
+              "street",
+              "streetNumber",
+              "complement",
+              "district",
+              "postalCode",
+              "city",
+              "cityIbgeCode",
+              "state",
+              "country",
+              "foreignCity",
+              "phone",
+              "secondaryPhone",
+              "fax",
+              "email",
+              "simplesOptant",
+              "simplesOptedOn",
+              "simplesLeftOn",
+              "meiOptant",
+              "meiOptedOn",
+              "meiLeftOn",
+              "federativeEntity",
+              "source",
+              "status",
+              "httpStatus",
+              "fetchedAt",
+              "expiresAt",
+              "failureCount",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "activities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "orgId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "registrationId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "code": {
+                  "type": "string",
+                  "maxLength": 10
+                },
+                "description": {
+                  "type": "string",
+                  "maxLength": 400
+                },
+                "main": {
+                  "type": "boolean"
+                },
+                "sortOrder": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "orgId",
+                "registrationId",
+                "code",
+                "description",
+                "main",
+                "sortOrder"
+              ]
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "orgId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "registrationId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string",
+                  "maxLength": 300
+                },
+                "maskedTaxId": {
+                  "type": "string",
+                  "maxLength": 20,
+                  "nullable": true
+                },
+                "role": {
+                  "type": "string",
+                  "maxLength": 200,
+                  "nullable": true
+                },
+                "roleCode": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "joinedOn": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "nullable": true
+                },
+                "ageRange": {
+                  "type": "string",
+                  "maxLength": 60,
+                  "nullable": true
+                },
+                "country": {
+                  "type": "string",
+                  "maxLength": 100,
+                  "nullable": true
+                },
+                "legalRepresentative": {
+                  "type": "string",
+                  "maxLength": 300,
+                  "nullable": true
+                },
+                "legalRepresentativeMaskedTaxId": {
+                  "type": "string",
+                  "maxLength": 20,
+                  "nullable": true
+                },
+                "legalRepresentativeRole": {
+                  "type": "string",
+                  "maxLength": 200,
+                  "nullable": true
+                },
+                "sortOrder": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "orgId",
+                "registrationId",
+                "name",
+                "maskedTaxId",
+                "role",
+                "roleCode",
+                "joinedOn",
+                "ageRange",
+                "country",
+                "legalRepresentative",
+                "legalRepresentativeMaskedTaxId",
+                "legalRepresentativeRole",
+                "sortOrder"
+              ]
+            }
+          },
+          "taxRegimes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "orgId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "registrationId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "year": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "taxation": {
+                  "type": "string",
+                  "maxLength": 200,
+                  "nullable": true
+                },
+                "bookkeepingCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "scpTaxId": {
+                  "type": "string",
+                  "maxLength": 14,
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "orgId",
+                "registrationId",
+                "year",
+                "taxation",
+                "bookkeepingCount",
+                "scpTaxId"
+              ]
+            }
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "registration",
+          "activities",
+          "members",
+          "taxRegimes",
           "txid"
         ]
       }
