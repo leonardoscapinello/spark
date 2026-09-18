@@ -1,11 +1,11 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
-import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, type StagesCollection } from "@spark/data";
-import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, SearchSelect, Select, Skeleton, Textarea, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
+import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type StageTransition, type DealStatus } from "@spark/core";
+import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, configureStage, type StagesCollection } from "@spark/data";
+import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, SearchSelect, Select, Skeleton, Switch, Checkbox, Textarea, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
-import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
+import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection, getStageTransitionsCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -412,6 +412,8 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
   stagesCollection: StagesCollection;
   orgId: OrgId | undefined;
 }) {
+  const stageTransitionsCollection = getStageTransitionsCollection();
+  const { data: stageTransitions = [] } = useLiveQuery({ query: (q) => open ? q.from({ stageTransitions: stageTransitionsCollection }) : undefined }, [open]);
   const [order, setOrder] = useState<string[]>(() => stages.map((stage) => stage.id));
   const [dragging, setDragging] = useState<string | null>(null);
   const [busyStageId, setBusyStageId] = useState<string | null>(null);
@@ -493,6 +495,7 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
           >
             <span className={styles.editorAlca} aria-hidden="true"><Icon name="menu" /></span>
             <span className={styles.editorNome}>{stage.name}</span>
+            <StageConfigPopover stage={stage} otherStages={orderedStages.filter((candidate) => candidate.id !== stage.id)} transitions={stageTransitions} />
             <Button
               variant="ghost"
               size="sm"
@@ -512,4 +515,76 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
       </form>
     </ModalContent>
   </Modal>;
+}
+
+/**
+ * Para quais etapas esta pode avançar, se pode fechar ganho/perdido daqui,
+ * e o prazo — um negócio não deve poder pular etapa livremente para que o
+ * funil funcione bem (pedido do usuário, 18/09). O popover só grava no
+ * salvar: `allowedDestinationStageIds` substitui a configuração inteira,
+ * nunca soma — mesma semântica de `stages.repository.configure` (apaga e
+ * reinsere numa transação só).
+ */
+function StageConfigPopover({ stage, otherStages, transitions }: {
+  stage: Stage;
+  otherStages: readonly Stage[];
+  transitions: readonly StageTransition[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [restrictTransitions, setRestrictTransitions] = useState(stage.restrictTransitions);
+  const [allowWon, setAllowWon] = useState(stage.allowWon);
+  const [allowLost, setAllowLost] = useState(stage.allowLost);
+  const [slaMinutes, setSlaMinutes] = useState(stage.slaMinutes ? String(stage.slaMinutes) : "");
+  const [destinations, setDestinations] = useState<StageId[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  // O popover reflete o estado sincronizado só na hora em que abre — depois
+  // disso, a edição em andamento é a única fonte da verdade até salvar.
+  useEffect(() => {
+    if (!open) return;
+    setRestrictTransitions(stage.restrictTransitions);
+    setAllowWon(stage.allowWon);
+    setAllowLost(stage.allowLost);
+    setSlaMinutes(stage.slaMinutes ? String(stage.slaMinutes) : "");
+    setDestinations(transitions.filter((transition) => transition.fromStageId === stage.id).map((transition) => transition.toStageId));
+  }, [open, stage, transitions]);
+
+  function toggleDestination(id: StageId, checked: boolean) {
+    setDestinations((current) => (checked ? [...current, id] : current.filter((item) => item !== id)));
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      await configureStage(stage.id, {
+        slaMinutes: slaMinutes.trim() ? Number(slaMinutes) : null,
+        allowWon,
+        allowLost,
+        restrictTransitions,
+        allowedDestinationStageIds: destinations,
+      });
+      notify({ title: "Etapa configurada", description: stage.name, tone: "success" });
+      setOpen(false);
+    } catch (cause) {
+      notify({ title: "Não foi possível salvar a configuração", tone: "error", ...(cause instanceof Error && cause.message ? { description: cause.message } : {}) });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger render={<Button variant="ghost" size="sm" iconOnly icon={<Icon name="settings" />} aria-label={`Configurar etapa ${stage.name}`} />} />
+    <PopoverContent title={`Configurar ${stage.name}`} contentClassName={styles.editorConfig ?? ""}>
+      <Switch checked={restrictTransitions} onCheckedChange={setRestrictTransitions}>Restringir para quais etapas pode avançar</Switch>
+      {restrictTransitions && (otherStages.length > 0
+        ? <div className={styles.editorConfigDestinos}>
+          {otherStages.map((candidate) => <Checkbox key={candidate.id} checked={destinations.includes(candidate.id)} onCheckedChange={(checked) => toggleDestination(candidate.id, checked === true)}>{candidate.name}</Checkbox>)}
+        </div>
+        : <p className={styles.editorConfigVazio}>Não há outra etapa neste funil.</p>)}
+      <Switch checked={allowWon} onCheckedChange={setAllowWon}>Permite marcar como ganho</Switch>
+      <Switch checked={allowLost} onCheckedChange={setAllowLost}>Permite marcar como perdido</Switch>
+      <Field><Label>Prazo nesta etapa (minutos)</Label><Input type="number" min="1" value={slaMinutes} onChange={(event) => setSlaMinutes(event.target.value)} placeholder="Sem prazo" /></Field>
+      <Button variant="primary" loading={saving} onClick={() => void save()}>Salvar</Button>
+    </PopoverContent>
+  </Popover>;
 }

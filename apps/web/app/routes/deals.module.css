@@ -240,3 +240,8 @@
 @media (prefers-reduced-motion: reduce) {
   .editorLinha { transition-duration: var(--motion-duration-instant); }
 }
+
+/* Popover de configuração da etapa (transições, ganho/perda, prazo). */
+.editorConfig { display: flex; flex-direction: column; gap: var(--space-3); }
+.editorConfigDestinos { display: flex; flex-direction: column; gap: var(--space-1); padding-left: var(--space-4); }
+.editorConfigVazio { padding-left: var(--space-4); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }

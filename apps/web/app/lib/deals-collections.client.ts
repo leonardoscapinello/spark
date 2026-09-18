@@ -3,13 +3,14 @@
  * contacts-collection.client.ts — criados sob demanda, nunca no import do
  * módulo (as três collections leem base URL/token na hora da chamada).
  */
-import { createPipelinesCollection, createStagesCollection, createDealsCollection } from "@spark/data";
-import type { PipelinesCollection, StagesCollection, DealsCollection } from "@spark/data";
+import { createPipelinesCollection, createStagesCollection, createDealsCollection, createStageTransitionsCollection } from "@spark/data";
+import type { PipelinesCollection, StagesCollection, DealsCollection, StageTransitionsCollection } from "@spark/data";
 import type { DealId, DealStatus, PipelineId } from "@spark/core";
 
 let pipelines: PipelinesCollection | undefined;
 let stages: StagesCollection | undefined;
 let deals: DealsCollection | undefined;
+let stageTransitions: StageTransitionsCollection | undefined;
 const boardDeals = new Map<string, DealsCollection>();
 const detailDeals = new Map<DealId, DealsCollection>();
 
@@ -21,6 +22,12 @@ export function getPipelinesCollection(): PipelinesCollection {
 export function getStagesCollection(): StagesCollection {
   stages ??= createStagesCollection();
   return stages;
+}
+
+/** Só leitura — quem grava é `configureStage` (packages/data). */
+export function getStageTransitionsCollection(): StageTransitionsCollection {
+  stageTransitions ??= createStageTransitionsCollection();
+  return stageTransitions;
 }
 
 export function getDealsCollection(): DealsCollection {
