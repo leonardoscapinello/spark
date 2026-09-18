@@ -27,6 +27,23 @@ Projeto Supabase do Spark: **`vrxjqqqsoqfaxzanebtf`** — Auth e banco no mesmo 
 
 > Em 14/09/2026 este documento passou a citar um projeto `aiqbhzugqwbcraifhyxl`, na organização **Human Studio**, que pertence a outro cliente. Os `.env` nunca deixaram de apontar para `vrxjqqqsoqfaxzanebtf`, e é nele que estão as migrations e os dados. O registro ficou dizendo uma coisa e o sistema fazendo outra por três dias. **A fonte da verdade sobre qual banco está em uso é o `.env`**, e nenhum projeto da organização Human Studio deve ser usado aqui.
 
+## A conexão direta é IPv6, e isso já causou queda ao vivo
+
+Verificado em 18/09/2026: numa máquina atrás de VPN, a rota IPv6 até
+`db.<projeto>.supabase.co` **oscila** — conecta agora, `EHOSTUNREACH` no minuto
+seguinte, sem nada mudar no código. Toda a API dependia dela sozinha (as 38
+classes de repositório, via `DATABASE_URL`), então uma queda de rota derrubava
+a aplicação inteira, não só a sincronização — o sintoma era a tela "carregando"
+sem nunca terminar.
+
+Correção: `createAppDbClient` (`packages/db/src/client.ts`) usa
+`DATABASE_POOLER_URL` quando ela existe — o Session Pooler do Supabase
+(Supavisor), que é IPv4 e grátis em todo projeto — e cai para `DATABASE_URL`
+quando não. Preencher `DATABASE_POOLER_URL` no `.env` tira o tráfego comum
+dessa rota instável; só o Electric continua na conexão direta, porque
+replicação lógica exige. Ver `.env.example` para onde pegar a string no
+painel.
+
 ## O que o Supabase exige
 
 - **Conexão direta**, não o pooler em modo transação: Electric precisa de

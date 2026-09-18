@@ -2,13 +2,13 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 import { eq, sql } from "drizzle-orm";
-import { companies, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
+import { companies, createAppDbClient, withOrgContext, type SparkDb } from "@spark/db";
 import type { Company, CompanyId, CreateCompanyInput, OrgId, UpdateCompanyInput } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
 export class CompaniesRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
 
   constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter, private readonly tagWriter: TagWriter) {}
 

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { eq, sql } from "drizzle-orm";
-import { createDbClient, userPreferenceItems, userPreferences, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, userPreferenceItems, userPreferences, withOrgContext, type SparkDb } from "@spark/db";
 import { fromPreferenceStorage, toPreferenceStorage, type PreferenceKind } from "@spark/core";
 import type { OrgId, UpsertUserPreferenceInput, UserId, UserPreference } from "@spark/core";
 
@@ -16,7 +16,7 @@ import type { OrgId, UpsertUserPreferenceInput, UserId, UserPreference } from "@
  */
 @Injectable()
 export class UserPreferencesRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
 
   upsert(orgId: OrgId, userId: UserId, key: string, input: UpsertUserPreferenceInput): Promise<{ preference: UserPreference; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {

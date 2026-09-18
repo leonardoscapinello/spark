@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, asc, eq, sql } from "drizzle-orm";
-import { createDbClient, dealProducts, deals, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, dealProducts, deals, withOrgContext, type SparkDb } from "@spark/db";
 import { auditChanges, dealProductsTotal, money, toCents, type CreateDealProductInput, type DealId, type DealProduct, type DealProductId, type Money, type OrgId, type UpdateDealProductInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
@@ -15,7 +15,7 @@ export class DealProductsRepository {
   private readonly db: SparkDb;
 
   constructor(private readonly eventWriter: DomainEventWriter) {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   add(orgId: OrgId, actorUserId: UserId, input: CreateDealProductInput): Promise<{ item: DealProduct; dealAmount: Money; txid: number }> {

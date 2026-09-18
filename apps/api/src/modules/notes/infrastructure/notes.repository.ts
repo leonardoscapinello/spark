@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { createDbClient, notes, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, notes, withOrgContext, type SparkDb } from "@spark/db";
 import { auditChanges, type CompanyId, type ContactId, type CreateNoteInput, type DealId, type Note, type NoteId, type OrgId, type UpdateNoteInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
@@ -9,7 +9,7 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 export class NotesRepository {
   private readonly db: SparkDb;
   constructor(private readonly eventWriter: DomainEventWriter) {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   create(orgId: OrgId, authorId: UserId, input: CreateNoteInput): Promise<{ note: Note; txid: number }> {

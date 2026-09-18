@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { and, eq, inArray } from "drizzle-orm";
-import { auditLogs, createDbClient, permissionGroupCapabilities, permissionGroups, userPermissionGroups, users, withOrgContext, type SparkDb } from "@spark/db";
+import { auditLogs, createAppDbClient, permissionGroupCapabilities, permissionGroups, userPermissionGroups, users, withOrgContext, type SparkDb } from "@spark/db";
 import { DEFAULT_GROUPS, type AuditAction, type Capability, type CreatePermissionGroupInput, type OrgId, type PermissionGroup, type PermissionGroupId, type UpdatePermissionGroupInput, type UserId } from "@spark/core";
 
 /**
@@ -20,7 +20,7 @@ export class PermissionGroupsRepository {
   private readonly db: SparkDb;
 
   constructor() {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   /**

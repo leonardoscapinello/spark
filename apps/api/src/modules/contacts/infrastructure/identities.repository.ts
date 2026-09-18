@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { contacts, createDbClient, identities, type SparkDb, withOrgContext } from "@spark/db";
+import { contacts, createAppDbClient, identities, type SparkDb, withOrgContext } from "@spark/db";
 import {
   identityId,
   normalizeIdentityValue,
@@ -16,7 +16,7 @@ export class IdentitiesRepository {
   private readonly db: SparkDb;
 
   constructor(private readonly eventWriter: DomainEventWriter) {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   async add(orgId: OrgId, contactId: ContactId, input: AddContactIdentityInput): Promise<{ identity: Identity; txid: number }> {

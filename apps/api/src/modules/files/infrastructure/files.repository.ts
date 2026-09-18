@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { createDbClient, files, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, files, withOrgContext, type SparkDb } from "@spark/db";
 import type { CreateFileUploadInput, FileDownloadResponse, FileId, FileUploadResponse, FileWriteResponse, OrgId, StoredFile, UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { StorageResolver } from "./storage-resolver.service.js";
 
 @Injectable()
 export class FilesRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly resolver: StorageResolver, private readonly events: DomainEventWriter) {}
   async createUpload(orgId: OrgId, userId: UserId, input: CreateFileUploadInput): Promise<FileUploadResponse> {
     const resolved = await this.resolver.forNewUpload(orgId); const objectKey = `${input.id}/${safeName(input.name)}`;

@@ -1,8 +1,7 @@
 import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { and, desc, eq } from "drizzle-orm";
 import {
-  createDbClient,
-  integrationConnections,
+  createAppDbClient,   integrationConnections,
   integrationSecrets,
   withOrgContext,
   type SparkDb,
@@ -20,7 +19,7 @@ export interface ActiveIntegration {
 
 @Injectable()
 export class IntegrationRuntimeResolver {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
 
   constructor(private readonly vault: SecretVault, private readonly settings: ConnectionSettingsRepository) {}
 

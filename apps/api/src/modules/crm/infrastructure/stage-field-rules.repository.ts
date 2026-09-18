@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, sql } from "drizzle-orm";
-import { createDbClient, stageFieldRules, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, stageFieldRules, withOrgContext, type SparkDb } from "@spark/db";
 import type { CreateStageFieldRuleInput, OrgId, StageFieldRule, StageFieldRuleId } from "@spark/core";
 
 /**
@@ -9,7 +9,7 @@ import type { CreateStageFieldRuleInput, OrgId, StageFieldRule, StageFieldRuleId
  */
 @Injectable()
 export class StageFieldRulesRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
 
   save(orgId: OrgId, input: CreateStageFieldRuleInput): Promise<{ rule: StageFieldRule; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {

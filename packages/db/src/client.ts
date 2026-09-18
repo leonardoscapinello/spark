@@ -65,6 +65,30 @@ export function createDbClient(connectionString: string) {
 export type SparkDb = ReturnType<typeof createDbClient>;
 
 /**
+ * O endereço que o TRÁFEGO DA APLICAÇÃO usa — nunca migrations, nunca o
+ * semeador, que continuam falando com `DATABASE_URL` (a conexão direta,
+ * porque só ela cria papel e publicação para o Electric).
+ *
+ * Prefere `DATABASE_POOLER_URL` quando ela existe. O motivo é de rede, não de
+ * gosto: a conexão direta do Supabase só tem endereço IPv6, e uma máquina de
+ * desenvolvimento atrás de VPN pode ter uma rota IPv6 instável — funciona
+ * agora, falha no minuto seguinte, sem nada mudar no código. Foi visto ao
+ * vivo: o mesmo host respondeu `EHOSTUNREACH` numa tentativa e conectou
+ * normalmente na seguinte. O Session Pooler da Supabase (Supavisor) é IPv4,
+ * grátis em todo projeto, e não depende dessa rota.
+ *
+ * Centralizado aqui, e não repetido nas 38 classes de repositório, porque foi
+ * exatamente a repetição — cada uma decidindo por conta própria como abrir a
+ * conexão — que já causou um incidente nesta base (packages/db/src/client.ts,
+ * `pools`): mudar a estratégia de conexão de novo não deve exigir tocar em 38
+ * arquivos outra vez.
+ */
+export function createAppDbClient(): SparkDb {
+  const connectionString = process.env.DATABASE_POOLER_URL ?? process.env.DATABASE_URL ?? "";
+  return createDbClient(connectionString);
+}
+
+/**
  * Runs `fn` inside a transaction with `app.current_org_id` set — this is
  * what every table's RLS policy reads (docs/adr/0022, docs/adr/0026).
  * Without this, `current_setting('app.current_org_id', true)` comes back

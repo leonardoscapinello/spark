@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
 import {
-  createDbClient,
-  socialChannels,
+  createAppDbClient,   socialChannels,
   socialPosts,
   withOrgContext,
   type SparkDb,
@@ -22,7 +21,7 @@ import type { ProviderSocialChannel, ProviderSocialPost } from "./buffer-social.
 
 @Injectable()
 export class SocialRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly events: DomainEventWriter) {}
 
   syncChannels(

@@ -1,13 +1,13 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { automationJobs, automationRuns, automationVersions, automations, contactTags, contacts, createDbClient, tags, withOrgContext, type SparkDb } from "@spark/db";
+import { automationJobs, automationRuns, automationVersions, automations, contactTags, contacts, createAppDbClient, tags, withOrgContext, type SparkDb } from "@spark/db";
 import { automationJobId, automationRunId, automationVersionId, firstAutomationNode, validateAutomationGraph, type Automation, type AutomationId, type AutomationPublishResponse, type AutomationRun, type AutomationVersion, type AutomationWriteResponse, type CreateAutomationInput, type OrgId, type PublishAutomationInput, type StartAutomationRunInput, type StartAutomationRunResponse, type UpdateAutomationDraftInput, type UpdateAutomationStatusInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
 export class AutomationsRepository {
   private readonly db: SparkDb;
-  constructor(private readonly events: DomainEventWriter) { this.db = createDbClient(process.env.DATABASE_URL ?? ""); }
+  constructor(private readonly events: DomainEventWriter) { this.db = createAppDbClient(); }
 
   create(orgId: OrgId, actorUserId: UserId, input: CreateAutomationInput): Promise<AutomationWriteResponse> {
     return withOrgContext(this.db, orgId, async (tx) => {

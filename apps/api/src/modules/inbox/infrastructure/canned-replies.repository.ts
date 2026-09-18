@@ -1,12 +1,12 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { cannedReplies, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
+import { cannedReplies, createAppDbClient, withOrgContext, type SparkDb } from "@spark/db";
 import { normalizeCannedReplyShortcut, type CannedReply, type CannedReplyId, type CreateCannedReplyInput, type OrgId, type UpdateCannedReplyInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
 export class CannedRepliesRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly events: DomainEventWriter) {}
 
   create(orgId: OrgId, userId: UserId, input: CreateCannedReplyInput) {

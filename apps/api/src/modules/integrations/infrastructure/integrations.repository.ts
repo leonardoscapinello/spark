@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { createDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
 import type { IntegrationConnection, IntegrationConnectionId, IntegrationWriteResponse, OrgId, UpdateIntegrationStatusInput, UpsertIntegrationInput, UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { ConnectionSettingsRepository } from "./connection-settings.repository.js";
@@ -11,7 +11,7 @@ import { CalendarFeedSyncService } from "../application/calendar-feed-sync.servi
 @Injectable()
 export class IntegrationsRepository {
   private readonly db: SparkDb;
-  constructor(private readonly vault: SecretVault, private readonly providers: IntegrationProviderRegistry, private readonly calendarSync: CalendarFeedSyncService, private readonly events: DomainEventWriter, private readonly settings: ConnectionSettingsRepository) { this.db = createDbClient(process.env.DATABASE_URL ?? ""); }
+  constructor(private readonly vault: SecretVault, private readonly providers: IntegrationProviderRegistry, private readonly calendarSync: CalendarFeedSyncService, private readonly events: DomainEventWriter, private readonly settings: ConnectionSettingsRepository) { this.db = createAppDbClient(); }
   upsert(orgId: OrgId, actorUserId: UserId, input: UpsertIntegrationInput): Promise<IntegrationWriteResponse> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const existing = await tx.select().from(integrationConnections).where(and(eq(integrationConnections.id, input.id), eq(integrationConnections.orgId, orgId))).limit(1);

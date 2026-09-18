@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { businessHours, createDbClient, holidays, type SparkDb, withOrgContext } from "@spark/db";
+import { businessHours, createAppDbClient, holidays, type SparkDb, withOrgContext } from "@spark/db";
 import type { BusinessHour, Holiday, HolidayId, OrgId, SaveBusinessHourInput, SaveHolidayInput } from "@spark/core";
 
 @Injectable()
 export class BusinessCalendarRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
 
   saveBusinessHour(orgId: OrgId, input: SaveBusinessHourInput): Promise<{ businessHour: BusinessHour; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {

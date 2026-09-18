@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { and, eq } from "drizzle-orm";
-import { auditLogs, createDbClient, permissionGroups, userPermissionGroups, users, withOrgContext, type SparkDb } from "@spark/db";
+import { auditLogs, createAppDbClient, permissionGroups, userPermissionGroups, users, withOrgContext, type SparkDb } from "@spark/db";
 import type { AdminUser, InviteUserInput, OrgId, PermissionGroupId, User, UserId } from "@spark/core";
 
 /**
@@ -17,7 +17,7 @@ export class UsersRepository {
   private readonly db: SparkDb;
 
   constructor() {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   async findBySupabaseUserId(supabaseUserId: string): Promise<User | null> {

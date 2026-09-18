@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { desc, eq, inArray } from "drizzle-orm";
-import { auditLogs, createDbClient, permissionGroups, teams, users, withOrgContext, type SparkDb } from "@spark/db";
+import { auditLogs, createAppDbClient, permissionGroups, teams, users, withOrgContext, type SparkDb } from "@spark/db";
 import type { AdminAuditLog, AuditAction, OrgId, UserId } from "@spark/core";
 
 @Injectable()
@@ -8,7 +8,7 @@ export class AuditLogsRepository {
   private readonly db: SparkDb;
 
   constructor() {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   async listByOrg(orgId: OrgId): Promise<AdminAuditLog[]> {

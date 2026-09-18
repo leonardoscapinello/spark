@@ -1,12 +1,12 @@
 import { BadGatewayException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { conversations, createDbClient, messages, withOrgContext, type SparkDb } from "@spark/db";
+import { conversations, createAppDbClient, messages, withOrgContext, type SparkDb } from "@spark/db";
 import type { ContactId, Conversation, ConversationId, Message, MessageWriteResponse, OrgId, SendMessageInput, UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { ChannelSender } from "./channel-sender.service.js";
 @Injectable()
 export class OutboundMessagesRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly sender: ChannelSender, private readonly events: DomainEventWriter) {}
   async send(orgId: OrgId, actorUserId: UserId, conversationId: ConversationId, input: SendMessageInput): Promise<MessageWriteResponse> {
     const queued = await withOrgContext(this.db, orgId, async (tx) => {

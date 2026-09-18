@@ -5,8 +5,7 @@ import {
   companyRegistrationMembers,
   companyRegistrationTaxRegimes,
   companyRegistrations,
-  createDbClient,
-  withOrgContext,
+  createAppDbClient,   withOrgContext,
   type SparkDb,
 } from "@spark/db";
 import {
@@ -50,7 +49,7 @@ export interface RegistrationRecord {
 @Injectable()
 export class CompanyRegistrationsRepository {
   private readonly db: SparkDb;
-  constructor() { this.db = createDbClient(process.env.DATABASE_URL ?? ""); }
+  constructor() { this.db = createAppDbClient(); }
 
   find(orgId: OrgId, taxId: string): Promise<RegistrationRecord | null> {
     return withOrgContext(this.db, orgId, async (tx) => {

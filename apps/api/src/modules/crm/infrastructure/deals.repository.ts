@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { and, eq, isNull, sql } from "drizzle-orm";
-import { createDbClient, withOrgContext, deals, stages, stageTransitions, type SparkDb } from "@spark/db";
+import { createAppDbClient, withOrgContext, deals, stages, stageTransitions, type SparkDb } from "@spark/db";
 import {
   money,
   toCents,
@@ -25,7 +25,7 @@ export class DealsRepository {
   private readonly db: SparkDb;
 
   constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter) {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   exists(orgId: OrgId, id: DealId): Promise<boolean> {

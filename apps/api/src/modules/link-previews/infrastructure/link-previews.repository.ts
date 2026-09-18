@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { createDbClient, linkPreviews, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, linkPreviews, withOrgContext, type SparkDb } from "@spark/db";
 import { linkPreviewId, type LinkPreview, type OrgId } from "@spark/core";
 
 export interface PreviewWrite {
@@ -24,7 +24,7 @@ export interface PreviewWrite {
 @Injectable()
 export class LinkPreviewsRepository {
   private readonly db: SparkDb;
-  constructor() { this.db = createDbClient(process.env.DATABASE_URL ?? ""); }
+  constructor() { this.db = createAppDbClient(); }
 
   find(orgId: OrgId, urlHash: string): Promise<LinkPreview | null> {
     return withOrgContext(this.db, orgId, async (tx) => {

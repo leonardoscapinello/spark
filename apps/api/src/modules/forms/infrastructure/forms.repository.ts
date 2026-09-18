@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, or, sql } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
-import { contacts, createDbClient, formSubmissions, identities, leadFormPublicKeys, leadForms, withOrgContext, type SparkDb } from "@spark/db";
+import { contacts, createAppDbClient, formSubmissions, identities, leadFormPublicKeys, leadForms, withOrgContext, type SparkDb } from "@spark/db";
 import { contactId, email as normalizeEmail, identityId, leadFormId, mappedLeadValue, orgId, phone as normalizePhone, validateLeadFormValues, type ContactId, type CreateLeadFormInput, type LeadForm, type LeadFormField, type LeadFormId, type OrgId, type SubmitLeadFormInput, type UpdateLeadFormInput } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { LeadFormFieldsRepository } from "./lead-form-fields.repository.js";
 const DEFAULT_FIELDS: LeadFormField[] = [{ id: "name", label: "Nome", type: "text", mapping: "name", required: true, options: [] }, { id: "email", label: "E-mail", type: "email", mapping: "email", required: true, options: [] }];
 @Injectable()
 export class FormsRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? ""); constructor(private readonly events: DomainEventWriter, private readonly fieldsRepository: LeadFormFieldsRepository) {}
+  private readonly db: SparkDb = createAppDbClient(); constructor(private readonly events: DomainEventWriter, private readonly fieldsRepository: LeadFormFieldsRepository) {}
   create(orgId: OrgId, input: CreateLeadFormInput): Promise<{ form: LeadForm; txid: number }> { return withOrgContext(this.db, orgId, async (tx) => { const [row] = await tx.insert(leadForms).values({ id: input.id, orgId, name: input.name, title: input.title, description: input.description ?? null, publicKey: randomBytes(24).toString("base64url"), submitLabel: input.submitLabel ?? "Enviar", successMessage: input.successMessage ?? "Recebemos seus dados. Obrigado!" }).returning(); if (!row) throw new Error("Form insert returned no row."); const created = input.fields ?? DEFAULT_FIELDS;
     await this.fieldsRepository.replaceFields(tx, orgId, row.id, created); const txid = await captureTxid(tx); await this.events.append(tx, { orgId, type: "form.created", data: { formId: row.id, name: row.name } }); return { form: toForm(row, created), txid }; }); }
   update(orgId: OrgId, id: LeadFormId, input: UpdateLeadFormInput): Promise<{ form: LeadForm; txid: number }> { return withOrgContext(this.db, orgId, async (tx) => { const { fields: _fields, ...columns } = input;

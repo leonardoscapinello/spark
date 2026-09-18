@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { discountRules, products, productVariants, createDbClient, withOrgContext, type SparkDb } from "@spark/db";
+import { discountRules, products, productVariants, createAppDbClient, withOrgContext, type SparkDb } from "@spark/db";
 import { money, toCents, type CreateDiscountRuleInput, type CreateProductInput, type CreateProductVariantInput, type DiscountRule, type DiscountRuleId, type OrgId, type Product, type ProductId, type ProductVariant, type UpdateDiscountRuleInput, type UpdateProductInput } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 @Injectable()
 export class CatalogRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly events: DomainEventWriter, private readonly tagWriter: TagWriter) {}
   createProduct(orgId: OrgId, input: CreateProductInput): Promise<{ product: Product; txid: number }> { return withOrgContext(this.db, orgId, async (tx) => { const [row] = await tx.insert(products).values({ id: input.id, orgId, sku: input.sku, name: input.name, description: input.description ?? null, price: toCents(input.price), currency: input.currency ?? "BRL", unit: input.unit ?? "un", stock: input.stock ?? null, active: input.active ?? true }).returning(); if (!row) throw new Error("Product insert returned no row."); await this.tagWriter.write(tx, orgId, "product", row.id, input.tags ?? []); const txid = await captureTxid(tx); await this.events.append(tx, { orgId, type: "product.created", data: { productId: row.id, name: row.name } }); return { product: toProduct(row), txid }; }); }
   updateProduct(orgId: OrgId, id: ProductId, input: UpdateProductInput): Promise<{ product: Product; txid: number }> { return withOrgContext(this.db, orgId, async (tx) => { const { price, tags: _tags, ...plain } = input; const values = { ...plain, ...(price ? { price: toCents(price) } : {}), updatedAt: new Date() }; const [row] = await tx.update(products).set(values).where(and(eq(products.id, id), eq(products.orgId, orgId))).returning(); if (!row) throw new NotFoundException("Produto não encontrado."); if (input.tags !== undefined) await this.tagWriter.write(tx, orgId, "product", row.id, input.tags); const txid = await captureTxid(tx); await this.events.append(tx, { orgId, type: "product.updated", data: { productId: id, fields: Object.keys(input) } }); return { product: toProduct(row), txid }; }); }

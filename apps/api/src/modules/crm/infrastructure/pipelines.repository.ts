@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { sql } from "drizzle-orm";
-import { createDbClient, withOrgContext, pipelines, type SparkDb } from "@spark/db";
+import { createAppDbClient, withOrgContext, pipelines, type SparkDb } from "@spark/db";
 import type { Pipeline, CreatePipelineInput, OrgId } from "@spark/core";
 
 /** Same pattern as ContactsRepository — withOrgContext, real RLS, captures txid (docs/adr/0018, docs/adr/0022). */
@@ -9,7 +9,7 @@ export class PipelinesRepository {
   private readonly db: SparkDb;
 
   constructor() {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   async create(orgId: OrgId, input: CreatePipelineInput): Promise<{ pipeline: Pipeline; txid: number }> {

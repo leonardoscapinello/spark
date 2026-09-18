@@ -1,12 +1,12 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { audienceLeadStatuses, audienceTags, audiences, campaignRecipients, campaigns, contactTags, contacts, createDbClient, emailSuppressions, tags, withOrgContext, type SparkDb } from "@spark/db";
+import { audienceLeadStatuses, audienceTags, audiences, campaignRecipients, campaigns, contactTags, contacts, createAppDbClient, emailSuppressions, tags, withOrgContext, type SparkDb } from "@spark/db";
 import { campaignRecipientId, matchesAudience, normalizeTagNames, tagDisplayName, tagSlug, type AudienceFilter, type Campaign, type CampaignId, type CreateAudienceInput, type CreateCampaignInput, type OrgId, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
 export class CampaignsRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly events: DomainEventWriter) {}
   createAudience(orgId: OrgId, userId: UserId, input: CreateAudienceInput) { return withOrgContext(this.db, orgId, async (tx) => {
     const [row] = await tx.insert(audiences).values({ id: input.id, orgId, name: input.name, description: input.description ?? null, operator: input.filter.operator, minimumScore: input.filter.minimumScore, createdBy: userId }).returning();

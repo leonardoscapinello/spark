@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { and, eq, inArray } from "drizzle-orm";
-import { auditLogs, createDbClient, teamMembers, teams, users, withOrgContext, type SparkDb } from "@spark/db";
+import { auditLogs, createAppDbClient, teamMembers, teams, users, withOrgContext, type SparkDb } from "@spark/db";
 import type { CreateTeamInput, OrgId, Team, TeamId, UpdateTeamInput, UserId } from "@spark/core";
 
 @Injectable()
@@ -8,7 +8,7 @@ export class TeamsRepository {
   private readonly db: SparkDb;
 
   constructor() {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   async list(orgId: OrgId): Promise<Team[]> {

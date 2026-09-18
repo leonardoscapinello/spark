@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { and, desc, eq } from "drizzle-orm";
 import { S3ObjectStorage, type ObjectStorage, type StorageConfig } from "@spark/storage";
-import { createDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
 import type { IntegrationConnectionId, OrgId } from "@spark/core";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
 import { ConnectionSettingsRepository } from "../../integrations/infrastructure/connection-settings.repository.js";
 
 @Injectable()
 export class StorageResolver {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly vault: SecretVault, private readonly settings: ConnectionSettingsRepository) {}
   async forNewUpload(orgId: OrgId): Promise<{ connectionId: IntegrationConnectionId; storage: ObjectStorage }> {
     const loaded = await withOrgContext(this.db, orgId, async (tx) => {

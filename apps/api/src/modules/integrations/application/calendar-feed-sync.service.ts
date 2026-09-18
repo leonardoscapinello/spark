@@ -1,6 +1,6 @@
 import { Injectable, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common";
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
-import { calendarEvents, createDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
+import { calendarEvents, createAppDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
 import { CALENDAR_PROVIDERS, calendarEventId, integrationConnectionId, orgId as orgIdFactory, userId, type CalendarProvider, type IntegrationConnectionId, type OrgId } from "@spark/core";
 import { loadCalendarFeed, normalizeCalendarFeed } from "../infrastructure/calendar-feed.js";
 import { ConnectionSettingsRepository } from "../infrastructure/connection-settings.repository.js";
@@ -8,7 +8,7 @@ import { SecretVault } from "../infrastructure/secret-vault.service.js";
 
 @Injectable()
 export class CalendarFeedSyncService implements OnModuleInit, OnModuleDestroy {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   private timer?: ReturnType<typeof setInterval>;
 
   constructor(private readonly settings: ConnectionSettingsRepository, private readonly vault: SecretVault) {}

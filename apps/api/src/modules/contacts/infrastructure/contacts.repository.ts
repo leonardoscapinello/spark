@@ -2,7 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { createDbClient, withOrgContext, contacts, identities, type SparkDb } from "@spark/db";
+import { createAppDbClient, withOrgContext, contacts, identities, type SparkDb } from "@spark/db";
 import { contactId, identityId, type Contact, type CreateContactInput, type ImportContactsInput, type ImportContactsResponse, type UpdateContactInput, type OrgId, type ContactId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
@@ -18,7 +18,7 @@ export class ContactsRepository {
   private readonly db: SparkDb;
 
   constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter, private readonly tagWriter: TagWriter) {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   /**

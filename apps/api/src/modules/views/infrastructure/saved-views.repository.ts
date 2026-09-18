@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, or, sql } from "drizzle-orm";
-import { createDbClient, savedViews, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, savedViews, withOrgContext, type SparkDb } from "@spark/db";
 import type { CreateSavedViewInput, OrgId, SavedView, SavedViewId, UserId } from "@spark/core";
 
 /**
@@ -10,7 +10,7 @@ import type { CreateSavedViewInput, OrgId, SavedView, SavedViewId, UserId } from
  */
 @Injectable()
 export class SavedViewsRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
 
   create(orgId: OrgId, userId: UserId, input: CreateSavedViewInput): Promise<{ view: SavedView; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {

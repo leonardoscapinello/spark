@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { createDbClient, withOrgContext, stages, stageTransitions, type SparkDb } from "@spark/db";
+import { createAppDbClient, withOrgContext, stages, stageTransitions, type SparkDb } from "@spark/db";
 import { stageTransitionId, type ConfigureStageInput, type Stage, type CreateStageInput, type OrgId, type StageId } from "@spark/core";
 
 @Injectable()
@@ -8,7 +8,7 @@ export class StagesRepository {
   private readonly db: SparkDb;
 
   constructor() {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   async create(orgId: OrgId, input: CreateStageInput): Promise<{ stage: Stage; txid: number }> {

@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { contacts, conversations, createDbClient, identities, integrationConnectionSettings, integrationConnections, integrationSecrets, messages, withOrgContext, type SparkDb } from "@spark/db";
+import { contacts, conversations, createAppDbClient, identities, integrationConnectionSettings, integrationConnections, integrationSecrets, messages, withOrgContext, type SparkDb } from "@spark/db";
 import { contactId, conversationId, firstResponseDueAt, identityId, messageId, normalizeIdentityValue, parseInstagramInboundTexts, type IntegrationConnectionId, type OrgId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
 
 @Injectable()
 export class InstagramWebhookRepository {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly vault: SecretVault, private readonly events: DomainEventWriter) {}
 
   async connection(id: IntegrationConnectionId): Promise<{ orgId: OrgId; appSecret: string; verifyToken: string; accountId?: string }> {

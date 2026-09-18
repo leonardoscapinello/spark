@@ -1,13 +1,13 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { contacts, createDbClient, identities, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
+import { contacts, createAppDbClient, identities, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
 import type { ContactId, ConversationChannel, OrgId } from "@spark/core";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
 import { ConnectionSettingsRepository } from "../../integrations/infrastructure/connection-settings.repository.js";
 import { EmailDeliveryService } from "../../integrations/application/email-delivery.service.js";
 @Injectable()
 export class ChannelSender {
-  private readonly db: SparkDb = createDbClient(process.env.DATABASE_URL ?? "");
+  private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly vault: SecretVault, private readonly email: EmailDeliveryService, private readonly settings: ConnectionSettingsRepository) {}
   async send(orgId: OrgId, contactId: ContactId, channel: ConversationChannel, subject: string, body: string): Promise<string> {
     if (channel !== "email" && channel !== "instagram") throw new BadRequestException(`O canal ${channel} ainda não aceita respostas externas.`);

@@ -11,7 +11,7 @@ import {
   type OrgId,
   type VerifyEmailResponse,
 } from "@spark/core";
-import { createDbClient, emailVerificationMxRecords, emailVerifications, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, emailVerificationMxRecords, emailVerifications, withOrgContext, type SparkDb } from "@spark/db";
 import { IntegrationRuntimeResolver } from "../../integrations/application/integration-runtime-resolver.service.js";
 
 const CACHE_DURATION_MS = 90 * 24 * 60 * 60 * 1_000;
@@ -21,7 +21,7 @@ export class EmailVerificationService {
   private readonly db: SparkDb;
 
   constructor(private readonly integrations: IntegrationRuntimeResolver) {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   async verify(orgId: OrgId, email: Email): Promise<VerifyEmailResponse> {

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { contacts, conversations, createDbClient, messages, teams, users, withOrgContext, type SparkDb } from "@spark/db";
+import { contacts, conversations, createAppDbClient, messages, teams, users, withOrgContext, type SparkDb } from "@spark/db";
 import { firstResponseDueAt, type AddInternalNoteInput, type Conversation, type ConversationId, type ConversationWriteResponse, type CreateConversationInput, type Message, type MessageWriteResponse, type OrgId, type UpdateConversationInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
@@ -8,7 +8,7 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 export class InboxRepository {
   private readonly db: SparkDb;
   constructor(private readonly events: DomainEventWriter) {
-    this.db = createDbClient(process.env.DATABASE_URL ?? "");
+    this.db = createAppDbClient();
   }
 
   createConversation(orgId: OrgId, actorUserId: UserId, input: CreateConversationInput): Promise<ConversationWriteResponse> {
