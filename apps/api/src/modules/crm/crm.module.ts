@@ -12,6 +12,8 @@ import { CloseDealUseCase } from "./application/close-deal.usecase.js";
 import { EditDealUseCase } from "./application/edit-deal.usecase.js";
 import { ReopenDealUseCase } from "./application/reopen-deal.usecase.js";
 import { ConfigureStageUseCase } from "./application/configure-stage.usecase.js";
+import { ArchiveStageUseCase } from "./application/archive-stage.usecase.js";
+import { ReorderStagesUseCase } from "./application/reorder-stages.usecase.js";
 import { PipelinesRepository } from "./infrastructure/pipelines.repository.js";
 import { StagesRepository } from "./infrastructure/stages.repository.js";
 import { StageFieldRulesRepository } from "./infrastructure/stage-field-rules.repository.js";
@@ -44,6 +46,8 @@ import { DealFollowersRepository } from "./infrastructure/deal-followers.reposit
     EditDealUseCase,
     ReopenDealUseCase,
     ConfigureStageUseCase,
+    ArchiveStageUseCase,
+    ReorderStagesUseCase,
     PipelinesRepository,
     StagesRepository,
     DealsRepository,

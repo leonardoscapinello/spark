@@ -45,18 +45,6 @@
   min-height: 0;
 }
 
-.colunaNova {
-  box-sizing: border-box;
-  flex: 0 0 var(--ui-kanbanColumnWidth);
-  align-self: flex-start;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface2);
-  padding: var(--space-2);
-}
-
 .colunaCabecalho {
   display: flex;
   flex-direction: column;
@@ -216,7 +204,7 @@
 
 @media (max-width: 640px) {
   .board { scroll-snap-type: x proximity; }
-  .coluna, .colunaNova { flex-basis: 100%; scroll-snap-align: start; }
+  .coluna { flex-basis: 100%; scroll-snap-align: start; }
 }
 
 /* Próximo passo do card (Pipedrive, captura 020): ponto colorido + o que vem
@@ -226,3 +214,29 @@
 .cartaoPasso[data-state="overdue"] { color: var(--color-statusDanger); }
 .cartaoPasso[data-state="overdue"] .cartaoPassoPonto { background: var(--color-statusDanger); }
 .cartaoPasso[data-state="scheduled"] .cartaoPassoPonto { background: var(--color-accent); }
+
+/* Editor de funil (modal) — lista de etapas arrastável, uma abaixo da outra.
+ * Alça e nome ocupam a largura; arquivar fica no fim, do tamanho de um botão
+ * de ícone só — a ação rara não deveria competir em peso com o nome. */
+.editorLista { display: flex; flex-direction: column; gap: var(--space-1); margin: 0 0 var(--space-3); padding: 0; list-style: none; }
+.editorLinha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface2);
+  cursor: grab;
+  transition: opacity var(--motion-duration-instant) var(--motion-ease-out);
+}
+.editorLinha:active { cursor: grabbing; }
+.editorLinhaArrastando { opacity: 0.4; }
+.editorAlca { display: flex; flex: 0 0 auto; color: var(--color-inkFaint); }
+.editorNome { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); }
+.editorVazio { padding: var(--space-3); color: var(--color-inkMuted); font-size: var(--typography-size-sm); text-align: center; }
+.editorNovo { display: flex; align-items: flex-end; gap: var(--space-2); }
+.editorNovo > :first-child { flex: 1 1 auto; min-width: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .editorLinha { transition-duration: var(--motion-duration-instant); }
+}

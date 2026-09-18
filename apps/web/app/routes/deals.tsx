@@ -1,9 +1,9 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type StageId, type DealStatus } from "@spark/core";
-import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount } from "@spark/data";
-import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, Select, Skeleton, Textarea, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
+import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
+import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, type StagesCollection } from "@spark/data";
+import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, SearchSelect, Select, Skeleton, Textarea, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -35,6 +35,7 @@ export default function Deals() {
   const requestedStatus = searchParams.get("status");
   const statusFilter: DealStatus | "all" = requestedStatus === "won" || requestedStatus === "lost" || requestedStatus === "all" ? requestedStatus : "open";
   const [dealModalOpen, setDealModalOpen] = useState(false);
+  const [pipelineEditorOpen, setPipelineEditorOpen] = useState(false);
   const [visibleByStage, setVisibleByStage] = useState<Record<string, number>>({});
 
   const { data: pipelines, isLoading: isLoadingPipelines } = useLiveQuery({
@@ -86,7 +87,9 @@ export default function Deals() {
   const [lossReason, setLossReason] = useState("");
   const [busyDealId, setBusyDealId] = useState<string | null>(null);
 
-  const stages = mainPipeline ? allStages.filter((s) => s.pipelineId === mainPipeline.id) : [];
+  // Etapa arquivada some do quadro e de "adicionar negócio" — mas continua
+  // existindo para os negócios antigos que ainda apontam para ela.
+  const stages = mainPipeline ? allStages.filter((s) => s.pipelineId === mainPipeline.id && !s.archivedAt) : [];
   const contactNames = new Map(contacts.map((contact) => [contact.id, contact.name]));
   const userNames = new Map(users.map((user) => [user.id, user.name]));
   const companyNames = new Map(companies.map((company) => [company.id, company.name]));
@@ -188,20 +191,6 @@ export default function Deals() {
     finally { setBusyDealId(null); }
   }
 
-  function addStage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const session = getSession();
-    if (!session || !mainPipeline) return;
-
-    const formData = new FormData(event.currentTarget);
-    const name = String(formData.get("stageName") ?? "").trim();
-    if (!name) return;
-
-    const stage = optimisticStage({ pipelineId: mainPipeline.id, name, sortOrder: stages.length }, session.orgId);
-    stagesCollection.insert(stage);
-    event.currentTarget.reset();
-  }
-
   function saveStageName(id: string, newName: string) {
     const trimmed = newName.trim();
     if (trimmed) {
@@ -228,7 +217,7 @@ export default function Deals() {
 
   return (
     <PageFrame className={styles.pagina}>
-      <PageHeader icon="briefcase" title={mainPipeline.name} actions={<>{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
+      <PageHeader icon="briefcase" title={mainPipeline.name} actions={<>{canManagePipeline && <Button variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${mainPipeline.name}`} onClick={() => setPipelineEditorOpen(true)} />}{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
       <div className={styles.toolbar}><CollectionToolbar filters={<>
         <Select appearance="filter" label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
         <Select appearance="filter" label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value && value !== "open" ? { status: value } : {})} />
@@ -369,16 +358,19 @@ export default function Deals() {
           );
         })}
 
-        {canManagePipeline && <form className={styles.colunaNova} onSubmit={addStage}>
-          <Field>
-            <Label>Novo estágio</Label>
-            <Input name="stageName" placeholder="Nome do estágio" size="sm" />
-          </Field>
-          <Button type="submit" size="sm" variant="secondary">
-            + Estágio
-          </Button>
-        </form>}
       </div>
+      {/* Criar, arquivar e reordenar etapa moram atrás do lápis ao lado do
+        * nome do funil — nunca abertos no quadro. É a mesma decisão do
+        * Pipedrive: essa permissão não é de todo mundo, e um formulário
+        * sempre aberto no fim das colunas convida quem não deveria mexer. */}
+      {canManagePipeline && <PipelineEditorModal
+        open={pipelineEditorOpen}
+        onOpenChange={setPipelineEditorOpen}
+        pipeline={mainPipeline}
+        stages={stages}
+        stagesCollection={stagesCollection}
+        orgId={session?.orgId}
+      />}
       <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
         <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
       </ActionModal>
@@ -402,4 +394,122 @@ export default function Deals() {
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(value));
+}
+
+/**
+ * Criar, arquivar e reordenar etapa — tudo atrás do lápis ao lado do nome do
+ * funil, nunca aberto no quadro (docs/inspiration/pipedrive P025: o editor de
+ * pipeline do Pipedrive é uma tela própria, não uma coluna sempre disponível).
+ *
+ * Arrastar reordena TODAS as etapas de uma vez (`reorderStages`), não uma por
+ * uma — a mesma razão que o servidor já impõe (packages/data/stages-collection).
+ */
+function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesCollection, orgId }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  pipeline: Pipeline;
+  stages: readonly Stage[];
+  stagesCollection: StagesCollection;
+  orgId: OrgId | undefined;
+}) {
+  const [order, setOrder] = useState<string[]>(() => stages.map((stage) => stage.id));
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [busyStageId, setBusyStageId] = useState<string | null>(null);
+  const [newStageName, setNewStageName] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  // A ordem local acompanha a sincronizada — exceto durante um arrasto em
+  // andamento, quando ela é a única fonte da verdade até a gravação confirmar.
+  useEffect(() => {
+    if (dragging) return;
+    setOrder(stages.map((stage) => stage.id));
+  }, [stages, dragging]);
+
+  const orderedStages = order.map((id) => stages.find((stage) => stage.id === id)).filter((stage): stage is Stage => stage !== undefined);
+
+  async function commitReorder(nextOrder: string[]) {
+    const previous = order;
+    setOrder(nextOrder);
+    try {
+      await reorderStages(pipeline.id, nextOrder);
+    } catch {
+      setOrder(previous);
+      notify({ title: "Não foi possível reordenar as etapas", tone: "error" });
+    }
+  }
+
+  async function archiveStage(stage: Stage) {
+    setBusyStageId(stage.id);
+    try {
+      const transaction = stagesCollection.update(stage.id, (draft) => { draft.archivedAt = new Date().toISOString(); });
+      await transaction.isPersisted.promise;
+      notify({ title: "Etapa arquivada", description: stage.name, tone: "success" });
+    } catch (cause) {
+      notify({ title: "Não foi possível arquivar a etapa", tone: "error", ...(cause instanceof Error && cause.message ? { description: cause.message } : {}) });
+    } finally {
+      setBusyStageId(null);
+    }
+  }
+
+  async function addStage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = newStageName.trim();
+    if (!name || !orgId) return;
+    setCreating(true);
+    try {
+      const stage = optimisticStage({ pipelineId: pipeline.id, name, sortOrder: stages.length }, orgId);
+      const transaction = stagesCollection.insert(stage);
+      await transaction.isPersisted.promise;
+      setNewStageName("");
+    } catch {
+      notify({ title: "Não foi possível criar a etapa", tone: "error" });
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return <Modal open={open} onOpenChange={onOpenChange}>
+    <ModalContent title={`Editar ${pipeline.name}`} description="Etapas do funil, na ordem em que um negócio passa por elas">
+      <ul className={styles.editorLista}>
+        {orderedStages.map((stage) => (
+          <li
+            key={stage.id}
+            className={[styles.editorLinha, dragging === stage.id ? styles.editorLinhaArrastando : ""].filter(Boolean).join(" ")}
+            draggable
+            onDragStart={() => setDragging(stage.id)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              if (!dragging || dragging === stage.id) return;
+              const from = order.indexOf(dragging);
+              const to = order.indexOf(stage.id);
+              if (from === -1 || to === -1) return;
+              const next = [...order];
+              next.splice(from, 1);
+              next.splice(to, 0, dragging);
+              void commitReorder(next);
+            }}
+            onDragEnd={() => setDragging(null)}
+          >
+            <span className={styles.editorAlca} aria-hidden="true"><Icon name="menu" /></span>
+            <span className={styles.editorNome}>{stage.name}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
+              icon={<Icon name="trash" />}
+              aria-label={`Arquivar etapa ${stage.name}`}
+              loading={busyStageId === stage.id}
+              onClick={() => void archiveStage(stage)}
+            />
+          </li>
+        ))}
+        {orderedStages.length === 0 && <li className={styles.editorVazio}>Este funil ainda não tem etapa.</li>}
+      </ul>
+      <form className={styles.editorNovo} onSubmit={(event) => void addStage(event)}>
+        <Field><Label>Nova etapa</Label><Input value={newStageName} onChange={(event) => setNewStageName(event.target.value)} placeholder="Ex.: Proposta enviada" /></Field>
+        <Button type="submit" variant="secondary" loading={creating}>+ Etapa</Button>
+      </form>
+    </ModalContent>
+  </Modal>;
 }

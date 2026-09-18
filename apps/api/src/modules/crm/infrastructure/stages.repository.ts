@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { and, eq, inArray, sql } from "drizzle-orm";
-import { createAppDbClient, withOrgContext, stages, stageTransitions, type SparkDb } from "@spark/db";
-import { stageTransitionId, type ConfigureStageInput, type Stage, type CreateStageInput, type OrgId, type StageId } from "@spark/core";
+import { and, count, eq, inArray, sql } from "drizzle-orm";
+import { createAppDbClient, withOrgContext, deals, stages, stageTransitions, type SparkDb } from "@spark/db";
+import { stageTransitionId, type ConfigureStageInput, type Stage, type CreateStageInput, type OrgId, type PipelineId, type StageId } from "@spark/core";
 
 @Injectable()
 export class StagesRepository {
@@ -77,6 +77,60 @@ export class StagesRepository {
         await tx.insert(stageTransitions).values(input.allowedDestinationStageIds.map((toStageId) => ({ id: stageTransitionId.create(), orgId, pipelineId: current.pipelineId, fromStageId: id, toStageId })));
       }
       return { stage: toStage(row), txid };
+    });
+  }
+
+  /** Negócios abertos hoje nesta etapa — o que `canArchiveStage` precisa
+   * saber antes de deixar arquivar. */
+  async countOpenDeals(orgId: OrgId, id: StageId): Promise<number> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [row] = await tx.select({ total: count() }).from(deals)
+        .where(and(eq(deals.orgId, orgId), eq(deals.stageId, id), eq(deals.status, "open")));
+      return row?.total ?? 0;
+    });
+  }
+
+  /** Ids das etapas ativas do funil, na ordem atual — o que `isValidStageOrder`
+   * usa para conferir que uma reordenação não perdeu nem duplicou etapa. */
+  async listActiveIds(orgId: OrgId, pipelineId: PipelineId): Promise<string[]> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const rows = await tx.select({ id: stages.id }).from(stages)
+        .where(and(eq(stages.orgId, orgId), eq(stages.pipelineId, pipelineId), sql`${stages.archivedAt} IS NULL`))
+        .orderBy(stages.sortOrder);
+      return rows.map((row) => row.id);
+    });
+  }
+
+  async archive(orgId: OrgId, id: StageId, archived: boolean): Promise<{ stage: Stage; txid: number }> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
+      const txid = Number(txidRows[0]?.txid);
+      const [row] = await tx.update(stages)
+        .set({ archivedAt: archived ? new Date() : null, updatedAt: new Date() })
+        .where(and(eq(stages.orgId, orgId), eq(stages.id, id)))
+        .returning();
+      if (!row) throw new NotFoundException(`Stage ${id} not found.`);
+      return { stage: toStage(row), txid };
+    });
+  }
+
+  /** Reescreve `sortOrder` de todas as etapas do funil numa transação só —
+   * nunca uma de cada vez, para que uma falha no meio nunca deixe duas
+   * etapas com a mesma posição. */
+  async reorder(orgId: OrgId, pipelineId: PipelineId, orderedIds: readonly StageId[]): Promise<{ stages: Stage[]; txid: number }> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
+      const txid = Number(txidRows[0]?.txid);
+      const rows: Awaited<ReturnType<typeof toStage>>[] = [];
+      for (const [sortOrder, id] of orderedIds.entries()) {
+        const [row] = await tx.update(stages)
+          .set({ sortOrder, updatedAt: new Date() })
+          .where(and(eq(stages.orgId, orgId), eq(stages.pipelineId, pipelineId), eq(stages.id, id)))
+          .returning();
+        if (!row) throw new NotFoundException(`Stage ${id} not found in pipeline ${pipelineId}.`);
+        rows.push(toStage(row));
+      }
+      return { stages: rows, txid };
     });
   }
 }

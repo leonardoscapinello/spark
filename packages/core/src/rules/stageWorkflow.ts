@@ -24,6 +24,31 @@ export function stageMoveCooldownRemaining(stageEnteredAt: string, now: Date): n
   return Math.max(0, STAGE_MOVE_COOLDOWN_MS - (now.getTime() - new Date(stageEnteredAt).getTime()));
 }
 
+/**
+ * Uma etapa só é arquivada quando está vazia. Arquivar com negócio aberto
+ * dentro faria aquele negócio sumir de todo quadro que lista só etapas
+ * ativas — não é "esconder a etapa", é "esconder o negócio por engano".
+ */
+export function canArchiveStage(openDealCount: number): boolean {
+  return openDealCount === 0;
+}
+
+/**
+ * A nova ordem precisa ser exatamente as mesmas etapas, só reorganizadas —
+ * nem uma a mais, nem uma a menos, nem repetida. Aceitar qualquer lista
+ * apagaria etapa por omissão (uma que o cliente esqueceu de incluir) ou
+ * duplicaria posição (a mesma etapa duas vezes, a outra nenhuma).
+ */
+export function isValidStageOrder(currentIds: readonly string[], orderedIds: readonly string[]): boolean {
+  if (currentIds.length !== orderedIds.length) return false;
+  const current = new Set(currentIds);
+  if (current.size !== currentIds.length) return false; // defeito de quem chamou, não deveria acontecer
+  const proposed = new Set(orderedIds);
+  if (proposed.size !== orderedIds.length) return false;
+  for (const id of proposed) if (!current.has(id)) return false;
+  return true;
+}
+
 export interface SlaProgressState {
   elapsedMinutes: number;
   limitMinutes: number;

@@ -65,6 +65,23 @@ export const RenameStageResponseSchema = z.object({
 });
 export type RenameStageResponse = z.infer<typeof RenameStageResponseSchema>;
 
+/** Arquivar esconde do quadro; nunca apaga — é a etapa de onde negócios
+ * antigos ainda contam a história de quem passou por ali. */
+export const ArchiveStageInputSchema = z.object({ archived: z.boolean() });
+export type ArchiveStageInput = z.infer<typeof ArchiveStageInputSchema>;
+export const ArchiveStageResponseSchema = z.object({ stage: StageSchema, txid: z.number().int() });
+export type ArchiveStageResponse = z.infer<typeof ArchiveStageResponseSchema>;
+
+/** A nova posição de cada etapa do funil, de uma vez — nunca uma por uma:
+ * arrastar da posição 2 para a 5 desloca toda etapa entre elas. */
+export const ReorderStagesInputSchema = z.object({
+  pipelineId: zPipelineId,
+  orderedIds: z.array(zStageId).min(1),
+});
+export type ReorderStagesInput = z.infer<typeof ReorderStagesInputSchema>;
+export const ReorderStagesResponseSchema = z.object({ stages: z.array(StageSchema), txid: z.number().int() });
+export type ReorderStagesResponse = z.infer<typeof ReorderStagesResponseSchema>;
+
 export const ConfigureStageInputSchema = z.object({
   slaMinutes: z.number().int().min(1).nullable(),
   allowWon: z.boolean(),

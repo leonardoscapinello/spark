@@ -6,7 +6,7 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { StageSchema, stageId, type Stage, type CreateStageInput, type OrgId } from "@spark/core";
-import { stagesControllerCreate, stagesControllerRename } from "@spark/api-client";
+import { stagesControllerArchive, stagesControllerCreate, stagesControllerRename, stagesControllerReorder } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 import { sparkShapeOptions } from "./shape-options.js";
 
@@ -60,17 +60,34 @@ export function createStagesCollection() {
         if (!mutation) throw new Error("onUpdate called with no pending mutation.");
 
         const changedFields = Object.keys(mutation.changes);
-        if (changedFields.length !== 1 || changedFields[0] !== "name") {
-          throw new Error(
-            `Only renaming a stage is possible today — changed field(s): ${changedFields.join(", ")}.`,
-          );
+        // Uma mutação sincronizada é uma só decisão por vez — nome OU
+        // arquivar, nunca os dois juntos. Mistura escondida numa única
+        // chamada dificultaria dizer, depois, qual ação realmente aconteceu.
+        if (changedFields.length === 1 && changedFields[0] === "name") {
+          const response = await stagesControllerRename(mutation.original.id, { name: mutation.modified.name });
+          return confirmed(response);
         }
-
-        const response = await stagesControllerRename(mutation.original.id, { name: mutation.modified.name });
-        return confirmed(response);
+        if (changedFields.length === 1 && changedFields[0] === "archivedAt") {
+          const response = await stagesControllerArchive(mutation.original.id, { archived: mutation.modified.archivedAt !== null });
+          return confirmed(response);
+        }
+        throw new Error(
+          `Only renaming or archiving a stage is possible today — changed field(s): ${changedFields.join(", ")}.`,
+        );
       },
     }),
   );
 }
 
 export type StagesCollection = ReturnType<typeof createStagesCollection>;
+
+/**
+ * Reordena todo o funil numa chamada — fora do caminho de mutação da
+ * coleção de propósito. `onUpdate` decide uma etapa por vez; arrastar uma
+ * etapa desloca todas as outras entre a origem e o destino, e mandar isso
+ * como N mutações otimistas separadas arriscaria o quadro passar por uma
+ * posição inconsistente entre a primeira confirmar e a última falhar.
+ */
+export async function reorderStages(pipelineId: string, orderedIds: readonly string[]): Promise<void> {
+  await stagesControllerReorder({ pipelineId, orderedIds: [...orderedIds] });
+}

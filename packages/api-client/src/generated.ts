@@ -1737,6 +1737,110 @@ export interface RenameStageResponseDto {
   txid: number;
 }
 
+export interface ArchiveStageDto {
+  archived: boolean;
+}
+
+export type ArchiveStageResponseDtoStage = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  probability?: number;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  slaMinutes?: number | null;
+  allowWon?: boolean;
+  allowLost?: boolean;
+  restrictTransitions?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+};
+
+export interface ArchiveStageResponseDto {
+  stage: ArchiveStageResponseDtoStage;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface ReorderStagesDto {
+  /** @minLength 1 */
+  pipelineId: string;
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  orderedIds: string[];
+}
+
+export type ReorderStagesResponseDtoStagesItem = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  pipelineId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  probability?: number;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  slaMinutes?: number | null;
+  allowWon?: boolean;
+  allowLost?: boolean;
+  restrictTransitions?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+};
+
+export interface ReorderStagesResponseDto {
+  stages: ReorderStagesResponseDtoStagesItem[];
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export interface ConfigureStageDto {
   /**
      * @minimum 1
@@ -8363,6 +8467,131 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getStagesControllerRenameMutationOptions(options), queryClient);
+    }
+
+export const stagesControllerArchive = (
+    id: string,
+    archiveStageDto: ArchiveStageDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ArchiveStageResponseDto>(
+      {url: `/v1/stages/${id}/archive`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: archiveStageDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getStagesControllerArchiveMutationKey = () => ['stagesControllerArchive'] as const;
+
+export const getStagesControllerArchiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerArchive>>, TError,StagesControllerArchiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof stagesControllerArchive>>, TError,StagesControllerArchiveMutationVariables, TContext> => {
+
+const mutationKey = getStagesControllerArchiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stagesControllerArchive>>, StagesControllerArchiveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  stagesControllerArchive(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StagesControllerArchiveMutationResult = NonNullable<Awaited<ReturnType<typeof stagesControllerArchive>>>
+    export type StagesControllerArchiveMutationBody = ArchiveStageDto
+    export type StagesControllerArchiveMutationError = unknown
+    export type StagesControllerArchiveMutationVariables = {id: string;data: ArchiveStageDto}
+
+    export const useStagesControllerArchive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerArchive>>, TError,StagesControllerArchiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof stagesControllerArchive>>,
+        TError,
+        StagesControllerArchiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStagesControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const stagesControllerReorder = (
+    reorderStagesDto: ReorderStagesDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ReorderStagesResponseDto>(
+      {url: `/v1/stages/reorder`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: reorderStagesDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getStagesControllerReorderMutationKey = () => ['stagesControllerReorder'] as const;
+
+export const getStagesControllerReorderMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerReorder>>, TError,StagesControllerReorderMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof stagesControllerReorder>>, TError,StagesControllerReorderMutationVariables, TContext> => {
+
+const mutationKey = getStagesControllerReorderMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stagesControllerReorder>>, StagesControllerReorderMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  stagesControllerReorder(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StagesControllerReorderMutationResult = NonNullable<Awaited<ReturnType<typeof stagesControllerReorder>>>
+    export type StagesControllerReorderMutationBody = ReorderStagesDto
+    export type StagesControllerReorderMutationError = unknown
+    export type StagesControllerReorderMutationVariables = {data: ReorderStagesDto}
+
+    export const useStagesControllerReorder = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stagesControllerReorder>>, TError,StagesControllerReorderMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof stagesControllerReorder>>,
+        TError,
+        StagesControllerReorderMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStagesControllerReorderMutationOptions(options), queryClient);
     }
 
 export const stagesControllerConfigure = (
