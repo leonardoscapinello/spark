@@ -23,7 +23,9 @@ integração que criam/apagam dados só rodam quando a infraestrutura fornece
 explicitamente `TEST_DATABASE_URL`. Sem essa variável eles são excluídos, nunca
 redirecionados ao banco de produção.
 
-Projeto Supabase do Spark: **`aiqbhzugqwbcraifhyxl`** (organização Human Studio, São Paulo) — criado em 14/09/2026; Auth e banco no mesmo projeto. A configuração de Auth (site URL, redirecionamentos) vive em `supabase/config.toml` e sobe com `supabase config push`.
+Projeto Supabase do Spark: **`vrxjqqqsoqfaxzanebtf`** — Auth e banco no mesmo projeto. A configuração de Auth (site URL, redirecionamentos) vive em `supabase/config.toml` e sobe com `supabase config push`.
+
+> Em 14/09/2026 este documento passou a citar um projeto `aiqbhzugqwbcraifhyxl`, na organização **Human Studio**, que pertence a outro cliente. Os `.env` nunca deixaram de apontar para `vrxjqqqsoqfaxzanebtf`, e é nele que estão as migrations e os dados. O registro ficou dizendo uma coisa e o sistema fazendo outra por três dias. **A fonte da verdade sobre qual banco está em uso é o `.env`**, e nenhum projeto da organização Human Studio deve ser usado aqui.
 
 ## O que o Supabase exige
 
