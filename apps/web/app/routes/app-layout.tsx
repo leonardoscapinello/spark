@@ -373,9 +373,9 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {tabIndicator && <span className={styles.moduleIndicator} style={{ left: tabIndicator.left, width: tabIndicator.width }} aria-hidden="true" />}
         </nav>}
         {queueNotice && <div className={styles.sendQueueNotice}><Alert tone="warning" title={queueNotice.title}>{queueNotice.description}</Alert></div>}
-        /* O provedor do cadastro da Receita não sincroniza nada até alguém
-           * olhar um CNPJ — montá-lo aqui custa zero e evita repeti-lo em cada
-           * tela que mostra campo personalizado. */
+        {/* O provedor do cadastro da Receita não sincroniza nada até alguém
+            olhar um CNPJ: montá-lo aqui custa zero e evita repeti-lo em cada
+            tela que mostra campo personalizado. */}
           <LinkPreviewDataProvider><CompanyRegistrationDataProvider><Outlet /></CompanyRegistrationDataProvider></LinkPreviewDataProvider>
       </main>
       <QuickNavigation open={quickNavigationOpen} onOpenChange={setQuickNavigationOpen} items={quickNavigationItems} onSelect={(to) => { markNavigation(to); void navigate(to); }} />
