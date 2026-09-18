@@ -44,7 +44,7 @@ export function CompanyRegistrationDetails({ registration, activities = [], memb
       <Fact label="Porte" value={registration.size} />
       {/* Capital social está em centavos na coluna; `money` é o único caminho
         * para reais em todo o sistema. */}
-      <Fact label="Capital social" value={registration.shareCapital === null ? null : formatBRL(money(registration.shareCapital))} />
+      <Fact label="Capital social" value={reais(registration.shareCapital)} />
       <Fact label="Simples Nacional" value={optante(registration.simplesOptant, registration.simplesOptedOn, registration.simplesLeftOn)} />
       <Fact label="MEI" value={optante(registration.meiOptant, registration.meiOptedOn, registration.meiLeftOn)} />
       <Fact label="Ente federativo" value={registration.federativeEntity} />
@@ -108,6 +108,19 @@ function optante(optante: boolean | null, entrada: string | null, saida: string 
   if (optante === null) return null;
   if (optante) return entrada ? `Optante desde ${dataCurta(entrada)}` : "Optante";
   return saida ? `Não optante, saiu em ${dataCurta(saida)}` : "Não optante";
+}
+
+/**
+ * Centavos → reais, sem lançar. `money()` recusa o que não for inteiro seguro,
+ * e recusar LANÇANDO no caminho de render apaga a página inteira — foi assim
+ * que um `bigint` vindo da sincronização derrubou a tela. Valor ilegível
+ * simplesmente não vira linha.
+ */
+function reais(centavos: number | null): string | null {
+  if (centavos === null) return null;
+  const inteiro = Number(centavos);
+  if (!Number.isSafeInteger(inteiro)) return null;
+  return formatBRL(money(inteiro));
 }
 
 function dataCurta(dia: string): string {

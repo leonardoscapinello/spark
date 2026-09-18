@@ -13,7 +13,7 @@
     "dev:gateway": "pnpm --filter @spark/dev-gateway dev",
     "build": "turbo run build",
     "check": "turbo run typecheck lint test --filter=...[HEAD~1] --concurrency=2",
-    "check:full": "turbo run typecheck lint test",
+    "check:full": "turbo run typecheck lint test build",
     "size": "turbo run size",
     "lighthouse": "turbo run lighthouse",
     "db:migrate": "pnpm --filter @spark/db db:migrate",

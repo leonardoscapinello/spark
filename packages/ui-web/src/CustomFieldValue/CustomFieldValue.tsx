@@ -7,6 +7,7 @@ import { DocumentInput, MaskedInput, MoneyInput } from "../MaskedInput/MaskedInp
 import { Select } from "../Select/Select.js";
 import { Textarea } from "../Textarea/Textarea.js";
 import { InlineField } from "../InlineField/InlineField.js";
+import type { IconName } from "../Icon/Icon.js";
 import s from "./CustomFieldValue.module.css";
 
 
@@ -23,6 +24,12 @@ export interface CustomFieldValueProps {
   onSuccess?: (label: string) => void;
   preview?: ReactNode;
   onPreviewRequest?: () => void;
+  /**
+   * Botão irmão do valor, além de editar — o mesmo lugar por onde «Pessoa» e
+   * «Empresa» abrem a ficha. É aqui que mora uma ação sobre o valor, e não
+   * dentro da prévia: prévia é tooltip, e tooltip não recebe clique.
+   */
+  action?: { label: string; icon: IconName; onClick: () => void };
 }
 
 /**
@@ -40,7 +47,7 @@ export interface CustomFieldValueProps {
  * mostrando o valor antigo, o editor já com o novo, e nada dizendo o que estava
  * acontecendo. Se a gravação falhar, o valor volta ao que era e o erro aparece.
  */
-export function CustomFieldValue({ field, value, options, disabled = false, onSave, onError, onSuccess, preview, onPreviewRequest }: CustomFieldValueProps) {
+export function CustomFieldValue({ field, value, options, disabled = false, onSave, onError, onSuccess, preview, onPreviewRequest, action }: CustomFieldValueProps) {
   const choices = options ?? customFieldOptions(field);
   /* O valor que a tela mostra. Começa igual ao sincronizado e passa a ser o
    * que esta pessoa gravou, na hora — a volta do servidor demora, e mostrar o
@@ -111,7 +118,12 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
     disabled={disabled}
     onCancel={discardDraft}
     {...(href === undefined ? {} : { href })}
-    {...(href === undefined || preview === undefined ? {} : { preview, onPreviewRequest })}
+    {...(action === undefined ? {} : { action })}
+    /* A prévia não depende de haver endereço. A condição aqui exigia `href`,
+     * que só existe em campo de endereço web — e com isso a prévia do CNPJ era
+     * montada, passada para cá e descartada em silêncio. Prévia é prévia, venha
+     * de um link ou de um documento. */
+    {...(preview === undefined ? {} : { preview, ...(onPreviewRequest === undefined ? {} : { onPreviewRequest }) })}
   >{control}</InlineField>;
 
   if (field.type === "boolean") return row((close) => <Checkbox checked={local === true} disabled={busy} onCheckedChange={(checked) => close(save(checked === true))}>{local === true ? "Sim" : "Não"}</Checkbox>);

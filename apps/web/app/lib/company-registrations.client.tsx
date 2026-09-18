@@ -57,10 +57,17 @@ const CompanyRegistrationContext = createContext<ContextValue | null>(null);
  * abrindo a sua consulta seria a mesma resposta buscada N vezes.
  */
 export function CompanyRegistrationDataProvider({ children }: { children: ReactNode }) {
-  const { data: registrosSincronizados = [] } = useLiveQuery({ query: (q) => q.from({ registros: getRegistrations() }) });
-  const { data: atividades = [] } = useLiveQuery({ query: (q) => q.from({ atividades: getActivities() }) });
-  const { data: socios = [] } = useLiveQuery({ query: (q) => q.from({ socios: getMembers() }) });
-  const { data: regimes = [] } = useLiveQuery({ query: (q) => q.from({ regimes: getTaxRegimes() }) });
+  /* Nada sincroniza até alguém olhar um CNPJ.
+   *
+   * Sem esta porta, abrir QUALQUER tela abria quatro fluxos de sincronização
+   * para tabelas que aquela tela não lê — e a maioria das telas não tem campo
+   * de documento nenhum. Ligar por demanda é o que faz o custo acompanhar o
+   * uso em vez de acompanhar o número de tabelas que existem. */
+  const [ligado, setLigado] = useState(false);
+  const { data: registrosSincronizados = [] } = useLiveQuery({ query: (q) => ligado ? q.from({ registros: getRegistrations() }) : undefined }, [ligado]);
+  const { data: atividades = [] } = useLiveQuery({ query: (q) => ligado ? q.from({ atividades: getActivities() }) : undefined }, [ligado]);
+  const { data: socios = [] } = useLiveQuery({ query: (q) => ligado ? q.from({ socios: getMembers() }) : undefined }, [ligado]);
+  const { data: regimes = [] } = useLiveQuery({ query: (q) => ligado ? q.from({ regimes: getTaxRegimes() }) : undefined }, [ligado]);
   const [imediatos, setImediatos] = useState<ReadonlyMap<string, CompanyRegistration>>(() => new Map());
   const [pending, setPending] = useState<ReadonlySet<string>>(() => new Set());
 
@@ -84,6 +91,9 @@ export function CompanyRegistrationDataProvider({ children }: { children: ReactN
     // Só CNPJ tem cadastro público, e um número que não fecha não merece uma
     // ida à rede — a mesma conferência que o servidor faria, feita antes.
     if (taxId.length !== 14 || !isValidCnpj(taxId)) return;
+    // O primeiro CNPJ olhado liga a sincronização; daí em diante ela serve a
+    // todos os outros da sessão.
+    setLigado(true);
     const atual = byTaxId.get(taxId);
     if ((atual && !companyRegistrationNeedsRefresh(atual)) || inflight.has(taxId)) return;
 
@@ -155,14 +165,20 @@ export function EnrichedCustomFieldValue(props: ComponentProps<typeof CustomFiel
     <PreviewedCustomFieldValue
       {...props}
       onSave={save}
+      /* Sem `onExpand` aqui: o cartão mora dentro de um tooltip, e tooltip não
+       * recebe clique — o botão do rodapé ficava desenhado e inalcançável, e o
+       * clique atravessava para o campo de baixo. A ação vai para o botão
+       * irmão do valor, o mesmo por onde «Pessoa» e «Empresa» abrem a ficha. */
       preview={<CompanyRegistrationCard
         registration={estado.registration}
         activities={estado.activities}
         loading={estado.loading}
         taxId={taxId}
-        onExpand={() => setAberto(true)}
       />}
       onPreviewRequest={estado.request}
+      {...(estado.registration?.status === "ready"
+        ? { action: { label: `Ver o cadastro de ${estado.registration.legalName ?? "empresa"} na Receita`, icon: "building" as const, onClick: () => setAberto(true) } }
+        : {})}
     />
     <Modal open={aberto} onOpenChange={setAberto}>
       {estado.registration && <ModalContent

@@ -23,6 +23,11 @@ services:
       ELECTRIC_DATABASE_USE_IPV6: "true"
       ELECTRIC_INSECURE: "true"
       ELECTRIC_USAGE_REPORTING: "false"
+      # O padrão do Electric é 20, e o banco tem 60 conexões no total: três
+      # reservadas ao superusuário e catorze dos serviços do próprio Supabase.
+      # Sobram 43, das quais a API já orça 12. Oito deixa folga para o painel e
+      # para quem estiver depurando com psql.
+      ELECTRIC_DB_POOL_SIZE: "8"
 
   mailpit:
     image: axllent/mailpit:latest

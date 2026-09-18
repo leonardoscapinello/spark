@@ -41,7 +41,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -64,7 +64,6 @@ import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
 import { useDealPresence } from "../lib/deal-presence.client";
-import { ViewerStack, RecordSelect } from "@spark/ui-web";
 import { ContactProfile } from "./contact-detail";
 import { CompanyProfile } from "./company-detail";
 import styles from "./deal-detail.module.css";
@@ -360,7 +359,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     }
   }
 
-  async function addFollower(nextUserId = selectedFollower?.value) {
+  const addFollower = async (nextUserId = selectedFollower?.value) => {
     if (!deal || !session || !nextUserId || !canWrite) throw new Error("Escolha uma pessoa para seguir o negócio.");
     setBusyFollowerId(nextUserId);
     try {
@@ -536,7 +535,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     notify({ title: status === "won" ? "Negócio ganho" : "Negócio perdido", tone: status === "won" ? "success" : "warning" });
   }
 
-  function openActivityModal(activity?: Activity, requestedType: ActivityType = "task") {
+  const openActivityModal = (activity?: Activity, requestedType: ActivityType = "task") => {
     if (activity) {
       setEditingActivityId(activity.id);
       setActivityType(activity.type);

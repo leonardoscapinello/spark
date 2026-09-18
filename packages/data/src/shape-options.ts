@@ -51,7 +51,28 @@ const parseJson: SparkParser[string] = (value) => {
   if (typeof value !== "string") return value;
   try { return JSON.parse(value) as ReturnType<SparkParser[string]>; } catch { return value; }
 };
+/**
+ * `bigint` vira número comum.
+ *
+ * Toda coluna de dinheiro aqui é `bigint` de centavos — o valor do negócio, o
+ * preço do produto, o capital social da empresa. O cliente do Electric entrega
+ * `int8` como `BigInt`, e `money()` só aceita `number`: `Number.isSafeInteger(0n)`
+ * é falso, então a linha estourava «Invalid monetary value» no meio do render e
+ * derrubava a tela inteira.
+ *
+ * Perde precisão acima de 2^53, que em centavos são noventa trilhões de reais.
+ * Nenhum valor nosso chega perto, e a alternativa — carregar `BigInt` até a
+ * borda — contaminaria toda a aritmética de domínio.
+ */
+const parseBigint: SparkParser[string] = (value) => {
+  if (typeof value === "bigint") return Number(value) as ReturnType<SparkParser[string]>;
+  if (typeof value !== "string" || value === "") return value;
+  const convertido = Number(value);
+  return (Number.isFinite(convertido) ? convertido : value) as ReturnType<SparkParser[string]>;
+};
+
 const SPARK_PARSER: SparkParser = {
   jsonb: parseJson,
   json: parseJson,
+  int8: parseBigint,
 };

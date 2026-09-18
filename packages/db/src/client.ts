@@ -27,10 +27,36 @@ import type { OrgId } from "@spark/core";
  */
 const pools = new Map<string, ReturnType<typeof drizzle<typeof schema>>>();
 
+/**
+ * Teto de conexões do processo, explícito e orçado — não o padrão da
+ * biblioteca.
+ *
+ * A conta que justifica o número: o projeto Supabase aceita 60 conexões, três
+ * ficam reservadas ao superusuário e catorze são dos serviços do próprio
+ * Supabase (PostgREST, Storage, pg_cron, pgbouncer, exporter). Sobram 43 para
+ * nós, e o Electric precisa da parte dele. Doze deixa folga para o `psql` de
+ * quem está depurando e para o painel.
+ *
+ * O padrão do postgres.js é 10 POR POOL, o que só era seguro quando havia um
+ * pool. Deixar implícito foi o que permitiu a API pedir 380 conexões sem que
+ * ninguém tivesse escrito esse número em lugar nenhum.
+ */
+const MAX_CONEXOES = Number(process.env.DATABASE_POOL_MAX ?? 12);
+
 export function createDbClient(connectionString: string) {
   const existente = pools.get(connectionString);
   if (existente) return existente;
-  const client = postgres(connectionString, { prepare: false });
+  const client = postgres(connectionString, {
+    prepare: false,
+    max: MAX_CONEXOES,
+    /* Conexão ociosa devolvida ao banco em vez de guardada para sempre: num
+     * processo que fica de pé por dias, pool cheio de conexão parada é
+     * orçamento tomado de quem precisa. */
+    idle_timeout: 30,
+    /* Espera por uma conexão livre em vez de estourar na hora: sob pico, a
+     * requisição fica na fila alguns segundos e passa, em vez de virar erro. */
+    connect_timeout: 15,
+  });
   const db = drizzle(client, { schema });
   pools.set(connectionString, db);
   return db;
