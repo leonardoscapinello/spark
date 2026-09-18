@@ -3,6 +3,7 @@
 import boundaries from "eslint-plugin-boundaries";
 import tseslint from "typescript-eslint";
 import { cssModuleClasses } from "./eslint-rules/css-module-classes.mjs";
+import { oneConnectionPool } from "./eslint-rules/one-connection-pool.mjs";
 
 const ELEMENTS = [
   { type: "app-api", pattern: "apps/api/**" },
@@ -89,10 +90,19 @@ export default tseslint.config(
     },
   },
   {
+    // Um plugin "spark" só — duas config objects definindo o mesmo nome de
+    // plugin para arquivos que se sobrepõem (.tsx está nos dois padrões) faz
+    // o ESLint recusar com "Cannot redefine plugin". Regras específicas de
+    // .tsx (css-module-classes) convivem aqui com regras gerais de .ts/.tsx
+    // (one-connection-pool).
+    files: ["**/*.ts", "**/*.tsx"],
+    plugins: { spark: { rules: { "css-module-classes": cssModuleClasses, "one-connection-pool": oneConnectionPool } } },
+    rules: { "spark/one-connection-pool": "error" },
+  },
+  {
     // Classe de módulo CSS que não existe. O tipo Record<string,string> deixa
     // passar; o bundler entrega undefined e a tela renderiza sem estilo.
     files: ["**/*.tsx"],
-    plugins: { spark: { rules: { "css-module-classes": cssModuleClasses } } },
     rules: { "spark/css-module-classes": "error" },
   },
   {

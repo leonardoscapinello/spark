@@ -125,8 +125,24 @@ export class ShapesController {
     if (table === "events") appendEventShapeScope(query, filters, params);
     upstream.searchParams.set("where", filters.join(" AND "));
     params.forEach((value, index) => upstream.searchParams.set(`params[${index + 1}]`, value));
-    const columns = TABLE_COLUMNS.get(table);
-    if (columns) upstream.searchParams.set("columns", columns.join(","));
+    /* Recorte de COLUNA, decidido aqui — nunca pelo cliente.
+     *
+     * A tela pede uma visão pelo nome («directory»); o servidor traduz para a
+     * lista de colunas que aquela visão pode ver. Nome desconhecido é recusado
+     * em vez de virar a linha inteira em silêncio: uma visão escrita errado
+     * não pode acabar entregando mais dado do que pediu.
+     *
+     * Mandar a linha inteira custa duas vezes — bytes na rede e dado pessoal
+     * numa tela que não o mostra. É o padrão só onde a tela realmente lê tudo. */
+    const view = query.view;
+    if (view !== undefined) {
+      const projecao = tableConfig.views?.[view];
+      if (!projecao) throw new NotFoundException(`Unknown view "${view}" for table "${table}".`);
+      upstream.searchParams.set("columns", projecao.join(","));
+    } else {
+      const columns = TABLE_COLUMNS.get(table);
+      if (columns) upstream.searchParams.set("columns", columns.join(","));
+    }
 
     // The browser closing its request (tab closed, shape unsubscribed) must
     // close ours to Electric too — otherwise every abandoned SSE stream

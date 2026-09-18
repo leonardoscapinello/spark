@@ -17,14 +17,29 @@ export interface ShapeTableConfig {
   userColumn?: "user_id";
   /** Rows shared org-wide when flagColumn = sharedValue, otherwise only their owner sees them. */
   sharedUnless?: { ownerColumn: string; flagColumn: string; sharedValue: string };
+  /**
+   * Recortes de COLUNA por finalidade. A tela pede uma visão pelo nome; o
+   * servidor decide o que ela recebe — a mesma regra do WHERE, pelo mesmo
+   * motivo (ADR-0026: quem escolhe o recorte é o servidor).
+   *
+   * Existe porque o padrão — mandar a linha inteira — custa caro duas vezes.
+   * O cartão do funil precisa do nome da pessoa e recebia telefone, e-mail e
+   * tudo o mais: mais bytes na rede, e dado pessoal indo parar numa tela que
+   * não o mostra. Numa carteira de cinquenta mil pessoas isso é a diferença
+   * entre 26 MB e 3 MB por navegador.
+   */
+  views?: Readonly<Record<string, readonly string[]>>;
 }
+
+/** Colunas que toda visão carrega: sem elas a shape não é filtrável nem indexável. */
+const CHAVES = ["id", "org_id"] as const;
 
 export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   organizations: { column: "id" },
-  contacts: { column: "org_id" },
+  contacts: { column: "org_id", views: { directory: [...CHAVES, "name", "deleted_at"] } },
   tags: { column: "org_id" },
   contact_tags: { column: "org_id" },
-  companies: { column: "org_id" },
+  companies: { column: "org_id", views: { directory: [...CHAVES, "name", "deleted_at"] } },
   company_tags: { column: "org_id" },
   pipelines: { column: "org_id" },
   stages: { column: "org_id" },
@@ -40,7 +55,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   notes: { column: "org_id" },
   events: { column: "org_id" },
   identities: { column: "org_id" },
-  users: { column: "org_id" },
+  users: { column: "org_id", views: { directory: [...CHAVES, "name", "email", "avatar_url", "deactivated_at"] } },
   conversations: { column: "org_id" },
   messages: { column: "org_id" },
   automations: { column: "org_id" },

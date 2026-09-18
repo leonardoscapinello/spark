@@ -15,9 +15,15 @@ import { getSparkApiBaseUrl, getSparkAuthToken, refreshSparkAuthToken } from "@s
  * (apps/dev-gateway). HTTP/1.1 satura seis conexões e bloqueia a própria
  * API de escrita; trocar SSE por long-poll mantém o mesmo gargalo.
  */
-export function sparkShapeOptions(table: string) {
+/**
+ * `view` pede um RECORTE DE COLUNA ao servidor — quem decide quais colunas
+ * aquela visão pode ver é ele, não esta chamada. Sem `view`, vem a linha
+ * inteira, e isso deve ser a exceção: a regra é a tela declarar o que lê.
+ */
+export function sparkShapeOptions(table: string, options: { view?: string } = {}) {
   return {
     url: `${getSparkApiBaseUrl()}/v1/shapes/${table}`,
+    ...(options.view ? { params: { view: options.view } } : {}),
     liveSse: true,
     columnMapper: snakeCamelMapper(),
     parser: SPARK_PARSER,
