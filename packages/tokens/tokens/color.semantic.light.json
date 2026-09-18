@@ -48,9 +48,19 @@
       "$type": "color",
       "$value": "{color.status.success}"
     },
+    "statusSuccessSoft": {
+      "$type": "color",
+      "$value": "#2F92701F",
+      "$description": "Pastilha de situação — 12% da primitiva success, para o texto statusSuccess ler por cima."
+    },
     "statusWarning": {
       "$type": "color",
       "$value": "{color.status.warning}"
+    },
+    "statusWarningSoft": {
+      "$type": "color",
+      "$value": "#B875181F",
+      "$description": "Pastilha de situação — 12% da primitiva warning."
     },
     "internalNoteSurface": {
       "$type": "color",
@@ -59,6 +69,11 @@
     "statusDanger": {
       "$type": "color",
       "$value": "{color.status.danger}"
+    },
+    "statusDangerSoft": {
+      "$type": "color",
+      "$value": "#C94B5A1F",
+      "$description": "Pastilha de situação — 12% da primitiva danger."
     },
     "focusRing": {
       "$type": "color",

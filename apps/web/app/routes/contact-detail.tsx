@@ -31,7 +31,7 @@ import layout from "./contact-profile-layout.module.css";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
 import { useCustomFieldOptions, useCustomFieldValues } from "../lib/custom-fields.client";
-import { PreviewedCustomFieldValue } from "../lib/link-previews.client";
+import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("contacts:read");
@@ -361,7 +361,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
       {customFields.filter((field) => !field.archivedAt).length > 0 && <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Campos personalizados</h2>
         <div className={styles.campos}>
-          {customFields.filter((field) => !field.archivedAt).map((field) => <PreviewedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
+          {customFields.filter((field) => !field.archivedAt).map((field) => <EnrichedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
         </div>
       </section>}
 

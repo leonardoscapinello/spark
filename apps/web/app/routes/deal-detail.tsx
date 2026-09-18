@@ -62,7 +62,7 @@ import { getDealEventsCollection } from "../lib/events-collection.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
-import { PreviewedCustomFieldValue } from "../lib/link-previews.client";
+import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
 import { useDealPresence } from "../lib/deal-presence.client";
 import { ViewerStack, RecordSelect } from "@spark/ui-web";
 import { ContactProfile } from "./contact-detail";
@@ -735,7 +735,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           </div> },
           { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: <div className={styles.details}>
-            {customFields.filter((field) => !field.archivedAt).map((field) => <PreviewedCustomFieldValue
+            {customFields.filter((field) => !field.archivedAt).map((field) => <EnrichedCustomFieldValue
               options={fieldOptions.get(field.id) ?? []}
               key={field.id}
               field={field}

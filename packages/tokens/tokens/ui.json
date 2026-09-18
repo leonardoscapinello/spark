@@ -25,6 +25,11 @@
       "$type": "dimension",
       "$value": "16px"
     },
+    "iconSm": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$description": "Ícone dentro de texto ou de pastilha, onde 16px domina a linha."
+    },
     "railWidth": {
       "$type": "dimension",
       "$value": "36px"
@@ -373,6 +378,16 @@
     "cashIllustrationHeight": {
       "$type": "dimension",
       "$value": "80px"
+    },
+    "registrationCardHeight": {
+      "$type": "dimension",
+      "$value": "208px",
+      "$description": "Altura mínima do cartão de cadastro da Receita — consultando, indisponível e pronto ocupam a mesma caixa."
+    },
+    "cnaeColumn": {
+      "$type": "dimension",
+      "$value": "72px",
+      "$description": "Coluna do código de CNAE e do ano de regime no cadastro da Receita — largura de sete dígitos em fonte monoespaçada."
     }
   }
 }

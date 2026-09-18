@@ -1,0 +1,50 @@
+/* O cadastro inteiro. Vive dentro do corpo de um ModalContent, que já rola —
+ * por isso nada aqui declara altura ou rolagem própria: duas barras de rolagem
+ * encaixadas é o que faz um painel parecer quebrado. */
+.details { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.section { display: flex; flex-direction: column; gap: var(--space-2); }
+.sectionTitle {
+  margin: 0;
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-xs);
+  font-weight: var(--typography-weight-semibold);
+  letter-spacing: var(--typography-tracking-wide);
+  text-transform: uppercase;
+}
+
+/* Rótulo e valor em duas colunas, com a mesma medida de rótulo do painel de
+ * detalhes: quem abre isto vem de lá, e mudar a largura da coluna no caminho
+ * faz a informação parecer outra. */
+.fact { display: grid; grid-template-columns: var(--ui-fieldLabelColumn) minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+.factLabel { color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.factValue { color: var(--color-ink); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); overflow-wrap: break-word; }
+.factValue[data-mono] { font-family: var(--typography-fontFamily-mono); }
+
+.activity { display: grid; grid-template-columns: var(--ui-cnaeColumn) minmax(0, 1fr); gap: var(--space-3); align-items: baseline; font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.code { color: var(--color-inkMuted); font-family: var(--typography-fontFamily-mono); font-size: var(--typography-size-xs); }
+.badge {
+  display: inline-block;
+  margin-inline-start: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--ui-subtle);
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-xs);
+  font-weight: var(--typography-weight-regular);
+}
+
+.members { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.member { display: flex; flex-direction: column; gap: var(--space-1); }
+.member strong { font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.muted { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
+
+.regimes { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.regime { display: grid; grid-template-columns: var(--ui-cnaeColumn) minmax(0, 1fr); gap: var(--space-3); align-items: baseline; font-size: var(--typography-size-sm); }
+.year { color: var(--color-inkMuted); font-family: var(--typography-fontFamily-mono); font-size: var(--typography-size-xs); }
+
+/* Estreito: rótulo em cima do valor, senão a coluna do valor fica com duas
+ * palavras por linha. */
+@media (max-width: 640px) {
+  .fact, .activity, .regime { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+}

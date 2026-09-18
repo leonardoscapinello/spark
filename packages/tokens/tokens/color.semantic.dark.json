@@ -57,10 +57,20 @@
       "$value": "#4CB98C",
       "$description": "Interpolado — status.success clareado para ler sobre o vazio; os tons de --cs-success/warning/danger da especificação são calibrados pro fundo claro."
     },
+    "statusSuccessSoft": {
+      "$type": "color",
+      "$value": "#4CB98C2E",
+      "$description": "Pastilha de situação — 18% do success do tema escuro, que já vem clareado."
+    },
     "statusWarning": {
       "$type": "color",
       "$value": "#D99A3E",
       "$description": "Interpolado — mesmo motivo de statusSuccess."
+    },
+    "statusWarningSoft": {
+      "$type": "color",
+      "$value": "#D99A3E2E",
+      "$description": "Pastilha de situação — 18% do warning do tema escuro."
     },
     "internalNoteSurface": {
       "$type": "color",
@@ -71,6 +81,11 @@
       "$type": "color",
       "$value": "#E0808C",
       "$description": "Interpolado — mesmo motivo de statusSuccess."
+    },
+    "statusDangerSoft": {
+      "$type": "color",
+      "$value": "#E0808C2E",
+      "$description": "Pastilha de situação — 18% do danger do tema escuro."
     },
     "focusRing": {
       "$type": "color",

@@ -1,0 +1,102 @@
+/* Cartão do cadastro da Receita. Mesma largura da prévia de link, porque os
+ * dois moram no mesmo tooltip e alternar de largura entre um campo e outro
+ * faria a coluna dançar.
+ *
+ * `min-height` e não `height`: os três estados (consultando, indisponível,
+ * pronto) têm de ocupar a MESMA caixa — é o que evita a página pular por baixo
+ * quando a resposta chega —, mas uma razão social muito longa precisa poder
+ * crescer em vez de ser cortada no meio de uma palavra. */
+.card {
+  display: flex;
+  flex-direction: column;
+  width: var(--ui-popoverWidth);
+  min-height: var(--ui-registrationCardHeight);
+  max-width: 100%;
+  min-width: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) var(--space-3) 0; }
+
+/* A situação é a primeira coisa que decide a conversa: empresa baixada muda o
+ * que se faz em seguida. Por isso tem cor e vem antes do nome. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--typography-size-xs);
+  font-weight: var(--typography-weight-semibold);
+  line-height: var(--ui-tabLine);
+  letter-spacing: var(--typography-tracking-wide);
+  text-transform: uppercase;
+  background: var(--ui-subtle);
+  color: var(--color-inkMuted);
+}
+.pill[data-tone="success"] { background: var(--color-statusSuccessSoft); color: var(--color-statusSuccess); }
+.pill[data-tone="warning"] { background: var(--color-statusWarningSoft); color: var(--color-statusWarning); }
+.pill[data-tone="danger"] { background: var(--color-statusDangerSoft); color: var(--color-statusDanger); }
+
+.branch { color: var(--color-inkFaint); font-size: var(--typography-size-xs); }
+
+.body { display: flex; flex: 1 1 auto; flex-direction: column; gap: var(--space-1); min-width: 0; padding: var(--space-2) var(--space-3) var(--space-3); }
+.name { font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); overflow-wrap: break-word; }
+.muted { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
+
+/* Atividade em duas linhas no máximo: a descrição do CNAE é escrita por
+ * legislador, não por redator, e algumas passam de cem caracteres. */
+.activity {
+  display: -webkit-box;
+  gap: var(--space-1);
+  overflow: hidden;
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-xs);
+  line-height: var(--ui-bodyLine);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.activityIcon { display: inline-flex; margin-inline-end: var(--space-1); vertical-align: text-bottom; color: var(--color-inkFaint); }
+.activityIcon > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
+
+.meta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); padding: 0 var(--space-3) var(--space-3); }
+.document { color: var(--color-ink); font-size: var(--typography-size-xs); font-family: var(--typography-fontFamily-mono); }
+
+/* Rodapé colado embaixo, separado por fio: é ação, não informação. */
+.expand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: auto;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-top: var(--ui-hairline) solid var(--color-line);
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: var(--typography-size-xs);
+  font-weight: var(--typography-weight-semibold);
+  text-align: start;
+  cursor: pointer;
+  /* Propriedades nomeadas, nunca `all`: `all` anima também o que não deveria,
+   * e num cartão dentro de tooltip isso briga com a entrada do próprio popup. */
+  transition: background var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-instant) var(--motion-ease-out);
+}
+.expand:hover { background: var(--ui-subtle); }
+/* Responde ao toque: sem isto o botão parece não ter ouvido o clique. */
+.expand:active { transform: scale(0.98); }
+.expand:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusOffset)); }
+.chevron { display: inline-flex; color: var(--color-inkFaint); }
+.chevron > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
+
+/* Esperando: linhas na posição exata em que o nome e o fantasia vão entrar,
+ * para que a troca não desloque nada. */
+.skeleton { height: var(--space-3); border-radius: var(--radius-sm); background: var(--ui-subtle); }
+.skeleton[data-short="true"] { width: 60%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .expand { transition-duration: var(--motion-duration-instant); }
+  .expand:active { transform: none; }
+}
