@@ -12,9 +12,28 @@ import type { OrgId } from "@spark/core";
  * matters is that every business query goes through `withOrgContext` —
  * never around it.
  */
+/**
+ * Um pool por endereço de banco, compartilhado — e não um por chamada.
+ *
+ * Cada repositório do backend chama esta função no próprio construtor, e são
+ * 38 deles. Sem a memória abaixo, um processo da API abria 38 pools; com o
+ * padrão de dez conexões cada, isso são até 380 conexões de UM processo, e o
+ * Postgres recusa muito antes disso com «remaining connection slots are
+ * reserved for roles with the SUPERUSER attribute» — a API inteira, e o
+ * Electric junto, param de responder por esgotamento.
+ *
+ * A memória é por endereço: teste com outro banco continua tendo o seu pool, e
+ * quem chama não muda nada.
+ */
+const pools = new Map<string, ReturnType<typeof drizzle<typeof schema>>>();
+
 export function createDbClient(connectionString: string) {
+  const existente = pools.get(connectionString);
+  if (existente) return existente;
   const client = postgres(connectionString, { prepare: false });
-  return drizzle(client, { schema });
+  const db = drizzle(client, { schema });
+  pools.set(connectionString, db);
+  return db;
 }
 
 export type SparkDb = ReturnType<typeof createDbClient>;
