@@ -5,7 +5,7 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { StageSchema, stageId, type Stage, type CreateStageInput, type OrgId } from "@spark/core";
+import { StageSchema, stageId, STAGE_PROBABILITY_DEFAULT, type Stage, type CreateStageInput, type OrgId } from "@spark/core";
 import { stagesControllerArchive, stagesControllerCreate, stagesControllerRename, stagesControllerReorder } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 import { sparkShapeOptions } from "./shape-options.js";
@@ -18,7 +18,7 @@ export function optimisticStage(input: Omit<CreateStageInput, "id">, orgId: OrgI
     pipelineId: input.pipelineId,
     name: input.name,
     sortOrder: input.sortOrder,
-    probability: input.probability ?? 0,
+    probability: STAGE_PROBABILITY_DEFAULT,
     slaMinutes: input.slaMinutes ?? null,
     allowWon: input.allowWon ?? true,
     allowLost: input.allowLost ?? true,
@@ -46,7 +46,6 @@ export function createStagesCollection() {
           pipelineId: stage.pipelineId,
           name: stage.name,
           sortOrder: stage.sortOrder,
-          probability: stage.probability,
           slaMinutes: stage.slaMinutes,
           allowWon: stage.allowWon,
           allowLost: stage.allowLost,

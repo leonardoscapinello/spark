@@ -1624,11 +1624,6 @@ export interface CreateStageDto {
      */
   sortOrder: number;
   /**
-     * @minimum 0
-     * @maximum 100
-     */
-  probability?: number;
-  /**
      * @minimum 1
      * @maximum 9007199254740991
      * @nullable

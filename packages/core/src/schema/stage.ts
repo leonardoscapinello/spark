@@ -19,9 +19,11 @@ export const StageSchema = z.object({
   pipelineId: zPipelineId,
   name: z.string().min(1, { error: "Stage name is required" }).max(200),
   sortOrder: z.number().int().min(0),
-  /** win probability associated with this stage, 0–100 — used for
-   * weighted revenue forecasting (Pipedrive parity). */
-  probability: z.number().int().min(0).max(100).default(0),
+  /** Probabilidade de um negócio avançar desta etapa para a próxima, 0–100
+   * — calculada por `calculateStageProbability` (core/rules/stageWorkflow)
+   * a partir do histórico real de movimentação, nunca preenchida na mão.
+   * Etapa sem histórico começa em 100 (STAGE_PROBABILITY_DEFAULT). */
+  probability: z.number().int().min(0).max(100).default(100),
   /** Operational minutes allowed in this stage; null disables SLA. */
   slaMinutes: z.number().int().min(1).nullable().default(null),
   allowWon: z.boolean().default(true),
@@ -35,12 +37,17 @@ export const StageSchema = z.object({
 
 export type Stage = z.infer<typeof StageSchema>;
 
+/** `probability` fora daqui de propósito — toda etapa nasce em
+ * STAGE_PROBABILITY_DEFAULT, e só `recomputeStageProbability` (infra) volta
+ * a mudar esse número depois. Aceitar um valor no create reabriria a porta
+ * que o usuário pediu para fechar: preenchimento manual. */
 export const CreateStageInputSchema = StageSchema.omit({
   orgId: true,
+  probability: true,
   createdAt: true,
   updatedAt: true,
   archivedAt: true,
-}).partial({ probability: true, slaMinutes: true, allowWon: true, allowLost: true, restrictTransitions: true });
+}).partial({ slaMinutes: true, allowWon: true, allowLost: true, restrictTransitions: true });
 export type CreateStageInput = z.infer<typeof CreateStageInputSchema>;
 
 export const UpdateStageInputSchema = CreateStageInputSchema.omit({ id: true }).partial();

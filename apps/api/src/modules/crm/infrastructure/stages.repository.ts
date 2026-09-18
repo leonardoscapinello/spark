@@ -26,7 +26,8 @@ export class StagesRepository {
           pipelineId: input.pipelineId,
           name: input.name,
           sortOrder: input.sortOrder,
-          probability: input.probability ?? 0,
+          // probability fica no default da coluna (100) — nunca vem do
+          // cliente (packages/core/schema/stage.ts).
           slaMinutes: input.slaMinutes ?? null,
           allowWon: input.allowWon ?? true,
           allowLost: input.allowLost ?? true,

@@ -11,8 +11,11 @@ import { config as loadEnv } from "dotenv";
 // O banco do app é o da API (docs/operacao/ambientes.md): sem DATABASE_URL no ambiente, lê apps/api/.env.
 loadEnv({ path: ["../../apps/api/.env", ".env"] });
 
-const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) throw new Error("DATABASE_URL is required; Spark has no local database fallback.");
+// Mesma preferência de createAppDbClient (packages/db/src/client.ts): a
+// conexão direta do Supabase só existe em IPv6, instável nesta rede; o
+// pooler de sessão (Supavisor) é IPv4 e evita o ENOTFOUND intermitente.
+const DATABASE_URL = process.env.DATABASE_POOLER_URL || process.env.DATABASE_URL;
+if (!DATABASE_URL) throw new Error("DATABASE_POOLER_URL ou DATABASE_URL é obrigatório; Spark não tem banco local.");
 const MIGRATIONS_DIR = new URL("../migrations", import.meta.url).pathname;
 
 async function main() {

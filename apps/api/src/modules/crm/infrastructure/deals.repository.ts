@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
-import { and, eq, isNull, sql } from "drizzle-orm";
-import { createAppDbClient, withOrgContext, deals, stages, stageTransitions, type SparkDb } from "@spark/db";
+import { and, eq, gte, isNull, sql } from "drizzle-orm";
+import { createAppDbClient, withOrgContext, deals, stages, stageTransitions, dealStageMoves, type SparkDb } from "@spark/db";
 import {
   money,
   toCents,
@@ -12,8 +12,10 @@ import {
   type OrgId,
   type DealId,
   type StageId,
+  type StageProbabilityWindow,
   canCloseAtStage,
   canMoveBetweenStages,
+  calculateStageProbability,
   stageMoveCooldownRemaining,
   auditChanges,
   type UserId,
@@ -98,9 +100,40 @@ export class DealsRepository {
 
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
+      await tx.insert(dealStageMoves).values({ orgId, pipelineId: current.pipelineId, dealId, fromStageId: source.id, toStageId: stageId });
+      await this.recomputeProbability(tx, orgId, source.id, source.sortOrder);
+
       await this.eventWriter.append(tx, { orgId, actorUserId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.stage_changed", data: { fromStageId: current.stageId, stageId: deal.stageId, changes: [{ field: "stageId", before: current.stageId, after: deal.stageId }] } });
       return { deal, txid };
     });
+  }
+
+  private static readonly PROBABILITY_LONG_WINDOW_DAYS = 90;
+  private static readonly PROBABILITY_SHORT_WINDOW_DAYS = 14;
+
+  /**
+   * Roda dentro da mesma transação do `move()` que a disparou — a
+   * probabilidade de uma etapa é sempre calculada a partir de quem saiu
+   * dela (`deal_stage_moves`), nunca preenchida na mão (pedido do usuário,
+   * 18/09). Ver `calculateStageProbability` (packages/core/rules/stageWorkflow).
+   */
+  private async recomputeProbability(tx: SparkDb, orgId: OrgId, stageId: string, sortOrder: number): Promise<void> {
+    const [longWindow, shortWindow] = await Promise.all([
+      this.probabilityWindow(tx, orgId, stageId, sortOrder, DealsRepository.PROBABILITY_LONG_WINDOW_DAYS),
+      this.probabilityWindow(tx, orgId, stageId, sortOrder, DealsRepository.PROBABILITY_SHORT_WINDOW_DAYS),
+    ]);
+    const probability = calculateStageProbability({ longWindow, shortWindow });
+    await tx.update(stages).set({ probability, updatedAt: new Date() }).where(and(eq(stages.orgId, orgId), eq(stages.id, stageId)));
+  }
+
+  private async probabilityWindow(tx: SparkDb, orgId: OrgId, stageId: string, sortOrder: number, days: number): Promise<StageProbabilityWindow> {
+    const since = new Date(Date.now() - days * 86_400_000);
+    const departures = await tx
+      .select({ toSortOrder: stages.sortOrder })
+      .from(dealStageMoves)
+      .innerJoin(stages, eq(stages.id, dealStageMoves.toStageId))
+      .where(and(eq(dealStageMoves.orgId, orgId), eq(dealStageMoves.fromStageId, stageId), gte(dealStageMoves.occurredAt, since)));
+    return { left: departures.length, advanced: departures.filter((departure) => departure.toSortOrder > sortOrder).length };
   }
 
   async edit(orgId: OrgId, actorUserId: UserId, dealId: DealId, input: EditDealInput): Promise<{ deal: Deal; txid: number }> {

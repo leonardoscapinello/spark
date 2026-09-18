@@ -32,6 +32,7 @@ export * from "./saved-views.js";
 export * from "./user-preferences.js";
 export * from "./deal-products.js";
 export * from "./deal-followers.js";
+export * from "./deal-stage-moves.js";
 export * from "./stage-field-rules.js";
 export * from "./notes.js";
 export * from "./tags.js";

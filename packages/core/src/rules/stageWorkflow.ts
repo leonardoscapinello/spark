@@ -49,6 +49,54 @@ export function isValidStageOrder(currentIds: readonly string[], orderedIds: rea
   return true;
 }
 
+export interface StageProbabilityWindow {
+  /** Negócios que saíram desta etapa no período — para outra etapa ou fechados. */
+  left: number;
+  /** Desses, quantos saíram avançando (etapa de destino com sortOrder maior). */
+  advanced: number;
+}
+
+export interface StageProbabilityInput {
+  /** Janela longa (ex.: 90 dias) — a tendência de fundo. */
+  longWindow: StageProbabilityWindow;
+  /** Janela curta (ex.: 14 dias) — reage à sazonalidade recente. */
+  shortWindow: StageProbabilityWindow;
+}
+
+/** Sem histórico nenhum ainda, começa otimista — não em zero, que
+ * puniria toda etapa nova antes mesmo do primeiro negócio passar por ela. */
+export const STAGE_PROBABILITY_DEFAULT = 100;
+
+/** Abaixo disso, a taxa de um período é ruído — sujeita a virar de 100%
+ * para 0% com um único negócio. Cai para o outro período, ou para o padrão. */
+const MINIMUM_SAMPLE_SIZE = 5;
+
+/** Quanto a janela curta pesa quando as duas têm amostra suficiente — mais
+ * que a longa, porque é ela que carrega a sazonalidade recente, mas não
+ * tudo, para uma semana atípica não virar a métrica sozinha. */
+const SHORT_WINDOW_WEIGHT = 0.65;
+
+/**
+ * A probabilidade de uma etapa nunca é preenchida na mão (pedido do
+ * usuário, 18/09) — só isto calcula, a partir de quem realmente saiu da
+ * etapa e para onde. Pura de propósito: os números vêm de fora
+ * (packages/db/deal-stage-moves), a decisão de como combiná-los mora aqui.
+ */
+export function calculateStageProbability({ longWindow, shortWindow }: StageProbabilityInput): number {
+  const hasShort = shortWindow.left >= MINIMUM_SAMPLE_SIZE;
+  const hasLong = longWindow.left >= MINIMUM_SAMPLE_SIZE;
+  if (hasShort && hasLong) {
+    return Math.round(advanceRate(shortWindow) * SHORT_WINDOW_WEIGHT + advanceRate(longWindow) * (1 - SHORT_WINDOW_WEIGHT));
+  }
+  if (hasShort) return Math.round(advanceRate(shortWindow));
+  if (hasLong) return Math.round(advanceRate(longWindow));
+  return STAGE_PROBABILITY_DEFAULT;
+}
+
+function advanceRate(window: StageProbabilityWindow): number {
+  return window.left === 0 ? STAGE_PROBABILITY_DEFAULT : (window.advanced / window.left) * 100;
+}
+
 export interface SlaProgressState {
   elapsedMinutes: number;
   limitMinutes: number;

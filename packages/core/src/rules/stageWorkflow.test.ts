@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canArchiveStage, canCloseAtStage, canMoveBetweenStages, isValidStageOrder, operatingMillisecondsBetween, stageMoveCooldownRemaining, stageSlaProgress } from "./stageWorkflow.js";
+import { calculateStageProbability, canArchiveStage, canCloseAtStage, canMoveBetweenStages, isValidStageOrder, operatingMillisecondsBetween, stageMoveCooldownRemaining, stageSlaProgress } from "./stageWorkflow.js";
 import type { BusinessHour, Holiday, StageTransition } from "../schema/stageWorkflow.js";
 
 const source = { id: "a", pipelineId: "p", restrictTransitions: true, allowWon: false, allowLost: true };
@@ -52,5 +52,23 @@ describe("arquivar e reordenar etapas", () => {
     expect(isValidStageOrder(["a", "b", "c"], ["a", "b", "c", "d"])).toBe(false);
     expect(isValidStageOrder(["a", "b", "c"], ["a", "a", "c"])).toBe(false);
     expect(isValidStageOrder(["a", "b", "c"], ["a", "b", "d"])).toBe(false);
+  });
+
+  it("sem histórico em nenhuma janela, começa em 100%", () => {
+    expect(calculateStageProbability({ longWindow: { left: 0, advanced: 0 }, shortWindow: { left: 0, advanced: 0 } })).toBe(100);
+    expect(calculateStageProbability({ longWindow: { left: 2, advanced: 0 }, shortWindow: { left: 1, advanced: 0 } })).toBe(100);
+  });
+
+  it("usa a janela curta quando só ela tem amostra suficiente", () => {
+    expect(calculateStageProbability({ longWindow: { left: 2, advanced: 1 }, shortWindow: { left: 10, advanced: 3 } })).toBe(30);
+  });
+
+  it("usa a janela longa quando só ela tem amostra suficiente", () => {
+    expect(calculateStageProbability({ longWindow: { left: 20, advanced: 15 }, shortWindow: { left: 4, advanced: 4 } })).toBe(75);
+  });
+
+  it("com as duas janelas maduras, pesa a curta mais que a longa", () => {
+    // curta: 20% de avanço: longa: 80% de avanço — 0.65*20 + 0.35*80 = 41
+    expect(calculateStageProbability({ longWindow: { left: 10, advanced: 8 }, shortWindow: { left: 10, advanced: 2 } })).toBe(41);
   });
 });
