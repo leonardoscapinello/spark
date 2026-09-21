@@ -86,6 +86,7 @@ export default function Deals() {
   const [closingDeal, setClosingDeal] = useState<Deal | null>(null);
   const [lossReason, setLossReason] = useState("");
   const [busyDealId, setBusyDealId] = useState<string | null>(null);
+  const [duplicateConfirmed, setDuplicateConfirmed] = useState(false);
 
   // Etapa arquivada some do quadro e de "adicionar negócio" — mas continua
   // existindo para os negócios antigos que ainda apontam para ela.
@@ -142,11 +143,20 @@ export default function Deals() {
 
   function resetDealForm() {
     setDealName(""); setDealAmount(null); setDealContact(null);
-    setDealOwnerId(getSession()?.userId ?? ""); setDealCompanyId(""); setExpectedCloseDate("");
+    setDealOwnerId(getSession()?.userId ?? ""); setDealCompanyId(""); setExpectedCloseDate(""); setDuplicateConfirmed(false);
   }
+
+  // O contato pode ter mais de uma oportunidade aberta — não é um erro, mas
+  // criar sem enxergar as que já existem é o jeito mais fácil de duplicar
+  // por engano (pedido do usuário, 21/09).
+  const existingOpenDeals = useMemo(
+    () => dealContact ? deals.filter((item) => item.status === "open" && item.contactId === dealContact.value) : [],
+    [deals, dealContact],
+  );
 
   async function addDeal() {
     if (!session || !mainPipeline || !targetStageId || !dealContact || !dealName.trim() || dealAmount === null) throw new Error("MISSING_FIELDS");
+    if (existingOpenDeals.length > 0 && !duplicateConfirmed) throw new Error("Marque a confirmação para criar mesmo já havendo oportunidade aberta.");
     const deal = optimisticDeal({
       pipelineId: mainPipeline.id,
       stageId: targetStageId as StageId,
@@ -378,11 +388,20 @@ export default function Deals() {
         <div className={styles.modalFields}>
           <Field><Label>Nome</Label><Input value={dealName} onChange={(event) => setDealName(event.target.value)} placeholder="Ex.: Contrato anual Acme" /></Field>
           <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={dealAmount} onValueChange={setDealAmount} /></Field>
-          <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={dealContact} onValueChange={setDealContact} /></Field>
+          <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={dealContact} onValueChange={(option) => { setDealContact(option); setDuplicateConfirmed(false); }} /></Field>
           <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={dealCompanyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setDealCompanyId(value ?? "")} /></Field>
           <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={dealOwnerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => setDealOwnerId(value ?? "")} /></Field>
           <Field><Label>Etapa inicial</Label><Select label="Etapa inicial" value={targetStageId} options={stages.map((stage) => ({ value: stage.id, label: stage.name }))} onValueChange={setTargetStageId} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
+          {existingOpenDeals.length > 0 && (
+            <Field>
+              <Label>{dealContact?.label} já tem oportunidade aberta</Label>
+              <ul className={styles.duplicateDealsList}>
+                {existingOpenDeals.map((item) => <li key={item.id}>{item.name}</li>)}
+              </ul>
+              <Checkbox checked={duplicateConfirmed} onCheckedChange={(checked) => setDuplicateConfirmed(checked === true)}>Criar mesmo assim</Checkbox>
+            </Field>
+          )}
         </div>
       </ActionModal>}
       <ActionModal open={closingDeal !== null} onOpenChange={(open) => { if (!open) { setClosingDeal(null); setLossReason(""); } }} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Não foi possível fechar o negócio." onConfirm={async () => { if (!closingDeal) return; const closed = await closeDeal(closingDeal, "lost", lossReason); if (!closed) throw new Error("CLOSE_FAILED"); setClosingDeal(null); }}>
