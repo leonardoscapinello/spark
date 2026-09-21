@@ -2670,6 +2670,29 @@
         ]
       }
     },
+    "/v1/webhooks/telegram/{connectionId}": {
+      "post": {
+        "operationId": "TelegramWebhookController_receive",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TelegramWebhook"
+        ]
+      }
+    },
     "/v1/automations": {
       "post": {
         "operationId": "AutomationsController_create",
@@ -5187,6 +5210,7 @@
               "instagram",
               "whatsapp",
               "messenger",
+              "telegram",
               "buffer",
               "s3",
               "reoon"
@@ -5241,6 +5265,7 @@
                   "instagram",
                   "whatsapp",
                   "messenger",
+                  "telegram",
                   "buffer",
                   "s3",
                   "reoon"
@@ -5575,6 +5600,7 @@
               "whatsapp",
               "instagram",
               "messenger",
+              "telegram",
               "phone"
             ]
           },
@@ -5613,6 +5639,7 @@
                   "whatsapp",
                   "instagram",
                   "messenger",
+                  "telegram",
                   "phone"
                 ]
               },
@@ -7961,7 +7988,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:38:33.736Z",
+                "default": "2026-09-21T17:40:59.543Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8204,7 +8231,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:38:33.744Z",
+                "default": "2026-09-21T17:40:59.549Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8378,7 +8405,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:38:33.747Z",
+                "default": "2026-09-21T17:40:59.551Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8560,7 +8587,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:38:33.751Z",
+                "default": "2026-09-21T17:40:59.552Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8722,7 +8749,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:38:33.752Z",
+                "default": "2026-09-21T17:40:59.553Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9694,7 +9721,8 @@
               "email",
               "instagram",
               "whatsapp",
-              "messenger"
+              "messenger",
+              "telegram"
             ]
           },
           "subject": {
@@ -9735,7 +9763,8 @@
                   "email",
                   "instagram",
                   "whatsapp",
-                  "messenger"
+                  "messenger",
+                  "telegram"
                 ]
               },
               "subject": {
@@ -10073,7 +10102,8 @@
                   "email",
                   "instagram",
                   "whatsapp",
-                  "messenger"
+                  "messenger",
+                  "telegram"
                 ]
               },
               "subject": {

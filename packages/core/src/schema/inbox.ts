@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zCannedReplyId, zContactId, zConversationId, zMessageId, zOrgId, zServerTimestamp, zTeamId, zUserId } from "./zodHelpers.js";
 
-export const CONVERSATION_CHANNELS = ["manual", "email", "instagram", "whatsapp", "messenger"] as const;
+export const CONVERSATION_CHANNELS = ["manual", "email", "instagram", "whatsapp", "messenger", "telegram"] as const;
 export const CONVERSATION_STATUSES = ["open", "snoozed", "closed"] as const;
 export const CONVERSATION_PRIORITIES = ["normal", "priority"] as const;
 export type ConversationChannel = (typeof CONVERSATION_CHANNELS)[number];

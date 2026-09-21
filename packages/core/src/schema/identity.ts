@@ -8,7 +8,7 @@ import { zOrgId, zContactId, zIdentityId, zServerTimestamp } from "./zodHelpers.
  * externalValue)` is what guarantees an identity belongs to exactly one
  * contact — the constraint lives in the migration, not here.
  */
-export const IDENTITY_CHANNELS = ["email", "whatsapp", "instagram", "messenger", "phone"] as const;
+export const IDENTITY_CHANNELS = ["email", "whatsapp", "instagram", "messenger", "telegram", "phone"] as const;
 export const IdentityChannel = z.enum(IDENTITY_CHANNELS);
 export type IdentityChannel = z.infer<typeof IdentityChannel>;
 

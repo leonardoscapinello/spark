@@ -501,6 +501,7 @@ export const UpsertIntegrationDtoProvider = {
   instagram: 'instagram',
   whatsapp: 'whatsapp',
   messenger: 'messenger',
+  telegram: 'telegram',
   buffer: 'buffer',
   s3: 's3',
   reoon: 'reoon',
@@ -535,6 +536,7 @@ export const IntegrationWriteResponseDtoConnectionProvider = {
   instagram: 'instagram',
   whatsapp: 'whatsapp',
   messenger: 'messenger',
+  telegram: 'telegram',
   buffer: 'buffer',
   s3: 's3',
   reoon: 'reoon',
@@ -715,6 +717,7 @@ export const AddContactIdentityDtoChannel = {
   whatsapp: 'whatsapp',
   instagram: 'instagram',
   messenger: 'messenger',
+  telegram: 'telegram',
   phone: 'phone',
 } as const;
 
@@ -732,6 +735,7 @@ export const CreateIdentityResponseDtoIdentityChannel = {
   whatsapp: 'whatsapp',
   instagram: 'instagram',
   messenger: 'messenger',
+  telegram: 'telegram',
   phone: 'phone',
 } as const;
 
@@ -2919,6 +2923,7 @@ export const CreateConversationDtoChannel = {
   instagram: 'instagram',
   whatsapp: 'whatsapp',
   messenger: 'messenger',
+  telegram: 'telegram',
 } as const;
 
 export interface CreateConversationDto {
@@ -2943,6 +2948,7 @@ export const ConversationWriteResponseDtoConversationChannel = {
   instagram: 'instagram',
   whatsapp: 'whatsapp',
   messenger: 'messenger',
+  telegram: 'telegram',
 } as const;
 
 export type ConversationWriteResponseDtoConversationStatus = typeof ConversationWriteResponseDtoConversationStatus[keyof typeof ConversationWriteResponseDtoConversationStatus];
@@ -3109,6 +3115,7 @@ export const MessageWriteResponseDtoConversationChannel = {
   instagram: 'instagram',
   whatsapp: 'whatsapp',
   messenger: 'messenger',
+  telegram: 'telegram',
 } as const;
 
 export type MessageWriteResponseDtoConversationStatus = typeof MessageWriteResponseDtoConversationStatus[keyof typeof MessageWriteResponseDtoConversationStatus];
@@ -10257,6 +10264,66 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getMessengerWebhookControllerReceiveMutationOptions(options), queryClient);
+    }
+
+export const telegramWebhookControllerReceive = (
+    connectionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/webhooks/telegram/${connectionId}`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getTelegramWebhookControllerReceiveMutationKey = () => ['telegramWebhookControllerReceive'] as const;
+
+export const getTelegramWebhookControllerReceiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramWebhookControllerReceive>>, TError,TelegramWebhookControllerReceiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof telegramWebhookControllerReceive>>, TError,TelegramWebhookControllerReceiveMutationVariables, TContext> => {
+
+const mutationKey = getTelegramWebhookControllerReceiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof telegramWebhookControllerReceive>>, TelegramWebhookControllerReceiveMutationVariables> = (props) => {
+          const {connectionId} = props ?? {};
+
+          return  telegramWebhookControllerReceive(connectionId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TelegramWebhookControllerReceiveMutationResult = NonNullable<Awaited<ReturnType<typeof telegramWebhookControllerReceive>>>
+
+    export type TelegramWebhookControllerReceiveMutationError = unknown
+    export type TelegramWebhookControllerReceiveMutationVariables = {connectionId: string}
+
+    export const useTelegramWebhookControllerReceive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof telegramWebhookControllerReceive>>, TError,TelegramWebhookControllerReceiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof telegramWebhookControllerReceive>>,
+        TError,
+        TelegramWebhookControllerReceiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTelegramWebhookControllerReceiveMutationOptions(options), queryClient);
     }
 
 export const automationsControllerCreate = (
