@@ -16,10 +16,12 @@ import { OutboundMessagesRepository } from "./infrastructure/outbound-messages.r
 import { CannedRepliesRepository } from "./infrastructure/canned-replies.repository.js";
 import { InstagramWebhookRepository } from "./infrastructure/instagram-webhook.repository.js";
 import { InstagramWebhookController } from "./presentation/instagram-webhook.controller.js";
+import { WhatsAppWebhookRepository } from "./infrastructure/whatsapp-webhook.repository.js";
+import { WhatsAppWebhookController } from "./presentation/whatsapp-webhook.controller.js";
 
 @Module({
   imports: [EventsModule, IntegrationsModule],
-  controllers: [InboxController, InstagramWebhookController],
-  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  controllers: [InboxController, InstagramWebhookController, WhatsAppWebhookController],
+  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

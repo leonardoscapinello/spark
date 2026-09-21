@@ -2534,6 +2534,74 @@
         ]
       }
     },
+    "/v1/webhooks/whatsapp/{connectionId}": {
+      "get": {
+        "operationId": "WhatsAppWebhookController_verify",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.mode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.verify_token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.challenge",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WhatsAppWebhook"
+        ]
+      },
+      "post": {
+        "operationId": "WhatsAppWebhookController_receive",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WhatsAppWebhook"
+        ]
+      }
+    },
     "/v1/automations": {
       "post": {
         "operationId": "AutomationsController_create",
@@ -5049,6 +5117,7 @@
               "outlook_calendar",
               "apple_calendar",
               "instagram",
+              "whatsapp",
               "buffer",
               "s3",
               "reoon"
@@ -5101,6 +5170,7 @@
                   "outlook_calendar",
                   "apple_calendar",
                   "instagram",
+                  "whatsapp",
                   "buffer",
                   "s3",
                   "reoon"
@@ -7821,7 +7891,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-18T13:59:09.454Z",
+                "default": "2026-09-21T17:34:49.962Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8064,7 +8134,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-18T13:59:09.504Z",
+                "default": "2026-09-21T17:34:49.964Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8238,7 +8308,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-18T13:59:09.512Z",
+                "default": "2026-09-21T17:34:49.966Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8420,7 +8490,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-18T13:59:09.537Z",
+                "default": "2026-09-21T17:34:49.968Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8582,7 +8652,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-18T13:59:09.541Z",
+                "default": "2026-09-21T17:34:49.972Z",
                 "anyOf": [
                   {
                     "type": "string",
