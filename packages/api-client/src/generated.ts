@@ -500,6 +500,7 @@ export const UpsertIntegrationDtoProvider = {
   apple_calendar: 'apple_calendar',
   instagram: 'instagram',
   whatsapp: 'whatsapp',
+  messenger: 'messenger',
   buffer: 'buffer',
   s3: 's3',
   reoon: 'reoon',
@@ -533,6 +534,7 @@ export const IntegrationWriteResponseDtoConnectionProvider = {
   apple_calendar: 'apple_calendar',
   instagram: 'instagram',
   whatsapp: 'whatsapp',
+  messenger: 'messenger',
   buffer: 'buffer',
   s3: 's3',
   reoon: 'reoon',
@@ -5750,6 +5752,12 @@ export type WhatsAppWebhookControllerVerifyParams = {
 'hub.challenge': string;
 };
 
+export type MessengerWebhookControllerVerifyParams = {
+'hub.mode': string;
+'hub.verify_token': string;
+'hub.challenge': string;
+};
+
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
@@ -10094,6 +10102,161 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getWhatsAppWebhookControllerReceiveMutationOptions(options), queryClient);
+    }
+
+export const messengerWebhookControllerVerify = (
+    connectionId: string,
+    params: MessengerWebhookControllerVerifyParams,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/webhooks/messenger/${connectionId}`, method: 'GET',
+        params, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getMessengerWebhookControllerVerifyQueryKey = (connectionId: string,
+    params?: MessengerWebhookControllerVerifyParams,) => {
+    return [
+    `/v1/webhooks/messenger/${connectionId}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getMessengerWebhookControllerVerifyQueryOptions = <TData = Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError = unknown>(connectionId: string,
+    params: MessengerWebhookControllerVerifyParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMessengerWebhookControllerVerifyQueryKey(connectionId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof messengerWebhookControllerVerify>>> = ({ signal }) => messengerWebhookControllerVerify(connectionId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: connectionId !== null && connectionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MessengerWebhookControllerVerifyQueryResult = NonNullable<Awaited<ReturnType<typeof messengerWebhookControllerVerify>>>
+export type MessengerWebhookControllerVerifyQueryError = unknown
+
+
+export function useMessengerWebhookControllerVerify<TData = Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError = unknown>(
+ connectionId: string,
+    params: MessengerWebhookControllerVerifyParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof messengerWebhookControllerVerify>>,
+          TError,
+          Awaited<ReturnType<typeof messengerWebhookControllerVerify>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMessengerWebhookControllerVerify<TData = Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError = unknown>(
+ connectionId: string,
+    params: MessengerWebhookControllerVerifyParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof messengerWebhookControllerVerify>>,
+          TError,
+          Awaited<ReturnType<typeof messengerWebhookControllerVerify>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMessengerWebhookControllerVerify<TData = Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError = unknown>(
+ connectionId: string,
+    params: MessengerWebhookControllerVerifyParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMessengerWebhookControllerVerify<TData = Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError = unknown>(
+ connectionId: string,
+    params: MessengerWebhookControllerVerifyParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof messengerWebhookControllerVerify>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMessengerWebhookControllerVerifyQueryOptions(connectionId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const messengerWebhookControllerReceive = (
+    connectionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/webhooks/messenger/${connectionId}`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getMessengerWebhookControllerReceiveMutationKey = () => ['messengerWebhookControllerReceive'] as const;
+
+export const getMessengerWebhookControllerReceiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof messengerWebhookControllerReceive>>, TError,MessengerWebhookControllerReceiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof messengerWebhookControllerReceive>>, TError,MessengerWebhookControllerReceiveMutationVariables, TContext> => {
+
+const mutationKey = getMessengerWebhookControllerReceiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof messengerWebhookControllerReceive>>, MessengerWebhookControllerReceiveMutationVariables> = (props) => {
+          const {connectionId} = props ?? {};
+
+          return  messengerWebhookControllerReceive(connectionId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MessengerWebhookControllerReceiveMutationResult = NonNullable<Awaited<ReturnType<typeof messengerWebhookControllerReceive>>>
+
+    export type MessengerWebhookControllerReceiveMutationError = unknown
+    export type MessengerWebhookControllerReceiveMutationVariables = {connectionId: string}
+
+    export const useMessengerWebhookControllerReceive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof messengerWebhookControllerReceive>>, TError,MessengerWebhookControllerReceiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof messengerWebhookControllerReceive>>,
+        TError,
+        MessengerWebhookControllerReceiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMessengerWebhookControllerReceiveMutationOptions(options), queryClient);
     }
 
 export const automationsControllerCreate = (

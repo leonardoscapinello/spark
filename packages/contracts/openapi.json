@@ -2602,6 +2602,74 @@
         ]
       }
     },
+    "/v1/webhooks/messenger/{connectionId}": {
+      "get": {
+        "operationId": "MessengerWebhookController_verify",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.mode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.verify_token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub.challenge",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MessengerWebhook"
+        ]
+      },
+      "post": {
+        "operationId": "MessengerWebhookController_receive",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MessengerWebhook"
+        ]
+      }
+    },
     "/v1/automations": {
       "post": {
         "operationId": "AutomationsController_create",
@@ -5118,6 +5186,7 @@
               "apple_calendar",
               "instagram",
               "whatsapp",
+              "messenger",
               "buffer",
               "s3",
               "reoon"
@@ -5171,6 +5240,7 @@
                   "apple_calendar",
                   "instagram",
                   "whatsapp",
+                  "messenger",
                   "buffer",
                   "s3",
                   "reoon"
@@ -7891,7 +7961,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:34:49.962Z",
+                "default": "2026-09-21T17:38:33.736Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8134,7 +8204,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:34:49.964Z",
+                "default": "2026-09-21T17:38:33.744Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8308,7 +8378,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:34:49.966Z",
+                "default": "2026-09-21T17:38:33.747Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8490,7 +8560,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:34:49.968Z",
+                "default": "2026-09-21T17:38:33.751Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8652,7 +8722,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:34:49.972Z",
+                "default": "2026-09-21T17:38:33.752Z",
                 "anyOf": [
                   {
                     "type": "string",
