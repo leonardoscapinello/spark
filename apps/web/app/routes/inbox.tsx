@@ -15,12 +15,16 @@ import { getUsersCollection } from "../lib/users-collection.client";
 import { LinkifiedText } from "../lib/link-previews.client";
 import styles from "./inbox.module.css";
 
+// Espelha os canais que o ChannelSender do backend sabe enviar (channel-sender.service.ts).
+const REPLYABLE_CHANNELS: ReadonlySet<ConversationChannel> = new Set(["email", "instagram", "whatsapp", "messenger", "telegram"]);
+
 const CHANNELS: ReadonlyArray<{ value: ConversationChannel; label: string }> = [
   { value: "manual", label: "Manual" },
   { value: "email", label: "E-mail" },
   { value: "instagram", label: "Instagram" },
   { value: "whatsapp", label: "WhatsApp" },
   { value: "messenger", label: "Messenger" },
+  { value: "telegram", label: "Telegram" },
 ];
 
 export async function clientLoader() {
@@ -89,10 +93,14 @@ export default function Inbox() {
       if (conversation.assigneeId === session?.userId) increment("mine");
       if (conversation.assigneeId === null) increment("unassigned");
       if (conversation.teamId) increment(`team:${conversation.teamId}`);
+      increment(`channel:${conversation.channel}`);
     }
     return counts;
   }, [conversations, session?.userId]);
   const queueCount = (box: InboxFilter) => queueCounts.get(box) ?? 0;
+  // Só lista canal com conversa aberta de verdade — "Manual" não é um canal
+  // externo, é criado pela própria equipe, não faz sentido como caixa dedicada.
+  const activeChannels = CHANNELS.filter((item) => item.value !== "manual" && queueCounts.has(`channel:${item.value}`));
   const tableColumns: TableColumn<Conversation>[] = [
     { id: "subject", label: "Conversa", cell: (item) => <Button size="sm" variant="ghost" className={styles.tableSubject} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>{item.subject}</Button>, sortValue: (item) => item.subject },
     { id: "contact", label: "Pessoa", cell: (item) => contactNames.get(item.contactId) ?? "Pessoa", sortValue: (item) => contactNames.get(item.contactId) ?? "" },
@@ -129,13 +137,13 @@ export default function Inbox() {
     nextParams.delete("createFor");
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, setSearchParams, contacts, canWrite, canReadContacts]);
-  useEffect(() => { if (selected && selected.channel !== "email" && selected.channel !== "instagram" && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
+  useEffect(() => { if (selected && !REPLYABLE_CHANNELS.has(selected.channel) && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60_000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
     const active = activeQueueLink.current;
     const strip = active?.parentElement?.parentElement;
     if (active && strip && strip.scrollWidth > strip.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
-  }, [filter, teams.length]);
+  }, [filter, teams.length, activeChannels.length]);
 
   async function createConversation() {
     if (!session || !newContact || !newSubject.trim()) throw new Error("MISSING_FIELDS");
@@ -226,12 +234,16 @@ export default function Inbox() {
       {teams.some((team) => !team.archivedAt) && <SidebarSection title="Equipes">
         {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link ref={filter === `team:${team.id}` ? activeQueueLink : undefined} to={`/inbox?box=team:${team.id}`} onClick={() => setMobileView("list")} />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
       </SidebarSection>}
+      {activeChannels.length > 0 && <SidebarSection title="Canais">
+        {activeChannels.map((item) => <SidebarItem key={item.value} render={<Link ref={filter === `channel:${item.value}` ? activeQueueLink : undefined} to={`/inbox?box=channel:${item.value}`} onClick={() => setMobileView("list")} />} active={filter === `channel:${item.value}`} icon={<Icon name="message" />} count={queueCount(`channel:${item.value}`)}>{item.label}</SidebarItem>)}
+      </SidebarSection>}
       <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
     </Sidebar>
     <div className={styles.mobileQueueMenu}>
       <MenuButton variant="ghost" shape="rounded" className={styles.mobileQueueTrigger} icon={<Icon name="inbox" />} aria-label="Selecionar caixa de atendimento" menu={<>
         <MenuGroup label="Caixas">{queues.map((queue) => <MenuItem key={queue.box} icon={<Icon name={queue.icon} />} shortcut={String(queueCount(queue.box))} aria-current={filter === queue.box ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(queue.to); }}>{queue.label}</MenuItem>)}</MenuGroup>
         {teams.some((team) => !team.archivedAt) && <MenuGroup label="Equipes">{teams.filter((team) => !team.archivedAt).map((team) => <MenuItem key={team.id} icon={<Icon name="team" />} shortcut={String(queueCount(`team:${team.id}`))} aria-current={filter === `team:${team.id}` ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=team:${team.id}`); }}>{team.name}</MenuItem>)}</MenuGroup>}
+        {activeChannels.length > 0 && <MenuGroup label="Canais">{activeChannels.map((item) => <MenuItem key={item.value} icon={<Icon name="message" />} shortcut={String(queueCount(`channel:${item.value}`))} aria-current={filter === `channel:${item.value}` ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=channel:${item.value}`); }}>{item.label}</MenuItem>)}</MenuGroup>}
         <MenuGroup label="Ferramentas"><MenuItem icon={<Icon name="file" />} onClick={() => void navigate("/inbox/replies")}>Respostas prontas</MenuItem></MenuGroup>
       </>}>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</MenuButton>
     </div>
@@ -274,7 +286,7 @@ export default function Inbox() {
             </article>)}
           </div>
           {canWrite && <form className={styles.composer} data-mode={composerMode} onSubmit={submitMessage}>
-            <div className={styles.composerMode}><div className={styles.modeButtons}>{(selected.channel === "email" || selected.channel === "instagram") && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
+            <div className={styles.composerMode}><div className={styles.modeButtons}>{REPLYABLE_CHANNELS.has(selected.channel) && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
             <Textarea className={styles.composerInput} value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />
             {quickRepliesOpen && <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Buscar resposta pronta" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) { setNote((current) => current ? `${current}\n${reply.body}` : reply.body); setQuickRepliesOpen(false); } }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar</Button></div>}
             <div className={styles.composerFooter}><Button type="button" size="sm" variant="ghost" icon={<Icon name="file" />} aria-expanded={quickRepliesOpen} onClick={() => setQuickRepliesOpen((open) => !open)}>Respostas prontas</Button><span>{note.length}/20.000</span><Button type="submit" loading={saving} disabled={!note.trim()}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button></div>
@@ -308,10 +320,11 @@ export default function Inbox() {
   </div>;
 }
 
-type InboxFilter = ConversationStatus | "all" | "mine" | "unassigned" | `team:${string}`;
+type InboxFilter = ConversationStatus | "all" | "mine" | "unassigned" | `team:${string}` | `channel:${string}`;
 function parseInboxFilter(value: string | null): InboxFilter {
   if (value === "all" || value === "mine" || value === "unassigned" || value === "closed" || value === "snoozed") return value;
   if (value?.startsWith("team:")) return value as `team:${string}`;
+  if (value?.startsWith("channel:")) return value as `channel:${string}`;
   return "open";
 }
 function matchesFilter(item: Conversation, filter: InboxFilter, currentUserId: string | null): boolean {
@@ -319,9 +332,10 @@ function matchesFilter(item: Conversation, filter: InboxFilter, currentUserId: s
   if (filter === "mine") return item.status === "open" && item.assigneeId === currentUserId;
   if (filter === "unassigned") return item.status === "open" && item.assigneeId === null;
   if (filter.startsWith("team:")) return item.status === "open" && item.teamId === filter.slice(5);
+  if (filter.startsWith("channel:")) return item.status === "open" && item.channel === filter.slice(8);
   return item.status === filter;
 }
-function filterLabel(value: InboxFilter): string { if (value.startsWith("team:")) return "Fila da equipe"; if (value === "open") return "Abertas"; if (value === "mine") return "Minhas conversas"; if (value === "unassigned") return "Não atribuídas"; if (value === "snoozed") return "Adiadas"; if (value === "closed") return "Fechadas"; return "Todas"; }
+function filterLabel(value: InboxFilter): string { if (value.startsWith("team:")) return "Fila da equipe"; if (value.startsWith("channel:")) return channelLabel(value.slice(8) as ConversationChannel); if (value === "open") return "Abertas"; if (value === "mine") return "Minhas conversas"; if (value === "unassigned") return "Não atribuídas"; if (value === "snoozed") return "Adiadas"; if (value === "closed") return "Fechadas"; return "Todas"; }
 function channelLabel(value: ConversationChannel): string { return CHANNELS.find((item) => item.value === value)?.label ?? value; }
 function statusLabel(value: ConversationStatus): string { return ({ open: "Aberta", snoozed: "Adiada", closed: "Fechada" })[value]; }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
