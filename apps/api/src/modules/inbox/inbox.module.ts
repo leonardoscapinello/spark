@@ -22,10 +22,12 @@ import { MessengerWebhookRepository } from "./infrastructure/messenger-webhook.r
 import { MessengerWebhookController } from "./presentation/messenger-webhook.controller.js";
 import { TelegramWebhookRepository } from "./infrastructure/telegram-webhook.repository.js";
 import { TelegramWebhookController } from "./presentation/telegram-webhook.controller.js";
+import { PostmarkWebhookRepository } from "./infrastructure/postmark-webhook.repository.js";
+import { PostmarkWebhookController } from "./presentation/postmark-webhook.controller.js";
 
 @Module({
   imports: [EventsModule, IntegrationsModule],
-  controllers: [InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController],
-  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  controllers: [InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController, PostmarkWebhookController],
+  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, PostmarkWebhookRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

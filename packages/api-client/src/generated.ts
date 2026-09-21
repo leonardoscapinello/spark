@@ -502,6 +502,7 @@ export const UpsertIntegrationDtoProvider = {
   whatsapp: 'whatsapp',
   messenger: 'messenger',
   telegram: 'telegram',
+  postmark: 'postmark',
   buffer: 'buffer',
   s3: 's3',
   reoon: 'reoon',
@@ -537,6 +538,7 @@ export const IntegrationWriteResponseDtoConnectionProvider = {
   whatsapp: 'whatsapp',
   messenger: 'messenger',
   telegram: 'telegram',
+  postmark: 'postmark',
   buffer: 'buffer',
   s3: 's3',
   reoon: 'reoon',
@@ -10324,6 +10326,66 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getTelegramWebhookControllerReceiveMutationOptions(options), queryClient);
+    }
+
+export const postmarkWebhookControllerReceive = (
+    connectionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/webhooks/postmark/${connectionId}`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPostmarkWebhookControllerReceiveMutationKey = () => ['postmarkWebhookControllerReceive'] as const;
+
+export const getPostmarkWebhookControllerReceiveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postmarkWebhookControllerReceive>>, TError,PostmarkWebhookControllerReceiveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postmarkWebhookControllerReceive>>, TError,PostmarkWebhookControllerReceiveMutationVariables, TContext> => {
+
+const mutationKey = getPostmarkWebhookControllerReceiveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postmarkWebhookControllerReceive>>, PostmarkWebhookControllerReceiveMutationVariables> = (props) => {
+          const {connectionId} = props ?? {};
+
+          return  postmarkWebhookControllerReceive(connectionId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostmarkWebhookControllerReceiveMutationResult = NonNullable<Awaited<ReturnType<typeof postmarkWebhookControllerReceive>>>
+
+    export type PostmarkWebhookControllerReceiveMutationError = unknown
+    export type PostmarkWebhookControllerReceiveMutationVariables = {connectionId: string}
+
+    export const usePostmarkWebhookControllerReceive = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postmarkWebhookControllerReceive>>, TError,PostmarkWebhookControllerReceiveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postmarkWebhookControllerReceive>>,
+        TError,
+        PostmarkWebhookControllerReceiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostmarkWebhookControllerReceiveMutationOptions(options), queryClient);
     }
 
 export const automationsControllerCreate = (

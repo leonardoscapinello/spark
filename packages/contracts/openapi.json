@@ -2693,6 +2693,29 @@
         ]
       }
     },
+    "/v1/webhooks/postmark/{connectionId}": {
+      "post": {
+        "operationId": "PostmarkWebhookController_receive",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PostmarkWebhook"
+        ]
+      }
+    },
     "/v1/automations": {
       "post": {
         "operationId": "AutomationsController_create",
@@ -5211,6 +5234,7 @@
               "whatsapp",
               "messenger",
               "telegram",
+              "postmark",
               "buffer",
               "s3",
               "reoon"
@@ -5266,6 +5290,7 @@
                   "whatsapp",
                   "messenger",
                   "telegram",
+                  "postmark",
                   "buffer",
                   "s3",
                   "reoon"
@@ -7988,7 +8013,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:40:59.543Z",
+                "default": "2026-09-21T18:09:51.626Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8231,7 +8256,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:40:59.549Z",
+                "default": "2026-09-21T18:09:51.628Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8405,7 +8430,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:40:59.551Z",
+                "default": "2026-09-21T18:09:51.629Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8587,7 +8612,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:40:59.552Z",
+                "default": "2026-09-21T18:09:51.630Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8749,7 +8774,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-21T17:40:59.553Z",
+                "default": "2026-09-21T18:09:51.631Z",
                 "anyOf": [
                   {
                     "type": "string",
