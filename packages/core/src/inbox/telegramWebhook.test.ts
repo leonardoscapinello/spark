@@ -27,4 +27,8 @@ describe("parseTelegramInboundMedia", () => {
     expect(parseTelegramInboundMedia({ message: { message_id: 3, from: { id: 1, is_bot: true }, chat: { id: 1 }, document: { file_id: "x" } } })).toEqual([]);
     expect(parseTelegramInboundMedia({ message: { message_id: 4, from: { id: 1, is_bot: false }, chat: { id: 1 }, text: "oi" } })).toEqual([]);
   });
+  it("extracts a sticker without mime type or caption", () => {
+    const payload = { message: { message_id: 5, from: { id: 7, is_bot: false }, chat: { id: 7 }, sticker: { file_id: "sticker1", emoji: "😀" } } };
+    expect(parseTelegramInboundMedia(payload)).toEqual([{ externalId: "telegram:5", senderId: "7", kind: "sticker", fileId: "sticker1", mimeType: null, filename: null, caption: null, occurredAt: expect.any(Date) }]);
+  });
 });

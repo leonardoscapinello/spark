@@ -6,8 +6,8 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
 import { InboundMediaStorage } from "./inbound-media-storage.service.js";
 
-const MEDIA_LABEL: Record<TelegramInboundMedia["kind"], string> = { photo: "Imagem", document: "Documento", voice: "Áudio", video: "Vídeo" };
-const FALLBACK_MIME: Record<TelegramInboundMedia["kind"], string> = { photo: "image/jpeg", document: "application/octet-stream", voice: "audio/ogg", video: "video/mp4" };
+const MEDIA_LABEL: Record<TelegramInboundMedia["kind"], string> = { photo: "Imagem", document: "Documento", voice: "Áudio", video: "Vídeo", sticker: "Figurinha" };
+const FALLBACK_MIME: Record<TelegramInboundMedia["kind"], string> = { photo: "image/jpeg", document: "application/octet-stream", voice: "audio/ogg", video: "video/mp4", sticker: "image/webp" };
 
 @Injectable()
 export class TelegramWebhookRepository {

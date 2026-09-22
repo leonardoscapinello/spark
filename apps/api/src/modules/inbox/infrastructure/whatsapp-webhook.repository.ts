@@ -6,7 +6,7 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
 import { InboundMediaStorage } from "./inbound-media-storage.service.js";
 
-const MEDIA_LABEL: Record<WhatsAppInboundMedia["kind"], string> = { image: "Imagem", audio: "Áudio", document: "Documento", video: "Vídeo" };
+const MEDIA_LABEL: Record<WhatsAppInboundMedia["kind"], string> = { image: "Imagem", audio: "Áudio", document: "Documento", video: "Vídeo", sticker: "Figurinha" };
 const GRAPH_API_VERSION = "v23.0";
 
 @Injectable()

@@ -19,7 +19,7 @@ export function parseTelegramInboundTexts(payload: unknown): TelegramInboundText
   return [{ externalId: `telegram:${externalId}`, senderId: String(senderId), text: text.trim().slice(0, 20_000), occurredAt: Number.isNaN(occurredAt.getTime()) ? new Date() : occurredAt }];
 }
 
-export type TelegramMediaKind = "photo" | "document" | "voice" | "video";
+export type TelegramMediaKind = "photo" | "document" | "voice" | "video" | "sticker";
 
 export interface TelegramInboundMedia {
   externalId: string;
@@ -57,6 +57,10 @@ export function parseTelegramInboundMedia(payload: unknown): TelegramInboundMedi
   }
   if (isRecord(message.video) && typeof message.video.file_id === "string" && message.video.file_id) {
     return [{ ...base, kind: "video", fileId: message.video.file_id, mimeType: typeof message.video.mime_type === "string" ? message.video.mime_type : null, filename: null }];
+  }
+  // Sticker do Telegram nunca leva legenda (a API nem aceita) e não informa mime_type — pode ser webp estático, tgs animado ou webm.
+  if (isRecord(message.sticker) && typeof message.sticker.file_id === "string" && message.sticker.file_id) {
+    return [{ ...base, kind: "sticker", fileId: message.sticker.file_id, mimeType: null, filename: null }];
   }
   return [];
 }

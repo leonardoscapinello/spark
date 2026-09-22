@@ -32,7 +32,7 @@ export function parseWhatsAppInboundTexts(payload: unknown, phoneNumberId?: stri
   return results;
 }
 
-export type WhatsAppMediaKind = "image" | "audio" | "document" | "video";
+export type WhatsAppMediaKind = "image" | "audio" | "document" | "video" | "sticker";
 
 export interface WhatsAppInboundMedia {
   externalId: string;
@@ -45,7 +45,7 @@ export interface WhatsAppInboundMedia {
   occurredAt: Date;
 }
 
-const MEDIA_KINDS: readonly WhatsAppMediaKind[] = ["image", "audio", "document", "video"];
+const MEDIA_KINDS: readonly WhatsAppMediaKind[] = ["image", "audio", "document", "video", "sticker"];
 
 /** Same envelope as parseWhatsAppInboundTexts, but for the four media message types the Cloud API sends. */
 export function parseWhatsAppInboundMedia(payload: unknown, phoneNumberId?: string): WhatsAppInboundMedia[] {
