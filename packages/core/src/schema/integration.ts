@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zIntegrationConnectionId, zOrgId, zServerTimestamp } from "./zodHelpers.js";
 
-export const INTEGRATION_PROVIDERS = ["smtp", "google_workspace", "google_calendar", "outlook_calendar", "apple_calendar", "instagram", "whatsapp", "messenger", "telegram", "postmark", "buffer", "s3", "reoon"] as const;
+export const INTEGRATION_PROVIDERS = ["smtp", "google_workspace", "google_calendar", "outlook_calendar", "apple_calendar", "instagram", "whatsapp", "messenger", "telegram", "postmark", "buffer", "s3", "reoon", "widget"] as const;
 export const INTEGRATION_STATUSES = ["not_configured", "connected", "error", "disabled"] as const;
 export type IntegrationProvider = (typeof INTEGRATION_PROVIDERS)[number];
 export type IntegrationStatus = (typeof INTEGRATION_STATUSES)[number];

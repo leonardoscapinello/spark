@@ -17,6 +17,7 @@ export class IntegrationProviderRegistry {
       await loadCalendarFeed(provider as CalendarProvider, requiredSecret(secrets, "feedUrl"));
       return;
     }
+    if (provider === "widget") return; // sem API externa — não há o que verificar, o publicKey já foi gerado no upsert.
     if (provider === "smtp") return this.checkSmtp(config, secrets);
     if (provider === "s3") return this.checkS3(config, secrets);
     if (provider === "reoon") return this.checkReoon(config, secrets);

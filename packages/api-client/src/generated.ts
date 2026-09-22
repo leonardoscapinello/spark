@@ -506,6 +506,7 @@ export const UpsertIntegrationDtoProvider = {
   buffer: 'buffer',
   s3: 's3',
   reoon: 'reoon',
+  widget: 'widget',
 } as const;
 
 export type UpsertIntegrationDtoConfig = {[key: string]: unknown};
@@ -542,6 +543,7 @@ export const IntegrationWriteResponseDtoConnectionProvider = {
   buffer: 'buffer',
   s3: 's3',
   reoon: 'reoon',
+  widget: 'widget',
 } as const;
 
 export type IntegrationWriteResponseDtoConnectionStatus = typeof IntegrationWriteResponseDtoConnectionStatus[keyof typeof IntegrationWriteResponseDtoConnectionStatus];
@@ -721,6 +723,7 @@ export const AddContactIdentityDtoChannel = {
   messenger: 'messenger',
   telegram: 'telegram',
   phone: 'phone',
+  widget: 'widget',
 } as const;
 
 export interface AddContactIdentityDto {
@@ -739,6 +742,7 @@ export const CreateIdentityResponseDtoIdentityChannel = {
   messenger: 'messenger',
   telegram: 'telegram',
   phone: 'phone',
+  widget: 'widget',
 } as const;
 
 export type CreateIdentityResponseDtoIdentity = {
@@ -2926,6 +2930,7 @@ export const CreateConversationDtoChannel = {
   whatsapp: 'whatsapp',
   messenger: 'messenger',
   telegram: 'telegram',
+  widget: 'widget',
 } as const;
 
 export interface CreateConversationDto {
@@ -2951,6 +2956,7 @@ export const ConversationWriteResponseDtoConversationChannel = {
   whatsapp: 'whatsapp',
   messenger: 'messenger',
   telegram: 'telegram',
+  widget: 'widget',
 } as const;
 
 export type ConversationWriteResponseDtoConversationStatus = typeof ConversationWriteResponseDtoConversationStatus[keyof typeof ConversationWriteResponseDtoConversationStatus];
@@ -3130,6 +3136,7 @@ export const MessageWriteResponseDtoConversationChannel = {
   whatsapp: 'whatsapp',
   messenger: 'messenger',
   telegram: 'telegram',
+  widget: 'widget',
 } as const;
 
 export type MessageWriteResponseDtoConversationStatus = typeof MessageWriteResponseDtoConversationStatus[keyof typeof MessageWriteResponseDtoConversationStatus];
@@ -3374,6 +3381,93 @@ export type SyncWhatsAppTemplatesResponseDtoTemplatesItem = {
 
 export interface SyncWhatsAppTemplatesResponseDto {
   templates: SyncWhatsAppTemplatesResponseDtoTemplatesItem[];
+}
+
+export type WidgetConfigDtoPosition = typeof WidgetConfigDtoPosition[keyof typeof WidgetConfigDtoPosition];
+
+
+export const WidgetConfigDtoPosition = {
+  left: 'left',
+  right: 'right',
+} as const;
+
+export interface WidgetConfigDto {
+  /**
+     * @minLength 20
+     * @maxLength 100
+     */
+  publicKey: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  welcomeMessage: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  color: string;
+  position: WidgetConfigDtoPosition;
+}
+
+export type StartWidgetConversationDtoMessage = {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  body: string;
+};
+
+export interface StartWidgetConversationDto {
+  /**
+     * @minLength 8
+     * @maxLength 120
+     */
+  visitorId: string;
+  /** @maxLength 200 */
+  name?: string;
+  message: StartWidgetConversationDtoMessage;
+}
+
+export type WidgetConversationStateDtoMessagesItemDirection = typeof WidgetConversationStateDtoMessagesItemDirection[keyof typeof WidgetConversationStateDtoMessagesItemDirection];
+
+
+export const WidgetConversationStateDtoMessagesItemDirection = {
+  inbound: 'inbound',
+  outbound: 'outbound',
+} as const;
+
+export type WidgetConversationStateDtoMessagesItem = {
+  /** @minLength 1 */
+  id: string;
+  direction: WidgetConversationStateDtoMessagesItemDirection;
+  body: string;
+  createdAt: string;
+};
+
+export interface WidgetConversationStateDto {
+  /** @minLength 1 */
+  conversationId: string;
+  messages: WidgetConversationStateDtoMessagesItem[];
+}
+
+export interface SendWidgetMessageDto {
+  /**
+     * @minLength 8
+     * @maxLength 120
+     */
+  visitorId: string;
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  body: string;
 }
 
 export interface CreateFileUploadDto {
@@ -5866,6 +5960,10 @@ export type MessengerWebhookControllerVerifyParams = {
 'hub.mode': string;
 'hub.verify_token': string;
 'hub.challenge': string;
+};
+
+export type PublicWidgetControllerPollParams = {
+visitorId: string;
 };
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -10635,6 +10733,314 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getWhatsAppTemplatesControllerSyncTemplatesMutationOptions(options), queryClient);
     }
+
+export const publicWidgetControllerConfig = (
+    publicKey: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<WidgetConfigDto>(
+      {url: `/v1/public/widget/${publicKey}`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPublicWidgetControllerConfigQueryKey = (publicKey: string,) => {
+    return [
+    `/v1/public/widget/${publicKey}`
+    ] as const;
+    }
+
+
+export const getPublicWidgetControllerConfigQueryOptions = <TData = Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError = unknown>(publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPublicWidgetControllerConfigQueryKey(publicKey);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof publicWidgetControllerConfig>>> = ({ signal }) => publicWidgetControllerConfig(publicKey, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: publicKey !== null && publicKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PublicWidgetControllerConfigQueryResult = NonNullable<Awaited<ReturnType<typeof publicWidgetControllerConfig>>>
+export type PublicWidgetControllerConfigQueryError = unknown
+
+
+export function usePublicWidgetControllerConfig<TData = Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError = unknown>(
+ publicKey: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicWidgetControllerConfig>>,
+          TError,
+          Awaited<ReturnType<typeof publicWidgetControllerConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicWidgetControllerConfig<TData = Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicWidgetControllerConfig>>,
+          TError,
+          Awaited<ReturnType<typeof publicWidgetControllerConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicWidgetControllerConfig<TData = Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function usePublicWidgetControllerConfig<TData = Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError = unknown>(
+ publicKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPublicWidgetControllerConfigQueryOptions(publicKey,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const publicWidgetControllerStart = (
+    publicKey: string,
+    startWidgetConversationDto: StartWidgetConversationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<WidgetConversationStateDto>(
+      {url: `/v1/public/widget/${publicKey}/conversations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: startWidgetConversationDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPublicWidgetControllerStartMutationKey = () => ['publicWidgetControllerStart'] as const;
+
+export const getPublicWidgetControllerStartMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicWidgetControllerStart>>, TError,PublicWidgetControllerStartMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof publicWidgetControllerStart>>, TError,PublicWidgetControllerStartMutationVariables, TContext> => {
+
+const mutationKey = getPublicWidgetControllerStartMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publicWidgetControllerStart>>, PublicWidgetControllerStartMutationVariables> = (props) => {
+          const {publicKey,data} = props ?? {};
+
+          return  publicWidgetControllerStart(publicKey,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublicWidgetControllerStartMutationResult = NonNullable<Awaited<ReturnType<typeof publicWidgetControllerStart>>>
+    export type PublicWidgetControllerStartMutationBody = StartWidgetConversationDto
+    export type PublicWidgetControllerStartMutationError = unknown
+    export type PublicWidgetControllerStartMutationVariables = {publicKey: string;data: StartWidgetConversationDto}
+
+    export const usePublicWidgetControllerStart = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicWidgetControllerStart>>, TError,PublicWidgetControllerStartMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publicWidgetControllerStart>>,
+        TError,
+        PublicWidgetControllerStartMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublicWidgetControllerStartMutationOptions(options), queryClient);
+    }
+
+export const publicWidgetControllerSend = (
+    publicKey: string,
+    sendWidgetMessageDto: SendWidgetMessageDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<WidgetConversationStateDto>(
+      {url: `/v1/public/widget/${publicKey}/messages`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: sendWidgetMessageDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPublicWidgetControllerSendMutationKey = () => ['publicWidgetControllerSend'] as const;
+
+export const getPublicWidgetControllerSendMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicWidgetControllerSend>>, TError,PublicWidgetControllerSendMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof publicWidgetControllerSend>>, TError,PublicWidgetControllerSendMutationVariables, TContext> => {
+
+const mutationKey = getPublicWidgetControllerSendMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publicWidgetControllerSend>>, PublicWidgetControllerSendMutationVariables> = (props) => {
+          const {publicKey,data} = props ?? {};
+
+          return  publicWidgetControllerSend(publicKey,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublicWidgetControllerSendMutationResult = NonNullable<Awaited<ReturnType<typeof publicWidgetControllerSend>>>
+    export type PublicWidgetControllerSendMutationBody = SendWidgetMessageDto
+    export type PublicWidgetControllerSendMutationError = unknown
+    export type PublicWidgetControllerSendMutationVariables = {publicKey: string;data: SendWidgetMessageDto}
+
+    export const usePublicWidgetControllerSend = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicWidgetControllerSend>>, TError,PublicWidgetControllerSendMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publicWidgetControllerSend>>,
+        TError,
+        PublicWidgetControllerSendMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublicWidgetControllerSendMutationOptions(options), queryClient);
+    }
+
+export const publicWidgetControllerPoll = (
+    publicKey: string,
+    params: PublicWidgetControllerPollParams,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<WidgetConversationStateDto>(
+      {url: `/v1/public/widget/${publicKey}/messages`, method: 'GET',
+        params, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getPublicWidgetControllerPollQueryKey = (publicKey: string,
+    params?: PublicWidgetControllerPollParams,) => {
+    return [
+    `/v1/public/widget/${publicKey}/messages`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getPublicWidgetControllerPollQueryOptions = <TData = Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError = unknown>(publicKey: string,
+    params: PublicWidgetControllerPollParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPublicWidgetControllerPollQueryKey(publicKey,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof publicWidgetControllerPoll>>> = ({ signal }) => publicWidgetControllerPoll(publicKey,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: publicKey !== null && publicKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PublicWidgetControllerPollQueryResult = NonNullable<Awaited<ReturnType<typeof publicWidgetControllerPoll>>>
+export type PublicWidgetControllerPollQueryError = unknown
+
+
+export function usePublicWidgetControllerPoll<TData = Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError = unknown>(
+ publicKey: string,
+    params: PublicWidgetControllerPollParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicWidgetControllerPoll>>,
+          TError,
+          Awaited<ReturnType<typeof publicWidgetControllerPoll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicWidgetControllerPoll<TData = Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError = unknown>(
+ publicKey: string,
+    params: PublicWidgetControllerPollParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicWidgetControllerPoll>>,
+          TError,
+          Awaited<ReturnType<typeof publicWidgetControllerPoll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicWidgetControllerPoll<TData = Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError = unknown>(
+ publicKey: string,
+    params: PublicWidgetControllerPollParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function usePublicWidgetControllerPoll<TData = Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError = unknown>(
+ publicKey: string,
+    params: PublicWidgetControllerPollParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicWidgetControllerPoll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPublicWidgetControllerPollQueryOptions(publicKey,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const filesControllerUpload = (
     createFileUploadDto: CreateFileUploadDto,

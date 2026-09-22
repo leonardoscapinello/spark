@@ -15,8 +15,10 @@ export class ChannelSender {
   constructor(private readonly vault: SecretVault, private readonly email: EmailDeliveryService, private readonly settings: ConnectionSettingsRepository, private readonly storage: StorageResolver) {}
 
   async send(orgId: OrgId, contactId: ContactId, channel: ConversationChannel, subject: string, body: string, attachmentFileId?: FileId | null, connectionId?: IntegrationConnectionId | null, template?: SendTemplate | null): Promise<string> {
-    if (channel !== "email" && channel !== "instagram" && channel !== "whatsapp" && channel !== "messenger" && channel !== "telegram") throw new BadRequestException(`O canal ${channel} ainda não aceita respostas externas.`);
+    if (channel !== "email" && channel !== "instagram" && channel !== "whatsapp" && channel !== "messenger" && channel !== "telegram" && channel !== "widget") throw new BadRequestException(`O canal ${channel} ainda não aceita respostas externas.`);
     if (template && channel !== "whatsapp") throw new BadRequestException("Modelo pré-aprovado só existe no WhatsApp.");
+    // O widget não tem API externa pra entregar — a mensagem já foi persistida pelo chamador, e o visitante lê por polling em /v1/public/widget.
+    if (channel === "widget") return crypto.randomUUID();
     const [loaded, attachment] = await Promise.all([
       withOrgContext(this.db, orgId, async (tx) => {
         // A conversa já sabe por qual das nossas conexões (ex: qual número de WhatsApp) o cliente escreveu — responde por ela mesma, não "a mais recente".

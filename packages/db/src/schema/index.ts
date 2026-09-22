@@ -22,6 +22,7 @@ export * from "./integrations.js";
 export * from "./files.js";
 export * from "./catalog.js";
 export * from "./lead-forms.js";
+export * from "./widget-public-keys.js";
 export * from "./email-verifications.js";
 export * from "./social.js";
 export * from "./campaigns.js";

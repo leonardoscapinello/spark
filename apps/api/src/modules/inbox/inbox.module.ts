@@ -32,10 +32,12 @@ import { WhatsAppTemplatesController } from "./presentation/whatsapp-templates.c
 import { ListWhatsAppTemplatesUseCase } from "./application/list-whatsapp-templates.usecase.js";
 import { SyncWhatsAppTemplatesUseCase } from "./application/sync-whatsapp-templates.usecase.js";
 import { FilesModule } from "../files/files.module.js";
+import { WidgetRepository } from "./infrastructure/widget.repository.js";
+import { PublicWidgetController } from "./presentation/widget-public.controller.js";
 
 @Module({
   imports: [EventsModule, IntegrationsModule, FilesModule],
-  controllers: [InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController, PostmarkWebhookController, WhatsAppTemplatesController],
-  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, PostmarkWebhookRepository, InboundMediaStorage, InboundMessageIngestor, WebhookQueue, WhatsAppTemplatesRepository, ListWhatsAppTemplatesUseCase, SyncWhatsAppTemplatesUseCase, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  controllers: [InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController, PostmarkWebhookController, WhatsAppTemplatesController, PublicWidgetController],
+  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, PostmarkWebhookRepository, InboundMediaStorage, InboundMessageIngestor, WebhookQueue, WhatsAppTemplatesRepository, ListWhatsAppTemplatesUseCase, SyncWhatsAppTemplatesUseCase, WidgetRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

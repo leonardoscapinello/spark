@@ -2786,6 +2786,152 @@
         ]
       }
     },
+    "/v1/public/widget/{publicKey}": {
+      "get": {
+        "operationId": "PublicWidgetController_config",
+        "parameters": [
+          {
+            "name": "publicKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetConfigDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public-widget"
+        ]
+      }
+    },
+    "/v1/public/widget/{publicKey}/conversations": {
+      "post": {
+        "operationId": "PublicWidgetController_start",
+        "parameters": [
+          {
+            "name": "publicKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartWidgetConversationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetConversationStateDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public-widget"
+        ]
+      }
+    },
+    "/v1/public/widget/{publicKey}/messages": {
+      "post": {
+        "operationId": "PublicWidgetController_send",
+        "parameters": [
+          {
+            "name": "publicKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendWidgetMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetConversationStateDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public-widget"
+        ]
+      },
+      "get": {
+        "operationId": "PublicWidgetController_poll",
+        "parameters": [
+          {
+            "name": "publicKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "visitorId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetConversationStateDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public-widget"
+        ]
+      }
+    },
     "/v1/files/uploads": {
       "post": {
         "operationId": "FilesController_upload",
@@ -5307,7 +5453,8 @@
               "postmark",
               "buffer",
               "s3",
-              "reoon"
+              "reoon",
+              "widget"
             ]
           },
           "name": {
@@ -5363,7 +5510,8 @@
                   "postmark",
                   "buffer",
                   "s3",
-                  "reoon"
+                  "reoon",
+                  "widget"
                 ]
               },
               "name": {
@@ -5696,7 +5844,8 @@
               "instagram",
               "messenger",
               "telegram",
-              "phone"
+              "phone",
+              "widget"
             ]
           },
           "externalValue": {
@@ -5735,7 +5884,8 @@
                   "instagram",
                   "messenger",
                   "telegram",
-                  "phone"
+                  "phone",
+                  "widget"
                 ]
               },
               "externalValue": {
@@ -8083,7 +8233,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:38:51.563Z",
+                "default": "2026-09-22T21:17:56.393Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8326,7 +8476,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:38:51.565Z",
+                "default": "2026-09-22T21:17:56.396Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8500,7 +8650,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:38:51.566Z",
+                "default": "2026-09-22T21:17:56.397Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8682,7 +8832,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:38:51.567Z",
+                "default": "2026-09-22T21:17:56.397Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8844,7 +8994,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:38:51.567Z",
+                "default": "2026-09-22T21:17:56.398Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9817,7 +9967,8 @@
               "instagram",
               "whatsapp",
               "messenger",
-              "telegram"
+              "telegram",
+              "widget"
             ]
           },
           "subject": {
@@ -9859,7 +10010,8 @@
                   "instagram",
                   "whatsapp",
                   "messenger",
-                  "telegram"
+                  "telegram",
+                  "widget"
                 ]
               },
               "connectionId": {
@@ -10238,7 +10390,8 @@
                   "instagram",
                   "whatsapp",
                   "messenger",
-                  "telegram"
+                  "telegram",
+                  "widget"
                 ]
               },
               "connectionId": {
@@ -10739,6 +10892,148 @@
         },
         "required": [
           "templates"
+        ]
+      },
+      "WidgetConfigDto": {
+        "type": "object",
+        "properties": {
+          "publicKey": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "welcomeMessage": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "position": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ]
+          }
+        },
+        "required": [
+          "publicKey",
+          "name",
+          "welcomeMessage",
+          "color",
+          "position"
+        ]
+      },
+      "StartWidgetConversationDto": {
+        "type": "object",
+        "properties": {
+          "visitorId": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 120
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            },
+            "required": [
+              "id",
+              "body"
+            ]
+          }
+        },
+        "required": [
+          "visitorId",
+          "message"
+        ]
+      },
+      "WidgetConversationStateDto": {
+        "type": "object",
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": [
+                    "inbound",
+                    "outbound"
+                  ]
+                },
+                "body": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "direction",
+                "body",
+                "createdAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "conversationId",
+          "messages"
+        ]
+      },
+      "SendWidgetMessageDto": {
+        "type": "object",
+        "properties": {
+          "visitorId": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 120
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "visitorId",
+          "id",
+          "body"
         ]
       },
       "CreateFileUploadDto": {

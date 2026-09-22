@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
-import { createAppDbClient, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
+import { createAppDbClient, integrationConnections, integrationSecrets, widgetPublicKeys, withOrgContext, type SparkDb } from "@spark/db";
 import type { IntegrationConnection, IntegrationConnectionId, IntegrationWriteResponse, OrgId, UpdateIntegrationStatusInput, UpsertIntegrationInput, UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { ConnectionSettingsRepository } from "./connection-settings.repository.js";
@@ -19,15 +19,25 @@ export class IntegrationsRepository {
       const mergedCredentials = input.credentials ? { ...(storedSecret ? this.vault.decrypt(storedSecret) : {}), ...input.credentials } : null;
       const encrypted = mergedCredentials ? this.vault.encrypt(mergedCredentials) : null;
       const hint = mergedCredentials ? credentialHint(mergedCredentials) : existing[0]?.credentialHint ?? null;
+      // O widget não tem credencial pra verificar — não tem "Testar conexão" que o levaria a "connected". Nasce conectado.
+      const bootstrapStatus = input.provider === "widget" ? "connected" : "not_configured";
       const [row] = existing[0]
-        ? await tx.update(integrationConnections).set({ provider: input.provider, name: input.name, ...(encrypted ? { credentialsConfigured: true, credentialHint: hint } : {}), status: "not_configured", lastError: null, updatedAt: new Date() }).where(eq(integrationConnections.id, input.id)).returning()
-        : await tx.insert(integrationConnections).values({ id: input.id, orgId, provider: input.provider, name: input.name, credentialsConfigured: Boolean(encrypted), credentialHint: hint }).returning();
+        ? await tx.update(integrationConnections).set({ provider: input.provider, name: input.name, ...(encrypted ? { credentialsConfigured: true, credentialHint: hint } : {}), status: bootstrapStatus, lastError: null, updatedAt: new Date() }).where(eq(integrationConnections.id, input.id)).returning()
+        : await tx.insert(integrationConnections).values({ id: input.id, orgId, provider: input.provider, name: input.name, credentialsConfigured: Boolean(encrypted), credentialHint: hint, status: bootstrapStatus }).returning();
       if (!row) throw new Error("Integration upsert returned no row.");
-      await this.settings.replace(tx, orgId, row.id, input.config);
+      // Cada widget é a própria caixa de entrada (igual múltiplos números de WhatsApp): o publicKey nasce uma vez e nunca muda — depois só é lido de volta.
+      let config = input.config;
+      if (input.provider === "widget") {
+        const [existingKey] = await tx.select({ publicKey: widgetPublicKeys.publicKey }).from(widgetPublicKeys).where(eq(widgetPublicKeys.connectionId, row.id)).limit(1);
+        const publicKey = existingKey?.publicKey ?? crypto.randomUUID();
+        if (!existingKey) await tx.insert(widgetPublicKeys).values({ publicKey, orgId, connectionId: row.id });
+        config = { ...input.config, publicKey };
+      }
+      await this.settings.replace(tx, orgId, row.id, config);
       if (encrypted) await tx.insert(integrationSecrets).values({ connectionId: input.id, orgId, ...encrypted }).onConflictDoUpdate({ target: integrationSecrets.connectionId, set: { ...encrypted, updatedAt: new Date() } });
       const txid = await captureTxid(tx);
       await this.events.append(tx, { orgId, type: "integration.configured", data: { connectionId: input.id, provider: input.provider, actorUserId } });
-      return { connection: toConnection(row, input.config), txid };
+      return { connection: toConnection(row, config), txid };
     });
   }
   async check(orgId: OrgId, actorUserId: UserId, id: IntegrationConnectionId): Promise<IntegrationWriteResponse> {

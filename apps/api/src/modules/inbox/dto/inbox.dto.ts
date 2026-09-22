@@ -1,5 +1,5 @@
 import { createZodDto } from "nestjs-zod";
-import { AddInternalNoteInputSchema, ArchiveCannedReplyInputSchema, CannedReplyWriteResponseSchema, ConversationSchema, ConversationWriteResponseSchema, CreateCannedReplyInputSchema, CreateConversationInputSchema, MessageSchema, MessageWriteResponseSchema, SendMessageInputSchema, SyncWhatsAppTemplatesResponseSchema, UpdateCannedReplyInputSchema, UpdateConversationInputSchema } from "@spark/core";
+import { AddInternalNoteInputSchema, ArchiveCannedReplyInputSchema, CannedReplyWriteResponseSchema, ConversationSchema, ConversationWriteResponseSchema, CreateCannedReplyInputSchema, CreateConversationInputSchema, MessageSchema, MessageWriteResponseSchema, SendMessageInputSchema, SendWidgetMessageInputSchema, StartWidgetConversationInputSchema, SyncWhatsAppTemplatesResponseSchema, UpdateCannedReplyInputSchema, UpdateConversationInputSchema, WidgetConfigSchema, WidgetConversationStateSchema } from "@spark/core";
 
 export class ConversationDto extends createZodDto(ConversationSchema) {}
 export class MessageDto extends createZodDto(MessageSchema) {}
@@ -14,3 +14,7 @@ export class UpdateCannedReplyDto extends createZodDto(UpdateCannedReplyInputSch
 export class ArchiveCannedReplyDto extends createZodDto(ArchiveCannedReplyInputSchema) {}
 export class CannedReplyWriteResponseDto extends createZodDto(CannedReplyWriteResponseSchema) {}
 export class SyncWhatsAppTemplatesResponseDto extends createZodDto(SyncWhatsAppTemplatesResponseSchema) {}
+export class WidgetConfigDto extends createZodDto(WidgetConfigSchema) {}
+export class StartWidgetConversationDto extends createZodDto(StartWidgetConversationInputSchema) {}
+export class SendWidgetMessageDto extends createZodDto(SendWidgetMessageInputSchema) {}
+export class WidgetConversationStateDto extends createZodDto(WidgetConversationStateSchema) {}
