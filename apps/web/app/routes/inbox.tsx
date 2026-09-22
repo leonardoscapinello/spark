@@ -15,6 +15,7 @@ import { getTeamsCollection } from "../lib/teams-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { LinkifiedText } from "../lib/link-previews.client";
+import { useConversationPresence } from "../lib/realtime-presence.client";
 import styles from "./inbox.module.css";
 
 // Espelha os canais que o ChannelSender do backend sabe enviar (channel-sender.service.ts).
@@ -94,6 +95,8 @@ export default function Inbox() {
       .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm))))
     .sort((a, b) => sortOrder === "recent" ? b.lastMessageAt.localeCompare(a.lastMessageAt) : a.lastMessageAt.localeCompare(b.lastMessageAt));
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+  const self = useMemo(() => session ? { id: session.userId, name: userNames.get(userId.from(session.userId)) ?? "Você" } : null, [session, userNames]);
+  const { viewers, typingUsers, notifyTyping } = useConversationPresence(selected ? `conversation:${selected.id}` : null, self);
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
   const windowClosed = Boolean(selected) && selected!.channel === "whatsapp" && !isWithinWhatsAppSessionWindow(selected!.lastInboundMessageAt, now);
   const connectionTemplates = whatsappTemplates.filter((item) => item.connectionId === selected?.connectionId);
@@ -324,6 +327,10 @@ export default function Inbox() {
           <header className={styles.threadHeader}>
             <Button type="button" size="sm" variant="ghost" className={styles.mobileBack} onClick={() => setMobileView("list")}>Conversas</Button>
             <div><strong>{selected.subject}</strong><span>{contactNames.get(selected.contactId) ?? "Pessoa"} · {channelLabel(selected.channel)}</span></div>
+            {viewers.length > 0 && <div className={styles.presenceViewers} aria-label={`${viewers.map((viewer) => viewer.name).join(", ")} também ${viewers.length === 1 ? "está vendo" : "estão vendo"} esta conversa`}>
+              {viewers.slice(0, 4).map((viewer) => <span key={viewer.id} className={styles.presenceViewer} title={viewer.name}><Avatar name={viewer.name} size="small" /></span>)}
+              {viewers.length > 4 && <span className={styles.presenceViewerMore}>+{viewers.length - 4}</span>}
+            </div>}
             <div className={styles.threadActions}>
               <Button iconOnly size="sm" variant="ghost" className={styles.tablePreviewClose} aria-label="Fechar prévia da conversa" onClick={() => { setSelectedId(null); setMobileView("list"); }}><Icon name="close" /></Button>
               <Button iconOnly size="sm" variant="ghost" className={styles.detailsTrigger} aria-label="Abrir detalhes da conversa" onClick={() => setDetailsOpen(true)}><Icon name="user" /></Button>
@@ -340,6 +347,7 @@ export default function Inbox() {
               <small>{message.direction === "internal" ? "Nota interna" : message.status}</small>
             </article>)}
           </div>
+          {typingUsers.length > 0 && <p className={styles.typingIndicator} role="status"><Icon name="message" />{typingUsers.length === 1 ? `${typingUsers[0]!.name} está digitando…` : `${typingUsers.map((item) => item.name).join(", ")} estão digitando…`}</p>}
           {canWrite && <form className={styles.composer} data-mode={composerMode} onSubmit={submitMessage}>
             <div className={styles.composerMode}><div className={styles.modeButtons}>{REPLYABLE_CHANNELS.has(selected.channel) && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
             {composerMode === "reply" && windowClosed && <p className={styles.windowWarning}><Icon name="bolt" />Fora da janela de 24h — só modelo pré-aprovado passa. Escolha um abaixo.</p>}
@@ -347,7 +355,7 @@ export default function Inbox() {
               <Select label="Modelo aprovado" placeholder={connectionTemplates.length ? "Escolher modelo" : "Nenhum modelo sincronizado — configure em Integrações"} value={templateId} options={connectionTemplates.map((item) => ({ value: item.id, label: `${item.name} (${item.language})` }))} onValueChange={setTemplateId} />
               {selectedTemplate && Array.from({ length: selectedTemplate.variableCount }, (_, index) => <Input key={index} aria-label={`Variável {{${index + 1}}}`} placeholder={`{{${index + 1}}}`} value={templateParams[index] ?? ""} onChange={(event) => setTemplateParams((current) => current.map((value, position) => position === index ? event.target.value : value))} />)}
               {selectedTemplate && <p className={styles.templatePreview}>{templatePreview}</p>}
-            </div> : <Textarea className={styles.composerInput} value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />}
+            </div> : <Textarea className={styles.composerInput} value={note} onChange={(event) => { setNote(event.target.value); notifyTyping(); }} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />}
             {quickRepliesOpen && <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Buscar resposta pronta" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) { setNote((current) => current ? `${current}\n${reply.body}` : reply.body); setQuickRepliesOpen(false); } }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar</Button></div>}
             {composerMode === "reply" && (attachment || uploadingAttachment) && <div className={styles.attachmentChip}>
               <Icon name={uploadingAttachment ? "upload" : "file"} />
