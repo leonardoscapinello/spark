@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zCannedReplyId, zContactId, zConversationId, zMessageId, zOrgId, zServerTimestamp, zTeamId, zUserId } from "./zodHelpers.js";
+import { zCannedReplyId, zContactId, zConversationId, zFileId, zMessageId, zOrgId, zServerTimestamp, zTeamId, zUserId } from "./zodHelpers.js";
 
 export const CONVERSATION_CHANNELS = ["manual", "email", "instagram", "whatsapp", "messenger", "telegram"] as const;
 export const CONVERSATION_STATUSES = ["open", "snoozed", "closed"] as const;
@@ -42,6 +42,8 @@ export const MessageSchema = z.object({
   status: z.enum(MESSAGE_STATUSES),
   body: z.string().trim().min(1).max(20_000),
   externalId: z.string().max(500).nullable(),
+  /** Mídia recebida (áudio, imagem, documento) — aponta pra um `files` já enviado (ADR-0028). */
+  attachmentFileId: zFileId.nullable().default(null),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
   deletedAt: zServerTimestamp.nullable(),

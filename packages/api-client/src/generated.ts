@@ -3103,6 +3103,11 @@ export type MessageWriteResponseDtoMessage = {
      * @nullable
      */
   externalId: string | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  attachmentFileId?: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -3281,6 +3286,160 @@ export interface UpdateCannedReplyDto {
 
 export interface ArchiveCannedReplyDto {
   archived: boolean;
+}
+
+export interface CreateFileUploadDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 240
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  mimeType: string;
+  /**
+     * @maximum 5000000000
+     * @exclusiveMinimum 0
+     */
+  sizeBytes: number;
+  /**
+     * @maxLength 240
+     * @nullable
+     */
+  folder?: string | null;
+}
+
+export type FileUploadResponseDtoFileStatus = typeof FileUploadResponseDtoFileStatus[keyof typeof FileUploadResponseDtoFileStatus];
+
+
+export const FileUploadResponseDtoFileStatus = {
+  pending: 'pending',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export type FileUploadResponseDtoFile = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  storageConnectionId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  createdBy: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 240
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 700
+     */
+  objectKey: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  mimeType: string;
+  /**
+     * @minimum 0
+     * @maximum 5000000000
+     */
+  sizeBytes: number;
+  /**
+     * @maxLength 240
+     * @nullable
+     */
+  folder: string | null;
+  status: FileUploadResponseDtoFileStatus;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export interface FileUploadResponseDto {
+  file: FileUploadResponseDtoFile;
+  uploadUrl: string;
+  expiresAt: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type FileWriteResponseDtoFileStatus = typeof FileWriteResponseDtoFileStatus[keyof typeof FileWriteResponseDtoFileStatus];
+
+
+export const FileWriteResponseDtoFileStatus = {
+  pending: 'pending',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export type FileWriteResponseDtoFile = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  storageConnectionId: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  createdBy: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 240
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 700
+     */
+  objectKey: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  mimeType: string;
+  /**
+     * @minimum 0
+     * @maximum 5000000000
+     */
+  sizeBytes: number;
+  /**
+     * @maxLength 240
+     * @nullable
+     */
+  folder: string | null;
+  status: FileWriteResponseDtoFileStatus;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+};
+
+export interface FileWriteResponseDto {
+  file: FileWriteResponseDtoFile;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface FileDownloadResponseDto {
+  downloadUrl: string;
+  expiresAt: string;
 }
 
 export interface CreateAutomationDto {
@@ -3742,154 +3901,6 @@ export interface StartAutomationRunResponseDto {
      * @maximum 9007199254740991
      */
   txid: number;
-}
-
-export interface CreateFileUploadDto {
-  /** @minLength 1 */
-  id: string;
-  /**
-     * @minLength 1
-     * @maxLength 240
-     */
-  name: string;
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  mimeType: string;
-  /**
-     * @maximum 5000000000
-     * @exclusiveMinimum 0
-     */
-  sizeBytes: number;
-  /**
-     * @maxLength 240
-     * @nullable
-     */
-  folder?: string | null;
-}
-
-export type FileUploadResponseDtoFileStatus = typeof FileUploadResponseDtoFileStatus[keyof typeof FileUploadResponseDtoFileStatus];
-
-
-export const FileUploadResponseDtoFileStatus = {
-  pending: 'pending',
-  ready: 'ready',
-  failed: 'failed',
-} as const;
-
-export type FileUploadResponseDtoFile = {
-  /** @minLength 1 */
-  id: string;
-  /** @minLength 1 */
-  orgId: string;
-  /** @minLength 1 */
-  storageConnectionId: string;
-  /** @minLength 1 */
-  createdBy: string;
-  /**
-     * @minLength 1
-     * @maxLength 240
-     */
-  name: string;
-  /**
-     * @minLength 1
-     * @maxLength 700
-     */
-  objectKey: string;
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  mimeType: string;
-  /**
-     * @minimum 0
-     * @maximum 5000000000
-     */
-  sizeBytes: number;
-  /**
-     * @maxLength 240
-     * @nullable
-     */
-  folder: string | null;
-  status: FileUploadResponseDtoFileStatus;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-};
-
-export interface FileUploadResponseDto {
-  file: FileUploadResponseDtoFile;
-  uploadUrl: string;
-  expiresAt: string;
-  /**
-     * @minimum -9007199254740991
-     * @maximum 9007199254740991
-     */
-  txid: number;
-}
-
-export type FileWriteResponseDtoFileStatus = typeof FileWriteResponseDtoFileStatus[keyof typeof FileWriteResponseDtoFileStatus];
-
-
-export const FileWriteResponseDtoFileStatus = {
-  pending: 'pending',
-  ready: 'ready',
-  failed: 'failed',
-} as const;
-
-export type FileWriteResponseDtoFile = {
-  /** @minLength 1 */
-  id: string;
-  /** @minLength 1 */
-  orgId: string;
-  /** @minLength 1 */
-  storageConnectionId: string;
-  /** @minLength 1 */
-  createdBy: string;
-  /**
-     * @minLength 1
-     * @maxLength 240
-     */
-  name: string;
-  /**
-     * @minLength 1
-     * @maxLength 700
-     */
-  objectKey: string;
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  mimeType: string;
-  /**
-     * @minimum 0
-     * @maximum 5000000000
-     */
-  sizeBytes: number;
-  /**
-     * @maxLength 240
-     * @nullable
-     */
-  folder: string | null;
-  status: FileWriteResponseDtoFileStatus;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-};
-
-export interface FileWriteResponseDto {
-  file: FileWriteResponseDtoFile;
-  /**
-     * @minimum -9007199254740991
-     * @maximum 9007199254740991
-     */
-  txid: number;
-}
-
-export interface FileDownloadResponseDto {
-  downloadUrl: string;
-  expiresAt: string;
 }
 
 export type CreateProductDtoCurrency = typeof CreateProductDtoCurrency[keyof typeof CreateProductDtoCurrency];
@@ -10388,6 +10399,275 @@ const {mutation: mutationOptions} = options ?
       return useMutation(getPostmarkWebhookControllerReceiveMutationOptions(options), queryClient);
     }
 
+export const filesControllerUpload = (
+    createFileUploadDto: CreateFileUploadDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<FileUploadResponseDto>(
+      {url: `/v1/files/uploads`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createFileUploadDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFilesControllerUploadMutationKey = () => ['filesControllerUpload'] as const;
+
+export const getFilesControllerUploadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerUpload>>, TError,FilesControllerUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof filesControllerUpload>>, TError,FilesControllerUploadMutationVariables, TContext> => {
+
+const mutationKey = getFilesControllerUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof filesControllerUpload>>, FilesControllerUploadMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  filesControllerUpload(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FilesControllerUploadMutationResult = NonNullable<Awaited<ReturnType<typeof filesControllerUpload>>>
+    export type FilesControllerUploadMutationBody = CreateFileUploadDto
+    export type FilesControllerUploadMutationError = unknown
+    export type FilesControllerUploadMutationVariables = {data: CreateFileUploadDto}
+
+    export const useFilesControllerUpload = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerUpload>>, TError,FilesControllerUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof filesControllerUpload>>,
+        TError,
+        FilesControllerUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFilesControllerUploadMutationOptions(options), queryClient);
+    }
+
+export const filesControllerComplete = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<FileWriteResponseDto>(
+      {url: `/v1/files/${id}/complete`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFilesControllerCompleteMutationKey = () => ['filesControllerComplete'] as const;
+
+export const getFilesControllerCompleteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerComplete>>, TError,FilesControllerCompleteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof filesControllerComplete>>, TError,FilesControllerCompleteMutationVariables, TContext> => {
+
+const mutationKey = getFilesControllerCompleteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof filesControllerComplete>>, FilesControllerCompleteMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  filesControllerComplete(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FilesControllerCompleteMutationResult = NonNullable<Awaited<ReturnType<typeof filesControllerComplete>>>
+
+    export type FilesControllerCompleteMutationError = unknown
+    export type FilesControllerCompleteMutationVariables = {id: string}
+
+    export const useFilesControllerComplete = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerComplete>>, TError,FilesControllerCompleteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof filesControllerComplete>>,
+        TError,
+        FilesControllerCompleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFilesControllerCompleteMutationOptions(options), queryClient);
+    }
+
+export const filesControllerDownload = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<FileDownloadResponseDto>(
+      {url: `/v1/files/${id}/download`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFilesControllerDownloadQueryKey = (id: string,) => {
+    return [
+    `/v1/files/${id}/download`
+    ] as const;
+    }
+
+
+export const getFilesControllerDownloadQueryOptions = <TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFilesControllerDownloadQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof filesControllerDownload>>> = ({ signal }) => filesControllerDownload(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FilesControllerDownloadQueryResult = NonNullable<Awaited<ReturnType<typeof filesControllerDownload>>>
+export type FilesControllerDownloadQueryError = unknown
+
+
+export function useFilesControllerDownload<TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof filesControllerDownload>>,
+          TError,
+          Awaited<ReturnType<typeof filesControllerDownload>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFilesControllerDownload<TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof filesControllerDownload>>,
+          TError,
+          Awaited<ReturnType<typeof filesControllerDownload>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFilesControllerDownload<TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFilesControllerDownload<TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFilesControllerDownloadQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const filesControllerRemove = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<FileWriteResponseDto>(
+      {url: `/v1/files/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFilesControllerRemoveMutationKey = () => ['filesControllerRemove'] as const;
+
+export const getFilesControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerRemove>>, TError,FilesControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof filesControllerRemove>>, TError,FilesControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getFilesControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof filesControllerRemove>>, FilesControllerRemoveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  filesControllerRemove(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FilesControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof filesControllerRemove>>>
+
+    export type FilesControllerRemoveMutationError = unknown
+    export type FilesControllerRemoveMutationVariables = {id: string}
+
+    export const useFilesControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerRemove>>, TError,FilesControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof filesControllerRemove>>,
+        TError,
+        FilesControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFilesControllerRemoveMutationOptions(options), queryClient);
+    }
+
 export const automationsControllerCreate = (
     createAutomationDto: CreateAutomationDto,
  signal?: AbortSignal
@@ -10700,275 +10980,6 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getAutomationsControllerRunMutationOptions(options), queryClient);
-    }
-
-export const filesControllerUpload = (
-    createFileUploadDto: CreateFileUploadDto,
- signal?: AbortSignal
-) => {
-
-
-      return sparkHttpClient<FileUploadResponseDto>(
-      {url: `/v1/files/uploads`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createFileUploadDto, ...(signal ? { signal }: {})
-    },
-      );
-    }
-
-
-
-
-export const getFilesControllerUploadMutationKey = () => ['filesControllerUpload'] as const;
-
-export const getFilesControllerUploadMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerUpload>>, TError,FilesControllerUploadMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof filesControllerUpload>>, TError,FilesControllerUploadMutationVariables, TContext> => {
-
-const mutationKey = getFilesControllerUploadMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof filesControllerUpload>>, FilesControllerUploadMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  filesControllerUpload(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FilesControllerUploadMutationResult = NonNullable<Awaited<ReturnType<typeof filesControllerUpload>>>
-    export type FilesControllerUploadMutationBody = CreateFileUploadDto
-    export type FilesControllerUploadMutationError = unknown
-    export type FilesControllerUploadMutationVariables = {data: CreateFileUploadDto}
-
-    export const useFilesControllerUpload = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerUpload>>, TError,FilesControllerUploadMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof filesControllerUpload>>,
-        TError,
-        FilesControllerUploadMutationVariables,
-        TContext
-      > => {
-      return useMutation(getFilesControllerUploadMutationOptions(options), queryClient);
-    }
-
-export const filesControllerComplete = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return sparkHttpClient<FileWriteResponseDto>(
-      {url: `/v1/files/${id}/complete`, method: 'POST', ...(signal ? { signal }: {})
-    },
-      );
-    }
-
-
-
-
-export const getFilesControllerCompleteMutationKey = () => ['filesControllerComplete'] as const;
-
-export const getFilesControllerCompleteMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerComplete>>, TError,FilesControllerCompleteMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof filesControllerComplete>>, TError,FilesControllerCompleteMutationVariables, TContext> => {
-
-const mutationKey = getFilesControllerCompleteMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof filesControllerComplete>>, FilesControllerCompleteMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  filesControllerComplete(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FilesControllerCompleteMutationResult = NonNullable<Awaited<ReturnType<typeof filesControllerComplete>>>
-
-    export type FilesControllerCompleteMutationError = unknown
-    export type FilesControllerCompleteMutationVariables = {id: string}
-
-    export const useFilesControllerComplete = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerComplete>>, TError,FilesControllerCompleteMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof filesControllerComplete>>,
-        TError,
-        FilesControllerCompleteMutationVariables,
-        TContext
-      > => {
-      return useMutation(getFilesControllerCompleteMutationOptions(options), queryClient);
-    }
-
-export const filesControllerDownload = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return sparkHttpClient<FileDownloadResponseDto>(
-      {url: `/v1/files/${id}/download`, method: 'GET', ...(signal ? { signal }: {})
-    },
-      );
-    }
-
-
-
-
-export const getFilesControllerDownloadQueryKey = (id: string,) => {
-    return [
-    `/v1/files/${id}/download`
-    ] as const;
-    }
-
-
-export const getFilesControllerDownloadQueryOptions = <TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFilesControllerDownloadQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof filesControllerDownload>>> = ({ signal }) => filesControllerDownload(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FilesControllerDownloadQueryResult = NonNullable<Awaited<ReturnType<typeof filesControllerDownload>>>
-export type FilesControllerDownloadQueryError = unknown
-
-
-export function useFilesControllerDownload<TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof filesControllerDownload>>,
-          TError,
-          Awaited<ReturnType<typeof filesControllerDownload>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFilesControllerDownload<TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof filesControllerDownload>>,
-          TError,
-          Awaited<ReturnType<typeof filesControllerDownload>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFilesControllerDownload<TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFilesControllerDownload<TData = Awaited<ReturnType<typeof filesControllerDownload>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof filesControllerDownload>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFilesControllerDownloadQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const filesControllerRemove = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return sparkHttpClient<FileWriteResponseDto>(
-      {url: `/v1/files/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
-    },
-      );
-    }
-
-
-
-
-export const getFilesControllerRemoveMutationKey = () => ['filesControllerRemove'] as const;
-
-export const getFilesControllerRemoveMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerRemove>>, TError,FilesControllerRemoveMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof filesControllerRemove>>, TError,FilesControllerRemoveMutationVariables, TContext> => {
-
-const mutationKey = getFilesControllerRemoveMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof filesControllerRemove>>, FilesControllerRemoveMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  filesControllerRemove(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FilesControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof filesControllerRemove>>>
-
-    export type FilesControllerRemoveMutationError = unknown
-    export type FilesControllerRemoveMutationVariables = {id: string}
-
-    export const useFilesControllerRemove = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof filesControllerRemove>>, TError,FilesControllerRemoveMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof filesControllerRemove>>,
-        TError,
-        FilesControllerRemoveMutationVariables,
-        TContext
-      > => {
-      return useMutation(getFilesControllerRemoveMutationOptions(options), queryClient);
     }
 
 export const catalogControllerCreateProduct = (

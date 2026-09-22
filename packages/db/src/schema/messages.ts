@@ -4,6 +4,7 @@ import { v7 as uuidv7 } from "uuid";
 import { APP_ROLE } from "../roles.js";
 import { contacts } from "./contacts.js";
 import { conversations } from "./conversations.js";
+import { files } from "./files.js";
 import { organizations } from "./organizations.js";
 import { users } from "./users.js";
 
@@ -17,6 +18,8 @@ export const messages = pgTable("messages", {
   status: text("status").notNull(),
   body: text("body").notNull(),
   externalId: text("external_id"),
+  /** Mídia recebida (áudio, imagem, documento) — o arquivo em si mora em `files` (ADR-0028). */
+  attachmentFileId: uuid("attachment_file_id").references(() => files.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),

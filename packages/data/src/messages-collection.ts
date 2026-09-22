@@ -8,7 +8,7 @@ import { sparkShapeOptions } from "./shape-options.js";
 
 export function optimisticInternalNote(input: { conversationId: ConversationId; contactId: ContactId; authorUserId: UserId; body: string }, orgId: OrgId): Message {
   const now = new Date().toISOString();
-  return { id: messageId.create(), orgId, conversationId: input.conversationId, contactId: input.contactId, authorUserId: input.authorUserId, direction: "internal", status: "sent", body: input.body, externalId: null, createdAt: now, updatedAt: now, deletedAt: null };
+  return { id: messageId.create(), orgId, conversationId: input.conversationId, contactId: input.contactId, authorUserId: input.authorUserId, direction: "internal", status: "sent", body: input.body, externalId: null, attachmentFileId: null, createdAt: now, updatedAt: now, deletedAt: null };
 }
 
 export function createMessagesCollection() {

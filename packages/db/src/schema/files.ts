@@ -9,7 +9,8 @@ import { users } from "./users.js";
 export const files = pgTable("files", {
   id: idColumn(), orgId: uuid("org_id").notNull().references(() => organizations.id),
   storageConnectionId: uuid("storage_connection_id").notNull().references(() => integrationConnections.id),
-  createdBy: uuid("created_by").notNull().references(() => users.id), name: text("name").notNull(),
+  /** Nulo quando o arquivo veio de ingestão automática (mídia recebida por um canal), não de upload humano. */
+  createdBy: uuid("created_by").references(() => users.id), name: text("name").notNull(),
   objectKey: text("object_key").notNull(), mimeType: text("mime_type").notNull(),
   sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(), folder: text("folder"), status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(), deletedAt: timestamp("deleted_at", { withTimezone: true }),

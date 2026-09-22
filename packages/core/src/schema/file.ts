@@ -3,7 +3,8 @@ import { zFileId, zIntegrationConnectionId, zOrgId, zServerTimestamp, zUserId } 
 
 export const FileStatusSchema = z.enum(["pending", "ready", "failed"]);
 export const StoredFileSchema = z.object({
-  id: zFileId, orgId: zOrgId, storageConnectionId: zIntegrationConnectionId, createdBy: zUserId,
+  /** Nulo quando o arquivo veio de ingestão automática (mídia recebida por um canal), não de upload humano. */
+  id: zFileId, orgId: zOrgId, storageConnectionId: zIntegrationConnectionId, createdBy: zUserId.nullable(),
   name: z.string().trim().min(1).max(240), objectKey: z.string().min(1).max(700),
   mimeType: z.string().trim().min(1).max(160), sizeBytes: z.number().int().nonnegative().max(5_000_000_000),
   folder: z.string().trim().max(240).nullable(), status: FileStatusSchema,
