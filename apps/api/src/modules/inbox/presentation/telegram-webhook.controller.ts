@@ -15,7 +15,7 @@ export class TelegramWebhookController {
     const connection = await this.webhooks.connection(integrationConnectionId.from(rawId));
     const secret = request.headers["x-telegram-bot-api-secret-token"];
     if (typeof secret !== "string" || !sameSecret(secret, connection.secretToken)) throw new ForbiddenException("Assinatura ausente ou inválida.");
-    const inserted = await this.webhooks.receive(connection.orgId, payload);
+    const inserted = await this.webhooks.receive(connection.orgId, payload, connection.botToken);
     return { received: true, inserted };
   }
 }
