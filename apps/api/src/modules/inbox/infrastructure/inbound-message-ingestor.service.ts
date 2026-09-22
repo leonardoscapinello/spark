@@ -1,11 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { contacts, conversations, createAppDbClient, identities, messages, withOrgContext, type SparkDb } from "@spark/db";
-import { contactId, conversationId, firstResponseDueAt, identityId, normalizeIdentityValue, type ContactId, type ConversationChannel, type ConversationId, type IdentityChannel, type OrgId } from "@spark/core";
+import { contactId, conversationId, firstResponseDueAt, identityId, normalizeIdentityValue, type ContactId, type ConversationChannel, type ConversationId, type IdentityChannel, type IntegrationConnectionId, type OrgId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 export interface InboundIngestParams {
   channel: ConversationChannel & IdentityChannel;
+  /** Qual das nossas conexões recebeu isso — cada uma é a própria caixa de entrada (ex: cada número de WhatsApp). Nula nos canais que hoje só aceitam uma conexão por vez. */
+  connectionId?: IntegrationConnectionId | null;
   externalId: string;
   /** Valor cru do remetente — a normalização (telefone, e-mail, @handle...) é responsabilidade daqui, não do chamador. */
   senderId: string;
@@ -47,10 +49,11 @@ export class InboundMessageIngestor {
         await this.events.append(tx, { orgId, contactId: leadId, type: "contact.created", data: { source: params.channel } });
       }
 
-      const [existing] = await tx.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.orgId, orgId), eq(conversations.contactId, leadId), eq(conversations.channel, params.channel), inArray(conversations.status, ["open", "snoozed"]))).orderBy(desc(conversations.lastMessageAt)).limit(1);
+      const connectionFilter = params.connectionId ? eq(conversations.connectionId, params.connectionId) : isNull(conversations.connectionId);
+      const [existing] = await tx.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.orgId, orgId), eq(conversations.contactId, leadId), eq(conversations.channel, params.channel), connectionFilter, inArray(conversations.status, ["open", "snoozed"]))).orderBy(desc(conversations.lastMessageAt)).limit(1);
       const threadId = (existing?.id ?? conversationId.create()) as ConversationId;
       if (!existing) {
-        await tx.insert(conversations).values({ id: threadId, orgId, contactId: leadId, channel: params.channel, subject: params.conversationSubject, firstResponseDueAt: new Date(firstResponseDueAt(params.occurredAt, "normal")), lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, createdAt: params.occurredAt });
+        await tx.insert(conversations).values({ id: threadId, orgId, contactId: leadId, channel: params.channel, connectionId: params.connectionId ?? null, subject: params.conversationSubject, firstResponseDueAt: new Date(firstResponseDueAt(params.occurredAt, "normal")), lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, createdAt: params.occurredAt });
         await this.events.append(tx, { orgId, contactId: leadId, type: "conversation.created", data: { conversationId: threadId, channel: params.channel } });
       } else {
         await tx.update(conversations).set({ status: "open", snoozedUntil: null, lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, updatedAt: new Date() }).where(eq(conversations.id, threadId));

@@ -2980,6 +2980,11 @@ export type ConversationWriteResponseDtoConversation = {
   channel: ConversationWriteResponseDtoConversationChannel;
   /**
      * @minLength 1
+     * @nullable
+     */
+  connectionId?: string | null;
+  /**
+     * @minLength 1
      * @maxLength 300
      */
   subject: string;
@@ -3152,6 +3157,11 @@ export type MessageWriteResponseDtoConversation = {
   /** @minLength 1 */
   contactId: string;
   channel: MessageWriteResponseDtoConversationChannel;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  connectionId?: string | null;
   /**
      * @minLength 1
      * @maxLength 300

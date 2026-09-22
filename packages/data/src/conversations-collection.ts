@@ -8,7 +8,7 @@ import { sparkShapeOptions } from "./shape-options.js";
 
 export function optimisticConversation(input: Omit<CreateConversationInput, "id">, orgId: OrgId, assigneeId: Conversation["assigneeId"]): Conversation {
   const now = new Date().toISOString();
-  return { id: conversationId.create(), orgId, contactId: input.contactId, channel: input.channel, subject: input.subject, status: "open", priority: "normal", assigneeId, teamId: null, snoozedUntil: null, firstResponseDueAt: firstResponseDueAt(now, "normal"), firstRespondedAt: null, resolvedAt: null, lastInboundMessageAt: null, lastMessageAt: now, createdAt: now, updatedAt: now };
+  return { id: conversationId.create(), orgId, contactId: input.contactId, channel: input.channel, connectionId: null, subject: input.subject, status: "open", priority: "normal", assigneeId, teamId: null, snoozedUntil: null, firstResponseDueAt: firstResponseDueAt(now, "normal"), firstRespondedAt: null, resolvedAt: null, lastInboundMessageAt: null, lastMessageAt: now, createdAt: now, updatedAt: now };
 }
 
 export function createConversationsCollection() {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zCannedReplyId, zContactId, zConversationId, zFileId, zMessageId, zOrgId, zServerTimestamp, zTeamId, zUserId } from "./zodHelpers.js";
+import { zCannedReplyId, zContactId, zConversationId, zFileId, zIntegrationConnectionId, zMessageId, zOrgId, zServerTimestamp, zTeamId, zUserId } from "./zodHelpers.js";
 
 export const CONVERSATION_CHANNELS = ["manual", "email", "instagram", "whatsapp", "messenger", "telegram"] as const;
 export const CONVERSATION_STATUSES = ["open", "snoozed", "closed"] as const;
@@ -13,6 +13,8 @@ export const ConversationSchema = z.object({
   orgId: zOrgId,
   contactId: zContactId,
   channel: z.enum(CONVERSATION_CHANNELS),
+  /** Qual das nossas conexões (ex: qual número de WhatsApp) — cada uma é a própria caixa de entrada. */
+  connectionId: zIntegrationConnectionId.nullable().default(null),
   subject: z.string().trim().min(1).max(300),
   status: z.enum(CONVERSATION_STATUSES).default("open"),
   priority: z.enum(CONVERSATION_PRIORITIES).default("normal"),

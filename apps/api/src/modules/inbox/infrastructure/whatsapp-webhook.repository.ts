@@ -29,11 +29,12 @@ export class WhatsAppWebhookRepository {
     return { orgId, appSecret: secrets.appSecret, verifyToken: secrets.verifyToken, ...(secrets.accessToken ? { accessToken: secrets.accessToken } : {}), ...(phoneNumberId ? { phoneNumberId } : {}) };
   }
 
-  async receive(orgId: OrgId, payload: unknown, phoneNumberId?: string, accessToken?: string): Promise<number> {
+  async receive(orgId: OrgId, connectionId: IntegrationConnectionId, payload: unknown, phoneNumberId?: string, accessToken?: string): Promise<number> {
     let inserted = 0;
     for (const item of parseWhatsAppInboundTexts(payload, phoneNumberId)) {
       const added = await this.ingestor.ingest(orgId, {
         channel: "whatsapp",
+        connectionId,
         externalId: item.externalId,
         senderId: item.senderId,
         contactName: `WhatsApp ${normalizeIdentityValue("whatsapp", item.senderId)}`,
@@ -53,6 +54,7 @@ export class WhatsAppWebhookRepository {
       if (!downloaded) continue;
       const added = await this.ingestor.ingest(orgId, {
         channel: "whatsapp",
+        connectionId,
         externalId: item.externalId,
         senderId: item.senderId,
         contactName: `WhatsApp ${normalizeIdentityValue("whatsapp", item.senderId)}`,

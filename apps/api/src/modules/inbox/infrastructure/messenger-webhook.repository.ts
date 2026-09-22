@@ -29,11 +29,12 @@ export class MessengerWebhookRepository {
     return { orgId, appSecret: secrets.appSecret, verifyToken: secrets.verifyToken, ...(pageId ? { pageId } : {}) };
   }
 
-  async receive(orgId: OrgId, payload: unknown, pageId?: string): Promise<number> {
+  async receive(orgId: OrgId, connectionId: IntegrationConnectionId, payload: unknown, pageId?: string): Promise<number> {
     let inserted = 0;
     for (const item of parseMessengerInboundTexts(payload, pageId)) {
       const added = await this.ingestor.ingest(orgId, {
         channel: "messenger",
+        connectionId,
         externalId: item.externalId,
         senderId: item.senderId,
         contactName: `Messenger ${normalizeIdentityValue("messenger", item.senderId)}`,
@@ -51,6 +52,7 @@ export class MessengerWebhookRepository {
       if (!downloaded) continue;
       const added = await this.ingestor.ingest(orgId, {
         channel: "messenger",
+        connectionId,
         externalId: item.externalId,
         senderId: item.senderId,
         contactName: `Messenger ${normalizeIdentityValue("messenger", item.senderId)}`,

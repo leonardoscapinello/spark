@@ -22,11 +22,12 @@ export class PostmarkWebhookRepository {
     return { orgId, username: secrets.username, password: secrets.password };
   }
 
-  async receive(orgId: OrgId, payload: unknown): Promise<number> {
+  async receive(orgId: OrgId, connectionId: IntegrationConnectionId, payload: unknown): Promise<number> {
     const item = parsePostmarkInboundEmail(payload);
     if (!item) return 0;
     const added = await this.ingestor.ingest(orgId, {
       channel: "email",
+      connectionId,
       externalId: item.externalId,
       senderId: item.senderId,
       contactName: item.senderName ?? item.senderId,

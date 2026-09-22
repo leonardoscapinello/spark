@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { contacts, createAppDbClient, files, identities, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
-import type { ContactId, ConversationChannel, FileId, OrgId } from "@spark/core";
+import type { ContactId, ConversationChannel, FileId, IntegrationConnectionId, OrgId } from "@spark/core";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
 import { ConnectionSettingsRepository } from "../../integrations/infrastructure/connection-settings.repository.js";
 import { EmailDeliveryService } from "../../integrations/application/email-delivery.service.js";
@@ -14,12 +14,14 @@ export class ChannelSender {
   private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly vault: SecretVault, private readonly email: EmailDeliveryService, private readonly settings: ConnectionSettingsRepository, private readonly storage: StorageResolver) {}
 
-  async send(orgId: OrgId, contactId: ContactId, channel: ConversationChannel, subject: string, body: string, attachmentFileId?: FileId | null): Promise<string> {
+  async send(orgId: OrgId, contactId: ContactId, channel: ConversationChannel, subject: string, body: string, attachmentFileId?: FileId | null, connectionId?: IntegrationConnectionId | null): Promise<string> {
     if (channel !== "email" && channel !== "instagram" && channel !== "whatsapp" && channel !== "messenger" && channel !== "telegram") throw new BadRequestException(`O canal ${channel} ainda não aceita respostas externas.`);
     const [loaded, attachment] = await Promise.all([
       withOrgContext(this.db, orgId, async (tx) => {
+        // A conversa já sabe por qual das nossas conexões (ex: qual número de WhatsApp) o cliente escreveu — responde por ela mesma, não "a mais recente".
         const providers = channel === "email" ? ["google_workspace", "smtp"] : [channel];
-        const [connection] = await tx.select().from(integrationConnections).where(and(eq(integrationConnections.orgId, orgId), inArray(integrationConnections.provider, providers), eq(integrationConnections.status, "connected"))).orderBy(desc(integrationConnections.updatedAt)).limit(1);
+        const scope = connectionId ? and(eq(integrationConnections.orgId, orgId), eq(integrationConnections.id, connectionId), eq(integrationConnections.status, "connected")) : and(eq(integrationConnections.orgId, orgId), inArray(integrationConnections.provider, providers), eq(integrationConnections.status, "connected"));
+        const [connection] = await tx.select().from(integrationConnections).where(scope).orderBy(desc(integrationConnections.updatedAt)).limit(1);
         if (!connection) throw new ServiceUnavailableException(`Nenhuma integração conectada para ${channel}.`);
         const [secret] = await tx.select().from(integrationSecrets).where(and(eq(integrationSecrets.connectionId, connection.id), eq(integrationSecrets.orgId, orgId))).limit(1);
         if (!secret) throw new ServiceUnavailableException("Credenciais do canal indisponíveis.");

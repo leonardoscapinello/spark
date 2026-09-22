@@ -29,11 +29,12 @@ export class InstagramWebhookRepository {
     return { orgId, appSecret: secrets.appSecret, verifyToken: secrets.verifyToken, ...(accountId ? { accountId } : {}) };
   }
 
-  async receive(orgId: OrgId, payload: unknown, accountId?: string): Promise<number> {
+  async receive(orgId: OrgId, connectionId: IntegrationConnectionId, payload: unknown, accountId?: string): Promise<number> {
     let inserted = 0;
     for (const item of parseInstagramInboundTexts(payload, accountId)) {
       const added = await this.ingestor.ingest(orgId, {
         channel: "instagram",
+        connectionId,
         externalId: item.externalId,
         senderId: item.senderId,
         contactName: `Instagram ${normalizeIdentityValue("instagram", item.senderId)}`,
@@ -51,6 +52,7 @@ export class InstagramWebhookRepository {
       if (!downloaded) continue;
       const added = await this.ingestor.ingest(orgId, {
         channel: "instagram",
+        connectionId,
         externalId: item.externalId,
         senderId: item.senderId,
         contactName: `Instagram ${normalizeIdentityValue("instagram", item.senderId)}`,

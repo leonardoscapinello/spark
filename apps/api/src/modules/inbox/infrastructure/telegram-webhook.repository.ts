@@ -26,11 +26,12 @@ export class TelegramWebhookRepository {
     return { orgId, secretToken: secrets.secretToken, ...(secrets.botToken ? { botToken: secrets.botToken } : {}) };
   }
 
-  async receive(orgId: OrgId, payload: unknown, botToken?: string): Promise<number> {
+  async receive(orgId: OrgId, connectionId: IntegrationConnectionId, payload: unknown, botToken?: string): Promise<number> {
     let inserted = 0;
     for (const item of parseTelegramInboundTexts(payload)) {
       const added = await this.ingestor.ingest(orgId, {
         channel: "telegram",
+        connectionId,
         externalId: item.externalId,
         senderId: item.senderId,
         contactName: `Telegram ${normalizeIdentityValue("telegram", item.senderId)}`,
@@ -49,6 +50,7 @@ export class TelegramWebhookRepository {
       if (!downloaded) continue;
       const added = await this.ingestor.ingest(orgId, {
         channel: "telegram",
+        connectionId,
         externalId: item.externalId,
         senderId: item.senderId,
         contactName: `Telegram ${normalizeIdentityValue("telegram", item.senderId)}`,

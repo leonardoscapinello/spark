@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { availableCannedReplies, contactId, conversationId, conversationSlaState, fileId, formatPhone, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
+import { availableCannedReplies, contactId, conversationId, conversationSlaState, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
 import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, FilePicker, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
+import { getIntegrationConnectionsCollection } from "../lib/integration-connections.client";
 import { getCannedRepliesCollection } from "../lib/canned-replies-collection.client";
 import { getTeamsCollection } from "../lib/teams-collection.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -36,6 +37,7 @@ export async function clientLoader() {
     getCannedRepliesCollection().preload(),
     getTeamsCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
+    ...(session.capabilities.includes("integrations:read") ? [getIntegrationConnectionsCollection().preload()] : []),
   ]);
   return null;
 }
@@ -54,6 +56,7 @@ export default function Inbox() {
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
   const { data: cannedReplies = [] } = useLiveQuery({ query: (q) => q.from({ replies: getCannedRepliesCollection() }).orderBy(({ replies: item }) => item.shortcut, "asc") });
   const { data: teams = [] } = useLiveQuery({ query: (q) => q.from({ teams: getTeamsCollection() }).orderBy(({ teams: item }) => item.name, "asc") });
+  const { data: connections = [] } = useLiveQuery({ query: (q) => canReadIntegrations ? q.from({ connections: getIntegrationConnectionsCollection() }) : undefined });
   const filter = parseInboxFilter(searchParams.get("box"));
   const [mobileView, setMobileView] = useState<"list" | "thread">("list");
   const [layout, setLayout] = useState<"chat" | "table">("chat");
@@ -77,6 +80,8 @@ export default function Inbox() {
   const contactNames = useMemo(() => new Map(contacts.map((item) => [item.id, item.name])), [contacts]);
   const userNames = useMemo(() => new Map(users.map((item) => [item.id, item.name])), [users]);
   const teamNames = useMemo(() => new Map(teams.map((item) => [item.id, item.name])), [teams]);
+  const connectionNames = useMemo(() => new Map(connections.map((item) => [item.id, item.name])), [connections]);
+  const currentQueueTitle = filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filter.startsWith("connection:") ? connectionNames.get(integrationConnectionId.from(filter.slice(11))) ?? "Caixa" : filterLabel(filter);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const firstRun = !isLoading && conversations.length === 0 && !searchTerm && (filter === "open" || filter === "all");
   const filtered = conversations.filter((item) => matchesFilter(item, filter, session?.userId ?? null)
@@ -96,13 +101,23 @@ export default function Inbox() {
       if (conversation.assigneeId === null) increment("unassigned");
       if (conversation.teamId) increment(`team:${conversation.teamId}`);
       increment(`channel:${conversation.channel}`);
+      if (conversation.connectionId) increment(`connection:${conversation.connectionId}`);
     }
     return counts;
   }, [conversations, session?.userId]);
   const queueCount = (box: InboxFilter) => queueCounts.get(box) ?? 0;
+  // Mais de um número de WhatsApp conectado: cada um vira a própria caixa
+  // (pedido do usuário, 22/09) — a caixa genérica "WhatsApp" só existe
+  // quando há zero ou um número, senão a conversa já sabe qual conexão é.
+  const whatsappConnections = connections.filter((item) => item.provider === "whatsapp" && item.status === "connected");
   // Só lista canal com conversa aberta de verdade — "Manual" não é um canal
   // externo, é criado pela própria equipe, não faz sentido como caixa dedicada.
-  const activeChannels = CHANNELS.filter((item) => item.value !== "manual" && queueCounts.has(`channel:${item.value}`));
+  const sidebarChannelItems: { key: string; label: string; box: InboxFilter }[] = whatsappConnections.length > 1
+    ? [
+      ...CHANNELS.filter((item) => item.value !== "manual" && item.value !== "whatsapp" && queueCounts.has(`channel:${item.value}`)).map((item) => ({ key: `channel:${item.value}`, label: item.label, box: `channel:${item.value}` as InboxFilter })),
+      ...whatsappConnections.filter((item) => queueCounts.has(`connection:${item.id}`)).map((item) => ({ key: `connection:${item.id}`, label: item.name, box: `connection:${item.id}` as InboxFilter })),
+    ]
+    : CHANNELS.filter((item) => item.value !== "manual" && queueCounts.has(`channel:${item.value}`)).map((item) => ({ key: `channel:${item.value}`, label: item.label, box: `channel:${item.value}` as InboxFilter }));
   const tableColumns: TableColumn<Conversation>[] = [
     { id: "subject", label: "Conversa", cell: (item) => <Button size="sm" variant="ghost" className={styles.tableSubject} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>{item.subject}</Button>, sortValue: (item) => item.subject },
     { id: "contact", label: "Pessoa", cell: (item) => contactNames.get(item.contactId) ?? "Pessoa", sortValue: (item) => contactNames.get(item.contactId) ?? "" },
@@ -146,7 +161,7 @@ export default function Inbox() {
     const active = activeQueueLink.current;
     const strip = active?.parentElement?.parentElement;
     if (active && strip && strip.scrollWidth > strip.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
-  }, [filter, teams.length, activeChannels.length]);
+  }, [filter, teams.length, sidebarChannelItems.length]);
 
   async function createConversation() {
     if (!session || !newContact || !newSubject.trim()) throw new Error("MISSING_FIELDS");
@@ -255,8 +270,8 @@ export default function Inbox() {
       {teams.some((team) => !team.archivedAt) && <SidebarSection title="Equipes">
         {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link ref={filter === `team:${team.id}` ? activeQueueLink : undefined} to={`/inbox?box=team:${team.id}`} onClick={() => setMobileView("list")} />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
       </SidebarSection>}
-      {activeChannels.length > 0 && <SidebarSection title="Canais">
-        {activeChannels.map((item) => <SidebarItem key={item.value} render={<Link ref={filter === `channel:${item.value}` ? activeQueueLink : undefined} to={`/inbox?box=channel:${item.value}`} onClick={() => setMobileView("list")} />} active={filter === `channel:${item.value}`} icon={<Icon name="message" />} count={queueCount(`channel:${item.value}`)}>{item.label}</SidebarItem>)}
+      {sidebarChannelItems.length > 0 && <SidebarSection title="Canais">
+        {sidebarChannelItems.map((item) => <SidebarItem key={item.key} render={<Link ref={filter === item.box ? activeQueueLink : undefined} to={`/inbox?box=${item.box}`} onClick={() => setMobileView("list")} />} active={filter === item.box} icon={<Icon name="message" />} count={queueCount(item.box)}>{item.label}</SidebarItem>)}
       </SidebarSection>}
       <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
     </Sidebar>
@@ -264,13 +279,13 @@ export default function Inbox() {
       <MenuButton variant="ghost" shape="rounded" className={styles.mobileQueueTrigger} icon={<Icon name="inbox" />} aria-label="Selecionar caixa de atendimento" menu={<>
         <MenuGroup label="Caixas">{queues.map((queue) => <MenuItem key={queue.box} icon={<Icon name={queue.icon} />} shortcut={String(queueCount(queue.box))} aria-current={filter === queue.box ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(queue.to); }}>{queue.label}</MenuItem>)}</MenuGroup>
         {teams.some((team) => !team.archivedAt) && <MenuGroup label="Equipes">{teams.filter((team) => !team.archivedAt).map((team) => <MenuItem key={team.id} icon={<Icon name="team" />} shortcut={String(queueCount(`team:${team.id}`))} aria-current={filter === `team:${team.id}` ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=team:${team.id}`); }}>{team.name}</MenuItem>)}</MenuGroup>}
-        {activeChannels.length > 0 && <MenuGroup label="Canais">{activeChannels.map((item) => <MenuItem key={item.value} icon={<Icon name="message" />} shortcut={String(queueCount(`channel:${item.value}`))} aria-current={filter === `channel:${item.value}` ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=channel:${item.value}`); }}>{item.label}</MenuItem>)}</MenuGroup>}
+        {sidebarChannelItems.length > 0 && <MenuGroup label="Canais">{sidebarChannelItems.map((item) => <MenuItem key={item.key} icon={<Icon name="message" />} shortcut={String(queueCount(item.box))} aria-current={filter === item.box ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=${item.box}`); }}>{item.label}</MenuItem>)}</MenuGroup>}
         <MenuGroup label="Ferramentas"><MenuItem icon={<Icon name="file" />} onClick={() => void navigate("/inbox/replies")}>Respostas prontas</MenuItem></MenuGroup>
-      </>}>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</MenuButton>
+      </>}>{currentQueueTitle}</MenuButton>
     </div>
     <div className={styles.workspace} data-layout={layout} data-preview-open={layout === "table" && selectedId && selected ? "true" : "false"} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"} data-first-run={firstRun ? "true" : undefined}>
       <section className={styles.conversationList} aria-label="Lista de conversas">
-        <header><strong>{filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filterLabel(filter)}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" className={styles.mobileCreate} aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar pessoa"} onClick={openConversationOrContact}><Icon name="plus" /></Button>}</div></header>
+        <header><strong>{currentQueueTitle}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" className={styles.mobileCreate} aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar pessoa"} onClick={openConversationOrContact}><Icon name="plus" /></Button>}</div></header>
         {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
         {(!firstRun || layout === "table") && <div className={styles.listControls}><span>{filtered.length} {filtered.length === 1 ? "conversa" : "conversas"}</span><div className={styles.listControlActions}><div className={styles.layoutSwitch} role="group" aria-label="Formato das conversas"><Button iconOnly size="sm" variant={layout === "chat" ? "raised" : "ghost"} aria-label="Visualização de conversa" aria-pressed={layout === "chat"} onClick={() => setLayout("chat")}><Icon name="message" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>{layout === "chat" && <MenuButton size="sm" variant="ghost" shape="rounded" menu={<><MenuItem onClick={() => setSortOrder("recent")}>Mais recentes</MenuItem><MenuItem onClick={() => setSortOrder("oldest")}>Mais antigas</MenuItem></>}>{sortOrder === "recent" ? "Mais recentes" : "Mais antigas"}</MenuButton>}</div></div>}
         <div className={styles.listBody}>
@@ -353,11 +368,12 @@ export default function Inbox() {
   </div>;
 }
 
-type InboxFilter = ConversationStatus | "all" | "mine" | "unassigned" | `team:${string}` | `channel:${string}`;
+type InboxFilter = ConversationStatus | "all" | "mine" | "unassigned" | `team:${string}` | `channel:${string}` | `connection:${string}`;
 function parseInboxFilter(value: string | null): InboxFilter {
   if (value === "all" || value === "mine" || value === "unassigned" || value === "closed" || value === "snoozed") return value;
   if (value?.startsWith("team:")) return value as `team:${string}`;
   if (value?.startsWith("channel:")) return value as `channel:${string}`;
+  if (value?.startsWith("connection:")) return value as `connection:${string}`;
   return "open";
 }
 function matchesFilter(item: Conversation, filter: InboxFilter, currentUserId: string | null): boolean {
@@ -366,9 +382,10 @@ function matchesFilter(item: Conversation, filter: InboxFilter, currentUserId: s
   if (filter === "unassigned") return item.status === "open" && item.assigneeId === null;
   if (filter.startsWith("team:")) return item.status === "open" && item.teamId === filter.slice(5);
   if (filter.startsWith("channel:")) return item.status === "open" && item.channel === filter.slice(8);
+  if (filter.startsWith("connection:")) return item.status === "open" && item.connectionId === filter.slice(11);
   return item.status === filter;
 }
-function filterLabel(value: InboxFilter): string { if (value.startsWith("team:")) return "Fila da equipe"; if (value.startsWith("channel:")) return channelLabel(value.slice(8) as ConversationChannel); if (value === "open") return "Abertas"; if (value === "mine") return "Minhas conversas"; if (value === "unassigned") return "Não atribuídas"; if (value === "snoozed") return "Adiadas"; if (value === "closed") return "Fechadas"; return "Todas"; }
+function filterLabel(value: InboxFilter): string { if (value.startsWith("team:")) return "Fila da equipe"; if (value.startsWith("channel:")) return channelLabel(value.slice(8) as ConversationChannel); if (value.startsWith("connection:")) return "Caixa"; if (value === "open") return "Abertas"; if (value === "mine") return "Minhas conversas"; if (value === "unassigned") return "Não atribuídas"; if (value === "snoozed") return "Adiadas"; if (value === "closed") return "Fechadas"; return "Todas"; }
 function channelLabel(value: ConversationChannel): string { return CHANNELS.find((item) => item.value === value)?.label ?? value; }
 function statusLabel(value: ConversationStatus): string { return ({ open: "Aberta", snoozed: "Adiada", closed: "Fechada" })[value]; }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }

@@ -21,7 +21,7 @@ export class OutboundMessagesRepository {
       return conversation;
     });
     try {
-      const externalId = await this.sender.send(orgId, queued.contactId as Message["contactId"], queued.channel as Conversation["channel"], queued.subject, input.body?.trim() ?? "", input.attachmentFileId);
+      const externalId = await this.sender.send(orgId, queued.contactId as Message["contactId"], queued.channel as Conversation["channel"], queued.subject, input.body?.trim() ?? "", input.attachmentFileId, queued.connectionId as Conversation["connectionId"]);
       return withOrgContext(this.db, orgId, async (tx) => {
         const sentAt = new Date();
         const [message] = await tx.update(messages).set({ status: "sent", externalId }).where(and(eq(messages.id, input.id), eq(messages.orgId, orgId))).returning();

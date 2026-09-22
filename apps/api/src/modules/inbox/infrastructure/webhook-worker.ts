@@ -28,12 +28,12 @@ export function startWebhookWorker(app: INestApplicationContext): Worker<Webhook
   return new Worker<WebhookJobData>(WEBHOOK_QUEUE, async (job: Job<WebhookJobData>) => {
     const { provider, connectionId, payload } = job.data;
     const id = connectionId as IntegrationConnectionId;
-    if (provider === "whatsapp") { const c = await repositories.whatsapp.connection(id); await repositories.whatsapp.receive(c.orgId, payload, c.phoneNumberId, c.accessToken); return; }
-    if (provider === "instagram") { const c = await repositories.instagram.connection(id); await repositories.instagram.receive(c.orgId, payload, c.accountId); return; }
-    if (provider === "messenger") { const c = await repositories.messenger.connection(id); await repositories.messenger.receive(c.orgId, payload, c.pageId); return; }
-    if (provider === "telegram") { const c = await repositories.telegram.connection(id); await repositories.telegram.receive(c.orgId, payload, c.botToken); return; }
+    if (provider === "whatsapp") { const c = await repositories.whatsapp.connection(id); await repositories.whatsapp.receive(c.orgId, id, payload, c.phoneNumberId, c.accessToken); return; }
+    if (provider === "instagram") { const c = await repositories.instagram.connection(id); await repositories.instagram.receive(c.orgId, id, payload, c.accountId); return; }
+    if (provider === "messenger") { const c = await repositories.messenger.connection(id); await repositories.messenger.receive(c.orgId, id, payload, c.pageId); return; }
+    if (provider === "telegram") { const c = await repositories.telegram.connection(id); await repositories.telegram.receive(c.orgId, id, payload, c.botToken); return; }
     const c = await repositories.postmark.connection(id);
-    await repositories.postmark.receive(c.orgId, payload);
+    await repositories.postmark.receive(c.orgId, id, payload);
   }, { connection: redisConnection(process.env.REDIS_URL ?? "redis://127.0.0.1:6379"), concurrency: Number(process.env.WEBHOOK_CONCURRENCY ?? 10) });
 }
 

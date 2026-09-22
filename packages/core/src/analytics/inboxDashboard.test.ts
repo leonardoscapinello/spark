@@ -5,8 +5,8 @@ import type { Conversation } from "../schema/inbox.js";
 function conversation(overrides: Partial<Conversation>): Conversation {
   return {
     id: "c1" as Conversation["id"], orgId: "org" as Conversation["orgId"], contactId: "contact" as Conversation["contactId"],
-    channel: "whatsapp", subject: "Assunto", status: "open", priority: "normal", assigneeId: null, teamId: null,
-    snoozedUntil: null, firstResponseDueAt: "2026-09-01T00:00:00.000Z", firstRespondedAt: null, resolvedAt: null,
+    channel: "whatsapp", connectionId: null, subject: "Assunto", status: "open", priority: "normal", assigneeId: null, teamId: null,
+    snoozedUntil: null, firstResponseDueAt: "2026-09-01T00:00:00.000Z", firstRespondedAt: null, resolvedAt: null, lastInboundMessageAt: null,
     lastMessageAt: "2026-09-01T00:00:00.000Z", createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z",
     ...overrides,
   };
