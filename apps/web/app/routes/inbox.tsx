@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, contactId, conversationId, conversationSlaState, formatPhone, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
-import { inboxControllerSend } from "@spark/api-client";
+import { filesControllerDownload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
 import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
@@ -196,6 +196,15 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
+  async function openAttachment(attachmentFileId: string) {
+    try {
+      const response = await filesControllerDownload(attachmentFileId);
+      window.open(response.downloadUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      notify({ title: "Não foi possível abrir o anexo", tone: "error" });
+    }
+  }
+
   function startConversationAction() {
     if (!canWrite || !canReadContacts) return null;
     return contacts.length > 0
@@ -282,6 +291,7 @@ export default function Inbox() {
             {messages.map((message) => <article key={message.id} className={styles.message} data-direction={message.direction}>
               <header><strong>{message.direction === "internal" ? (message.authorUserId ? userNames.get(message.authorUserId) : null) ?? "Equipe" : message.direction === "inbound" ? contactNames.get(message.contactId) ?? "Pessoa" : "Equipe"}</strong><time>{formatDateTime(message.createdAt)}</time></header>
               <p><LinkifiedText text={message.body} /></p>
+              {message.attachmentFileId && <Button type="button" size="sm" variant="ghost" icon={<Icon name="download" />} onClick={() => void openAttachment(message.attachmentFileId!)}>Baixar anexo</Button>}
               <small>{message.direction === "internal" ? "Nota interna" : message.status}</small>
             </article>)}
           </div>
