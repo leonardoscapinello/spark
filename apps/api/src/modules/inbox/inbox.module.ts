@@ -25,11 +25,12 @@ import { TelegramWebhookController } from "./presentation/telegram-webhook.contr
 import { PostmarkWebhookRepository } from "./infrastructure/postmark-webhook.repository.js";
 import { PostmarkWebhookController } from "./presentation/postmark-webhook.controller.js";
 import { InboundMediaStorage } from "./infrastructure/inbound-media-storage.service.js";
+import { InboundMessageIngestor } from "./infrastructure/inbound-message-ingestor.service.js";
 import { FilesModule } from "../files/files.module.js";
 
 @Module({
   imports: [EventsModule, IntegrationsModule, FilesModule],
   controllers: [InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController, PostmarkWebhookController],
-  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, PostmarkWebhookRepository, InboundMediaStorage, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, PostmarkWebhookRepository, InboundMediaStorage, InboundMessageIngestor, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

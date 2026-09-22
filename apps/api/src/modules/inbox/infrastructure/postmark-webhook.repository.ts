@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { contacts, conversations, createAppDbClient, identities, integrationConnections, integrationSecrets, messages, withOrgContext, type SparkDb } from "@spark/db";
-import { contactId, conversationId, firstResponseDueAt, identityId, messageId, normalizeIdentityValue, parsePostmarkInboundEmail, type IntegrationConnectionId, type OrgId } from "@spark/core";
-import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
+import { and, eq } from "drizzle-orm";
+import { withOrgContext, createAppDbClient, integrationConnections, integrationSecrets, messages, type SparkDb } from "@spark/db";
+import { messageId, parsePostmarkInboundEmail, type IntegrationConnectionId, type OrgId } from "@spark/core";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
+import { InboundMessageIngestor } from "./inbound-message-ingestor.service.js";
 
 @Injectable()
 export class PostmarkWebhookRepository {
   private readonly db: SparkDb = createAppDbClient();
-  constructor(private readonly vault: SecretVault, private readonly events: DomainEventWriter) {}
+  constructor(private readonly vault: SecretVault, private readonly ingestor: InboundMessageIngestor) {}
 
   async connection(id: IntegrationConnectionId): Promise<{ orgId: OrgId; username: string; password: string }> {
     // Public webhook bootstrap: resolve only the tenant and provider before entering org context.
@@ -25,31 +25,18 @@ export class PostmarkWebhookRepository {
   async receive(orgId: OrgId, payload: unknown): Promise<number> {
     const item = parsePostmarkInboundEmail(payload);
     if (!item) return 0;
-    const added = await withOrgContext(this.db, orgId, async (tx) => {
-      const externalValue = normalizeIdentityValue("email", item.senderId);
-      // The identity and conversation are shared state; serialize concurrent deliveries per sender.
-      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`${orgId}:email:${externalValue}`}, 0))`);
-      const [duplicate] = await tx.select({ id: messages.id }).from(messages).where(and(eq(messages.orgId, orgId), eq(messages.externalId, item.externalId))).limit(1);
-      if (duplicate) return false;
-      const [identity] = await tx.select({ contactId: identities.contactId }).from(identities).where(and(eq(identities.orgId, orgId), eq(identities.channel, "email"), eq(identities.externalValue, externalValue))).limit(1);
-      const leadId = identity?.contactId ?? contactId.create();
-      if (!identity) {
-        await tx.insert(contacts).values({ id: leadId, orgId, name: item.senderName ?? externalValue, email: externalValue, source: "email" });
-        await tx.insert(identities).values({ id: identityId.create(), orgId, contactId: leadId, channel: "email", externalValue });
-        await this.events.append(tx, { orgId, contactId: leadId as ReturnType<typeof contactId.create>, type: "contact.created", data: { source: "email" } });
-      }
-      const [existing] = await tx.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.orgId, orgId), eq(conversations.contactId, leadId), eq(conversations.channel, "email"), inArray(conversations.status, ["open", "snoozed"]))).orderBy(desc(conversations.lastMessageAt)).limit(1);
-      const threadId = existing?.id ?? conversationId.create();
-      if (!existing) {
-        await tx.insert(conversations).values({ id: threadId, orgId, contactId: leadId, channel: "email", subject: item.subject, firstResponseDueAt: new Date(firstResponseDueAt(item.occurredAt, "normal")), lastMessageAt: item.occurredAt, createdAt: item.occurredAt });
-        await this.events.append(tx, { orgId, contactId: leadId as ReturnType<typeof contactId.create>, type: "conversation.created", data: { conversationId: threadId, channel: "email" } });
-      } else {
-        await tx.update(conversations).set({ status: "open", snoozedUntil: null, lastMessageAt: item.occurredAt, updatedAt: new Date() }).where(eq(conversations.id, threadId));
-      }
-      const [message] = await tx.insert(messages).values({ id: messageId.create(), orgId, conversationId: threadId, contactId: leadId, direction: "inbound", status: "received", body: item.text, externalId: item.externalId, createdAt: item.occurredAt }).onConflictDoNothing().returning({ id: messages.id });
-      if (!message) return false;
-      await this.events.append(tx, { orgId, contactId: leadId as ReturnType<typeof contactId.create>, type: "message.received", data: { conversationId: threadId, messageId: message.id, channel: "email" } });
-      return true;
+    const added = await this.ingestor.ingest(orgId, {
+      channel: "email",
+      externalId: item.externalId,
+      senderId: item.senderId,
+      contactName: item.senderName ?? item.senderId,
+      setContactEmail: true,
+      conversationSubject: item.subject,
+      occurredAt: item.occurredAt,
+      insertMessage: async (tx, leadId, threadId) => {
+        const [message] = await tx.insert(messages).values({ id: messageId.create(), orgId, conversationId: threadId, contactId: leadId, direction: "inbound", status: "received", body: item.text, externalId: item.externalId, createdAt: item.occurredAt }).onConflictDoNothing().returning({ id: messages.id });
+        return message?.id ?? null;
+      },
     });
     return added ? 1 : 0;
   }
