@@ -13,14 +13,15 @@ export class OutboundMessagesRepository {
       const [conversation] = await tx.select().from(conversations).where(and(eq(conversations.id, conversationId), eq(conversations.orgId, orgId))).limit(1);
       if (!conversation) throw new NotFoundException("Conversa não encontrada.");
       const now = new Date();
-      const [message] = await tx.insert(messages).values({ id: input.id, orgId, conversationId, contactId: conversation.contactId, authorUserId: actorUserId, direction: "outbound", status: "queued", body: input.body, createdAt: now }).returning();
+      const body = input.body?.trim() || "Anexo";
+      const [message] = await tx.insert(messages).values({ id: input.id, orgId, conversationId, contactId: conversation.contactId, authorUserId: actorUserId, direction: "outbound", status: "queued", body, attachmentFileId: input.attachmentFileId ?? null, createdAt: now }).returning();
       await tx.update(conversations).set({ lastMessageAt: now, updatedAt: now }).where(eq(conversations.id, conversationId));
       if (!message) throw new Error("Não foi possível enfileirar a mensagem.");
       await this.events.append(tx, { orgId, contactId: conversation.contactId as ContactId, type: "message.queued", data: { messageId: input.id, conversationId } });
       return conversation;
     });
     try {
-      const externalId = await this.sender.send(orgId, queued.contactId as Message["contactId"], queued.channel as Conversation["channel"], queued.subject, input.body);
+      const externalId = await this.sender.send(orgId, queued.contactId as Message["contactId"], queued.channel as Conversation["channel"], queued.subject, input.body?.trim() ?? "", input.attachmentFileId);
       return withOrgContext(this.db, orgId, async (tx) => {
         const sentAt = new Date();
         const [message] = await tx.update(messages).set({ status: "sent", externalId }).where(and(eq(messages.id, input.id), eq(messages.orgId, orgId))).returning();

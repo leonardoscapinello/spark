@@ -66,7 +66,9 @@ export type UpdateConversationInput = z.infer<typeof UpdateConversationInputSche
 
 export const AddInternalNoteInputSchema = MessageSchema.pick({ id: true, body: true });
 export type AddInternalNoteInput = z.infer<typeof AddInternalNoteInputSchema>;
-export const SendMessageInputSchema = MessageSchema.pick({ id: true, body: true });
+export const SendMessageInputSchema = MessageSchema.pick({ id: true, attachmentFileId: true }).extend({
+  body: z.string().trim().max(20_000).optional(),
+}).refine((value) => (value.body && value.body.length > 0) || value.attachmentFileId !== null, { error: "Informe um texto ou um anexo." });
 export type SendMessageInput = z.infer<typeof SendMessageInputSchema>;
 
 export const ConversationWriteResponseSchema = z.object({ conversation: ConversationSchema, txid: z.number().int() });

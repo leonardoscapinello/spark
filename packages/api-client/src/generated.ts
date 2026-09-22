@@ -3192,9 +3192,11 @@ export interface SendMessageDto {
   id: string;
   /**
      * @minLength 1
-     * @maxLength 20000
+     * @nullable
      */
-  body: string;
+  attachmentFileId?: string | null;
+  /** @maxLength 20000 */
+  body?: string;
 }
 
 export interface CreateCannedReplyDto {

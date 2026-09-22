@@ -3,7 +3,8 @@ import { createTransport } from "nodemailer";
 import type { OrgId } from "@spark/core";
 import { IntegrationRuntimeResolver } from "./integration-runtime-resolver.service.js";
 
-export interface EmailMessage { to: string; subject: string; text: string; }
+export interface EmailAttachment { url: string; mimeType: string; name: string; }
+export interface EmailMessage { to: string; subject: string; text: string; attachment?: EmailAttachment; }
 
 @Injectable()
 export class EmailDeliveryService {
@@ -21,12 +22,17 @@ export class EmailDeliveryService {
     const host = text(config.host); const port = Number(config.port ?? 587); const from = text(config.fromEmail) || credentials.username;
     if (!host || !from || !credentials.username || !credentials.password) throw new ServiceUnavailableException("A integração SMTP precisa de remetente e credenciais.");
     const transport = createTransport({ host, port, secure: config.secure === true, auth: { user: credentials.username, pass: credentials.password } });
-    const result = await transport.sendMail({ from: text(config.fromName) ? `${text(config.fromName)} <${from}>` : from, to: message.to, subject: message.subject, text: message.text });
+    // nodemailer busca o binário sozinho quando `path` é uma URL — mesma URL assinada que o resto do produto usa pra baixar o arquivo.
+    const attachments = message.attachment ? [{ filename: message.attachment.name, path: message.attachment.url }] : undefined;
+    const result = await transport.sendMail({ from: text(config.fromName) ? `${text(config.fromName)} <${from}>` : from, to: message.to, subject: message.subject, text: message.text, attachments });
     return result.messageId;
   }
+  /** A API do Gmail exige multipart MIME construído à mão pra anexo — fora de escopo por ora; o link do arquivo entra no corpo do e-mail. */
   private async gmail(config: Record<string, unknown>, credentials: Record<string, string>, message: EmailMessage): Promise<string> {
     if (!credentials.accessToken) throw new ServiceUnavailableException("Token OAuth do Google indisponível.");
-    const from = text(config.fromEmail); const mime = [`To: ${message.to}`, ...(from ? [`From: ${from}`] : []), `Subject: ${message.subject}`, "Content-Type: text/plain; charset=utf-8", "", message.text].join("\r\n");
+    const from = text(config.fromEmail);
+    const body = message.attachment ? `${message.text}\n\n${message.attachment.name}: ${message.attachment.url}` : message.text;
+    const mime = [`To: ${message.to}`, ...(from ? [`From: ${from}`] : []), `Subject: ${message.subject}`, "Content-Type: text/plain; charset=utf-8", "", body].join("\r\n");
     const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", { method: "POST", headers: { Authorization: `Bearer ${credentials.accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ raw: Buffer.from(mime).toString("base64url") }) });
     const payload = await json(response); if (!response.ok) throw new Error(apiError(payload, "O Gmail recusou a mensagem."));
     return text(payload.id) || crypto.randomUUID();
