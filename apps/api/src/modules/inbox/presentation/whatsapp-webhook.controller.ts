@@ -25,7 +25,7 @@ export class WhatsAppWebhookController {
     if (!Buffer.isBuffer(request.rawBody) || typeof signature !== "string" || !/^sha256=[a-f\d]{64}$/i.test(signature)) throw new ForbiddenException("Assinatura ausente ou inválida.");
     const expected = `sha256=${createHmac("sha256", connection.appSecret).update(request.rawBody).digest("hex")}`;
     if (!sameSecret(signature.toLowerCase(), expected)) throw new ForbiddenException("Assinatura ausente ou inválida.");
-    const inserted = await this.webhooks.receive(connection.orgId, payload, connection.phoneNumberId);
+    const inserted = await this.webhooks.receive(connection.orgId, payload, connection.phoneNumberId, connection.accessToken);
     return { received: true, inserted };
   }
 }

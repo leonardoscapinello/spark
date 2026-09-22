@@ -12,5 +12,5 @@ import { GetFileDownloadUseCase } from "./application/get-file-download.usecase.
 import { FilesRepository } from "./infrastructure/files.repository.js";
 import { StorageResolver } from "./infrastructure/storage-resolver.service.js";
 import { FilesController } from "./presentation/files.controller.js";
-@Module({ imports: [EventsModule, IntegrationsModule], controllers: [FilesController], providers: [CreateFileUploadUseCase, CompleteFileUploadUseCase, GetFileDownloadUseCase, DeleteFileUseCase, FilesRepository, StorageResolver, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard] })
+@Module({ imports: [EventsModule, IntegrationsModule], controllers: [FilesController], providers: [CreateFileUploadUseCase, CompleteFileUploadUseCase, GetFileDownloadUseCase, DeleteFileUseCase, FilesRepository, StorageResolver, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard], exports: [StorageResolver] })
 export class FilesModule {}
