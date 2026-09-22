@@ -9,6 +9,8 @@
 .providerMeta { display: flex; align-items: center; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .connectionInfo { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .connectionInfo small { color: var(--color-statusDanger); }
+.connectionInfo strong { flex-basis: 100%; color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+.connectionRow { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface2); }
 .fieldHint { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-inline-start: auto; }
 .fields { display: grid; gap: var(--space-4); }
