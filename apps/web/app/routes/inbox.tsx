@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { availableCannedReplies, contactId, conversationId, conversationSlaState, formatPhone, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
-import { filesControllerDownload, inboxControllerSend } from "@spark/api-client";
+import { availableCannedReplies, contactId, conversationId, conversationSlaState, fileId, formatPhone, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
+import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, FilePicker, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -71,6 +71,8 @@ export default function Inbox() {
   const [note, setNote] = useState("");
   const [composerMode, setComposerMode] = useState<"reply" | "note">("note");
   const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
+  const [attachment, setAttachment] = useState<{ id: string; name: string } | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const contactNames = useMemo(() => new Map(contacts.map((item) => [item.id, item.name])), [contacts]);
   const userNames = useMemo(() => new Map(users.map((item) => [item.id, item.name])), [users]);
@@ -138,6 +140,7 @@ export default function Inbox() {
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, setSearchParams, contacts, canWrite, canReadContacts]);
   useEffect(() => { if (selected && !REPLYABLE_CHANNELS.has(selected.channel) && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
+  useEffect(() => { setAttachment(null); }, [selected?.id, composerMode]);
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60_000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
     const active = activeQueueLink.current;
@@ -181,15 +184,32 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
+  async function attachFile(selectedFiles: File[]) {
+    const file = selectedFiles[0];
+    if (!file) return;
+    setUploadingAttachment(file.name);
+    try {
+      const id = fileId.create();
+      const response = await filesControllerUpload({ id, name: file.name, mimeType: file.type || "application/octet-stream", sizeBytes: file.size, folder: null });
+      const put = await fetch(response.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
+      if (!put.ok) throw new Error(`O armazenamento respondeu ${put.status}.`);
+      await filesControllerComplete(id);
+      setAttachment({ id, name: file.name });
+    } catch (error) {
+      notify({ title: "Falha no envio do anexo", description: error instanceof Error ? error.message : file.name, tone: "error" });
+    } finally { setUploadingAttachment(null); }
+  }
+
   async function submitMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const body = note.trim();
-    if (!session || !selected || !body || saving) return;
+    if (!session || !selected || saving || (!body && !attachment)) return;
     setSaving(true);
     try {
-      if (composerMode === "reply") await inboxControllerSend(selected.id, { id: messageId.create(), body });
+      if (composerMode === "reply") await inboxControllerSend(selected.id, { id: messageId.create(), ...(body ? { body } : {}), ...(attachment ? { attachmentFileId: attachment.id } : {}) });
       else { const message = optimisticInternalNote({ conversationId: conversationId.from(selected.id), contactId: selected.contactId, authorUserId: userId.from(session.userId), body }, session.orgId); const transaction = messagesCollection.insert(message); await transaction.isPersisted.promise; }
       setNote("");
+      setAttachment(null);
       notify({ title: composerMode === "reply" ? "Mensagem enviada" : "Nota adicionada", tone: "success" });
     } catch {
       notify({ title: composerMode === "reply" ? "Não foi possível enviar a mensagem" : "Não foi possível adicionar a nota", tone: "error" });
@@ -291,7 +311,17 @@ export default function Inbox() {
             <div className={styles.composerMode}><div className={styles.modeButtons}>{REPLYABLE_CHANNELS.has(selected.channel) && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
             <Textarea className={styles.composerInput} value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />
             {quickRepliesOpen && <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Buscar resposta pronta" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) { setNote((current) => current ? `${current}\n${reply.body}` : reply.body); setQuickRepliesOpen(false); } }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar</Button></div>}
-            <div className={styles.composerFooter}><Button type="button" size="sm" variant="ghost" icon={<Icon name="file" />} aria-expanded={quickRepliesOpen} onClick={() => setQuickRepliesOpen((open) => !open)}>Respostas prontas</Button><span>{note.length}/20.000</span><Button type="submit" loading={saving} disabled={!note.trim()}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button></div>
+            {composerMode === "reply" && (attachment || uploadingAttachment) && <div className={styles.attachmentChip}>
+              <Icon name={uploadingAttachment ? "upload" : "file"} />
+              <span>{uploadingAttachment ? `Enviando ${uploadingAttachment}…` : attachment?.name}</span>
+              {attachment && <Button type="button" size="sm" variant="ghost" iconOnly icon={<Icon name="close" />} aria-label="Remover anexo" onClick={() => setAttachment(null)} />}
+            </div>}
+            <div className={styles.composerFooter}>
+              <Button type="button" size="sm" variant="ghost" icon={<Icon name="file" />} aria-expanded={quickRepliesOpen} onClick={() => setQuickRepliesOpen((open) => !open)}>Respostas prontas</Button>
+              {composerMode === "reply" && <FilePicker appearance="button" iconOnly size="sm" multiple={false} disabled={Boolean(uploadingAttachment) || Boolean(attachment)} label="Anexar arquivo" onFiles={(selected) => void attachFile(selected)} />}
+              <span>{note.length}/20.000</span>
+              <Button type="submit" loading={saving} disabled={!note.trim() && !attachment}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button>
+            </div>
           </form>}
         </> : <div className={styles.threadEmpty}>
           {!isLoading && conversations.length === 0 ? <span className={styles.threadEmptyArt} aria-hidden="true">
