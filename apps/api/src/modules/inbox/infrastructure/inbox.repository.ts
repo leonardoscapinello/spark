@@ -90,7 +90,7 @@ async function captureTxid(tx: SparkDb): Promise<number> {
 }
 
 function toConversation(row: typeof conversations.$inferSelect): Conversation {
-  return { ...row, snoozedUntil: row.snoozedUntil?.toISOString() ?? null, firstResponseDueAt: row.firstResponseDueAt.toISOString(), firstRespondedAt: row.firstRespondedAt?.toISOString() ?? null, resolvedAt: row.resolvedAt?.toISOString() ?? null, lastMessageAt: row.lastMessageAt.toISOString(), createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() } as Conversation;
+  return { ...row, snoozedUntil: row.snoozedUntil?.toISOString() ?? null, firstResponseDueAt: row.firstResponseDueAt.toISOString(), firstRespondedAt: row.firstRespondedAt?.toISOString() ?? null, resolvedAt: row.resolvedAt?.toISOString() ?? null, lastInboundMessageAt: row.lastInboundMessageAt?.toISOString() ?? null, lastMessageAt: row.lastMessageAt.toISOString(), createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() } as Conversation;
 }
 
 function toMessage(row: typeof messages.$inferSelect): Message {

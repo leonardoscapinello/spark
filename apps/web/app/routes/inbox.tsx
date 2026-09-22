@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { availableCannedReplies, contactId, conversationId, conversationSlaState, fileId, formatPhone, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
+import { availableCannedReplies, contactId, conversationId, conversationSlaState, fileId, formatPhone, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
 import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, FilePicker, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
@@ -309,6 +309,7 @@ export default function Inbox() {
           </div>
           {canWrite && <form className={styles.composer} data-mode={composerMode} onSubmit={submitMessage}>
             <div className={styles.composerMode}><div className={styles.modeButtons}>{REPLYABLE_CHANNELS.has(selected.channel) && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
+            {composerMode === "reply" && selected.channel === "whatsapp" && !isWithinWhatsAppSessionWindow(selected.lastInboundMessageAt, now) && <p className={styles.windowWarning}><Icon name="bolt" />Fora da janela de 24h — o WhatsApp só aceita mensagem de modelo pré-aprovado agora, texto livre será recusado.</p>}
             <Textarea className={styles.composerInput} value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />
             {quickRepliesOpen && <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Buscar resposta pronta" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) { setNote((current) => current ? `${current}\n${reply.body}` : reply.body); setQuickRepliesOpen(false); } }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar</Button></div>}
             {composerMode === "reply" && (attachment || uploadingAttachment) && <div className={styles.attachmentChip}>

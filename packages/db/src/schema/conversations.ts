@@ -22,6 +22,8 @@ export const conversations = pgTable("conversations", {
   firstRespondedAt: timestamp("first_responded_at", { withTimezone: true }),
   /** Carimbada só na transição pra "closed" — reabrir limpa de novo. Base do tempo de resolução (roadmap Fase 2). */
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  /** Só o inbound mexe aqui — enviar não conta. Base da janela de 24h do WhatsApp (lastMessageAt reseta em qualquer envio, não serve pra isso). */
+  lastInboundMessageAt: timestamp("last_inbound_message_at", { withTimezone: true }),
   lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

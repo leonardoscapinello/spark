@@ -23,6 +23,8 @@ export const ConversationSchema = z.object({
   firstRespondedAt: zServerTimestamp.nullable().default(null),
   /** Carimbada só na transição pra "closed" — reabrir limpa de novo. Base do tempo de resolução. */
   resolvedAt: zServerTimestamp.nullable().default(null),
+  /** Só inbound mexe aqui — enviar não conta. Base da janela de 24h do WhatsApp. */
+  lastInboundMessageAt: zServerTimestamp.nullable().default(null),
   lastMessageAt: zServerTimestamp,
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,

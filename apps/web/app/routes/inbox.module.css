@@ -72,6 +72,7 @@
 .attachmentFile:hover { text-decoration: underline; }
 .attachmentChip { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface2); font-size: var(--typography-size-sm); color: var(--color-inkMuted); }
 .attachmentChip span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.windowWarning { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-statusWarning) 14%, transparent); color: var(--color-statusWarning); font-size: var(--typography-size-xs); }
 .composer { position: relative; min-width: 0; margin: var(--space-3) var(--space-4) var(--space-4); padding: var(--space-3); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--ui-panelShadow); display: flex; flex-direction: column; gap: var(--space-2); }
 .composer:focus-within { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .composer .composerInput { min-height: var(--ui-textareaHeight); padding-inline: 0; border: 0; background: transparent; }

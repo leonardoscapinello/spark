@@ -50,10 +50,10 @@ export class InboundMessageIngestor {
       const [existing] = await tx.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.orgId, orgId), eq(conversations.contactId, leadId), eq(conversations.channel, params.channel), inArray(conversations.status, ["open", "snoozed"]))).orderBy(desc(conversations.lastMessageAt)).limit(1);
       const threadId = (existing?.id ?? conversationId.create()) as ConversationId;
       if (!existing) {
-        await tx.insert(conversations).values({ id: threadId, orgId, contactId: leadId, channel: params.channel, subject: params.conversationSubject, firstResponseDueAt: new Date(firstResponseDueAt(params.occurredAt, "normal")), lastMessageAt: params.occurredAt, createdAt: params.occurredAt });
+        await tx.insert(conversations).values({ id: threadId, orgId, contactId: leadId, channel: params.channel, subject: params.conversationSubject, firstResponseDueAt: new Date(firstResponseDueAt(params.occurredAt, "normal")), lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, createdAt: params.occurredAt });
         await this.events.append(tx, { orgId, contactId: leadId, type: "conversation.created", data: { conversationId: threadId, channel: params.channel } });
       } else {
-        await tx.update(conversations).set({ status: "open", snoozedUntil: null, lastMessageAt: params.occurredAt, updatedAt: new Date() }).where(eq(conversations.id, threadId));
+        await tx.update(conversations).set({ status: "open", snoozedUntil: null, lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, updatedAt: new Date() }).where(eq(conversations.id, threadId));
       }
 
       const insertedId = await params.insertMessage(tx, leadId, threadId);

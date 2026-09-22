@@ -8013,7 +8013,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:42:59.287Z",
+                "default": "2026-09-22T20:08:26.113Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8256,7 +8256,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:42:59.290Z",
+                "default": "2026-09-22T20:08:26.115Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8430,7 +8430,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:42:59.291Z",
+                "default": "2026-09-22T20:08:26.116Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8612,7 +8612,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:42:59.292Z",
+                "default": "2026-09-22T20:08:26.117Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8774,7 +8774,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:42:59.292Z",
+                "default": "2026-09-22T20:08:26.117Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9882,6 +9882,21 @@
                 "default": null,
                 "nullable": true
               },
+              "lastInboundMessageAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "default": null,
+                "nullable": true
+              },
               "lastMessageAt": {
                 "anyOf": [
                   {
@@ -10227,6 +10242,21 @@
                 "nullable": true
               },
               "resolvedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "default": null,
+                "nullable": true
+              },
+              "lastInboundMessageAt": {
                 "anyOf": [
                   {
                     "type": "string",
