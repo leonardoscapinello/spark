@@ -53,6 +53,8 @@ export class InboxRepository {
         ...(input.teamId !== undefined ? { teamId: input.teamId } : {}),
         ...(input.snoozedUntil !== undefined ? { snoozedUntil: input.snoozedUntil ? new Date(input.snoozedUntil) : null } : {}),
         ...(input.priority !== undefined && current.firstRespondedAt === null ? { firstResponseDueAt: new Date(firstResponseDueAt(current.createdAt, input.priority)) } : {}),
+        ...(input.status === "closed" && current.status !== "closed" ? { resolvedAt: new Date() } : {}),
+        ...(input.status === "open" && current.status === "closed" ? { resolvedAt: null } : {}),
         updatedAt: new Date(),
       }).where(and(eq(conversations.id, id), eq(conversations.orgId, orgId))).returning();
       if (!row) throw new NotFoundException(`Conversation ${id} not found.`);
@@ -88,7 +90,7 @@ async function captureTxid(tx: SparkDb): Promise<number> {
 }
 
 function toConversation(row: typeof conversations.$inferSelect): Conversation {
-  return { ...row, snoozedUntil: row.snoozedUntil?.toISOString() ?? null, firstResponseDueAt: row.firstResponseDueAt.toISOString(), firstRespondedAt: row.firstRespondedAt?.toISOString() ?? null, lastMessageAt: row.lastMessageAt.toISOString(), createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() } as Conversation;
+  return { ...row, snoozedUntil: row.snoozedUntil?.toISOString() ?? null, firstResponseDueAt: row.firstResponseDueAt.toISOString(), firstRespondedAt: row.firstRespondedAt?.toISOString() ?? null, resolvedAt: row.resolvedAt?.toISOString() ?? null, lastMessageAt: row.lastMessageAt.toISOString(), createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() } as Conversation;
 }
 
 function toMessage(row: typeof messages.$inferSelect): Message {

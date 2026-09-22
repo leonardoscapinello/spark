@@ -20,6 +20,8 @@ export const conversations = pgTable("conversations", {
   snoozedUntil: timestamp("snoozed_until", { withTimezone: true }),
   firstResponseDueAt: timestamp("first_response_due_at", { withTimezone: true }).notNull(),
   firstRespondedAt: timestamp("first_responded_at", { withTimezone: true }),
+  /** Carimbada só na transição pra "closed" — reabrir limpa de novo. Base do tempo de resolução (roadmap Fase 2). */
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

@@ -21,6 +21,8 @@ export const ConversationSchema = z.object({
   snoozedUntil: zServerTimestamp.nullable().default(null),
   firstResponseDueAt: zServerTimestamp,
   firstRespondedAt: zServerTimestamp.nullable().default(null),
+  /** Carimbada só na transição pra "closed" — reabrir limpa de novo. Base do tempo de resolução. */
+  resolvedAt: zServerTimestamp.nullable().default(null),
   lastMessageAt: zServerTimestamp,
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,

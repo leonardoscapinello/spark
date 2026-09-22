@@ -2998,6 +2998,7 @@ export type ConversationWriteResponseDtoConversation = {
   snoozedUntil?: string | null;
   firstResponseDueAt: string;
   firstRespondedAt?: string | null;
+  resolvedAt?: string | null;
   lastMessageAt: string;
   createdAt: string;
   updatedAt: string;
@@ -3170,6 +3171,7 @@ export type MessageWriteResponseDtoConversation = {
   snoozedUntil?: string | null;
   firstResponseDueAt: string;
   firstRespondedAt?: string | null;
+  resolvedAt?: string | null;
   lastMessageAt: string;
   createdAt: string;
   updatedAt: string;

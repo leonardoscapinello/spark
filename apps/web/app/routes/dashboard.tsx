@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link, redirect, useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
-import { buildCrmDashboard, formatBRL } from "@spark/core";
+import { buildCrmDashboard, buildInboxDashboard, formatBRL } from "@spark/core";
 import { syncedAmount } from "@spark/data";
 import { ActionCard, ActionCardGroup, Button, DashboardGrid, DataChart, DonutChart, EmptyState, Icon, MetricCard, PageFrame, PageHeader, Select } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
+import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { getSession, restoreSession } from "../lib/auth.client";
 import styles from "./dashboard.module.css";
 
@@ -22,6 +23,7 @@ export async function clientLoader() {
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
+    ...(session.capabilities.includes("inbox:read") ? [getConversationsCollection().preload()] : []),
   ]);
   return null;
 }
@@ -34,17 +36,20 @@ export default function Dashboard() {
   const canImportContacts = session?.capabilities.includes("contacts:write") ?? false;
   const canReadDeals = session?.capabilities.includes("deals:read") ?? false;
   const canReadActivities = session?.capabilities.includes("activities:read") ?? false;
+  const canReadInbox = session?.capabilities.includes("inbox:read") ?? false;
   const requestedView = searchParams.get("view");
   const view = requestedView === "people" && canReadContacts ? "people"
     : requestedView === "deals" && canReadDeals ? "deals"
-      : requestedView === "activities" && canReadActivities ? "activities" : "overview";
+      : requestedView === "activities" && canReadActivities ? "activities"
+        : requestedView === "inbox" && canReadInbox ? "inbox" : "overview";
   const showPeople = view === "overview" || view === "people";
   const showDeals = view === "overview" || view === "deals";
   const showActivities = view === "overview" || view === "activities";
-  const viewTitle = ({ overview: "Visão geral", people: "Pessoas", deals: "Negócios", activities: "Atividades" } as const)[view];
+  const viewTitle = ({ overview: "Visão geral", people: "Pessoas", deals: "Negócios", activities: "Atividades", inbox: "Atendimento" } as const)[view];
   const { data: contacts = [], isLoading: loadingContacts } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: getContactsCollection() }) : undefined });
   const { data: deals = [], isLoading: loadingDeals } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }) : undefined });
   const { data: activities = [], isLoading: loadingActivities } = useLiveQuery({ query: (q) => canReadActivities ? q.from({ activities: getActivitiesCollection() }) : undefined });
+  const { data: conversations = [], isLoading: loadingConversations } = useLiveQuery({ query: (q) => canReadInbox && view === "inbox" ? q.from({ conversations: getConversationsCollection() }) : undefined }, [canReadInbox, view]);
   const [period, setPeriod] = useState("7");
   const periodDays = Number(period);
   const snapshot = useMemo(() => buildCrmDashboard({
@@ -54,10 +59,11 @@ export default function Dashboard() {
     now: new Date(),
     periodDays,
   }), [activities, contacts, deals, periodDays]);
+  const inboxSnapshot = useMemo(() => buildInboxDashboard({ conversations, now: new Date(), periodDays }), [conversations, periodDays]);
   const loading = loadingContacts || loadingDeals || loadingActivities;
   const hasRecords = contacts.length > 0 || deals.length > 0 || activities.length > 0;
-  const visibleRecords = view === "people" ? contacts.length > 0 : view === "deals" ? deals.length > 0 : view === "activities" ? activities.length > 0 : hasRecords;
-  const hasMetrics = canReadContacts || canReadDeals || canReadActivities;
+  const visibleRecords = view === "people" ? contacts.length > 0 : view === "deals" ? deals.length > 0 : view === "activities" ? activities.length > 0 : view === "inbox" ? conversations.length > 0 : hasRecords;
+  const hasMetrics = canReadContacts || canReadDeals || canReadActivities || canReadInbox;
   const firstRun = hasMetrics && !loading && !visibleRecords;
   const chartData = snapshot.days.map((day) => ({
     label: formatDay(day.date, periodDays),
@@ -79,6 +85,7 @@ export default function Dashboard() {
       {canReadContacts && <ActionCard icon="team" title="Pessoas" description="Veja quem entrou na base e como o relacionamento evolui." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir Leads</Button>} />}
       {canReadDeals && <ActionCard icon="briefcase" title="Oportunidades" description="Acompanhe o valor e o andamento dos negócios no funil." action={<Button variant="secondary" onClick={() => void navigate("/deals")}>Abrir CRM</Button>} />}
       {canReadActivities && <ActionCard icon="calendar" title="Compromissos" description="Veja tarefas, reuniões e ligações da equipe em uma agenda." action={<Button variant="secondary" onClick={() => void navigate("/activities")}>Abrir atividades</Button>} />}
+      {canReadInbox && <ActionCard icon="message" title="Atendimento" description="Acompanhe tempo de resposta e de resolução das conversas." action={<Button variant="secondary" onClick={() => void navigate("/inbox")}>Abrir atendimento</Button>} />}
     </ActionCardGroup>}
     {hasMetrics && !firstRun && <>
       <div className={styles.reportFilters}>
@@ -93,6 +100,9 @@ export default function Dashboard() {
       {canReadDeals && view === "deals" && <Link className={styles.metricLink} to="/deals"><MetricCard title="Valor em negociação" value={formatBRL(snapshot.openPipelineAmount)} comparison="Negócios em aberto" state={loadingDeals ? "loading" : "ready"} /></Link>}
       {canReadActivities && showActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Atividades atrasadas" value={snapshot.overdueActivities} comparison="Pendências anteriores a hoje" sentiment={snapshot.overdueActivities > 0 ? "negative" : "positive"} state={loadingActivities ? "loading" : "ready"} /></Link>}
       {canReadActivities && showActivities && <Link className={styles.metricLink} to="/activities"><MetricCard title="Conclusão no período" value={snapshot.activityCompletionRate === null ? "—" : `${snapshot.activityCompletionRate}%`} comparison={`${periodDays} dias selecionados`} sentiment={(snapshot.activityCompletionRate ?? 0) >= 80 ? "positive" : "neutral"} state={loadingActivities ? "loading" : "ready"} /></Link>}
+      {canReadInbox && view === "inbox" && <Link className={styles.metricLink} to="/inbox"><MetricCard title="Conversas em aberto" value={inboxSnapshot.openConversations} comparison={`${inboxSnapshot.unassignedConversations} não atribuídas`} sentiment={inboxSnapshot.unassignedConversations > 0 ? "negative" : "positive"} state={loadingConversations ? "loading" : "ready"} /></Link>}
+      {canReadInbox && view === "inbox" && <Link className={styles.metricLink} to="/inbox"><MetricCard title="Tempo médio de primeira resposta" value={inboxSnapshot.averageFirstResponseMinutes === null ? "—" : formatMinutes(inboxSnapshot.averageFirstResponseMinutes)} comparison="Todas as conversas respondidas" state={loadingConversations ? "loading" : "ready"} /></Link>}
+      {canReadInbox && view === "inbox" && <Link className={styles.metricLink} to="/inbox?box=closed"><MetricCard title="Tempo médio de resolução" value={inboxSnapshot.averageResolutionMinutes === null ? "—" : formatMinutes(inboxSnapshot.averageResolutionMinutes)} comparison={`${inboxSnapshot.resolvedInPeriod} resolvidas no período`} state={loadingConversations ? "loading" : "ready"} /></Link>}
       </DashboardGrid>
     </>}
     {hasMetrics && !firstRun && <>
@@ -117,6 +127,12 @@ export default function Dashboard() {
       </DashboardGrid></>}
     </>}
   </PageFrame>;
+}
+
+function formatMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  return hours < 24 ? `${hours} h` : `${Math.floor(hours / 24)} d`;
 }
 
 function formatDay(value: string, periodDays: number): string {

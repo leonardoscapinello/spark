@@ -23,6 +23,7 @@ const modules: NavModule[] = [
       { label: "Pessoas", to: "/dashboard?view=people", icon: "user", capability: "contacts:read" },
       { label: "Negócios", to: "/dashboard?view=deals", icon: "briefcase", capability: "deals:read" },
       { label: "Atividades", to: "/dashboard?view=activities", icon: "calendar", capability: "activities:read" },
+      { label: "Atendimento", to: "/dashboard?view=inbox", icon: "message", capability: "inbox:read" },
     ] },
   ] },
   { id: "leads", title: "Leads", icon: "user", to: "/", sections: [
