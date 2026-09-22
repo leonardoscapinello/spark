@@ -112,6 +112,13 @@ const PROVIDERS: ProviderDefinition[] = [
     category: "Comunicação",
   },
   {
+    provider: "widget",
+    name: "Chat do site",
+    icon: "message",
+    description: "Bolha de chat pro seu site — cada widget é a própria caixa de entrada. Pode ter mais de um.",
+    category: "Redes sociais",
+  },
+  {
     provider: "buffer",
     name: "Buffer",
     icon: "calendar",
@@ -607,6 +614,18 @@ function IntegrationFields({
         </Field>}
       </div>
     );
+  if (provider === "widget")
+    return (
+      <div className={styles.fields}>
+        <Field><Label>Nome exibido no cabeçalho</Label><Input value={text(config.name)} placeholder="Sua empresa" onChange={(event) => publicField("name", event.target.value)} /></Field>
+        <Field><Label>Mensagem de boas-vindas</Label><Input value={text(config.welcomeMessage)} placeholder="Olá! Como podemos ajudar?" onChange={(event) => publicField("welcomeMessage", event.target.value)} /></Field>
+        <div className={styles.columns}>
+          <Field><Label>Cor</Label><Input type="color" value={text(config.color) || "#4338CA"} onChange={(event) => publicField("color", event.target.value)} /></Field>
+          <Field><Label>Posição</Label><Select label="Posição" value={text(config.position) || "right"} options={[{ value: "right", label: "Canto direito" }, { value: "left", label: "Canto esquerdo" }]} onValueChange={(value) => publicField("position", value ?? "right")} /></Field>
+        </div>
+        {connectionId && <WidgetEmbedSnippet publicKey={text(config.publicKey)} />}
+      </div>
+    );
   if (provider === "postmark")
     return (
       <div className={styles.fields}>
@@ -691,6 +710,26 @@ function WhatsAppTemplatesSync({ connectionId }: { connectionId: string }) {
     </Field>
   );
 }
+function WidgetEmbedSnippet({ publicKey }: { publicKey: string }) {
+  const [copied, setCopied] = useState(false);
+  if (!publicKey) return <Field><Label>Código de instalação</Label><span className={styles.fieldHint}>Salve a conexão para gerar o código — ele aparece aqui na próxima vez que você abrir "Configurar".</span></Field>;
+  const snippet = `<script async src="${window.location.origin}/widget.js" data-spark-widget="${publicKey}"></script>`;
+  async function copy() {
+    await navigator.clipboard.writeText(snippet);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2_000);
+  }
+  return (
+    <Field>
+      <Label>Código de instalação</Label>
+      <div className={styles.columns}>
+        <Input value={snippet} readOnly onFocus={(event) => event.target.select()} />
+        <Button type="button" variant="secondary" size="sm" icon={<Icon name={copied ? "check" : "copy"} />} onClick={() => void copy()}>{copied ? "Copiado" : "Copiar"}</Button>
+      </div>
+      <span className={styles.fieldHint}>Cole antes de {"</body>"} em qualquer página do site. A bolha aparece sozinha — não precisa de mais nada.</span>
+    </Field>
+  );
+}
 function SecretToken({
   name,
   field,
@@ -720,6 +759,7 @@ function defaults(provider: IntegrationProvider, currentUserId?: string): Record
   if (provider === "smtp") return { port: 587, secure: false };
   if (provider === "s3") return { region: "auto", forcePathStyle: true };
   if (provider === "instagram" || provider === "whatsapp" || provider === "messenger") return { apiVersion: "v23.0" };
+  if (provider === "widget") return { welcomeMessage: "Olá! Como podemos ajudar?", color: "#4338CA", position: "right" };
   if (provider === "google_calendar" || provider === "outlook_calendar" || provider === "apple_calendar") return { ownerId: currentUserId ?? "", calendarName: "Agenda principal" };
   return {};
 }

@@ -3,6 +3,7 @@ import { type RouteConfig, index, layout, route } from "@react-router/dev/routes
 export default [
   route("f/:publicKey", "routes/public-form.tsx"),
   route("p/:publicKey", "routes/public-page.tsx"),
+  route("widget/:publicKey", "routes/widget.tsx"),
   layout("routes/auth-layout.tsx", [
     route("login", "routes/login.tsx"),
     route("forgot-password", "routes/forgot-password.tsx"),

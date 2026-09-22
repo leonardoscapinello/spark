@@ -50,6 +50,7 @@ const paths = {
   list: "M6 4h8M6 8h8M6 12h8M3 4h.01M3 8h.01M3 12h.01",
   /* Lápis: o sinal de «isto dá para mudar aqui mesmo». */
   pencil: "M11.5 2.5a1.4 1.4 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5Z",
+  copy: "M6 6h7v7H6V6Zm-3-3h7v7H3V3Z",
 } as const;
 export type IconName = keyof typeof paths;
 export function Icon({ name, ...props }: { name: IconName } & Omit<ComponentProps<"svg">, "children">) {

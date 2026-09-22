@@ -19,7 +19,9 @@ import { useConversationPresence } from "../lib/realtime-presence.client";
 import styles from "./inbox.module.css";
 
 // Espelha os canais que o ChannelSender do backend sabe enviar (channel-sender.service.ts).
-const REPLYABLE_CHANNELS: ReadonlySet<ConversationChannel> = new Set(["email", "instagram", "whatsapp", "messenger", "telegram"]);
+const REPLYABLE_CHANNELS: ReadonlySet<ConversationChannel> = new Set(["email", "instagram", "whatsapp", "messenger", "telegram", "widget"]);
+// Canais em que uma org pode ter mais de uma conexão — cada uma vira a própria caixa de entrada (pedido do usuário, 22/09).
+const MULTI_CONNECTION_CHANNELS: ReadonlySet<ConversationChannel> = new Set(["whatsapp", "widget"]);
 
 const CHANNELS: ReadonlyArray<{ value: ConversationChannel; label: string }> = [
   { value: "manual", label: "Manual" },
@@ -28,6 +30,7 @@ const CHANNELS: ReadonlyArray<{ value: ConversationChannel; label: string }> = [
   { value: "whatsapp", label: "WhatsApp" },
   { value: "messenger", label: "Messenger" },
   { value: "telegram", label: "Telegram" },
+  { value: "widget", label: "Chat do site" },
 ];
 
 export async function clientLoader() {
@@ -118,18 +121,16 @@ export default function Inbox() {
     return counts;
   }, [conversations, session?.userId]);
   const queueCount = (box: InboxFilter) => queueCounts.get(box) ?? 0;
-  // Mais de um número de WhatsApp conectado: cada um vira a própria caixa
-  // (pedido do usuário, 22/09) — a caixa genérica "WhatsApp" só existe
-  // quando há zero ou um número, senão a conversa já sabe qual conexão é.
-  const whatsappConnections = connections.filter((item) => item.provider === "whatsapp" && item.status === "connected");
-  // Só lista canal com conversa aberta de verdade — "Manual" não é um canal
-  // externo, é criado pela própria equipe, não faz sentido como caixa dedicada.
-  const sidebarChannelItems: { key: string; label: string; box: InboxFilter }[] = whatsappConnections.length > 1
-    ? [
-      ...CHANNELS.filter((item) => item.value !== "manual" && item.value !== "whatsapp" && queueCounts.has(`channel:${item.value}`)).map((item) => ({ key: `channel:${item.value}`, label: item.label, box: `channel:${item.value}` as InboxFilter })),
-      ...whatsappConnections.filter((item) => queueCounts.has(`connection:${item.id}`)).map((item) => ({ key: `connection:${item.id}`, label: item.name, box: `connection:${item.id}` as InboxFilter })),
-    ]
-    : CHANNELS.filter((item) => item.value !== "manual" && queueCounts.has(`channel:${item.value}`)).map((item) => ({ key: `channel:${item.value}`, label: item.label, box: `channel:${item.value}` as InboxFilter }));
+  // Canal com mais de uma conexão (mais de um número de WhatsApp, mais de um
+  // widget de chat): cada uma vira a própria caixa (pedido do usuário,
+  // 22/09) — a caixa genérica do canal só existe com zero ou uma conexão,
+  // senão a conversa já sabe qual delas é. Só lista canal com conversa
+  // aberta de verdade — "Manual" não é canal externo, não vira caixa dedicada.
+  const sidebarChannelItems: { key: string; label: string; box: InboxFilter }[] = CHANNELS.filter((item) => item.value !== "manual").flatMap((item) => {
+    const perConnection = MULTI_CONNECTION_CHANNELS.has(item.value) ? connections.filter((connection) => connection.provider === item.value && connection.status === "connected") : [];
+    if (perConnection.length > 1) return perConnection.filter((connection) => queueCounts.has(`connection:${connection.id}`)).map((connection) => ({ key: `connection:${connection.id}`, label: connection.name, box: `connection:${connection.id}` as InboxFilter }));
+    return queueCounts.has(`channel:${item.value}`) ? [{ key: `channel:${item.value}`, label: item.label, box: `channel:${item.value}` as InboxFilter }] : [];
+  });
   const tableColumns: TableColumn<Conversation>[] = [
     { id: "subject", label: "Conversa", cell: (item) => <Button size="sm" variant="ghost" className={styles.tableSubject} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>{item.subject}</Button>, sortValue: (item) => item.subject },
     { id: "contact", label: "Pessoa", cell: (item) => contactNames.get(item.contactId) ?? "Pessoa", sortValue: (item) => contactNames.get(item.contactId) ?? "" },
