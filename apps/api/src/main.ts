@@ -7,6 +7,7 @@ import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fa
 import { Logger } from "nestjs-pino";
 import { ZodValidationPipe } from "nestjs-zod";
 import { AppModule } from "./app.module.js";
+import { startWebhookWorker } from "./modules/inbox/infrastructure/webhook-worker.js";
 
 export async function bootstrap(): Promise<NestFastifyApplication> {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
@@ -40,4 +41,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port, "0.0.0.0");
   app.get(Logger).log(`apps/api listening on :${port}`);
+  startWebhookWorker(app);
+  app.get(Logger).log("webhook worker started");
 }
