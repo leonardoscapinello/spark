@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "apps/web/app/routes/app-layout.module.css"
+        ],
+        "createdAt": "2026-09-22T20:00:00.239Z",
+        "reason": "rail expandido empurra a coluna do grid de verdade (comentário no CSS linha ~19-23); largura real de layout, transform não substitui"
+      }
+    ]
+  }
+}

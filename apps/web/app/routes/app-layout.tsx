@@ -371,7 +371,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
           {topNavigation.map((item) =>
             <Link key={item.to} ref={displayedTopTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
           )}
-          {tabIndicator && <span className={styles.moduleIndicator} style={{ left: tabIndicator.left, width: tabIndicator.width }} aria-hidden="true" />}
+          {tabIndicator && <span className={styles.moduleIndicator} style={{ transform: `translateX(${tabIndicator.left}px) scaleX(${tabIndicator.width})` }} aria-hidden="true" />}
         </nav>}
         {queueNotice && <div className={styles.sendQueueNotice}><Alert tone="warning" title={queueNotice.title}>{queueNotice.description}</Alert></div>}
         {/* O provedor do cadastro da Receita não sincroniza nada até alguém
