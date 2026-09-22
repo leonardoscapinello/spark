@@ -21,5 +21,5 @@ export const FileUploadResponseSchema = z.object({ file: StoredFileSchema, uploa
 export type FileUploadResponse = z.infer<typeof FileUploadResponseSchema>;
 export const FileWriteResponseSchema = z.object({ file: StoredFileSchema, txid: z.number().int() });
 export type FileWriteResponse = z.infer<typeof FileWriteResponseSchema>;
-export const FileDownloadResponseSchema = z.object({ downloadUrl: z.url(), expiresAt: zServerTimestamp });
+export const FileDownloadResponseSchema = z.object({ downloadUrl: z.url(), expiresAt: zServerTimestamp, mimeType: z.string(), name: z.string() });
 export type FileDownloadResponse = z.infer<typeof FileDownloadResponseSchema>;

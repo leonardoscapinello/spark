@@ -3442,6 +3442,8 @@ export interface FileWriteResponseDto {
 export interface FileDownloadResponseDto {
   downloadUrl: string;
   expiresAt: string;
+  mimeType: string;
+  name: string;
 }
 
 export interface CreateAutomationDto {

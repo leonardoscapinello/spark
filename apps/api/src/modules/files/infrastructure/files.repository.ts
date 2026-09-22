@@ -23,7 +23,8 @@ export class FilesRepository {
     return withOrgContext(this.db, orgId, async (tx) => { const [row] = await tx.update(files).set({ status: "ready", updatedAt: new Date() }).where(and(eq(files.id, id), eq(files.orgId, orgId), eq(files.status, "pending"))).returning(); if (!row) throw new NotFoundException("Arquivo pendente não encontrado."); const txid = await captureTxid(tx); await this.events.append(tx, { orgId, type: "file.upload_completed", data: { fileId: id, actorUserId: userId } }); return { file: toFile(row), txid }; });
   }
   async download(orgId: OrgId, id: FileId): Promise<FileDownloadResponse> {
-    const row = await this.findReady(orgId, id); const storage = await this.resolver.byConnection(orgId, row.storageConnectionId as FileUploadResponse["file"]["storageConnectionId"]); return storage.createDownload(orgId, row.objectKey);
+    const row = await this.findReady(orgId, id); const storage = await this.resolver.byConnection(orgId, row.storageConnectionId as FileUploadResponse["file"]["storageConnectionId"]); const target = await storage.createDownload(orgId, row.objectKey);
+    return { ...target, mimeType: row.mimeType, name: row.name };
   }
   async remove(orgId: OrgId, userId: UserId, id: FileId): Promise<FileWriteResponse> {
     const existing = await this.findReady(orgId, id); const storage = await this.resolver.byConnection(orgId, existing.storageConnectionId as FileUploadResponse["file"]["storageConnectionId"]); await storage.remove(orgId, existing.objectKey);

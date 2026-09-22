@@ -196,14 +196,6 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
-  async function openAttachment(attachmentFileId: string) {
-    try {
-      const response = await filesControllerDownload(attachmentFileId);
-      window.open(response.downloadUrl, "_blank", "noopener,noreferrer");
-    } catch {
-      notify({ title: "Não foi possível abrir o anexo", tone: "error" });
-    }
-  }
 
   function startConversationAction() {
     if (!canWrite || !canReadContacts) return null;
@@ -291,7 +283,7 @@ export default function Inbox() {
             {messages.map((message) => <article key={message.id} className={styles.message} data-direction={message.direction}>
               <header><strong>{message.direction === "internal" ? (message.authorUserId ? userNames.get(message.authorUserId) : null) ?? "Equipe" : message.direction === "inbound" ? contactNames.get(message.contactId) ?? "Pessoa" : "Equipe"}</strong><time>{formatDateTime(message.createdAt)}</time></header>
               <p><LinkifiedText text={message.body} /></p>
-              {message.attachmentFileId && <Button type="button" size="sm" variant="ghost" icon={<Icon name="download" />} onClick={() => void openAttachment(message.attachmentFileId!)}>Baixar anexo</Button>}
+              {message.attachmentFileId && <MessageAttachment fileId={message.attachmentFileId} />}
               <small>{message.direction === "internal" ? "Nota interna" : message.status}</small>
             </article>)}
           </div>
@@ -352,3 +344,24 @@ function formatDateTime(value: string): string { return new Intl.DateTimeFormat(
 function relativeTime(value: string): string { const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60_000)); return minutes < 1 ? "agora" : minutes < 60 ? `${minutes} min` : minutes < 1_440 ? `${Math.floor(minutes / 60)} h` : `${Math.floor(minutes / 1_440)} d`; }
 function SlaBadge({ conversation, now }: { conversation: Conversation; now: Date }) { const state = conversationSlaState(conversation.firstResponseDueAt, conversation.firstRespondedAt, now); const labels = { met: "Respondida no prazo", on_track: `SLA ${timeUntil(conversation.firstResponseDueAt, now)}`, due_soon: `SLA ${timeUntil(conversation.firstResponseDueAt, now)}`, breached: "SLA vencido" }; return <Badge tone={state === "met" ? "success" : state === "breached" ? "danger" : state === "due_soon" ? "warning" : "neutral"}>{labels[state]}</Badge>; }
 function timeUntil(value: string, now: Date): string { const minutes = Math.ceil((new Date(value).getTime() - now.getTime()) / 60_000); if (minutes <= 0) return "vencido"; if (minutes < 60) return `${minutes} min`; return `${Math.ceil(minutes / 60)} h`; }
+
+/** Busca a URL assinada uma vez, ao montar, e decide entre preview inline e link de download pelo mimeType. */
+function MessageAttachment({ fileId }: { fileId: string }) {
+  const [state, setState] = useState<{ status: "loading" } | { status: "error" } | { status: "ready"; downloadUrl: string; mimeType: string; name: string }>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ status: "loading" });
+    filesControllerDownload(fileId)
+      .then((response) => { if (!cancelled) setState({ status: "ready", downloadUrl: response.downloadUrl, mimeType: response.mimeType, name: response.name }); })
+      .catch(() => { if (!cancelled) setState({ status: "error" }); });
+    return () => { cancelled = true; };
+  }, [fileId]);
+
+  if (state.status === "loading") return <div className={styles.attachment} aria-busy="true">Carregando anexo…</div>;
+  if (state.status === "error") return <div className={styles.attachment}>Não foi possível abrir o anexo.</div>;
+  if (state.mimeType.startsWith("image/")) return <img className={styles.attachmentImage} src={state.downloadUrl} alt={state.name} loading="lazy" />;
+  if (state.mimeType.startsWith("video/")) return <video className={styles.attachmentVideo} src={state.downloadUrl} controls preload="metadata" />;
+  if (state.mimeType.startsWith("audio/")) return <audio className={styles.attachmentAudio} src={state.downloadUrl} controls preload="metadata" />;
+  return <a className={styles.attachmentFile} href={state.downloadUrl} target="_blank" rel="noopener noreferrer"><Icon name="file" />{state.name}</a>;
+}

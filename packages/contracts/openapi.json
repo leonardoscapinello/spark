@@ -8013,7 +8013,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:36:06.375Z",
+                "default": "2026-09-22T19:38:42.456Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8256,7 +8256,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:36:06.378Z",
+                "default": "2026-09-22T19:38:42.459Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8430,7 +8430,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:36:06.378Z",
+                "default": "2026-09-22T19:38:42.460Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8612,7 +8612,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:36:06.379Z",
+                "default": "2026-09-22T19:38:42.460Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8774,7 +8774,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T19:36:06.380Z",
+                "default": "2026-09-22T19:38:42.461Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10820,11 +10820,19 @@
                 "minLength": 1
               }
             ]
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
           }
         },
         "required": [
           "downloadUrl",
-          "expiresAt"
+          "expiresAt",
+          "mimeType",
+          "name"
         ]
       },
       "CreateAutomationDto": {
