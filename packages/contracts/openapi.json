@@ -2716,6 +2716,76 @@
         ]
       }
     },
+    "/v1/integrations/{connectionId}/whatsapp-templates": {
+      "get": {
+        "operationId": "WhatsAppTemplatesController_index",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncWhatsAppTemplatesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
+    "/v1/integrations/{connectionId}/whatsapp-templates/sync": {
+      "post": {
+        "operationId": "WhatsAppTemplatesController_syncTemplates",
+        "parameters": [
+          {
+            "name": "connectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncWhatsAppTemplatesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "inbox"
+        ]
+      }
+    },
     "/v1/files/uploads": {
       "post": {
         "operationId": "FilesController_upload",
@@ -8013,7 +8083,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:27:16.837Z",
+                "default": "2026-09-22T20:38:51.563Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8256,7 +8326,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:27:16.843Z",
+                "default": "2026-09-22T20:38:51.565Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8430,7 +8500,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:27:16.844Z",
+                "default": "2026-09-22T20:38:51.566Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8612,7 +8682,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:27:16.845Z",
+                "default": "2026-09-22T20:38:51.567Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8774,7 +8844,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T20:27:16.847Z",
+                "default": "2026-09-22T20:38:51.567Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10360,6 +10430,35 @@
           "body": {
             "type": "string",
             "maxLength": 20000
+          },
+          "template": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "language": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 35
+              },
+              "parameters": {
+                "default": [],
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2000
+                }
+              }
+            },
+            "required": [
+              "name",
+              "language"
+            ],
+            "nullable": true
           }
         },
         "required": [
@@ -10539,6 +10638,107 @@
         },
         "required": [
           "archived"
+        ]
+      },
+      "SyncWhatsAppTemplatesResponseDto": {
+        "type": "object",
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "orgId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "connectionId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "language": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 35
+                },
+                "category": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "APPROVED",
+                    "PENDING",
+                    "REJECTED",
+                    "PAUSED",
+                    "DISABLED"
+                  ]
+                },
+                "bodyText": {
+                  "type": "string",
+                  "maxLength": 20000
+                },
+                "variableCount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                },
+                "createdAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  ]
+                },
+                "updatedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "orgId",
+                "connectionId",
+                "name",
+                "language",
+                "category",
+                "status",
+                "bodyText",
+                "variableCount",
+                "createdAt",
+                "updatedAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "templates"
         ]
       },
       "CreateFileUploadDto": {

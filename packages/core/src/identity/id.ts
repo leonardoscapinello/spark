@@ -65,6 +65,7 @@ export type CompanyRegistrationId = Id<"CompanyRegistration">;
 export type CompanyRegistrationActivityId = Id<"CompanyRegistrationActivity">;
 export type CompanyRegistrationMemberId = Id<"CompanyRegistrationMember">;
 export type CompanyRegistrationTaxRegimeId = Id<"CompanyRegistrationTaxRegime">;
+export type WhatsAppTemplateId = Id<"WhatsAppTemplate">;
 
 export class InvalidIdError extends Error {
   constructor(type: string, value: string) {
@@ -144,3 +145,4 @@ export const companyRegistrationId = makeIdFactory("CompanyRegistration");
 export const companyRegistrationActivityId = makeIdFactory("CompanyRegistrationActivity");
 export const companyRegistrationMemberId = makeIdFactory("CompanyRegistrationMember");
 export const companyRegistrationTaxRegimeId = makeIdFactory("CompanyRegistrationTaxRegime");
+export const whatsAppTemplateId = makeIdFactory("WhatsAppTemplate");

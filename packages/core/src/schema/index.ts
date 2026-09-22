@@ -33,5 +33,6 @@ export * from "./customFieldData.js";
 export * from "./tag.js";
 export * from "./linkPreview.js";
 export * from "./companyRegistration.js";
+export * from "./whatsappTemplate.js";
 export * from "./dealPresence.js";
 export * from "./stageWorkflow.js";

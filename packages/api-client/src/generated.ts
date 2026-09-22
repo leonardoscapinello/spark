@@ -3199,6 +3199,27 @@ export interface MessageWriteResponseDto {
   txid: number;
 }
 
+/**
+ * @nullable
+ */
+export type SendMessageDtoTemplate = {
+  /**
+     * @minLength 1
+     * @maxLength 512
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 35
+     */
+  language: string;
+  /**
+     * @maxItems 20
+     * @items.maxLength 2000
+     */
+  parameters?: string[];
+} | null;
+
 export interface SendMessageDto {
   /** @minLength 1 */
   id: string;
@@ -3209,6 +3230,8 @@ export interface SendMessageDto {
   attachmentFileId?: string | null;
   /** @maxLength 20000 */
   body?: string;
+  /** @nullable */
+  template?: SendMessageDtoTemplate;
 }
 
 export interface CreateCannedReplyDto {
@@ -3302,6 +3325,55 @@ export interface UpdateCannedReplyDto {
 
 export interface ArchiveCannedReplyDto {
   archived: boolean;
+}
+
+export type SyncWhatsAppTemplatesResponseDtoTemplatesItemStatus = typeof SyncWhatsAppTemplatesResponseDtoTemplatesItemStatus[keyof typeof SyncWhatsAppTemplatesResponseDtoTemplatesItemStatus];
+
+
+export const SyncWhatsAppTemplatesResponseDtoTemplatesItemStatus = {
+  APPROVED: 'APPROVED',
+  PENDING: 'PENDING',
+  REJECTED: 'REJECTED',
+  PAUSED: 'PAUSED',
+  DISABLED: 'DISABLED',
+} as const;
+
+export type SyncWhatsAppTemplatesResponseDtoTemplatesItem = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  connectionId: string;
+  /**
+     * @minLength 1
+     * @maxLength 512
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 35
+     */
+  language: string;
+  /**
+     * @minLength 1
+     * @maxLength 64
+     */
+  category: string;
+  status: SyncWhatsAppTemplatesResponseDtoTemplatesItemStatus;
+  /** @maxLength 20000 */
+  bodyText: string;
+  /**
+     * @minimum 0
+     * @maximum 20
+     */
+  variableCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface SyncWhatsAppTemplatesResponseDto {
+  templates: SyncWhatsAppTemplatesResponseDtoTemplatesItem[];
 }
 
 export interface CreateFileUploadDto {
@@ -10415,6 +10487,153 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPostmarkWebhookControllerReceiveMutationOptions(options), queryClient);
+    }
+
+export const whatsAppTemplatesControllerIndex = (
+    connectionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<SyncWhatsAppTemplatesResponseDto>(
+      {url: `/v1/integrations/${connectionId}/whatsapp-templates`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getWhatsAppTemplatesControllerIndexQueryKey = (connectionId: string,) => {
+    return [
+    `/v1/integrations/${connectionId}/whatsapp-templates`
+    ] as const;
+    }
+
+
+export const getWhatsAppTemplatesControllerIndexQueryOptions = <TData = Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError = unknown>(connectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWhatsAppTemplatesControllerIndexQueryKey(connectionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>> = ({ signal }) => whatsAppTemplatesControllerIndex(connectionId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: connectionId !== null && connectionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WhatsAppTemplatesControllerIndexQueryResult = NonNullable<Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>>
+export type WhatsAppTemplatesControllerIndexQueryError = unknown
+
+
+export function useWhatsAppTemplatesControllerIndex<TData = Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError = unknown>(
+ connectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>,
+          TError,
+          Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWhatsAppTemplatesControllerIndex<TData = Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError = unknown>(
+ connectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>,
+          TError,
+          Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWhatsAppTemplatesControllerIndex<TData = Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError = unknown>(
+ connectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useWhatsAppTemplatesControllerIndex<TData = Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError = unknown>(
+ connectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerIndex>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWhatsAppTemplatesControllerIndexQueryOptions(connectionId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const whatsAppTemplatesControllerSyncTemplates = (
+    connectionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<SyncWhatsAppTemplatesResponseDto>(
+      {url: `/v1/integrations/${connectionId}/whatsapp-templates/sync`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getWhatsAppTemplatesControllerSyncTemplatesMutationKey = () => ['whatsAppTemplatesControllerSyncTemplates'] as const;
+
+export const getWhatsAppTemplatesControllerSyncTemplatesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerSyncTemplates>>, TError,WhatsAppTemplatesControllerSyncTemplatesMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerSyncTemplates>>, TError,WhatsAppTemplatesControllerSyncTemplatesMutationVariables, TContext> => {
+
+const mutationKey = getWhatsAppTemplatesControllerSyncTemplatesMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof whatsAppTemplatesControllerSyncTemplates>>, WhatsAppTemplatesControllerSyncTemplatesMutationVariables> = (props) => {
+          const {connectionId} = props ?? {};
+
+          return  whatsAppTemplatesControllerSyncTemplates(connectionId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WhatsAppTemplatesControllerSyncTemplatesMutationResult = NonNullable<Awaited<ReturnType<typeof whatsAppTemplatesControllerSyncTemplates>>>
+
+    export type WhatsAppTemplatesControllerSyncTemplatesMutationError = unknown
+    export type WhatsAppTemplatesControllerSyncTemplatesMutationVariables = {connectionId: string}
+
+    export const useWhatsAppTemplatesControllerSyncTemplates = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof whatsAppTemplatesControllerSyncTemplates>>, TError,WhatsAppTemplatesControllerSyncTemplatesMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof whatsAppTemplatesControllerSyncTemplates>>,
+        TError,
+        WhatsAppTemplatesControllerSyncTemplatesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWhatsAppTemplatesControllerSyncTemplatesMutationOptions(options), queryClient);
     }
 
 export const filesControllerUpload = (

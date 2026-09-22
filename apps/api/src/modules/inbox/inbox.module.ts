@@ -27,11 +27,15 @@ import { PostmarkWebhookController } from "./presentation/postmark-webhook.contr
 import { InboundMediaStorage } from "./infrastructure/inbound-media-storage.service.js";
 import { InboundMessageIngestor } from "./infrastructure/inbound-message-ingestor.service.js";
 import { WebhookQueue } from "./infrastructure/webhook-queue.service.js";
+import { WhatsAppTemplatesRepository } from "./infrastructure/whatsapp-templates.repository.js";
+import { WhatsAppTemplatesController } from "./presentation/whatsapp-templates.controller.js";
+import { ListWhatsAppTemplatesUseCase } from "./application/list-whatsapp-templates.usecase.js";
+import { SyncWhatsAppTemplatesUseCase } from "./application/sync-whatsapp-templates.usecase.js";
 import { FilesModule } from "../files/files.module.js";
 
 @Module({
   imports: [EventsModule, IntegrationsModule, FilesModule],
-  controllers: [InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController, PostmarkWebhookController],
-  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, PostmarkWebhookRepository, InboundMediaStorage, InboundMessageIngestor, WebhookQueue, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
+  controllers: [InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController, PostmarkWebhookController, WhatsAppTemplatesController],
+  providers: [CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, PostmarkWebhookRepository, InboundMediaStorage, InboundMessageIngestor, WebhookQueue, WhatsAppTemplatesRepository, ListWhatsAppTemplatesUseCase, SyncWhatsAppTemplatesUseCase, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

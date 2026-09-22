@@ -5,6 +5,7 @@ import {
   integrationsControllerCheck,
   integrationsControllerStatus,
   integrationsControllerUpsert,
+  whatsAppTemplatesControllerSyncTemplates,
 } from "@spark/api-client";
 import {
   integrationConnectionId,
@@ -549,6 +550,11 @@ function IntegrationFields({
             />
           </Field>
         </div>
+        <Field>
+          <Label>ID da conta do WhatsApp Business (WABA)</Label>
+          <Input value={text(config.wabaId)} placeholder="WABA ID" onChange={(event) => publicField("wabaId", event.target.value)} />
+          <span className={styles.fieldHint}>Necessário só pra sincronizar os modelos aprovados — o número em si funciona sem isso.</span>
+        </Field>
         <SecretToken name="Token de acesso" field="accessToken" value={credentials.accessToken ?? ""} existing={hasExistingCredentials} onChange={secretField} />
         <SecretToken name="App Secret da Meta" field="appSecret" value={credentials.appSecret ?? ""} existing={hasExistingCredentials} onChange={secretField} />
         <SecretToken name="Token de verificação do webhook" field="verifyToken" value={credentials.verifyToken ?? ""} existing={hasExistingCredentials} onChange={secretField} />
@@ -557,6 +563,7 @@ function IntegrationFields({
           <Input value={metaCallbackUrl("whatsapp", connectionId)} readOnly onFocus={(event) => event.target.select()} />
           <span className={styles.fieldHint}>Cadastre esta URL e o token de verificação no painel da Meta (WhatsApp Cloud API); assine o evento "messages". A URL precisa ser pública em HTTPS.</span>
         </Field>}
+        {connectionId && <WhatsAppTemplatesSync connectionId={connectionId} />}
       </div>
     );
   if (provider === "messenger")
@@ -657,6 +664,31 @@ function IntegrationFields({
         onChange={secretField}
       />
     </div>
+  );
+}
+function WhatsAppTemplatesSync({ connectionId }: { connectionId: string }) {
+  const [syncing, setSyncing] = useState(false);
+  const [count, setCount] = useState<number | null>(null);
+  async function sync() {
+    setSyncing(true);
+    try {
+      const response = await whatsAppTemplatesControllerSyncTemplates(connectionId);
+      setCount(response.templates.length);
+      notify({ title: `${response.templates.length} modelo(s) sincronizado(s)`, description: "Ficam disponíveis pra escolher na conversa quando a janela de 24h estiver fechada.", tone: "success" });
+    } catch (error) {
+      notify({ title: "Não foi possível sincronizar os modelos", description: error instanceof Error ? error.message : "Confira o ID da conta (WABA) e o token de acesso.", tone: "error" });
+    } finally {
+      setSyncing(false);
+    }
+  }
+  return (
+    <Field>
+      <Label>Modelos aprovados</Label>
+      <div className={styles.columns}>
+        <Button type="button" variant="secondary" loading={syncing} onClick={() => void sync()}>Sincronizar modelos agora</Button>
+        {count !== null && <span className={styles.fieldHint}>{count} modelo(s) encontrado(s).</span>}
+      </div>
+    </Field>
   );
 }
 function SecretToken({

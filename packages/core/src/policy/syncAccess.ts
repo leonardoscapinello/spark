@@ -61,6 +61,7 @@ export const SYNC_RESOURCES = [
   "company_registration_activities",
   "company_registration_members",
   "company_registration_tax_regimes",
+  "whatsapp_templates",
 ] as const;
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
@@ -118,6 +119,7 @@ const READ_REQUIREMENTS: Record<
   canned_replies: ["inbox:read"],
   teams: ["inbox:read", "users:manage"],
   saved_views: ["contacts:read"],
+  whatsapp_templates: ["inbox:read"],
 };
 
 const DIRECTORY_READERS: readonly Capability[] = [

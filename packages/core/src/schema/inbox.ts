@@ -70,9 +70,13 @@ export type UpdateConversationInput = z.infer<typeof UpdateConversationInputSche
 
 export const AddInternalNoteInputSchema = MessageSchema.pick({ id: true, body: true });
 export type AddInternalNoteInput = z.infer<typeof AddInternalNoteInputSchema>;
+/** Fora da janela de 24h do WhatsApp, texto livre é recusado — só modelo pré-aprovado passa (regra da Meta). */
+export const SendTemplateSchema = z.object({ name: z.string().trim().min(1).max(512), language: z.string().trim().min(1).max(35), parameters: z.array(z.string().max(2_000)).max(20).default([]) });
+export type SendTemplate = z.infer<typeof SendTemplateSchema>;
 export const SendMessageInputSchema = MessageSchema.pick({ id: true, attachmentFileId: true }).extend({
   body: z.string().trim().max(20_000).optional(),
-}).refine((value) => (value.body && value.body.length > 0) || value.attachmentFileId !== null, { error: "Informe um texto ou um anexo." });
+  template: SendTemplateSchema.nullable().optional(),
+}).refine((value) => (value.body && value.body.length > 0) || value.attachmentFileId !== null || value.template, { error: "Informe um texto, um anexo ou um modelo." });
 export type SendMessageInput = z.infer<typeof SendMessageInputSchema>;
 
 export const ConversationWriteResponseSchema = z.object({ conversation: ConversationSchema, txid: z.number().int() });

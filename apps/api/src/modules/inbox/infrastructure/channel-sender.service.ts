@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { contacts, createAppDbClient, files, identities, integrationConnections, integrationSecrets, withOrgContext, type SparkDb } from "@spark/db";
-import type { ContactId, ConversationChannel, FileId, IntegrationConnectionId, OrgId } from "@spark/core";
+import type { ContactId, ConversationChannel, FileId, IntegrationConnectionId, OrgId, SendTemplate } from "@spark/core";
 import { SecretVault } from "../../integrations/infrastructure/secret-vault.service.js";
 import { ConnectionSettingsRepository } from "../../integrations/infrastructure/connection-settings.repository.js";
 import { EmailDeliveryService } from "../../integrations/application/email-delivery.service.js";
@@ -14,8 +14,9 @@ export class ChannelSender {
   private readonly db: SparkDb = createAppDbClient();
   constructor(private readonly vault: SecretVault, private readonly email: EmailDeliveryService, private readonly settings: ConnectionSettingsRepository, private readonly storage: StorageResolver) {}
 
-  async send(orgId: OrgId, contactId: ContactId, channel: ConversationChannel, subject: string, body: string, attachmentFileId?: FileId | null, connectionId?: IntegrationConnectionId | null): Promise<string> {
+  async send(orgId: OrgId, contactId: ContactId, channel: ConversationChannel, subject: string, body: string, attachmentFileId?: FileId | null, connectionId?: IntegrationConnectionId | null, template?: SendTemplate | null): Promise<string> {
     if (channel !== "email" && channel !== "instagram" && channel !== "whatsapp" && channel !== "messenger" && channel !== "telegram") throw new BadRequestException(`O canal ${channel} ainda não aceita respostas externas.`);
+    if (template && channel !== "whatsapp") throw new BadRequestException("Modelo pré-aprovado só existe no WhatsApp.");
     const [loaded, attachment] = await Promise.all([
       withOrgContext(this.db, orgId, async (tx) => {
         // A conversa já sabe por qual das nossas conexões (ex: qual número de WhatsApp) o cliente escreveu — responde por ela mesma, não "a mais recente".
@@ -34,7 +35,7 @@ export class ChannelSender {
     ]);
     if (!loaded.recipient) throw new BadRequestException(`O contato não possui identidade ${channel}.`);
     if (loaded.connection.provider === "smtp" || loaded.connection.provider === "google_workspace") return this.email.send(orgId, { to: loaded.recipient, subject, text: body, ...(attachment ? { attachment } : {}) });
-    if (loaded.connection.provider === "whatsapp") return this.whatsapp(loaded.config, loaded.credentials, loaded.recipient, body, attachment);
+    if (loaded.connection.provider === "whatsapp") return this.whatsapp(loaded.config, loaded.credentials, loaded.recipient, body, attachment, template);
     if (loaded.connection.provider === "telegram") return this.telegram(loaded.credentials, loaded.recipient, body, attachment);
     if (loaded.connection.provider === "messenger") return this.metaSend(text(loaded.config.pageId), text(loaded.config.apiVersion), loaded.credentials, loaded.recipient, body, "Messenger", attachment);
     return this.metaSend(text(loaded.config.accountId), text(loaded.config.apiVersion), loaded.credentials, loaded.recipient, body, "Instagram", attachment);
@@ -75,13 +76,15 @@ export class ChannelSender {
     return messageId;
   }
 
-  private async whatsapp(config: Record<string, unknown>, credentials: Record<string, string>, recipient: string, body: string, attachment?: Attachment): Promise<string> {
+  private async whatsapp(config: Record<string, unknown>, credentials: Record<string, string>, recipient: string, body: string, attachment?: Attachment, template?: SendTemplate | null): Promise<string> {
     const phoneNumberId = text(config.phoneNumberId); const version = text(config.apiVersion) || "v23.0";
     if (!phoneNumberId || !credentials.accessToken) throw new ServiceUnavailableException("Número ou token do WhatsApp indisponível.");
-    const type = !attachment ? "text" : whatsappMessageType(attachment.mimeType);
-    const payload = !attachment
-      ? { messaging_product: "whatsapp", to: recipient, type: "text", text: { body } }
-      : { messaging_product: "whatsapp", to: recipient, type, [type]: { link: attachment.url, ...(type === "document" ? { filename: attachment.name } : {}), ...(body && type !== "audio" ? { caption: body } : {}) } };
+    const type = template ? "template" : !attachment ? "text" : whatsappMessageType(attachment.mimeType);
+    const payload = template
+      ? { messaging_product: "whatsapp", to: recipient, type: "template", template: { name: template.name, language: { code: template.language }, ...(template.parameters.length ? { components: [{ type: "body", parameters: template.parameters.map((value) => ({ type: "text", text: value })) }] } : {}) } }
+      : !attachment
+        ? { messaging_product: "whatsapp", to: recipient, type: "text", text: { body } }
+        : { messaging_product: "whatsapp", to: recipient, type, [type]: { link: attachment.url, ...(type === "document" ? { filename: attachment.name } : {}), ...(body && type !== "audio" ? { caption: body } : {}) } };
     const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(phoneNumberId)}/messages`, { method: "POST", headers: { Authorization: `Bearer ${credentials.accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const responseBody = await json(response);
     if (!response.ok) throw new Error(apiError(responseBody, "O WhatsApp recusou a mensagem."));

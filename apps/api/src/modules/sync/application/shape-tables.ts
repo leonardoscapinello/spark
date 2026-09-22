@@ -95,6 +95,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   company_registration_activities: { column: "org_id" },
   company_registration_members: { column: "org_id" },
   company_registration_tax_regimes: { column: "org_id" },
+  whatsapp_templates: { column: "org_id" },
 };
 
 export function isSyncableTable(table: string): table is SyncResource {

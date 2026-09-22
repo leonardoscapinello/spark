@@ -9,6 +9,7 @@ import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
 import { getIntegrationConnectionsCollection } from "../lib/integration-connections.client";
+import { getWhatsAppTemplatesCollection } from "../lib/whatsapp-templates.client";
 import { getCannedRepliesCollection } from "../lib/canned-replies-collection.client";
 import { getTeamsCollection } from "../lib/teams-collection.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -36,6 +37,7 @@ export async function clientLoader() {
     getUsersCollection().preload(),
     getCannedRepliesCollection().preload(),
     getTeamsCollection().preload(),
+    getWhatsAppTemplatesCollection().preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
     ...(session.capabilities.includes("integrations:read") ? [getIntegrationConnectionsCollection().preload()] : []),
   ]);
@@ -75,6 +77,9 @@ export default function Inbox() {
   const [composerMode, setComposerMode] = useState<"reply" | "note">("note");
   const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
   const [attachment, setAttachment] = useState<{ id: string; name: string } | null>(null);
+  const [templateId, setTemplateId] = useState<string | null>(null);
+  const [templateParams, setTemplateParams] = useState<string[]>([]);
+  const { data: whatsappTemplates = [] } = useLiveQuery({ query: (q) => q.from({ templates: getWhatsAppTemplatesCollection() }).where(({ templates: item }) => eq(item.status, "APPROVED")) });
   const [uploadingAttachment, setUploadingAttachment] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const contactNames = useMemo(() => new Map(contacts.map((item) => [item.id, item.name])), [contacts]);
@@ -90,6 +95,10 @@ export default function Inbox() {
     .sort((a, b) => sortOrder === "recent" ? b.lastMessageAt.localeCompare(a.lastMessageAt) : a.lastMessageAt.localeCompare(b.lastMessageAt));
   const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
+  const windowClosed = Boolean(selected) && selected!.channel === "whatsapp" && !isWithinWhatsAppSessionWindow(selected!.lastInboundMessageAt, now);
+  const connectionTemplates = whatsappTemplates.filter((item) => item.connectionId === selected?.connectionId);
+  const selectedTemplate = connectionTemplates.find((item) => item.id === templateId) ?? null;
+  const templatePreview = selectedTemplate ? fillTemplate(selectedTemplate.bodyText, templateParams) : "";
   const queueCounts = useMemo(() => {
     const counts = new Map<InboxFilter, number>();
     const increment = (box: InboxFilter) => counts.set(box, (counts.get(box) ?? 0) + 1);
@@ -156,6 +165,8 @@ export default function Inbox() {
   }, [searchParams, setSearchParams, contacts, canWrite, canReadContacts]);
   useEffect(() => { if (selected && !REPLYABLE_CHANNELS.has(selected.channel) && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
   useEffect(() => { setAttachment(null); }, [selected?.id, composerMode]);
+  useEffect(() => { setTemplateId(null); setTemplateParams([]); }, [selected?.id, composerMode]);
+  useEffect(() => { setTemplateParams(selectedTemplate ? Array.from({ length: selectedTemplate.variableCount }, () => "") : []); }, [selectedTemplate?.id]);
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60_000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
     const active = activeQueueLink.current;
@@ -218,17 +229,24 @@ export default function Inbox() {
   async function submitMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const body = note.trim();
-    if (!session || !selected || saving || (!body && !attachment)) return;
+    if (!session || !selected || saving) return;
+    if (composerMode === "reply" && windowClosed) { if (!selectedTemplate) return; } else if (!body && !attachment) return;
     setSaving(true);
     try {
-      if (composerMode === "reply") await inboxControllerSend(selected.id, { id: messageId.create(), ...(body ? { body } : {}), ...(attachment ? { attachmentFileId: attachment.id } : {}) });
-      else { const message = optimisticInternalNote({ conversationId: conversationId.from(selected.id), contactId: selected.contactId, authorUserId: userId.from(session.userId), body }, session.orgId); const transaction = messagesCollection.insert(message); await transaction.isPersisted.promise; }
+      if (composerMode === "reply") {
+        if (windowClosed && selectedTemplate) await inboxControllerSend(selected.id, { id: messageId.create(), body: templatePreview, template: { name: selectedTemplate.name, language: selectedTemplate.language, parameters: templateParams } });
+        else await inboxControllerSend(selected.id, { id: messageId.create(), ...(body ? { body } : {}), ...(attachment ? { attachmentFileId: attachment.id } : {}) });
+      } else { const message = optimisticInternalNote({ conversationId: conversationId.from(selected.id), contactId: selected.contactId, authorUserId: userId.from(session.userId), body }, session.orgId); const transaction = messagesCollection.insert(message); await transaction.isPersisted.promise; }
       setNote("");
       setAttachment(null);
+      setTemplateId(null);
       notify({ title: composerMode === "reply" ? "Mensagem enviada" : "Nota adicionada", tone: "success" });
     } catch {
       notify({ title: composerMode === "reply" ? "Não foi possível enviar a mensagem" : "Não foi possível adicionar a nota", tone: "error" });
     } finally { setSaving(false); }
+  }
+  function fillTemplate(bodyText: string, values: string[]): string {
+    return bodyText.replace(/\{\{\s*(\d+)\s*\}\}/g, (_, index: string) => values[Number(index) - 1]?.trim() || `{{${index}}}`);
   }
 
 
@@ -324,8 +342,12 @@ export default function Inbox() {
           </div>
           {canWrite && <form className={styles.composer} data-mode={composerMode} onSubmit={submitMessage}>
             <div className={styles.composerMode}><div className={styles.modeButtons}>{REPLYABLE_CHANNELS.has(selected.channel) && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
-            {composerMode === "reply" && selected.channel === "whatsapp" && !isWithinWhatsAppSessionWindow(selected.lastInboundMessageAt, now) && <p className={styles.windowWarning}><Icon name="bolt" />Fora da janela de 24h — o WhatsApp só aceita mensagem de modelo pré-aprovado agora, texto livre será recusado.</p>}
-            <Textarea className={styles.composerInput} value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />
+            {composerMode === "reply" && windowClosed && <p className={styles.windowWarning}><Icon name="bolt" />Fora da janela de 24h — só modelo pré-aprovado passa. Escolha um abaixo.</p>}
+            {composerMode === "reply" && windowClosed ? <div className={styles.templatePicker}>
+              <Select label="Modelo aprovado" placeholder={connectionTemplates.length ? "Escolher modelo" : "Nenhum modelo sincronizado — configure em Integrações"} value={templateId} options={connectionTemplates.map((item) => ({ value: item.id, label: `${item.name} (${item.language})` }))} onValueChange={setTemplateId} />
+              {selectedTemplate && Array.from({ length: selectedTemplate.variableCount }, (_, index) => <Input key={index} aria-label={`Variável {{${index + 1}}}`} placeholder={`{{${index + 1}}}`} value={templateParams[index] ?? ""} onChange={(event) => setTemplateParams((current) => current.map((value, position) => position === index ? event.target.value : value))} />)}
+              {selectedTemplate && <p className={styles.templatePreview}>{templatePreview}</p>}
+            </div> : <Textarea className={styles.composerInput} value={note} onChange={(event) => setNote(event.target.value)} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />}
             {quickRepliesOpen && <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Buscar resposta pronta" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) { setNote((current) => current ? `${current}\n${reply.body}` : reply.body); setQuickRepliesOpen(false); } }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar</Button></div>}
             {composerMode === "reply" && (attachment || uploadingAttachment) && <div className={styles.attachmentChip}>
               <Icon name={uploadingAttachment ? "upload" : "file"} />
@@ -333,10 +355,10 @@ export default function Inbox() {
               {attachment && <Button type="button" size="sm" variant="ghost" iconOnly icon={<Icon name="close" />} aria-label="Remover anexo" onClick={() => setAttachment(null)} />}
             </div>}
             <div className={styles.composerFooter}>
-              <Button type="button" size="sm" variant="ghost" icon={<Icon name="file" />} aria-expanded={quickRepliesOpen} onClick={() => setQuickRepliesOpen((open) => !open)}>Respostas prontas</Button>
-              {composerMode === "reply" && <FilePicker appearance="button" iconOnly size="sm" multiple={false} disabled={Boolean(uploadingAttachment) || Boolean(attachment)} label="Anexar arquivo" onFiles={(selected) => void attachFile(selected)} />}
-              <span>{note.length}/20.000</span>
-              <Button type="submit" loading={saving} disabled={!note.trim() && !attachment}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button>
+              {!(composerMode === "reply" && windowClosed) && <Button type="button" size="sm" variant="ghost" icon={<Icon name="file" />} aria-expanded={quickRepliesOpen} onClick={() => setQuickRepliesOpen((open) => !open)}>Respostas prontas</Button>}
+              {composerMode === "reply" && !windowClosed && <FilePicker appearance="button" iconOnly size="sm" multiple={false} disabled={Boolean(uploadingAttachment) || Boolean(attachment)} label="Anexar arquivo" onFiles={(selected) => void attachFile(selected)} />}
+              {!(composerMode === "reply" && windowClosed) && <span>{note.length}/20.000</span>}
+              <Button type="submit" loading={saving} disabled={composerMode === "reply" && windowClosed ? !selectedTemplate : !note.trim() && !attachment}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button>
             </div>
           </form>}
         </> : <div className={styles.threadEmpty}>

@@ -79,6 +79,7 @@ import {
   companyRegistrationActivityId as toCompanyRegistrationActivityId,
   companyRegistrationMemberId as toCompanyRegistrationMemberId,
   companyRegistrationTaxRegimeId as toCompanyRegistrationTaxRegimeId,
+  whatsAppTemplateId as toWhatsAppTemplateId,
   type OrgId,
   type ContactId,
   type CompanyId,
@@ -134,6 +135,7 @@ import {
   type CompanyRegistrationActivityId,
   type CompanyRegistrationMemberId,
   type CompanyRegistrationTaxRegimeId,
+  type WhatsAppTemplateId,
 } from "../identity/id.js";
 
 function bridged<Out>(build: (value: string) => Out) {
@@ -212,6 +214,7 @@ export const zStageTransitionId = bridged<StageTransitionId>(toStageTransitionId
 export const zBusinessHourId = bridged<BusinessHourId>(toBusinessHourId.from);
 export const zHolidayId = bridged<HolidayId>(toHolidayId.from);
 export const zCompanyRegistrationId = bridged<CompanyRegistrationId>(toCompanyRegistrationId.from);
+export const zWhatsAppTemplateId = bridged<WhatsAppTemplateId>(toWhatsAppTemplateId.from);
 export const zCompanyRegistrationActivityId = bridged<CompanyRegistrationActivityId>(toCompanyRegistrationActivityId.from);
 export const zCompanyRegistrationMemberId = bridged<CompanyRegistrationMemberId>(toCompanyRegistrationMemberId.from);
 export const zCompanyRegistrationTaxRegimeId = bridged<CompanyRegistrationTaxRegimeId>(toCompanyRegistrationTaxRegimeId.from);
