@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "accessibility-a11y": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "accessibility-a11y/SKILL.md",
+      "computedHash": "3117d5b0302f4fbb90cf7b3b65474aa0ea70eadaf91036ab9e20c912d68f9289"
+    },
     "animate": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
@@ -24,6 +30,12 @@
       "sourceType": "github",
       "skillPath": "skills/apple-design/SKILL.md",
       "computedHash": "8b94db67cb9edaad5f1501010804caa610131f1d2dfda0a27664b2e858deade3"
+    },
+    "architecture-review": {
+      "source": "getsentry/warden",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/architecture-review/SKILL.md",
+      "computedHash": "4f3eb66516d3cb3b28538d2abce6a31f66934d743216689019e0f7613d8d961e"
     },
     "ask-sonner": {
       "source": "emilkowalski/skills",
@@ -55,6 +67,12 @@
       "skillPath": "skills/find-animation-opportunities/SKILL.md",
       "computedHash": "8fb8492eb8fbed1313cb430b5831d925d9b8964ca24f3c41a6244cbd1fd98732"
     },
+    "fix-knip-unused-exports": {
+      "source": "factory-ai/factory-plugins",
+      "sourceType": "github",
+      "skillPath": "plugins/typescript/skills/fix-knip-unused-exports/SKILL.md",
+      "computedHash": "3e368a8a3d6ab324fd260639becf9144c87eab9fc93147299ee5f88b127d4518"
+    },
     "framer-motion-animator": {
       "source": "patricio0312rev/skills",
       "sourceType": "github",
@@ -73,6 +91,12 @@
       "skillPath": "skills/improve-animations/SKILL.md",
       "computedHash": "eeb219a407e325b687af88db25771cc3018e3148245604112f5ac6990b6fd79c"
     },
+    "lgpd": {
+      "source": "sushegaad/claude-skills-governance-risk-and-compliance",
+      "sourceType": "github",
+      "skillPath": "plugins/lgpd/skills/lgpd/SKILL.md",
+      "computedHash": "3d0f5f58edd573cc6ee2edfe7f481a597d0487e346101fd306fa563c24f78a28"
+    },
     "nestjs-best-practices": {
       "source": "kadajett/agent-nestjs-skills",
       "sourceType": "github",
@@ -90,6 +114,12 @@
       "sourceType": "github",
       "skillPath": "plugins/developer-kit-typescript/skills/nestjs-drizzle-crud-generator/SKILL.md",
       "computedHash": "30c0494e7f7179dd0b7ac41550bb8c688574ce0ff30e785a41adae6329fb70c7"
+    },
+    "nielsen-usability-heuristics": {
+      "source": "dembrandt/dembrandt-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nielsen-usability-heuristics/SKILL.md",
+      "computedHash": "18344fdd990903e9c507b940939f0721c4cf8f82b78b961065248be2205c96cf"
     },
     "pick-ui-library": {
       "source": "emilkowalski/skills",
@@ -144,6 +174,12 @@
       "sourceType": "github",
       "skillPath": "pstack/skills/typescript-best-practices/SKILL.md",
       "computedHash": "b987c46f03f6c918110c2c198aa49fdd39e126f23ba75ae75fb8efe84625e397"
+    },
+    "typescript-clean-code": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/typescript-clean-code/SKILL.md",
+      "computedHash": "1d33058fbbaf385267453957de42a8b6403f1c8826c2a8d60d99b86bccefdabb"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
