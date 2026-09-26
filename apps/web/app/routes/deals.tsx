@@ -342,7 +342,7 @@ export default function Deals() {
                         const overdue = next ? next.scheduledAt < new Date().toISOString() : false;
                         return <span className={styles.cartaoPasso} data-state={!next ? "none" : overdue ? "overdue" : "scheduled"}>
                           <span className={styles.cartaoPassoPonto} aria-hidden="true" />
-                          {next ? `${overdue ? "Atrasada" : "Próxima"}: ${next.title}` : "Sem próximo passo"}
+                          <span className={styles.cartaoPassoTexto}>{next ? `${overdue ? "Atrasada" : "Próxima"}: ${next.title}` : "Sem próximo passo"}</span>
                         </span>;
                       })()}
                       {(deal.ownerId || deal.expectedCloseDate) && <span className={styles.cartaoRodape}>{deal.ownerId && <span className={styles.cartaoMeta}>{userNames.get(deal.ownerId) ?? "Usuário indisponível"}</span>}{deal.expectedCloseDate && <span className={styles.cartaoMeta}>{formatDate(deal.expectedCloseDate)}</span>}</span>}

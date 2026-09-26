@@ -43,6 +43,11 @@
   border-radius: var(--radius-sm);
   padding: var(--space-2);
   min-height: 0;
+  /* Sem isto a coluna nunca encolhe abaixo do conteúdo mais largo: flex-basis
+   * não é "tamanho especificado", então o mínimo automático vira a largura da
+   * linha mais longa em nowrap (nome, pessoa · empresa, próximo passo). Bastava
+   * um card cair numa etapa para ela alargar. */
+  min-width: 0;
 }
 
 .colunaCabecalho {
@@ -170,6 +175,7 @@
   justify-content: space-between;
   gap: var(--space-2);
   min-width: 0;
+  overflow: hidden;
   padding-top: var(--space-2);
   border-top: var(--ui-hairline) solid var(--color-line);
 }
@@ -219,7 +225,10 @@
 
 /* Próximo passo do card (Pipedrive, captura 020): ponto colorido + o que vem
  * depois. Vermelho é atraso, azul é agendado, cinza é ninguém marcou nada. */
-.cartaoPasso { display: flex; align-items: center; gap: var(--space-2); min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cartaoPasso { display: flex; align-items: center; gap: var(--space-2); min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+/* O texto precisa ser um item flex próprio: text-overflow não alcança texto
+ * anônimo dentro de um flex, e sem min-width: 0 ele empurrava a coluna. */
+.cartaoPassoTexto { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cartaoPassoPonto { flex: 0 0 var(--space-2); width: var(--space-2); height: var(--space-2); border-radius: var(--radius-full); background: var(--color-line); }
 .cartaoPasso[data-state="overdue"] { color: var(--color-statusDanger); }
 .cartaoPasso[data-state="overdue"] .cartaoPassoPonto { background: var(--color-statusDanger); }
