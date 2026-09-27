@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zOrgId, zPipelineId } from "./zodHelpers.js";
+import { zOrgId, zPipelineId, zStageId } from "./zodHelpers.js";
 
 /**
  * Pipeline — the sales funnel. A `Stage` (stage.ts) belongs to a pipeline;
@@ -27,7 +27,7 @@ export const CreatePipelineInputSchema = PipelineSchema.omit({
   createdAt: true,
   updatedAt: true,
   archivedAt: true,
-}).partial({ isDefault: true });
+}).partial({ isDefault: true }).extend({ entryStageId: zStageId.optional() });
 export type CreatePipelineInput = z.infer<typeof CreatePipelineInputSchema>;
 
 export const UpdatePipelineInputSchema = CreatePipelineInputSchema.omit({ id: true }).partial();

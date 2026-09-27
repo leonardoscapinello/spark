@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { sql } from "drizzle-orm";
-import { createAppDbClient, withOrgContext, pipelines, type SparkDb } from "@spark/db";
-import type { Pipeline, CreatePipelineInput, OrgId } from "@spark/core";
+import { createAppDbClient, withOrgContext, pipelines, stages, type SparkDb } from "@spark/db";
+import { PIPELINE_ENTRY_NAME, stageId, type Pipeline, type CreatePipelineInput, type OrgId } from "@spark/core";
 
 /** Same pattern as ContactsRepository — withOrgContext, real RLS, captures txid (docs/adr/0018, docs/adr/0022). */
 @Injectable()
@@ -25,6 +25,15 @@ export class PipelinesRepository {
         .returning();
 
       if (!row) throw new Error("Pipeline insert returned no row.");
+
+      await tx.insert(stages).values({
+        id: input.entryStageId ?? stageId.create(),
+        orgId,
+        pipelineId: row.id,
+        name: PIPELINE_ENTRY_NAME,
+        sortOrder: 0,
+        isEntry: true,
+      });
 
       return { pipeline: toPipeline(row), txid: Number(txid) };
     });

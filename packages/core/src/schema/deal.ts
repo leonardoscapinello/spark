@@ -33,6 +33,7 @@ export const DealSchema = z.object({
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
   deletedAt: zServerTimestamp.nullable(),
+  isArchived: z.boolean().default(false),
 });
 
 export type Deal = z.infer<typeof DealSchema>;
@@ -53,6 +54,7 @@ export type UpdateDealInput = z.infer<typeof UpdateDealInputSchema>;
 
 /** Move to another stage — the board's central "drag and drop" action. */
 export const MoveDealInputSchema = z.object({
+  pipelineId: zPipelineId.optional(),
   stageId: zStageId,
 });
 export type MoveDealInput = z.infer<typeof MoveDealInputSchema>;

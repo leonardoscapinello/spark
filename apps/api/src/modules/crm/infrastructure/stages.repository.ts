@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, count, eq, inArray, sql } from "drizzle-orm";
 import { createAppDbClient, withOrgContext, deals, stages, stageTransitions, type SparkDb } from "@spark/db";
-import { stageTransitionId, type ConfigureStageInput, type Stage, type CreateStageInput, type OrgId, type PipelineId, type StageId } from "@spark/core";
+import { canArchiveStage, stageTransitionId, type ConfigureStageInput, type Stage, type CreateStageInput, type OrgId, type PipelineId, type StageId } from "@spark/core";
 
 @Injectable()
 export class StagesRepository {
@@ -104,6 +104,11 @@ export class StagesRepository {
 
   async archive(orgId: OrgId, id: StageId, archived: boolean): Promise<{ stage: Stage; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      const [current] = await tx.select().from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, id))).limit(1).for("update");
+      if (!current) throw new NotFoundException(`Stage ${id} not found.`);
+      if (archived && !canArchiveStage(0, current.isEntry)) {
+        throw new BadRequestException("A entrada de lead é obrigatória. Você pode renomeá-la ou reordená-la, mas não arquivá-la.");
+      }
       const txidRows = await tx.execute<{ txid: string }>(sql`SELECT pg_current_xact_id()::xid::text as txid`);
       const txid = Number(txidRows[0]?.txid);
       const [row] = await tx.update(stages)
@@ -142,6 +147,7 @@ function toStage(row: {
   pipelineId: string;
   name: string;
   sortOrder: number;
+  isEntry: boolean;
   probability: number;
   slaMinutes: number | null;
   allowWon: boolean;
@@ -157,6 +163,7 @@ function toStage(row: {
     pipelineId: row.pipelineId,
     name: row.name,
     sortOrder: row.sortOrder,
+    isEntry: row.isEntry,
     probability: row.probability,
     slaMinutes: row.slaMinutes,
     allowWon: row.allowWon,

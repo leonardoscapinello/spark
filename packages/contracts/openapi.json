@@ -7332,6 +7332,10 @@
           "isDefault": {
             "default": false,
             "type": "boolean"
+          },
+          "entryStageId": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -7475,6 +7479,10 @@
                 "minimum": 0,
                 "maximum": 9007199254740991
               },
+              "isEntry": {
+                "default": false,
+                "type": "boolean"
+              },
               "probability": {
                 "default": 100,
                 "type": "integer",
@@ -7604,6 +7612,10 @@
                 "minimum": 0,
                 "maximum": 9007199254740991
               },
+              "isEntry": {
+                "default": false,
+                "type": "boolean"
+              },
               "probability": {
                 "default": 100,
                 "type": "integer",
@@ -7730,6 +7742,10 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 9007199254740991
+              },
+              "isEntry": {
+                "default": false,
+                "type": "boolean"
               },
               "probability": {
                 "default": 100,
@@ -7869,6 +7885,10 @@
                   "type": "integer",
                   "minimum": 0,
                   "maximum": 9007199254740991
+                },
+                "isEntry": {
+                  "default": false,
+                  "type": "boolean"
                 },
                 "probability": {
                   "default": 100,
@@ -8021,6 +8041,10 @@
                 "minimum": 0,
                 "maximum": 9007199254740991
               },
+              "isEntry": {
+                "default": false,
+                "type": "boolean"
+              },
               "probability": {
                 "default": 100,
                 "type": "integer",
@@ -8154,6 +8178,10 @@
           "customFields": {
             "type": "object",
             "additionalProperties": {}
+          },
+          "isArchived": {
+            "default": false,
+            "type": "boolean"
           }
         }
       },
@@ -8233,7 +8261,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T21:17:56.393Z",
+                "default": "2026-09-27T19:42:23.989Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8289,6 +8317,10 @@
                   }
                 ],
                 "nullable": true
+              },
+              "isArchived": {
+                "default": false,
+                "type": "boolean"
               }
             },
             "required": [
@@ -8390,6 +8422,10 @@
           "customFields": {
             "type": "object",
             "additionalProperties": {}
+          },
+          "isArchived": {
+            "default": false,
+            "type": "boolean"
           }
         },
         "required": [
@@ -8476,7 +8512,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T21:17:56.396Z",
+                "default": "2026-09-27T19:42:23.992Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8532,6 +8568,10 @@
                   }
                 ],
                 "nullable": true
+              },
+              "isArchived": {
+                "default": false,
+                "type": "boolean"
               }
             },
             "required": [
@@ -8565,6 +8605,10 @@
       "MoveDealDto": {
         "type": "object",
         "properties": {
+          "pipelineId": {
+            "type": "string",
+            "minLength": 1
+          },
           "stageId": {
             "type": "string",
             "minLength": 1
@@ -8650,7 +8694,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T21:17:56.397Z",
+                "default": "2026-09-27T19:42:23.993Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8706,6 +8750,10 @@
                   }
                 ],
                 "nullable": true
+              },
+              "isArchived": {
+                "default": false,
+                "type": "boolean"
               }
             },
             "required": [
@@ -8832,7 +8880,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T21:17:56.397Z",
+                "default": "2026-09-27T19:42:23.994Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8888,6 +8936,10 @@
                   }
                 ],
                 "nullable": true
+              },
+              "isArchived": {
+                "default": false,
+                "type": "boolean"
               }
             },
             "required": [
@@ -8994,7 +9046,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-22T21:17:56.398Z",
+                "default": "2026-09-27T19:42:23.995Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9050,6 +9102,10 @@
                   }
                 ],
                 "nullable": true
+              },
+              "isArchived": {
+                "default": false,
+                "type": "boolean"
               }
             },
             "required": [

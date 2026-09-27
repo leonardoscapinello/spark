@@ -18,8 +18,14 @@ export function appendDealShapeScope(
   }
   const status = query.status;
   if (status !== undefined) {
-    if (!["open", "won", "lost"].includes(status)) throw new BadRequestException("Invalid deal status.");
+    if (!["open", "won", "lost", "archived"].includes(status)) throw new BadRequestException("Invalid deal status.");
     params.push(status);
     filters.push(`"status" = $${params.length}`);
+  }
+  const isArchived = query.isArchived;
+  if (isArchived !== undefined) {
+    if (isArchived !== "true" && isArchived !== "false") throw new BadRequestException("Invalid archived flag.");
+    params.push(isArchived);
+    filters.push(`"is_archived" = $${params.length}`);
   }
 }

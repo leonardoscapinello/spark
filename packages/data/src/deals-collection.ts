@@ -41,6 +41,7 @@ export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId)
     updatedAt: now,
     customFields: {},
     deletedAt: null,
+    isArchived: false,
   };
 }
 
@@ -117,6 +118,7 @@ export interface DealsCollectionScope {
   dealId?: DealId;
   pipelineId?: PipelineId;
   status?: DealStatus | "all";
+  isArchived?: boolean;
   collectionId?: string;
 }
 
@@ -126,6 +128,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
   if (scope.dealId) shapeUrl.searchParams.set("dealId", scope.dealId);
   if (scope.pipelineId) shapeUrl.searchParams.set("pipelineId", scope.pipelineId);
   if (scope.status && scope.status !== "all") shapeUrl.searchParams.set("status", scope.status);
+  if (scope.isArchived !== undefined) shapeUrl.searchParams.set("isArchived", String(scope.isArchived));
   return createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: scope.collectionId ?? "deals",
@@ -165,8 +168,8 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
         return reportWriteAcceptance(mutation.metadata, () => serializedWrite(`deal:${mutation.original.id}`, async () => {
           const changedFields = Object.keys(mutation.changes);
 
-          if (changedFields.length === 1 && changedFields[0] === "stageId") {
-            const response = await dealsControllerMove(mutation.original.id, { stageId: mutation.modified.stageId });
+          if (changedFields.includes("stageId") && changedFields.every((field) => field === "stageId" || field === "pipelineId")) {
+            const response = await dealsControllerMove(mutation.original.id, { stageId: mutation.modified.stageId, ...(changedFields.includes("pipelineId") ? { pipelineId: mutation.modified.pipelineId } : {}) });
             return confirmed(response);
           }
 
@@ -194,7 +197,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
             return confirmed(response);
           }
 
-          const editableFields = ["name", "amount", "contactId", "companyId", "ownerId", "expectedCloseDate", "customFields"];
+          const editableFields = ["name", "amount", "contactId", "companyId", "ownerId", "expectedCloseDate", "customFields", "isArchived"];
           if (changedFields.length > 0 && changedFields.every((field) => editableFields.includes(field))) {
             // Envia somente o delta. Mandar a linha inteira em cada blur fazia
             // duas gravações concorrentes em campos distintos se sobrescreverem.
@@ -206,6 +209,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
               ...(changedFields.includes("ownerId") ? { ownerId: mutation.modified.ownerId } : {}),
               ...(changedFields.includes("expectedCloseDate") ? { expectedCloseDate: mutation.modified.expectedCloseDate } : {}),
               ...(changedFields.includes("customFields") ? { customFields: mutation.modified.customFields ?? {} } : {}),
+              ...(changedFields.includes("isArchived") ? { isArchived: mutation.modified.isArchived } : {}),
             });
             return confirmed(response);
           }

@@ -12,6 +12,7 @@ import {
   type OrgId,
   type DealId,
   type StageId,
+  type PipelineId,
   type StageProbabilityWindow,
   canCloseAtStage,
   canMoveBetweenStages,
@@ -74,15 +75,17 @@ export class DealsRepository {
   }
 
   /** The drag-and-drop action: only changes stageId, nothing else (roadmap.md, Fase 1). */
-  async move(orgId: OrgId, actorUserId: UserId, dealId: DealId, stageId: StageId): Promise<{ deal: Deal; txid: number }> {
+  async move(orgId: OrgId, actorUserId: UserId, dealId: DealId, stageId: StageId, pipelineId?: PipelineId): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
-      const [current] = await tx.select({ pipelineId: deals.pipelineId, stageId: deals.stageId, stageEnteredAt: deals.stageEnteredAt }).from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
+      const [current] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
       if (!current) throw new NotFoundException(`Deal ${dealId} not found.`);
       const [source] = await tx.select().from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, current.stageId))).limit(1);
-      const [target] = await tx.select().from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, stageId), eq(stages.pipelineId, current.pipelineId))).limit(1);
+      const targetPipelineId = pipelineId ?? current.pipelineId;
+      const [target] = await tx.select().from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, stageId), eq(stages.pipelineId, targetPipelineId))).limit(1);
       if (!target) throw new BadRequestException("A etapa não pertence ao funil deste negócio.");
       if (!source) throw new BadRequestException("A etapa atual não existe mais.");
+      if (targetPipelineId === current.pipelineId && stageId === current.stageId) return { deal: toDeal(current), txid };
       const cooldown = stageMoveCooldownRemaining(current.stageEnteredAt.toISOString(), new Date());
       if (cooldown > 0) throw new ConflictException(`Aguarde ${Math.ceil(cooldown / 1_000)} s antes de mover novamente.`);
       const transitionRows = source.restrictTransitions ? await tx.select().from(stageTransitions).where(and(eq(stageTransitions.orgId, orgId), eq(stageTransitions.fromStageId, source.id))) : [];
@@ -90,7 +93,7 @@ export class DealsRepository {
 
       const [row] = await tx
         .update(deals)
-        .set({ stageId, stageEnteredAt: new Date(), updatedAt: new Date() })
+        .set({ pipelineId: targetPipelineId, stageId, stageEnteredAt: new Date(), updatedAt: new Date() })
         .where(eq(deals.id, dealId))
         .returning();
 
@@ -100,7 +103,7 @@ export class DealsRepository {
 
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
-      await tx.insert(dealStageMoves).values({ orgId, pipelineId: current.pipelineId, dealId, fromStageId: source.id, toStageId: stageId });
+      await tx.insert(dealStageMoves).values({ orgId, pipelineId: targetPipelineId, dealId, fromStageId: source.id, toStageId: stageId });
       await this.recomputeProbability(tx, orgId, source.id, source.sortOrder);
 
       await this.eventWriter.append(tx, { orgId, actorUserId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.stage_changed", data: { fromStageId: current.stageId, stageId: deal.stageId, changes: [{ field: "stageId", before: current.stageId, after: deal.stageId }] } });
@@ -152,6 +155,7 @@ export class DealsRepository {
           ...(input.expectedCloseDate !== undefined
             ? { expectedCloseDate: input.expectedCloseDate ? new Date(input.expectedCloseDate) : null }
             : {}),
+          ...(input.isArchived !== undefined ? { isArchived: input.isArchived } : {}),
           updatedAt: new Date(),
         })
         .where(eq(deals.id, dealId))
@@ -242,6 +246,7 @@ function toDeal(row: {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+  isArchived: boolean;
 }): Deal {
   return {
     id: row.id,
@@ -260,5 +265,6 @@ function toDeal(row: {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,
+    isArchived: row.isArchived,
   } as Deal;
 }

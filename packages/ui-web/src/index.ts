@@ -36,6 +36,7 @@ export { ModalColumns, ModalColumn } from "./Modal/Modal.js";
 export { ActionModal } from "./Modal/ActionModal.js";
 export { Notification, NotificationList, type NotificationProps, type NotificationEntry } from "./Notification/Notification.js";
 export { Toaster, notify, dismissNotification } from "./Notification/Toast.js";
+export { DealOutcomeCelebration, celebrateDealOutcome, type DealOutcome } from "./DealOutcome/DealOutcome.js";
 
 export { CompanyRegistrationCard, type CompanyRegistrationCardProps } from "./CompanyRegistration/CompanyRegistration.js";
 export { CompanyRegistrationDetails, type CompanyRegistrationDetailsProps } from "./CompanyRegistration/CompanyRegistrationDetails.js";

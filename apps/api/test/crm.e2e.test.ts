@@ -83,6 +83,21 @@ afterAll(async () => {
 });
 
 describe("End-to-end CRM — pipeline → stage → deal → move (docs/adr/0029)", () => {
+  it("creates a required, renamable entry with the pipeline and prevents archiving it", async () => {
+    const token = await signJwt(supabaseIdManager);
+    const pipeline = pipelineIdFactory.create();
+    const entry = stageIdFactory.create();
+    const headers = { authorization: `Bearer ${token}` };
+    const created = await app.inject({ method: "POST", url: "/v1/pipelines", headers, payload: { id: pipeline, name: "Required columns", entryStageId: entry } });
+    expect(created.statusCode).toBe(201);
+    const [row] = await admin`SELECT name, is_entry, sort_order FROM stages WHERE id = ${entry}`;
+    expect(row).toMatchObject({ name: "Entrada de lead", is_entry: true, sort_order: 0 });
+    const renamed = await app.inject({ method: "PATCH", url: `/v1/stages/${entry}/rename`, headers, payload: { name: "Recebidos" } });
+    expect(renamed.statusCode).toBe(200);
+    const archived = await app.inject({ method: "PATCH", url: `/v1/stages/${entry}/archive`, headers, payload: { archived: true } });
+    expect(archived.statusCode).toBe(400);
+  });
+
   it("Agent (no pipelines:manage) can't create a pipeline: 403", async () => {
     const token = await signJwt(supabaseIdAgent);
     const res = await app.inject({

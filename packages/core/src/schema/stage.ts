@@ -19,6 +19,8 @@ export const StageSchema = z.object({
   pipelineId: zPipelineId,
   name: z.string().min(1, { error: "Stage name is required" }).max(200),
   sortOrder: z.number().int().min(0),
+  /** A entrada é obrigatória, mas pode mudar de nome e posição. */
+  isEntry: z.boolean().default(false),
   /** Probabilidade de um negócio avançar desta etapa para a próxima, 0–100
    * — calculada por `calculateStageProbability` (core/rules/stageWorkflow)
    * a partir do histórico real de movimentação, nunca preenchida na mão.
@@ -43,6 +45,7 @@ export type Stage = z.infer<typeof StageSchema>;
  * que o usuário pediu para fechar: preenchimento manual. */
 export const CreateStageInputSchema = StageSchema.omit({
   orgId: true,
+  isEntry: true,
   probability: true,
   createdAt: true,
   updatedAt: true,

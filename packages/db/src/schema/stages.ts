@@ -1,4 +1,4 @@
-import { boolean, check, pgTable, pgPolicy, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
+import { boolean, check, pgTable, pgPolicy, text, timestamp, uuid, integer, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -18,6 +18,7 @@ export const stages = pgTable(
       .references(() => pipelines.id),
     name: text("name").notNull(),
     sortOrder: integer("sort_order").notNull(),
+    isEntry: boolean("is_entry").notNull().default(false),
     probability: integer("probability").notNull().default(100),
     slaMinutes: integer("sla_minutes"),
     allowWon: boolean("allow_won").notNull().default(true),
@@ -28,6 +29,8 @@ export const stages = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [
+    uniqueIndex("stages_pipeline_entry_unique").on(t.pipelineId).where(sql`${t.isEntry}`),
+    check("stages_entry_active_check", sql`NOT ${t.isEntry} OR ${t.archivedAt} IS NULL`),
     check("stages_sort_order_check", sql`${t.sortOrder} >= 0`),
     check("stages_probability_check", sql`${t.probability} BETWEEN 0 AND 100`),
     check("stages_sla_minutes_check", sql`${t.slaMinutes} IS NULL OR ${t.slaMinutes} > 0`),

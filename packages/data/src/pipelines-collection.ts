@@ -5,7 +5,7 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
  */
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { PipelineSchema, pipelineId, type Pipeline, type CreatePipelineInput, type OrgId } from "@spark/core";
+import { PipelineSchema, pipelineId, stageId, type Pipeline, type CreatePipelineInput, type OrgId } from "@spark/core";
 import { pipelinesControllerCreate } from "@spark/api-client";
 import { confirmed } from "./confirmed.js";
 import { sparkShapeOptions } from "./shape-options.js";
@@ -39,6 +39,7 @@ export function createPipelinesCollection() {
           id: pipeline.id,
           name: pipeline.name,
           isDefault: pipeline.isDefault,
+          entryStageId: stageId.create(),
         });
 
         return confirmed(response);

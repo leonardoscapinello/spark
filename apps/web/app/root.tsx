@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse } from "react-router";
 import type { Route } from "./+types/root";
-import { Toaster, TooltipProvider } from "@spark/ui-web";
+import { DealOutcomeCelebration, Toaster, TooltipProvider } from "@spark/ui-web";
 import "@spark/tokens/css";
 import "./app.css";
 
@@ -32,7 +32,7 @@ export default function Root() {
    * manda. Sem ele montado, as 115 chamadas espalhadas pelas telas não
    * apareciam em lugar nenhum — um CPF recusado, uma escrita que falhou e uma
    * importação concluída eram todos o mesmo silêncio. */
-  return <TooltipProvider><Outlet /><Toaster /></TooltipProvider>;
+  return <TooltipProvider><Outlet /><Toaster /><DealOutcomeCelebration /></TooltipProvider>;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

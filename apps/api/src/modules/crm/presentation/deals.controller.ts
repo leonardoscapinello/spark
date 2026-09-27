@@ -73,7 +73,7 @@ export class DealsController {
     @Body() body: MoveDealDto,
   ): Promise<MoveDealResponseDto> {
     const user = await this.getCurrentUser.execute(claims.sub);
-    const { deal, txid } = await this.moveDeal.execute(user.orgId, user.id, dealIdFactory.from(id), body.stageId);
+    const { deal, txid } = await this.moveDeal.execute(user.orgId, user.id, dealIdFactory.from(id), body.stageId, body.pipelineId);
     return { deal: toDealDto(deal), txid } as MoveDealResponseDto;
   }
 

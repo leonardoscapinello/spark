@@ -46,11 +46,11 @@ export function getDetailDealsCollection(dealId: DealId): DealsCollection {
 }
 
 /** Um shape por visão do quadro: nunca baixa negócios de outros funis/estados. */
-export function getBoardDealsCollection(pipelineId: PipelineId, status: DealStatus | "all"): DealsCollection {
-  const key = `${pipelineId}:${status}`;
+export function getBoardDealsCollection(pipelineId: PipelineId, status: DealStatus | "all", isArchived = false): DealsCollection {
+  const key = `${pipelineId}:${status}:${isArchived}`;
   let collection = boardDeals.get(key);
   if (!collection) {
-    collection = createDealsCollection({ pipelineId, status, collectionId: `deals-board-${key}` });
+    collection = createDealsCollection({ pipelineId, status, isArchived, collectionId: `deals-board-${key}` });
     boardDeals.set(key, collection);
   }
   return collection;

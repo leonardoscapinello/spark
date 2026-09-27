@@ -1,9 +1,9 @@
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type StageTransition, type DealStatus } from "@spark/core";
+import { pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type StageTransition, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, configureStage, type StagesCollection } from "@spark/data";
-import { ActionModal, Button, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, SearchSelect, Select, Skeleton, Switch, Checkbox, Textarea, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, SearchSelect, Select, Skeleton, Switch, Checkbox, Textarea, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection, getStageTransitionsCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -33,7 +33,8 @@ export default function Deals() {
   const companiesCollection = getCompaniesCollection();
   const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
   const requestedStatus = searchParams.get("status");
-  const statusFilter: DealStatus | "all" = requestedStatus === "won" || requestedStatus === "lost" || requestedStatus === "all" ? requestedStatus : "open";
+  const showArchived = requestedStatus === "archived";
+  const statusFilter: DealStatus | "all" = requestedStatus === "open" || requestedStatus === "won" || requestedStatus === "lost" ? requestedStatus : "all";
   const [dealModalOpen, setDealModalOpen] = useState(false);
   const [pipelineEditorOpen, setPipelineEditorOpen] = useState(false);
   const [visibleByStage, setVisibleByStage] = useState<Record<string, number>>({});
@@ -45,7 +46,7 @@ export default function Deals() {
     query: (q) => q.from({ stages: stagesCollection }).orderBy(({ stages: s }) => s.sortOrder, "asc"),
   });
   const mainPipeline = pipelines.find((pipeline) => pipeline.id === selectedPipelineId) ?? pipelines.find((pipeline) => pipeline.isDefault) ?? pipelines[0];
-  const dealsCollection = useMemo(() => mainPipeline ? getBoardDealsCollection(mainPipeline.id, statusFilter) : null, [mainPipeline, statusFilter]);
+  const dealsCollection = useMemo(() => mainPipeline ? getBoardDealsCollection(mainPipeline.id, statusFilter, showArchived) : null, [mainPipeline, statusFilter, showArchived]);
   const { data: deals = [], isLoading: isLoadingDeals } = useLiveQuery({ query: (q) => dealsCollection ? q.from({ deals: dealsCollection }) : undefined }, [dealsCollection]);
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
@@ -87,6 +88,13 @@ export default function Deals() {
   const [lossReason, setLossReason] = useState("");
   const [busyDealId, setBusyDealId] = useState<string | null>(null);
   const [duplicateConfirmed, setDuplicateConfirmed] = useState(false);
+  const [moveCandidate, setMoveCandidate] = useState<{ dealId: string; stageId: string | null } | null>(null);
+  const [dropAction, setDropAction] = useState<"won" | "lost" | "archived" | "move" | null>(null);
+  const dragPreviewRef = useRef<HTMLDivElement | null>(null);
+  const movingDeal = moveCandidate ? deals.find((deal) => deal.id === moveCandidate.dealId) ?? null : null;
+  const movingPipelineId = movingDeal?.pipelineId ?? mainPipeline?.id ?? "";
+  const [movePipelineId, setMovePipelineId] = useState<string>(movingPipelineId);
+  const [moveStageId, setMoveStageId] = useState<string | null>(null);
 
   // Etapa arquivada some do quadro e de "adicionar negócio" — mas continua
   // existindo para os negócios antigos que ainda apontam para ela.
@@ -100,9 +108,10 @@ export default function Deals() {
   const dealsByStage = useMemo(() => {
     const grouped = new Map<string, Deal[]>();
     for (const deal of deals) {
-      const stageDeals = grouped.get(deal.stageId) ?? [];
+      const columnId = dealBoardColumn(deal);
+      const stageDeals = grouped.get(columnId) ?? [];
       stageDeals.push(deal);
-      grouped.set(deal.stageId, stageDeals);
+      grouped.set(columnId, stageDeals);
     }
     return grouped;
   }, [deals]);
@@ -113,7 +122,7 @@ export default function Deals() {
     const person = contacts.find((item) => item.id === personId && !item.deletedAt);
     if (!person) return;
     setDealContact({ value: person.id, label: person.name, ...(person.email ? { description: person.email } : {}) });
-    setTargetStageId(stages[0]!.id);
+    setTargetStageId((stages.find((stage) => stage.isEntry) ?? stages[0])!.id);
     setDealModalOpen(true);
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete("createFor");
@@ -124,20 +133,15 @@ export default function Deals() {
     if (!session || !pipelineName.trim()) throw new Error("MISSING_PIPELINE_NAME");
     const pipeline = optimisticPipeline({ name: pipelineName.trim(), isDefault: pipelines.length === 0 }, session.orgId);
     const pipelineTx = pipelinesCollection.insert(pipeline);
-    // The pipeline must exist on the server before its stages are written (FK).
+    // A API cria a entrada obrigatória na mesma transação do funil.
     await pipelineTx.isPersisted.promise;
-    const stageWrites = ["Novo", "Em negociação", "Fechado"].map((name, sortOrder) => {
-      const stage = optimisticStage({ pipelineId: pipeline.id, name, sortOrder }, session.orgId);
-      return stagesCollection.insert(stage).isPersisted.promise;
-    });
-    await Promise.all(stageWrites);
     setSelectedPipelineId(pipeline.id);
     setPipelineName("");
     notify({ title: "Funil criado", description: pipeline.name, tone: "success" });
   }
 
   function openDealModal(stageId?: string) {
-    setTargetStageId(stageId ?? stages[0]?.id ?? null);
+    setTargetStageId(stageId ?? stages.find((stage) => stage.isEntry)?.id ?? stages[0]?.id ?? null);
     setDealModalOpen(true);
   }
 
@@ -166,6 +170,7 @@ export default function Deals() {
       name: dealName.trim(),
       amount: dealAmount,
       expectedCloseDate: expectedCloseDate || null,
+      isArchived: false,
     }, session.orgId);
     if (!dealsCollection) throw new Error("DEALS_NOT_READY");
     const transaction = dealsCollection.insert(forInsert(deal));
@@ -175,15 +180,17 @@ export default function Deals() {
   }
 
   async function dropOn(stageId: string) {
-    if (dragging && dealsCollection) {
-      const transaction = dealsCollection.update(dragging, (draft) => {
-        draft.stageId = stageId;
-      });
-      try { await transaction.isPersisted.promise; notify({ title: "Negócio movido", tone: "success" }); }
-      catch { notify({ title: "Não foi possível mover o negócio", tone: "error" }); }
-    }
+    const dealId = dragging;
+    const deal = dealId ? deals.find((item) => item.id === dealId) : null;
     setDragging(null);
     setDropTarget(null);
+    setDropAction(null);
+    if (!deal || !dealsCollection || deal.stageId === stageId) return;
+    try {
+      const transaction = dealsCollection.update(deal.id, (draft) => { draft.stageId = stageId; });
+      await transaction.isPersisted.promise;
+      notify({ title: "Negócio movido", description: deal.name, tone: "success" });
+    } catch { notify({ title: "Não foi possível mover o negócio", tone: "error" }); }
   }
 
   async function closeDeal(deal: Deal, status: Extract<DealStatus, "won" | "lost">, reason?: string) {
@@ -195,10 +202,58 @@ export default function Deals() {
         if (status === "lost") draft.lossReason = reason?.trim() || null;
       });
       await transaction.isPersisted.promise;
+      celebrateDealOutcome({ status, name: deal.name });
       notify({ title: status === "won" ? "Negócio ganho" : "Negócio perdido", description: deal.name, tone: status === "won" ? "success" : "warning" });
       return true;
     } catch { notify({ title: "Não foi possível fechar o negócio", tone: "error" }); return false; }
     finally { setBusyDealId(null); }
+  }
+
+  async function archiveDeal(deal: Deal) {
+    if (!dealsCollection || !canMove) return;
+    try {
+      const transaction = dealsCollection.update(deal.id, (draft) => { draft.isArchived = true; });
+      await transaction.isPersisted.promise;
+      notify({ title: "Negócio arquivado", description: deal.name, tone: "success" });
+    } catch { notify({ title: "Não foi possível arquivar o negócio", tone: "error" }); }
+  }
+
+  function finishDragAction(action: "won" | "lost" | "archived") {
+    const deal = dragging ? deals.find((item) => item.id === dragging) : null;
+    setDragging(null);
+    setDropTarget(null);
+    if (!deal) return;
+    if (action === "archived") void archiveDeal(deal);
+    else void closeDeal(deal, action);
+  }
+
+  function openMovePanel() {
+    if (!dragging) return;
+    setMoveCandidate({ dealId: dragging, stageId: dropTarget });
+    setMovePipelineId(mainPipeline?.id ?? "");
+    setMoveStageId(dropTarget);
+    setDragging(null);
+    setDropTarget(null);
+    setDropAction(null);
+  }
+
+  function handleActionDrop(action: "won" | "lost" | "archived" | "move") {
+    if (action === "move") openMovePanel();
+    else finishDragAction(action);
+  }
+
+  async function confirmMove() {
+    if (!moveCandidate || !movingDeal || !dealsCollection || !moveStageId) return;
+    if (movingDeal.pipelineId === movePipelineId && movingDeal.stageId === moveStageId) {
+      setMoveCandidate(null);
+      return;
+    }
+    const transaction = dealsCollection.update(movingDeal.id, (draft) => {
+      draft.pipelineId = movePipelineId;
+      draft.stageId = moveStageId;
+    });
+    try { await transaction.isPersisted.promise; notify({ title: "Negócio movido", description: movingDeal.name, tone: "success" }); setMoveCandidate(null); }
+    catch { notify({ title: "Não foi possível mover o negócio", tone: "error" }); }
   }
 
   function saveStageName(id: string, newName: string) {
@@ -230,11 +285,11 @@ export default function Deals() {
       <PageHeader icon="briefcase" title={mainPipeline.name} actions={<>{canManagePipeline && <Button variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${mainPipeline.name}`} onClick={() => setPipelineEditorOpen(true)} />}{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
       <div className={styles.toolbar}><CollectionToolbar filters={<>
         <Select appearance="filter" label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
-        <Select appearance="filter" label="Situação dos negócios" value={statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value && value !== "open" ? { status: value } : {})} />
-      </>} count={`${deals.length} ${deals.length === 1 ? "negócio" : "negócios"} · ${formatBRL(sum(deals.map((deal) => syncedAmount(deal.amount))))}`} /></div>
+        <Select appearance="filter" label="Situação dos negócios" value={showArchived ? "archived" : statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "archived", label: "Arquivados" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value ? { status: value } : {})} />
+      </>} count={isLoadingDeals ? "Carregando negócios…" : `${deals.length} ${deals.length === 1 ? "negócio" : "negócios"} · ${formatBRL(sum(deals.map((deal) => syncedAmount(deal.amount))))}`} /></div>
 
       <div className={styles.board}>
-        {stages.map((stage) => {
+        {pipelineBoardColumns(stages).map((stage) => {
           const allStageDeals = dealsByStage.get(stage.id) ?? [];
           const visibleCount = visibleByStage[stage.id] ?? 50;
           const stageDeals = allStageDeals.slice(0, visibleCount);
@@ -243,6 +298,8 @@ export default function Deals() {
           return (
             <section
               key={stage.id}
+              data-outcome={stage.kind === "outcome" ? stage.id : undefined}
+              aria-label={stage.name}
               className={[styles.coluna, dropTarget === stage.id ? styles.colunaSobreArraste : ""]
                 .filter(Boolean)
                 .join(" ")}
@@ -252,11 +309,12 @@ export default function Deals() {
               }}
               onDrop={(event) => {
                 event.preventDefault();
-                void dropOn(stage.id);
+                if (stage.kind === "outcome") finishDragAction(stage.id);
+                else void dropOn(stage.id);
               }}
             >
               <div className={styles.colunaCabecalho}>
-                {renamingStage === stage.id ? (
+                {stage.kind === "stage" && renamingStage === stage.id ? (
                   <form
                     className={styles.formRenomear}
                     onSubmit={(event) => {
@@ -276,7 +334,7 @@ export default function Deals() {
                       }}
                     />
                   </form>
-                ) : canManagePipeline ? (
+                ) : stage.kind === "stage" && canManagePipeline ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -288,13 +346,14 @@ export default function Deals() {
                   </Button>
                 ) : <span className={styles.colunaNome}>{stage.name}</span>}
                 <span className={styles.colunaTotal}>
-                  {allStageDeals.length} · {formatBRL(total)}
+                  {isLoadingDeals ? "Carregando…" : `${allStageDeals.length} · ${formatBRL(total)}`}
                 </span>
               </div>
 
               <div className={styles.listaCartoes}>
+                {isLoadingDeals && <Skeleton className={styles.loadingCard} />}
                 {stageDeals.map((deal) => {
-                  const isOpen = deal.status === "open";
+                  const isOpen = deal.status === "open" && !deal.isArchived;
                   return (
                     <article
                       key={deal.id}
@@ -305,11 +364,20 @@ export default function Deals() {
                       data-draggable={isOpen && canMove ? "true" : undefined}
                       onDragStart={(event) => {
                         event.dataTransfer.effectAllowed = "move";
+                        const preview = document.createElement("div");
+                        preview.className = styles.dragPreview!;
+                        preview.textContent = deal.name;
+                        document.body.appendChild(preview);
+                        dragPreviewRef.current = preview;
+                        event.dataTransfer.setDragImage(preview, 24, 18);
                         setDragging(deal.id);
                       }}
                       onDragEnd={() => {
+                        dragPreviewRef.current?.remove();
+                        dragPreviewRef.current = null;
                         setDragging(null);
                         setDropTarget(null);
+                        setDropAction(null);
                       }}
                       /* O cartão inteiro abre o negócio. Só o título era
                        * clicável, e num quadro cheio isso é mirar em duas
@@ -332,7 +400,7 @@ export default function Deals() {
                     >
                       <div className={styles.cartaoCabecalho}>
                         <Link className={styles.cartaoNome} to={`/deals/${deal.id}`}>{deal.name}</Link>
-                        {isOpen && canMove && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} disabled={busyDealId === deal.id} menu={<><MenuItem onClick={() => void closeDeal(deal, "won")}>Marcar como ganho</MenuItem><MenuItem onClick={() => { setLossReason(""); setClosingDeal(deal); }}>Marcar como perdido</MenuItem></>} />}
+                        {!deal.isArchived && canMove && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} disabled={busyDealId === deal.id} menu={<>{isOpen && <><MenuItem onClick={() => void closeDeal(deal, "won")}>Marcar como ganho</MenuItem><MenuItem onClick={() => { setLossReason(""); setClosingDeal(deal); }}>Marcar como perdido</MenuItem></>}<MenuItem onClick={() => void archiveDeal(deal)}>Arquivar negócio</MenuItem></>} />}
                       </div>
                       <span className={styles.cartaoValor}>{formatBRL(syncedAmount(deal.amount))}</span>
                       {(deal.contactId || deal.companyId) && <span className={styles.cartaoMeta}>{[deal.contactId ? contactNames.get(deal.contactId) ?? "Contato indisponível" : null, deal.companyId ? companyNames.get(deal.companyId) ?? "Empresa indisponível" : null].filter(Boolean).join(" · ")}</span>}
@@ -353,7 +421,7 @@ export default function Deals() {
                             deal.status === "won" ? styles.cartaoBadgeGanho : styles.cartaoBadgePerdido,
                           ].join(" ")}
                         >
-                          {deal.status === "won" ? "Ganho" : "Perdido"}
+                          {deal.isArchived ? `Arquivado · ${deal.status === "won" ? "Ganho" : deal.status === "lost" ? "Perdido" : "Em aberto"}` : deal.status === "won" ? "Ganho" : "Perdido"}
                         </span>
                       )}
                     </article>
@@ -363,12 +431,29 @@ export default function Deals() {
 
               {stageDeals.length < allStageDeals.length && <Button variant="ghost" size="sm" onClick={() => setVisibleByStage((current) => ({ ...current, [stage.id]: visibleCount + 50 }))}>Mostrar mais {Math.min(50, allStageDeals.length - stageDeals.length)}</Button>}
 
-              {canWrite && <Button variant="ghost" size="sm" onClick={() => openDealModal(stage.id)}>+ Adicionar negócio</Button>}
+              {stage.kind === "stage" && canWrite && <Button variant="ghost" size="sm" onClick={() => openDealModal(stage.id)}>+ Adicionar negócio</Button>}
             </section>
           );
         })}
 
       </div>
+      {canMove && dragging && <div className={styles.moveBar}>
+        <div className={styles.moveBarActions}>
+          {(["won", "lost", "archived", "move"] as const).map((action) => {
+            const labels = { won: "Ganho", lost: "Perdido", archived: "Arquivar", move: "Mover negócio" };
+            const descriptions = { won: "Soltar para marcar como ganho", lost: "Soltar para marcar como perdido", archived: "Soltar para arquivar mantendo o status", move: "Soltar para escolher funil e etapa" };
+            return <Button key={action} size="sm" className={styles.moveDropZone} data-action={action} data-drag-over={dropAction === action ? "true" : undefined} variant="secondary" icon={action === "won" ? <Icon name="check" /> : action === "lost" ? <Icon name="close" /> : undefined} onDragEnter={(event) => { event.preventDefault(); setDropAction(action); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDropAction(action); }} onDragLeave={() => setDropAction((current) => current === action ? null : current)} onDrop={(event) => { event.preventDefault(); setDropAction(null); handleActionDrop(action); }} onClick={() => handleActionDrop(action)} aria-label={descriptions[action]}>{dropAction === action ? "Soltar aqui" : labels[action]}</Button>;
+          })}
+        </div>
+      </div>}
+      <Modal open={moveCandidate !== null} onOpenChange={(open) => { if (!open) setMoveCandidate(null); }}>
+        <ModalContent title="Mover negócio" description={movingDeal ? movingDeal.name : "Escolha o destino antes de confirmar."} placement="bottom" className={styles.movePanel} footer={<><Button variant="ghost" onClick={() => setMoveCandidate(null)}>Cancelar</Button><Button onClick={() => void confirmMove()} disabled={!moveStageId}>Confirmar movimento</Button></>}>
+          {movingDeal && <div className={styles.movePanelFields}>
+            <Field><Label>Funil</Label><Select label="Funil de destino" value={movePipelineId} options={pipelines.filter((pipeline) => !pipeline.archivedAt).map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => { if (value) { setMovePipelineId(value); setMoveStageId(allStages.find((stage) => stage.pipelineId === value && !stage.archivedAt)?.id ?? null); } }} /></Field>
+            <Field><Label>Etapa</Label><Select label="Etapa de destino" value={moveStageId} options={allStages.filter((stage) => stage.pipelineId === movePipelineId && !stage.archivedAt).map((stage) => ({ value: stage.id, label: stage.name }))} onValueChange={setMoveStageId} /></Field>
+          </div>}
+        </ModalContent>
+      </Modal>
       {/* Criar, arquivar e reordenar etapa moram atrás do lápis ao lado do
         * nome do funil — nunca abertos no quadro. É a mesma decisão do
         * Pipedrive: essa permissão não é de todo mundo, e um formulário
@@ -490,18 +575,18 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
   }
 
   return <Modal open={open} onOpenChange={onOpenChange}>
-    <ModalContent title={`Editar ${pipeline.name}`} description="Etapas do funil, na ordem em que um negócio passa por elas">
+    <ModalContent title={`Editar ${pipeline.name}`} description="A entrada é obrigatória e pode mudar de nome e posição. Ganhos e Perdidos ficam sempre no final.">
       <ul className={styles.editorLista}>
-        {orderedStages.map((stage) => (
+        {pipelineBoardColumns(orderedStages.map((stage, sortOrder) => ({ ...stage, sortOrder }))).map((stage) => (
           <li
             key={stage.id}
             className={[styles.editorLinha, dragging === stage.id ? styles.editorLinhaArrastando : ""].filter(Boolean).join(" ")}
-            draggable
-            onDragStart={() => setDragging(stage.id)}
+            draggable={stage.kind === "stage"}
+            onDragStart={() => { if (stage.kind === "stage") setDragging(stage.id); }}
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
               event.preventDefault();
-              if (!dragging || dragging === stage.id) return;
+              if (stage.kind === "outcome" || !dragging || dragging === stage.id) return;
               const from = order.indexOf(dragging);
               const to = order.indexOf(stage.id);
               if (from === -1 || to === -1) return;
@@ -512,10 +597,10 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
             }}
             onDragEnd={() => setDragging(null)}
           >
-            <span className={styles.editorAlca} aria-hidden="true"><Icon name="menu" /></span>
-            <span className={styles.editorNome}>{stage.name}</span>
-            <StageConfigPopover stage={stage} otherStages={orderedStages.filter((candidate) => candidate.id !== stage.id)} transitions={stageTransitions} />
-            <Button
+            <span className={styles.editorAlca} aria-hidden="true"><Icon name={stage.kind === "outcome" ? "lock" : "menu"} /></span>
+            <span className={styles.editorNome}>{stage.kind === "stage" ? <InlineEdit label="nome da etapa" value={stage.name} onSave={async (name) => { const transaction = stagesCollection.update(stage.id, (draft) => { draft.name = name.trim(); }); await transaction.isPersisted.promise; }} /> : stage.name}</span>
+            {stage.kind === "stage" && <StageConfigPopover stage={stage} otherStages={orderedStages.filter((candidate) => candidate.id !== stage.id)} transitions={stageTransitions} />}
+            {stage.kind === "stage" && !stage.isEntry && <Button
               variant="ghost"
               size="sm"
               iconOnly
@@ -523,7 +608,7 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
               aria-label={`Arquivar etapa ${stage.name}`}
               loading={busyStageId === stage.id}
               onClick={() => void archiveStage(stage)}
-            />
+            />}
           </li>
         ))}
         {orderedStages.length === 0 && <li className={styles.editorVazio}>Este funil ainda não tem etapa.</li>}

@@ -1,0 +1,28 @@
+.root { position: fixed; top: var(--space-6); left: 50%; z-index: var(--ui-modalLayer); display: flex; align-items: center; gap: var(--space-3); min-width: min(var(--ui-toastWidth), calc(100vw - var(--space-8))); padding: var(--space-3) var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-ink); box-shadow: var(--ui-popupShadow); pointer-events: none; transform: translateX(-50%); animation: outcomeIn var(--motion-duration-moderate) var(--motion-ease-out); }
+.root[data-outcome="won"] { border-color: color-mix(in srgb, var(--color-statusSuccess) 38%, var(--color-line)); }
+.root[data-outcome="lost"] { border-color: color-mix(in srgb, var(--color-statusDanger) 30%, var(--color-line)); }
+.root strong, .root span { display: block; }
+.root span { margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+.mark { display: grid; place-items: center; flex: 0 0 var(--ui-controlLarge); width: var(--ui-controlLarge); height: var(--ui-controlLarge); border-radius: var(--radius-full); }
+.mark svg { width: var(--space-4); height: var(--space-4); }
+[data-outcome="won"] .mark { color: var(--color-statusSuccess); background: color-mix(in srgb, var(--color-statusSuccess) 14%, transparent); }
+[data-outcome="lost"] .mark { color: var(--color-statusDanger); background: color-mix(in srgb, var(--color-statusDanger) 12%, transparent); }
+.confetti { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+.confetti span { position: absolute; top: -var(--space-2); width: var(--space-2); height: var(--space-1); border-radius: var(--radius-sm); background: var(--color-statusSuccess); animation: confettiFall var(--motion-duration-moderate) var(--motion-ease-out) both; }
+.confetti span:nth-child(3n) { background: var(--color-accent); }
+.confetti span:nth-child(4n) { background: var(--color-statusWarning); }
+.confetti span:nth-child(1) { left: 8%; }
+.confetti span:nth-child(2) { left: 17%; }
+.confetti span:nth-child(3) { left: 29%; }
+.confetti span:nth-child(4) { left: 42%; }
+.confetti span:nth-child(5) { left: 53%; }
+.confetti span:nth-child(6) { left: 64%; }
+.confetti span:nth-child(7) { left: 75%; }
+.confetti span:nth-child(8) { left: 84%; }
+.confetti span:nth-child(9) { left: 22%; }
+.confetti span:nth-child(10) { left: 38%; }
+.confetti span:nth-child(11) { left: 69%; }
+.confetti span:nth-child(12) { left: 91%; }
+@keyframes outcomeIn { from { opacity: 0; transform: translate(-50%, calc(var(--space-2) * -1)); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes confettiFall { to { opacity: 0; transform: translateY(var(--space-16)) rotate(180deg); } }
+@media (prefers-reduced-motion: reduce) { .root { animation: none; } .confetti { display: none; } }

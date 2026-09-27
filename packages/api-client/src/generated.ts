@@ -1589,6 +1589,8 @@ export interface CreatePipelineDto {
      */
   name: string;
   isDefault?: boolean;
+  /** @minLength 1 */
+  entryStageId?: string;
 }
 
 export type CreatePipelineResponseDtoPipeline = {
@@ -1665,6 +1667,7 @@ export type CreateStageResponseDtoStage = {
      * @maximum 9007199254740991
      */
   sortOrder: number;
+  isEntry?: boolean;
   /**
      * @minimum 0
      * @maximum 100
@@ -1718,6 +1721,7 @@ export type RenameStageResponseDtoStage = {
      * @maximum 9007199254740991
      */
   sortOrder: number;
+  isEntry?: boolean;
   /**
      * @minimum 0
      * @maximum 100
@@ -1767,6 +1771,7 @@ export type ArchiveStageResponseDtoStage = {
      * @maximum 9007199254740991
      */
   sortOrder: number;
+  isEntry?: boolean;
   /**
      * @minimum 0
      * @maximum 100
@@ -1822,6 +1827,7 @@ export type ReorderStagesResponseDtoStagesItem = {
      * @maximum 9007199254740991
      */
   sortOrder: number;
+  isEntry?: boolean;
   /**
      * @minimum 0
      * @maximum 100
@@ -1881,6 +1887,7 @@ export type ConfigureStageResponseDtoStage = {
      * @maximum 9007199254740991
      */
   sortOrder: number;
+  isEntry?: boolean;
   /**
      * @minimum 0
      * @maximum 100
@@ -1939,6 +1946,7 @@ export interface EditDealDto {
   amount?: number;
   expectedCloseDate?: string | null;
   customFields?: EditDealDtoCustomFields;
+  isArchived?: boolean;
 }
 
 export type EditDealResponseDtoDealStatus = typeof EditDealResponseDtoDealStatus[keyof typeof EditDealResponseDtoDealStatus];
@@ -1998,6 +2006,7 @@ export type EditDealResponseDtoDeal = {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  isArchived?: boolean;
 };
 
 export interface EditDealResponseDto {
@@ -2060,6 +2069,7 @@ export interface CreateDealDto {
      */
   lossReason?: string | null;
   customFields?: CreateDealDtoCustomFields;
+  isArchived?: boolean;
 }
 
 export type CreateDealResponseDtoDealStatus = typeof CreateDealResponseDtoDealStatus[keyof typeof CreateDealResponseDtoDealStatus];
@@ -2119,6 +2129,7 @@ export type CreateDealResponseDtoDeal = {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  isArchived?: boolean;
 };
 
 export interface CreateDealResponseDto {
@@ -2131,6 +2142,8 @@ export interface CreateDealResponseDto {
 }
 
 export interface MoveDealDto {
+  /** @minLength 1 */
+  pipelineId?: string;
   /** @minLength 1 */
   stageId: string;
 }
@@ -2192,6 +2205,7 @@ export type MoveDealResponseDtoDeal = {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  isArchived?: boolean;
 };
 
 export interface MoveDealResponseDto {
@@ -2277,6 +2291,7 @@ export type CloseDealResponseDtoDeal = {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  isArchived?: boolean;
 };
 
 export interface CloseDealResponseDto {
@@ -2345,6 +2360,7 @@ export type ReopenDealResponseDtoDeal = {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  isArchived?: boolean;
 };
 
 export interface ReopenDealResponseDto {

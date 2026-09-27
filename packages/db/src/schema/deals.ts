@@ -1,4 +1,4 @@
-import { bigint, check, index, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -42,6 +42,7 @@ export const deals = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    isArchived: boolean("is_archived").notNull().default(false),
   },
   (t) => [
     check("deals_amount_check", sql`${t.amount} >= 0`),

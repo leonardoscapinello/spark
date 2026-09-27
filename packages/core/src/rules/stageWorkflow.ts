@@ -29,8 +29,8 @@ export function stageMoveCooldownRemaining(stageEnteredAt: string, now: Date): n
  * dentro faria aquele negócio sumir de todo quadro que lista só etapas
  * ativas — não é "esconder a etapa", é "esconder o negócio por engano".
  */
-export function canArchiveStage(openDealCount: number): boolean {
-  return openDealCount === 0;
+export function canArchiveStage(openDealCount: number, isEntry = false): boolean {
+  return !isEntry && openDealCount === 0;
 }
 
 /**

@@ -18,6 +18,7 @@ export function optimisticStage(input: Omit<CreateStageInput, "id">, orgId: OrgI
     pipelineId: input.pipelineId,
     name: input.name,
     sortOrder: input.sortOrder,
+    isEntry: false,
     probability: STAGE_PROBABILITY_DEFAULT,
     slaMinutes: input.slaMinutes ?? null,
     allowWon: input.allowWon ?? true,

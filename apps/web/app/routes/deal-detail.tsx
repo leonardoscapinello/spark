@@ -41,7 +41,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -532,6 +532,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
       draft.status = status;
       draft.lossReason = status === "lost" ? reason?.trim() || null : null;
     }));
+    celebrateDealOutcome({ status, name: deal.name });
     notify({ title: status === "won" ? "Negócio ganho" : "Negócio perdido", tone: status === "won" ? "success" : "warning" });
   }
 
