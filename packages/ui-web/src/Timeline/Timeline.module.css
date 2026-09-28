@@ -49,3 +49,8 @@
 .root[data-density="compact"] .changes dd > span:first-child { text-decoration: none; }
 .root[data-density="compact"] .changes dd strong { font-weight: var(--typography-weight-medium); }
 @media (max-width: 640px) { .heading { flex-wrap: wrap; gap: var(--space-1); } .metadata { margin-inline-start: auto; } }
+
+.group { font-size: var(--typography-size-xs); }
+.group summary { color: var(--color-inkMuted); cursor: pointer; padding-block: var(--space-1); }
+.groupEntry { padding: var(--space-2) var(--space-3); border-left: var(--ui-hairline) solid var(--color-lineStrong); display: grid; gap: var(--space-1); }
+.groupEntry strong { font-size: inherit; }

@@ -112,6 +112,8 @@ export function toTimelineItem(event: Event, context: TimelinePresentationContex
         ? "positive"
         : event.type === "deal.lost"
           ? "negative"
+          : event.type === "deal.stage_changed" || event.type === "deal.created" || event.type === "activity.created" || event.type === "note.created"
+            ? "accent"
           : event.type.endsWith("created")
             ? "accent"
             : "neutral",
@@ -201,4 +203,28 @@ function formatAuditValue(field: string, value: unknown, context: TimelinePresen
 function stringData(event: Event, key: string): string | undefined {
   const value = event.data[key];
   return typeof value === "string" && value ? value : undefined;
+}
+
+/** Agrupamento somente visual: o log persistido permanece evento a evento. */
+export function groupTimelineEvents(events: readonly Event[], context: TimelinePresentationContext = {}): TimelineItem[] {
+  const groups: Event[][] = [];
+  for (const event of events) {
+    const group = groups.at(-1);
+    const first = group?.[0];
+    const elapsed = first ? new Date(first.occurredAt).getTime() - new Date(event.occurredAt).getTime() : Infinity;
+    if (group && first && event.type === "deal.updated" && first.type === event.type &&
+      first.actorUserId === event.actorUserId && first.dealId === event.dealId &&
+      elapsed >= 0 && elapsed <= 5 * 60 * 1000 &&
+      new Date(first.occurredAt).toDateString() === new Date(event.occurredAt).toDateString()) group.push(event);
+    else groups.push([event]);
+  }
+  return groups.flatMap((group) => {
+    const first = group[0];
+    if (!first) return [];
+    const item = toTimelineItem(first, context);
+    if (group.length === 1) return [item];
+    const entries = group.map((event) => toTimelineItem(event, context));
+    const labels = [...new Set(entries.flatMap((entry) => entry.changes?.map((change) => change.label) ?? []))];
+    return [{ ...item, title: "Dados do negócio atualizados", description: labels.join(" · "), changes: [], entries }];
+  });
 }

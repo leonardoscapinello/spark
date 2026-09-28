@@ -62,7 +62,7 @@ import { getSession } from "../lib/auth.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getDealEventsCollection } from "../lib/events-collection.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
-import { toTimelineItem } from "../lib/event-presentation";
+import { groupTimelineEvents } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
 import { useDealPresence } from "../lib/deal-presence.client";
@@ -327,7 +327,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
   const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
   const doneActivities = useMemo(() => orderedActivities.filter((activity) => activity.completed).reverse(), [orderedActivities]);
-  const timelineItems = useMemo(() => events.map((event) => toTimelineItem(event, { users, stages, contacts, companies, customFields })), [companies, contacts, customFields, events, stages, users]);
+  const timelineItems = useMemo(() => groupTimelineEvents(events, { users, stages, contacts, companies, customFields }), [companies, contacts, customFields, events, stages, users]);
   const scheduledAt = activityStartDate && activityStartTime ? `${activityStartDate}T${activityStartTime}` : "";
   const activityEndsAtValue = activityEndDate && activityEndTime ? `${activityEndDate}T${activityEndTime}` : "";
   const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
@@ -713,7 +713,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
                   <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong><time>{formatDateTime(activity.scheduledAt)}</time></div>
                   {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Reabrir</Button>}
                 </li>)}</ul> }] : []),
-            { value: "mudancas", label: "Mudanças", content: <Timeline items={events.filter((item) => item.type !== "activity.created").map((event) => toTimelineItem(event, { users, stages, contacts, companies, customFields }))} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
+            { value: "mudancas", label: "Mudanças", content: <Timeline items={groupTimelineEvents(events.filter((item) => item.type !== "activity.created"), { users, stages, contacts, companies, customFields })} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
           ]} /></div></div>
         </section>
   </>;

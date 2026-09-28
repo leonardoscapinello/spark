@@ -23,6 +23,7 @@ export interface TimelineItem {
   tone?: "neutral" | "positive" | "negative" | "accent";
   actor?: TimelineActor;
   changes?: readonly TimelineChange[];
+  entries?: readonly TimelineItem[];
 }
 
 export function Timeline({ items, emptyText = "Nenhum evento registrado.", initialCount, pageSize = 25, density = "default", groupByDay = false }: { items: readonly TimelineItem[]; emptyText?: string; initialCount?: number; pageSize?: number; density?: "default" | "compact"; groupByDay?: boolean }) {
@@ -50,6 +51,14 @@ export function Timeline({ items, emptyText = "Nenhum evento registrado.", initi
         <div className={styles.content}>
           <div className={styles.heading}><strong>{item.title}</strong><span className={styles.metadata}><time dateTime={item.timestamp} title={formatTimestamp(item.timestamp)}>{groupByDay ? new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(item.timestamp)) : formatTimestamp(item.timestamp)}</time>{item.actor && <Actor actor={item.actor} />}</span></div>
           {item.description && <div className={styles.description}>{item.description}</div>}
+          {item.entries && <details className={styles.group}>
+            <summary>{item.entries.length} alterações próximas · ver detalhes</summary>
+            {item.entries.map((entry) => <div className={styles.groupEntry} key={entry.id}>
+              <time dateTime={entry.timestamp} title={formatTimestamp(entry.timestamp)}>{new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(entry.timestamp))}</time>
+              {entry.changes?.map((change, i) => <div key={i}><span>{change.label}: </span>{change.before} → <strong>{change.after}</strong></div>)}
+            </div>)}
+          </details>}
+
           {item.changes && item.changes.length > 0 && <dl className={styles.changes}>{item.changes.map((change, changeIndex) => <div key={`${change.label}:${changeIndex}`}>
             <dt>{change.label}</dt><dd><span>{change.before}</span><span aria-hidden="true">→</span><strong>{change.after}</strong></dd>
           </div>)}</dl>}
@@ -67,7 +76,7 @@ function Actor({ actor }: { actor: TimelineActor }) {
 }
 
 function formatTimestamp(value: string): string {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "medium" }).format(new Date(value));
 }
 
 function dayKey(value: string): string {
