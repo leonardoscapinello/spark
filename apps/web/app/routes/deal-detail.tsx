@@ -658,7 +658,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     return <PageFrame className={styles.page}><BackLink render={<Link to="/deals" />}>Negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Negócio não encontrado.</p>}</PageFrame>;
   }
 
-  const historyContent = <>
+  const composerContent = <div className={styles.workspaceComposer}>
         <Composer
           label="Registrar no negócio"
           value={composerTab}
@@ -677,7 +677,9 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
                 </div>}
               </div>}
         </Composer>
+  </div>;
 
+  const historyContent = <>
         {canReadActivities && focusActivities.length === 0 && <div className={styles.focusEmpty}><Icon name="calendar" /><span>Nenhuma atividade agendada</span>{canWriteActivities && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openActivityModal()}>Agendar</Button>}</div>}
         {canReadActivities && focusActivities.length > 0 && <section className={`${styles.bloco} ${styles.focusBloco}`} aria-labelledby="deal-foco">
           <header className={styles.blocoCabecalho}>
@@ -756,7 +758,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
                     <div data-total="true"><dt>Valor do negócio</dt><dd>{formatBRL(itemsSummary.net)}</dd></div>
                   </dl>
                 </>}
-            {canWrite && <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemEditor()}>Adicionar produto</Button>}
+            {canWrite && <Button variant="secondary" shape="rounded" icon={<Icon name="plus" />} onClick={() => openItemEditor()}>Adicionar produto</Button>}
           </div>;
 
   const summaryFields = <div className={styles.details}>
@@ -900,15 +902,15 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
           { value: "pessoas", label: "Vínculos", content: relatedContent },
         ]} />
       </aside>
-      <section className={styles.quickPhase}>{quickPanel === "commercial" ? commercialPanel : <>{phaseContent}<div className={`${styles.pageActivity} ${styles.quickActivity}`}>{historyContent}</div></>}</section>
+      <section className={styles.quickPhase}>{composerContent}{quickPanel === "commercial" ? commercialPanel : <>{phaseContent}<div className={`${styles.pageActivity} ${styles.quickActivity}`}>{historyContent}</div></>}</section>
       <aside className={styles.quickActions}>{moveActions}</aside>
     </div> : <div className={styles.contentGrid}>
       <aside className={styles.painel}>{valueContent}{phaseContent}{summaryContent}<div className={styles.tagSection}>{tagsContent}</div></aside>
-      <section className={styles.fluxo}><Tabs label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
+      <section className={styles.fluxo}>{composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
         { value: "atividade", label: "Atividades e histórico", content: <div className={styles.pageActivity}>{historyContent}</div> },
         { value: "comercial", label: "Itens e valores", content: <div className={styles.commercialPage}><h2>Itens do negócio</h2><p>Produtos, serviços e composição do valor negociado.</p>{productsContent}</div> },
         { value: "pessoas", label: "Pessoas e empresa", content: relatedContent },
-      ]} /></section>
+      ]} /></div></section>
     </div>}
 
     <ActionModal

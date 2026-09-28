@@ -120,7 +120,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
 
   if (!company) return <PageFrame>{!embedded && <BackLink render={<Link to="/companies" />}>Empresas</BackLink>}{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</PageFrame>;
 
-  return <PageFrame>
+  return <PageFrame className={embedded ? styles.embedded : undefined}>
     <RecordPageHeader back={embedded ? null : <BackLink render={<Link to="/companies" />}>Empresas</BackLink>} icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Pessoas", value: linkedContacts.length, icon: "user" as const }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length, icon: "briefcase" as const }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)), icon: "chart" as const }] : [])]} />
 
     <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <Card title="Editar empresa"><form className={styles.editForm} onSubmit={saveCompany}>
@@ -148,7 +148,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
     </div>}
 
     <div className={`${styles.relationCard} ${styles.history}`}><Card title="Histórico" description="Mudanças registradas nesta empresa e em seus vínculos comerciais.">
-      <Timeline items={events.map((event) => toTimelineItem(event, { users, contacts, companies }))} emptyText="As próximas alterações desta empresa aparecerão aqui." />
+      <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={events.map((event) => toTimelineItem(event, { users, contacts, companies }))} emptyText="As próximas alterações desta empresa aparecerão aqui." />
     </Card></div>
     </div>
 

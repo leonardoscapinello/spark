@@ -124,3 +124,6 @@
   gap: var(--space-1);
   flex-wrap: wrap;
 }
+
+.embeddedGrid { display: flex; flex-direction: column; gap: var(--space-5); }
+.embeddedGrid > div { width: 100%; min-width: 0; }

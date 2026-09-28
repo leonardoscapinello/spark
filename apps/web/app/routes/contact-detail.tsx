@@ -281,7 +281,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
   return (
     <div className={layout.page}>
       <RecordPageHeader back={embedded ? null : <BackLink render={<Link to="/" />}>Pessoas</BackLink>} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={(canWrite && !isEditing) || canWriteInbox ? <>{canWrite && !isEditing && <><Button variant="secondary" onClick={startEditing}>Editar pessoa</Button><MergePerson contactId={contactId} name={data.name} /></>}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star" }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada", icon: "building" }]} />
-      <div className={layout.contentGrid}>
+      <div className={[layout.contentGrid, embedded ? styles.embeddedGrid : ""].join(" ")}>
         <div className={layout.profileColumn}>
       <h2 className={layout.columnTitle}>Detalhes</h2>
       {isEditing ? (
@@ -378,7 +378,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
       </section>}
       <section className={styles.atividades}>
         <h2 className={styles.subtitulo}>Histórico</h2>
-        <Timeline items={events.map((event) => toTimelineItem(event, { users, companies, customFields }))} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
+        <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={events.map((event) => toTimelineItem(event, { users, companies, customFields }))} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
       </section>
 
       {canReadActivities && <section className={styles.atividades}>

@@ -40,3 +40,6 @@
   .profileColumn, .history, .relations { padding-inline: 0; }
   .relations { grid-template-columns: minmax(0, 1fr); }
 }
+
+.embedded .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "relations" "history"; }
+.embedded .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history"; }
