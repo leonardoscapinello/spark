@@ -11,6 +11,7 @@ export * from "./Icon/Icon.js";
 export * from "./PasswordInput/PasswordInput.js";
 export * from "./Form/Form.js";
 export * from "./Tabs/Tabs.js";
+export * from "./TagPicker/TagPicker.js";
 export * from "./Accordion/Accordion.js";
 export * from "./Sidebar/Sidebar.js";
 export * from "./Menu/Menu.js";
@@ -41,6 +42,7 @@ export { DealOutcomeCelebration, celebrateDealOutcome, type DealOutcome } from "
 export { CompanyRegistrationCard, type CompanyRegistrationCardProps } from "./CompanyRegistration/CompanyRegistration.js";
 export { CompanyRegistrationDetails, type CompanyRegistrationDetailsProps } from "./CompanyRegistration/CompanyRegistrationDetails.js";
 export { DocumentInput, MaskedInput, MoneyInput, PercentInput, PhoneInput, type MaskedInputProps, type PhoneCountry, type PhoneDraft } from "./MaskedInput/MaskedInput.js";
+export { ColorPicker, CRM_COLOR_OPTIONS, type CrmColorOption } from "./ColorPicker/ColorPicker.js";
 
 export { Panel, PanelTrigger, PanelClose, PanelContent, type PanelSide, type PanelContentProps } from "./Panel/Panel.js";
 

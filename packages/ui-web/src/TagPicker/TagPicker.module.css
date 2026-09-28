@@ -1,0 +1,9 @@
+.trigger { justify-content: space-between; width: 100%; }
+.popup { width: min(22rem, calc(100vw - var(--space-8))); }
+.content { gap: var(--space-3); }
+.options { display: grid; gap: var(--space-1); max-height: min(18rem, 45vh); overflow: auto; }
+.option { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-2); min-height: var(--ui-controlMedium); padding-inline: var(--space-2); text-align: start; }
+.option > svg { margin-inline-start: auto; color: var(--color-accent); }
+.swatch { flex: 0 0 var(--space-3); width: var(--space-3); height: var(--space-3); border: var(--ui-hairline) solid var(--color-lineStrong); border-radius: var(--radius-full); }
+.empty { padding: var(--space-3) var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+.create { justify-content: flex-start; }

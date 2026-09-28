@@ -12,6 +12,7 @@
 .label[data-color="red"] { --label-ink: var(--color-statusDanger); }
 .label[data-color="amber"] { --label-ink: var(--color-statusWarning); }
 .label[data-color="purple"] { --label-ink: color-mix(in srgb, var(--color-accent), var(--color-statusDanger)); }
+.label[data-color^="#"] { --label-ink: var(--crm-color); }
 @media (max-width: 1000px) { .workspace { grid-template-columns: repeat(2,minmax(0,1fr)); } .actions { grid-column: 1 / -1; } }
 @media (max-width: 640px) { .workspace { grid-template-columns: minmax(0,1fr); } .current { border: 0; padding: 0; } }
 
@@ -20,14 +21,15 @@
 :is(.phase, .destination)[data-color="red"] { --phase-color: var(--color-statusDanger); }
 :is(.phase, .destination)[data-color="amber"] { --phase-color: var(--color-statusWarning); }
 :is(.phase, .destination)[data-color="purple"] { --phase-color: color-mix(in srgb, var(--color-accent), var(--color-statusDanger)); }
+:is(.phase, .destination)[data-color^="#"] { --phase-color: var(--crm-color); }
 .phase { min-width: 0; }
-.phaseHeader { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-5); background: var(--color-surface); border-bottom: var(--ui-hairline) solid color-mix(in srgb, var(--phase-color) 16%, transparent); }
+.phaseHeader { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4) var(--space-5) var(--space-2); background: var(--color-surface); }
 .phaseHeader > div { flex: 1; min-width: 0; }
 .phaseHeader small { color: var(--phase-color); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); }
-.phaseHeader h2 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); overflow-wrap: anywhere; }
+.phaseHeader h2 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); overflow-wrap: anywhere; }
 .phaseHeader p { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 
-.phaseBody { display: grid; gap: var(--space-5); padding: var(--space-5); }
+.phaseBody { display: grid; gap: var(--space-3); padding: var(--space-2) var(--space-5) var(--space-4); }
 .stageActions { display: flex; flex-direction: column; gap: var(--space-4); }
 .stageActions h3 { margin: 0; font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
 .stageActions header p, .actionEmpty { margin: var(--space-1) 0 0; font-size: var(--typography-size-compact); color: var(--color-inkMuted); }

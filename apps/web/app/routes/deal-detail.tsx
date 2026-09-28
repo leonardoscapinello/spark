@@ -43,7 +43,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, CrmLabel, DealStageActions, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, CrmLabel, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -77,13 +77,13 @@ import styles from "./deal-detail.module.css";
 
 const ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPES.map((value) => ({ value, label: ACTIVITY_TYPE_LABELS[value] }));
 const ACTIVITY_COMPOSER_TABS: readonly { id: ActivityType | "note"; label: string; icon: IconName }[] = [
+  { id: "note", label: "Nota", icon: "file" },
   { id: "call", label: "Ligação", icon: "phone" },
   { id: "meeting", label: "Reunião", icon: "team" },
   { id: "task", label: "Tarefa", icon: "check" },
   { id: "deadline", label: "Prazo", icon: "pushpin" },
   { id: "email", label: "E-mail", icon: "mail" },
   { id: "lunch", label: "Almoço", icon: "calendar" },
-  { id: "note", label: "Nota", icon: "file" },
 ];
 const PRIORITIES = [{ value: "none", label: "Sem prioridade" }, { value: "high", label: "Alta" }, { value: "medium", label: "Média" }, { value: "low", label: "Baixa" }];
 const AVAILABILITIES = [{ value: "free", label: "Livre — permite sobreposição" }, { value: "busy", label: "Ocupado — reserva o horário" }];
@@ -145,7 +145,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const { data: transitions = [] } = useLiveQuery({ query: (q) => q.from({ transitions: getStageTransitionsCollection() }) });
   const dealsCollection = getDetailDealsCollection(dealIdFactory.from(params.dealId));
   const [itemModalOpen, setItemModalOpen] = useState(false);
-  const [productsOpen, setProductsOpen] = useState(false);
+  const [quickPanel, setQuickPanel] = useState<"stage" | "commercial">("stage");
+  const [embeddedItemEditorOpen, setEmbeddedItemEditorOpen] = useState(false);
   const [pageTab, setPageTab] = useState("atividade");
   const [openSections, setOpenSections] = useState<string[]>(["resumo", "detalhes"]);
   const stagesCollection = getStagesCollection();
@@ -190,7 +191,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   }, [canReadActivities]);
   const canReadCatalog = session?.capabilities.includes("catalog:read") ?? false;
   const { data: dealItems = [] } = useLiveQuery({ query: (q) => q.from({ items: getDealProductsCollection() }).where(({ items: item }) => eq(item.dealId, params.dealId)).orderBy(({ items: item }) => item.sortOrder, "asc") });
-  const { data: catalog = [], isLoading: catalogLoading } = useLiveQuery({ query: (q) => canReadCatalog && itemModalOpen ? q.from({ products: getProductsCollection() }).orderBy(({ products: product }) => product.name, "asc") : undefined }, [canReadCatalog, itemModalOpen]);
+  const { data: catalog = [], isLoading: catalogLoading } = useLiveQuery({ query: (q) => canReadCatalog && (itemModalOpen || embeddedItemEditorOpen) ? q.from({ products: getProductsCollection() }).orderBy(({ products: product }) => product.name, "asc") : undefined }, [canReadCatalog, embeddedItemEditorOpen, itemModalOpen]);
   const { data: dealNotes = [] } = useLiveQuery({ query: (q) => q.from({ notes: getNotesCollection() }).where(({ notes: note }) => eq(note.dealId, params.dealId)).orderBy(({ notes: note }) => note.createdAt, "desc") });
   const { data: fieldRules = [] } = useLiveQuery({ query: (q) => q.from({ rules: getStageFieldRulesCollection() }) });
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: field }) => eq(field.entityType, "deal")).orderBy(({ fields: field }) => field.label, "asc") });
@@ -213,7 +214,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const [activityAvailability, setActivityAvailability] = useState<ActivityAvailability>("free");
   const [activityOwnerId, setActivityOwnerId] = useState("");
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
-  const [composerTab, setComposerTab] = useState<ActivityType | "note">("call");
+  const [composerTab, setComposerTab] = useState<ActivityType | "note">("note");
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -424,7 +425,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     }
   }
 
-  function openItemModal(item?: DealProduct) {
+  function openItemEditor(item?: DealProduct) {
     if (item) {
       setEditingItemId(item.id);
       setItemProductId(item.productId ?? "");
@@ -436,14 +437,15 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     } else {
       setEditingItemId(null); setItemProductId(""); setItemName(""); setItemQuantity("1"); setItemUnitAmount(null); setItemDiscount(0); setItemTax(0);
     }
-    setItemModalOpen(true);
+    if (embedded) setEmbeddedItemEditorOpen(true);
+    else setItemModalOpen(true);
   }
 
   /** Escolher um produto do catálogo copia nome e preço — dali em diante o item é do negócio. */
   function pickCatalogProduct(productId: string | null) {
     setItemProductId(productId ?? "");
     const product = catalog.find((item) => item.id === productId);
-    if (product) { setItemName(product.name); setItemUnitAmount(product.price); }
+    if (product) { setItemName(product.name); setItemUnitAmount(syncedAmount(product.price)); }
   }
 
   async function saveItem() {
@@ -476,6 +478,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       notify({ title: "Item adicionado", description: item.name, tone: "success" });
     }
     setEditingItemId(null);
+    setEmbeddedItemEditorOpen(false);
   }
 
   async function removeItem(item: DealProduct) {
@@ -664,10 +667,10 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         >
           {composerTab !== "note"
             ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal(undefined, composerTab)}>
-                {canWriteActivities ? `Clique aqui para agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}…` : "Você não pode agendar atividades."}
+                {canWriteActivities ? `Agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}…` : "Você não pode agendar atividades."}
               </ComposerPrompt>
             : <div className={styles.compositorNota}>
-                <Textarea aria-label="Nova nota" rows={noteDraft ? 4 : 2} value={noteDraft} placeholder="Clique aqui para escrever uma nota…" onChange={(event) => setNoteDraft(event.target.value)} />
+                <Textarea aria-label="Nova nota" disabled={!canWrite || savingNote} rows={noteDraft ? 3 : 2} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={(event) => setNoteDraft(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
                 {noteDraft.trim() && <div className={styles.compositorAcoes}>
                   <Button size="sm" loading={savingNote} onClick={() => void saveNote()}>Salvar nota</Button>
                   <Button size="sm" variant="ghost" onClick={() => setNoteDraft("")}>Cancelar</Button>
@@ -675,9 +678,10 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
               </div>}
         </Composer>
 
-        {canReadActivities && <section className={styles.bloco} aria-labelledby="deal-foco">
+        {canReadActivities && focusActivities.length === 0 && <div className={styles.focusEmpty}><Icon name="calendar" /><span>Nenhuma atividade agendada</span>{canWriteActivities && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openActivityModal()}>Agendar</Button>}</div>}
+        {canReadActivities && focusActivities.length > 0 && <section className={`${styles.bloco} ${styles.focusBloco}`} aria-labelledby="deal-foco">
           <header className={styles.blocoCabecalho}>
-            <h2 id="deal-foco" className={styles.blocoTitulo}>Foco</h2>
+            <h2 id="deal-foco" className={styles.blocoTitulo}>Próximas atividades</h2>
             <span className={styles.blocoContagem}>{focusActivities.length === 0 ? "nada pendente" : `${focusActivities.length} ${focusActivities.length === 1 ? "pendente" : "pendentes"}`}</span>
           </header>
           <div className={styles.blocoCorpo}>{focusActivities.length === 0
@@ -691,13 +695,13 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
               </li>)}</ul>}</div>
         </section>}
 
-        <section className={styles.bloco} aria-labelledby="deal-historico">
+        <section className={`${styles.bloco} ${styles.historyBloco}`} aria-labelledby="deal-historico">
           <header className={styles.blocoCabecalho}>
             <h2 id="deal-historico" className={styles.blocoTitulo}>Histórico</h2>
-            <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(true)}>Ver histórico completo</Button>
+            <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(true)}>Expandir histórico <Icon name="right" /></Button>
           </header>
-          <div className={styles.blocoCorpo}><Tabs label="Filtrar o histórico" defaultValue="tudo" items={[
-            { value: "tudo", label: "Tudo", content: <Timeline items={timelineItems.slice(0, 10)} emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
+          <div className={`${styles.blocoCorpo} ${styles.historyBody}`}><div className={styles.historyTabs}><Tabs variant="segmented" label="Filtrar o histórico" defaultValue="tudo" items={[
+            { value: "tudo", label: "Tudo", content: <Timeline items={timelineItems} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
             { value: "notas", label: `Notas (${dealNotes.length})`, content: dealNotes.length === 0
               ? <p className={styles.empty}>Nenhuma nota ainda. Use o campo acima para registrar o que foi conversado.</p>
               : <ul className={styles.notaList}>{dealNotes.map((note) => <li key={note.id}><NoteCard note={note} authorName={users.find((user) => user.id === note.authorId)?.name} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} /></li>)}</ul> },
@@ -707,10 +711,23 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
                   <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong><time>{formatDateTime(activity.scheduledAt)}</time></div>
                   {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Reabrir</Button>}
                 </li>)}</ul> }] : []),
-            { value: "mudancas", label: "Mudanças", content: <Timeline items={events.filter((item) => item.type !== "activity.created").map((event) => toTimelineItem(event, { users, stages, contacts, companies, customFields })).slice(0, 10)} emptyText="Nenhuma mudança registrada." /> },
-          ]} /></div>
+            { value: "mudancas", label: "Mudanças", content: <Timeline items={events.filter((item) => item.type !== "activity.created").map((event) => toTimelineItem(event, { users, stages, contacts, companies, customFields }))} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
+          ]} /></div></div>
         </section>
   </>;
+
+  const itemEditorContent = <div className={styles.modalFields}>
+    {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="dropdown" placeholder={catalogLoading ? "Carregando catálogo…" : "Escolher um produto cadastrado (opcional)"} options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(item.price)}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
+    <Field><Label>Nome do item</Label><Input value={itemName} onChange={(event) => setItemName(event.target.value)} placeholder="Escreva um item avulso ou escolha do catálogo" /></Field>
+    <div className={styles.modalLinha}>
+      <Field><Label>Quantidade</Label><Input inputMode="decimal" value={itemQuantity} onChange={(event) => setItemQuantity(event.target.value)} placeholder="1" /></Field>
+      <Field><Label>Preço unitário</Label><MoneyInput label="Preço unitário" value={itemUnitAmount} onValueChange={setItemUnitAmount} /></Field>
+    </div>
+    <div className={styles.modalLinha}>
+      <Field><Label>Desconto</Label><PercentInput label="Desconto do item" value={itemDiscount} onValueChange={setItemDiscount} /></Field>
+      <Field><Label>Imposto</Label><PercentInput label="Imposto do item" value={itemTax} onValueChange={setItemTax} /></Field>
+    </div>
+  </div>;
 
   const productsContent = <div className={styles.itens}>
             {dealItems.length === 0
@@ -726,7 +743,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
                       <div className={styles.itemValor}>
                         <strong>{formatBRL(totals.net)}</strong>
                         {canWrite && <span className={styles.activityActions}>
-                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="file" />} aria-label={`Editar ${item.name}`} onClick={() => openItemModal(item)} />
+                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="file" />} aria-label={`Editar ${item.name}`} onClick={() => openItemEditor(item)} />
                           <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} onClick={() => void removeItem(item)} />
                         </span>}
                       </div>
@@ -739,7 +756,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
                     <div data-total="true"><dt>Valor do negócio</dt><dd>{formatBRL(itemsSummary.net)}</dd></div>
                   </dl>
                 </>}
-            {canWrite && <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemModal()}>Adicionar produto</Button>}
+            {canWrite && <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemEditor()}>Adicionar produto</Button>}
           </div>;
 
   const summaryFields = <div className={styles.details}>
@@ -758,20 +775,28 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
             </InlineField>
             {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           </div>;
+  const detailsContent = <div className={styles.details}>
+    {customFields.filter((field) => !field.archivedAt).map((field) => <EnrichedCustomFieldValue
+      options={fieldOptions.get(field.id) ?? []}
+      key={field.id}
+      field={field}
+      value={customValues[field.key]}
+      disabled={!canWrite}
+      onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
+      onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
+    />)}
+    {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
+  </div>;
+  const phaseContent = stage && <div className={styles.phaseFields}><PhaseFields stage={stage} stages={pipelineStages} values={customValues} disabled={!canWrite} onOpenCommercial={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }} renderBuiltIn={(key) => {
+          if (key === "contactId") return <RecordSelect label="Pessoa nesta etapa" disabled={!canWrite || !canReadContacts} options={contactOptions} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onValueChange={(next) => { void saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"); }} />;
+          if (key === "companyId") return <RecordSelect label="Empresa nesta etapa" kind="company" disabled={!canWrite || !canReadCompanies} options={companyOptions} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onValueChange={(next) => { void saveField({ companyId: next ? companyIdFactory.from(next.value) : null }, "Empresa"); }} />;
+          if (key === "ownerId") return <Select label="Responsável nesta etapa" disabled={!canWrite} options={users.filter((u) => !u.deactivatedAt).map(userSelectOption)} value={deal.ownerId} onValueChange={(value) => { void saveField({ ownerId: value ? userIdFactory.from(value) : null }, "Responsável"); }} />;
+          if (key === "expectedCloseDate") return <DatePicker label="Previsão nesta etapa" disabled={!canWrite} value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(value) => { void saveField({ expectedCloseDate: value ? new Date(`${value}T12:00:00`).toISOString() : null }, "Previsão"); }} />;
+          return null;
+        }} onSave={(key, value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...customValues, [key]: value }; }))} /></div>;
   const summaryContent = <Accordion value={openSections} onValueChange={setOpenSections} items={[
           { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: summaryFields },
-          ...(!embedded ? [{ value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: <div className={styles.details}>
-            {customFields.filter((field) => !field.archivedAt).map((field) => <EnrichedCustomFieldValue
-              options={fieldOptions.get(field.id) ?? []}
-              key={field.id}
-              field={field}
-              value={customValues[field.key]}
-              disabled={!canWrite}
-              onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
-              onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
-            />)}
-            {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
-          </div> }] : []),
+          { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: detailsContent },
           /* Pessoa e Empresa não têm seção própria: o resumo já mostra as duas,
            * e o botão ao lado abre a ficha inteira por cima. Repetir o nome
            * numa seção logo abaixo era ocupar o painel com o que já estava à
@@ -785,19 +810,22 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         ]} />;
   const relatedContent = <div className={styles.relatedRecords}><RelatedRecords contactId={deal.contactId} companyId={deal.companyId} disabled={!canWrite} onContact={(person) => { void saveField({ contactId: person?.id ?? null }, "Pessoa"); }} onCompany={(company) => { void saveField({ companyId: company?.id ?? null }, "Empresa"); }} /></div>;
 
-  const phaseContent = stage && <div className={styles.phaseFields}><PhaseFields stage={stage} stages={pipelineStages} values={customValues} disabled={!canWrite} onOpenCommercial={() => { if (embedded) setProductsOpen(true); else setPageTab("comercial"); }} renderBuiltIn={(key) => {
-          if (key === "contactId") return <RecordSelect label="Pessoa nesta etapa" disabled={!canWrite || !canReadContacts} options={contactOptions} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onValueChange={(next) => { void saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"); }} />;
-          if (key === "companyId") return <RecordSelect label="Empresa nesta etapa" kind="company" disabled={!canWrite || !canReadCompanies} options={companyOptions} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onValueChange={(next) => { void saveField({ companyId: next ? companyIdFactory.from(next.value) : null }, "Empresa"); }} />;
-          if (key === "ownerId") return <Select label="Responsável nesta etapa" disabled={!canWrite} options={users.filter((u) => !u.deactivatedAt).map(userSelectOption)} value={deal.ownerId} onValueChange={(value) => { void saveField({ ownerId: value ? userIdFactory.from(value) : null }, "Responsável"); }} />;
-          if (key === "expectedCloseDate") return <DatePicker label="Previsão nesta etapa" disabled={!canWrite} value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(value) => { void saveField({ expectedCloseDate: value ? new Date(`${value}T12:00:00`).toISOString() : null }, "Previsão"); }} />;
-          return null;
-        }} onSave={(key, value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...customValues, [key]: value }; }))} /></div>;
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
-  const valueContent = <div className={styles.dealValue}><span>Valor do negócio</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong><div><CrmLabel color={deal.status === "won" ? "green" : deal.status === "lost" ? "red" : "blue"}>{statusLabel(deal.status)}</CrmLabel><Button variant="ghost" size="sm" shape="rounded" onClick={() => { if (embedded) setProductsOpen(true); else setPageTab("comercial"); }}>Itens e valores <Icon name="right" /></Button></div></div>;
+  const valueContent = <div className={styles.dealValue}><span>Valor do negócio</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong><div><CrmLabel color={deal.status === "won" ? "green" : deal.status === "lost" ? "red" : "blue"}>{statusLabel(deal.status)}</CrmLabel><Button variant="ghost" size="sm" shape="rounded" onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores <Icon name="right" /></Button></div></div>;
   const moveActions = <DealStageActions closed={!isOpen} destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && canMoveBetweenStages(stage, target, transitions)).map((target) => ({ id: target.id, label: target.name, color: target.color, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []} onMove={(id) => void moveDeal(id).catch((cause: unknown) => notify({ title: "Movimento não concluído", description: cause instanceof Error ? cause.message : "Revise os campos da etapa.", tone: "error" }))} onWon={stage && isOpen && canMove && canCloseAtStage(stage, "won") ? () => void closeDeal("won").catch(() => notify({ title: "Não foi possível registrar o ganho", tone: "error" })) : undefined} onLost={stage && isOpen && canMove && canCloseAtStage(stage, "lost") ? () => { setLossReason(""); setLossModalOpen(true); } : undefined} />;
+  const commercialPanel = <div className={styles.quickPanel}>
+    <header className={styles.quickPanelHeader}>
+      {embedded && <Button variant="ghost" size="sm" icon={<Icon name="left" />} iconOnly aria-label={embeddedItemEditorOpen ? "Voltar aos itens" : "Voltar aos campos"} onClick={() => { if (embeddedItemEditorOpen) setEmbeddedItemEditorOpen(false); else setQuickPanel("stage"); }} />}
+      <div><h2>{embeddedItemEditorOpen ? (editingItemId ? "Editar produto" : "Adicionar produto") : "Itens e valores"}</h2><p>{embeddedItemEditorOpen ? "Informe os dados do item comercial." : "Produtos, serviços e composição do valor negociado."}</p></div>
+    </header>
+    {embeddedItemEditorOpen ? <>
+      <div className={styles.quickPanelBody}>{itemEditorContent}</div>
+      <footer className={styles.quickPanelFooter}><Button variant="ghost" onClick={() => setEmbeddedItemEditorOpen(false)}>Cancelar</Button><Button onClick={() => void saveItem().catch((cause: unknown) => notify({ title: "Não foi possível salvar o item", description: cause instanceof Error ? cause.message : "Revise os campos.", tone: "error" }))}>{editingItemId ? "Salvar" : "Adicionar"}</Button></footer>
+    </> : <div className={styles.quickPanelBody}>{productsContent}</div>}
+  </div>;
 
   return <PageFrame className={[styles.page, embedded ? styles.embedded : ""].join(" ")}>
-    {embedded ? <header className={styles.quickHeader}><span className={styles.quickIcon}><Icon name="briefcase" /></span><div><small>{pipeline?.name ?? "Negócio"}</small><InlineEdit label="Título do negócio" value={deal.name} disabled={!canWrite} appearance="title" saveOnBlur onSave={async (draft) => { const next = draft.trim(); if (!next || next.length > 200) throw new Error("Informe um título de até 200 caracteres."); if (next !== deal.name) await saveField({ name: next }, "Título"); }} /></div>{owner && <UserAvatar user={owner} size="small" />}</header> : <PageHeader
+    {embedded ? <header className={styles.quickHeader}><span className={styles.quickIcon}><Icon name="briefcase" /></span><div><small>{pipeline?.name ?? "Negócio"}</small><InlineEdit label="Título do negócio" value={deal.name} disabled={!canWrite} appearance="title" saveOnBlur onSave={async (draft) => { const next = draft.trim(); if (!next || next.length > 200) throw new Error("Informe um título de até 200 caracteres."); if (next !== deal.name) await saveField({ name: next }, "Título"); }} /></div>{owner && <div className={styles.quickOwner}><UserAvatar user={owner} size="small" /><span><small>Responsável</small><strong>{owner.name}</strong></span></div>}</header> : <PageHeader
       back={embedded ? undefined : <BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
       icon="briefcase"
       title={<InlineEdit
@@ -814,14 +842,14 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         }}
       />}
       actions={<div className={styles.headerActions}>
-        <div className={styles.headerPeople}>
+        <div className={styles.headerPeople} aria-label="Equipe do negócio">
           {/* Uma identidade única para o responsável. A presença mostra apenas outras pessoas. */}
-          <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
+          <MenuButton variant="ghost" shape="rounded" disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
             {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<UserAvatar user={item} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
             {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
           </MenuGroup>}>
             {owner ? <UserAvatar user={owner} size="small" /> : <Icon name="account" />}
-            <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
+            <span>{owner?.name ?? "Sem responsável"}</span>
           </MenuButton>
           <MenuButton variant="ghost" shape="rounded" className={styles.followers} disabled={!canWrite} aria-label={`${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}. Gerenciar`} menu={<>
             <MenuGroup label="Seguidores">
@@ -840,8 +868,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         </div>
         <div className={styles.headerOutcome}>
           {isOpen && canMove && <>
-            <Button className={styles.wonButton} icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
-            <Button variant="secondary" className={styles.lostButton} icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
+            <Button variant="secondary" shape="rounded" className={styles.wonButton} icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
+            <Button variant="secondary" shape="rounded" className={styles.lostButton} icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
           </>}
           {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
           {!isOpen && canMove && <Button variant="secondary" icon={<Icon name="undo" />} loading={reopening} onClick={() => void reopenDeal()}>Reabrir</Button>}
@@ -868,23 +896,20 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         {valueContent}
         <Tabs label="Contexto do negócio" defaultValue="resumo" items={[
           { value: "resumo", label: "Resumo", content: <><div className={styles.quickSummary}>{summaryFields}</div><div className={styles.tagSection}>{tagsContent}</div></> },
-          { value: "historico", label: "Histórico", content: <div className={styles.quickHistory}>{historyContent}</div> },
+          { value: "detalhes", label: "Detalhes", content: <div className={styles.quickDetails}>{detailsContent}</div> },
           { value: "pessoas", label: "Vínculos", content: relatedContent },
         ]} />
       </aside>
-      <section className={styles.quickPhase}>{phaseContent}</section>
+      <section className={styles.quickPhase}>{quickPanel === "commercial" ? commercialPanel : <>{phaseContent}<div className={`${styles.pageActivity} ${styles.quickActivity}`}>{historyContent}</div></>}</section>
       <aside className={styles.quickActions}>{moveActions}</aside>
     </div> : <div className={styles.contentGrid}>
-      <aside className={styles.painel}>{valueContent}{summaryContent}<div className={styles.tagSection}>{tagsContent}</div></aside>
+      <aside className={styles.painel}>{valueContent}{phaseContent}{summaryContent}<div className={styles.tagSection}>{tagsContent}</div></aside>
       <section className={styles.fluxo}><Tabs label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
         { value: "atividade", label: "Atividades e histórico", content: <div className={styles.pageActivity}>{historyContent}</div> },
-        { value: "etapa", label: "Campos da etapa", content: phaseContent },
         { value: "comercial", label: "Itens e valores", content: <div className={styles.commercialPage}><h2>Itens do negócio</h2><p>Produtos, serviços e composição do valor negociado.</p>{productsContent}</div> },
         { value: "pessoas", label: "Pessoas e empresa", content: relatedContent },
       ]} /></section>
     </div>}
-
-    <Modal open={productsOpen} onOpenChange={setProductsOpen}><ModalContent title="Itens e valores do negócio" size="wide"><div className={styles.commercialPage}>{productsContent}</div></ModalContent></Modal>
 
     <ActionModal
       open={selectedStage !== undefined}
@@ -968,43 +993,25 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       </aside>
       </div>
     </ActionModal>
-    <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>
-      <div className={styles.modalFields}>
-        {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="dropdown" placeholder={catalogLoading ? "Carregando catálogo…" : "Escolher um produto cadastrado (opcional)"} options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(item.price)}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
-        <Field><Label>Nome do item</Label><Input value={itemName} onChange={(event) => setItemName(event.target.value)} placeholder="Escreva um item avulso ou escolha do catálogo" /></Field>
-        <div className={styles.modalLinha}>
-          <Field><Label>Quantidade</Label><Input inputMode="decimal" value={itemQuantity} onChange={(event) => setItemQuantity(event.target.value)} placeholder="1" /></Field>
-          <Field><Label>Preço unitário</Label><MoneyInput label="Preço unitário" value={itemUnitAmount} onValueChange={setItemUnitAmount} /></Field>
-        </div>
-        <div className={styles.modalLinha}>
-          <Field><Label>Desconto</Label><PercentInput label="Desconto do item" value={itemDiscount} onValueChange={setItemDiscount} /></Field>
-          <Field><Label>Imposto</Label><PercentInput label="Imposto do item" value={itemTax} onValueChange={setItemTax} /></Field>
-        </div>
-      </div>
-    </ActionModal>
+    {!embedded && <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>{itemEditorContent}</ActionModal>}
     <ActionModal open={lossModalOpen} onOpenChange={setLossModalOpen} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Informe o motivo da perda." onConfirm={async () => { if (!lossReason.trim()) throw new Error("MISSING_REASON"); await closeDeal("lost", lossReason); setLossReason(""); }}>
       <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
     </ActionModal>
 
     <Panel open={historyOpen} onOpenChange={setHistoryOpen}>
       <PanelContent side="right" title="Histórico completo" description={`${events.length} ${events.length === 1 ? "evento registrado" : "eventos registrados"}`} closeLabel="Fechar histórico">
-        <Timeline items={timelineItems} initialCount={25} pageSize={25} emptyText="Nenhuma alteração registrada." />
+        <Timeline items={timelineItems} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma alteração registrada." />
       </PanelContent>
     </Panel>
 
     {/* A ficha entra por cima, ocupando 85% da largura: o negócio continua
       * visível atrás, e fechar devolve exatamente onde se estava. */}
-    <Modal open={ficha !== null} onOpenChange={(aberta) => { if (!aberta) setFicha(null); }}>
-      <ModalContent
-        placement="right"
-        size="record"
-        title={ficha?.tipo === "empresa" ? "Empresa" : "Pessoa"}
-        closeLabel="Fechar e voltar ao negócio"
-      >
+    <Panel open={ficha !== null} onOpenChange={(aberta) => { if (!aberta) setFicha(null); }}>
+      <PanelContent side="right" title={ficha?.tipo === "empresa" ? "Empresa" : "Pessoa"} closeLabel="Fechar e voltar ao negócio">
         {ficha?.tipo === "contato" && <ContactProfile contactId={ficha.id} embedded />}
         {ficha?.tipo === "empresa" && <CompanyProfile companyId={ficha.id} embedded />}
-      </ModalContent>
-    </Modal>
+      </PanelContent>
+    </Panel>
   </PageFrame>;
 }
 

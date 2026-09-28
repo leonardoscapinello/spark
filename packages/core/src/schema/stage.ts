@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { zOrgId, zPipelineId, zStageId, zServerTimestamp } from "./zodHelpers.js";
 
+export const StageColorSchema = z.union([
+  z.enum(["neutral", "blue", "green", "red", "amber", "purple"]),
+  z.string().regex(/^#[0-9a-fA-F]{6}$/, { error: "A cor precisa estar no formato hexadecimal #RRGGBB." }),
+]);
+export type StageColor = z.infer<typeof StageColorSchema>;
+
 /**
  * Stage — one column of a pipeline (pipeline.ts). `sortOrder` is the
  * visual position on the board; that field always decides position, never
@@ -18,7 +24,7 @@ export const StageSchema = z.object({
   orgId: zOrgId,
   pipelineId: zPipelineId,
   name: z.string().min(1, { error: "Stage name is required" }).max(200),
-  color: z.enum(["neutral", "blue", "green", "red", "amber", "purple"]).optional(),
+  color: StageColorSchema.optional(),
   sortOrder: z.number().int().min(0),
   /** A entrada é obrigatória, mas pode mudar de nome e posição. */
   isEntry: z.boolean().default(false),
@@ -94,7 +100,7 @@ export const ReorderStagesResponseSchema = z.object({ stages: z.array(StageSchem
 export type ReorderStagesResponse = z.infer<typeof ReorderStagesResponseSchema>;
 
 export const ConfigureStageInputSchema = z.object({
-  color: z.enum(["neutral", "blue", "green", "red", "amber", "purple"]).optional(),
+  color: StageColorSchema.optional(),
   slaMinutes: z.number().int().min(1).nullable(),
   allowWon: z.boolean(),
   allowLost: z.boolean(),

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { UserAvatar } from "../UserAvatar/UserAvatar.js";
 import { Tooltip } from "../Tooltip/Tooltip.js";
 import styles from "./Timeline.module.css";
@@ -25,7 +25,7 @@ export interface TimelineItem {
   changes?: readonly TimelineChange[];
 }
 
-export function Timeline({ items, emptyText = "Nenhum evento registrado.", initialCount, pageSize = 25 }: { items: readonly TimelineItem[]; emptyText?: string; initialCount?: number; pageSize?: number }) {
+export function Timeline({ items, emptyText = "Nenhum evento registrado.", initialCount, pageSize = 25, density = "default", groupByDay = false }: { items: readonly TimelineItem[]; emptyText?: string; initialCount?: number; pageSize?: number; density?: "default" | "compact"; groupByDay?: boolean }) {
   const [visibleCount, setVisibleCount] = useState(initialCount ?? items.length);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => setVisibleCount(initialCount ?? items.length), [initialCount, items.length]);
@@ -40,17 +40,23 @@ export function Timeline({ items, emptyText = "Nenhum evento registrado.", initi
   }, [items.length, pageSize, visibleCount]);
   if (!items.length) return <div className={styles.empty}>{emptyText}</div>;
   const visibleItems = items.slice(0, visibleCount);
-  return <><ol className={styles.root}>{visibleItems.map((item) => <li key={item.id} className={styles.item} data-tone={item.tone ?? "neutral"}>
-    <span className={styles.marker} aria-hidden="true" />
-    <div className={styles.content}>
-      <div className={styles.heading}><strong>{item.title}</strong>{item.actor && <Actor actor={item.actor} />}</div>
-      {item.description && <div className={styles.description}>{item.description}</div>}
-      {item.changes && item.changes.length > 0 && <dl className={styles.changes}>{item.changes.map((change, index) => <div key={`${change.label}:${index}`}>
-        <dt>{change.label}</dt><dd><span>{change.before}</span><span aria-hidden="true">→</span><strong>{change.after}</strong></dd>
-      </div>)}</dl>}
-      <time dateTime={item.timestamp}>{formatTimestamp(item.timestamp)}</time>
-    </div>
-  </li>)}</ol>{visibleCount < items.length && <div ref={sentinelRef} className={styles.sentinel} aria-label="Carregando mais eventos" />}</>;
+  return <><ol className={styles.root} data-density={density}>{visibleItems.map((item, index) => {
+    const previousItem = visibleItems[index - 1];
+    const startsDay = groupByDay && (!previousItem || dayKey(previousItem.timestamp) !== dayKey(item.timestamp));
+    return <Fragment key={item.id}>
+      {startsDay && <li className={styles.dayBreak} role="presentation"><time dateTime={item.timestamp}>{formatDay(item.timestamp)}</time></li>}
+      <li className={styles.item} data-tone={item.tone ?? "neutral"}>
+        <span className={styles.marker} aria-hidden="true" />
+        <div className={styles.content}>
+          <div className={styles.heading}><strong>{item.title}</strong><span className={styles.metadata}><time dateTime={item.timestamp} title={formatTimestamp(item.timestamp)}>{groupByDay ? new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(item.timestamp)) : formatTimestamp(item.timestamp)}</time>{item.actor && <Actor actor={item.actor} />}</span></div>
+          {item.description && <div className={styles.description}>{item.description}</div>}
+          {item.changes && item.changes.length > 0 && <dl className={styles.changes}>{item.changes.map((change, changeIndex) => <div key={`${change.label}:${changeIndex}`}>
+            <dt>{change.label}</dt><dd><span>{change.before}</span><span aria-hidden="true">→</span><strong>{change.after}</strong></dd>
+          </div>)}</dl>}
+        </div>
+      </li>
+    </Fragment>;
+  })}</ol>{visibleCount < items.length && <div ref={sentinelRef} className={styles.sentinel} aria-label="Carregando mais eventos" />}</>;
 }
 
 function Actor({ actor }: { actor: TimelineActor }) {
@@ -62,4 +68,13 @@ function Actor({ actor }: { actor: TimelineActor }) {
 
 function formatTimestamp(value: string): string {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function dayKey(value: string): string {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function formatDay(value: string): string {
+  return new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date(value));
 }
