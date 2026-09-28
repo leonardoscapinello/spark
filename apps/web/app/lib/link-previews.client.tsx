@@ -1,21 +1,15 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ComponentProps, type ReactNode } from "react";
+import { useCallback, useContext, useMemo, useState, type ComponentProps, type ReactNode } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { linkPreviewsControllerResolve } from "@spark/api-client";
 import { createLinkPreviewsCollection, type LinkPreviewsCollection } from "@spark/data";
 import { linkPreviewNeedsRefresh, normalizeLinkPreviewUrl, type LinkPreview } from "@spark/core";
+import { LinkPreviewContext, EMPTY_LINK_PREVIEW_CONTEXT } from "./link-preview-context";
 import { CustomFieldValue, LinkPreviewCard, PreviewLink } from "@spark/ui-web";
 
 let collection: LinkPreviewsCollection | undefined;
 function getCollection() { collection ??= createLinkPreviewsCollection(); return collection; }
 const inflight = new Map<string, Promise<unknown>>();
 
-interface LinkPreviewContextValue {
-  previews: ReadonlyMap<string, LinkPreview>;
-  pending: ReadonlySet<string>;
-  failures: ReadonlySet<string>;
-  request: (url: string) => void;
-}
-const LinkPreviewContext = createContext<LinkPreviewContextValue | null>(null);
 
 export function LinkPreviewDataProvider({ children }: { children: ReactNode }) {
   const { data = [] } = useLiveQuery({ query: (q) => q.from({ previews: getCollection() }) });
@@ -62,8 +56,7 @@ export function LinkPreviewDataProvider({ children }: { children: ReactNode }) {
 }
 
 export function useLinkPreview(rawUrl: string | null | undefined) {
-  const context = useContext(LinkPreviewContext);
-  if (!context) throw new Error("useLinkPreview must be used inside LinkPreviewDataProvider.");
+  const context = useContext(LinkPreviewContext) ?? EMPTY_LINK_PREVIEW_CONTEXT;
   let url: string | null = null;
   try { if (rawUrl) url = normalizeLinkPreviewUrl(rawUrl); } catch { url = null; }
   const preview = url ? context.previews.get(url) ?? (context.failures.has(url) ? failedPreview(url) : null) : null;
@@ -71,8 +64,7 @@ export function useLinkPreview(rawUrl: string | null | undefined) {
 }
 
 export function useLinkPreviewRequest(): (url: string) => void {
-  const context = useContext(LinkPreviewContext);
-  if (!context) throw new Error("useLinkPreviewRequest must be used inside LinkPreviewDataProvider.");
+  const context = useContext(LinkPreviewContext) ?? EMPTY_LINK_PREVIEW_CONTEXT;
   return context.request;
 }
 
