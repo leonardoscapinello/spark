@@ -14,6 +14,20 @@
 const MoneyValue: unique symbol = Symbol("Money"); // the real value — must exist at runtime, not just in the type
 export type Money = { readonly [MoneyValue]: number };
 
+/** Retorna true somente para o objeto Money criado por este módulo. */
+export function isMoney(value: unknown): value is Money {
+  if (typeof value !== "object" || value === null || !(MoneyValue in value)) return false;
+  const cents = Reflect.get(value, MoneyValue);
+  return typeof cents === "number" && Number.isSafeInteger(cents);
+}
+
+/** Normaliza valores que atravessam uma coleção sincronizada para Money. */
+export function normalizeMoney(value: unknown, fallbackCents = 0): Money {
+  if (isMoney(value)) return value;
+  const candidate = typeof value === "bigint" || typeof value === "number" || typeof value === "string" ? Number(value) : NaN;
+  return money(Number.isSafeInteger(candidate) ? candidate : fallbackCents);
+}
+
 export class InvalidMoneyError extends Error {
   constructor(value: number) {
     super(`Invalid monetary value: ${value}. Money requires an integer (cents).`);

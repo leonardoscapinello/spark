@@ -8,7 +8,7 @@ import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { z } from "zod";
-import { DealSchema, dealId, money, toCents, type Deal, type DealId, type DealStatus, type Money, type CreateDealInput, type OrgId, type PipelineId } from "@spark/core";
+import { DealSchema, dealId, money, normalizeMoney, toCents, type Deal, type DealId, type DealStatus, type Money, type CreateDealInput, type OrgId, type PipelineId } from "@spark/core";
 import { confirmed } from "./confirmed.js";
 import { serializedWrite } from "./serialized-write.js";
 import { reportWriteAcceptance } from "./write-acceptance.js";
@@ -81,15 +81,11 @@ export function forInsert(deal: Deal) {
  * tells the two cases apart without needing to know the row's origin.
  */
 export function syncedAmount(rawAmount: unknown): Money {
-  if (typeof rawAmount === "object" && rawAmount !== null) {
-    return rawAmount as Money;
-  }
-  const cents = Number(rawAmount);
   /* Valor ausente ou ilegível vira zero em vez de derrubar a tela. `money()`
    * recusa lançando, e numa função chamada durante o render isso apagava a
    * página inteira com «Invalid monetary value: NaN» — o certo é a linha
    * mostrar R$ 0,00 e o resto continuar de pé. */
-  return money(Number.isInteger(cents) ? cents : 0);
+  return normalizeMoney(rawAmount);
 }
 
 /**

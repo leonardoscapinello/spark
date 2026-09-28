@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toCents, moneyToDecimalString, add, formatBRL, money, moneyFromDecimal, multiply, subtract, toDecimal, sum, compare } from "./money.js";
+import { toCents, moneyToDecimalString, add, formatBRL, isMoney, money, moneyFromDecimal, multiply, normalizeMoney, subtract, toDecimal, sum, compare } from "./money.js";
 import { applyDiscount } from "./discount.js";
 
 describe("money", () => {
@@ -38,6 +38,14 @@ describe("money", () => {
 
   it("formats as BRL", () => {
     expect(formatBRL(money(199_90))).toMatch(/R\$\s*199,90/);
+  });
+
+  it("recognizes and normalizes synchronized money values", () => {
+    expect(isMoney(money(123))).toBe(true);
+    expect(isMoney({})).toBe(false);
+    expect(toCents(normalizeMoney(456n))).toBe(456);
+    expect(toCents(normalizeMoney({}))).toBe(0);
+    expect(toCents(normalizeMoney(Number.NaN))).toBe(0);
   });
 });
 

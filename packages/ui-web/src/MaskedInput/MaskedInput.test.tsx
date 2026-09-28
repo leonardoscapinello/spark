@@ -21,3 +21,15 @@ it("digita da direita para a esquerda, em centavos, e distingue campo apagado",(
  fireEvent.change(campo,{target:{value:""}});
  expect(campo).toHaveValue("");
 });
+
+it("não exibe NaN quando recebe uma forma inválida durante a sincronização",()=>{
+  function Campo(){
+    const [valor,setValor]=useState<Money|null>({} as Money);
+    return <MoneyInput label="Valor" value={valor} onValueChange={setValor} />;
+  }
+  render(<Campo />);
+  const campo=screen.getByRole("textbox",{name:"Valor"});
+  expect(campo).toHaveValue("");
+  fireEvent.change(campo,{target:{value:"9"}});
+  expect(campo).toHaveValue("R$ 0,09");
+});

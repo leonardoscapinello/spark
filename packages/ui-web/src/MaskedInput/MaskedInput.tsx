@@ -17,7 +17,11 @@ export function MaskedInput({value,onValueChange,...props}:MaskedInputProps){ret
  * sequência de centavos, e a formatação é de saída.
  */
 export function MoneyInput({value,onValueChange,label,currency="BRL",disabled=false,onBlur}:{value:Money|null;onValueChange:(value:Money|null)=>void;label:string;currency?:"BRL"|"USD";disabled?:boolean;onBlur?:()=>void}){
-  const centavos=value===null?null:toCents(value);
+  /* Uma linha sincronizada pode chegar durante a troca de coleção antes de
+   * ter a forma final de Money. Nunca deixe esse valor inválido vazar para a
+   * máscara: `formatCents(undefined)` produziria «NaN,NaN» no campo e
+   * obrigaria a pessoa a apagar tudo antes de começar a digitar. */
+  const centavos=value===null||typeof value!=="object"?null:safeCents(value);
   const prefixo=currency==="BRL"?"R$ ":"US$ ";
   const texto=centavos===null?"":`${prefixo}${formatCents(centavos,currency)}`;
   function digitar(bruto:string){
@@ -34,6 +38,11 @@ export function MoneyInput({value,onValueChange,label,currency="BRL",disabled=fa
     onBlur={onBlur}
     onChange={event=>digitar(event.target.value)}
   />;
+}
+
+function safeCents(value: Money): number|null{
+  const cents=toCents(value);
+  return Number.isSafeInteger(cents)?cents:null;
 }
 
 /** Centavos → «1.234,56», com o separador da moeda. */
