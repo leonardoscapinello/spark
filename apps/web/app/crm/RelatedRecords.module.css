@@ -1,0 +1,62 @@
+.profileSummary {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: var(--ui-hairline) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface2);
+}
+
+.profileHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.profileHeading > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.profileHeading strong {
+  overflow: hidden;
+  color: var(--color-ink);
+  font-size: var(--typography-size-md);
+  font-weight: var(--typography-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileHeading span,
+.profileFacts dt {
+  color: var(--color-inkMuted);
+  font-size: var(--typography-size-xs);
+}
+
+.profileFacts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.profileFacts > div {
+  display: grid;
+  grid-template-columns: minmax(5rem, .35fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.profileFacts dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-size: var(--typography-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileSummary > button { justify-self: start; color: var(--color-accent); }
