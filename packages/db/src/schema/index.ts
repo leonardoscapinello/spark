@@ -1,4 +1,5 @@
 export * from "./organizations.js";
+export * from "./organization-themes.js";
 export * from "./users.js";
 export * from "./contacts.js";
 export * from "./companies.js";
@@ -48,3 +49,4 @@ export * from "./calendar-events.js";
 export * from "./stage-transitions.js";
 export * from "./business-hours.js";
 export * from "./holidays.js";
+

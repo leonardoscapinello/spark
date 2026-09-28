@@ -2,6 +2,7 @@ import type { Capability } from "./capability.js";
 
 export const SYNC_RESOURCES = [
   "organizations",
+  "organization_themes",
   "contacts",
   "identities",
   "companies",
@@ -67,7 +68,7 @@ export const SYNC_RESOURCES = [
 export type SyncResource = (typeof SYNC_RESOURCES)[number];
 
 const READ_REQUIREMENTS: Record<
-  Exclude<SyncResource, "organizations" | "events" | "users" | "user_preferences" | "user_preference_items" | "link_previews" | "company_registrations" | "company_registration_activities" | "company_registration_members" | "company_registration_tax_regimes">,
+  Exclude<SyncResource, "organizations" | "organization_themes" | "events" | "users" | "user_preferences" | "user_preference_items" | "link_previews" | "company_registrations" | "company_registration_activities" | "company_registration_members" | "company_registration_tax_regimes">,
   readonly Capability[]
 > = {
   contacts: ["contacts:read"],
@@ -146,6 +147,7 @@ export function canReadSyncResource(
   resource: SyncResource,
 ): boolean {
   if (resource === "organizations") return true;
+  if (resource === "organization_themes") return true;
   // Preferência é do próprio usuário — a shape já vem filtrada por user_id no servidor.
   if (resource === "user_preferences" || resource === "user_preference_items") return true;
   if (resource === "events") return readableEventPrefixes(capabilities).length > 0;

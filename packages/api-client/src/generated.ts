@@ -1216,6 +1216,113 @@ export interface TagWriteResponseDto {
   txid: number;
 }
 
+export type UpdateOrganizationThemeDtoFontBody = typeof UpdateOrganizationThemeDtoFontBody[keyof typeof UpdateOrganizationThemeDtoFontBody];
+
+
+export const UpdateOrganizationThemeDtoFontBody = {
+  inter: 'inter',
+  system: 'system',
+  rounded: 'rounded',
+  serif: 'serif',
+} as const;
+
+export type UpdateOrganizationThemeDtoFontDisplay = typeof UpdateOrganizationThemeDtoFontDisplay[keyof typeof UpdateOrganizationThemeDtoFontDisplay];
+
+
+export const UpdateOrganizationThemeDtoFontDisplay = {
+  inter: 'inter',
+  system: 'system',
+  rounded: 'rounded',
+  serif: 'serif',
+} as const;
+
+export interface UpdateOrganizationThemeDto {
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  accentColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  accentStrongColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  groundColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  surfaceColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  surface2Color: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  inkColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  inkMutedColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  lineColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  statusSuccessColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  statusWarningColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  statusDangerColor: string;
+  fontBody: UpdateOrganizationThemeDtoFontBody;
+  fontDisplay: UpdateOrganizationThemeDtoFontDisplay;
+}
+
+export type OrganizationThemeWriteResponseDtoThemeFontBody = typeof OrganizationThemeWriteResponseDtoThemeFontBody[keyof typeof OrganizationThemeWriteResponseDtoThemeFontBody];
+
+
+export const OrganizationThemeWriteResponseDtoThemeFontBody = {
+  inter: 'inter',
+  system: 'system',
+  rounded: 'rounded',
+  serif: 'serif',
+} as const;
+
+export type OrganizationThemeWriteResponseDtoThemeFontDisplay = typeof OrganizationThemeWriteResponseDtoThemeFontDisplay[keyof typeof OrganizationThemeWriteResponseDtoThemeFontDisplay];
+
+
+export const OrganizationThemeWriteResponseDtoThemeFontDisplay = {
+  inter: 'inter',
+  system: 'system',
+  rounded: 'rounded',
+  serif: 'serif',
+} as const;
+
+export type OrganizationThemeWriteResponseDtoTheme = {
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  accentColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  accentStrongColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  groundColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  surfaceColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  surface2Color: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  inkColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  inkMutedColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  lineColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  statusSuccessColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  statusWarningColor: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  statusDangerColor: string;
+  fontBody: OrganizationThemeWriteResponseDtoThemeFontBody;
+  fontDisplay: OrganizationThemeWriteResponseDtoThemeFontDisplay;
+  /** @minLength 1 */
+  orgId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface OrganizationThemeWriteResponseDto {
+  theme: OrganizationThemeWriteResponseDtoTheme;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export interface AddDealFollowerDto {
   /** @minLength 1 */
   userId: string;
@@ -8145,6 +8252,68 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getTagsControllerSaveMutationOptions(options), queryClient);
+    }
+
+export const organizationThemeControllerUpdate = (
+    updateOrganizationThemeDto: UpdateOrganizationThemeDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<OrganizationThemeWriteResponseDto>(
+      {url: `/v1/settings/organization-theme`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateOrganizationThemeDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getOrganizationThemeControllerUpdateMutationKey = () => ['organizationThemeControllerUpdate'] as const;
+
+export const getOrganizationThemeControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof organizationThemeControllerUpdate>>, TError,OrganizationThemeControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof organizationThemeControllerUpdate>>, TError,OrganizationThemeControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getOrganizationThemeControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof organizationThemeControllerUpdate>>, OrganizationThemeControllerUpdateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  organizationThemeControllerUpdate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OrganizationThemeControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof organizationThemeControllerUpdate>>>
+    export type OrganizationThemeControllerUpdateMutationBody = UpdateOrganizationThemeDto
+    export type OrganizationThemeControllerUpdateMutationError = unknown
+    export type OrganizationThemeControllerUpdateMutationVariables = {data: UpdateOrganizationThemeDto}
+
+    export const useOrganizationThemeControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof organizationThemeControllerUpdate>>, TError,OrganizationThemeControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof organizationThemeControllerUpdate>>,
+        TError,
+        OrganizationThemeControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getOrganizationThemeControllerUpdateMutationOptions(options), queryClient);
     }
 
 export const dealFollowersControllerAdd = (

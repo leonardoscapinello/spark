@@ -27,6 +27,9 @@ const sections: { title: string; areas: AdminArea[] }[] = [
     { title: "O que cada etapa exige", to: "/admin/data/stage-fields", icon: "briefcase", description: "Campos obrigatórios e importantes por funil e etapa.", capability: "pipelines:manage" },
     { title: "Auditoria", to: "/admin/audit-log", icon: "chart", description: "Consulte alterações de acesso e equipe.", capability: "audit_logs:read" },
   ] },
+  { title: "Identidade", areas: [
+    { title: "Aparência", to: "/admin/appearance", icon: "image", description: "Personalize cores e tipografia da organização.", capability: "settings:manage" },
+  ] },
 ];
 
 export async function clientLoader() {

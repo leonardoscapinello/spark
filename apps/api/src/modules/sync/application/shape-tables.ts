@@ -36,6 +36,7 @@ const CHAVES = ["id", "org_id"] as const;
 
 export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   organizations: { column: "id" },
+  organization_themes: { column: "org_id" },
   contacts: { column: "org_id", views: { directory: [...CHAVES, "name", "deleted_at"] } },
   tags: { column: "org_id" },
   deal_tags: { column: "org_id" },

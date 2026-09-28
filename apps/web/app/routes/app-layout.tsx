@@ -11,6 +11,7 @@ import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
 import { sendQueueNotice, useSendQueue } from "../lib/send-queue.client";
 import { LinkPreviewDataProvider } from "../lib/link-previews.client";
 import { CompanyRegistrationDataProvider } from "../lib/company-registrations.client";
+import { OrganizationThemeProvider } from "../lib/organization-theme.client";
 import styles from "./app-layout.module.css";
 
 type NavItem = { label: string; to: string; icon: IconName; capability?: Capability };
@@ -107,6 +108,9 @@ const modules: NavModule[] = [
     { title: "Dados", icon: "file", items: [
       { label: "Campos personalizados", to: "/admin/data/custom-fields", icon: "file", capability: "settings:manage" },
       { label: "O que cada etapa exige", to: "/admin/data/stage-fields", icon: "briefcase", capability: "pipelines:manage" },
+    ] },
+    { title: "Identidade", icon: "image", items: [
+      { label: "Aparência", to: "/admin/appearance", icon: "image", capability: "settings:manage" },
     ] },
     { title: "Canais e integrações", icon: "bolt", items: [
       { label: "Integrações", to: "/integrations", icon: "bolt", capability: "integrations:read" },
@@ -377,7 +381,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {/* O provedor do cadastro da Receita não sincroniza nada até alguém
             olhar um CNPJ: montá-lo aqui custa zero e evita repeti-lo em cada
             tela que mostra campo personalizado. */}
-          <LinkPreviewDataProvider><CompanyRegistrationDataProvider><Outlet /></CompanyRegistrationDataProvider></LinkPreviewDataProvider>
+          <OrganizationThemeProvider orgId={session.orgId}><LinkPreviewDataProvider><CompanyRegistrationDataProvider><Outlet /></CompanyRegistrationDataProvider></LinkPreviewDataProvider></OrganizationThemeProvider>
       </main>
       <QuickNavigation open={quickNavigationOpen} onOpenChange={setQuickNavigationOpen} items={quickNavigationItems} onSelect={(to) => { markNavigation(to); void navigate(to); }} />
     </div>

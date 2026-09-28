@@ -25,6 +25,7 @@ export default [
     route("campaigns", "routes/campaigns.tsx"),
     route("admin/data/custom-fields", "routes/settings.tsx"),
     route("admin/data/stage-fields", "routes/admin-stage-fields.tsx"),
+    route("admin/appearance", "routes/admin-appearance.tsx"),
     route("settings", "routes/settings-redirect.tsx"),
     route("pages", "routes/pages.tsx"),
     route("pages/:pageId", "routes/page-builder.tsx"),

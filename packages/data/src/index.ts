@@ -12,6 +12,7 @@ export * from "./deal-products-collection.js";
 export * from "./deal-followers-collection.js";
 export * from "./activities-collection.js";
 export * from "./users-collection.js";
+export * from "./organization-themes-collection.js";
 export * from "./conversations-collection.js";
 export * from "./messages-collection.js";
 export * from "./automations-collection.js";
@@ -40,3 +41,4 @@ export * from "./whatsapp-templates-collection.js";
 export * from "./calendar-events-collection.js";
 export * from "./tag-collections.js";
 export { subscribeDealPresence, type DealPresenceState } from "./deal-presence.js";
+

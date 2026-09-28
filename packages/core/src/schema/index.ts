@@ -1,5 +1,6 @@
 export * from "./zodHelpers.js";
 export * from "./organization.js";
+export * from "./organizationTheme.js";
 export * from "./contact.js";
 export * from "./company.js";
 export * from "./user.js";
