@@ -1,0 +1,6 @@
+.empty { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.commercial { display: flex; align-items: flex-start; gap: var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); padding-top: var(--space-4); color: var(--color-inkMuted); }
+.commercial > svg { flex-shrink: 0; margin-top: var(--space-1); }
+.commercial strong { color: var(--color-ink); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); }
+.commercial p { margin: var(--space-1) 0; font-size: var(--typography-size-xs); }
+.commercial button { margin-top: var(--space-2); color: var(--color-accent); }

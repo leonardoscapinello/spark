@@ -85,3 +85,5 @@ export * from "./Composer/Composer.js";
 export * from "./LinkPreview/LinkPreview.js";
 export * from "./ViewerStack/ViewerStack.js";
 export * from "./SlaProgress/SlaProgress.js";
+
+export * from "./CrmWorkspace/CrmWorkspace.js";

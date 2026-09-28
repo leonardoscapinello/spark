@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import {
+  createDealTagsCollection,
+  type DealTagsCollection,
   createCompanyTagsCollection,
   createContactTagsCollection,
   createProductTagsCollection,
@@ -89,4 +91,20 @@ export function useTagsByEntity(entity: TaggableEntity): Map<string, string[]> {
     for (const list of byEntity.values()) list.sort((a, b) => a.localeCompare(b, "pt-BR"));
     return byEntity;
   }, [entity, catalog, contactRows, companyRows, productRows]);
+}
+
+let dealLinks: DealTagsCollection | undefined;
+export function getDealTagsCollection(): DealTagsCollection { dealLinks ??= createDealTagsCollection(); return dealLinks; }
+export function useDealTags() {
+  const catalog = useTagCatalog();
+  const { data: links = [] } = useLiveQuery({ query: (q) => q.from({ link: getDealTagsCollection() }) });
+  return useMemo(() => {
+    const byId = new Map(catalog.map((tag) => [tag.id, tag]));
+    const byDeal = new Map<string, typeof catalog>();
+    for (const link of links) {
+      const tag = byId.get(link.tagId);
+      if (tag) byDeal.set(link.dealId, [...(byDeal.get(link.dealId) ?? []), tag]);
+    }
+    return byDeal;
+  }, [catalog, links]);
 }

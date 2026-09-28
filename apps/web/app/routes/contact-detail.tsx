@@ -1,3 +1,4 @@
+import { MergePerson } from "../crm/MergePerson";
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
@@ -279,7 +280,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
 
   return (
     <div className={layout.page}>
-      <RecordPageHeader back={embedded ? null : <BackLink render={<Link to="/" />}>Pessoas</BackLink>} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={(canWrite && !isEditing) || canWriteInbox ? <>{canWrite && !isEditing && <Button variant="secondary" onClick={startEditing}>Editar pessoa</Button>}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star" }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada", icon: "building" }]} />
+      <RecordPageHeader back={embedded ? null : <BackLink render={<Link to="/" />}>Pessoas</BackLink>} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={(canWrite && !isEditing) || canWriteInbox ? <>{canWrite && !isEditing && <><Button variant="secondary" onClick={startEditing}>Editar pessoa</Button><MergePerson contactId={contactId} name={data.name} /></>}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star" }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada", icon: "building" }]} />
       <div className={layout.contentGrid}>
         <div className={layout.profileColumn}>
       <h2 className={layout.columnTitle}>Detalhes</h2>

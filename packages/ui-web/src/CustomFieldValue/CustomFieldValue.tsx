@@ -17,6 +17,8 @@ export interface CustomFieldValueProps {
   /** As opções válidas, vindas de `custom_field_options` (ADR-0035). */
   options?: readonly string[];
   disabled?: boolean;
+  layout?: "inline" | "stacked";
+  hint?: ReactNode;
   /** Recebe o valor já normalizado pelo core; lançar aqui volta como erro na tela. */
   onSave: (value: unknown) => Promise<void>;
   /** Como avisar a pessoa — a tela decide (toast, inline). */
@@ -47,7 +49,7 @@ export interface CustomFieldValueProps {
  * mostrando o valor antigo, o editor já com o novo, e nada dizendo o que estava
  * acontecendo. Se a gravação falhar, o valor volta ao que era e o erro aparece.
  */
-export function CustomFieldValue({ field, value, options, disabled = false, onSave, onError, onSuccess, preview, onPreviewRequest, action }: CustomFieldValueProps) {
+export function CustomFieldValue({ field, value, options, disabled = false, layout = "inline", hint, onSave, onError, onSuccess, preview, onPreviewRequest, action }: CustomFieldValueProps) {
   const choices = options ?? customFieldOptions(field);
   /* O valor que a tela mostra. Começa igual ao sincronizado e passa a ser o
    * que esta pessoa gravou, na hora — a volta do servidor demora, e mostrar o
@@ -112,7 +114,8 @@ export function CustomFieldValue({ field, value, options, disabled = false, onSa
   const row = (control: (close: (persistence?: Promise<unknown>) => void, trackPersistence: (persistence: Promise<unknown>) => void) => ReactNode) => <InlineField
     label={field.label}
     required={field.required}
-    block={field.type === "paragraph"}
+    block={layout === "stacked" || field.type === "paragraph"}
+    hint={hint}
     value={shown === "" ? "Clique para adicionar" : shown}
     empty={shown === ""}
     disabled={disabled}

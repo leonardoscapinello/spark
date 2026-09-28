@@ -1,17 +1,23 @@
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { type FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type StageTransition, type DealStatus } from "@spark/core";
-import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, configureStage, type StagesCollection } from "@spark/data";
-import { ActionModal, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, SearchSelect, Select, Skeleton, Switch, Checkbox, Textarea, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
+import { pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
+import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, type StagesCollection } from "@spark/data";
+import { ActionModal, CrmWorkspace, CrmSection, CrmLabel, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, Select, Skeleton, Checkbox, Textarea, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
-import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection, getStageTransitionsCollection } from "../lib/deals-collections.client";
+import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { requireCapability } from "../lib/route-access.client";
+import { RelatedRecords } from "../crm/RelatedRecords";
+import { DealTags } from "../crm/DealTags";
+import { PhaseFields } from "../crm/PhaseFields";
+import { StageSettingsButton } from "../crm/StageSettings";
+import { useDealTags } from "../lib/tags.client";
 import styles from "./deals.module.css";
+const DealWorkspace = lazy(() => import("./deal-detail").then((m) => ({ default: m.DealWorkspace })));
 
 export async function clientLoader() {
   await requireCapability("deals:read");
@@ -25,7 +31,8 @@ export async function clientLoader() {
 
 export default function Deals() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const [openedDealId, setOpenedDealId] = useState<string | null>(null);
+  const tagsByDeal = useDealTags();
   const pipelinesCollection = getPipelinesCollection();
   const stagesCollection = getStagesCollection();
   const contactsCollection = getContactsCollection();
@@ -78,6 +85,8 @@ export default function Deals() {
   const [pipelineModalOpen, setPipelineModalOpen] = useState(false);
   const [pipelineName, setPipelineName] = useState("");
   const [targetStageId, setTargetStageId] = useState<string | null>(null);
+  const [dealTags, setDealTags] = useState<string[]>([]);
+  const [dealCustom, setDealCustom] = useState<Record<string, unknown>>({});
   const [dealName, setDealName] = useState("");
   const [dealAmount, setDealAmount] = useState<Money | null>(null);
   const [dealContact, setDealContact] = useState<SelectOption | null>(null);
@@ -147,7 +156,7 @@ export default function Deals() {
 
   function resetDealForm() {
     setDealName(""); setDealAmount(null); setDealContact(null);
-    setDealOwnerId(getSession()?.userId ?? ""); setDealCompanyId(""); setExpectedCloseDate(""); setDuplicateConfirmed(false);
+    setDealOwnerId(getSession()?.userId ?? ""); setDealCompanyId(""); setExpectedCloseDate(""); setDuplicateConfirmed(false); setDealTags([]); setDealCustom({});
   }
 
   // O contato pode ter mais de uma oportunidade aberta — não é um erro, mas
@@ -159,7 +168,7 @@ export default function Deals() {
   );
 
   async function addDeal() {
-    if (!session || !mainPipeline || !targetStageId || !dealContact || !dealName.trim() || dealAmount === null) throw new Error("MISSING_FIELDS");
+    if (!session || !mainPipeline || !targetStageId || !dealContact || !dealName.trim() || dealAmount === null) throw new Error("Preencha nome, valor, pessoa e etapa para criar o negócio.");
     if (existingOpenDeals.length > 0 && !duplicateConfirmed) throw new Error("Marque a confirmação para criar mesmo já havendo oportunidade aberta.");
     const deal = optimisticDeal({
       pipelineId: mainPipeline.id,
@@ -171,6 +180,8 @@ export default function Deals() {
       amount: dealAmount,
       expectedCloseDate: expectedCloseDate || null,
       isArchived: false,
+      tags: dealTags,
+      customFields: dealCustom,
     }, session.orgId);
     if (!dealsCollection) throw new Error("DEALS_NOT_READY");
     const transaction = dealsCollection.insert(forInsert(deal));
@@ -300,6 +311,7 @@ export default function Deals() {
               key={stage.id}
               data-outcome={stage.kind === "outcome" ? stage.id : undefined}
               aria-label={stage.name}
+              data-color={stage.kind === "stage" ? stage.color : undefined}
               className={[styles.coluna, dropTarget === stage.id ? styles.colunaSobreArraste : ""]
                 .filter(Boolean)
                 .join(" ")}
@@ -314,6 +326,7 @@ export default function Deals() {
               }}
             >
               <div className={styles.colunaCabecalho}>
+                {stage.kind === "stage" && canManagePipeline && <span className={styles.stageSettings}><StageSettingsButton stage={stage} stages={stages} /></span>}
                 {stage.kind === "stage" && renamingStage === stage.id ? (
                   <form
                     className={styles.formRenomear}
@@ -395,13 +408,18 @@ export default function Deals() {
                         const alvo = event.target;
                         if (alvo instanceof Element && alvo.closest("a, button, input, [role='menu']")) return;
                         if (window.getSelection()?.toString()) return;
-                        void navigate(`/deals/${deal.id}`);
+                        setOpenedDealId(deal.id);
                       }}
                     >
                       <div className={styles.cartaoCabecalho}>
-                        <Link className={styles.cartaoNome} to={`/deals/${deal.id}`}>{deal.name}</Link>
-                        {!deal.isArchived && canMove && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} disabled={busyDealId === deal.id} menu={<>{isOpen && <><MenuItem onClick={() => void closeDeal(deal, "won")}>Marcar como ganho</MenuItem><MenuItem onClick={() => { setLossReason(""); setClosingDeal(deal); }}>Marcar como perdido</MenuItem></>}<MenuItem onClick={() => void archiveDeal(deal)}>Arquivar negócio</MenuItem></>} />}
+                        <Link className={styles.cartaoNome} to={`/deals/${deal.id}`} onClick={(event) => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); setOpenedDealId(deal.id); } }}>{deal.name}</Link>
+                        <MenuButton className={styles.cardMenu} size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} disabled={busyDealId === deal.id} menu={<>
+                          <MenuItem icon={<Icon name="eye" />} onClick={() => setOpenedDealId(deal.id)}>Abrir visão rápida</MenuItem>
+                          <MenuItem icon={<Icon name="page" />} render={<Link to={`/deals/${deal.id}`} />}>Abrir página completa</MenuItem>
+                          {!deal.isArchived && canMove && <><MenuSeparator /><MenuItem icon={<Icon name="right" />} onClick={() => { setMoveCandidate({ dealId: deal.id, stageId: deal.stageId }); setMovePipelineId(deal.pipelineId); setMoveStageId(deal.stageId); }}>Mover negócio</MenuItem>{isOpen && <><MenuItem icon={<Icon name="check" />} onClick={() => void closeDeal(deal, "won")}>Marcar como ganho</MenuItem><MenuItem icon={<Icon name="close" />} onClick={() => { setLossReason(""); setClosingDeal(deal); }}>Marcar como perdido</MenuItem></>}<MenuSeparator /><MenuItem icon={<Icon name="folder" />} onClick={() => void archiveDeal(deal)}>Arquivar negócio</MenuItem></>}
+                        </>} />
                       </div>
+                      <div className={styles.cardTags}>{(tagsByDeal.get(deal.id) ?? []).map((tag) => <CrmLabel key={tag.id} color={tag.color}>{tag.name}</CrmLabel>)}</div>
                       <span className={styles.cartaoValor}>{formatBRL(syncedAmount(deal.amount))}</span>
                       {(deal.contactId || deal.companyId) && <span className={styles.cartaoMeta}>{[deal.contactId ? contactNames.get(deal.contactId) ?? "Contato indisponível" : null, deal.companyId ? companyNames.get(deal.companyId) ?? "Empresa indisponível" : null].filter(Boolean).join(" · ")}</span>}
                       {canReadActivities && (() => {
@@ -431,7 +449,7 @@ export default function Deals() {
 
               {stageDeals.length < allStageDeals.length && <Button variant="ghost" size="sm" onClick={() => setVisibleByStage((current) => ({ ...current, [stage.id]: visibleCount + 50 }))}>Mostrar mais {Math.min(50, allStageDeals.length - stageDeals.length)}</Button>}
 
-              {stage.kind === "stage" && canWrite && <Button variant="ghost" size="sm" onClick={() => openDealModal(stage.id)}>+ Adicionar negócio</Button>}
+              {stage.kind === "stage" && canWrite && <Button className={styles.addDeal} variant="ghost" icon={<Icon name="plus" />} onClick={() => openDealModal(stage.id)}>Adicionar negócio</Button>}
             </section>
           );
         })}
@@ -469,26 +487,22 @@ export default function Deals() {
       <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
         <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
       </ActionModal>
-      {dealModalOpen && <ActionModal open onOpenChange={(open) => { setDealModalOpen(open); if (!open) resetDealForm(); }} title="Novo negócio" confirmLabel="Criar negócio" errorText="Preencha nome, valor, pessoa e etapa para criar o negócio." onConfirm={addDeal}>
-        <div className={styles.modalFields}>
-          <Field><Label>Nome</Label><Input value={dealName} onChange={(event) => setDealName(event.target.value)} placeholder="Ex.: Contrato anual Acme" /></Field>
-          <Field><Label>Valor</Label><MoneyInput label="Valor do negócio" value={dealAmount} onValueChange={setDealAmount} /></Field>
-          <Field><Label>Pessoa</Label><SearchSelect label="Pessoa do negócio" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={dealContact} onValueChange={(option) => { setDealContact(option); setDuplicateConfirmed(false); }} /></Field>
-          <Field><Label>Empresa</Label><Select label="Empresa do negócio" value={dealCompanyId || null} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} onValueChange={(value) => setDealCompanyId(value ?? "")} /></Field>
+      {dealModalOpen && <ActionModal open onOpenChange={(open) => { setDealModalOpen(open); if (!open) resetDealForm(); }} title="Novo negócio" size="workspace" confirmLabel="Criar negócio" onConfirm={addDeal}>
+        <CrmWorkspace context={<RelatedRecords contactId={dealContact?.value ?? null} companyId={dealCompanyId || null} onContact={(person) => { setDealContact(person ? { value: person.id, label: person.name } : null); setDuplicateConfirmed(false); }} onCompany={(company) => setDealCompanyId(company?.id ?? "")} />} current={<CrmSection title="Negócio">
+          <Field><Label>Nome do negócio</Label><Input autoFocus value={dealName} onChange={(event) => setDealName(event.target.value)} placeholder="Ex.: Contrato anual Acme" /></Field>
+          <Field><Label>Valor inicial</Label><MoneyInput label="Valor do negócio" value={dealAmount} onValueChange={setDealAmount} /></Field>
           <Field><Label>Responsável</Label><Select label="Responsável pelo negócio" value={dealOwnerId || null} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => setDealOwnerId(value ?? "")} /></Field>
           <Field><Label>Etapa inicial</Label><Select label="Etapa inicial" value={targetStageId} options={stages.map((stage) => ({ value: stage.id, label: stage.name }))} onValueChange={setTargetStageId} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
-          {existingOpenDeals.length > 0 && (
-            <Field>
-              <Label>{dealContact?.label} já tem oportunidade aberta</Label>
-              <ul className={styles.duplicateDealsList}>
-                {existingOpenDeals.map((item) => <li key={item.id}>{item.name}</li>)}
-              </ul>
-              <Checkbox checked={duplicateConfirmed} onCheckedChange={(checked) => setDuplicateConfirmed(checked === true)}>Criar mesmo assim</Checkbox>
-            </Field>
-          )}
-        </div>
+          <DealTags value={dealTags} onChange={setDealTags} />
+          {existingOpenDeals.length > 0 && <Field><Label>{dealContact?.label} já tem oportunidade aberta</Label><ul className={styles.duplicateDealsList}>{existingOpenDeals.map((item) => <li key={item.id}>{item.name}</li>)}</ul><Checkbox checked={duplicateConfirmed} onCheckedChange={(checked) => setDuplicateConfirmed(checked === true)}>Criar outra oportunidade</Checkbox></Field>}
+        </CrmSection>} actions={stages.filter((stage) => stage.id === targetStageId).map((stage) => <PhaseFields key={stage.id} stage={stage} stages={stages} values={dealCustom} onSave={async (key, value) => setDealCustom((current) => ({ ...current, [key]: value }))} />)} />
       </ActionModal>}
+      <Modal open={openedDealId !== null} onOpenChange={(open) => { if (!open) setOpenedDealId(null); }}>
+        <ModalContent title="Visão rápida" size="workspace" className={styles.dealWorkspace} closeLabel="Voltar ao pipeline" headerAction={openedDealId ? <Button variant="ghost" shape="rounded" icon={<Icon name="page" />} render={<Link to={`/deals/${openedDealId}`} />}>Abrir página completa</Button> : undefined}>
+          {openedDealId && <Suspense fallback={<Skeleton className={styles.loadingCard} />}><DealWorkspace dealId={openedDealId} embedded /></Suspense>}
+        </ModalContent>
+      </Modal>
       <ActionModal open={closingDeal !== null} onOpenChange={(open) => { if (!open) { setClosingDeal(null); setLossReason(""); } }} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Não foi possível fechar o negócio." onConfirm={async () => { if (!closingDeal) return; const closed = await closeDeal(closingDeal, "lost", lossReason); if (!closed) throw new Error("CLOSE_FAILED"); setClosingDeal(null); }}>
         <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
       </ActionModal>
@@ -516,8 +530,6 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
   stagesCollection: StagesCollection;
   orgId: OrgId | undefined;
 }) {
-  const stageTransitionsCollection = getStageTransitionsCollection();
-  const { data: stageTransitions = [] } = useLiveQuery({ query: (q) => open ? q.from({ stageTransitions: stageTransitionsCollection }) : undefined }, [open]);
   const [order, setOrder] = useState<string[]>(() => stages.map((stage) => stage.id));
   const [dragging, setDragging] = useState<string | null>(null);
   const [busyStageId, setBusyStageId] = useState<string | null>(null);
@@ -599,7 +611,7 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
           >
             <span className={styles.editorAlca} aria-hidden="true"><Icon name={stage.kind === "outcome" ? "lock" : "menu"} /></span>
             <span className={styles.editorNome}>{stage.kind === "stage" ? <InlineEdit label="nome da etapa" value={stage.name} onSave={async (name) => { const transaction = stagesCollection.update(stage.id, (draft) => { draft.name = name.trim(); }); await transaction.isPersisted.promise; }} /> : stage.name}</span>
-            {stage.kind === "stage" && <StageConfigPopover stage={stage} otherStages={orderedStages.filter((candidate) => candidate.id !== stage.id)} transitions={stageTransitions} />}
+            {stage.kind === "stage" && <StageSettingsButton stage={stage} stages={orderedStages} />}
             {stage.kind === "stage" && !stage.isEntry && <Button
               variant="ghost"
               size="sm"
@@ -621,74 +633,3 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
   </Modal>;
 }
 
-/**
- * Para quais etapas esta pode avançar, se pode fechar ganho/perdido daqui,
- * e o prazo — um negócio não deve poder pular etapa livremente para que o
- * funil funcione bem (pedido do usuário, 18/09). O popover só grava no
- * salvar: `allowedDestinationStageIds` substitui a configuração inteira,
- * nunca soma — mesma semântica de `stages.repository.configure` (apaga e
- * reinsere numa transação só).
- */
-function StageConfigPopover({ stage, otherStages, transitions }: {
-  stage: Stage;
-  otherStages: readonly Stage[];
-  transitions: readonly StageTransition[];
-}) {
-  const [open, setOpen] = useState(false);
-  const [restrictTransitions, setRestrictTransitions] = useState(stage.restrictTransitions);
-  const [allowWon, setAllowWon] = useState(stage.allowWon);
-  const [allowLost, setAllowLost] = useState(stage.allowLost);
-  const [slaMinutes, setSlaMinutes] = useState(stage.slaMinutes ? String(stage.slaMinutes) : "");
-  const [destinations, setDestinations] = useState<StageId[]>([]);
-  const [saving, setSaving] = useState(false);
-
-  // O popover reflete o estado sincronizado só na hora em que abre — depois
-  // disso, a edição em andamento é a única fonte da verdade até salvar.
-  useEffect(() => {
-    if (!open) return;
-    setRestrictTransitions(stage.restrictTransitions);
-    setAllowWon(stage.allowWon);
-    setAllowLost(stage.allowLost);
-    setSlaMinutes(stage.slaMinutes ? String(stage.slaMinutes) : "");
-    setDestinations(transitions.filter((transition) => transition.fromStageId === stage.id).map((transition) => transition.toStageId));
-  }, [open, stage, transitions]);
-
-  function toggleDestination(id: StageId, checked: boolean) {
-    setDestinations((current) => (checked ? [...current, id] : current.filter((item) => item !== id)));
-  }
-
-  async function save() {
-    setSaving(true);
-    try {
-      await configureStage(stage.id, {
-        slaMinutes: slaMinutes.trim() ? Number(slaMinutes) : null,
-        allowWon,
-        allowLost,
-        restrictTransitions,
-        allowedDestinationStageIds: destinations,
-      });
-      notify({ title: "Etapa configurada", description: stage.name, tone: "success" });
-      setOpen(false);
-    } catch (cause) {
-      notify({ title: "Não foi possível salvar a configuração", tone: "error", ...(cause instanceof Error && cause.message ? { description: cause.message } : {}) });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return <Popover open={open} onOpenChange={setOpen}>
-    <PopoverTrigger render={<Button variant="ghost" size="sm" iconOnly icon={<Icon name="settings" />} aria-label={`Configurar etapa ${stage.name}`} />} />
-    <PopoverContent title={`Configurar ${stage.name}`} contentClassName={styles.editorConfig ?? ""}>
-      <Switch checked={restrictTransitions} onCheckedChange={setRestrictTransitions}>Restringir para quais etapas pode avançar</Switch>
-      {restrictTransitions && (otherStages.length > 0
-        ? <div className={styles.editorConfigDestinos}>
-          {otherStages.map((candidate) => <Checkbox key={candidate.id} checked={destinations.includes(candidate.id)} onCheckedChange={(checked) => toggleDestination(candidate.id, checked === true)}>{candidate.name}</Checkbox>)}
-        </div>
-        : <p className={styles.editorConfigVazio}>Não há outra etapa neste funil.</p>)}
-      <Switch checked={allowWon} onCheckedChange={setAllowWon}>Permite marcar como ganho</Switch>
-      <Switch checked={allowLost} onCheckedChange={setAllowLost}>Permite marcar como perdido</Switch>
-      <Field><Label>Prazo nesta etapa (minutos)</Label><Input type="number" min="1" value={slaMinutes} onChange={(event) => setSlaMinutes(event.target.value)} placeholder="Sem prazo" /></Field>
-      <Button variant="primary" loading={saving} onClick={() => void save()}>Salvar</Button>
-    </PopoverContent>
-  </Popover>;
-}

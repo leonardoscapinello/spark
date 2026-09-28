@@ -288,3 +288,28 @@
 .editorConfig { display: flex; flex-direction: column; gap: var(--space-3); }
 .editorConfigDestinos { display: flex; flex-direction: column; gap: var(--space-1); padding-left: var(--space-4); }
 .editorConfigVazio { padding-left: var(--space-4); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+
+/* Cards legíveis e ações com alvo confortável, sem disputar espaço com o título. */
+.cartao { padding: var(--space-4); gap: var(--space-2); box-shadow: none; border-radius: var(--radius-md); }
+.listaCartoes { gap: var(--space-3); flex: 0 1 auto; }
+.cartaoCabecalho { align-items: flex-start; }
+.cartaoNome { white-space: normal; line-height: var(--ui-bodyLine); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cardMenu { margin-top: calc(var(--space-1) * -1); margin-right: calc(var(--space-2) * -1); color: var(--color-inkMuted); }
+.cardTags { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.cardTags:empty { display: none; }
+.addDeal { flex: 0 0 auto; min-height: var(--ui-controlLarge); width: 100%; justify-content: flex-start; padding-inline: var(--space-4); color: var(--color-inkMuted); border: var(--ui-hairline) solid transparent; border-radius: var(--radius-sm); }
+.colunaCabecalho { position: relative; padding: var(--space-2); padding-right: var(--space-8); min-height: var(--ui-controlLarge); }
+.stageSettings { position: absolute; inset-inline-end: 0; top: var(--space-1); }
+.coluna { border-top: var(--space-1) solid var(--color-lineStrong); }
+.coluna[data-color="blue"] { border-top-color: var(--color-accent); }
+.coluna[data-color="green"], .coluna[data-outcome="won"] { border-top-color: var(--color-statusSuccess); }
+.coluna[data-color="red"], .coluna[data-outcome="lost"] { border-top-color: var(--color-statusDanger); }
+.coluna[data-color="amber"] { border-top-color: var(--color-statusWarning); }
+.coluna[data-color="purple"] { border-top-color: color-mix(in srgb,var(--color-accent),var(--color-statusDanger)); }
+.dealWorkspace { height: min(100%, var(--ui-modalWide)); width: 100%; overflow: hidden; }
+.dealWorkspace > div { flex: 1; padding: 0; overflow: hidden; }
+
+.addDeal:hover { color: var(--color-accent); background: var(--color-accentWash); }
+.cartao:focus-within { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
+.cardMenu { flex-shrink: 0; }
+.cartaoValor { font-weight: var(--typography-weight-semibold); }

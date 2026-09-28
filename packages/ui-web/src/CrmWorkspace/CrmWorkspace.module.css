@@ -1,0 +1,50 @@
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, .8fr); min-width: 0; gap: var(--space-6); }
+.context, .current, .actions { min-width: 0; display: flex; flex-direction: column; gap: var(--space-6); }
+.current, .actions { border-inline-start: var(--ui-hairline) solid var(--color-line); padding-inline-start: var(--space-6); }
+.actions { border-inline-start: var(--ui-hairline) solid var(--color-line); padding-inline-start: var(--space-6); }
+.section { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.section > header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.section h3 { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
+.section p { margin: var(--space-1) 0 0; font-size: var(--typography-size-sm); color: var(--color-inkMuted); line-height: var(--ui-bodyLine); }
+.label { --label-ink: var(--color-inkMuted); display: inline-flex; align-items: center; gap: var(--space-1); width: fit-content; max-width: 100%; overflow-wrap: anywhere; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); color: var(--label-ink); background: color-mix(in srgb, var(--label-ink) 12%, var(--color-surface)); border: var(--ui-hairline) solid color-mix(in srgb, var(--label-ink) 20%, transparent); }
+.label[data-color="blue"] { --label-ink: var(--color-accent); }
+.label[data-color="green"] { --label-ink: var(--color-statusSuccess); }
+.label[data-color="red"] { --label-ink: var(--color-statusDanger); }
+.label[data-color="amber"] { --label-ink: var(--color-statusWarning); }
+.label[data-color="purple"] { --label-ink: color-mix(in srgb, var(--color-accent), var(--color-statusDanger)); }
+@media (max-width: 1000px) { .workspace { grid-template-columns: repeat(2,minmax(0,1fr)); } .actions { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .workspace { grid-template-columns: minmax(0,1fr); } .current { border: 0; padding: 0; } }
+
+.phase, .destination { --phase-color: var(--color-accent); }
+:is(.phase, .destination)[data-color="green"] { --phase-color: var(--color-statusSuccess); }
+:is(.phase, .destination)[data-color="red"] { --phase-color: var(--color-statusDanger); }
+:is(.phase, .destination)[data-color="amber"] { --phase-color: var(--color-statusWarning); }
+:is(.phase, .destination)[data-color="purple"] { --phase-color: color-mix(in srgb, var(--color-accent), var(--color-statusDanger)); }
+.phase { min-width: 0; }
+.phaseHeader { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-5); background: var(--color-surface); border-bottom: var(--ui-hairline) solid color-mix(in srgb, var(--phase-color) 16%, transparent); }
+.phaseHeader > div { flex: 1; min-width: 0; }
+.phaseHeader small { color: var(--phase-color); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); }
+.phaseHeader h2 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); overflow-wrap: anywhere; }
+.phaseHeader p { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
+
+.phaseBody { display: grid; gap: var(--space-5); padding: var(--space-5); }
+.stageActions { display: flex; flex-direction: column; gap: var(--space-4); }
+.stageActions h3 { margin: 0; font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
+.stageActions header p, .actionEmpty { margin: var(--space-1) 0 0; font-size: var(--typography-size-compact); color: var(--color-inkMuted); }
+.stageList { display: grid; gap: var(--space-2); }
+.stageList .destination { height: auto; min-height: var(--ui-controlLarge); padding: var(--space-2) var(--space-3); gap: var(--space-3); border: var(--ui-hairline) solid color-mix(in srgb, var(--phase-color) 20%, var(--color-line)); background: color-mix(in srgb, var(--phase-color) 6%, var(--color-surface)); color: var(--phase-color); text-align: start; white-space: normal; }
+.stageList .destination:hover { background: color-mix(in srgb, var(--phase-color) 7%, var(--color-surface)); border-color: color-mix(in srgb, var(--phase-color) 30%, var(--color-line)); }
+.stageList .destination:active, .outcomes .outcome:active { transform: scale(var(--motion-scale-popup)); }
+.stageDot { flex-shrink: 0; width: var(--space-2); height: var(--space-2); border-radius: var(--radius-full); background: var(--phase-color); }
+.destinationText { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.destinationText small { display: block; margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-regular); }
+.destination > svg { color: var(--color-inkMuted); flex-shrink: 0; }
+.outcomes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); padding-top: var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); }
+.outcomes > span { grid-column: 1 / -1; margin-bottom: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.outcomes .outcome { --outcome-color: var(--color-statusSuccess); min-height: var(--ui-controlLarge); color: var(--outcome-color); border: var(--ui-hairline) solid color-mix(in srgb, var(--outcome-color) 22%, transparent); background: color-mix(in srgb, var(--outcome-color) 10%, var(--color-surface)); }
+.outcomes .outcome[data-outcome="lost"] { --outcome-color: var(--color-statusDanger); }
+.outcomes .outcome:hover { background: color-mix(in srgb, var(--outcome-color) 18%, var(--color-surface)); }
+
+.workspace .phaseHeader { padding: 0 0 var(--space-4); }
+.workspace .phaseBody { padding: var(--space-4) 0 0; }
+@media (max-width: 640px) { .actions { border: 0; padding-inline-start: 0; } }

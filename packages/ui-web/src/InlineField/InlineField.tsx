@@ -17,6 +17,7 @@ export interface InlineFieldProps {
   required?: boolean;
   /** Campo que precisa da largura toda: o controle desce para baixo do rótulo. */
   block?: boolean;
+  hint?: ReactNode;
   /**
    * Endereço que o valor aponta. Com ele, o valor parado vira link: um clique
    * edita, dois cliques abrem. Quem só quer ver para onde vai não precisa
@@ -62,7 +63,7 @@ type PersistenceState = "idle" | "saving" | "saved" | "error";
  * clique de fora para perguntar — com isso o `onBlur` nunca disparava, e
  * link, data e dinheiro simplesmente não gravavam.
  */
-export function InlineField({ label, value, leading, empty = false, disabled = false, required = false, block = false, href, action, preview, onPreviewRequest, onCancel, children }: InlineFieldProps) {
+export function InlineField({ label, value, leading, empty = false, disabled = false, required = false, block = false, hint, href, action, preview, onPreviewRequest, onCancel, children }: InlineFieldProps) {
   const [open, setOpen] = useState(false);
   const [persistenceState, setPersistenceState] = useState<PersistenceState>("idle");
   const holder = useRef<HTMLDivElement>(null);
@@ -147,7 +148,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
    * «Orçamento do cliente» quebrava em duas linhas e desalinhava a coluna toda,
    * e um painel com dez campos ficava com altura irregular. Cortar mantém o
    * ritmo; a dica devolve o que foi cortado sem custar um clique. */
-  const rotulo = (
+  const rotulo = block ? <span className={s.stackedLabel}><span>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</span>{hint && <small>{hint}</small>}</span> : (
     <Tooltip content={label} pinOnClick={false} size="compact">
       <span className={s.label}>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</span>
     </Tooltip>

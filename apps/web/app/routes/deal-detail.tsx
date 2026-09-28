@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
+  canMoveBetweenStages,
+  canCloseAtStage,
   contactId as contactIdFactory,
   companyId as companyIdFactory,
   dealId as dealIdFactory,
@@ -41,7 +43,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, CrmLabel, DealStageActions, ActionModal, Modal, ModalContent, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -66,6 +68,11 @@ import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
 import { useDealPresence } from "../lib/deal-presence.client";
 import { ContactProfile } from "./contact-detail";
 import { CompanyProfile } from "./company-detail";
+import { PhaseFields } from "../crm/PhaseFields";
+import { RelatedRecords } from "../crm/RelatedRecords";
+import { DealTags } from "../crm/DealTags";
+import { useDealTags } from "../lib/tags.client";
+import { getStageTransitionsCollection } from "../lib/deals-collections.client";
 import styles from "./deal-detail.module.css";
 
 const ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPES.map((value) => ({ value, label: ACTIVITY_TYPE_LABELS[value] }));
@@ -131,9 +138,15 @@ function formatExternalTimeRange(startsAt: string, endsAt: string, allDay: boole
   return `${formatter.format(new Date(startsAt))}–${formatter.format(new Date(endsAt))}`;
 }
 
-export default function DealDetail({ params }: Route.ComponentProps) {
+export default function DealDetail({ params }: Route.ComponentProps) { return <DealWorkspace dealId={params.dealId} />; }
+export function DealWorkspace({ dealId, embedded = false }: { dealId: string; embedded?: boolean }) {
+  const params = { dealId };
+  const tagsByDeal = useDealTags();
+  const { data: transitions = [] } = useLiveQuery({ query: (q) => q.from({ transitions: getStageTransitionsCollection() }) });
   const dealsCollection = getDetailDealsCollection(dealIdFactory.from(params.dealId));
   const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
+  const [pageTab, setPageTab] = useState("atividade");
   const [openSections, setOpenSections] = useState<string[]>(["resumo", "detalhes"]);
   const stagesCollection = getStagesCollection();
   const pipelinesCollection = getPipelinesCollection();
@@ -642,153 +655,7 @@ export default function DealDetail({ params }: Route.ComponentProps) {
     return <PageFrame className={styles.page}><BackLink render={<Link to="/deals" />}>Negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Negócio não encontrado.</p>}</PageFrame>;
   }
 
-  return <PageFrame className={styles.page}>
-    <PageHeader
-      back={<BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
-      icon="briefcase"
-      title={<InlineEdit
-        label="Título do negócio"
-        value={deal.name}
-        disabled={!canWrite}
-        appearance="title"
-        saveOnBlur
-        errorText="O título não pode ficar vazio e precisa ter até 200 caracteres."
-        onSave={async (draft) => {
-          const next = draft.trim();
-          if (!next || next.length > 200) throw new Error("INVALID_DEAL_TITLE");
-          if (next !== deal.name) await saveField({ name: next }, "Título");
-        }}
-      />}
-      actions={<div className={styles.headerActions}>
-        <div className={styles.headerPeople}>
-          {/* Uma identidade única para o responsável. A presença mostra apenas outras pessoas. */}
-          <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
-            {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<UserAvatar user={item} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
-            {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
-          </MenuGroup>}>
-            {owner ? <UserAvatar user={owner} size="small" /> : <Icon name="account" />}
-            <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
-          </MenuButton>
-          <MenuButton variant="ghost" shape="rounded" className={styles.followers} disabled={!canWrite} aria-label={`${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}. Gerenciar`} menu={<>
-            <MenuGroup label="Seguidores">
-              {followerUsers.length === 0 && <MenuItem disabled>Ninguém segue este negócio</MenuItem>}
-              {followerUsers.map((user) => <MenuItem key={user.id} icon={<UserAvatar user={user} size="small" />} shortcut="Remover" disabled={busyFollowerId === user.id} onClick={() => void removeFollower(user.id)}>{user.name}</MenuItem>)}
-            </MenuGroup>
-            <MenuGroup label="Ações">
-              {session && !followers.some((follower) => follower.userId === session.userId) && <MenuItem icon={<Icon name="eye" />} disabled={busyFollowerId !== null} onClick={() => void addFollower(session.userId)}>Seguir este negócio</MenuItem>}
-              <MenuItem icon={<Icon name="plus" />} disabled={followerOptions.length === 0} onClick={() => setFollowerModalOpen(true)}>Adicionar seguidor</MenuItem>
-            </MenuGroup>
-          </>}>
-            <span className={styles.followerFaces} aria-hidden="true">{followerUsers.slice(0, 3).map((user) => <UserAvatar key={user.id} user={user} size="small" />)}{followerUsers.length === 0 && <Icon name="team" />}</span>
-            <span>{followers.length === 0 ? "Seguidores" : `${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}`}</span>
-          </MenuButton>
-          <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
-        </div>
-        <div className={styles.headerOutcome}>
-          {isOpen && canMove && <>
-            <Button onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
-            <Button variant="secondary" className={styles.lostButton} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
-          </>}
-          {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
-          {!isOpen && canMove && <Button variant="secondary" icon={<Icon name="undo" />} loading={reopening} onClick={() => void reopenDeal()}>Reabrir</Button>}
-        </div>
-      </div>}
-    />
-
-    <div className={styles.topo}>
-      {pipelineStages.length > 0 && <StageProgress
-        stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
-        currentId={deal.stageId}
-        durations={stageTiming.durations}
-        details={stageTiming.details}
-        outcome={deal.status === "open" ? undefined : deal.status}
-        interaction={compactStageUi ? "modal" : "popover"}
-        {...(canMove && isOpen && compactStageUi ? { onSelect: (id: string) => setSelectedStageId(id) } : {})}
-        {...(canMove && isOpen && !compactStageUi ? { onMove: (id: string) => moveDeal(id) } : {})}
-      />}
-      <p className={styles.trilha}><Link to="/deals">{pipeline?.name ?? "Funil"}</Link> <Icon name="chevron" /> {stage?.name ?? "Etapa"}</p>
-    </div>
-
-    <div className={styles.contentGrid}>
-      <aside className={styles.painel}>
-        <Accordion value={openSections} onValueChange={setOpenSections} items={[
-          { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: <div className={styles.details}>
-            {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))}</p>}
-            {/* O valor é a soma dos produtos e por isso não se edita aqui: um
-              * número solto faria a conta do funil discordar do que foi vendido. */}
-            <div className={styles.linha}><span>Valor</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong></div>
-            <InlineField label="Nome" value={deal.name} disabled={!canWrite}>
-              {(close) => <Input aria-label="Nome do negócio" defaultValue={deal.name} onBlur={(event) => { const next = event.target.value.trim(); close(next && next !== deal.name ? saveField({ name: next }, "Nome") : undefined); }} />}
-            </InlineField>
-            <InlineField label="Previsão" value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
-              {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
-            </InlineField>
-            <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>
-              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
-            </InlineField>
-            <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} empty={!linkedContact} disabled={!canWrite || !canReadContacts} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
-              {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"))} />}
-            </InlineField>
-            <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} leading={linkedCompany && <Avatar name={linkedCompany.name} size="small" />} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies} {...(linkedCompany ? { action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})}>
-              {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : saveField({ companyId: next ? companyIdFactory.from(next.value) : null }, "Empresa"))} />}
-            </InlineField>
-            {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
-          </div> },
-          { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: <div className={styles.details}>
-            {customFields.filter((field) => !field.archivedAt).map((field) => <EnrichedCustomFieldValue
-              options={fieldOptions.get(field.id) ?? []}
-              key={field.id}
-              field={field}
-              value={customValues[field.key]}
-              disabled={!canWrite}
-              onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
-              onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
-            />)}
-            {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
-          </div> },
-          { value: "produtos", title: "Produtos", icon: <Icon name="briefcase" />, content: <div className={styles.itens}>
-            {dealItems.length === 0
-              ? <p className={styles.empty}>O valor do negócio é a soma dos produtos. Adicione o que está sendo vendido.</p>
-              : <>
-                  <ul className={styles.itemList}>{dealItems.map((item) => {
-                    const totals = dealProductTotals({ ...item, unitAmount: syncedAmount(item.unitAmount) });
-                    return <li key={item.id}>
-                      <div className={styles.itemCorpo}>
-                        <strong>{item.name}</strong>
-                        <span>{formatQuantity(item.quantityMilli)} × {formatBRL(syncedAmount(item.unitAmount))}{item.discountBasisPoints > 0 ? ` · −${formatBasisPoints(item.discountBasisPoints)}%` : ""}{item.taxBasisPoints > 0 ? ` · +${formatBasisPoints(item.taxBasisPoints)}% imp.` : ""}</span>
-                      </div>
-                      <div className={styles.itemValor}>
-                        <strong>{formatBRL(totals.net)}</strong>
-                        {canWrite && <span className={styles.activityActions}>
-                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="file" />} aria-label={`Editar ${item.name}`} onClick={() => openItemModal(item)} />
-                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} onClick={() => void removeItem(item)} />
-                        </span>}
-                      </div>
-                    </li>;
-                  })}</ul>
-                  <dl className={styles.itemResumo}>
-                    <div><dt>Subtotal</dt><dd>{formatBRL(itemsSummary.gross)}</dd></div>
-                    {toCents(itemsSummary.discount) > 0 && <div><dt>Descontos</dt><dd>−{formatBRL(itemsSummary.discount)}</dd></div>}
-                    {toCents(itemsSummary.tax) > 0 && <div><dt>Impostos</dt><dd>+{formatBRL(itemsSummary.tax)}</dd></div>}
-                    <div data-total="true"><dt>Valor do negócio</dt><dd>{formatBRL(itemsSummary.net)}</dd></div>
-                  </dl>
-                </>}
-            {canWrite && <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemModal()}>Adicionar produto</Button>}
-          </div> },
-          /* Pessoa e Empresa não têm seção própria: o resumo já mostra as duas,
-           * e o botão ao lado abre a ficha inteira por cima. Repetir o nome
-           * numa seção logo abaixo era ocupar o painel com o que já estava à
-           * vista três linhas acima. */
-          ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId
-            ? <p className={styles.empty}>Vincule uma pessoa para ver o atendimento.</p>
-            : conversationsLoading ? <Skeleton />
-            : conversations.length === 0
-              ? <p className={styles.empty}>Nenhuma conversa desta pessoa ainda.</p>
-              : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?conversation=${conversation.id}`}><div className={styles.conversationBody}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {formatDateTime(conversation.lastMessageAt)}</span></div><Icon name="chevron" /></Link></li>)}</ul> }] : []),
-        ]} />
-      </aside>
-
-      <section className={styles.fluxo}>
+  const historyContent = <>
         <Composer
           label="Registrar no negócio"
           value={composerTab}
@@ -843,8 +710,181 @@ export default function DealDetail({ params }: Route.ComponentProps) {
             { value: "mudancas", label: "Mudanças", content: <Timeline items={events.filter((item) => item.type !== "activity.created").map((event) => toTimelineItem(event, { users, stages, contacts, companies, customFields })).slice(0, 10)} emptyText="Nenhuma mudança registrada." /> },
           ]} /></div>
         </section>
-      </section>
-    </div>
+  </>;
+
+  const productsContent = <div className={styles.itens}>
+            {dealItems.length === 0
+              ? <p className={styles.empty}>O valor do negócio é a soma dos produtos. Adicione o que está sendo vendido.</p>
+              : <>
+                  <ul className={styles.itemList}>{dealItems.map((item) => {
+                    const totals = dealProductTotals({ ...item, unitAmount: syncedAmount(item.unitAmount) });
+                    return <li key={item.id}>
+                      <div className={styles.itemCorpo}>
+                        <strong>{item.name}</strong>
+                        <span>{formatQuantity(item.quantityMilli)} × {formatBRL(syncedAmount(item.unitAmount))}{item.discountBasisPoints > 0 ? ` · −${formatBasisPoints(item.discountBasisPoints)}%` : ""}{item.taxBasisPoints > 0 ? ` · +${formatBasisPoints(item.taxBasisPoints)}% imp.` : ""}</span>
+                      </div>
+                      <div className={styles.itemValor}>
+                        <strong>{formatBRL(totals.net)}</strong>
+                        {canWrite && <span className={styles.activityActions}>
+                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="file" />} aria-label={`Editar ${item.name}`} onClick={() => openItemModal(item)} />
+                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} onClick={() => void removeItem(item)} />
+                        </span>}
+                      </div>
+                    </li>;
+                  })}</ul>
+                  <dl className={styles.itemResumo}>
+                    <div><dt>Subtotal</dt><dd>{formatBRL(itemsSummary.gross)}</dd></div>
+                    {toCents(itemsSummary.discount) > 0 && <div><dt>Descontos</dt><dd>−{formatBRL(itemsSummary.discount)}</dd></div>}
+                    {toCents(itemsSummary.tax) > 0 && <div><dt>Impostos</dt><dd>+{formatBRL(itemsSummary.tax)}</dd></div>}
+                    <div data-total="true"><dt>Valor do negócio</dt><dd>{formatBRL(itemsSummary.net)}</dd></div>
+                  </dl>
+                </>}
+            {canWrite && <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemModal()}>Adicionar produto</Button>}
+          </div>;
+
+  const summaryFields = <div className={styles.details}>
+            {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))}</p>}
+            <InlineField label="Previsão" value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
+              {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
+            </InlineField>
+            <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>
+              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
+            </InlineField>
+            <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} empty={!linkedContact} disabled={!canWrite || !canReadContacts} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
+              {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"))} />}
+            </InlineField>
+            <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} leading={linkedCompany && <Avatar name={linkedCompany.name} size="small" />} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies} {...(linkedCompany ? { action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})}>
+              {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : saveField({ companyId: next ? companyIdFactory.from(next.value) : null }, "Empresa"))} />}
+            </InlineField>
+            {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
+          </div>;
+  const summaryContent = <Accordion value={openSections} onValueChange={setOpenSections} items={[
+          { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: summaryFields },
+          ...(!embedded ? [{ value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: <div className={styles.details}>
+            {customFields.filter((field) => !field.archivedAt).map((field) => <EnrichedCustomFieldValue
+              options={fieldOptions.get(field.id) ?? []}
+              key={field.id}
+              field={field}
+              value={customValues[field.key]}
+              disabled={!canWrite}
+              onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
+              onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
+            />)}
+            {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
+          </div> }] : []),
+          /* Pessoa e Empresa não têm seção própria: o resumo já mostra as duas,
+           * e o botão ao lado abre a ficha inteira por cima. Repetir o nome
+           * numa seção logo abaixo era ocupar o painel com o que já estava à
+           * vista três linhas acima. */
+          ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId
+            ? <p className={styles.empty}>Vincule uma pessoa para ver o atendimento.</p>
+            : conversationsLoading ? <Skeleton />
+            : conversations.length === 0
+              ? <p className={styles.empty}>Nenhuma conversa desta pessoa ainda.</p>
+              : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?conversation=${conversation.id}`}><div className={styles.conversationBody}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {formatDateTime(conversation.lastMessageAt)}</span></div><Icon name="chevron" /></Link></li>)}</ul> }] : []),
+        ]} />;
+  const relatedContent = <div className={styles.relatedRecords}><RelatedRecords contactId={deal.contactId} companyId={deal.companyId} disabled={!canWrite} onContact={(person) => { void saveField({ contactId: person?.id ?? null }, "Pessoa"); }} onCompany={(company) => { void saveField({ companyId: company?.id ?? null }, "Empresa"); }} /></div>;
+
+  const phaseContent = stage && <div className={styles.phaseFields}><PhaseFields stage={stage} stages={pipelineStages} values={customValues} disabled={!canWrite} onOpenCommercial={() => { if (embedded) setProductsOpen(true); else setPageTab("comercial"); }} renderBuiltIn={(key) => {
+          if (key === "contactId") return <RecordSelect label="Pessoa nesta etapa" disabled={!canWrite || !canReadContacts} options={contactOptions} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onValueChange={(next) => { void saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"); }} />;
+          if (key === "companyId") return <RecordSelect label="Empresa nesta etapa" kind="company" disabled={!canWrite || !canReadCompanies} options={companyOptions} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onValueChange={(next) => { void saveField({ companyId: next ? companyIdFactory.from(next.value) : null }, "Empresa"); }} />;
+          if (key === "ownerId") return <Select label="Responsável nesta etapa" disabled={!canWrite} options={users.filter((u) => !u.deactivatedAt).map(userSelectOption)} value={deal.ownerId} onValueChange={(value) => { void saveField({ ownerId: value ? userIdFactory.from(value) : null }, "Responsável"); }} />;
+          if (key === "expectedCloseDate") return <DatePicker label="Previsão nesta etapa" disabled={!canWrite} value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(value) => { void saveField({ expectedCloseDate: value ? new Date(`${value}T12:00:00`).toISOString() : null }, "Previsão"); }} />;
+          return null;
+        }} onSave={(key, value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...customValues, [key]: value }; }))} /></div>;
+  const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
+  const valueContent = <div className={styles.dealValue}><span>Valor do negócio</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong><div><CrmLabel color={deal.status === "won" ? "green" : deal.status === "lost" ? "red" : "blue"}>{statusLabel(deal.status)}</CrmLabel><Button variant="ghost" size="sm" shape="rounded" onClick={() => { if (embedded) setProductsOpen(true); else setPageTab("comercial"); }}>Itens e valores <Icon name="right" /></Button></div></div>;
+  const moveActions = <DealStageActions closed={!isOpen} destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && canMoveBetweenStages(stage, target, transitions)).map((target) => ({ id: target.id, label: target.name, color: target.color, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []} onMove={(id) => void moveDeal(id).catch((cause: unknown) => notify({ title: "Movimento não concluído", description: cause instanceof Error ? cause.message : "Revise os campos da etapa.", tone: "error" }))} onWon={stage && isOpen && canMove && canCloseAtStage(stage, "won") ? () => void closeDeal("won").catch(() => notify({ title: "Não foi possível registrar o ganho", tone: "error" })) : undefined} onLost={stage && isOpen && canMove && canCloseAtStage(stage, "lost") ? () => { setLossReason(""); setLossModalOpen(true); } : undefined} />;
+
+  return <PageFrame className={[styles.page, embedded ? styles.embedded : ""].join(" ")}>
+    {embedded ? <header className={styles.quickHeader}><span className={styles.quickIcon}><Icon name="briefcase" /></span><div><small>{pipeline?.name ?? "Negócio"}</small><InlineEdit label="Título do negócio" value={deal.name} disabled={!canWrite} appearance="title" saveOnBlur onSave={async (draft) => { const next = draft.trim(); if (!next || next.length > 200) throw new Error("Informe um título de até 200 caracteres."); if (next !== deal.name) await saveField({ name: next }, "Título"); }} /></div>{owner && <UserAvatar user={owner} size="small" />}</header> : <PageHeader
+      back={embedded ? undefined : <BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
+      icon="briefcase"
+      title={<InlineEdit
+        label="Título do negócio"
+        value={deal.name}
+        disabled={!canWrite}
+        appearance="title"
+        saveOnBlur
+        errorText="O título não pode ficar vazio e precisa ter até 200 caracteres."
+        onSave={async (draft) => {
+          const next = draft.trim();
+          if (!next || next.length > 200) throw new Error("INVALID_DEAL_TITLE");
+          if (next !== deal.name) await saveField({ name: next }, "Título");
+        }}
+      />}
+      actions={<div className={styles.headerActions}>
+        <div className={styles.headerPeople}>
+          {/* Uma identidade única para o responsável. A presença mostra apenas outras pessoas. */}
+          <MenuButton variant="ghost" shape="rounded" indicator={false} disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
+            {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<UserAvatar user={item} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
+            {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
+          </MenuGroup>}>
+            {owner ? <UserAvatar user={owner} size="small" /> : <Icon name="account" />}
+            <span><small>Responsável</small>{owner?.name ?? "Não atribuído"}</span>
+          </MenuButton>
+          <MenuButton variant="ghost" shape="rounded" className={styles.followers} disabled={!canWrite} aria-label={`${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}. Gerenciar`} menu={<>
+            <MenuGroup label="Seguidores">
+              {followerUsers.length === 0 && <MenuItem disabled>Ninguém segue este negócio</MenuItem>}
+              {followerUsers.map((user) => <MenuItem key={user.id} icon={<UserAvatar user={user} size="small" />} shortcut="Remover" disabled={busyFollowerId === user.id} onClick={() => void removeFollower(user.id)}>{user.name}</MenuItem>)}
+            </MenuGroup>
+            <MenuGroup label="Ações">
+              {session && !followers.some((follower) => follower.userId === session.userId) && <MenuItem icon={<Icon name="eye" />} disabled={busyFollowerId !== null} onClick={() => void addFollower(session.userId)}>Seguir este negócio</MenuItem>}
+              <MenuItem icon={<Icon name="plus" />} disabled={followerOptions.length === 0} onClick={() => setFollowerModalOpen(true)}>Adicionar seguidor</MenuItem>
+            </MenuGroup>
+          </>}>
+            <span className={styles.followerFaces} aria-hidden="true">{followerUsers.slice(0, 3).map((user) => <UserAvatar key={user.id} user={user} size="small" />)}{followerUsers.length === 0 && <Icon name="team" />}</span>
+            <span>{followers.length === 0 ? "Seguidores" : `${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}`}</span>
+          </MenuButton>
+          <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
+        </div>
+        <div className={styles.headerOutcome}>
+          {isOpen && canMove && <>
+            <Button className={styles.wonButton} icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
+            <Button variant="secondary" className={styles.lostButton} icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
+          </>}
+          {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
+          {!isOpen && canMove && <Button variant="secondary" icon={<Icon name="undo" />} loading={reopening} onClick={() => void reopenDeal()}>Reabrir</Button>}
+        </div>
+      </div>}
+    />}
+
+    {!embedded && <div className={styles.topo}>
+      {pipelineStages.length > 0 && <StageProgress
+        stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
+        currentId={deal.stageId}
+        durations={stageTiming.durations}
+        details={stageTiming.details}
+        outcome={deal.status === "open" ? undefined : deal.status}
+        interaction={compactStageUi ? "modal" : "popover"}
+        {...(canMove && isOpen && compactStageUi ? { onSelect: (id: string) => setSelectedStageId(id) } : {})}
+        {...(canMove && isOpen && !compactStageUi ? { onMove: (id: string) => moveDeal(id) } : {})}
+      />}
+      <p className={styles.trilha}><Link to="/deals">{pipeline?.name ?? "Funil"}</Link> <Icon name="chevron" /> {stage?.name ?? "Etapa"}</p>
+    </div>}
+
+    {embedded ? <div className={styles.quickGrid}>
+      <aside className={styles.quickContext}>
+        {valueContent}
+        <Tabs label="Contexto do negócio" defaultValue="resumo" items={[
+          { value: "resumo", label: "Resumo", content: <><div className={styles.quickSummary}>{summaryFields}</div><div className={styles.tagSection}>{tagsContent}</div></> },
+          { value: "historico", label: "Histórico", content: <div className={styles.quickHistory}>{historyContent}</div> },
+          { value: "pessoas", label: "Vínculos", content: relatedContent },
+        ]} />
+      </aside>
+      <section className={styles.quickPhase}>{phaseContent}</section>
+      <aside className={styles.quickActions}>{moveActions}</aside>
+    </div> : <div className={styles.contentGrid}>
+      <aside className={styles.painel}>{valueContent}{summaryContent}<div className={styles.tagSection}>{tagsContent}</div></aside>
+      <section className={styles.fluxo}><Tabs label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
+        { value: "atividade", label: "Atividades e histórico", content: <div className={styles.pageActivity}>{historyContent}</div> },
+        { value: "etapa", label: "Campos da etapa", content: phaseContent },
+        { value: "comercial", label: "Itens e valores", content: <div className={styles.commercialPage}><h2>Itens do negócio</h2><p>Produtos, serviços e composição do valor negociado.</p>{productsContent}</div> },
+        { value: "pessoas", label: "Pessoas e empresa", content: relatedContent },
+      ]} /></section>
+    </div>}
+
+    <Modal open={productsOpen} onOpenChange={setProductsOpen}><ModalContent title="Itens e valores do negócio" size="wide"><div className={styles.commercialPage}>{productsContent}</div></ModalContent></Modal>
 
     <ActionModal
       open={selectedStage !== undefined}

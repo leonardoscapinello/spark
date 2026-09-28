@@ -27,3 +27,8 @@ export const TodosOsTipos = () => {
 };
 
 export const Bloqueado = () => <CustomFieldValue field={define("currency", "Ticket médio")} value={249900} disabled onSave={async () => {}} />;
+
+export const CampoDaEtapa = () => {
+  const [value, setValue] = useState<unknown>(null);
+  return <CustomFieldValue field={define("single_select", "Origem do negócio", ["Indicação", "Site", "Evento"])} layout="stacked" hint="Importante" value={value} onSave={async (next) => setValue(next)} />;
+};

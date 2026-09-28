@@ -385,3 +385,9 @@
 
 /* Aviso da fila de envio (docs/adr/0017): acima do conteúdo, no mesmo recuo do título. Âmbar é semântico aqui — pendência —, não marca (ADR-0034). */
 .sendQueueNotice { flex-shrink: 0; padding: var(--space-4) var(--space-8) 0; }
+
+/* No celular, os rótulos do rail expandido não podem invadir outros controles. */
+@media (max-width: 760px) {
+  .rail .railLabel, .rail .brandWordmark { display: none; }
+  .rail .brandSymbol { opacity: 1; visibility: visible; }
+}

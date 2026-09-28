@@ -37,3 +37,5 @@
 .popup[data-placement="top"]:is([data-starting-style],[data-ending-style]) { transform: translateY(calc(-100% - var(--space-2))); }
 .popup[data-placement="bottom"]:is([data-starting-style],[data-ending-style]) { transform: translateY(calc(100% + var(--space-2))); }
 @media (prefers-reduced-motion: reduce) { .popup { transition-property: opacity; } .popup:is([data-starting-style],[data-ending-style]) { transform: none; } }
+
+.header > div:first-child { flex: 1; min-width: 0; }
