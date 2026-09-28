@@ -39,7 +39,8 @@ export function optimisticDeal(input: Omit<CreateDealInput, "id">, orgId: OrgId)
     stageEnteredAt: now,
     createdAt: now,
     updatedAt: now,
-    customFields: {},
+    customFields: input.customFields ?? {},
+    tags: input.tags ?? [],
     deletedAt: null,
     isArchived: false,
   };
@@ -158,6 +159,8 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
           status: deal.status,
           expectedCloseDate: deal.expectedCloseDate,
           lossReason: deal.lossReason,
+          customFields: deal.customFields ?? {},
+          tags: deal.tags ?? [],
         });
 
         return confirmed(response);
@@ -197,7 +200,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
             return confirmed(response);
           }
 
-          const editableFields = ["name", "amount", "contactId", "companyId", "ownerId", "expectedCloseDate", "customFields", "isArchived"];
+          const editableFields = ["name", "amount", "contactId", "companyId", "ownerId", "expectedCloseDate", "customFields", "isArchived", "tags"];
           if (changedFields.length > 0 && changedFields.every((field) => editableFields.includes(field))) {
             // Envia somente o delta. Mandar a linha inteira em cada blur fazia
             // duas gravações concorrentes em campos distintos se sobrescreverem.
@@ -209,6 +212,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
               ...(changedFields.includes("ownerId") ? { ownerId: mutation.modified.ownerId } : {}),
               ...(changedFields.includes("expectedCloseDate") ? { expectedCloseDate: mutation.modified.expectedCloseDate } : {}),
               ...(changedFields.includes("customFields") ? { customFields: mutation.modified.customFields ?? {} } : {}),
+              ...(changedFields.includes("tags") ? { tags: mutation.modified.tags ?? [] } : {}),
               ...(changedFields.includes("isArchived") ? { isArchived: mutation.modified.isArchived } : {}),
             });
             return confirmed(response);

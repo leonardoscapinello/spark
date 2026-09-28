@@ -5,6 +5,7 @@ import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
 import { contacts } from "./contacts.js";
 import { companies } from "./companies.js";
+import { deals } from "./deals.js";
 import { products } from "./catalog.js";
 
 /**
@@ -71,3 +72,10 @@ export const productTags = pgTable(
     pgPolicy("product_tags_isolation_by_org", { for: "all", to: APP_ROLE, using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid` }),
   ],
 ).enableRLS();
+
+export const dealTags = pgTable("deal_tags", {
+  orgId: uuid("org_id").notNull().references(() => organizations.id),
+  dealId: uuid("deal_id").notNull().references(() => deals.id, { onDelete: "cascade" }),
+  tagId: uuid("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.dealId, t.tagId] }), pgPolicy("deal_tags_isolation_by_org", { for: "all", to: APP_ROLE, using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid` })]).enableRLS();

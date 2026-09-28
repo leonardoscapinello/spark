@@ -18,6 +18,7 @@ export const StageSchema = z.object({
   orgId: zOrgId,
   pipelineId: zPipelineId,
   name: z.string().min(1, { error: "Stage name is required" }).max(200),
+  color: z.enum(["neutral", "blue", "green", "red", "amber", "purple"]).optional(),
   sortOrder: z.number().int().min(0),
   /** A entrada é obrigatória, mas pode mudar de nome e posição. */
   isEntry: z.boolean().default(false),
@@ -93,6 +94,7 @@ export const ReorderStagesResponseSchema = z.object({ stages: z.array(StageSchem
 export type ReorderStagesResponse = z.infer<typeof ReorderStagesResponseSchema>;
 
 export const ConfigureStageInputSchema = z.object({
+  color: z.enum(["neutral", "blue", "green", "red", "amber", "purple"]).optional(),
   slaMinutes: z.number().int().min(1).nullable(),
   allowWon: z.boolean(),
   allowLost: z.boolean(),

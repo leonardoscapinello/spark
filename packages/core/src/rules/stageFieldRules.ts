@@ -148,7 +148,7 @@ export function evaluateStageFields({ deal, productCount, rules, stages, targetS
  */
 export function stageFieldGaps({ deal, productCount, rules }: Pick<EvaluateStageFieldsInput, "deal" | "productCount" | "rules">): StageFieldIssue[] {
   return rules
-    .filter((rule) => rule.pipelineId === deal.pipelineId && rule.stageId === deal.stageId)
+    .filter((rule) => rule.pipelineId === deal.pipelineId && rule.stageId === deal.stageId && rule.level !== "optional")
     .filter((rule) => !isFilled(dealFieldValue(deal, rule.fieldKey, productCount)))
     .map((rule) => ({ fieldKey: rule.fieldKey, stageId: rule.stageId, level: rule.level }));
 }

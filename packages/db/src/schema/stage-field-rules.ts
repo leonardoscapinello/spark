@@ -24,7 +24,7 @@ export const stageFieldRules = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check("stage_field_rules_level_check", sql`${t.level} = ANY (ARRAY['required', 'important'])`),
+    check("stage_field_rules_level_check", sql`${t.level} = ANY (ARRAY['optional', 'required', 'important'])`),
     unique("stage_field_rules_stage_field").on(t.orgId, t.stageId, t.fieldKey),
     pgPolicy("stage_field_rules_isolation_by_org", {
       for: "all",

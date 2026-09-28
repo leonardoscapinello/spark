@@ -707,6 +707,51 @@
         ]
       }
     },
+    "/v1/contacts/{id}/merge": {
+      "post": {
+        "operationId": "ContactsController_merge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeContactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeContactResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "contacts"
+        ]
+      }
+    },
     "/v1/contacts/search": {
       "get": {
         "operationId": "ContactsController_search",
@@ -1073,6 +1118,42 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CustomFieldWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/v1/settings/tags": {
+      "post": {
+        "operationId": "TagsController_save",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveTagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagWriteResponseDto"
                 }
               }
             }
@@ -5621,6 +5702,36 @@
           "disabled"
         ]
       },
+      "MergeContactDto": {
+        "type": "object",
+        "properties": {
+          "sourceContactId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "sourceContactId"
+        ]
+      },
+      "MergeContactResponseDto": {
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "contactId",
+          "txid"
+        ]
+      },
       "SearchContactsResponseDto": {
         "type": "object",
         "properties": {
@@ -6568,6 +6679,109 @@
           "archived"
         ]
       },
+      "SaveTagDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "color": {
+            "type": "string",
+            "enum": [
+              "neutral",
+              "blue",
+              "green",
+              "red",
+              "amber",
+              "purple"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "color"
+        ]
+      },
+      "TagWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "slug": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "color": {
+                "type": "string",
+                "maxLength": 40,
+                "default": null,
+                "nullable": true
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "archivedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "default": null,
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "name",
+              "slug",
+              "createdAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "tag",
+          "txid"
+        ]
+      },
       "AddDealFollowerDto": {
         "type": "object",
         "properties": {
@@ -6987,6 +7201,7 @@
           "level": {
             "type": "string",
             "enum": [
+              "optional",
               "required",
               "important"
             ]
@@ -7030,6 +7245,7 @@
               "level": {
                 "type": "string",
                 "enum": [
+                  "optional",
                   "required",
                   "important"
                 ]
@@ -7419,6 +7635,17 @@
             "minLength": 1,
             "maxLength": 200
           },
+          "color": {
+            "type": "string",
+            "enum": [
+              "neutral",
+              "blue",
+              "green",
+              "red",
+              "amber",
+              "purple"
+            ]
+          },
           "sortOrder": {
             "type": "integer",
             "minimum": 0,
@@ -7473,6 +7700,17 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
+              },
+              "color": {
+                "type": "string",
+                "enum": [
+                  "neutral",
+                  "blue",
+                  "green",
+                  "red",
+                  "amber",
+                  "purple"
+                ]
               },
               "sortOrder": {
                 "type": "integer",
@@ -7607,6 +7845,17 @@
                 "minLength": 1,
                 "maxLength": 200
               },
+              "color": {
+                "type": "string",
+                "enum": [
+                  "neutral",
+                  "blue",
+                  "green",
+                  "red",
+                  "amber",
+                  "purple"
+                ]
+              },
               "sortOrder": {
                 "type": "integer",
                 "minimum": 0,
@@ -7737,6 +7986,17 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
+              },
+              "color": {
+                "type": "string",
+                "enum": [
+                  "neutral",
+                  "blue",
+                  "green",
+                  "red",
+                  "amber",
+                  "purple"
+                ]
               },
               "sortOrder": {
                 "type": "integer",
@@ -7881,6 +8141,17 @@
                   "minLength": 1,
                   "maxLength": 200
                 },
+                "color": {
+                  "type": "string",
+                  "enum": [
+                    "neutral",
+                    "blue",
+                    "green",
+                    "red",
+                    "amber",
+                    "purple"
+                  ]
+                },
                 "sortOrder": {
                   "type": "integer",
                   "minimum": 0,
@@ -7982,6 +8253,17 @@
       "ConfigureStageDto": {
         "type": "object",
         "properties": {
+          "color": {
+            "type": "string",
+            "enum": [
+              "neutral",
+              "blue",
+              "green",
+              "red",
+              "amber",
+              "purple"
+            ]
+          },
           "slaMinutes": {
             "type": "integer",
             "minimum": 1,
@@ -8035,6 +8317,17 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 200
+              },
+              "color": {
+                "type": "string",
+                "enum": [
+                  "neutral",
+                  "blue",
+                  "green",
+                  "red",
+                  "amber",
+                  "purple"
+                ]
               },
               "sortOrder": {
                 "type": "integer",
@@ -8175,6 +8468,15 @@
             ],
             "nullable": true
           },
+          "tags": {
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          },
           "customFields": {
             "type": "object",
             "additionalProperties": {}
@@ -8261,7 +8563,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-27T19:42:23.989Z",
+                "default": "2026-09-28T02:49:03.671Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8273,6 +8575,15 @@
                     "minLength": 1
                   }
                 ]
+              },
+              "tags": {
+                "maxItems": 50,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
               },
               "customFields": {
                 "type": "object",
@@ -8419,6 +8730,15 @@
             "maxLength": 500,
             "nullable": true
           },
+          "tags": {
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          },
           "customFields": {
             "type": "object",
             "additionalProperties": {}
@@ -8512,7 +8832,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-27T19:42:23.992Z",
+                "default": "2026-09-28T02:49:03.675Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8524,6 +8844,15 @@
                     "minLength": 1
                   }
                 ]
+              },
+              "tags": {
+                "maxItems": 50,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
               },
               "customFields": {
                 "type": "object",
@@ -8694,7 +9023,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-27T19:42:23.993Z",
+                "default": "2026-09-28T02:49:03.676Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8706,6 +9035,15 @@
                     "minLength": 1
                   }
                 ]
+              },
+              "tags": {
+                "maxItems": 50,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
               },
               "customFields": {
                 "type": "object",
@@ -8880,7 +9218,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-27T19:42:23.994Z",
+                "default": "2026-09-28T02:49:03.678Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8892,6 +9230,15 @@
                     "minLength": 1
                   }
                 ]
+              },
+              "tags": {
+                "maxItems": 50,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
               },
               "customFields": {
                 "type": "object",
@@ -9046,7 +9393,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-27T19:42:23.995Z",
+                "default": "2026-09-28T02:49:03.679Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9058,6 +9405,15 @@
                     "minLength": 1
                   }
                 ]
+              },
+              "tags": {
+                "maxItems": 50,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                }
               },
               "customFields": {
                 "type": "object",

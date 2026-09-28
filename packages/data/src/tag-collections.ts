@@ -1,7 +1,7 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { CompanyTagSchema, ContactTagSchema, ProductTagSchema, TagSchema } from "@spark/core";
+import { DealTagSchema, CompanyTagSchema, ContactTagSchema, ProductTagSchema, TagSchema } from "@spark/core";
 import { sparkShapeOptions } from "./shape-options.js";
 
 /**
@@ -64,3 +64,8 @@ export type TagsCollection = ReturnType<typeof createTagsCollection>;
 export type ContactTagsCollection = ReturnType<typeof createContactTagsCollection>;
 export type CompanyTagsCollection = ReturnType<typeof createCompanyTagsCollection>;
 export type ProductTagsCollection = ReturnType<typeof createProductTagsCollection>;
+
+export function createDealTagsCollection() {
+  return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS, id: "deal_tags", schema: DealTagSchema, getKey: (link) => `${link.dealId}:${link.tagId}`, shapeOptions: sparkShapeOptions("deal_tags") }));
+}
+export type DealTagsCollection = ReturnType<typeof createDealTagsCollection>;

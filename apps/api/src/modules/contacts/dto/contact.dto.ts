@@ -23,3 +23,7 @@ export class ImportContactsDto extends createZodDto(ImportContactsInputSchema) {
 export class ImportContactsResponseDto extends createZodDto(ImportContactsResponseSchema) {}
 export class SearchContactsQueryDto extends createZodDto(SearchContactsQuerySchema) {}
 export class SearchContactsResponseDto extends createZodDto(SearchContactsResponseSchema) {}
+
+import { MergeContactInputSchema, MergeContactResponseSchema } from "@spark/core";
+export class MergeContactDto extends createZodDto(MergeContactInputSchema) {}
+export class MergeContactResponseDto extends createZodDto(MergeContactResponseSchema) {}

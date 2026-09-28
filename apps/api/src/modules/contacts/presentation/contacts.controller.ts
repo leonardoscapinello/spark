@@ -1,3 +1,5 @@
+import { ContactMergeRepository } from "../infrastructure/contact-merge.repository.js";
+import { MergeContactDto, MergeContactResponseDto } from "../dto/contact.dto.js";
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { contactId as contactIdFactory } from "@spark/core";
@@ -23,6 +25,7 @@ import { SearchContactsUseCase } from "../application/search-contacts.usecase.js
 @Controller("v1/contacts")
 export class ContactsController {
   constructor(
+    private readonly contactMerge: ContactMergeRepository,
     private readonly getCurrentUser: GetCurrentUserUseCase,
     private readonly createContact: CreateContactUseCase,
     private readonly updateContact: UpdateContactUseCase,
@@ -31,6 +34,14 @@ export class ContactsController {
     private readonly importContacts: ImportContactsUseCase,
     private readonly searchContacts: SearchContactsUseCase,
   ) {}
+
+  @Post(":id/merge")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard) @RequireCapability("contacts:write")
+  @ApiBearerAuth() @ApiOkResponse({ type: MergeContactResponseDto })
+  async merge(@CurrentSupabaseUser() claims: SupabaseJwtClaims, @Param("id") id: string, @Body() body: MergeContactDto) {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    return this.contactMerge.merge(user.orgId, user.id, contactIdFactory.from(id), body.sourceContactId);
+  }
 
   @Get("search")
   @UseGuards(SupabaseJwtGuard, CapabilityGuard)

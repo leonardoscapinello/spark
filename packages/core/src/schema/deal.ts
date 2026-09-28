@@ -29,6 +29,7 @@ export const DealSchema = z.object({
   stageEnteredAt: zServerTimestamp.default(() => new Date().toISOString()),
   /** Campos definidos pela organização (packages/core/schema/customField,
    * entityType "deal") — como no Pipedrive, um negócio também carrega os seus. */
+  tags: z.array(z.string().trim().min(1).max(120)).max(50).optional(),
   customFields: z.record(z.string(), z.unknown()).optional(),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,

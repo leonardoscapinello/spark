@@ -17,6 +17,7 @@ export const stages = pgTable(
       .notNull()
       .references(() => pipelines.id),
     name: text("name").notNull(),
+    color: text("color").notNull().default("neutral"),
     sortOrder: integer("sort_order").notNull(),
     isEntry: boolean("is_entry").notNull().default(false),
     probability: integer("probability").notNull().default(100),

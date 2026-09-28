@@ -112,3 +112,6 @@ export const ImportContactsResponseSchema = z.object({
   txid: z.number().int(),
 });
 export type ImportContactsResponse = z.infer<typeof ImportContactsResponseSchema>;
+
+export const MergeContactInputSchema = z.object({ sourceContactId: zContactId });
+export const MergeContactResponseSchema = z.object({ contactId: zContactId, txid: z.number().int() });

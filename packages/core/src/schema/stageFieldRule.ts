@@ -2,9 +2,9 @@ import { z } from "zod";
 import { zOrgId, zPipelineId, zServerTimestamp, zStageFieldRuleId, zStageId } from "./zodHelpers.js";
 
 /** Obrigatório barra a passagem; importante só sinaliza (packages/core/rules/stageFieldRules). */
-export const STAGE_FIELD_LEVELS = ["required", "important"] as const;
+export const STAGE_FIELD_LEVELS = ["optional", "required", "important"] as const;
 export type StageFieldLevel = (typeof STAGE_FIELD_LEVELS)[number];
-export const STAGE_FIELD_LEVEL_LABELS: Record<StageFieldLevel, string> = { required: "Obrigatório", important: "Importante" };
+export const STAGE_FIELD_LEVEL_LABELS: Record<StageFieldLevel, string> = { optional: "Opcional", required: "Obrigatório", important: "Importante" };
 
 /**
  * «Neste funil, nesta etapa, este campo é obrigatório/importante.»

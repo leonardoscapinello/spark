@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zCompanyId, zContactId, zOrgId, zProductId, zServerTimestamp, zTagId } from "./zodHelpers.js";
+import { zDealId, zCompanyId, zContactId, zOrgId, zProductId, zServerTimestamp, zTagId } from "./zodHelpers.js";
 
 /**
  * Catálogo de marcações da organização (ADR-0035). `slug` é a forma
@@ -42,3 +42,9 @@ export const ProductTagSchema = z.object({
   createdAt: zServerTimestamp,
 });
 export type ProductTag = z.infer<typeof ProductTagSchema>;
+
+export const DealTagSchema = z.object({ orgId: zOrgId, dealId: zDealId, tagId: zTagId, createdAt: zServerTimestamp });
+export type DealTag = z.infer<typeof DealTagSchema>;
+export const SaveTagInputSchema = z.object({ name: z.string().trim().min(1).max(120), color: z.enum(["neutral", "blue", "green", "red", "amber", "purple"]) });
+export type SaveTagInput = z.infer<typeof SaveTagInputSchema>;
+export const TagWriteResponseSchema = z.object({ tag: TagSchema, txid: z.number().int() });

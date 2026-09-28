@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { and, eq, gte, isNull, sql } from "drizzle-orm";
 import { createAppDbClient, withOrgContext, deals, stages, stageTransitions, dealStageMoves, type SparkDb } from "@spark/db";
@@ -27,7 +28,7 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
 export class DealsRepository {
   private readonly db: SparkDb;
 
-  constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter) {
+  constructor(private readonly eventWriter: DomainEventWriter, private readonly customFields: CustomFieldWriter, private readonly tags: TagWriter) {
     this.db = createAppDbClient();
   }
 
@@ -68,6 +69,7 @@ export class DealsRepository {
 
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
 
+      if (input.tags !== undefined) await this.tags.write(tx, orgId, "deal", deal.id, input.tags);
       if (input.customFields !== undefined) await this.customFields.write(tx, orgId, "deal", deal.id, input.customFields);
       await this.eventWriter.append(tx, { orgId, actorUserId, contactId: deal.contactId, companyId: deal.companyId, dealId: deal.id, type: "deal.created", data: { name: deal.name, stageId: deal.stageId } });
       return { deal, txid };
@@ -164,6 +166,7 @@ export class DealsRepository {
       if (!row) throw new NotFoundException(`Deal ${dealId} not found.`);
       const deal = toDeal(row);
       // Espelha os campos personalizados nas colunas tipadas, na mesma transação (ADR-0035).
+      if (input.tags !== undefined) await this.tags.write(tx, orgId, "deal", deal.id, input.tags);
       const customChanges = input.customFields !== undefined ? await this.customFields.write(tx, orgId, "deal", deal.id, input.customFields) : [];
       const fields = Object.keys(input).filter((field) => field !== "customFields");
       const changes = [...auditChanges(before, row, fields), ...customChanges];

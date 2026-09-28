@@ -8,7 +8,10 @@ import { sparkShapeOptions } from "./shape-options.js";
 
 export function createStageTransitionsCollection() { return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS, id: "stage_transitions", schema: StageTransitionSchema, getKey: (row) => row.id, shapeOptions: sparkShapeOptions("stage_transitions") })); }
 
-export function configureStage(id: string, input: ConfigureStageInput) { return stagesControllerConfigure(id, input); }
+export function configureStage(id: string, input: ConfigureStageInput) {
+  const { color, ...required } = input;
+  return stagesControllerConfigure(id, { ...required, ...(color === undefined ? {} : { color }) });
+}
 
 export function optimisticBusinessHour(input: Omit<BusinessHour, "id" | "orgId" | "createdAt" | "updatedAt">, orgId: OrgId): BusinessHour {
   const now = new Date().toISOString();

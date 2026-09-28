@@ -25,6 +25,7 @@ export class StagesRepository {
           orgId,
           pipelineId: input.pipelineId,
           name: input.name,
+          color: input.color ?? "neutral",
           sortOrder: input.sortOrder,
           // probability fica no default da coluna (100) — nunca vem do
           // cliente (packages/core/schema/stage.ts).
@@ -71,7 +72,7 @@ export class StagesRepository {
         const targets = await tx.select({ id: stages.id }).from(stages).where(and(eq(stages.orgId, orgId), eq(stages.pipelineId, current.pipelineId), inArray(stages.id, input.allowedDestinationStageIds)));
         if (targets.length !== new Set(input.allowedDestinationStageIds).size) throw new Error("Every destination must belong to the same pipeline.");
       }
-      const [row] = await tx.update(stages).set({ slaMinutes: input.slaMinutes, allowWon: input.allowWon, allowLost: input.allowLost, restrictTransitions: input.restrictTransitions, updatedAt: new Date() }).where(and(eq(stages.orgId, orgId), eq(stages.id, id))).returning();
+      const [row] = await tx.update(stages).set({ ...(input.color !== undefined ? { color: input.color } : {}), slaMinutes: input.slaMinutes, allowWon: input.allowWon, allowLost: input.allowLost, restrictTransitions: input.restrictTransitions, updatedAt: new Date() }).where(and(eq(stages.orgId, orgId), eq(stages.id, id))).returning();
       if (!row) throw new NotFoundException(`Stage ${id} not found.`);
       await tx.delete(stageTransitions).where(and(eq(stageTransitions.orgId, orgId), eq(stageTransitions.fromStageId, id)));
       if (input.restrictTransitions && input.allowedDestinationStageIds.length > 0) {
@@ -146,6 +147,7 @@ function toStage(row: {
   orgId: string;
   pipelineId: string;
   name: string;
+  color: string;
   sortOrder: number;
   isEntry: boolean;
   probability: number;
@@ -162,6 +164,7 @@ function toStage(row: {
     orgId: row.orgId,
     pipelineId: row.pipelineId,
     name: row.name,
+    color: row.color,
     sortOrder: row.sortOrder,
     isEntry: row.isEntry,
     probability: row.probability,

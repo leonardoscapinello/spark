@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { and, eq, inArray } from "drizzle-orm";
-import { companyTags, contactTags, productTags, tags, type SparkDb } from "@spark/db";
+import { companyTags, contactTags, dealTags, productTags, tags, type SparkDb } from "@spark/db";
 import { normalizeTagNames, tagDisplayName, tagSlug, type OrgId } from "@spark/core";
 
 /** Onde o vínculo de cada entidade marcável mora. */
-export type TaggableEntity = "contact" | "company" | "product";
+export type TaggableEntity = "contact" | "company" | "product" | "deal";
 
 /**
  * Grava as marcações de um registro nas tabelas de vínculo (ADR-0035).
@@ -23,6 +23,11 @@ export class TagWriter {
     const wanted = normalizeTagNames(names);
     const tagIds = wanted.length === 0 ? [] : await this.resolveTagIds(tx, orgId, wanted);
 
+    if (entity === "deal") {
+      await tx.delete(dealTags).where(eq(dealTags.dealId, entityId));
+      if (tagIds.length > 0) await tx.insert(dealTags).values(tagIds.map((tagId) => ({ orgId, dealId: entityId, tagId }))).onConflictDoNothing();
+      return;
+    }
     if (entity === "contact") {
       await tx.delete(contactTags).where(eq(contactTags.contactId, entityId));
       if (tagIds.length > 0) {

@@ -594,6 +594,21 @@ export interface UpdateIntegrationStatusDto {
   disabled: boolean;
 }
 
+export interface MergeContactDto {
+  /** @minLength 1 */
+  sourceContactId: string;
+}
+
+export interface MergeContactResponseDto {
+  /** @minLength 1 */
+  contactId: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type SearchContactsResponseDtoContactsItemLeadStatus = typeof SearchContactsResponseDtoContactsItemLeadStatus[keyof typeof SearchContactsResponseDtoContactsItemLeadStatus];
 
 
@@ -1147,6 +1162,60 @@ export interface ArchiveCustomFieldDto {
   archived: boolean;
 }
 
+export type SaveTagDtoColor = typeof SaveTagDtoColor[keyof typeof SaveTagDtoColor];
+
+
+export const SaveTagDtoColor = {
+  neutral: 'neutral',
+  blue: 'blue',
+  green: 'green',
+  red: 'red',
+  amber: 'amber',
+  purple: 'purple',
+} as const;
+
+export interface SaveTagDto {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  color: SaveTagDtoColor;
+}
+
+export type TagWriteResponseDtoTag = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  slug: string;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  color?: string | null;
+  createdAt: string;
+  archivedAt?: string | null;
+};
+
+export interface TagWriteResponseDto {
+  tag: TagWriteResponseDtoTag;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export interface AddDealFollowerDto {
   /** @minLength 1 */
   userId: string;
@@ -1362,6 +1431,7 @@ export type CreateStageFieldRuleDtoLevel = typeof CreateStageFieldRuleDtoLevel[k
 
 
 export const CreateStageFieldRuleDtoLevel = {
+  optional: 'optional',
   required: 'required',
   important: 'important',
 } as const;
@@ -1385,6 +1455,7 @@ export type StageFieldRuleWriteResponseDtoRuleLevel = typeof StageFieldRuleWrite
 
 
 export const StageFieldRuleWriteResponseDtoRuleLevel = {
+  optional: 'optional',
   required: 'required',
   important: 'important',
 } as const;
@@ -1624,6 +1695,18 @@ export interface CreatePipelineResponseDto {
   txid: number;
 }
 
+export type CreateStageDtoColor = typeof CreateStageDtoColor[keyof typeof CreateStageDtoColor];
+
+
+export const CreateStageDtoColor = {
+  neutral: 'neutral',
+  blue: 'blue',
+  green: 'green',
+  red: 'red',
+  amber: 'amber',
+  purple: 'purple',
+} as const;
+
 export interface CreateStageDto {
   /** @minLength 1 */
   id: string;
@@ -1634,6 +1717,7 @@ export interface CreateStageDto {
      * @maxLength 200
      */
   name: string;
+  color?: CreateStageDtoColor;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1650,6 +1734,18 @@ export interface CreateStageDto {
   restrictTransitions?: boolean;
 }
 
+export type CreateStageResponseDtoStageColor = typeof CreateStageResponseDtoStageColor[keyof typeof CreateStageResponseDtoStageColor];
+
+
+export const CreateStageResponseDtoStageColor = {
+  neutral: 'neutral',
+  blue: 'blue',
+  green: 'green',
+  red: 'red',
+  amber: 'amber',
+  purple: 'purple',
+} as const;
+
 export type CreateStageResponseDtoStage = {
   /** @minLength 1 */
   id: string;
@@ -1662,6 +1758,7 @@ export type CreateStageResponseDtoStage = {
      * @maxLength 200
      */
   name: string;
+  color?: CreateStageResponseDtoStageColor;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1704,6 +1801,18 @@ export interface RenameStageDto {
   name: string;
 }
 
+export type RenameStageResponseDtoStageColor = typeof RenameStageResponseDtoStageColor[keyof typeof RenameStageResponseDtoStageColor];
+
+
+export const RenameStageResponseDtoStageColor = {
+  neutral: 'neutral',
+  blue: 'blue',
+  green: 'green',
+  red: 'red',
+  amber: 'amber',
+  purple: 'purple',
+} as const;
+
 export type RenameStageResponseDtoStage = {
   /** @minLength 1 */
   id: string;
@@ -1716,6 +1825,7 @@ export type RenameStageResponseDtoStage = {
      * @maxLength 200
      */
   name: string;
+  color?: RenameStageResponseDtoStageColor;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1754,6 +1864,18 @@ export interface ArchiveStageDto {
   archived: boolean;
 }
 
+export type ArchiveStageResponseDtoStageColor = typeof ArchiveStageResponseDtoStageColor[keyof typeof ArchiveStageResponseDtoStageColor];
+
+
+export const ArchiveStageResponseDtoStageColor = {
+  neutral: 'neutral',
+  blue: 'blue',
+  green: 'green',
+  red: 'red',
+  amber: 'amber',
+  purple: 'purple',
+} as const;
+
 export type ArchiveStageResponseDtoStage = {
   /** @minLength 1 */
   id: string;
@@ -1766,6 +1888,7 @@ export type ArchiveStageResponseDtoStage = {
      * @maxLength 200
      */
   name: string;
+  color?: ArchiveStageResponseDtoStageColor;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1810,6 +1933,18 @@ export interface ReorderStagesDto {
   orderedIds: string[];
 }
 
+export type ReorderStagesResponseDtoStagesItemColor = typeof ReorderStagesResponseDtoStagesItemColor[keyof typeof ReorderStagesResponseDtoStagesItemColor];
+
+
+export const ReorderStagesResponseDtoStagesItemColor = {
+  neutral: 'neutral',
+  blue: 'blue',
+  green: 'green',
+  red: 'red',
+  amber: 'amber',
+  purple: 'purple',
+} as const;
+
 export type ReorderStagesResponseDtoStagesItem = {
   /** @minLength 1 */
   id: string;
@@ -1822,6 +1957,7 @@ export type ReorderStagesResponseDtoStagesItem = {
      * @maxLength 200
      */
   name: string;
+  color?: ReorderStagesResponseDtoStagesItemColor;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1856,7 +1992,20 @@ export interface ReorderStagesResponseDto {
   txid: number;
 }
 
+export type ConfigureStageDtoColor = typeof ConfigureStageDtoColor[keyof typeof ConfigureStageDtoColor];
+
+
+export const ConfigureStageDtoColor = {
+  neutral: 'neutral',
+  blue: 'blue',
+  green: 'green',
+  red: 'red',
+  amber: 'amber',
+  purple: 'purple',
+} as const;
+
 export interface ConfigureStageDto {
+  color?: ConfigureStageDtoColor;
   /**
      * @minimum 1
      * @maximum 9007199254740991
@@ -1870,6 +2019,18 @@ export interface ConfigureStageDto {
   allowedDestinationStageIds: string[];
 }
 
+export type ConfigureStageResponseDtoStageColor = typeof ConfigureStageResponseDtoStageColor[keyof typeof ConfigureStageResponseDtoStageColor];
+
+
+export const ConfigureStageResponseDtoStageColor = {
+  neutral: 'neutral',
+  blue: 'blue',
+  green: 'green',
+  red: 'red',
+  amber: 'amber',
+  purple: 'purple',
+} as const;
+
 export type ConfigureStageResponseDtoStage = {
   /** @minLength 1 */
   id: string;
@@ -1882,6 +2043,7 @@ export type ConfigureStageResponseDtoStage = {
      * @maxLength 200
      */
   name: string;
+  color?: ConfigureStageResponseDtoStageColor;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1945,6 +2107,12 @@ export interface EditDealDto {
      */
   amount?: number;
   expectedCloseDate?: string | null;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  tags?: string[];
   customFields?: EditDealDtoCustomFields;
   isArchived?: boolean;
 }
@@ -2002,6 +2170,12 @@ export type EditDealResponseDtoDeal = {
      */
   lossReason: string | null;
   stageEnteredAt?: string;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  tags?: string[];
   customFields?: EditDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -2068,6 +2242,12 @@ export interface CreateDealDto {
      * @nullable
      */
   lossReason?: string | null;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  tags?: string[];
   customFields?: CreateDealDtoCustomFields;
   isArchived?: boolean;
 }
@@ -2125,6 +2305,12 @@ export type CreateDealResponseDtoDeal = {
      */
   lossReason: string | null;
   stageEnteredAt?: string;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  tags?: string[];
   customFields?: CreateDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -2201,6 +2387,12 @@ export type MoveDealResponseDtoDeal = {
      */
   lossReason: string | null;
   stageEnteredAt?: string;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  tags?: string[];
   customFields?: MoveDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -2287,6 +2479,12 @@ export type CloseDealResponseDtoDeal = {
      */
   lossReason: string | null;
   stageEnteredAt?: string;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  tags?: string[];
   customFields?: CloseDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -2356,6 +2554,12 @@ export type ReopenDealResponseDtoDeal = {
      */
   lossReason: string | null;
   stageEnteredAt?: string;
+  /**
+     * @maxItems 50
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  tags?: string[];
   customFields?: ReopenDealResponseDtoDealCustomFields;
   createdAt: string;
   updatedAt: string;
@@ -7313,6 +7517,69 @@ const {mutation: mutationOptions} = options ?
       return useMutation(getIntegrationsControllerStatusMutationOptions(options), queryClient);
     }
 
+export const contactsControllerMerge = (
+    id: string,
+    mergeContactDto: MergeContactDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<MergeContactResponseDto>(
+      {url: `/v1/contacts/${id}/merge`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: mergeContactDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getContactsControllerMergeMutationKey = () => ['contactsControllerMerge'] as const;
+
+export const getContactsControllerMergeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerMerge>>, TError,ContactsControllerMergeMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof contactsControllerMerge>>, TError,ContactsControllerMergeMutationVariables, TContext> => {
+
+const mutationKey = getContactsControllerMergeMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof contactsControllerMerge>>, ContactsControllerMergeMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  contactsControllerMerge(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ContactsControllerMergeMutationResult = NonNullable<Awaited<ReturnType<typeof contactsControllerMerge>>>
+    export type ContactsControllerMergeMutationBody = MergeContactDto
+    export type ContactsControllerMergeMutationError = unknown
+    export type ContactsControllerMergeMutationVariables = {id: string;data: MergeContactDto}
+
+    export const useContactsControllerMerge = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerMerge>>, TError,ContactsControllerMergeMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof contactsControllerMerge>>,
+        TError,
+        ContactsControllerMergeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getContactsControllerMergeMutationOptions(options), queryClient);
+    }
+
 export const contactsControllerSearch = (
     params: ContactsControllerSearchParams,
  signal?: AbortSignal
@@ -7900,6 +8167,68 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getSettingsControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const tagsControllerSave = (
+    saveTagDto: SaveTagDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<TagWriteResponseDto>(
+      {url: `/v1/settings/tags`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveTagDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getTagsControllerSaveMutationKey = () => ['tagsControllerSave'] as const;
+
+export const getTagsControllerSaveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tagsControllerSave>>, TError,TagsControllerSaveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof tagsControllerSave>>, TError,TagsControllerSaveMutationVariables, TContext> => {
+
+const mutationKey = getTagsControllerSaveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tagsControllerSave>>, TagsControllerSaveMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  tagsControllerSave(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TagsControllerSaveMutationResult = NonNullable<Awaited<ReturnType<typeof tagsControllerSave>>>
+    export type TagsControllerSaveMutationBody = SaveTagDto
+    export type TagsControllerSaveMutationError = unknown
+    export type TagsControllerSaveMutationVariables = {data: SaveTagDto}
+
+    export const useTagsControllerSave = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tagsControllerSave>>, TError,TagsControllerSaveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof tagsControllerSave>>,
+        TError,
+        TagsControllerSaveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTagsControllerSaveMutationOptions(options), queryClient);
     }
 
 export const dealFollowersControllerAdd = (
