@@ -4,6 +4,7 @@ export const SYNC_RESOURCES = [
   "organizations",
   "organization_themes",
   "contacts",
+  "contact_companies",
   "identities",
   "companies",
   "pipelines",
@@ -72,6 +73,7 @@ const READ_REQUIREMENTS: Record<
   readonly Capability[]
 > = {
   contacts: ["contacts:read"],
+  contact_companies: ["contacts:read", "companies:read", "deals:read"],
   identities: ["contacts:read"],
   companies: ["companies:read"],
   pipelines: ["deals:read"],

@@ -1,3 +1,5 @@
+import { ContactCompaniesRepository } from "../infrastructure/contact-companies.repository.js";
+import { LinkContactCompanyDto, LinkContactCompanyResponseDto } from "../dto/contact.dto.js";
 import { ContactMergeRepository } from "../infrastructure/contact-merge.repository.js";
 import { MergeContactDto, MergeContactResponseDto } from "../dto/contact.dto.js";
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
@@ -25,6 +27,7 @@ import { SearchContactsUseCase } from "../application/search-contacts.usecase.js
 @Controller("v1/contacts")
 export class ContactsController {
   constructor(
+    private readonly contactCompanies: ContactCompaniesRepository,
     private readonly contactMerge: ContactMergeRepository,
     private readonly getCurrentUser: GetCurrentUserUseCase,
     private readonly createContact: CreateContactUseCase,
@@ -34,6 +37,14 @@ export class ContactsController {
     private readonly importContacts: ImportContactsUseCase,
     private readonly searchContacts: SearchContactsUseCase,
   ) {}
+
+  @Post(":id/companies")
+  @UseGuards(SupabaseJwtGuard, CapabilityGuard) @RequireCapability("contacts:write")
+  @ApiBearerAuth() @ApiOkResponse({ type: LinkContactCompanyResponseDto })
+  async linkCompany(@CurrentSupabaseUser() claims: SupabaseJwtClaims, @Param("id") id: string, @Body() body: LinkContactCompanyDto) {
+    const user = await this.getCurrentUser.execute(claims.sub);
+    return this.contactCompanies.link(user.orgId, user.id, contactIdFactory.from(id), body.companyId);
+  }
 
   @Post(":id/merge")
   @UseGuards(SupabaseJwtGuard, CapabilityGuard) @RequireCapability("contacts:write")

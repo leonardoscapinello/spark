@@ -50,3 +50,4 @@ export * from "./stage-transitions.js";
 export * from "./business-hours.js";
 export * from "./holidays.js";
 
+export * from "./contact-companies.js";

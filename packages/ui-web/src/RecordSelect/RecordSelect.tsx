@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Combobox } from "@base-ui/react/combobox";
 import { lightTheme } from "@spark/tokens/native-theme";
 import { Icon } from "../Icon/Icon.js";
@@ -74,7 +74,7 @@ function RecordSelectInput({ label, options, value, onValueChange, onCancel, pla
         aria-label={label}
         aria-busy={loading}
         placeholder={placeholder}
-        onFocus={(event) => { setOpen(true); event.currentTarget.select(); }}
+        onFocus={(event) => { setOpen(true); if (options.some((option) => option.group)) setQuery(""); event.currentTarget.select(); }}
         onKeyDown={(event) => {
           // Enter belongs to the combobox, not InlineField's blur-to-save handler.
           if (event.key === "Enter") event.stopPropagation();
@@ -85,10 +85,10 @@ function RecordSelectInput({ label, options, value, onValueChange, onCancel, pla
       <Combobox.Positioner align="start" sideOffset={Number.parseFloat(lightTheme["space-1"])} className={s.positioner}>
         <Combobox.Popup className={s.popup} data-inline-editor>
           <Combobox.List className={s.list}>
-            {(item: SelectOption) => <Combobox.Item key={item.value} value={item} disabled={loading || (item.disabled ?? false)} className={s.option}>
+            {(item: SelectOption) => <Fragment key={item.value}>{item.group && visible[visible.indexOf(item) - 1]?.group !== item.group && <div className={s.groupLabel}>{item.group}</div>}<Combobox.Item key={item.value} value={item} disabled={loading || (item.disabled ?? false)} className={s.option}>
               <OptionContent option={{ ...item, avatar: item.avatar ?? null }} />
               <Combobox.ItemIndicator className={s.selected}><Icon name="check" /></Combobox.ItemIndicator>
-            </Combobox.Item>}
+            </Combobox.Item></Fragment>}
           </Combobox.List>
           <Combobox.Empty className={s.empty}>{loading ? "Carregando…" : kind === "company" ? "Nenhuma empresa encontrada." : "Nenhuma pessoa encontrada."}</Combobox.Empty>
           {hasMore && <div className={s.more}>Continue digitando para ver outros resultados.</div>}

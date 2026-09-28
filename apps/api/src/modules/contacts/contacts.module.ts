@@ -1,3 +1,4 @@
+import { ContactCompaniesRepository } from "./infrastructure/contact-companies.repository.js";
 import { ContactMergeRepository } from "./infrastructure/contact-merge.repository.js";
 import { Module } from "@nestjs/common";
 import { SettingsModule } from "../settings/settings.module.js";
@@ -21,6 +22,7 @@ import { SearchContactsUseCase } from "./application/search-contacts.usecase.js"
   controllers: [ContactsController],
   providers: [
     ContactMergeRepository,
+    ContactCompaniesRepository,
     CreateContactUseCase,
     UpdateContactUseCase,
     ArchiveContactUseCase,

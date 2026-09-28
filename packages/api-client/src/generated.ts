@@ -594,6 +594,19 @@ export interface UpdateIntegrationStatusDto {
   disabled: boolean;
 }
 
+export interface LinkContactCompanyDto {
+  /** @minLength 1 */
+  companyId: string;
+}
+
+export interface LinkContactCompanyResponseDto {
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export interface MergeContactDto {
   /** @minLength 1 */
   sourceContactId: string;
@@ -7538,6 +7551,69 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getIntegrationsControllerStatusMutationOptions(options), queryClient);
+    }
+
+export const contactsControllerLinkCompany = (
+    id: string,
+    linkContactCompanyDto: LinkContactCompanyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<LinkContactCompanyResponseDto>(
+      {url: `/v1/contacts/${id}/companies`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: linkContactCompanyDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getContactsControllerLinkCompanyMutationKey = () => ['contactsControllerLinkCompany'] as const;
+
+export const getContactsControllerLinkCompanyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerLinkCompany>>, TError,ContactsControllerLinkCompanyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof contactsControllerLinkCompany>>, TError,ContactsControllerLinkCompanyMutationVariables, TContext> => {
+
+const mutationKey = getContactsControllerLinkCompanyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof contactsControllerLinkCompany>>, ContactsControllerLinkCompanyMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  contactsControllerLinkCompany(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ContactsControllerLinkCompanyMutationResult = NonNullable<Awaited<ReturnType<typeof contactsControllerLinkCompany>>>
+    export type ContactsControllerLinkCompanyMutationBody = LinkContactCompanyDto
+    export type ContactsControllerLinkCompanyMutationError = unknown
+    export type ContactsControllerLinkCompanyMutationVariables = {id: string;data: LinkContactCompanyDto}
+
+    export const useContactsControllerLinkCompany = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contactsControllerLinkCompany>>, TError,ContactsControllerLinkCompanyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof contactsControllerLinkCompany>>,
+        TError,
+        ContactsControllerLinkCompanyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getContactsControllerLinkCompanyMutationOptions(options), queryClient);
     }
 
 export const contactsControllerMerge = (

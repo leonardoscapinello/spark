@@ -2,9 +2,10 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
 import { and, eq, gte, isNull, sql } from "drizzle-orm";
-import { createAppDbClient, withOrgContext, deals, stages, stageTransitions, dealStageMoves, type SparkDb } from "@spark/db";
+import { createAppDbClient, withOrgContext, deals, contacts, companies, contactCompanies, stages, stageTransitions, dealStageMoves, type SparkDb } from "@spark/db";
 import {
   money,
+  dealCompanyIssue,
   toCents,
   type Deal,
   type CreateDealInput,
@@ -44,6 +45,7 @@ export class DealsRepository {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
 
+      await validateCompany(tx, orgId, input.contactId ?? null, input.companyId ?? null);
       const [row] = await tx
         .insert(deals)
         .values({
@@ -146,6 +148,7 @@ export class DealsRepository {
       const txid = await captureTxid(tx);
       const [before] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
       if (!before) throw new NotFoundException(`Deal ${dealId} not found.`);
+      if (input.contactId !== undefined || input.companyId !== undefined) await validateCompany(tx, orgId, input.contactId === undefined ? before.contactId : input.contactId, input.companyId === undefined ? before.companyId : input.companyId);
       const [row] = await tx
         .update(deals)
         .set({
@@ -270,4 +273,15 @@ function toDeal(row: {
     deletedAt: row.deletedAt?.toISOString() ?? null,
     isArchived: row.isArchived,
   } as Deal;
+}
+
+async function validateCompany(tx: SparkDb, orgId: OrgId, contactId: string | null, companyId: string | null): Promise<void> {
+  if (!companyId) return;
+  if (!contactId) throw new BadRequestException(dealCompanyIssue(null, companyId, false));
+  const [contact] = await tx.select().from(contacts).where(and(eq(contacts.orgId, orgId), eq(contacts.id, contactId), isNull(contacts.deletedAt))).limit(1);
+  const [company] = await tx.select({ id: companies.id }).from(companies).where(and(eq(companies.orgId, orgId), eq(companies.id, companyId), isNull(companies.deletedAt))).limit(1);
+  if (!contact || !company) throw new BadRequestException("Pessoa ou empresa indisponível.");
+  const [link] = await tx.select().from(contactCompanies).where(and(eq(contactCompanies.orgId, orgId), eq(contactCompanies.contactId, contactId), eq(contactCompanies.companyId, companyId))).limit(1);
+  const issue = dealCompanyIssue(contactId, companyId, Boolean(link) || contact.companyId === companyId);
+  if (issue) throw new BadRequestException(issue);
 }

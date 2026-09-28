@@ -707,6 +707,51 @@
         ]
       }
     },
+    "/v1/contacts/{id}/companies": {
+      "post": {
+        "operationId": "ContactsController_linkCompany",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkContactCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkContactCompanyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "contacts"
+        ]
+      }
+    },
     "/v1/contacts/{id}/merge": {
       "post": {
         "operationId": "ContactsController_merge",
@@ -5736,6 +5781,31 @@
         },
         "required": [
           "disabled"
+        ]
+      },
+      "LinkContactCompanyDto": {
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "companyId"
+        ]
+      },
+      "LinkContactCompanyResponseDto": {
+        "type": "object",
+        "properties": {
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "txid"
         ]
       },
       "MergeContactDto": {

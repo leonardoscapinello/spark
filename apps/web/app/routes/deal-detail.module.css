@@ -322,3 +322,19 @@
 .workspaceComposer { flex: 0 0 auto; min-width: 0; }
 .quickPhase > .workspaceComposer { padding: var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .itens > button { align-self: flex-start; }
+
+.linkPreview { display: grid; gap: var(--space-4); }
+.linkDiagram { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; padding: var(--space-5) var(--space-4); border-radius: var(--radius-md); background: var(--color-surface2); }
+.linkNode { display: grid; justify-items: center; gap: var(--space-2); min-width: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); text-align: center; }
+.linkNode > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.linkCompany { display: grid; place-items: center; width: var(--space-10); height: var(--space-10); border-radius: var(--radius-md); background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); }
+.linkBridge { position: relative; display: grid; place-items: center; width: var(--space-16); height: var(--space-10); }
+.linkBridge::before { content: ""; position: absolute; inset-inline: 0; top: 50%; border-top: var(--ui-focusWidth) dashed var(--color-lineStrong); }
+.linkBadge { position: relative; display: grid; place-items: center; width: var(--space-8); height: var(--space-8); border-radius: var(--radius-full); background: var(--color-accent); color: var(--ui-buttonInk); animation: linkBadgeIn var(--motion-duration-moderate) var(--motion-ease-out) both; }
+.linkLead { margin: 0; }
+.linkEffects { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; font-size: var(--typography-size-sm); }
+.linkEffects li { display: flex; align-items: center; gap: var(--space-2); }
+.linkEffects li > svg { flex-shrink: 0; color: var(--color-statusSuccess); }
+.linkNote { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+@keyframes linkBadgeIn { from { transform: scale(0.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .linkBadge { animation: none; } }

@@ -20,3 +20,5 @@
 .emptyOption:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .emptyOption:disabled { color: var(--ui-disabledInk); cursor: not-allowed; }
 .emptyOption svg { flex-shrink: 0; }
+
+.groupLabel { padding: var(--space-3) var(--space-2) var(--space-1); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); color: var(--color-inkMuted); border-top: var(--ui-hairline) solid var(--color-line); }

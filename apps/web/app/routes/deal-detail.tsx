@@ -1,3 +1,5 @@
+import { contactsControllerLinkCompany } from "@spark/api-client";
+import { getContactCompaniesCollection } from "../lib/contact-companies.client";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
@@ -248,7 +250,13 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const followerOptions = users.filter((item) => !item.deactivatedAt && !followers.some((follower) => follower.userId === item.id)).map(userSelectOption);
   const linkedCompany = deal?.companyId ? companies.find((item) => item.id === deal.companyId) : undefined;
   const contactOptions = useMemo(() => contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, description: [item.email, item.phone].filter(Boolean).join(" · "), avatar: null })), [contacts]);
-  const companyOptions = useMemo(() => companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, description: [item.taxId, item.website ?? item.email ?? item.legalName].filter(Boolean).join(" · "), avatar: null })), [companies]);
+  const { data: companyLinks = [], isLoading: linksLoading } = useLiveQuery({ query: (q) => q.from({ links: getContactCompaniesCollection() }) });
+  const [pendingLink, setPendingLink] = useState<{ contactId: string; companyId: string } | null>(null);
+  const companyOptions = useMemo(() => companies.filter((item) => !item.deletedAt).map((item) => {
+    const linked = contacts.find((contact) => contact.id === deal?.contactId)?.companyId === item.id || companyLinks.some((link) => link.contactId === deal?.contactId && link.companyId === item.id);
+    return { value: item.id, label: item.name, description: [item.taxId, item.website ?? item.email ?? item.legalName].filter(Boolean).join(" · "), avatar: null, group: linked ? "Empresas desta pessoa" : "Outras empresas", linked };
+  }).sort((a, b) => Number(b.linked) - Number(a.linked)), [companies, companyLinks, contacts, deal?.contactId]);
+
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
   // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
   const customValues = useCustomFieldValues("deal", params.dealId, customFields);
@@ -327,6 +335,16 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
   const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
   const doneActivities = useMemo(() => orderedActivities.filter((activity) => activity.completed).reverse(), [orderedActivities]);
+  async function selectParties(contactId: string | null, companyId: string | null) {
+    if (!deal) return;
+    if (companyId && !contactId) {
+      notify({ title: "Selecione uma pessoa primeiro", description: "O negócio precisa de uma pessoa vinculada à empresa.", tone: "error" }); return;
+    }
+    const linked = !companyId || contacts.find((item) => item.id === contactId)?.companyId === companyId || companyLinks.some((link) => link.contactId === contactId && link.companyId === companyId);
+    if (!linked && contactId && companyId) { setPendingLink({ contactId, companyId }); return; }
+    await saveField({ contactId: contactId ? contactIdFactory.from(contactId) : null, companyId: companyId ? companyIdFactory.from(companyId) : null }, "Pessoa e empresa");
+  }
+
   const timelineItems = useMemo(() => groupTimelineEvents(events, { users, stages, contacts, companies, customFields }), [companies, contacts, customFields, events, stages, users]);
   const scheduledAt = activityStartDate && activityStartTime ? `${activityStartDate}T${activityStartTime}` : "";
   const activityEndsAtValue = activityEndDate && activityEndTime ? `${activityEndDate}T${activityEndTime}` : "";
@@ -770,10 +788,10 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
               {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
             </InlineField>
             <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} empty={!linkedContact} disabled={!canWrite || !canReadContacts} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
-              {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"))} />}
+              {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : selectParties(next?.value ?? null, deal.companyId))} />}
             </InlineField>
             <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} leading={linkedCompany && <Avatar name={linkedCompany.name} size="small" />} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies} {...(linkedCompany ? { action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})}>
-              {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : saveField({ companyId: next ? companyIdFactory.from(next.value) : null }, "Empresa"))} />}
+              {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading || linksLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : selectParties(deal.contactId, next?.value ?? null))} />}
             </InlineField>
             {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
           </div>;
@@ -790,8 +808,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
   </div>;
   const phaseContent = stage && <div className={styles.phaseFields}><PhaseFields stage={stage} stages={pipelineStages} values={customValues} disabled={!canWrite} onOpenCommercial={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }} renderBuiltIn={(key, hint) => {
-          if (key === "contactId") return <InlineField label="Pessoa" hint={hint} value={linkedContact?.name ?? "Clique para adicionar"} empty={!linkedContact} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} disabled={!canWrite || !canReadContacts}>{(close) => <RecordSelect label="Pessoa nesta etapa" options={contactOptions} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} onValueChange={(next) => close(saveField({ contactId: next ? contactIdFactory.from(next.value) : null }, "Pessoa"))} />}</InlineField>;
-          if (key === "companyId") return <InlineField label="Empresa" hint={hint} value={linkedCompany?.name ?? "Clique para adicionar"} empty={!linkedCompany} leading={linkedCompany && <Avatar name={linkedCompany.name} size="small" />} disabled={!canWrite || !canReadCompanies}>{(close) => <RecordSelect label="Empresa nesta etapa" kind="company" options={companyOptions} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} onValueChange={(next) => close(saveField({ companyId: next ? companyIdFactory.from(next.value) : null }, "Empresa"))} />}</InlineField>;
+          if (key === "contactId") return <InlineField label="Pessoa" hint={hint} value={linkedContact?.name ?? "Clique para adicionar"} empty={!linkedContact} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} disabled={!canWrite || !canReadContacts}>{(close) => <RecordSelect label="Pessoa nesta etapa" options={contactOptions} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} onValueChange={(next) => close(selectParties(next?.value ?? null, deal.companyId))} />}</InlineField>;
+          if (key === "companyId") return <InlineField label="Empresa" hint={hint} value={linkedCompany?.name ?? "Clique para adicionar"} empty={!linkedCompany} leading={linkedCompany && <Avatar name={linkedCompany.name} size="small" />} disabled={!canWrite || !canReadCompanies}>{(close) => <RecordSelect label="Empresa nesta etapa" kind="company" options={companyOptions} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} onValueChange={(next) => close(selectParties(deal.contactId, next?.value ?? null))} />}</InlineField>;
           if (key === "ownerId") return <InlineField label="Responsável" hint={hint} value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>{(close) => <Select label="Responsável nesta etapa" options={users.filter((u) => !u.deactivatedAt).map(userSelectOption)} value={deal.ownerId} onValueChange={(value) => close(saveField({ ownerId: value ? userIdFactory.from(value) : null }, "Responsável"))} />}</InlineField>;
           if (key === "expectedCloseDate") return <InlineField label="Previsão" hint={hint} value={deal.expectedCloseDate ? formatDateTime(deal.expectedCloseDate) : "Clique para adicionar"} empty={!deal.expectedCloseDate} disabled={!canWrite}>{(close) => <DatePicker label="Previsão nesta etapa" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(value) => close(saveField({ expectedCloseDate: value ? new Date(`${value}T12:00:00`).toISOString() : null }, "Previsão"))} />}</InlineField>;
           return null;
@@ -810,7 +828,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
               ? <p className={styles.empty}>Nenhuma conversa desta pessoa ainda.</p>
               : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?conversation=${conversation.id}`}><div className={styles.conversationBody}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {formatDateTime(conversation.lastMessageAt)}</span></div><Icon name="chevron" /></Link></li>)}</ul> }] : []),
         ]} />;
-  const relatedContent = <div className={styles.relatedRecords}><RelatedRecords contactId={deal.contactId} companyId={deal.companyId} disabled={!canWrite} onContact={(person) => { void saveField({ contactId: person?.id ?? null }, "Pessoa"); }} onCompany={(company) => { void saveField({ companyId: company?.id ?? null }, "Empresa"); }} /></div>;
+  const relatedContent = <div className={styles.relatedRecords}><RelatedRecords contactId={deal.contactId} companyId={deal.companyId} disabled={!canWrite} onContact={(person) => { void selectParties(person?.id ?? null, deal.companyId); }} onCompany={(company) => { void selectParties(deal.contactId, company?.id ?? null); }} /></div>;
 
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
   const valueContent = <div className={styles.dealValue}><span>Valor do negócio</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong><div><CrmLabel color={deal.status === "won" ? "green" : deal.status === "lost" ? "red" : "blue"}>{statusLabel(deal.status)}</CrmLabel><Button variant="ghost" size="sm" shape="rounded" onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores <Icon name="right" /></Button></div></div>;
@@ -912,6 +930,19 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         { value: "pessoas", label: "Pessoas e empresa", content: relatedContent },
       ]} /></div></section>
     </div>}
+
+    <ActionModal open={pendingLink !== null} onOpenChange={(open) => { if (!open) setPendingLink(null); }} title="Vincular pessoa à empresa?" confirmLabel="Vincular e adicionar" cancelLabel="Não vincular" onConfirm={async () => {
+      if (!pendingLink) return;
+      if (!session?.capabilities.includes("contacts:write")) throw new Error("Você precisa de permissão para editar pessoas.");
+      await contactsControllerLinkCompany(pendingLink.contactId, { companyId: pendingLink.companyId });
+      await saveField({ contactId: contactIdFactory.from(pendingLink.contactId), companyId: companyIdFactory.from(pendingLink.companyId) }, "Pessoa e empresa");
+      setPendingLink(null);
+    }}>
+      <LinkPreview
+        person={contacts.find((item) => item.id === pendingLink?.contactId)?.name ?? "Pessoa"}
+        company={companies.find((item) => item.id === pendingLink?.companyId)?.name ?? "Empresa"}
+      />
+    </ActionModal>
 
     <ActionModal
       open={selectedStage !== undefined}
@@ -1088,4 +1119,21 @@ function NoteCard({ note, authorName, onRemove }: { note: Note; authorName?: str
     <header><strong>{authorName ?? "Alguém"}</strong><time>{formatDateTime(note.createdAt)}</time>{onRemove && <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label="Remover nota" onClick={onRemove} />}</header>
     <p>{note.body}</p>
   </article>;
+}
+
+/** Mostra o vínculo antes de pedir a confirmação: pessoa → empresa, e o que muda. */
+function LinkPreview({ person, company }: { person: string; company: string }) {
+  return <div className={styles.linkPreview}>
+    <div className={styles.linkDiagram} aria-hidden="true">
+      <div className={styles.linkNode}><Avatar name={person} size="large" /><span>{person}</span></div>
+      <div className={styles.linkBridge}><span className={styles.linkBadge}><Icon name="link" /></span></div>
+      <div className={styles.linkNode}><span className={styles.linkCompany}><Icon name="building" /></span><span>{company}</span></div>
+    </div>
+    <p className={styles.linkLead}><strong>{person}</strong> ainda não faz parte de <strong>{company}</strong>.</p>
+    <ul className={styles.linkEffects}>
+      <li><Icon name="check" /><span>Empresa entra no <strong>cadastro de {person}</strong></span></li>
+      <li><Icon name="check" /><span>Empresa entra <strong>neste negócio</strong></span></li>
+    </ul>
+    <p className={styles.linkNote}>Os vínculos atuais continuam. Sem vincular, a empresa não entra no negócio.</p>
+  </div>;
 }

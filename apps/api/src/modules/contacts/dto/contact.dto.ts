@@ -27,3 +27,7 @@ export class SearchContactsResponseDto extends createZodDto(SearchContactsRespon
 import { MergeContactInputSchema, MergeContactResponseSchema } from "@spark/core";
 export class MergeContactDto extends createZodDto(MergeContactInputSchema) {}
 export class MergeContactResponseDto extends createZodDto(MergeContactResponseSchema) {}
+
+import { LinkContactCompanyInputSchema, LinkContactCompanyResponseSchema } from "@spark/core";
+export class LinkContactCompanyDto extends createZodDto(LinkContactCompanyInputSchema) {}
+export class LinkContactCompanyResponseDto extends createZodDto(LinkContactCompanyResponseSchema) {}
