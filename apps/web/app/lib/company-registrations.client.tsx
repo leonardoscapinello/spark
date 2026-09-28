@@ -50,6 +50,14 @@ interface ContextValue {
   request: (taxId: string) => void;
 }
 const CompanyRegistrationContext = createContext<ContextValue | null>(null);
+const EMPTY_COMPANY_REGISTRATION_CONTEXT: ContextValue = {
+  byTaxId: new Map(),
+  activitiesById: new Map(),
+  membersById: new Map(),
+  regimesById: new Map(),
+  pending: new Set(),
+  request: () => undefined,
+};
 
 /**
  * Um provedor para toda a aplicação, e não uma consulta por campo: a mesma
@@ -124,8 +132,12 @@ function agrupar<T>(itens: readonly T[], chave: (item: T) => string, ordem: (a: 
 }
 
 export function useCompanyRegistration(rawTaxId: string | null | undefined): CompanyRegistrationState & { request: () => void } {
-  const contexto = useContext(CompanyRegistrationContext);
-  if (!contexto) throw new Error("useCompanyRegistration precisa estar dentro de CompanyRegistrationDataProvider.");
+  /* O campo personalizado também é reutilizado em superfícies isoladas
+   * (preview, SSR e testes). Nessas superfícies não há sincronização para
+   * disparar, mas a ficha ainda precisa renderizar o valor sem derrubar a
+   * rota inteira. Quando o provider existe, o contexto real substitui este
+   * fallback e o enriquecimento funciona normalmente. */
+  const contexto = useContext(CompanyRegistrationContext) ?? EMPTY_COMPANY_REGISTRATION_CONTEXT;
   const taxId = typeof rawTaxId === "string" ? rawTaxId.replace(/\D/g, "") : null;
   const valido = taxId !== null && taxId.length === 14 && isValidCnpj(taxId);
   const registration = valido ? contexto.byTaxId.get(taxId) ?? null : null;

@@ -1,4 +1,4 @@
-import { type FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
@@ -312,6 +312,7 @@ export default function Deals() {
               data-outcome={stage.kind === "outcome" ? stage.id : undefined}
               aria-label={stage.name}
               data-color={stage.kind === "stage" ? stage.color : undefined}
+              style={stage.kind === "stage" && stage.color?.startsWith("#") ? { "--stage-color": stage.color } as CSSProperties : undefined}
               className={[styles.coluna, dropTarget === stage.id ? styles.colunaSobreArraste : ""]
                 .filter(Boolean)
                 .join(" ")}
@@ -632,4 +633,3 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
     </ModalContent>
   </Modal>;
 }
-

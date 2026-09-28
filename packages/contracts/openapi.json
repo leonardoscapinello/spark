@@ -7636,14 +7636,22 @@
             "maxLength": 200
           },
           "color": {
-            "type": "string",
-            "enum": [
-              "neutral",
-              "blue",
-              "green",
-              "red",
-              "amber",
-              "purple"
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "neutral",
+                  "blue",
+                  "green",
+                  "red",
+                  "amber",
+                  "purple"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              }
             ]
           },
           "sortOrder": {
@@ -7702,14 +7710,22 @@
                 "maxLength": 200
               },
               "color": {
-                "type": "string",
-                "enum": [
-                  "neutral",
-                  "blue",
-                  "green",
-                  "red",
-                  "amber",
-                  "purple"
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "neutral",
+                      "blue",
+                      "green",
+                      "red",
+                      "amber",
+                      "purple"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  }
                 ]
               },
               "sortOrder": {
@@ -7846,14 +7862,22 @@
                 "maxLength": 200
               },
               "color": {
-                "type": "string",
-                "enum": [
-                  "neutral",
-                  "blue",
-                  "green",
-                  "red",
-                  "amber",
-                  "purple"
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "neutral",
+                      "blue",
+                      "green",
+                      "red",
+                      "amber",
+                      "purple"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  }
                 ]
               },
               "sortOrder": {
@@ -7988,14 +8012,22 @@
                 "maxLength": 200
               },
               "color": {
-                "type": "string",
-                "enum": [
-                  "neutral",
-                  "blue",
-                  "green",
-                  "red",
-                  "amber",
-                  "purple"
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "neutral",
+                      "blue",
+                      "green",
+                      "red",
+                      "amber",
+                      "purple"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  }
                 ]
               },
               "sortOrder": {
@@ -8142,14 +8174,22 @@
                   "maxLength": 200
                 },
                 "color": {
-                  "type": "string",
-                  "enum": [
-                    "neutral",
-                    "blue",
-                    "green",
-                    "red",
-                    "amber",
-                    "purple"
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "neutral",
+                        "blue",
+                        "green",
+                        "red",
+                        "amber",
+                        "purple"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
                   ]
                 },
                 "sortOrder": {
@@ -8254,14 +8294,22 @@
         "type": "object",
         "properties": {
           "color": {
-            "type": "string",
-            "enum": [
-              "neutral",
-              "blue",
-              "green",
-              "red",
-              "amber",
-              "purple"
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "neutral",
+                  "blue",
+                  "green",
+                  "red",
+                  "amber",
+                  "purple"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              }
             ]
           },
           "slaMinutes": {
@@ -8319,14 +8367,22 @@
                 "maxLength": 200
               },
               "color": {
-                "type": "string",
-                "enum": [
-                  "neutral",
-                  "blue",
-                  "green",
-                  "red",
-                  "amber",
-                  "purple"
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "neutral",
+                      "blue",
+                      "green",
+                      "red",
+                      "amber",
+                      "purple"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  }
                 ]
               },
               "sortOrder": {
@@ -8563,7 +8619,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-28T02:49:03.671Z",
+                "default": "2026-09-28T14:53:39.318Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -8832,7 +8888,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-28T02:49:03.675Z",
+                "default": "2026-09-28T14:53:39.321Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9023,7 +9079,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-28T02:49:03.676Z",
+                "default": "2026-09-28T14:53:39.322Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9218,7 +9274,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-28T02:49:03.678Z",
+                "default": "2026-09-28T14:53:39.323Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9393,7 +9449,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-09-28T02:49:03.679Z",
+                "default": "2026-09-28T14:53:39.324Z",
                 "anyOf": [
                   {
                     "type": "string",

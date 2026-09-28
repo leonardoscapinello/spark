@@ -1695,18 +1695,6 @@ export interface CreatePipelineResponseDto {
   txid: number;
 }
 
-export type CreateStageDtoColor = typeof CreateStageDtoColor[keyof typeof CreateStageDtoColor];
-
-
-export const CreateStageDtoColor = {
-  neutral: 'neutral',
-  blue: 'blue',
-  green: 'green',
-  red: 'red',
-  amber: 'amber',
-  purple: 'purple',
-} as const;
-
 export interface CreateStageDto {
   /** @minLength 1 */
   id: string;
@@ -1717,7 +1705,7 @@ export interface CreateStageDto {
      * @maxLength 200
      */
   name: string;
-  color?: CreateStageDtoColor;
+  color?: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1734,18 +1722,6 @@ export interface CreateStageDto {
   restrictTransitions?: boolean;
 }
 
-export type CreateStageResponseDtoStageColor = typeof CreateStageResponseDtoStageColor[keyof typeof CreateStageResponseDtoStageColor];
-
-
-export const CreateStageResponseDtoStageColor = {
-  neutral: 'neutral',
-  blue: 'blue',
-  green: 'green',
-  red: 'red',
-  amber: 'amber',
-  purple: 'purple',
-} as const;
-
 export type CreateStageResponseDtoStage = {
   /** @minLength 1 */
   id: string;
@@ -1758,7 +1734,7 @@ export type CreateStageResponseDtoStage = {
      * @maxLength 200
      */
   name: string;
-  color?: CreateStageResponseDtoStageColor;
+  color?: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1801,18 +1777,6 @@ export interface RenameStageDto {
   name: string;
 }
 
-export type RenameStageResponseDtoStageColor = typeof RenameStageResponseDtoStageColor[keyof typeof RenameStageResponseDtoStageColor];
-
-
-export const RenameStageResponseDtoStageColor = {
-  neutral: 'neutral',
-  blue: 'blue',
-  green: 'green',
-  red: 'red',
-  amber: 'amber',
-  purple: 'purple',
-} as const;
-
 export type RenameStageResponseDtoStage = {
   /** @minLength 1 */
   id: string;
@@ -1825,7 +1789,7 @@ export type RenameStageResponseDtoStage = {
      * @maxLength 200
      */
   name: string;
-  color?: RenameStageResponseDtoStageColor;
+  color?: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1864,18 +1828,6 @@ export interface ArchiveStageDto {
   archived: boolean;
 }
 
-export type ArchiveStageResponseDtoStageColor = typeof ArchiveStageResponseDtoStageColor[keyof typeof ArchiveStageResponseDtoStageColor];
-
-
-export const ArchiveStageResponseDtoStageColor = {
-  neutral: 'neutral',
-  blue: 'blue',
-  green: 'green',
-  red: 'red',
-  amber: 'amber',
-  purple: 'purple',
-} as const;
-
 export type ArchiveStageResponseDtoStage = {
   /** @minLength 1 */
   id: string;
@@ -1888,7 +1840,7 @@ export type ArchiveStageResponseDtoStage = {
      * @maxLength 200
      */
   name: string;
-  color?: ArchiveStageResponseDtoStageColor;
+  color?: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1933,18 +1885,6 @@ export interface ReorderStagesDto {
   orderedIds: string[];
 }
 
-export type ReorderStagesResponseDtoStagesItemColor = typeof ReorderStagesResponseDtoStagesItemColor[keyof typeof ReorderStagesResponseDtoStagesItemColor];
-
-
-export const ReorderStagesResponseDtoStagesItemColor = {
-  neutral: 'neutral',
-  blue: 'blue',
-  green: 'green',
-  red: 'red',
-  amber: 'amber',
-  purple: 'purple',
-} as const;
-
 export type ReorderStagesResponseDtoStagesItem = {
   /** @minLength 1 */
   id: string;
@@ -1957,7 +1897,7 @@ export type ReorderStagesResponseDtoStagesItem = {
      * @maxLength 200
      */
   name: string;
-  color?: ReorderStagesResponseDtoStagesItemColor;
+  color?: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -1992,20 +1932,8 @@ export interface ReorderStagesResponseDto {
   txid: number;
 }
 
-export type ConfigureStageDtoColor = typeof ConfigureStageDtoColor[keyof typeof ConfigureStageDtoColor];
-
-
-export const ConfigureStageDtoColor = {
-  neutral: 'neutral',
-  blue: 'blue',
-  green: 'green',
-  red: 'red',
-  amber: 'amber',
-  purple: 'purple',
-} as const;
-
 export interface ConfigureStageDto {
-  color?: ConfigureStageDtoColor;
+  color?: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
   /**
      * @minimum 1
      * @maximum 9007199254740991
@@ -2019,18 +1947,6 @@ export interface ConfigureStageDto {
   allowedDestinationStageIds: string[];
 }
 
-export type ConfigureStageResponseDtoStageColor = typeof ConfigureStageResponseDtoStageColor[keyof typeof ConfigureStageResponseDtoStageColor];
-
-
-export const ConfigureStageResponseDtoStageColor = {
-  neutral: 'neutral',
-  blue: 'blue',
-  green: 'green',
-  red: 'red',
-  amber: 'amber',
-  purple: 'purple',
-} as const;
-
 export type ConfigureStageResponseDtoStage = {
   /** @minLength 1 */
   id: string;
@@ -2043,7 +1959,7 @@ export type ConfigureStageResponseDtoStage = {
      * @maxLength 200
      */
   name: string;
-  color?: ConfigureStageResponseDtoStageColor;
+  color?: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
   /**
      * @minimum 0
      * @maximum 9007199254740991

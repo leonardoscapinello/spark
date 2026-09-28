@@ -148,7 +148,7 @@
 }
 
 .cartaoNome:hover {
-  text-decoration: underline;
+  color: var(--color-accent);
 }
 
 .cartaoValor {
@@ -306,6 +306,7 @@
 .coluna[data-color="red"], .coluna[data-outcome="lost"] { border-top-color: var(--color-statusDanger); }
 .coluna[data-color="amber"] { border-top-color: var(--color-statusWarning); }
 .coluna[data-color="purple"] { border-top-color: color-mix(in srgb,var(--color-accent),var(--color-statusDanger)); }
+.coluna[data-color^="#"] { border-top-color: var(--stage-color); }
 .dealWorkspace { height: min(100%, var(--ui-modalWide)); width: 100%; overflow: hidden; }
 .dealWorkspace > div { flex: 1; padding: 0; overflow: hidden; }
 

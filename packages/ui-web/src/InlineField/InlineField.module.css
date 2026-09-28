@@ -147,8 +147,8 @@
 .value[data-empty="true"] {
   color: var(--color-inkMuted);
   font-weight: var(--typography-weight-regular);
-  text-decoration: underline dashed;
-  text-underline-offset: var(--space-1);
+  background: var(--color-surface2);
+  border-color: var(--color-line);
 }
 
 .confirmation {
