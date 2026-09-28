@@ -9,7 +9,7 @@
           0.32,
           1
         ],
-        "$description": "Entrada/sa\u00edda \u2014 mesma curva pros dois, ease-out estrito (skill animate)."
+        "$description": "Entrada/saída — mesma curva pros dois, ease-out estrito (skill animate)."
       },
       "inOut": {
         "$type": "cubicBezier",
@@ -19,7 +19,7 @@
           0.175,
           1
         ],
-        "$description": "Movimento na tela (drag, reordena\u00e7\u00e3o) \u2014 nunca ease-in puro em UI."
+        "$description": "Movimento na tela (drag, reordenação) — nunca ease-in puro em UI."
       }
     },
     "duration": {
@@ -44,6 +44,42 @@
       "popup": {
         "$type": "number",
         "$value": 0.97
+      }
+    },
+    "spring": {
+      "$description": "Molas perceptuais da Apple (WWDC23 Animate with springs): duration é o tempo que PARECE levar, bounce 0 não passa do alvo. O build emite cada uma como linear() em --motion-spring-<nome> e a duração total em --motion-spring-<nome>-duration.",
+      "smooth": {
+        "duration": {
+          "$type": "number",
+          "$value": 0.45,
+          "$description": "Padrão para mover, reordenar, zoom de modal: chega e para."
+        },
+        "bounce": {
+          "$type": "number",
+          "$value": 0
+        }
+      },
+      "snappy": {
+        "duration": {
+          "$type": "number",
+          "$value": 0.3,
+          "$description": "Levantar e soltar um card, trocar estado pequeno: rápido, um resto de vida."
+        },
+        "bounce": {
+          "$type": "number",
+          "$value": 0.15
+        }
+      },
+      "bouncy": {
+        "duration": {
+          "$type": "number",
+          "$value": 0.5,
+          "$description": "Só depois de um gesto com momento (flick, soltar com velocidade). Nunca em menu ou fade."
+        },
+        "bounce": {
+          "$type": "number",
+          "$value": 0.3
+        }
       }
     }
   }

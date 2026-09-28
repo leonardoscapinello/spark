@@ -59,3 +59,18 @@ describe("tipografia da marca — FH Duo (ver assets/brand/README.md do landings
     expect(css).toMatch(/--typography-fontFamily-body: Inter/);
   });
 });
+
+describe("molas perceptuais viram linear() no CSS", () => {
+  it("emite cada preset como easing pronto e a duração total em ms", () => {
+    for (const name of ["smooth", "snappy", "bouncy"]) {
+      expect(css).toMatch(new RegExp(`--motion-spring-${name}: linear\\(0, `));
+      expect(css).toMatch(new RegExp(`--motion-spring-${name}-duration: \\d+ms;`));
+      expect(css).not.toContain(`--motion-spring-${name}-bounce`);
+    }
+  });
+
+  it("mantém duration e bounce crus no tema nativo", () => {
+    expect(native).toContain('"motion-spring-smooth-duration": 0.45');
+    expect(native).toContain('"motion-spring-snappy-bounce": 0.15');
+  });
+});

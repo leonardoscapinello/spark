@@ -9,6 +9,9 @@
 // montagem final é feita aqui.
 import StyleDictionary from "style-dictionary";
 import { promises as fs } from "node:fs";
+// Node ≥ 23.6 importa TypeScript direto (type stripping). A matemática da mola
+// mora em src/spring.ts para o runtime (packages/ui-web) usar a mesma.
+import { springLinear } from "./src/spring.ts";
 
 const BASE_SOURCES = [
   "tokens/color.primitive.json",
@@ -52,8 +55,27 @@ function flatten(obj, prefix = []) {
   return out;
 }
 
+/* Mola declarada como par duration/bounce vira, no CSS, um easing linear()
+ * pronto e a duração total em ms. O par cru continua no tema nativo. */
+function withSprings(flat) {
+  const out = { ...flat };
+  for (const key of Object.keys(flat)) {
+    const match = /^motion-spring-([a-zA-Z]+)-duration$/.exec(key);
+    if (!match) continue;
+    const name = match[1];
+    const bounceKey = `motion-spring-${name}-bounce`;
+    if (!(bounceKey in flat)) continue;
+    const { easing, durationMs } = springLinear({ duration: Number(flat[key]), bounce: Number(flat[bounceKey]) });
+    delete out[key];
+    delete out[bounceKey];
+    out[`motion-spring-${name}`] = easing;
+    out[`motion-spring-${name}-duration`] = `${durationMs}ms`;
+  }
+  return out;
+}
+
 function toCssVars(flat, indent = "  ") {
-  return Object.entries(flat)
+  return Object.entries(withSprings(flat))
     .map(([k, v]) => `${indent}--${k}: ${cssValue(v)};`)
     .join("\n");
 }
