@@ -215,7 +215,8 @@
 .historyTabs > div > [role="tabpanel"] { flex: 1; min-height: 0; overflow: auto; padding: var(--space-3) var(--space-2) 0 0; overscroll-behavior: contain; scrollbar-gutter: stable; }
 .historyTabs > div > [role="tabpanel"][hidden] { display: none; }
 .phaseFields { background: var(--color-surface); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.relatedRecords, .quickHistory { padding: var(--space-4); display: grid; gap: var(--space-5); }
+.relatedRecords { padding: 0; }
+.quickHistory { padding: var(--space-4); display: grid; gap: var(--space-5); }
 .tagSection { padding: var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); }
 .dealValue { padding: var(--space-5); display: grid; gap: var(--space-2); background: var(--color-surface); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .dealValue > span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }

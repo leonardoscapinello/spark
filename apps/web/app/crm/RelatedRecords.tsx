@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { email, phone, companyId as companyIdFactory, type Contact, type Company } from "@spark/core";
 import { optimisticContact, optimisticCompany } from "@spark/data";
@@ -12,6 +12,7 @@ import styles from "./RelatedRecords.module.css";
 type Props = { contactId: string | null; companyId: string | null; onContact: (person: Contact | null) => void; onCompany: (company: Company | null) => void; disabled?: boolean };
 export function RelatedRecords({ contactId, companyId, onContact, onCompany, disabled = false }: Props) {
   const session = getSession();
+  const location = useLocation();
   const navigate = useNavigate();
   const canReadPeople = session?.capabilities.includes("contacts:read") ?? false;
   const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
@@ -25,7 +26,8 @@ export function RelatedRecords({ contactId, companyId, onContact, onCompany, dis
   const [taxId, setTaxId] = useState("");
   const person = people.find((item) => item.id === contactId);
   const company = companies.find((item) => item.id === companyId);
-  const openRecord = (kind: "person" | "company", id: string) => navigate(`/${kind === "person" ? "contacts" : "companies"}/${id}`);
+  const returnTo = `${location.pathname}${location.search}`;
+  const openRecord = (kind: "person" | "company", id: string) => navigate(`/${kind === "person" ? "contacts" : "companies"}/${id}?returnTo=${encodeURIComponent(returnTo)}`);
   function openCreate(kind: "person" | "company") { setName(""); setMail(""); setTelephone(""); setTaxId(""); setCreate(kind); }
   async function save() {
     if (!session || !name.trim()) throw new Error("Informe o nome para continuar.");

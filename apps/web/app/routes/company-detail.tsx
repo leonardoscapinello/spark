@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount, writeAccepted } from "@spark/data";
@@ -34,6 +34,11 @@ export default function CompanyDetail({ params }: Route.ComponentProps) {
 
 /** O perfil da empresa, sem depender de ser uma rota — ver ContactProfile. */
 export function CompanyProfile({ companyId, embedded = false }: { companyId: string; embedded?: boolean }) {
+  const location = useLocation();
+  const requestedReturn = new URLSearchParams(location.search).get("returnTo");
+  const returnTo = requestedReturn?.startsWith("/") ? requestedReturn : null;
+  const backHref = returnTo ?? "/companies";
+  const backLabel = returnTo ? "Voltar ao negócio" : "Empresas";
   const requestLinkPreview = useLinkPreviewRequest();
   const companiesCollection = getCompaniesCollection();
   const contactsCollection = getContactsCollection();
@@ -118,10 +123,10 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 
-  if (!company) return <PageFrame>{!embedded && <BackLink render={<Link to="/companies" />}>Empresas</BackLink>}{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</PageFrame>;
+  if (!company) return <PageFrame>{!embedded && <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>}{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</PageFrame>;
 
   return <PageFrame className={embedded ? styles.embedded : undefined}>
-    <RecordPageHeader back={embedded ? null : <BackLink render={<Link to="/companies" />}>Empresas</BackLink>} icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Pessoas", value: linkedContacts.length, icon: "user" as const }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length, icon: "briefcase" as const }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)), icon: "chart" as const }] : [])]} />
+    <RecordPageHeader back={embedded ? null : <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>} icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Pessoas", value: linkedContacts.length, icon: "user" as const }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length, icon: "briefcase" as const }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)), icon: "chart" as const }] : [])]} />
 
     <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <Card title="Editar empresa"><form className={styles.editForm} onSubmit={saveCompany}>
       <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
