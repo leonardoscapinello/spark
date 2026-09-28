@@ -18,6 +18,7 @@ export function RelatedRecords({ contactId, companyId, onContact, onCompany, dis
   const { data: people = [] } = useLiveQuery({ query: (q) => canReadPeople ? q.from({ people: getContactsCollection() }) : undefined }, [canReadPeople]);
   const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies ? q.from({ companies: getCompaniesCollection() }) : undefined }, [canReadCompanies]);
   const [create, setCreate] = useState<"person" | "company" | null>(null);
+  const [selection, setSelection] = useState<"person" | "company" | null>(null);
   const [name, setName] = useState("");
   const [mail, setMail] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -39,23 +40,31 @@ export function RelatedRecords({ contactId, companyId, onContact, onCompany, dis
       onCompany(record);
     }
   }
-  return <>
-    <CrmSection title="Pessoa" action={!disabled && session?.capabilities.includes("contacts:write") ? <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openCreate("person")}>Nova pessoa</Button> : undefined}>
-      <RecordSelect label="Pessoa do negócio" disabled={disabled || !canReadPeople} value={person ? { value: person.id, label: person.name } : null} options={people.filter((p) => !p.deletedAt).map((p) => ({ value: p.id, label: p.name, description: [p.email, p.phone].filter(Boolean).join(" · ") }))} onValueChange={(v) => onContact(people.find((p) => p.id === v?.value) ?? null)} emptyOptionLabel="Desvincular pessoa" />
+  return <div className={styles.root}>
+    <section className={styles.relationBlock}>
+      <header className={styles.relationHeader}><div><h2>Pessoa</h2><p>Quem está relacionado a este negócio.</p></div>{!disabled && session?.capabilities.includes("contacts:write") && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openCreate("person")}>Nova pessoa</Button>}</header>
       {person && canReadPeople && <div className={styles.profileSummary}>
         <div className={styles.profileHeading}><Avatar name={person.name} size="medium" /><div><strong>{person.name}</strong><span>Pessoa</span></div></div>
         <dl className={styles.profileFacts}><div><dt>E-mail</dt><dd>{person.email ?? "Não informado"}</dd></div><div><dt>Telefone</dt><dd>{person.phone ?? "Não informado"}</dd></div><div><dt>Pontuação</dt><dd>{person.score}</dd></div></dl>
         <Button variant="ghost" size="sm" shape="rounded" icon={<Icon name="right" />} onClick={() => openRecord("person", person.id)}>Abrir ficha da pessoa</Button>
+        {!disabled && <Button variant="secondary" size="sm" shape="rounded" onClick={() => setSelection("person")}>Trocar pessoa</Button>}
       </div>}
-    </CrmSection>
-    <CrmSection title="Empresa" action={!disabled && session?.capabilities.includes("companies:write") ? <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openCreate("company")}>Nova empresa</Button> : undefined}>
-      <RecordSelect label="Empresa do negócio" kind="company" disabled={disabled || !canReadCompanies} value={company ? { value: company.id, label: company.name } : null} options={companies.filter((c) => !c.deletedAt).map((c) => ({ value: c.id, label: c.name, description: c.taxId ?? c.website ?? "" }))} onValueChange={(v) => onCompany(companies.find((c) => c.id === v?.value) ?? null)} emptyOptionLabel="Desvincular empresa" />
+      {!person && <div className={styles.emptyRelation}><Icon name="user" /><span>Nenhuma pessoa vinculada</span>{!disabled && <Button variant="secondary" size="sm" shape="rounded" onClick={() => setSelection("person")}>Selecionar pessoa</Button>}</div>}
+    </section>
+    <section className={styles.relationBlock}>
+      <header className={styles.relationHeader}><div><h2>Empresa</h2><p>Organização ligada à pessoa deste negócio.</p></div>{!disabled && session?.capabilities.includes("companies:write") && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openCreate("company")}>Nova empresa</Button>}</header>
       {company && canReadCompanies && <div className={styles.profileSummary}>
         <div className={styles.profileHeading}><Avatar name={company.name} size="medium" /><div><strong>{company.name}</strong><span>Empresa</span></div></div>
         <dl className={styles.profileFacts}><div><dt>Documento</dt><dd>{company.taxId ?? "Não informado"}</dd></div><div><dt>E-mail</dt><dd>{company.email ?? "Não informado"}</dd></div><div><dt>Site</dt><dd>{company.website ?? "Não informado"}</dd></div></dl>
         <Button variant="ghost" size="sm" shape="rounded" icon={<Icon name="right" />} onClick={() => openRecord("company", company.id)}>Abrir ficha da empresa</Button>
+        {!disabled && <Button variant="secondary" size="sm" shape="rounded" onClick={() => setSelection("company")}>Trocar empresa</Button>}
       </div>}
-    </CrmSection>
+      {!company && <div className={styles.emptyRelation}><Icon name="building" /><span>Nenhuma empresa vinculada</span>{!disabled && <Button variant="secondary" size="sm" shape="rounded" onClick={() => setSelection("company")}>Selecionar empresa</Button>}</div>}
+    </section>
+    <ActionModal open={selection !== null} onOpenChange={(open) => { if (!open) setSelection(null); }} title={selection === "person" ? "Trocar pessoa" : "Trocar empresa"} confirmLabel="Fechar" onConfirm={() => undefined}>
+      {selection === "person" && <RecordSelect label="Pessoa do negócio" disabled={!canReadPeople} value={person ? { value: person.id, label: person.name } : null} options={people.filter((p) => !p.deletedAt).map((p) => ({ value: p.id, label: p.name, description: [p.email, p.phone].filter(Boolean).join(" · ") }))} onValueChange={(v) => { onContact(people.find((p) => p.id === v?.value) ?? null); setSelection(null); }} emptyOptionLabel="Desvincular pessoa" />}
+      {selection === "company" && <RecordSelect label="Empresa do negócio" kind="company" disabled={!canReadCompanies} value={company ? { value: company.id, label: company.name } : null} options={companies.filter((c) => !c.deletedAt).map((c) => ({ value: c.id, label: c.name, description: c.taxId ?? c.website ?? "" }))} onValueChange={(v) => { onCompany(companies.find((c) => c.id === v?.value) ?? null); setSelection(null); }} emptyOptionLabel="Desvincular empresa" />}
+    </ActionModal>
     {create && <ActionModal open onOpenChange={(open) => { if (!open) setCreate(null); }} title={create === "person" ? "Criar pessoa" : "Criar empresa"} placement="right" confirmLabel="Salvar e vincular" onConfirm={save}>
       <CrmSection title={create === "person" ? "Dados da pessoa" : "Dados da empresa"} description="Ao salvar, você volta ao negócio com este registro selecionado.">
         <Field><Label>Nome</Label><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} /></Field>
@@ -65,5 +74,5 @@ export function RelatedRecords({ contactId, companyId, onContact, onCompany, dis
       </CrmSection>
     </ActionModal>}
 
-  </>;
+  </div>;
 }

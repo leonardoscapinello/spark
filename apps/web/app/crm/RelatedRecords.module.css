@@ -1,7 +1,33 @@
+.root {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--color-surface2);
+}
+
+.relationBlock {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--ui-hairline) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.relationHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.relationHeader h2 { margin: 0; color: var(--color-ink); font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
+.relationHeader p { margin: var(--space-1) 0 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+
 .profileSummary {
   display: grid;
   gap: var(--space-3);
-  margin-top: var(--space-3);
+  margin: 0;
   padding: var(--space-4);
   border: var(--ui-hairline) solid var(--color-line);
   border-radius: var(--radius-md);
@@ -59,4 +85,6 @@
   white-space: nowrap;
 }
 
-.profileSummary > button { justify-self: start; color: var(--color-accent); }
+.profileSummary > button { justify-self: start; }
+.emptyRelation { display: flex; align-items: center; gap: var(--space-3); min-height: var(--ui-controlLarge); color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
+.emptyRelation > span { flex: 1; }
