@@ -1,11 +1,11 @@
 {
-  "$description": "Interface Intercom: Inter self-hosted; ADR-0033.",
+  "$description": "Brockmann da marca, auto-hospedada; Geist Mono para dados técnicos. ADR-0041.",
   "typography": {
     "fontFamily": {
       "display": {
         "$type": "fontFamily",
         "$value": [
-          "Geist",
+          "Brockmann",
           "Inter",
           "system-ui",
           "sans-serif"
@@ -14,7 +14,7 @@
       "body": {
         "$type": "fontFamily",
         "$value": [
-          "Geist",
+          "Brockmann",
           "Inter",
           "system-ui",
           "sans-serif"

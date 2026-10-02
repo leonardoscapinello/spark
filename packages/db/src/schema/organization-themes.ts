@@ -37,7 +37,7 @@ export const organizationThemes = pgTable(
       ${t.statusSuccessColor} ~ '^#[0-9A-Fa-f]{6}$' AND
       ${t.statusWarningColor} ~ '^#[0-9A-Fa-f]{6}$' AND
       ${t.statusDangerColor} ~ '^#[0-9A-Fa-f]{6}$'`),
-    check("organization_themes_fonts_check", sql`${t.fontBody} IN ('geist', 'inter', 'system', 'rounded', 'serif') AND ${t.fontDisplay} IN ('geist', 'inter', 'system', 'rounded', 'serif')`),
+    check("organization_themes_fonts_check", sql`${t.fontBody} IN ('brockmann', 'geist', 'inter', 'system', 'rounded', 'serif') AND ${t.fontDisplay} IN ('brockmann', 'geist', 'inter', 'system', 'rounded', 'serif')`),
     pgPolicy("organization_themes_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

@@ -45,7 +45,8 @@ describe("cascata de tema em três estados (ADR-0025)", () => {
 describe("tipografia da marca — FH Duo (ver assets/brand/README.md do landingsuite)", () => {
   it("declara @font-face para as duas famílias, nos seis pesos, normal e itálico", () => {
     const total = (css.match(/\@font-face/g) ?? []).length;
-    expect(total).toBe(27); // FH Duo, Inter, Geist e Geist Mono
+    const brandFonts = JSON.parse(readFileSync(new URL("./fonts/brockmann/manifest.json", import.meta.url), "utf-8"));
+    expect(total).toBe(27 + brandFonts.length); // famílias existentes + estilos reais da marca
   });
 
   it("aponta pros arquivos copiados em dist/fonts, não pro landingsuite", () => {
@@ -54,9 +55,9 @@ describe("tipografia da marca — FH Duo (ver assets/brand/README.md do landings
     expect(css).not.toMatch(/landingsuite/);
   });
 
-  it("Geist é a família de interface e título (ADR-0039)", () => {
-    expect(css).toMatch(/--typography-fontFamily-display: Geist/);
-    expect(css).toMatch(/--typography-fontFamily-body: Geist/);
+  it("Brockmann é a família de interface e título (ADR-0041)", () => {
+    expect(css).toMatch(/--typography-fontFamily-display: Brockmann/);
+    expect(css).toMatch(/--typography-fontFamily-body: Brockmann/);
   });
 });
 

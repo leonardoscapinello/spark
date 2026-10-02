@@ -37,3 +37,6 @@ Inspecionar uma vez a ficha em desktop e largura estreita, a visualização ráp
 
 ## Fonte dos valores
 Cores, tipografia, espaços e dimensões vêm de `packages/tokens`. Componentes compartilhados vivem em `packages/ui-web`. A composição usa esses contratos sem inventar uma variante de botão por tela.
+
+## Tipografia e menus da marca
+Brockmann é a família principal (400, 500, 600, 700; normal e itálico); Geist Mono complementa dados técnicos. Menus flutuantes compartilham Glass, espaçamento compacto, foco suave e abertura por transform/opacity. Não aplicar textura de cartão nos dropdowns. ADR-0041.

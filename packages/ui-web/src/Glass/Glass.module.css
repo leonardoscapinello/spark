@@ -6,7 +6,7 @@
  * drawer). Never a scrolling table row or list item, and never more than
  * a few glass surfaces visible at once. */
 
-.root {
+.root.root {
   background: var(--color-glassBg);
   border: 1px solid var(--color-glassEdge);
   /* isolates paint bounds — mitigates rasterization cost (ADR-0017) */
@@ -43,7 +43,7 @@
 /* No backdrop-filter support, or the user asked for less transparency:
  * fall back to a solid surface, never invisible. */
 @media (prefers-reduced-transparency: reduce) {
-  .root {
+  .root.root {
     background: var(--color-surface);
   }
   .subtle,
@@ -55,7 +55,7 @@
 }
 
 @media (forced-colors: active) {
-  .root {
+  .root.root {
     background: Canvas;
     border: 1px solid CanvasText;
   }
@@ -68,7 +68,7 @@
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .root {
+  .root.root {
     background: var(--color-surface);
   }
 }

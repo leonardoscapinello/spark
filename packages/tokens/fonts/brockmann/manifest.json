@@ -1,0 +1,37 @@
+[
+  {
+    "file": "Brockmann-RegularItalic",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "file": "Brockmann-Medium",
+    "weight": 500,
+    "style": "normal"
+  },
+  {
+    "file": "Brockmann-MediumItalic",
+    "weight": 500,
+    "style": "italic"
+  },
+  {
+    "file": "Brockmann-SemiBold",
+    "weight": 600,
+    "style": "normal"
+  },
+  {
+    "file": "Brockmann-SemiBoldItalic",
+    "weight": 600,
+    "style": "italic"
+  },
+  {
+    "file": "Brockmann-Bold",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "file": "Brockmann-BoldItalic",
+    "weight": 700,
+    "style": "italic"
+  }
+]

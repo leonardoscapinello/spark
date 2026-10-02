@@ -395,6 +395,14 @@
     "composerExpandedHeight": {
       "$type": "dimension",
       "$value": "112px"
+    },
+    "dropdownPadding": {
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    "dropdownRadius": {
+      "$type": "dimension",
+      "$value": "14px"
     }
   }
 }

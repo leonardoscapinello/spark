@@ -4,6 +4,7 @@ import { DEFAULT_THEME_VALUES, isDefaultTheme } from "./theme.js";
 describe("presets e aparência personalizada", () => {
   it("deixa o preset seguir a cascata clara/escura dos tokens", () => {
     expect(isDefaultTheme(DEFAULT_THEME_VALUES)).toBe(true);
+    expect(isDefaultTheme({ ...DEFAULT_THEME_VALUES, fontBody: "geist", fontDisplay: "geist" })).toBe(true);
     expect(isDefaultTheme({ ...DEFAULT_THEME_VALUES, accentColor: "#1d1b18" })).toBe(true);
   });
 

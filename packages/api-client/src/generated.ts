@@ -1233,6 +1233,7 @@ export type UpdateOrganizationThemeDtoFontBody = typeof UpdateOrganizationThemeD
 
 
 export const UpdateOrganizationThemeDtoFontBody = {
+  brockmann: 'brockmann',
   geist: 'geist',
   inter: 'inter',
   system: 'system',
@@ -1244,6 +1245,7 @@ export type UpdateOrganizationThemeDtoFontDisplay = typeof UpdateOrganizationThe
 
 
 export const UpdateOrganizationThemeDtoFontDisplay = {
+  brockmann: 'brockmann',
   geist: 'geist',
   inter: 'inter',
   system: 'system',
@@ -1282,6 +1284,7 @@ export type OrganizationThemeWriteResponseDtoThemeFontBody = typeof Organization
 
 
 export const OrganizationThemeWriteResponseDtoThemeFontBody = {
+  brockmann: 'brockmann',
   geist: 'geist',
   inter: 'inter',
   system: 'system',
@@ -1293,6 +1296,7 @@ export type OrganizationThemeWriteResponseDtoThemeFontDisplay = typeof Organizat
 
 
 export const OrganizationThemeWriteResponseDtoThemeFontDisplay = {
+  brockmann: 'brockmann',
   geist: 'geist',
   inter: 'inter',
   system: 'system',

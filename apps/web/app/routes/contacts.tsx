@@ -342,7 +342,7 @@ export default function Contacts() {
       hiddenColumnIds={hiddenColumnIds}
       onHiddenColumnsChange={changeHiddenColumns}
       emptyText={archiveView ? "Nenhuma pessoa arquivada." : search ? `Nenhuma pessoa encontrada para “${search}”.` : "Nenhuma pessoa cadastrada."}
-      actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>}
+      actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem icon={<Icon name="folder" />} onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>}
     />}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova pessoa" confirmLabel="Cadastrar pessoa" errorText="Não foi possível cadastrar a pessoa. Corrija os campos marcados ou tente novamente." onConfirm={addContact}>
       <form className={styles.modalFields} onSubmit={submitFromForm}>

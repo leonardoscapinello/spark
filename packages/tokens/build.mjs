@@ -184,6 +184,20 @@ ${toCssVars(darkOnly)}
   font-display: swap;
 }\n`;
   }
+  await fs.mkdir("dist/fonts/brockmann", { recursive: true });
+  const brandFonts = JSON.parse(await fs.readFile("fonts/brockmann/manifest.json", "utf8"));
+  for (const { file: filename, weight, style } of brandFonts) {
+      for (const format of ["woff2", "woff"]) {
+        await fs.copyFile(`fonts/brockmann/${filename}.${format}`, `dist/fonts/brockmann/${filename}.${format}`);
+      }
+      fontFace += `@font-face {
+  font-family: "Brockmann";
+  src: url("../fonts/brockmann/${filename}.woff2") format("woff2"), url("../fonts/brockmann/${filename}.woff") format("woff");
+  font-weight: ${weight};
+  font-style: ${style};
+  font-display: swap;
+}\n`;
+  }
   await fs.writeFile("dist/css/tokens.css", fontFace + css);
 
   const nativeTheme = `// Gerado por packages/tokens/build.mjs — NÃO editar à mão.

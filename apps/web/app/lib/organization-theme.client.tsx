@@ -9,7 +9,8 @@ export type ThemeDraft = UpdateOrganizationThemeInput;
 export const DEFAULT_THEME: ThemeDraft = { ...DEFAULT_THEME_VALUES };
 
 export const FONT_FAMILY_OPTIONS = [
-  { value: "geist", label: "Geist", description: "Padrão Spark" },
+  { value: "brockmann", label: "Brockmann", description: "Tipografia da marca" },
+  { value: "geist", label: "Geist", description: "Neutra e geométrica" },
   { value: "inter", label: "Inter", description: "Neutra e compacta" },
   { value: "system", label: "Sistema", description: "A fonte nativa de cada dispositivo" },
   { value: "rounded", label: "Arredondada", description: "Mais amigável em interfaces de atendimento" },
@@ -17,6 +18,7 @@ export const FONT_FAMILY_OPTIONS = [
 ] as const;
 
 const FONT_STACKS: Record<ThemeDraft["fontBody"], string> = {
+  brockmann: "Brockmann, Inter, system-ui, sans-serif",
   geist: "Geist, Inter, system-ui, sans-serif",
   inter: "Inter, system-ui, sans-serif",
   system: "ui-sans-serif, system-ui, sans-serif",

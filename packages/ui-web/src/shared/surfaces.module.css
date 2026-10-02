@@ -1,7 +1,7 @@
 .positioner { z-index: var(--ui-overlayLayer); outline: none; }
-.popup { box-sizing: border-box; min-width: var(--ui-menuWidth); max-width: min(var(--ui-popupMaxWidth), var(--available-width)); max-height: var(--available-height); overflow: auto; padding: var(--space-2); background: var(--color-surface); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-popupRadius); corner-shape: var(--radius-shape); box-shadow: var(--ui-popupShadow); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); transform-origin: var(--transform-origin); transition: opacity var(--motion-duration-popup) var(--motion-ease-out), transform var(--motion-duration-popup) var(--motion-ease-out); outline: none; }
+.popup { box-sizing: border-box; min-width: var(--ui-menuWidth); max-width: min(var(--ui-popupMaxWidth), var(--available-width)); max-height: var(--available-height); overflow: auto; padding: var(--ui-dropdownPadding); background: var(--color-glassBg); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-dropdownRadius); corner-shape: var(--radius-shape); box-shadow: var(--ui-popupShadow); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); transform-origin: var(--transform-origin); transition: opacity var(--motion-duration-popup) var(--motion-ease-out), transform var(--motion-duration-popup) var(--motion-ease-out); outline: none; }
 .popup[data-starting-style],.popup[data-ending-style] { opacity: 0; transform: translateY(calc(-1 * var(--space-1))) scale(var(--motion-scale-popup)); }
-.item { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding: var(--ui-menuItemPadding) var(--space-2); border-radius: var(--radius-sm); cursor: pointer; outline: none; user-select: none; }
+.item { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding: var(--ui-menuItemPadding) var(--space-2); border-radius: var(--radius-sm); cursor: pointer; outline: none; user-select: none; transition: background-color var(--motion-duration-control) var(--motion-ease-out), color var(--motion-duration-control) var(--motion-ease-out); }
 .item[data-highlighted] { background: var(--ui-subtle); }
 .item[data-disabled] { color: var(--ui-disabledInk); cursor: not-allowed; }
 .item[data-danger] { color: var(--color-statusDanger); }
@@ -23,11 +23,18 @@
 
 .selectValue { min-width: 0; flex: 1; text-align: start; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .triggerIcon { display: flex; align-items: center; justify-content: center; width: var(--ui-icon); height: var(--ui-icon); flex-shrink: 0; line-height: 0; }
-.triggerIcon > svg { display: block; }
+.triggerIcon > svg { display: block; transition: transform var(--motion-duration-selection) var(--motion-ease-out); }
+.trigger[data-popup-open] .triggerIcon > svg { transform: rotate(180deg); }
 
-.popup { padding: var(--space-3); background-image: var(--ui-paperTexture); }
+
 .popup[data-ending-style] { transition-duration: var(--motion-duration-exit); transition-timing-function: var(--motion-ease-exit); }
 .trigger { border-color: var(--color-line); transition: box-shadow var(--motion-duration-selection) var(--motion-ease-out), border-color var(--motion-duration-control) var(--motion-ease-out), background-color var(--motion-duration-control) var(--motion-ease-out); }
 .trigger[data-invalid] { border-color: var(--color-statusDanger); box-shadow: var(--ui-fieldErrorShadow); }
 .trigger[data-disabled] { box-shadow: none; }
-@media (prefers-reduced-motion: reduce) { .trigger, .popup { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .trigger, .popup, .item, .triggerIcon > svg { transition: none; } }
+
+.item > svg { flex-shrink: 0; color: var(--color-inkMuted); }
+.item[data-danger] > svg { color: inherit; }
+.popup { overscroll-behavior: contain; scrollbar-width: thin; }
+
+.popup.popup { border-radius: var(--ui-dropdownRadius); }
