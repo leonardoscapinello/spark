@@ -84,6 +84,10 @@
       "popup": {
         "$type": "number",
         "$value": 0.97
+      },
+      "drag": {
+        "$type": "number",
+        "$value": 1.03
       }
     },
     "spring": {

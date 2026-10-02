@@ -210,17 +210,13 @@
 .moveBar { position: fixed; inset-inline-start: calc(var(--ui-railWidth) + var(--ui-sidebarWidth) + var(--ui-pageGutter)); inset-inline-end: var(--ui-pageGutter); bottom: var(--space-3); z-index: var(--ui-modalLayer); padding: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); box-shadow: var(--ui-popupShadow); }
 .moveBarActions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; gap: var(--space-2); width: 100%; }
 .moveDropZone { min-height: var(--ui-controlLarge); transition: background-color var(--motion-duration-fast) var(--motion-ease-out), border-color var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out); }
-.moveDropZone[data-action="won"] { color: var(--color-statusSuccess) !important; background: color-mix(in srgb, var(--color-statusSuccess) 12%, var(--color-surface)) !important; border-color: color-mix(in srgb, var(--color-statusSuccess) 36%, var(--color-line)) !important; }
-.moveDropZone[data-action="lost"] { color: var(--color-statusDanger) !important; background: color-mix(in srgb, var(--color-statusDanger) 10%, var(--color-surface)) !important; border-color: color-mix(in srgb, var(--color-statusDanger) 32%, var(--color-line)) !important; }
-.moveDropZone[data-action="archived"] { color: var(--color-inkMuted) !important; background: var(--color-surface2) !important; border-color: var(--color-line) !important; }
-.moveDropZone[data-action="move"] { color: var(--color-accent) !important; background: var(--color-surface) !important; border-color: var(--color-accent) !important; }
-.moveDropZone[data-drag-over="true"] { transform: translateY(calc(var(--space-1) * -1)) scale(1.03); box-shadow: var(--ui-selectionShadow); outline: var(--ui-focusWidth) solid currentColor; outline-offset: var(--ui-focusWidth); filter: saturate(1.15); }
-.movePanel { width: min(420px, calc(100vw - var(--space-8))) !important; align-self: end; margin-left: auto; margin-right: var(--space-4); margin-bottom: var(--space-4); background: var(--color-surface) !important; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); box-shadow: var(--ui-popupShadow); overflow: hidden; }
+.moveDropZone[data-drag-over="true"] { transform: translateY(calc(var(--space-1) * -1)) scale(var(--motion-scale-drag)); box-shadow: var(--ui-selectionShadow); outline: var(--ui-focusWidth) solid currentColor; outline-offset: var(--ui-focusWidth); }
+
 .movePanelFields { display: flex; flex-direction: column; gap: var(--space-4); }
 @media (max-width: 900px) { .moveBar { inset-inline-start: var(--ui-pageGutter); } }
-@media (max-width: 760px) { .moveBar { inset-inline: var(--space-4); bottom: var(--space-4); } .moveBarActions { grid-template-columns: repeat(2, minmax(0, 1fr)); } .moveBarActions > button { width: 100%; } .movePanel { width: calc(100vw - var(--space-4)) !important; margin-right: var(--space-2); margin-bottom: var(--space-2); } }
+@media (max-width: 760px) { .moveBar { inset-inline: var(--space-4); bottom: var(--space-4); } .moveBarActions { grid-template-columns: repeat(2, minmax(0, 1fr)); } .moveBarActions > button { width: 100%; }  }
 
-@media (prefers-reduced-motion: reduce) { .moveBar, .movePanel, .moveDropZone, .cartaoArrastando { transition: none; } .moveDropZone[data-drag-over="true"], .cartaoArrastando { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .moveBar, .moveDropZone, .cartaoArrastando { transition: none; } .moveDropZone[data-drag-over="true"], .cartaoArrastando { transform: none; } }
 
 .modalFields {
   display: flex;
@@ -297,7 +293,7 @@
 .cardMenu { margin-top: calc(var(--space-1) * -1); margin-right: calc(var(--space-2) * -1); color: var(--color-inkMuted); }
 .cardTags { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .cardTags:empty { display: none; }
-.addDeal { flex: 0 0 auto; min-height: var(--ui-controlLarge); width: 100%; justify-content: flex-start; padding-inline: var(--space-4); color: var(--color-inkMuted); border: var(--ui-hairline) solid transparent; border-radius: var(--radius-sm); corner-shape: var(--radius-shape); }
+.addDeal { flex: 0 0 auto; width: 100%; justify-content: flex-start; }
 .colunaCabecalho { position: relative; padding: var(--space-2); padding-right: var(--space-8); min-height: var(--ui-controlLarge); }
 .stageSettings { position: absolute; inset-inline-end: 0; top: var(--space-1); }
 .coluna { border-top: var(--space-1) solid var(--color-lineStrong); }
@@ -307,10 +303,10 @@
 .coluna[data-color="amber"] { border-top-color: var(--color-statusWarning); }
 .coluna[data-color="purple"] { border-top-color: color-mix(in srgb,var(--color-accent),var(--color-statusDanger)); }
 .coluna[data-color^="#"] { border-top-color: var(--stage-color); }
-.dealWorkspace { height: min(100%, var(--ui-modalWide)); width: 100%; overflow: hidden; }
-.dealWorkspace > div { flex: 1; padding: 0; overflow: hidden; }
 
-.addDeal:hover { color: var(--color-accent); background: var(--color-accentWash); }
+
+
+
 .cartao:focus-within { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .cardMenu { flex-shrink: 0; }
 .cartaoValor { font-weight: var(--typography-weight-semibold); }

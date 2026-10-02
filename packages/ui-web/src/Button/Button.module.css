@@ -38,3 +38,7 @@
 .root:is([data-tone="success"], [data-tone="danger"]):not([data-disabled]) { color: var(--button-tone); }
 .root:is([data-tone="success"], [data-tone="danger"]):hover:not([data-disabled]) { background: color-mix(in srgb, var(--button-tone) 8%, var(--color-surface)); }
 .primary:is([data-tone="success"], [data-tone="danger"]):not([data-disabled]) { background: var(--button-tone); color: var(--color-onAccent); }
+
+.row { background: transparent; color: var(--color-ink); border: var(--ui-hairline) solid transparent; }
+.row:hover:not([data-disabled]) { background: var(--color-surface2); }
+.row[data-selected]:not([data-disabled]) { background: var(--color-surface); border-color: var(--color-line); box-shadow: var(--ui-panelShadow); }

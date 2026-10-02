@@ -450,7 +450,7 @@ export default function Deals() {
 
               {stageDeals.length < allStageDeals.length && <Button variant="ghost" size="sm" onClick={() => setVisibleByStage((current) => ({ ...current, [stage.id]: visibleCount + 50 }))}>Mostrar mais {Math.min(50, allStageDeals.length - stageDeals.length)}</Button>}
 
-              {stage.kind === "stage" && canWrite && <Button className={styles.addDeal} variant="ghost" icon={<Icon name="plus" />} onClick={() => openDealModal(stage.id)}>Adicionar negócio</Button>}
+              {stage.kind === "stage" && canWrite && <Button className={styles.addDeal} variant="ghost" size="lg" icon={<Icon name="plus" />} onClick={() => openDealModal(stage.id)}>Adicionar negócio</Button>}
             </section>
           );
         })}
@@ -461,12 +461,12 @@ export default function Deals() {
           {(["won", "lost", "archived", "move"] as const).map((action) => {
             const labels = { won: "Ganho", lost: "Perdido", archived: "Arquivar", move: "Mover negócio" };
             const descriptions = { won: "Soltar para marcar como ganho", lost: "Soltar para marcar como perdido", archived: "Soltar para arquivar mantendo o status", move: "Soltar para escolher funil e etapa" };
-            return <Button key={action} size="sm" className={styles.moveDropZone} data-action={action} data-drag-over={dropAction === action ? "true" : undefined} variant="secondary" icon={action === "won" ? <Icon name="check" /> : action === "lost" ? <Icon name="close" /> : undefined} onDragEnter={(event) => { event.preventDefault(); setDropAction(action); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDropAction(action); }} onDragLeave={() => setDropAction((current) => current === action ? null : current)} onDrop={(event) => { event.preventDefault(); setDropAction(null); handleActionDrop(action); }} onClick={() => handleActionDrop(action)} aria-label={descriptions[action]}>{dropAction === action ? "Soltar aqui" : labels[action]}</Button>;
+            return <Button key={action} size="lg" className={styles.moveDropZone} tone={action === "won" ? "success" : action === "lost" ? "danger" : "neutral"} data-action={action} data-drag-over={dropAction === action ? "true" : undefined} variant="secondary" icon={action === "won" ? <Icon name="check" /> : action === "lost" ? <Icon name="close" /> : undefined} onDragEnter={(event) => { event.preventDefault(); setDropAction(action); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDropAction(action); }} onDragLeave={() => setDropAction((current) => current === action ? null : current)} onDrop={(event) => { event.preventDefault(); setDropAction(null); handleActionDrop(action); }} onClick={() => handleActionDrop(action)} aria-label={descriptions[action]}>{dropAction === action ? "Soltar aqui" : labels[action]}</Button>;
           })}
         </div>
       </div>}
       <Modal open={moveCandidate !== null} onOpenChange={(open) => { if (!open) setMoveCandidate(null); }}>
-        <ModalContent title="Mover negócio" description={movingDeal ? movingDeal.name : "Escolha o destino antes de confirmar."} placement="bottom" className={styles.movePanel} footer={<><Button variant="ghost" onClick={() => setMoveCandidate(null)}>Cancelar</Button><Button onClick={() => void confirmMove()} disabled={!moveStageId}>Confirmar movimento</Button></>}>
+        <ModalContent title="Mover negócio" description={movingDeal ? movingDeal.name : "Escolha o destino antes de confirmar."} placement="bottom" footer={<><Button variant="ghost" onClick={() => setMoveCandidate(null)}>Cancelar</Button><Button onClick={() => void confirmMove()} disabled={!moveStageId}>Confirmar movimento</Button></>}>
           {movingDeal && <div className={styles.movePanelFields}>
             <Field><Label>Funil</Label><Select label="Funil de destino" value={movePipelineId} options={pipelines.filter((pipeline) => !pipeline.archivedAt).map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => { if (value) { setMovePipelineId(value); setMoveStageId(allStages.find((stage) => stage.pipelineId === value && !stage.archivedAt)?.id ?? null); } }} /></Field>
             <Field><Label>Etapa</Label><Select label="Etapa de destino" value={moveStageId} options={allStages.filter((stage) => stage.pipelineId === movePipelineId && !stage.archivedAt).map((stage) => ({ value: stage.id, label: stage.name }))} onValueChange={setMoveStageId} /></Field>
@@ -500,7 +500,7 @@ export default function Deals() {
         </CrmSection>} actions={stages.filter((stage) => stage.id === targetStageId).map((stage) => <PhaseFields key={stage.id} stage={stage} stages={stages} values={dealCustom} onSave={async (key, value) => setDealCustom((current) => ({ ...current, [key]: value }))} />)} />
       </ActionModal>}
       <Modal open={openedDealId !== null} onOpenChange={(open) => { if (!open) setOpenedDealId(null); }}>
-        <ModalContent title="Visão rápida" size="workspace" className={styles.dealWorkspace} closeLabel="Voltar ao pipeline" headerAction={openedDealId ? <Button variant="ghost" shape="rounded" icon={<Icon name="page" />} render={<Link to={`/deals/${openedDealId}`} />}>Abrir página completa</Button> : undefined}>
+        <ModalContent title="Visão rápida" size="workspace" bodyDensity="flush" closeLabel="Voltar ao pipeline" headerAction={openedDealId ? <Button variant="ghost" shape="rounded" icon={<Icon name="page" />} render={<Link to={`/deals/${openedDealId}`} />}>Abrir página completa</Button> : undefined}>
           {openedDealId && <Suspense fallback={<Skeleton className={styles.loadingCard} />}><DealWorkspace dealId={openedDealId} embedded /></Suspense>}
         </ModalContent>
       </Modal>

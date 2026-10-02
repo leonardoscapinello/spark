@@ -39,9 +39,9 @@ export function CalendarMonth({ label, month, items, onMonthChange }: CalendarMo
     <header className={styles.header}>
       <div><h2 id={titleId}>{new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(month)}</h2><span>{visibleCount} {visibleCount === 1 ? "item neste mês" : "itens neste mês"}</span></div>
       <div className={styles.controls} role="group" aria-label={`Navegar no calendário de ${label}`}>
-        <Button size="sm" variant="secondary" onClick={() => onMonthChange(new Date(today.getFullYear(), today.getMonth(), 1))}>Hoje</Button>
-        <Button size="sm" variant="ghost" iconOnly aria-label="Mês anterior" onClick={() => onMonthChange(new Date(year, monthIndex - 1, 1))}><Icon name="right" /></Button>
-        <Button size="sm" variant="ghost" iconOnly aria-label="Próximo mês" onClick={() => onMonthChange(new Date(year, monthIndex + 1, 1))}><Icon name="right" /></Button>
+        <Button shape="pill" size="sm" variant="secondary" onClick={() => onMonthChange(new Date(today.getFullYear(), today.getMonth(), 1))}>Hoje</Button>
+        <Button shape="pill" size="sm" variant="ghost" iconOnly aria-label="Mês anterior" onClick={() => onMonthChange(new Date(year, monthIndex - 1, 1))}><Icon name="right" /></Button>
+        <Button shape="pill" size="sm" variant="ghost" iconOnly aria-label="Próximo mês" onClick={() => onMonthChange(new Date(year, monthIndex + 1, 1))}><Icon name="right" /></Button>
       </div>
     </header>
     <div className={styles.scroll} role="region" aria-label={`Calendário mensal de ${label}`} tabIndex={0}>

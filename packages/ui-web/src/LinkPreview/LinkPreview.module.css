@@ -1,7 +1,7 @@
 /* A largura pertence ao cartão, não só ao tooltip especializado. A prévia
  * também aparece dentro do tooltip genérico de InlineField; sem largura aqui,
  * ela colapsava enquanto mantinha a altura e virava uma faixa vertical. */
-.popup { width: var(--ui-popoverWidth); padding: 0; overflow: hidden; background: var(--color-surface); color: var(--color-ink); }
+.popup { --floating-width: var(--ui-popoverWidth); --floating-padding: 0; --surface-background: var(--color-surface); overflow: hidden; color: var(--color-ink); }
 .card { display: flex; flex-direction: column; width: var(--ui-popoverWidth); max-width: 100%; min-width: 0; background: var(--color-surface); color: var(--color-ink); }
 
 .image, .imagePlaceholder { display: block; flex: 0 0 auto; width: 100%; aspect-ratio: var(--ui-linkPreviewAspectRatio); object-fit: cover; background: var(--ui-subtle); }

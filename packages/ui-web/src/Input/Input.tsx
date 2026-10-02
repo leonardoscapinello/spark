@@ -21,7 +21,7 @@ export function Input({ size = "md", className, startAdornment, endAdornment, ..
   const cls = [styles.root, size !== "md" && styles[size], className].filter(Boolean).join(" ");
   const input = <BaseInput className={cls} {...rest} />;
   if (startAdornment === undefined && endAdornment === undefined) return input;
-  return <div className={styles.adorned} data-disabled={rest.disabled || undefined}>
+  return <div className={[styles.adorned, size !== "md" && styles[size]].filter(Boolean).join(" ")} data-disabled={rest.disabled || undefined}>
     {startAdornment !== undefined && <span className={styles.adornment}>{startAdornment}</span>}
     {input}
     {endAdornment !== undefined && <span className={styles.adornment}>{endAdornment}</span>}

@@ -1,8 +1,7 @@
 .page { gap: var(--space-6); }
 .periods { display: flex; align-items: center; gap: var(--space-2); overflow-x: auto; border-bottom: var(--ui-hairline) solid var(--color-line); scrollbar-width: none; }
 .periods::-webkit-scrollbar { display: none; }
-.periodOption { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding-inline: var(--space-3); border-bottom: var(--ui-focusWidth) solid transparent; border-radius: 0; white-space: nowrap; }
-.periodOption[data-selected] { border-bottom-color: var(--color-accent); color: var(--color-ink); }
+.periodOption { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding-inline: var(--space-3); white-space: nowrap; }
 .periodOption strong { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
 .activityCell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 .activityCell > div { min-width: 0; }

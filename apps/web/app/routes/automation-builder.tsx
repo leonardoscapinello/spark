@@ -177,10 +177,10 @@ export default function AutomationBuilder() {
         {panelMode === "palette" || !selected ? <div className={styles.palette}>
           <header><strong>Adicionar etapa</strong><span>Escolha o que acontece neste ponto do fluxo.</span></header>
           <div className={styles.paletteGroup}><strong>Passo inicial</strong><div className={styles.paletteGrid}>
-            <Button variant="ghost" shape="rounded" className={styles.paletteButton} data-type="trigger" disabled={!canWrite} onClick={() => addNode("trigger")}><span className={styles.nodeIcon}><Icon name={NODE_ICONS.trigger} /></span><span><strong>Gatilho</strong><small>{NODE_DEFAULTS.trigger.description}</small></span></Button>
+            <Button variant="row" shape="rounded" className={styles.paletteButton} data-type="trigger" disabled={!canWrite} onClick={() => addNode("trigger")}><span className={styles.nodeIcon}><Icon name={NODE_ICONS.trigger} /></span><span><strong>Gatilho</strong><small>{NODE_DEFAULTS.trigger.description}</small></span></Button>
           </div></div>
           <div className={styles.paletteGroup}><strong>Lógica e execução</strong><div className={styles.paletteGrid}>
-            {(["action", "condition", "wait"] as const).map((type) => <Button key={type} variant="ghost" shape="rounded" className={styles.paletteButton} data-type={type} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeIcon}><Icon name={NODE_ICONS[type]} /></span><span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
+            {(["action", "condition", "wait"] as const).map((type) => <Button key={type} variant="row" shape="rounded" className={styles.paletteButton} data-type={type} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeIcon}><Icon name={NODE_ICONS[type]} /></span><span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
           </div></div>
           <div className={styles.validation}><strong>Pronto para publicar</strong>{issues.length ? issues.map((issue) => <span key={`${issue.code}-${issue.nodeId ?? issue.edgeId ?? "graph"}`}>{issue.message}</span>) : <span data-valid="true">Fluxo válido e conectado.</span>}</div>
         </div> : <div className={styles.inspector} data-type={selected.type}>

@@ -50,9 +50,9 @@ export function CalendarWeek({ label, week, items, onWeekChange }: CalendarWeekP
     <header className={styles.header}>
       <div><h2 id={titleId}>{rangeFormatter.format(days[0])} – {rangeFormatter.format(days[6])}</h2><span>{visible.length} {visible.length === 1 ? "atividade nesta semana" : "atividades nesta semana"}</span></div>
       <div className={styles.controls} role="group" aria-label={`Navegar na agenda de ${label}`}>
-        <Button size="sm" variant="secondary" onClick={() => onWeekChange(new Date())}>Hoje</Button>
-        <Button size="sm" variant="ghost" iconOnly aria-label="Semana anterior" onClick={() => onWeekChange(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 7))}><Icon name="right" /></Button>
-        <Button size="sm" variant="ghost" iconOnly aria-label="Próxima semana" onClick={() => onWeekChange(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7))}><Icon name="right" /></Button>
+        <Button shape="pill" size="sm" variant="secondary" onClick={() => onWeekChange(new Date())}>Hoje</Button>
+        <Button shape="pill" size="sm" variant="ghost" iconOnly aria-label="Semana anterior" onClick={() => onWeekChange(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 7))}><Icon name="right" /></Button>
+        <Button shape="pill" size="sm" variant="ghost" iconOnly aria-label="Próxima semana" onClick={() => onWeekChange(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7))}><Icon name="right" /></Button>
       </div>
     </header>
     <div className={styles.scroll} role="region" aria-label={`Agenda semanal de ${label}`} tabIndex={0}>

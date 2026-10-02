@@ -407,6 +407,10 @@
     "controlRadius": {
       "$type": "dimension",
       "$value": "12px"
+    },
+    "optionHover": {
+      "$type": "string",
+      "$value": "linear-gradient(180deg, color-mix(in srgb, var(--color-ink) 5%, transparent), color-mix(in srgb, var(--color-ink) 2%, transparent))"
     }
   }
 }

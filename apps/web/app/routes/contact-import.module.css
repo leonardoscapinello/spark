@@ -21,7 +21,7 @@
 .fileName,
 .previewNotice { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
 .fileName { color: var(--color-ink); font-weight: var(--typography-weight-medium); }
-.error { color: var(--color-statusDanger) !important; }
+.error { color: var(--color-statusDanger); }
 
 .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding-block: var(--space-4); border-block: var(--ui-hairline) solid var(--color-line); }
 .summary div { padding-inline: var(--space-4); }

@@ -1,5 +1,7 @@
-.root { position: relative; isolation: isolate; display: flex; align-items: center; gap: var(--space-1); min-width: 0; padding: var(--space-1); border-radius: var(--radius-full); background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); }
-.root > button { flex: 1 1 0; min-width: 0; position: relative; z-index: 1; background: transparent; box-shadow: none; overflow: hidden; text-overflow: ellipsis; }
+.root { position: relative; isolation: isolate; display: inline-grid; grid-template-columns: repeat(var(--segment-count), minmax(max-content, 1fr)); align-items: center; gap: var(--space-1); min-width: 0; max-width: 100%; overflow-x: auto; padding: var(--space-1); border-radius: var(--radius-full); background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); }
+.root > button { min-width: max-content; padding-inline: var(--space-4); border-radius: var(--radius-full); color: var(--color-inkMuted); position: relative; z-index: 1; background: transparent; box-shadow: none;  }
 .root > button:hover:not([data-disabled]) { background: transparent; box-shadow: none; transform: none; }
 .indicator { position: absolute; z-index: 0; inset-block: var(--space-1); left: var(--space-1); width: calc((100% - var(--space-1) * 2 - (var(--segment-count) - 1) * var(--space-1)) / var(--segment-count)); transform: translateX(calc(var(--segment-index) * (100% + var(--space-1)))); border-radius: var(--radius-full); background: var(--ui-selected); box-shadow: var(--ui-panelShadow); pointer-events: none; transition: transform var(--motion-duration-selection) var(--motion-ease-out); }
 @media (prefers-reduced-motion: reduce) { .indicator { transition: none; } }
+
+.root > button[aria-pressed="true"] { color: var(--color-ink); }

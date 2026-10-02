@@ -1,3 +1,5 @@
+import { Glass } from "../Glass/Glass.js";
+import surface from "../shared/surfaces.module.css";
 import { useMemo, useState } from "react";
 import { Button } from "../Button/Button.js";
 import { Icon } from "../Icon/Icon.js";
@@ -52,8 +54,8 @@ export function TagPicker({ label, options, value, onValueChange, onCreate, plac
     {!disabled && <Combobox.Root<TagPickerOption> items={suggestions} filter={null} value={null} inputValue={query} onInputValueChange={setQuery} open={open} onOpenChange={setOpen} autoHighlight itemToStringLabel={(item) => item.label} onValueChange={(option) => { if (option) { onValueChange([...value, option.value]); setQuery(""); } }}>
       <Combobox.Input className={styles.input} aria-label={label} placeholder="Buscar ou criar etiqueta…" onFocus={() => setOpen(true)} />
       <Combobox.Portal><Combobox.Positioner className={styles.positioner} sideOffset={Number.parseFloat(lightTheme["space-1"])} align="start">
-        <Combobox.Popup className={styles.popup}>
-          <Combobox.List className={styles.options}>{(option: TagPickerOption) => <Combobox.Item key={option.value} value={option} className={styles.option}>
+        <Combobox.Popup render={<Glass tier="panel" />} className={`${surface.popup} ${styles.popup}`}>
+          <Combobox.List className={styles.options}>{(option: TagPickerOption) => <Combobox.Item key={option.value} value={option} className={surface.item}>
             <span className={styles.swatch} style={{ background: option.color?.startsWith("#") ? option.color : semanticColorTokens[option.color ?? "neutral"] }} />{option.label}
           </Combobox.Item>}</Combobox.List>
           {!suggestions.length && !canCreate && <span className={styles.empty}>Nenhuma outra etiqueta encontrada.</span>}

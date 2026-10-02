@@ -24,7 +24,7 @@ export default function PageBuilder() { const { pageId } = useParams(); const na
         </nav>
         {panelMode === "blocks" && <section className={styles.panelSection}>
           <h2>Adicionar bloco</h2><p>Escolha um bloco para inserir no fim da página.</p>
-          <div className={styles.catalog}>{BLOCK_CATALOG.map((item) => <Button key={item.type} className={styles.catalogItem} variant="ghost" shape="rounded" icon={<Icon name={BLOCK_ICONS[item.type]} />} trailingIcon={<Icon name="plus" />} disabled={!canWrite} onClick={() => add(item.type)}><span className={styles.catalogCopy}><strong>{item.label}</strong><small>{item.description}</small></span></Button>)}</div>
+          <div className={styles.catalog}>{BLOCK_CATALOG.map((item) => <Button key={item.type} className={styles.catalogItem} variant="row" shape="rounded" icon={<Icon name={BLOCK_ICONS[item.type]} />} trailingIcon={<Icon name="plus" />} disabled={!canWrite} onClick={() => add(item.type)}><span className={styles.catalogCopy}><strong>{item.label}</strong><small>{item.description}</small></span></Button>)}</div>
         </section>}
         {panelMode === "structure" && <section className={styles.panelSection}>
           <h2>Estrutura</h2><p>Selecione, reorganize ou remova blocos.</p>

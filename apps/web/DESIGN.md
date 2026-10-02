@@ -43,3 +43,6 @@ Cores, tipografia, espaços e dimensões vêm de `packages/tokens`. Componentes 
 
 ## Tipografia e menus da marca
 Brockmann é a família principal (400, 500, 600, 700; normal e itálico); Geist Mono complementa dados técnicos. Menus flutuantes compartilham Glass, espaçamento compacto, foco suave e abertura por transform/opacity. Não aplicar textura de cartão nos dropdowns. ADR-0041.
+
+## Composição de superfícies
+Overlay nunca anima opacidade no ancestral do blur. Véu e camadas visuais fazem fade juntos; centro radial e painéis com máscara direcional. Superfícies compartilhadas recebem variantes por contrato, sem !important ou aumento artificial de especificidade. Lista de conflitos corrigidos e exceções funcionais em docs/arquitetura/auditoria-superficies-2026-10-02.md (ADR-0043).
