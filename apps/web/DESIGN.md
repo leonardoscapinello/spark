@@ -23,7 +23,9 @@ Modo operar: atendimento frequente, leitura rápida e edição direta. Fundo de 
 ## Contratos por componente
 - Equipe no cabeçalho: responsável e seguidores compartilham altura `controlLarge`, raio e padding.
 - Etapa: um título e o nome da etapa; cada campo aparece uma vez no bloco, com seu nível. Sem contador e selo repetindo a mesma informação em três níveis.
-- Registro: nota e atividades acessíveis na mesma área; texto digitado é preservado ao alternar.
+- Registro: nota e atividades em abas com navegação por teclado e indicador móvel. Texto digitado é preservado ao alternar; campo e ações expandem conforme a escrita, respeitando movimento reduzido.
+- Visão rápida: campos e condições da etapa ficam no Resumo; a coluna central é dedicada ao registro e ao histórico. Vínculos usam uma ou duas colunas conforme a largura real do painel.
+- Campo vazio inline: ação textual Adicionar com sinal de mais, sem simular um input preenchido. Ao editar, revelar o controle correspondente com transição breve.
 - Próximas atividades: vazio ocupa uma linha com ação de agendamento. Lista com limite de altura próprio.
 - Histórico: data uma vez por grupo; evento com título, horário e autor na primeira linha, mudança logo abaixo. Rolagem própria mantém ações e filtros acessíveis.
 - Tooltip de identidade: padding interno, nome e detalhe alinhados, sem encostar na borda.

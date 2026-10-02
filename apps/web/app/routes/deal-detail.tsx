@@ -687,12 +687,12 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
             ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal(undefined, composerTab)}>
                 {canWriteActivities ? `Agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}…` : "Você não pode agendar atividades."}
               </ComposerPrompt>
-            : <div className={styles.compositorNota}>
-                <Textarea aria-label="Nova nota" disabled={!canWrite || savingNote} rows={noteDraft ? 3 : 2} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={(event) => setNoteDraft(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
-                {noteDraft.trim() && <div className={styles.compositorAcoes}>
+            : <div className={styles.compositorNota} data-filled={Boolean(noteDraft.trim())}>
+                <Textarea aria-label="Nova nota" disabled={!canWrite || savingNote} rows={2} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={(event) => setNoteDraft(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
+                <div className={styles.compositorAcoes} data-open={Boolean(noteDraft.trim())} inert={!noteDraft.trim()}>
                   <Button size="sm" loading={savingNote} onClick={() => void saveNote()}>Salvar nota</Button>
                   <Button size="sm" variant="ghost" onClick={() => setNoteDraft("")}>Cancelar</Button>
-                </div>}
+                </div>
               </div>}
         </Composer>
   </div>;
@@ -780,7 +780,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
           </div>;
 
   const summaryFields = <div className={styles.details}>
-            {fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))}</p>}
+            {!embedded && fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))}</p>}
             <InlineField label="Previsão" value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
               {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
             </InlineField>
@@ -915,12 +915,12 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       <aside className={styles.quickContext}>
         {valueContent}
         <Tabs label="Contexto do negócio" defaultValue="resumo" items={[
-          { value: "resumo", label: "Resumo", content: <><div className={styles.quickSummary}>{summaryFields}</div><div className={styles.tagSection}>{tagsContent}</div></> },
+          { value: "resumo", label: "Resumo", content: <>{phaseContent}<div className={styles.quickSummary}>{summaryFields}</div><div className={styles.tagSection}>{tagsContent}</div></> },
           { value: "detalhes", label: "Detalhes", content: <div className={styles.quickDetails}>{detailsContent}</div> },
           { value: "pessoas", label: "Vínculos", content: relatedContent },
         ]} />
       </aside>
-      <section className={styles.quickPhase}>{composerContent}{quickPanel === "commercial" ? commercialPanel : <>{phaseContent}<div className={`${styles.pageActivity} ${styles.quickActivity}`}>{historyContent}</div></>}</section>
+      <section className={styles.quickPhase}>{composerContent}{quickPanel === "commercial" ? commercialPanel : <><div className={`${styles.pageActivity} ${styles.quickActivity}`}>{historyContent}</div></>}</section>
       <aside className={styles.quickActions}>{moveActions}</aside>
     </div> : <div className={styles.contentGrid}>
       <aside className={styles.painel}>{valueContent}{phaseContent}{summaryContent}<div className={styles.tagSection}>{tagsContent}</div></aside>

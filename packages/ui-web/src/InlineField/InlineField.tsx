@@ -149,9 +149,9 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
    * e um painel com dez campos ficava com altura irregular. Cortar mantém o
    * ritmo; a dica devolve o que foi cortado sem custar um clique. */
   const rotulo = block ? <span className={s.stackedLabel}><span>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</span>{hint && <small>{hint}</small>}</span> : (
-    <Tooltip content={label} pinOnClick={false} size="compact">
+    <span className={s.labelGroup}><Tooltip content={label} pinOnClick={false} size="compact">
       <span className={s.label}>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</span>
-    </Tooltip>
+    </Tooltip>{hint && <small>{hint}</small>}</span>
   );
 
   if (!open || disabled) {
@@ -172,7 +172,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
         }}
       >
         {leading ? <span className={s.identity}>{leading}<span>{value}</span></span> : <span>{value}</span>}
-        {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name={href === undefined ? "pencil" : "link"} /></span>}
+        {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name={empty ? "plus" : href === undefined ? "pencil" : "link"} /></span>}
       </button>
     );
     return (

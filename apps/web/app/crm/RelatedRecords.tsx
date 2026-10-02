@@ -44,7 +44,7 @@ export function RelatedRecords({ contactId, companyId, onContact, onCompany, dis
   }
   return <div className={styles.root}>
     <section className={styles.relationBlock}>
-      <header className={styles.relationHeader}><div><h2>Pessoa</h2><p>Quem está relacionado a este negócio.</p></div>{!disabled && session?.capabilities.includes("contacts:write") && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openCreate("person")}>Nova pessoa</Button>}</header>
+      <header className={styles.relationHeader}><h2>Pessoa</h2>{!disabled && session?.capabilities.includes("contacts:write") && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openCreate("person")}>Nova pessoa</Button>}</header><p className={styles.relationDescription}>Quem está relacionado a este negócio.</p>
       {person && canReadPeople && <div className={styles.profileSummary}>
         <div className={styles.profileHeading}><Avatar name={person.name} size="medium" /><div><strong>{person.name}</strong><span>Pessoa</span></div></div>
         <dl className={styles.profileFacts}><div><dt>E-mail</dt><dd>{person.email ?? "Não informado"}</dd></div><div><dt>Telefone</dt><dd>{person.phone ?? "Não informado"}</dd></div><div><dt>Pontuação</dt><dd>{person.score}</dd></div></dl>
@@ -54,7 +54,7 @@ export function RelatedRecords({ contactId, companyId, onContact, onCompany, dis
       {!person && <div className={styles.emptyRelation}><Icon name="user" /><span>Nenhuma pessoa vinculada</span>{!disabled && <Button variant="secondary" size="sm" shape="rounded" onClick={() => setSelection("person")}>Selecionar pessoa</Button>}</div>}
     </section>
     <section className={styles.relationBlock}>
-      <header className={styles.relationHeader}><div><h2>Empresa</h2><p>Organização ligada à pessoa deste negócio.</p></div>{!disabled && session?.capabilities.includes("companies:write") && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openCreate("company")}>Nova empresa</Button>}</header>
+      <header className={styles.relationHeader}><h2>Empresa</h2>{!disabled && session?.capabilities.includes("companies:write") && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openCreate("company")}>Nova empresa</Button>}</header><p className={styles.relationDescription}>Organização ligada à pessoa deste negócio.</p>
       {company && canReadCompanies && <div className={styles.profileSummary}>
         <div className={styles.profileHeading}><Avatar name={company.name} size="medium" /><div><strong>{company.name}</strong><span>Empresa</span></div></div>
         <dl className={styles.profileFacts}><div><dt>Documento</dt><dd>{company.taxId ?? "Não informado"}</dd></div><div><dt>E-mail</dt><dd>{company.email ?? "Não informado"}</dd></div><div><dt>Site</dt><dd>{company.website ?? "Não informado"}</dd></div></dl>

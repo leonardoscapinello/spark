@@ -116,7 +116,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, layo
     required={field.required}
     block={layout === "stacked" || field.type === "paragraph"}
     hint={hint}
-    value={shown === "" ? "Clique para adicionar" : shown}
+    value={shown === "" ? "Adicionar" : shown}
     empty={shown === ""}
     disabled={disabled}
     onCancel={discardDraft}

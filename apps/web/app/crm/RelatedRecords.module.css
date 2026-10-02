@@ -1,10 +1,10 @@
 .root {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-relatedCardMinWidth)), 1fr));
   align-items: stretch;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5) var(--space-6);
-  background: var(--color-surface2);
+  background: var(--color-surface);
 }
 
 .relationBlock {
@@ -21,6 +21,7 @@
 .relationHeader {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--space-4);
 }
@@ -32,10 +33,9 @@
   display: grid;
   gap: var(--space-3);
   margin: 0;
-  padding: var(--space-4);
-  border: var(--ui-hairline) solid var(--color-lineSubtle);
-  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
-  background: var(--color-surface2);
+  padding: 0;
+  border: 0;
+  background: var(--color-surface);
 }
 
 .profileHeading {
@@ -74,7 +74,7 @@
 
 .profileFacts > div {
   display: grid;
-  grid-template-columns: minmax(5rem, .35fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, .35fr) minmax(0, 1fr);
   gap: var(--space-3);
   align-items: baseline;
 }
@@ -85,8 +85,7 @@
   overflow: hidden;
   color: var(--color-ink);
   font-size: var(--typography-size-sm);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .profileSummary > button { justify-self: start; }
@@ -96,3 +95,9 @@
 @media (max-width: 800px) {
   .root { grid-template-columns: 1fr; }
 }
+
+.relationHeader p { line-height: var(--ui-bodyLine); }
+.emptyRelation { flex-wrap: wrap; }
+.profileSummary > button { max-width: 100%; white-space: normal; text-align: start; height: auto; min-height: var(--ui-controlSmall); }
+
+.relationDescription { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }

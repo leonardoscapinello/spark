@@ -203,3 +203,16 @@
 .value { transition: background-color var(--motion-duration-control) var(--motion-ease-out), box-shadow var(--motion-duration-selection) var(--motion-ease-out), border-color var(--motion-duration-control) var(--motion-ease-out); }
 .value[data-empty="true"]:hover, .row[data-block="true"] .value:hover:not(:disabled) { background: var(--color-surface2); border-color: var(--color-lineStrong); box-shadow: var(--ui-fieldFocusShadow); }
 @media (prefers-reduced-motion: reduce) { .value { transition: none; } }
+
+/* Um valor ausente convida à edição sem simular um input já aberto. */
+.row:not([data-block="true"]) .value[data-empty="true"] { width: fit-content; max-width: 100%; background: transparent; border-color: transparent; box-shadow: none; color: var(--color-inkMuted); font-weight: var(--typography-weight-medium); }
+.row:not([data-block="true"]) .value[data-empty="true"]:hover { color: var(--color-ink); background: var(--color-surface2); }
+.value[data-empty="true"] .pencil { opacity: 1; }
+.editing { animation: editIn var(--motion-duration-control) var(--motion-ease-out); }
+@keyframes editIn { from { opacity: 0; transform: translateY(var(--space-1)); } }
+@media (prefers-reduced-motion: reduce) { .editing { animation: none; } }
+
+.labelGroup { display: grid; min-width: 0; gap: var(--space-1); }
+.labelGroup > small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
+
+.row:not([data-block="true"]) .readRow > .value[data-empty="true"] { flex: 0 1 auto; }

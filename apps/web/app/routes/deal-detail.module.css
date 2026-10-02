@@ -237,13 +237,13 @@
 .quickOwner > span { display: grid; gap: 0; min-width: 0; }
 .quickOwner strong { max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); }
 .quickIcon { display: grid; place-items: center; flex-shrink: 0; width: var(--ui-controlLarge); height: var(--ui-controlLarge); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-accentWash); color: var(--color-accent); }
-.quickGrid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr) minmax(0, .85fr); flex: 1; min-height: 0; }
+.quickGrid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, .8fr); flex: 1; min-height: 0; }
 .quickContext, .quickPhase, .quickActions { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 .quickContext { border-inline-end: var(--ui-hairline) solid var(--color-line); }
 .quickContext > div > [role="tablist"] { padding-inline: var(--space-4); gap: var(--space-4); background: var(--color-surface); }
 .quickPhase { display: flex; flex-direction: column; overflow: hidden; background: var(--color-surface); }
 .quickPhase > .phaseFields { flex-shrink: 0; max-height: var(--ui-recordPickerListHeight); overflow: auto; }
-.quickActivity { flex: 1; min-height: var(--ui-registrationCardHeight); padding: var(--space-3); background: var(--color-ground); overflow: hidden; }
+.quickActivity { flex: 1; min-height: 0; padding: var(--space-3); background: var(--color-ground); overflow: hidden; }
 .quickPhase .phaseFields { border: 0; border-radius: 0; }
 .quickSummary { padding: var(--space-4); }
 .quickActions { padding: var(--space-5); background: var(--color-surface2); border-inline-start: var(--ui-hairline) solid var(--color-line); }
@@ -314,7 +314,7 @@
   .headerPeople .owner { max-width: 65%; }
   .historyBloco > .blocoCabecalho { padding-inline: var(--space-3); }
   .pageActivity .historyBody { padding-inline: var(--space-3); }
-  .workspaceTabs > div > [role="tablist"] { flex-wrap: wrap; gap: var(--space-2); }
+  .workspaceTabs > div > [role="tablist"] { flex-wrap: nowrap; gap: var(--space-3); overflow-x: auto; }
   .focusEmpty { flex-wrap: wrap; }
   .quickOwner { max-width: 45%; }
 }
@@ -338,3 +338,16 @@
 .linkNote { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 @keyframes linkBadgeIn { from { transform: scale(0.6); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .linkBadge { animation: none; } }
+
+/* O centro é dedicado ao registro e histórico; a etapa acompanha o contexto. */
+.quickContext > div > [role="tabpanel"] { padding-top: 0; }
+.quickContext .phaseFields { border-bottom: var(--ui-hairline) solid var(--color-line); }
+.quickActivity .historyBloco { min-height: 0; }
+.quickActivity .historyTabs > div > [role="tabpanel"] { padding-top: var(--space-5); }
+.quickContext .quickSummary { padding-top: var(--space-5); }
+.compositorNota textarea { height: calc(var(--ui-controlLarge) + var(--space-2)); resize: none; transition: height var(--motion-duration-selection) var(--motion-ease-out), box-shadow var(--motion-duration-control) var(--motion-ease-out), border-color var(--motion-duration-control) var(--motion-ease-out); }
+.compositorNota:focus-within textarea, .compositorNota[data-filled="true"] textarea { height: var(--ui-composerExpandedHeight); }
+.compositorAcoes { height: 0; opacity: 0; overflow: hidden; transform: translateY(calc(-1 * var(--space-1))); transition: height var(--motion-duration-selection) var(--motion-ease-out), opacity var(--motion-duration-control) var(--motion-ease-out), transform var(--motion-duration-selection) var(--motion-ease-out); }
+.compositorAcoes[data-open="true"] { height: var(--ui-controlMedium); opacity: 1; transform: none; }
+@container (max-width: 960px) { .quickActivity { min-height: var(--ui-previewColumn); overflow: visible; } .quickActivity .historyBloco { min-height: var(--ui-chartHeight); } }
+@media (prefers-reduced-motion: reduce) { .compositorNota textarea, .compositorAcoes { transition: none; } }

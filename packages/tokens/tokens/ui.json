@@ -387,6 +387,14 @@
     "toastRadius": {
       "$type": "dimension",
       "$value": "20px"
+    },
+    "relatedCardMinWidth": {
+      "$type": "dimension",
+      "$value": "280px"
+    },
+    "composerExpandedHeight": {
+      "$type": "dimension",
+      "$value": "112px"
     }
   }
 }
