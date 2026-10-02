@@ -62,7 +62,9 @@
   text-decoration: none;
 }
 
-.railLink { position: relative; }
+.railLink { position: relative; isolation: isolate; }
+.railLink::before { content: ""; position: absolute; z-index: -1; inset: 0; border-radius: inherit; background: var(--ui-optionHover); opacity: 0; pointer-events: none; transition: opacity var(--motion-duration-control) var(--motion-ease-out); }
+.railLink:hover::before { opacity: 1; }
 
 .railHeader {
   display: flex;
@@ -136,7 +138,7 @@
 
 /* Hover é sutil (cinza); só o selecionado ganha o cartão branco com anel —
  * senão dois itens parecem selecionados ao mesmo tempo. Mesma regra do Sidebar. */
-.railLink:hover { color: var(--color-ink); background: var(--ui-subtle); }
+.railLink:hover { color: var(--color-ink); }
 .railLink[aria-current="page"] {
   color: var(--color-ink);
   background: var(--ui-selected);
@@ -227,10 +229,6 @@
 .sidebar {
   height: 100%;
   min-height: 0;
-  /* Off-white, não branco puro: na referência (Intercom) o nav de módulos é
-     #fbfbf9 e o conteúdo é #ffffff — dois planos, não um bloco branco só.
-     Mesma cor que .mobileSecondaryNav já usa. */
-  background: var(--color-surface2);
 }
 
 .singleSection {
@@ -391,3 +389,5 @@
   .rail .railLabel, .rail .brandWordmark { display: none; }
   .rail .brandSymbol { opacity: 1; visibility: visible; }
 }
+
+@media (prefers-reduced-motion: reduce) { .railLink::before { transition: none; } }

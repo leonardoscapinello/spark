@@ -1,9 +1,32 @@
-import { cloneElement, useEffect, useId, useState, type ComponentProps, type ReactElement, type ReactNode } from "react";
+import { cloneElement, useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type ReactElement, type ReactNode } from "react";
 import { Icon } from "../Icon/Icon.js";
 import styles from "./Sidebar.module.css";
 export interface SidebarProps { title: string; children: ReactNode; actions?: ReactNode; footer?: ReactNode; className?: string | undefined }
 export function Sidebar({ title, children, actions, footer, className }: SidebarProps) {
-  return <nav aria-label={title} className={[styles.root, className].filter(Boolean).join(" ")}><header className={styles.header}><h2>{title}</h2>{actions}</header><div className={styles.body}>{children}</div>{footer && <footer className={styles.footer}>{footer}</footer>}</nav>;
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
+    const measure = () => {
+      const active = body.querySelector<HTMLElement>('[aria-current="page"]');
+      body.dataset.selection = active ? "visible" : "hidden";
+      if (!active) return;
+      const parent = body.getBoundingClientRect();
+      const rect = active.getBoundingClientRect();
+      body.style.setProperty("--selection-x", `${rect.left - parent.left + body.scrollLeft}px`);
+      body.style.setProperty("--selection-y", `${rect.top - parent.top + body.scrollTop}px`);
+      body.style.setProperty("--selection-width", `${rect.width}px`);
+      body.style.setProperty("--selection-height", `${rect.height}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(body);
+    const active = body.querySelector<HTMLElement>('[aria-current="page"]');
+    if (active) observer.observe(active);
+    body.addEventListener("transitionend", measure);
+    return () => { observer.disconnect(); body.removeEventListener("transitionend", measure); };
+  }, [children]);
+  return <nav aria-label={title} className={[styles.root, className].filter(Boolean).join(" ")}><header className={styles.header}><h2>{title}</h2>{actions}</header><div ref={bodyRef} className={styles.body}><span className={styles.selection} aria-hidden="true" />{children}</div>{footer && <footer className={styles.footer}>{footer}</footer>}</nav>;
 }
 export function SidebarItem({ active, icon, count, children, className, render, ...props }: ComponentProps<"a"> & { active?: boolean; icon?: ReactNode; count?: number | undefined; render?: ReactElement }) {
   const content = <>{icon}<span className={styles.label}>{children}</span>{count !== undefined && <span className={styles.count}>{count}</span>}</>;
