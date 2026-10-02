@@ -403,6 +403,10 @@
     "dropdownRadius": {
       "$type": "dimension",
       "$value": "14px"
+    },
+    "controlRadius": {
+      "$type": "dimension",
+      "$value": "12px"
     }
   }
 }

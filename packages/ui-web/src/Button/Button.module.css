@@ -5,7 +5,7 @@
   border: 0; text-decoration: none; cursor: pointer; white-space: nowrap; flex-shrink: 0;
 }
 .pill { border-radius: var(--radius-full); }
-.rounded { border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
+.rounded { border-radius: var(--ui-controlRadius); corner-shape: var(--radius-shape); }
 .sm { height: var(--ui-controlSmall); padding: var(--space-1) var(--space-3); font-size: var(--typography-size-compact); }
 .md { height: var(--ui-controlMedium); padding: var(--space-2) var(--space-4); font-size: var(--typography-size-sm); }
 .lg { height: var(--ui-controlLarge); padding: var(--space-3) var(--space-5); font-size: var(--typography-size-sm); }
@@ -31,3 +31,10 @@
 :is(.secondary,.raised):active:not([data-disabled]) { box-shadow: var(--ui-fieldShadow); }
 @media (hover: hover) and (pointer: fine) { :is(.secondary,.raised):hover:not(:active):not([data-disabled]) { transform: translateY(calc(-1 * var(--ui-pressOffset))); box-shadow: var(--ui-popupShadow); } }
 @media (prefers-reduced-motion: reduce) { .root { transition: none; } .root:is(:hover,:active):not([data-disabled]) { transform: none; } }
+
+/* A intenção muda a tinta; geometria, superfície e feedback permanecem comuns. */
+.root[data-tone="success"] { --button-tone: var(--color-statusSuccess); }
+.root[data-tone="danger"] { --button-tone: var(--color-statusDanger); }
+.root:is([data-tone="success"], [data-tone="danger"]):not([data-disabled]) { color: var(--button-tone); }
+.root:is([data-tone="success"], [data-tone="danger"]):hover:not([data-disabled]) { background: color-mix(in srgb, var(--button-tone) 8%, var(--color-surface)); }
+.primary:is([data-tone="success"], [data-tone="danger"]):not([data-disabled]) { background: var(--button-tone); color: var(--color-onAccent); }

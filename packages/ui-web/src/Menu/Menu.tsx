@@ -39,7 +39,7 @@ export function DropdownButton({ children, trigger, ...props }: Omit<ComponentPr
 export function MenuButton({ menu, indicator = true, children, ...props }: Omit<ButtonProps, "trailingIcon"> & { menu: ReactNode; indicator?: boolean }) {
   return <DropdownButton trigger={<Button {...props} trailingIcon={indicator ? <Icon name="chevron" /> : undefined}>{children}</Button>}>{menu}</DropdownButton>;
 }
-export function SplitButton({ children, menu, menuLabel = "Mais opções", shape = "pill", ...props }: ButtonProps & { menu: ReactNode; menuLabel?: string }) {
+export function SplitButton({ children, menu, menuLabel = "Mais opções", shape = "rounded", ...props }: ButtonProps & { menu: ReactNode; menuLabel?: string }) {
   return <div className={styles.root} role="group" aria-label={menuLabel}>
     <Button {...props} shape={shape} data-split-part="action">{children}</Button>
     <DropdownButton trigger={<Button type="button" data-split-part="menu" shape={shape} variant={props.variant ?? "primary"} disabled={props.disabled || props.loading} size={props.size ?? "md"} iconOnly aria-label={menuLabel} icon={<Icon name="chevron" />} />}>{menu}</DropdownButton>

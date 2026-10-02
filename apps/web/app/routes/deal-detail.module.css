@@ -7,7 +7,7 @@
 /* Faixa branca do topo: título, trilha de etapas e caminho do funil moram
  * juntos, coladas ao cabeçalho da rota, e a linha embaixo fecha o bloco. */
 .page > header:first-child { background: var(--color-surface); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.topo { box-sizing: border-box; display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--color-surface); border-radius: var(--radius-md); corner-shape: var(--radius-shape); border: var(--ui-hairline) solid var(--color-line); }
+.topo { box-sizing: border-box; display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--color-surface); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
 
@@ -25,14 +25,11 @@
 .headerActions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-4); }
 .headerPeople, .headerOutcome { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
 .headerOutcome { padding-inline-start: var(--space-4); border-inline-start: var(--ui-hairline) solid var(--color-line); }
-.headerPeople .owner, .headerPeople .followers { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; min-height: var(--ui-controlLarge); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); corner-shape: var(--radius-shape); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); color: var(--color-ink); background: var(--color-surface2); border: var(--ui-hairline) solid transparent; }
-.headerPeople .owner:hover, .headerPeople .followers:hover { background: var(--ui-subtle); border-color: var(--color-line); }
+.headerPeople .owner, .headerPeople .followers { min-width: 0; }
 .owner > span { min-width: 0; max-width: var(--ui-menuWidth); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.headerOutcome > button { min-height: var(--ui-controlLarge); padding-inline: var(--space-3); }
 .followerFaces { display: inline-flex; align-items: center; flex: 0 0 auto; color: var(--color-inkMuted); }
 .followerFaces > * + * { margin-inline-start: calc(var(--space-2) * -1); }
 .followerFaces > span { outline: var(--ui-hairline) solid var(--color-surface); }
-.lostButton { color: var(--color-statusDanger); }
 
 /* Caminho do funil abaixo da trilha: «Funil › Etapa». */
 .trilha { display: flex; margin: 0; align-items: center; gap: var(--space-1); margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
@@ -223,9 +220,6 @@
 .dealValue > strong { font-size: var(--typography-size-xl); font-weight: var(--typography-weight-semibold); font-variant-numeric: tabular-nums;  }
 .dealValue > div { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .dealValue button { color: var(--color-accent); }
-.headerOutcome .wonButton { background: color-mix(in srgb, var(--color-statusSuccess) 10%, var(--color-surface)); color: var(--color-statusSuccess); }
-.headerOutcome .wonButton:hover { background: color-mix(in srgb, var(--color-statusSuccess) 18%, var(--color-surface)); }
-.headerOutcome .lostButton { color: var(--color-statusDanger); background: color-mix(in srgb, var(--color-statusDanger) 9%, var(--color-surface)); }
 .commercialPage { padding: var(--space-5); background: var(--color-surface); border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
 .commercialPage h2 { margin: 0; font-size: var(--typography-size-md); }
 .commercialPage > p { margin: var(--space-2) 0 var(--space-6); color: var(--color-inkMuted); font-size: var(--typography-size-sm); }

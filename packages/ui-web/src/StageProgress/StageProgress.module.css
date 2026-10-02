@@ -1,16 +1,17 @@
-/* Trilha de etapas do Pipedrive (captura 001): faixa de 24px, setas encaixadas,
- * etapa atual sólida. Aqui com a paleta da casa — azul de marca no lugar do
- * verde, âmbar/vermelho só no desfecho (ADR-0033, ADR-0034). */
 .frame { display: grid; gap: var(--space-1); min-width: 0; }
 .cooldown { display: grid; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); text-align: end; }
 .cooldown i { display: block; justify-self: end; width: var(--cooldown-progress); height: var(--space-1); border-radius: var(--radius-full); background: var(--color-accent); transition: width var(--motion-duration-fast) linear; }
 .root {
   display: flex;
   align-items: stretch;
-  gap: var(--ui-hairline);
+  gap: var(--space-1);
   min-width: 0;
   margin: 0;
-  padding: 0;
+  padding: var(--space-1);
+  border-radius: var(--ui-fieldRadius);
+  corner-shape: var(--radius-shape);
+  background: var(--color-surface2);
+  box-shadow: var(--ui-fieldShadow);
   list-style: none;
   overflow-x: auto;
   scrollbar-width: none;
@@ -29,7 +30,7 @@
   flex-direction: column;
   gap: var(--space-0);
   min-width: 0;
-  min-height: var(--space-12);
+  min-height: var(--ui-controlLarge);
   padding: var(--space-1) var(--space-4);
   border: 0;
   font-family: var(--typography-fontFamily-body);
@@ -37,23 +38,20 @@
   font-weight: var(--typography-weight-medium);
   line-height: var(--ui-tabLine);
   white-space: nowrap;
-  background: var(--ui-subtle);
+  background: transparent;
   color: var(--color-inkMuted);
-  /* A seta: entalhe à esquerda, ponta à direita. A primeira não tem entalhe e
-   * a última não tem ponta, então as pontas da faixa ficam retas. */
-  clip-path: polygon(0 0, calc(100% - var(--space-2)) 0, 100% 50%, calc(100% - var(--space-2)) 100%, 0 100%, var(--space-2) 50%);
-  transition: background-color var(--motion-duration-fast) var(--motion-ease-out), color var(--motion-duration-fast) var(--motion-ease-out);
+  border-radius: var(--ui-controlRadius);
+  corner-shape: var(--radius-shape);
+  transition: background-color var(--motion-duration-control) var(--motion-ease-out), color var(--motion-duration-control) var(--motion-ease-out), transform var(--motion-duration-control) var(--motion-ease-out);
 }
-.step:first-child .action { clip-path: polygon(0 0, calc(100% - var(--space-2)) 0, 100% 50%, calc(100% - var(--space-2)) 100%, 0 100%); border-start-start-radius: var(--radius-sm); border-end-start-radius: var(--radius-sm); }
-.step:last-child .action { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--space-2) 50%); border-start-end-radius: var(--radius-sm); border-end-end-radius: var(--radius-sm); }
-.step:only-child .action { clip-path: none; border-radius: var(--radius-sm); corner-shape: var(--radius-shape); }
+button.action:active { transform: scale(var(--ui-controlPressScale)); }
 
 button.action { cursor: pointer; }
-button.action:hover { background: var(--color-line); color: var(--color-ink); }
+button.action:hover { background: var(--color-surface); color: var(--color-ink); }
 .action:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(var(--ui-focusWidth) * -1); }
 
 .step[data-state="done"] .action { background: var(--color-accentWash); color: var(--color-accent); }
-.step[data-state="done"] button.action:hover { background: var(--color-line); color: var(--color-ink); }
+.step[data-state="done"] button.action:hover { background: var(--color-surface); color: var(--color-ink); }
 .step[data-state="current"] .action { background: var(--color-accent); color: var(--ui-buttonInk); font-weight: var(--typography-weight-semibold); }
 .step[data-state="current"] button.action:hover { background: var(--ui-buttonHover); color: var(--ui-buttonInk); }
 
@@ -100,4 +98,4 @@ button.action:hover { background: var(--color-line); color: var(--color-ink); }
   .step { flex-basis: calc(var(--space-16) + var(--space-16)); min-width: calc(var(--space-16) + var(--space-16)); }
 }
 
-@media (prefers-reduced-motion: reduce) { .action { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .action { transition: none; } button.action:active { transform: none; } }

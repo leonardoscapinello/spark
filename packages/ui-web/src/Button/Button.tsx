@@ -8,6 +8,7 @@ export type ButtonSize = "sm" | "md" | "lg";
 export type ButtonProps = {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  tone?: "neutral" | "success" | "danger";
   /** Estado de carregamento — desabilita o botão e mostra um spinner, sem trocar o texto de lugar. */
   loading?: boolean;
   icon?: ReactNode;
@@ -20,10 +21,11 @@ export type ButtonProps = {
 export function Button({
   variant = "primary",
   size = "md",
+  tone = "neutral",
   loading = false,
   icon,
   trailingIcon,
-  shape = "pill",
+  shape = "rounded",
   iconOnly = false,
   disabled,
   children,
@@ -32,7 +34,7 @@ export function Button({
 }: ButtonProps) {
   const cls = [styles.root, styles[variant], styles[size], styles[shape], iconOnly && styles.iconOnly, className].filter(Boolean).join(" ");
   return (
-    <BaseButton aria-busy={loading || undefined} className={cls} disabled={disabled || loading} {...rest}>
+    <BaseButton data-tone={tone} aria-busy={loading || undefined} className={cls} disabled={disabled || loading} {...rest}>
       {loading && <span className={styles.spinner} aria-hidden="true" />}
       {!loading && icon && <span className={styles.icon} aria-hidden="true">{icon}</span>}
       {children}

@@ -21,7 +21,7 @@ Modo operar: atendimento frequente, leitura rápida e edição direta. Fundo de 
 - Valores editáveis permanecem reconhecíveis. O hover muda fundo/borda, nunca geometria ou tamanho.
 
 ## Contratos por componente
-- Equipe no cabeçalho: responsável e seguidores compartilham altura `controlLarge`, raio e padding.
+- Ações no cabeçalho: responsável, seguidores e desfechos usam Button secondary lg, raio controlRadius e movimento compartilhado. Tons success/danger pertencem ao componente; a rota não redesenha controles.
 - Etapa: um título e o nome da etapa; cada campo aparece uma vez no bloco, com seu nível. Sem contador e selo repetindo a mesma informação em três níveis.
 - Registro: nota e atividades em abas com navegação por teclado e indicador móvel. Texto digitado é preservado ao alternar; campo e ações expandem conforme a escrita, respeitando movimento reduzido.
 - Visão rápida: campos e condições da etapa ficam no Resumo; a coluna central é dedicada ao registro e ao histórico. Vínculos usam uma ou duas colunas conforme a largura real do painel.
@@ -34,6 +34,9 @@ Modo operar: atendimento frequente, leitura rápida e edição direta. Fundo de 
 
 ## Verificação de entrega
 Inspecionar uma vez a ficha em desktop e largura estreita, a visualização rápida, os menus do cabeçalho e as três áreas da configuração. Conferir: texto legível, nenhum overflow horizontal de página, foco visível, campos sem truncamento na matriz, rolagens com limites, estados vazios úteis. Corrigir defeitos concretos em lote. Rodar `pnpm check` conforme CLAUDE.md. Não confundir teste técnico aprovado com aprovação estética do usuário.
+
+## Padrão de ações e etapas
+Botões padrão são rounded; pill é explícito. Ações são elevadas, campos são rebaixados, menus são flutuantes. A trilha de etapas usa segmentos no mesmo vocabulário, com carvão apenas na etapa atual; sem recortes angulares. Ficha e visão rápida compartilham os tons de desfecho (ADR-0042).
 
 ## Fonte dos valores
 Cores, tipografia, espaços e dimensões vêm de `packages/tokens`. Componentes compartilhados vivem em `packages/ui-web`. A composição usa esses contratos sem inventar uma variante de botão por tela.

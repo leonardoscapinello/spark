@@ -17,3 +17,6 @@ export const Small: Story = { args: { size: "sm" } };
 export const Large: Story = { args: { size: "lg" } };
 export const Loading: Story = { args: { loading: true } };
 export const Disabled: Story = { args: { disabled: true } };
+
+export const Success: Story = { args: { variant: "secondary", tone: "success", children: "Ganho" } };
+export const Danger: Story = { args: { variant: "secondary", tone: "danger", children: "Perdido" } };

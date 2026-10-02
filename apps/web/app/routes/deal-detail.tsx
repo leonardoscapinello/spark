@@ -864,14 +864,14 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       actions={<div className={styles.headerActions}>
         <div className={styles.headerPeople} aria-label="Equipe do negócio">
           {/* Uma identidade única para o responsável. A presença mostra apenas outras pessoas. */}
-          <MenuButton variant="ghost" shape="rounded" disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
+          <MenuButton variant="secondary" size="lg" disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
             {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<UserAvatar user={item} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
             {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
           </MenuGroup>}>
             {owner ? <UserAvatar user={owner} size="small" /> : <Icon name="account" />}
             <span>{owner?.name ?? "Sem responsável"}</span>
           </MenuButton>
-          <MenuButton variant="ghost" shape="rounded" className={styles.followers} disabled={!canWrite} aria-label={`${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}. Gerenciar`} menu={<>
+          <MenuButton variant="secondary" size="lg" className={styles.followers} disabled={!canWrite} aria-label={`${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}. Gerenciar`} menu={<>
             <MenuGroup label="Seguidores">
               {followerUsers.length === 0 && <MenuItem disabled>Ninguém segue este negócio</MenuItem>}
               {followerUsers.map((user) => <MenuItem key={user.id} icon={<UserAvatar user={user} size="small" />} shortcut="Remover" disabled={busyFollowerId === user.id} onClick={() => void removeFollower(user.id)}>{user.name}</MenuItem>)}
@@ -888,8 +888,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         </div>
         <div className={styles.headerOutcome}>
           {isOpen && canMove && <>
-            <Button variant="secondary" shape="rounded" className={styles.wonButton} icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
-            <Button variant="secondary" shape="rounded" className={styles.lostButton} icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
+            <Button variant="secondary" size="lg" tone="success" icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
+            <Button variant="secondary" size="lg" tone="danger" icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
           </>}
           {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
           {!isOpen && canMove && <Button variant="secondary" icon={<Icon name="undo" />} loading={reopening} onClick={() => void reopenDeal()}>Reabrir</Button>}

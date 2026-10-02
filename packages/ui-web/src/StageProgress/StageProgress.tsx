@@ -59,15 +59,7 @@ export function StagePassageHistory({ passages, limit }: { passages: readonly St
   </li>)}</ol>;
 }
 
-/**
- * Trilha de etapas do funil, como a do Pipedrive (docs/inspiration/pipedrive,
- * captura 001): uma faixa de 24px dividida em setas — as vencidas preenchidas,
- * a atual em destaque com o tempo parado nela, as seguintes apagadas. Cada
- * seta é um botão: mover o negócio é um clique na etapa, sem abrir menu.
- *
- * Só desenha e avisa quem clicou. Quem decide se pode mover, e o que fazer
- * com isso, é a tela (ADR-0020).
- */
+/** Trilha segmentada: ordem, etapa atual, tempos e ações preservados (ADR-0042). */
 export function StageProgress<Id extends string = string>({ stages, currentId, durations, details, outcome, onSelect, onMove, interaction = "popover", label = "Etapas do funil", cooldownRemainingMs = 0 }: StageProgressProps<Id>) {
   const currentStep = useRef<HTMLElement>(null);
   const [openId, setOpenId] = useState<string | null>(null);
