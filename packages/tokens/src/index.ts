@@ -3,7 +3,7 @@
 
 export const PACKAGE_NAME = "@spark/tokens" as const;
 
-export { DEFAULT_THEME_VALUES, type ThemeFontFamily } from "./theme.js";
+export { DEFAULT_THEME_VALUES, isDefaultTheme, type ThemeFontFamily } from "./theme.js";
 
 // Molas perceptuais (duration + bounce) — a mesma matemática que o build usa
 // para emitir --motion-spring-* como linear(), disponível em runtime para

@@ -7,7 +7,7 @@ import { zOrgId, zServerTimestamp } from "./zodHelpers.js";
  * referências a um catálogo seguro aplicado pelo cliente.
  */
 export const ThemeHexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use uma cor hexadecimal de seis dígitos.");
-export const ThemeFontFamilySchema = z.enum(["inter", "system", "rounded", "serif"]);
+export const ThemeFontFamilySchema = z.enum(["geist", "inter", "system", "rounded", "serif"]);
 
 const ThemeValuesSchema = z.object({
   accentColor: ThemeHexColorSchema,
@@ -40,4 +40,3 @@ export const OrganizationThemeWriteResponseSchema = z.object({
   txid: z.number().int(),
 });
 export type OrganizationThemeWriteResponse = z.infer<typeof OrganizationThemeWriteResponseSchema>;
-

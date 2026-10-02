@@ -10,6 +10,8 @@ Cada arquivo aqui registra **uma decisão**, o contexto em que foi tomada, as al
 
 ## Índice
 
+A identidade visual vigente é definida pelo [ADR-0039](0039-identidade-papel-e-curvas-continuas.md), que substitui parcialmente 0033 e 0034 sem alterar a composição por colunas.
+
 | # | Decisão | Status |
 |---|---|---|
 | [0001](0001-typescript-ponta-a-ponta.md) | TypeScript em toda a stack | Aceito |

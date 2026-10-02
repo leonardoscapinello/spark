@@ -3,15 +3,15 @@
   "ui": {
     "controlSmall": {
       "$type": "dimension",
-      "$value": "24px"
+      "$value": "28px"
     },
     "controlMedium": {
       "$type": "dimension",
-      "$value": "32px"
+      "$value": "36px"
     },
     "controlLarge": {
       "$type": "dimension",
-      "$value": "40px"
+      "$value": "44px"
     },
     "fieldHeight": {
       "$type": "dimension",
@@ -19,7 +19,7 @@
     },
     "fieldRadius": {
       "$type": "dimension",
-      "$value": "7px"
+      "$value": "12px"
     },
     "icon": {
       "$type": "dimension",
@@ -27,8 +27,7 @@
     },
     "iconSm": {
       "$type": "dimension",
-      "$value": "12px",
-      "$description": "Ícone dentro de texto ou de pastilha, onde 16px domina a linha."
+      "$value": "14px"
     },
     "railWidth": {
       "$type": "dimension",
@@ -138,42 +137,6 @@
       "$type": "dimension",
       "$value": "44px"
     },
-    "buttonBg": {
-      "$type": "color",
-      "$value": "{color.accent}"
-    },
-    "buttonInk": {
-      "$type": "color",
-      "$value": "#fafaf7"
-    },
-    "buttonHover": {
-      "$type": "color",
-      "$value": "{color.accentStrong}"
-    },
-    "subtle": {
-      "$type": "color",
-      "$value": "#f8f8f7"
-    },
-    "selected": {
-      "$type": "color",
-      "$value": "#ffffff"
-    },
-    "disabledInk": {
-      "$type": "color",
-      "$value": "#81817e"
-    },
-    "tabIndicator": {
-      "$type": "color",
-      "$value": "{color.accent}"
-    },
-    "panelShadow": {
-      "$type": "string",
-      "$value": "0px 1px 4px rgba(20,20,20,0.15)"
-    },
-    "selectionShadow": {
-      "$type": "string",
-      "$value": "0px 0px 0px 1px #e9eae6, 0px 1px 4px rgba(20,20,20,0.15)"
-    },
     "spinDuration": {
       "$type": "duration",
       "$value": "600ms"
@@ -200,7 +163,7 @@
     },
     "popupRadius": {
       "$type": "dimension",
-      "$value": "12px"
+      "$value": "18px"
     },
     "menuItemPadding": {
       "$type": "dimension",
@@ -230,25 +193,17 @@
       "$type": "number",
       "$value": 50
     },
-    "scrim": {
-      "$type": "color",
-      "$value": "rgba(0,0,0,0.3)"
-    },
-    "popupShadow": {
-      "$type": "string",
-      "$value": "0px 8px 16px rgba(20,20,20,0.15)"
-    },
     "switchWidth": {
       "$type": "dimension",
-      "$value": "32px"
+      "$value": "42px"
     },
     "switchHeight": {
       "$type": "dimension",
-      "$value": "20px"
+      "$value": "24px"
     },
     "switchThumb": {
       "$type": "dimension",
-      "$value": "16px"
+      "$value": "18px"
     },
     "textareaHeight": {
       "$type": "dimension",
@@ -314,26 +269,6 @@
       "$type": "number",
       "$value": 48
     },
-    "chart1": {
-      "$type": "color",
-      "$value": "{color.accent}"
-    },
-    "chart2": {
-      "$type": "color",
-      "$value": "#62a7dd"
-    },
-    "chart3": {
-      "$type": "color",
-      "$value": "#b398dd"
-    },
-    "chart4": {
-      "$type": "color",
-      "$value": "#6baca0"
-    },
-    "chart5": {
-      "$type": "color",
-      "$value": "{color.accentStrong}"
-    },
     "checkboxMark": {
       "$type": "dimension",
       "$value": "12px"
@@ -363,14 +298,6 @@
       "$value": "96px",
       "$description": "Largura do seletor de hora e de minuto: cabem os dois dígitos e a seta sem truncar."
     },
-    "helpBg": {
-      "$type": "color",
-      "$value": "rgba(0,0,0,0.88)"
-    },
-    "helpSolid": {
-      "$type": "color",
-      "$value": "#000000"
-    },
     "cashIllustrationWidth": {
       "$type": "dimension",
       "$value": "128px"
@@ -388,6 +315,78 @@
       "$type": "dimension",
       "$value": "72px",
       "$description": "Coluna do código de CNAE e do ano de regime no cadastro da Receita — largura de sete dígitos em fonte monoespaçada."
+    },
+    "panelRadius": {
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    "cardRadius": {
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    "textareaRadius": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "checkboxRadius": {
+      "$type": "dimension",
+      "$value": "7px"
+    },
+    "switchInset": {
+      "$type": "dimension",
+      "$value": "3px"
+    },
+    "fieldGap": {
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    "labelSize": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "helpSize": {
+      "$type": "dimension",
+      "$value": "11px"
+    },
+    "chartBarRadius": {
+      "$type": "dimension",
+      "$value": "4px"
+    },
+    "chartComparisonDash": {
+      "$type": "string",
+      "$value": "2 4"
+    },
+    "chartGridDash": {
+      "$type": "string",
+      "$value": "2 4"
+    },
+    "controlPressScale": {
+      "$type": "number",
+      "$value": 0.97
+    },
+    "controlSheetScale": {
+      "$type": "number",
+      "$value": 0.98
+    },
+    "pressOffset": {
+      "$type": "dimension",
+      "$value": "1px"
+    },
+    "chartGridOpacity": {
+      "$type": "number",
+      "$value": 0.6
+    },
+    "modalRadius": {
+      "$type": "dimension",
+      "$value": "28px"
+    },
+    "navigationRadius": {
+      "$type": "dimension",
+      "$value": "10px"
+    },
+    "toastRadius": {
+      "$type": "dimension",
+      "$value": "20px"
     }
   }
 }

@@ -164,13 +164,26 @@ ${toCssVars(darkOnly)}
 
   await fs.mkdir("dist/fonts/inter", { recursive: true });
   await fs.copyFile("node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2", "dist/fonts/inter/inter-latin-wght-normal.woff2");
-  const fontFace = buildFontFaceCss() + `@font-face {
+  let fontFace = buildFontFaceCss() + `@font-face {
   font-family: "Inter";
   src: url("../fonts/inter/inter-latin-wght-normal.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }\n`;
+  for (const [directory, family] of [["geist", "Geist"], ["geist-mono", "Geist Mono"]]) {
+    const filename = `${directory}-latin-wght-normal.woff2`;
+    await fs.mkdir(`dist/fonts/${directory}`, { recursive: true });
+    await fs.copyFile(`node_modules/@fontsource-variable/${directory}/files/${filename}`, `dist/fonts/${directory}/${filename}`);
+    await fs.copyFile(`node_modules/@fontsource-variable/${directory}/LICENSE`, `dist/fonts/${directory}/LICENSE`);
+    fontFace += `@font-face {
+  font-family: "${family}";
+  src: url("../fonts/${directory}/${filename}") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}\n`;
+  }
   await fs.writeFile("dist/css/tokens.css", fontFace + css);
 
   const nativeTheme = `// Gerado por packages/tokens/build.mjs — NÃO editar à mão.

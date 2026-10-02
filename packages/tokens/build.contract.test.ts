@@ -32,8 +32,8 @@ describe("cascata de tema em três estados (ADR-0025)", () => {
   });
 
   it("todo token que aparece no claro também tem override coerente quando diverge no escuro", () => {
-    expect(css).toMatch(/--color-ground: #0a1526/); // fundo escuro dentro do bloco dark
-    expect(css).toMatch(/--color-ground: #eff0eb/); // fundo claro dentro do :root
+    expect(css).toMatch(/--color-ground: #161411/); // fundo escuro dentro do bloco dark
+    expect(css).toMatch(/--color-ground: #f6f4ef/); // fundo claro dentro do :root
   });
 
   it("gera o tema nativo com light e dark", () => {
@@ -45,7 +45,7 @@ describe("cascata de tema em três estados (ADR-0025)", () => {
 describe("tipografia da marca — FH Duo (ver assets/brand/README.md do landingsuite)", () => {
   it("declara @font-face para as duas famílias, nos seis pesos, normal e itálico", () => {
     const total = (css.match(/\@font-face/g) ?? []).length;
-    expect(total).toBe(25); // FH Duo preservada + Inter variável
+    expect(total).toBe(27); // FH Duo, Inter, Geist e Geist Mono
   });
 
   it("aponta pros arquivos copiados em dist/fonts, não pro landingsuite", () => {
@@ -54,9 +54,9 @@ describe("tipografia da marca — FH Duo (ver assets/brand/README.md do landings
     expect(css).not.toMatch(/landingsuite/);
   });
 
-  it("Inter é a família de interface e título (ADR-0033)", () => {
-    expect(css).toMatch(/--typography-fontFamily-display: Inter/);
-    expect(css).toMatch(/--typography-fontFamily-body: Inter/);
+  it("Geist é a família de interface e título (ADR-0039)", () => {
+    expect(css).toMatch(/--typography-fontFamily-display: Geist/);
+    expect(css).toMatch(/--typography-fontFamily-body: Geist/);
   });
 });
 

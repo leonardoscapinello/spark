@@ -2,94 +2,225 @@
   "color": {
     "ground": {
       "$type": "color",
-      "$value": "#eff0eb"
+      "$value": "#f6f4ef"
     },
     "surface": {
       "$type": "color",
-      "$value": "#ffffff"
+      "$value": "#fffefb"
     },
     "surface2": {
       "$type": "color",
-      "$value": "#fbfbf9"
+      "$value": "#f1eee7"
     },
     "ink": {
       "$type": "color",
-      "$value": "#1a1a1a"
+      "$value": "#1d1b18"
     },
     "inkMuted": {
       "$type": "color",
-      "$value": "#646462"
+      "$value": "#67625a"
     },
     "inkFaint": {
       "$type": "color",
-      "$value": "#81817e"
+      "$value": "#67625a"
     },
     "line": {
       "$type": "color",
-      "$value": "#e9eae6"
+      "$value": "#e7e3da"
     },
     "lineStrong": {
       "$type": "color",
-      "$value": "#c7c8c4"
+      "$value": "#d7d1c4"
     },
     "accent": {
       "$type": "color",
-      "$value": "{color.blue.600}"
+      "$value": "#1d1b18"
     },
     "accentStrong": {
       "$type": "color",
-      "$value": "{color.blue.700}"
+      "$value": "#34312c"
     },
     "accentWash": {
       "$type": "color",
-      "$value": "#EAF0FF"
+      "$value": "rgba(29,27,24,.06)"
     },
     "statusSuccess": {
       "$type": "color",
-      "$value": "{color.status.success}"
+      "$value": "#347653"
     },
     "statusSuccessSoft": {
       "$type": "color",
-      "$value": "#2F92701F",
-      "$description": "Pastilha de situação — 12% da primitiva success, para o texto statusSuccess ler por cima."
+      "$value": "rgba(63,138,99,.12)"
     },
     "statusWarning": {
       "$type": "color",
-      "$value": "{color.status.warning}"
+      "$value": "#8b5b23"
     },
     "statusWarningSoft": {
       "$type": "color",
-      "$value": "#B875181F",
-      "$description": "Pastilha de situação — 12% da primitiva warning."
+      "$value": "rgba(201,138,60,.14)"
     },
     "internalNoteSurface": {
       "$type": "color",
-      "$value": "#fff8e6"
+      "$value": "rgba(201,138,60,.14)"
     },
     "statusDanger": {
       "$type": "color",
-      "$value": "{color.status.danger}"
+      "$value": "#cf3f28"
     },
     "statusDangerSoft": {
       "$type": "color",
-      "$value": "#C94B5A1F",
-      "$description": "Pastilha de situação — 12% da primitiva danger."
+      "$value": "rgba(207,63,40,.10)"
     },
     "focusRing": {
       "$type": "color",
-      "$value": "{color.blue.600}"
+      "$value": "#1d1b18"
     },
     "glassBg": {
       "$type": "color",
-      "$value": "rgba(10, 21, 38, 0.10)"
+      "$value": "rgba(250,247,240,.62)"
     },
     "glassEdge": {
       "$type": "color",
-      "$value": "rgba(10, 21, 38, 0.14)"
+      "$value": "rgba(255,255,255,.45)"
     },
     "glassShadow": {
       "$type": "color",
       "$value": "rgba(10, 21, 38, 0.14)"
+    },
+    "onAccent": {
+      "$type": "color",
+      "$value": "#fffefb"
+    }
+  },
+  "ui": {
+    "buttonBg": {
+      "$type": "color",
+      "$value": "#1d1b18"
+    },
+    "buttonInk": {
+      "$type": "color",
+      "$value": "#fffefb"
+    },
+    "buttonHover": {
+      "$type": "color",
+      "$value": "#34312c"
+    },
+    "subtle": {
+      "$type": "color",
+      "$value": "#f1eee7"
+    },
+    "selected": {
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    "disabledInk": {
+      "$type": "color",
+      "$value": "#8f897f"
+    },
+    "tabIndicator": {
+      "$type": "color",
+      "$value": "#1d1b18"
+    },
+    "helpBg": {
+      "$type": "color",
+      "$value": "#1d1b18"
+    },
+    "helpSolid": {
+      "$type": "color",
+      "$value": "#1d1b18"
+    },
+    "helpInk": {
+      "$type": "color",
+      "$value": "#fffefb"
+    },
+    "chartGrid": {
+      "$type": "color",
+      "$value": "#ebe5d8"
+    },
+    "chartComparison": {
+      "$type": "color",
+      "$value": "#a9a39a"
+    },
+    "chart1": {
+      "$type": "color",
+      "$value": "#1d1b18"
+    },
+    "chart2": {
+      "$type": "color",
+      "$value": "#3c64c8"
+    },
+    "chart3": {
+      "$type": "color",
+      "$value": "#2f9c98"
+    },
+    "chart4": {
+      "$type": "color",
+      "$value": "#e0843a"
+    },
+    "chart5": {
+      "$type": "color",
+      "$value": "#8a6fd6"
+    },
+    "chart6": {
+      "$type": "color",
+      "$value": "#a9a39a"
+    },
+    "scrim": {
+      "$type": "color",
+      "$value": "rgba(20,20,20,.07)"
+    },
+    "panelShadow": {
+      "$type": "string",
+      "$value": "0 0 0 .5px rgba(29,27,24,.06),0 1px 1px rgba(29,27,24,.05),0 2px 3px -2px rgba(29,27,24,.10),0 0 0 0 rgba(0,0,0,0),inset 0 .5px 0 rgba(255,255,255,.55)"
+    },
+    "selectionShadow": {
+      "$type": "string",
+      "$value": "0 0 0 .5px rgba(29,27,24,.06),0 1px 1px rgba(29,27,24,.05),0 2px 3px -2px rgba(29,27,24,.10),0 0 0 0 rgba(0,0,0,0),inset 0 .5px 0 rgba(255,255,255,.55)"
+    },
+    "popupShadow": {
+      "$type": "string",
+      "$value": "0 0 0 .5px rgba(29,27,24,.06),0 1px 1px rgba(29,27,24,.06),0 5px 6px -4px rgba(29,27,24,.12),0 14px 18px -14px rgba(29,27,24,.20),inset 0 .5px 0 rgba(255,255,255,.55)"
+    },
+    "modalShadow": {
+      "$type": "string",
+      "$value": "0 0 0 .5px rgba(29,27,24,.06),0 2px 2px rgba(29,27,24,.06),0 12px 14px -10px rgba(29,27,24,.18),0 32px 40px -28px rgba(29,27,24,.34),inset 0 .5px 0 rgba(255,255,255,.55)"
+    },
+    "fieldShadow": {
+      "$type": "string",
+      "$value": "inset 0 1px 2px rgba(29,27,24,.08),inset 0 0 0 .5px rgba(29,27,24,.03),0 .5px 0 rgba(255,255,255,.4)"
+    },
+    "buttonShadow": {
+      "$type": "string",
+      "$value": "inset 0 .5px 0 rgba(255,255,255,.07),0 1px 1px rgba(29,27,24,.12),0 2px 3px -2px rgba(29,27,24,.14)"
+    },
+    "buttonPressedShadow": {
+      "$type": "string",
+      "$value": "inset 0 1px 1.5px rgba(0,0,0,.28),0 0 0 rgba(0,0,0,0)"
+    },
+    "fieldFocusShadow": {
+      "$type": "string",
+      "$value": "inset 0 1px 2px rgba(29,27,24,.08),inset 0 0 0 .5px rgba(29,27,24,.03),0 .5px 0 rgba(255,255,255,.4), 0 0 0 3px rgba(29,27,24,.14)"
+    },
+    "fieldErrorShadow": {
+      "$type": "string",
+      "$value": "inset 0 1px 2px rgba(29,27,24,.08),inset 0 0 0 .5px rgba(29,27,24,.03),0 .5px 0 rgba(255,255,255,.4), 0 0 0 1px #cf3f28"
+    },
+    "paperTexture": {
+      "$type": "string",
+      "$value": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .12 0 0 0 0 .1 0 0 0 0 .07 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23n%29'/%3E%3C/svg%3E\")"
+    }
+  },
+  "effect": {
+    "shadow": {
+      "sm": {
+        "$type": "string",
+        "$value": "0 0 0 .5px rgba(29,27,24,.06),0 1px 1px rgba(29,27,24,.05),0 2px 3px -2px rgba(29,27,24,.10),0 0 0 0 rgba(0,0,0,0),inset 0 .5px 0 rgba(255,255,255,.55)"
+      },
+      "md": {
+        "$type": "string",
+        "$value": "0 0 0 .5px rgba(29,27,24,.06),0 1px 1px rgba(29,27,24,.06),0 5px 6px -4px rgba(29,27,24,.12),0 14px 18px -14px rgba(29,27,24,.20),inset 0 .5px 0 rgba(255,255,255,.55)"
+      }
     }
   }
 }

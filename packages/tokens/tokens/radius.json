@@ -1,13 +1,13 @@
 {
   "radius": {
-    "$description": "Escala COLORsoft (docs/adr/0031) — o raio comunica função: campo/chip pequeno usa sm, card usa lg, superfície grande (modal, hero) usa xl.",
+    "$description": "Raios proporcionais à função: controles compactos, painéis discretos, overlays em curva contínua.",
     "sm": {
       "$type": "dimension",
       "$value": "8px"
     },
     "md": {
       "$type": "dimension",
-      "$value": "10px"
+      "$value": "12px"
     },
     "lg": {
       "$type": "dimension",
@@ -15,11 +15,19 @@
     },
     "xl": {
       "$type": "dimension",
-      "$value": "24px"
+      "$value": "20px"
     },
     "full": {
       "$type": "dimension",
       "$value": "9999px"
+    },
+    "2xl": {
+      "$type": "dimension",
+      "$value": "28px"
+    },
+    "shape": {
+      "$type": "string",
+      "$value": "squircle"
     }
   }
 }

@@ -1,43 +1,73 @@
 {
   "effect": {
     "$description": "Sombra e vidro (paleta COLORsoft, docs/adr/0031). O vidro tem três níveis — subtle/panel/modal — escolhidos pela função da superfície (docs/adr/0025 e docs/adr/0031), nunca por gosto. Blur/saturação são theme-independent; a cor (glassBg etc.) vem da camada semântica. SÓ packages/ui-web/src/Glass usa isto.",
-    "shadow": {
-      "sm": {
-        "$type": "shadow",
-        "$value": {
-          "color": "rgba(10, 21, 38, 0.08)",
-          "offsetX": "0px",
-          "offsetY": "4px",
-          "blur": "14px",
-          "spread": "0px"
-        }
-      },
-      "md": {
-        "$type": "shadow",
-        "$value": {
-          "color": "rgba(10, 21, 38, 0.14)",
-          "offsetX": "0px",
-          "offsetY": "14px",
-          "blur": "40px",
-          "spread": "0px"
-        }
-      }
-    },
     "glass": {
       "subtle": {
         "$description": "Chip, tag, botão de vidro.",
-        "blur": { "$type": "dimension", "$value": "8px" },
-        "saturate": { "$type": "number", "$value": 1.0 }
+        "blur": {
+          "$type": "dimension",
+          "$value": "8px"
+        },
+        "saturate": {
+          "$type": "number",
+          "$value": 1.0
+        }
       },
       "panel": {
         "$description": "Card, painel, dropdown, drawer — e a camada de navegação flutuante do ADR-0025 (sidebar, topbar, sheet).",
-        "blur": { "$type": "dimension", "$value": "18px" },
-        "saturate": { "$type": "number", "$value": 1.18 }
+        "blur": {
+          "$type": "dimension",
+          "$value": "18px"
+        },
+        "saturate": {
+          "$type": "number",
+          "$value": 1.18
+        }
       },
       "modal": {
         "$description": "Modal, confirmação, foco de tarefa.",
-        "blur": { "$type": "dimension", "$value": "28px" },
-        "saturate": { "$type": "number", "$value": 1.18 }
+        "blur": {
+          "$type": "dimension",
+          "$value": "28px"
+        },
+        "saturate": {
+          "$type": "number",
+          "$value": 1.18
+        }
+      }
+    },
+    "backdrop": {
+      "blur1": {
+        "$type": "dimension",
+        "$value": "2px"
+      },
+      "blur2": {
+        "$type": "dimension",
+        "$value": "6px"
+      },
+      "blur3": {
+        "$type": "dimension",
+        "$value": "14px"
+      },
+      "blur4": {
+        "$type": "dimension",
+        "$value": "28px"
+      },
+      "mask1": {
+        "$type": "string",
+        "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 0%, #000 35%)"
+      },
+      "mask2": {
+        "$type": "string",
+        "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 10%, #000 55%)"
+      },
+      "mask3": {
+        "$type": "string",
+        "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 25%, #000 75%)"
+      },
+      "mask4": {
+        "$type": "string",
+        "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 40%, #000 100%)"
       }
     }
   }

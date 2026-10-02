@@ -25,7 +25,10 @@ export function sparkShapeOptions(table: string, options: { view?: string } = {}
     url: `${getSparkApiBaseUrl()}/v1/shapes/${table}`,
     ...(options.view ? { params: { view: options.view } } : {}),
     liveSse: true,
-    columnMapper: snakeCamelMapper(),
+    columnMapper: table === "organization_themes" ? {
+      decode: (column: string) => column === "surface_2_color" ? "surface2Color" : snakeCamelMapper().decode(column),
+      encode: (column: string) => column === "surface2Color" ? "surface_2_color" : snakeCamelMapper().encode(column),
+    } : snakeCamelMapper(),
     parser: SPARK_PARSER,
     headers: { authorization: () => { const token = getSparkAuthToken(); return token ? `Bearer ${token}` : ""; } },
     onError: async (error: Error) => {

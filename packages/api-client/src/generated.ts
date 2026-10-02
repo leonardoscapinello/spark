@@ -1233,6 +1233,7 @@ export type UpdateOrganizationThemeDtoFontBody = typeof UpdateOrganizationThemeD
 
 
 export const UpdateOrganizationThemeDtoFontBody = {
+  geist: 'geist',
   inter: 'inter',
   system: 'system',
   rounded: 'rounded',
@@ -1243,6 +1244,7 @@ export type UpdateOrganizationThemeDtoFontDisplay = typeof UpdateOrganizationThe
 
 
 export const UpdateOrganizationThemeDtoFontDisplay = {
+  geist: 'geist',
   inter: 'inter',
   system: 'system',
   rounded: 'rounded',
@@ -1280,6 +1282,7 @@ export type OrganizationThemeWriteResponseDtoThemeFontBody = typeof Organization
 
 
 export const OrganizationThemeWriteResponseDtoThemeFontBody = {
+  geist: 'geist',
   inter: 'inter',
   system: 'system',
   rounded: 'rounded',
@@ -1290,6 +1293,7 @@ export type OrganizationThemeWriteResponseDtoThemeFontDisplay = typeof Organizat
 
 
 export const OrganizationThemeWriteResponseDtoThemeFontDisplay = {
+  geist: 'geist',
   inter: 'inter',
   system: 'system',
   rounded: 'rounded',
