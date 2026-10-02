@@ -7,10 +7,11 @@
 .panel { padding: var(--space-5) var(--space-0) var(--space-0); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
 .panel[hidden] { display: none; }
 
-.indicator { position: absolute; left: 0; bottom: 0; height: var(--ui-focusWidth); width: 100%; background: var(--ui-tabIndicator); clip-path: inset(0 calc(100% - var(--active-tab-left) - var(--active-tab-width)) 0 var(--active-tab-left)); transition: clip-path var(--motion-duration-fast) var(--motion-ease-out); }
+.indicator { position: absolute; left: 0; bottom: 0; height: var(--ui-focusWidth); width: 100%; background: var(--ui-tabIndicator); clip-path: inset(0 calc(100% - var(--active-tab-left) - var(--active-tab-width)) 0 var(--active-tab-left)); transition: clip-path var(--motion-duration-selection) var(--motion-ease-out); }
 @media (prefers-reduced-motion: reduce) { .indicator { transition: none; } }
 
-.root[data-variant="segmented"] > .list { gap: var(--space-1); padding: var(--space-1); border: 0; background: var(--color-surface2); border-radius: var(--radius-md); flex-wrap: wrap; }
-.root[data-variant="segmented"] > .list > .tab { height: auto; min-height: var(--ui-controlMedium); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font-size: var(--typography-size-compact); line-height: var(--ui-buttonLine); }
-.root[data-variant="segmented"] > .list > .tab[data-active] { background: var(--color-surface); color: var(--color-ink); box-shadow: var(--ui-panelShadow); }
-.root[data-variant="segmented"] > .list > .indicator { display: none; }
+.root[data-variant="segmented"] > .list { gap: var(--space-1); padding: var(--space-1); border: 0; background: var(--color-surface2); border-radius: var(--radius-full); box-shadow: var(--ui-fieldShadow); flex-wrap: nowrap; isolation: isolate; }
+.root[data-variant="segmented"] > .list > .tab { height: auto; min-height: var(--ui-controlMedium); padding: var(--space-2) var(--space-3); border-radius: var(--radius-full); position: relative; z-index: 1; font-size: var(--typography-size-compact); line-height: var(--ui-buttonLine); }
+.root[data-variant="segmented"] > .list > .tab[data-active] { color: var(--color-ink); }
+.root[data-variant="segmented"] > .list > .indicator { z-index: 0; top: 0; bottom: auto; left: 0; width: var(--active-tab-width); height: var(--active-tab-height); transform: translate(var(--active-tab-left), var(--active-tab-top)); clip-path: none; background: var(--ui-selected); border-radius: var(--radius-full); box-shadow: var(--ui-panelShadow); transition: transform var(--motion-duration-selection) var(--motion-ease-out), width var(--motion-duration-selection) var(--motion-ease-out); }
+@media (prefers-reduced-motion: reduce) { .root[data-variant="segmented"] > .list > .indicator { transition: none; } }

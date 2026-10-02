@@ -1,6 +1,6 @@
 .root {
   font-family: var(--typography-fontFamily-body);
-  font-size: var(--typography-size-sm);
+  font-size: var(--ui-labelSize);
   font-weight: var(--typography-weight-medium);
   color: var(--color-ink);
 }

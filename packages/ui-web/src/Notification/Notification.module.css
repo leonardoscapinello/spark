@@ -1,4 +1,4 @@
-.notification { box-sizing: border-box; width: 100%; display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); background: var(--color-surface); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-inline-start: var(--ui-focusWidth) solid var(--color-accent); border-radius: var(--radius-sm); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.notification { box-sizing: border-box; width: 100%; display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); background: var(--color-surface); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-inline-start: var(--ui-focusWidth) solid var(--color-accent); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
 .notification[data-tone="success"] { border-inline-start-color: var(--color-statusSuccess); }
 .notification[data-tone="warning"] { border-inline-start-color: var(--color-statusWarning); }
 .notification[data-tone="error"] { border-inline-start-color: var(--color-statusDanger); }
@@ -8,4 +8,10 @@
 .unread { display: block; color: var(--color-accent); font-size: var(--typography-size-compact); }
 .list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
 .empty { color: var(--color-inkMuted); }
-.toast { width: min(var(--ui-toastWidth), calc(100vw - var(--space-6) * 2)); box-shadow: var(--ui-popupShadow); border-radius: var(--radius-sm); }
+/* Toast é uma superfície inversa; a cor da marca não altera o feedback. */
+.toast { width: min(var(--ui-toastWidth), calc(100vw - var(--space-6) * 2)); border: 0; border-radius: var(--ui-toastRadius); corner-shape: var(--radius-shape); box-shadow: var(--ui-popupShadow); }
+.toast .notification { background: var(--ui-helpSolid); color: var(--ui-helpInk); border: 0; border-radius: inherit; corner-shape: inherit; padding-inline: var(--space-5); align-items: center; }
+.toast .content p { color: inherit; opacity: var(--ui-chartGridOpacity); }
+.toast button { color: inherit; background: transparent; box-shadow: none; }
+.toast button:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+.toast button:focus-visible { outline-color: currentColor; }

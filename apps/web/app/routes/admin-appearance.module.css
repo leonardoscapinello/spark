@@ -5,11 +5,11 @@
 .colorField { display: grid; grid-template-columns: minmax(0, 1fr) var(--space-10); align-items: center; gap: var(--space-3); min-width: 0; }
 .colorLabel { display: grid; gap: var(--space-1); min-width: 0; }
 .colorLabel small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
-.colorField input { width: var(--space-10); height: var(--space-10); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); cursor: pointer; }
+.colorField input { width: var(--space-10); height: var(--space-10); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); cursor: pointer; }
 .fontGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
 .fontGrid > * { display: grid; gap: var(--space-2); }
 .fontGrid label { display: block; }
-.preview { position: sticky; top: var(--space-5); min-width: 0; overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--ui-selectionShadow); }
+.preview { position: sticky; top: var(--space-5); min-width: 0; overflow: hidden; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); corner-shape: var(--radius-shape); background: var(--color-surface); box-shadow: var(--ui-selectionShadow); }
 .previewHeader { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
 .previewDot { width: var(--space-2); height: var(--space-2); border-radius: 50%; background: var(--color-accent); }
 .previewCanvas { min-height: 25rem; padding: var(--space-4); color: var(--preview-ink); background: var(--preview-ground); font-family: var(--preview-font-body); }
@@ -20,10 +20,10 @@
 .previewEyebrow { color: var(--preview-muted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); letter-spacing: var(--typography-tracking-wide); }
 .previewBody h2 { margin: 0; font-family: var(--preview-font-display); font-size: var(--typography-size-xl); line-height: var(--typography-lineHeight-tight); }
 .previewBody p { margin: 0 0 var(--space-3); color: var(--preview-muted); font-size: var(--typography-size-sm); }
-.previewCard { display: grid; gap: var(--space-2); padding: var(--space-4); border: var(--ui-hairline) solid var(--preview-line); border-radius: var(--radius-md); background: var(--preview-surface); box-shadow: var(--ui-selectionShadow); }
+.previewCard { display: grid; gap: var(--space-2); padding: var(--space-4); border: var(--ui-hairline) solid var(--preview-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--preview-surface); box-shadow: var(--ui-selectionShadow); }
 .previewCard strong { font-family: var(--preview-font-display); font-size: var(--typography-size-sm); }
 .previewCard > span:last-of-type { color: var(--preview-muted); font-size: var(--typography-size-sm); }
-.previewBadge { justify-self: start; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); color: var(--preview-strong); background: color-mix(in srgb, var(--preview-accent) 12%, transparent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); }
+.previewBadge { justify-self: start; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); color: var(--preview-strong); background: color-mix(in srgb, var(--preview-accent) 12%, transparent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); }
 .previewProgress { height: var(--space-1); overflow: hidden; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--preview-line) 70%, transparent); }
 .previewProgress i { display: block; width: 62%; height: 100%; border-radius: inherit; background: var(--preview-accent); }
 .previewAction { justify-self: start; margin-top: var(--space-2); border-radius: var(--radius-pill); color: var(--preview-surface); background: var(--preview-accent); cursor: default; }

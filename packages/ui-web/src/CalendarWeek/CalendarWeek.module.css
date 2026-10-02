@@ -5,7 +5,7 @@
 .header span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .controls { display: flex; align-items: center; gap: var(--space-1); }
 .controls > :nth-child(2) svg { transform: rotate(180deg); }
-.scroll { max-width: 100%; max-height: var(--ui-previewHeight); overflow: auto; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+.scroll { max-width: 100%; max-height: var(--ui-previewHeight); overflow: auto; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); }
 .scroll:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .grid { display: grid; grid-template-columns: var(--space-12) repeat(7, minmax(0, 1fr)); min-width: calc(var(--space-16) * 12); }
 .corner, .dayHeading { position: sticky; inset-block-start: 0; z-index: 2; border-bottom: var(--ui-hairline) solid var(--color-line); background: var(--color-surface); }
@@ -19,4 +19,4 @@
 .hourLabel { position: sticky; inset-inline-start: 0; z-index: 1; padding: var(--space-2) var(--space-1); background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
 .slot { display: grid; align-content: start; gap: var(--space-1); min-width: 0; padding: var(--space-1); border-inline-start: var(--ui-hairline) solid var(--color-line); }
 .slot[data-today] { background: var(--color-accentWash); }
-.item { min-width: 0; padding: var(--space-1) var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--ui-selectionShadow); }
+.item { min-width: 0; padding: var(--space-1) var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-surface); box-shadow: var(--ui-selectionShadow); }

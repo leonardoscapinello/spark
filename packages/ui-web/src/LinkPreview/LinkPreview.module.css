@@ -18,5 +18,5 @@
  * espera é a própria coisa que se quer evitar. */
 .unavailable { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; gap: var(--space-1); padding: var(--space-3); background: var(--color-surface); color: var(--color-inkMuted); }
 .unavailable strong { color: var(--color-ink); }
-.loadingLine { height: var(--space-3); border-radius: var(--radius-sm); background: var(--ui-subtle); }
+.loadingLine { height: var(--space-3); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--ui-subtle); }
 .loadingLine:last-child { width: var(--ui-previewColumn); max-width: 70%; }

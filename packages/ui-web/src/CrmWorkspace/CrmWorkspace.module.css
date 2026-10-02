@@ -6,7 +6,7 @@
 .section > header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .section h3 { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 .section p { margin: var(--space-1) 0 0; font-size: var(--typography-size-sm); color: var(--color-inkMuted); line-height: var(--ui-bodyLine); }
-.label { --label-ink: var(--color-inkMuted); display: inline-flex; align-items: center; gap: var(--space-1); width: fit-content; max-width: 100%; overflow-wrap: anywhere; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); color: var(--label-ink); background: color-mix(in srgb, var(--label-ink) 12%, var(--color-surface)); border: var(--ui-hairline) solid color-mix(in srgb, var(--label-ink) 20%, transparent); }
+.label { --label-ink: var(--color-inkMuted); display: inline-flex; align-items: center; gap: var(--space-1); width: fit-content; max-width: 100%; overflow-wrap: anywhere; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); color: var(--label-ink); background: color-mix(in srgb, var(--label-ink) 12%, var(--color-surface)); border: var(--ui-hairline) solid color-mix(in srgb, var(--label-ink) 20%, transparent); }
 .label[data-color="blue"] { --label-ink: var(--color-accent); }
 .label[data-color="green"] { --label-ink: var(--color-statusSuccess); }
 .label[data-color="red"] { --label-ink: var(--color-statusDanger); }

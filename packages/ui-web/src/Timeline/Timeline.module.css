@@ -16,7 +16,7 @@
 .profile { display: flex; align-items: center; gap: var(--space-2); min-width: var(--ui-menuWidth); }
 .profile > span { display: flex; min-width: 0; flex-direction: column; }
 .profile small { color: var(--color-inkMuted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.changes { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--space-2) 0; padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surfaceSubtle); }
+.changes { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--space-2) 0; padding: var(--space-3); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surfaceSubtle); }
 .changes > div { display: grid; grid-template-columns: minmax(var(--ui-timeFieldWidth), 0.5fr) minmax(0, 1fr); gap: var(--space-3); }
 .changes dt, .changes dd { min-width: 0; margin: 0; font-size: var(--typography-size-xs); }
 .changes dt { color: var(--color-inkMuted); }
@@ -30,7 +30,7 @@
 .metadata time { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .profile { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
 .profile > span { gap: var(--space-1); }
-.actor { padding: var(--space-1); border-radius: var(--radius-sm); }
+.actor { padding: var(--space-1); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); }
 .actor:hover { background: var(--ui-subtle); }
 .actor:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
 .root[data-density="compact"] .dayBreak { padding: var(--space-4) 0 var(--space-2); gap: var(--space-3); }

@@ -6,7 +6,7 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm); corner-shape: var(--radius-shape);
   background: var(--color-surface);
   border: var(--ui-hairline) solid var(--color-line);
 }
@@ -70,7 +70,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm); corner-shape: var(--radius-shape);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
 }
@@ -114,7 +114,7 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
 }

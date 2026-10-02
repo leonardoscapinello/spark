@@ -8,5 +8,5 @@
 .cardMeta svg { width: var(--ui-icon); height: var(--ui-icon); color: var(--color-accent); }
 .cardFooter { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
 .cardFooter > div { display: flex; align-items: center; gap: var(--space-1); }
-.cardLoading { display: block; height: var(--ui-textareaHeight); border-radius: var(--radius-md); }
+.cardLoading { display: block; height: var(--ui-textareaHeight); border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
 .empty { grid-column: 1 / -1; margin: 0; padding: var(--space-8); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }

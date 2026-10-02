@@ -23,7 +23,7 @@
   border: 0;
 }
 
-.capabilityGroup { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+.capabilityGroup { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); }
 .capabilityGroup h3 { margin: 0 0 var(--space-1); padding-bottom: var(--space-2); border-bottom: var(--ui-hairline) solid var(--color-line); color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
 
 .capabilityLegend {

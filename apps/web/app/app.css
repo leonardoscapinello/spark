@@ -17,10 +17,11 @@ body {
 body {
   margin: 0;
   background: var(--color-ground);
+  background-image: var(--ui-paperTexture);
   color: var(--color-ink);
   font-family: var(--typography-fontFamily-body);
   font-size: var(--typography-size-md);
-  line-height: 1.5;
+  line-height: var(--typography-lineHeight-body);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -31,3 +32,9 @@ body {
 a {
   color: inherit;
 }
+
+html { color-scheme: light dark; scrollbar-color: var(--color-lineStrong) var(--color-ground); }
+html[data-theme="light"] { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+::selection { background: var(--color-accent); color: var(--color-onAccent); }
+input, textarea { caret-color: var(--color-ink); }

@@ -11,3 +11,5 @@ export const Vazio: Story = {args:{data:[]}};
 export const Carregando: Story = {args:{state:"loading"}};
 export const Erro: Story = {args:{state:"error"}};
 export const DashboardCompleto: Story = {render:()=> <DashboardExamples />};
+
+export const Comparacao: Story = { args: { title: "Receita ilustrativa", data: [{label:"Seg",atual:1200,anterior:950},{label:"Ter",atual:1600,anterior:1250},{label:"Qua",atual:1450,anterior:1300},{label:"Qui",atual:1900,anterior:1500}], series: [{key:"atual",label:"Período atual",color:1},{key:"anterior",label:"Período anterior",color:6,comparison:true}] } };

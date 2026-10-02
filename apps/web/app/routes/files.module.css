@@ -1,5 +1,5 @@
 .page { gap: var(--space-6); }
-.fileIcon { display: grid; place-items: center; flex: 0 0 var(--ui-controlMedium); width: var(--ui-controlMedium); height: var(--ui-controlMedium); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
+.fileIcon { display: grid; place-items: center; flex: 0 0 var(--ui-controlMedium); width: var(--ui-controlMedium); height: var(--ui-controlMedium); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-accentWash); color: var(--color-accent); }
 .fileIcon svg { width: var(--space-4); height: var(--space-4); }
 .fileGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-cardMinWidth)), 1fr)); align-content: start; gap: var(--space-3); min-width: 0; }
 .fileGrid > section { min-width: 0; }
@@ -9,5 +9,5 @@
 .cardFooter { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; }
 .cardFooter > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cardFooter > div { display: flex; flex-shrink: 0; gap: var(--space-1); }
-.cardLoading { display: block; height: var(--ui-textareaHeight); border-radius: var(--radius-md); }
+.cardLoading { display: block; height: var(--ui-textareaHeight); border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
 .empty { grid-column: 1 / -1; margin: 0; padding: var(--space-8); color: var(--color-inkMuted); text-align: center; font-size: var(--typography-size-sm); }

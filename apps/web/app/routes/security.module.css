@@ -10,7 +10,7 @@
   min-width: 0;
   padding: var(--space-6);
   border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
   background: var(--color-surface);
 }
 
@@ -45,7 +45,7 @@
 .factor { padding-block: var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); }
 
 .enrollment { display: flex; flex-direction: column; gap: var(--space-4); max-width: var(--ui-drawerWidth); }
-.qrCode { width: var(--ui-menuWidth); height: var(--ui-menuWidth); border-radius: var(--radius-md); }
+.qrCode { width: var(--ui-menuWidth); height: var(--ui-menuWidth); border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
 .step { display: inline-flex; align-items: center; justify-content: center; width: var(--space-6); height: var(--space-6); flex: 0 0 auto; border-radius: var(--radius-full); background: var(--color-accent); color: var(--ui-buttonInk); font-weight: var(--typography-weight-semibold); }
 .secret { display: flex; flex-direction: column; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .secret code { color: var(--color-ink); font-size: var(--typography-size-sm); overflow-wrap: anywhere; }

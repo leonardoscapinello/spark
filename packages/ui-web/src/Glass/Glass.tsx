@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+import type { ComponentProps, ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import styles from "./Glass.module.css";
 
 export type GlassTier = "subtle" | "panel" | "modal" | "help";
@@ -36,4 +36,14 @@ export function Glass<T extends ElementType = "div">({
       {children}
     </Component>
   );
+}
+
+/** Desfoque progressivo no plano fixo atrás do diálogo, nunca no conteúdo. */
+export function GlassBackdrop({ className, ...props }: ComponentProps<"div">) {
+  return <div {...props} className={[styles.backdrop, className].filter(Boolean).join(" ")}>
+    <span className={styles.blurLayer} aria-hidden="true" />
+    <span className={styles.blurLayer} aria-hidden="true" />
+    <span className={styles.blurLayer} aria-hidden="true" />
+    <span className={styles.blurLayer} aria-hidden="true" />
+  </div>;
 }

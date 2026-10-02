@@ -7,7 +7,7 @@
 .fieldRulesActions > :first-child { flex: 1; min-width: 0; }
 .fieldRulesActions > button { flex-shrink: 0; align-self: end; min-height: var(--ui-fieldHeight); }
 .fieldRulesSummary, .help { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
-.fieldRules { max-height: var(--ui-recordPickerListHeight); overflow: auto; overscroll-behavior: contain; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); }
+.fieldRules { max-height: var(--ui-recordPickerListHeight); overflow: auto; overscroll-behavior: contain; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
 .fieldRulesHead, .fieldRule { display: grid; grid-template-columns: var(--ui-controlLarge) minmax(0, 1fr) repeat(2, var(--ui-timeFieldWidth)); align-items: center; column-gap: var(--space-3); }
 .fieldRulesHead { position: sticky; top: 0; z-index: 1; padding: var(--space-3); background: var(--color-surface2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .fieldRulesHead > span:not(:nth-child(2)) { text-align: center; }
@@ -21,7 +21,7 @@
 .fieldRule > label { justify-content: center; }
 .fieldRule > label > span:last-child { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .fieldRulesEmpty { margin: 0; padding: var(--space-5); color: var(--color-inkMuted); font-size: var(--typography-size-sm); }
-.newField { display: grid; gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-md); background: var(--color-surface2); }
+.newField { display: grid; gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface2); }
 .newFieldHeader { display: flex; align-items: center; justify-content: space-between; font-size: var(--typography-size-sm); }
 .newFieldInputs, .destinations { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
 @media (max-width: 640px) {

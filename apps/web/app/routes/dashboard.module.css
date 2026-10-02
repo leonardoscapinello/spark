@@ -30,7 +30,7 @@
 .metricLink {
   display: block;
   height: 100%;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm); corner-shape: var(--radius-shape);
   color: inherit;
   text-decoration: none;
 }

@@ -1,14 +1,14 @@
 .root { display: grid; gap: var(--space-2); }
 .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .chips:empty { display: none; }
-.chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: color-mix(in srgb, currentColor 10%, var(--color-surface)); font-size: var(--typography-size-xs); }
+.chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: color-mix(in srgb, currentColor 10%, var(--color-surface)); font-size: var(--typography-size-xs); }
 .chip > button { color: inherit; height: var(--space-5); min-height: var(--space-5); padding: 0; }
-.input { width: 100%; min-width: 0; box-sizing: border-box; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-ink); font: inherit; font-size: var(--typography-size-sm); padding: var(--space-2); min-height: var(--ui-controlMedium); }
+.input { width: 100%; min-width: 0; box-sizing: border-box; border: 0; border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: transparent; color: var(--color-ink); font: inherit; font-size: var(--typography-size-sm); padding: var(--space-2); min-height: var(--ui-controlMedium); }
 .input:focus { outline: var(--ui-focusWidth) solid var(--color-focusRing); }
 .positioner { z-index: var(--ui-overlayLayer); }
-.popup { min-width: var(--ui-menuWidth); width: var(--anchor-width); max-width: calc(100vw - var(--space-8)); padding: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--ui-popupShadow); }
+.popup { min-width: var(--ui-menuWidth); width: var(--anchor-width); max-width: calc(100vw - var(--space-8)); padding: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); box-shadow: var(--ui-popupShadow); }
 .options { max-height: var(--ui-recordPickerListHeight); overflow: auto; }
-.option { display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding: var(--space-2); border-radius: var(--radius-sm); cursor: pointer; font-size: var(--typography-size-sm); }
+.option { display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding: var(--space-2); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); cursor: pointer; font-size: var(--typography-size-sm); }
 .option[data-highlighted] { background: var(--color-accentWash); }
 .swatch { width: var(--space-3); height: var(--space-3); border-radius: var(--radius-full); flex-shrink: 0; }
 .empty { display: block; padding: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }

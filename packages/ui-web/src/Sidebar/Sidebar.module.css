@@ -1,4 +1,4 @@
-.root { box-sizing: border-box; display: flex; flex-direction: column; width: var(--ui-sidebarWidth); flex-shrink: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); font-family: var(--typography-fontFamily-body); color: var(--color-ink); min-height: 0; }
+.root { box-sizing: border-box; display: flex; flex-direction: column; width: var(--ui-sidebarWidth); flex-shrink: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-panelRadius); corner-shape: var(--radius-shape); box-shadow: none; font-family: var(--typography-fontFamily-body); color: var(--color-ink); min-height: 0; }
 /* Painel lateral da Intercom (medidas-inbox-shadow-dom): linha de título de 64px,
  * primeiro item colado nela, itens de 32px, seções a 12px uma da outra, título
  * de seção numa linha de 32px. Antes: 16px acima e abaixo do título, 24px de
@@ -7,7 +7,7 @@
 .header { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; min-height: var(--space-16); padding: 0 var(--space-3) 0 var(--space-6); }
 .header h2 { margin: 0; font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); }
 .body { flex: 1; min-height: 0; overflow: auto; padding: 0 var(--space-3) var(--space-3); }
-.item { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); text-decoration: none; color: inherit; font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); transition: background-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out), color var(--motion-duration-fast) var(--motion-ease-out); }
+.item { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding: var(--space-1) var(--space-3); border-radius: var(--ui-navigationRadius); text-decoration: none; color: inherit; font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); transition: background-color var(--motion-duration-control) var(--motion-ease-out), box-shadow var(--motion-duration-control) var(--motion-ease-out), color var(--motion-duration-control) var(--motion-ease-out); }
 /* Item-botão herda a cara do item-link: sem borda, sem fundo, fonte da página. */
 .item:is(button) { appearance: none; width: 100%; border: 0; background: transparent; font-family: inherit; font-size: var(--typography-size-sm); line-height: inherit; text-align: start; cursor: pointer; }
 .item:hover { background: var(--ui-subtle); }
@@ -24,12 +24,12 @@
 .sectionTitle { flex: 1; min-width: 0; }
 .section[data-icon] > .item { padding-inline-start: var(--space-6); }
 .section[data-collapsible] { margin-top: var(--space-1); }
-.sectionToggle { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); width: 100%; min-height: var(--ui-controlMedium); padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-ink); font: inherit; font-size: var(--typography-size-sm); text-align: left; cursor: pointer; transition: background-color var(--motion-duration-fast) var(--motion-ease-out); }
+.sectionToggle { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); width: 100%; min-height: var(--ui-controlMedium); padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--ui-navigationRadius); background: transparent; color: var(--color-ink); font: inherit; font-size: var(--typography-size-sm); text-align: left; cursor: pointer; transition: background-color var(--motion-duration-control) var(--motion-ease-out); }
 .sectionToggle:hover { background: var(--ui-subtle); }
 .sectionToggle:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); }
-.sectionToggle > svg { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); transition: transform var(--motion-duration-fast) var(--motion-ease-out); }
+.sectionToggle > svg { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); transition: transform var(--motion-duration-control) var(--motion-ease-out); }
 .sectionToggle[aria-expanded="true"] > svg { transform: rotate(90deg); }
-.sectionItems { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--motion-duration-fast) var(--motion-ease-out), opacity var(--motion-duration-fast) var(--motion-ease-out); }
+.sectionItems { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--motion-duration-control) var(--motion-ease-out), opacity var(--motion-duration-control) var(--motion-ease-out); }
 .sectionItems[data-open] { grid-template-rows: 1fr; opacity: 1; }
 .sectionItemsInner { display: grid; gap: var(--space-1); min-height: 0; overflow: hidden; }
 .sectionItems .item { padding-inline-start: var(--space-6); }

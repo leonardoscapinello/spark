@@ -1,9 +1,17 @@
 # Contrato visual — CRM
 
-Complementa ADR-0020 e ADR-0033, sem substituí-los. Escopo: ficha do negócio, visualização rápida, histórico e configuração da etapa.
+Segue ADR-0020, ADR-0039 e ADR-0040; substitui a direção visual anterior deste contrato. Escopo: ficha do negócio, visualização rápida, histórico e configuração da etapa.
 
 ## Direção
-Modo operar: atendimento frequente, leitura rápida e edição direta. Fundo `color-ground` separa painéis sólidos `color-surface`; `surface2` agrupa ferramentas internas. O azul indica seleção/ação; verde, vermelho e âmbar mantêm significado de sucesso, perda e atenção. Não usar cores decorativas para compensar uma estrutura fraca.
+Modo operar: atendimento frequente, leitura rápida e edição direta. Fundo de papel quente `color-ground` separa painéis sólidos `color-surface`; `surface2` recebe campos em baixo-relevo. No escuro, a mesma hierarquia usa carvão. Tinta indica seleção/ação; verde, vermelho e âmbar mantêm significado de sucesso, perda e atenção. Não usar cores decorativas para compensar uma estrutura fraca.
+
+## Identidade compartilhada
+- Geist para texto e títulos; Geist Mono para números, datas e eixos. Fontes locais.
+- Botões de ação e chips em pílula. Campos e seletores têm raio de 12px e contorno visível; cartões e colunas usam 20px, menus 18px e modais 28px. Curvas contínuas não justificam raios excessivos.
+- Sombras curtas de contato, menus elevados e modais acima deles. Textura restrita a overlays. O backdrop de modal usa desfoque progressivo dentro do primitivo Glass; conteúdo e colunas permanecem sólidos.
+- Pressão em 100 ms; feedback de campos em 180 ms, menus em 200 ms e seleção em 240 ms. Modais preservam a acomodação de 450 ms e saída de 280 ms. Estados mudam imediatamente; o movimento acompanha. Movimento reduzido remove deslocamentos. O blur progressivo é fixo: a transição anima sua opacidade, não recalcula o raio do filtro a cada frame.
+- Gráficos usam tinta na primeira série, pigmentos nas demais, comparação/projeção tracejada e tooltips na superfície inversa. Estados vazio, erro e ausência de dados continuam explícitos.
+- O ZIP fornecido é evidência em `docs/referencias/spark-design/original.zip`; seu nome, filosofia e script global não entram no produto.
 
 ## Composição
 - Página: cabeçalho, etapas e dois espaços independentes — ficha lateral e área de trabalho.

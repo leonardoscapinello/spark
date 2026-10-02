@@ -1,5 +1,5 @@
 .root { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
-.icon { display: grid; place-items: center; flex: 0 0 var(--ui-controlMedium); width: var(--ui-controlMedium); height: var(--ui-controlMedium); border-radius: var(--radius-md); background: var(--color-accentWash); color: var(--color-accent); }
+.icon { display: grid; place-items: center; flex: 0 0 var(--ui-controlMedium); width: var(--ui-controlMedium); height: var(--ui-controlMedium); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-accentWash); color: var(--color-accent); }
 .icon svg { width: var(--ui-icon); height: var(--ui-icon); }
 .copy { display: grid; gap: var(--space-1); min-width: 0; }
 .copy strong, .copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

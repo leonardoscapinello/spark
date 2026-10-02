@@ -57,7 +57,7 @@
   align-items: center;
   width: var(--ui-controlMedium);
   height: var(--ui-controlMedium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
   color: var(--color-inkMuted);
   text-decoration: none;
 }
@@ -198,7 +198,7 @@
      posição contra a caixa estreita de 36px, não contra o flyout de 196px
      que os filhos já desenhavam por cima dela. */
   .rail[data-expanded] { width: var(--ui-railFlyoutWidth); align-items: flex-start; }
-  .rail[data-expanded]::before { width: var(--ui-railFlyoutWidth); background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); }
+  .rail[data-expanded]::before { width: var(--ui-railFlyoutWidth); background: var(--color-surface); border-radius: var(--radius-lg); corner-shape: var(--radius-shape); box-shadow: var(--ui-panelShadow); }
   .rail[data-expanded] .railHeader,
   .rail[data-expanded] .railModules,
   .rail[data-expanded] .railBottom { box-sizing: border-box; width: var(--ui-railFlyoutWidth); padding-inline: var(--space-2); }
@@ -217,7 +217,7 @@
   .rail[data-expanded] .railLink svg { flex: 0 0 var(--ui-icon); }
   .rail[data-expanded] .railLabel { opacity: 1; visibility: visible; transform: none; }
   .rail[data-expanded] .accountMenu { justify-content: flex-start; width: 100%; }
-  .rail[data-expanded] .accountLink { border-radius: var(--radius-md); }
+  .rail[data-expanded] .accountLink { border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
   .rail[data-expanded] .railPin { display: inline-flex; }
   .rail[data-pinned] .railPin svg { transform: none; }
 }
@@ -246,7 +246,7 @@
   overscroll-behavior: contain;
   background: var(--color-surface);
   border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg); corner-shape: var(--radius-shape);
   box-shadow: var(--ui-panelShadow);
 }
 
@@ -333,7 +333,7 @@
 .railPlaceholder {
   width: var(--ui-controlMedium);
   height: var(--ui-controlMedium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
   background: var(--color-line);
 }
 
@@ -375,7 +375,7 @@
   .railLink { flex-shrink: 0; }
 
   .sidebar { display: none; }
-  .mobileSecondaryNav { display: flex; align-items: center; min-width: 0; min-height: var(--ui-touchTarget); flex-shrink: 0; padding-inline: var(--space-2); border-radius: var(--radius-lg); background: var(--color-surface2); box-shadow: var(--ui-panelShadow); }
+  .mobileSecondaryNav { display: flex; align-items: center; min-width: 0; min-height: var(--ui-touchTarget); flex-shrink: 0; padding-inline: var(--space-2); border-radius: var(--radius-lg); corner-shape: var(--radius-shape); background: var(--color-surface2); box-shadow: var(--ui-panelShadow); }
   .mobileSecondaryTrigger { min-width: 0; max-width: 100%; }
 
   .conteudo { flex: 1; }

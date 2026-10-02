@@ -9,7 +9,7 @@
 .swatch > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--color-surface); stroke-width: 2.25; filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--color-ink) 25%, transparent)); }
 .custom { display: grid; grid-template-columns: auto minmax(0, var(--ui-menuWidth)) var(--ui-controlMedium); align-items: center; gap: var(--space-2); padding-top: var(--space-2); }
 .customLabel { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); }
-.native { box-sizing: border-box; width: var(--ui-controlMedium); height: var(--ui-controlMedium); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-lineStrong); border-radius: var(--radius-sm); background: var(--color-accent); cursor: pointer; appearance: none; }
+.native { box-sizing: border-box; width: var(--ui-controlMedium); height: var(--ui-controlMedium); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-lineStrong); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-accent); cursor: pointer; appearance: none; }
 .native::-webkit-color-swatch-wrapper { padding: 0; }
 .native::-webkit-color-swatch { border: 0; border-radius: calc(var(--radius-sm) - var(--space-1)); }
 .native::-moz-color-swatch { border: 0; border-radius: calc(var(--radius-sm) - var(--space-1)); }

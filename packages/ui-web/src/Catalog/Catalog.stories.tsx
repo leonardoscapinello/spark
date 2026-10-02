@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ButtonFeedbackExamples } from "./ButtonFeedbackExamples.js";
 import { Button } from "../Button/Button.js";
@@ -38,10 +38,16 @@ function FormExample() {
   </Form>;
 }
 function Catalog() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  useEffect(() => {
+    const previous = document.documentElement.dataset.theme;
+    document.documentElement.dataset.theme = theme;
+    return () => { if (previous) document.documentElement.dataset.theme = previous; else delete document.documentElement.dataset.theme; };
+  }, [theme]);
   const [owner, setOwner] = useState("");
   const [team, setTeam] = useState("Atendimento");
   const [selection, setSelection] = useState("Todos");
-  return <div className={styles.page} data-theme="light">
+  return <div className={styles.page} data-theme={theme}>
     <Toaster /><NavigationRail>{(["inbox", "user", "mail", "search"] as const).map((name, index) => <Button key={name} iconOnly variant={index === 0 ? "raised" : "ghost"} shape="rounded" icon={<Icon name={name} />} aria-label={["Atendimento", "Pessoas", "E-mail", "Pesquisar"][index]} onClick={() => setSelection(["Todos", "Pessoas", "E-mail", "Pesquisar"][index] ?? "Todos")} />)}</NavigationRail>
     <Sidebar title="Atendimento" actions={<Button iconOnly variant="secondary" icon={<Icon name="plus" />} aria-label="Nova visualização" onClick={() => setSelection("Nova visualização")} />} footer={<Button variant="ghost" icon={<Icon name="menu" />} onClick={() => setSelection("Gerenciar")}>Gerenciar</Button>}>
       {(["Pesquisar", "Sua caixa de entrada", "Menções", "Criado por você", "Todos", "Não atribuído", "Spam", "Painel"]).map((label,index) => <SidebarItem key={label} href={`#${index}`} active={selection===label} onClick={e => {e.preventDefault(); setSelection(label);}} icon={<Icon name={index===0?"search":index===4?"user":"inbox"} />} count={index>0&&index<7 ? index===4||index===5 ? 4 : 0 : undefined}>{label}</SidebarItem>)}
@@ -49,14 +55,14 @@ function Catalog() {
       <SidebarSection title="Visualizações"><SidebarItem href="#email" onClick={e=>{e.preventDefault();setSelection("E-mail");}} active={selection==="E-mail"} icon={<Icon name="mail" />} count={1}>E-mail</SidebarItem></SidebarSection>
     </Sidebar>
     <main className={styles.main}>
-      <header className={styles.header}><div><h1>Componentes</h1><p>Biblioteca compartilhada · referência Intercom</p></div><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => setSelection("Nova visualização")}>Criar novo</Button></header>
+      <header className={styles.header}><div><h1>Componentes</h1><p>Biblioteca compartilhada · Spark</p></div><Button variant="secondary" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>{theme === "light" ? "Tema escuro" : "Tema claro"}</Button><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => setSelection("Nova visualização")}>Criar novo</Button></header>
       <div className={styles.selection} role="status">{selection}</div>
       <nav className={styles.shortcuts} aria-label="Atalhos do catálogo">{[{id:"catalog-dates",label:"Calendário e relógio"},{id:"catalog-change",label:"Calculadora de troco"},{id:"catalog-tables",label:"Tabelas"}].map(item=><Button key={item.id} variant="secondary" onClick={()=>document.getElementById(item.id)?.scrollIntoView({block:"start"})}>{item.label}</Button>)}</nav>
       <div className={styles.grid}>
         <DateProgressExamples /><ChangeExamples /><TableExamples /><FieldLayouts /><AdornedFields /><FieldExamples /><OverlayExamples /><PanelExamples /><ExtendedCatalog />
         <section className={styles.card}><h2>Botões</h2><div className={styles.rows}>
           <div className={styles.row}><Button>Salvar</Button><Button variant="secondary">Cancelar</Button><Button variant="ghost">Ver tudo</Button><Button variant="raised">Adicionar</Button></div>
-          <div className={styles.row}><Button size="sm">Pequeno</Button><Button>Médio</Button><Button size="lg">Grande</Button><Button shape="rounded">Retangular</Button></div>
+          <div className={styles.row}><Button size="sm">Pequeno</Button><Button>Médio</Button><Button size="lg">Grande</Button><Button shape="rounded">Alternativo</Button></div>
           <div className={styles.row}><Button icon={<Icon name="plus" />}>Criar novo</Button><Button variant="secondary" trailingIcon={<Icon name="chevron" />}>Última atividade</Button><Button iconOnly variant="raised" icon={<Icon name="plus" />} aria-label="Adicionar" /></div>
           <div className={styles.row}><Button disabled>Salvar</Button><Button loading>Salvando</Button></div><ButtonFeedbackExamples/>
         </div></section>
@@ -68,7 +74,7 @@ function Catalog() {
     </main>
   </div>;
 }
-const meta: Meta<typeof Catalog> = { title: "Fundamentos/Catálogo Intercom", component: Catalog, parameters: { layout: "fullscreen" } };
+const meta: Meta<typeof Catalog> = { title: "Fundamentos/Catálogo Spark", component: Catalog, parameters: { layout: "fullscreen" } };
 export default meta;
 type Story = StoryObj<typeof Catalog>;
 export const Componentes: Story = {};

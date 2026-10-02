@@ -40,7 +40,7 @@
   flex-direction: column;
   gap: var(--space-3);
   background: var(--color-surface2);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm); corner-shape: var(--radius-shape);
   padding: var(--space-2);
   min-height: 0;
   /* Sem isto a coluna nunca encolhe abaixo do conteúdo mais largo: flex-basis
@@ -97,7 +97,7 @@
 .cartao {
   background: var(--color-surface);
   border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm); corner-shape: var(--radius-shape);
   box-shadow: var(--ui-panelShadow);
   padding: var(--space-2);
   display: flex;
@@ -122,7 +122,7 @@
   transition: opacity var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 
-.dragPreview { position: fixed; top: calc(var(--space-16) * -1); left: calc(var(--space-16) * -1); width: var(--ui-kanbanColumnWidth); padding: var(--space-2); border: var(--ui-hairline) solid var(--color-accent); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-ink); box-shadow: var(--ui-popupShadow); opacity: 0.82; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); pointer-events: none; }
+.dragPreview { position: fixed; top: calc(var(--space-16) * -1); left: calc(var(--space-16) * -1); width: var(--ui-kanbanColumnWidth); padding: var(--space-2); border: var(--ui-hairline) solid var(--color-accent); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-surface); color: var(--color-ink); box-shadow: var(--ui-popupShadow); opacity: 0.82; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); pointer-events: none; }
 
 .colunaSobreArraste {
   outline: var(--ui-focusWidth) dashed var(--color-accent);
@@ -207,7 +207,7 @@
   background: color-mix(in srgb, var(--color-statusDanger) 14%, transparent);
 }
 .cartaoBadgeArquivado { color: var(--color-inkMuted); background: var(--color-surface2); }
-.moveBar { position: fixed; inset-inline-start: calc(var(--ui-railWidth) + var(--ui-sidebarWidth) + var(--ui-pageGutter)); inset-inline-end: var(--ui-pageGutter); bottom: var(--space-3); z-index: var(--ui-modalLayer); padding: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--ui-popupShadow); }
+.moveBar { position: fixed; inset-inline-start: calc(var(--ui-railWidth) + var(--ui-sidebarWidth) + var(--ui-pageGutter)); inset-inline-end: var(--ui-pageGutter); bottom: var(--space-3); z-index: var(--ui-modalLayer); padding: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); box-shadow: var(--ui-popupShadow); }
 .moveBarActions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; gap: var(--space-2); width: 100%; }
 .moveDropZone { min-height: var(--ui-controlLarge); transition: background-color var(--motion-duration-fast) var(--motion-ease-out), border-color var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out); }
 .moveDropZone[data-action="won"] { color: var(--color-statusSuccess) !important; background: color-mix(in srgb, var(--color-statusSuccess) 12%, var(--color-surface)) !important; border-color: color-mix(in srgb, var(--color-statusSuccess) 36%, var(--color-line)) !important; }
@@ -215,7 +215,7 @@
 .moveDropZone[data-action="archived"] { color: var(--color-inkMuted) !important; background: var(--color-surface2) !important; border-color: var(--color-line) !important; }
 .moveDropZone[data-action="move"] { color: var(--color-accent) !important; background: var(--color-surface) !important; border-color: var(--color-accent) !important; }
 .moveDropZone[data-drag-over="true"] { transform: translateY(calc(var(--space-1) * -1)) scale(1.03); box-shadow: var(--ui-selectionShadow); outline: var(--ui-focusWidth) solid currentColor; outline-offset: var(--ui-focusWidth); filter: saturate(1.15); }
-.movePanel { width: min(420px, calc(100vw - var(--space-8))) !important; align-self: end; margin-left: auto; margin-right: var(--space-4); margin-bottom: var(--space-4); background: var(--color-surface) !important; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); box-shadow: var(--ui-popupShadow); overflow: hidden; }
+.movePanel { width: min(420px, calc(100vw - var(--space-8))) !important; align-self: end; margin-left: auto; margin-right: var(--space-4); margin-bottom: var(--space-4); background: var(--color-surface) !important; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); box-shadow: var(--ui-popupShadow); overflow: hidden; }
 .movePanelFields { display: flex; flex-direction: column; gap: var(--space-4); }
 @media (max-width: 900px) { .moveBar { inset-inline-start: var(--ui-pageGutter); } }
 @media (max-width: 760px) { .moveBar { inset-inline: var(--space-4); bottom: var(--space-4); } .moveBarActions { grid-template-columns: repeat(2, minmax(0, 1fr)); } .moveBarActions > button { width: 100%; } .movePanel { width: calc(100vw - var(--space-4)) !important; margin-right: var(--space-2); margin-bottom: var(--space-2); } }
@@ -267,7 +267,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm); corner-shape: var(--radius-shape);
   background: var(--color-surface2);
   cursor: grab;
   transition: opacity var(--motion-duration-instant) var(--motion-ease-out);
@@ -290,14 +290,14 @@
 .editorConfigVazio { padding-left: var(--space-4); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 
 /* Cards legíveis e ações com alvo confortável, sem disputar espaço com o título. */
-.cartao { padding: var(--space-4); gap: var(--space-2); box-shadow: none; border-radius: var(--radius-md); }
+.cartao { padding: var(--space-4); gap: var(--space-2); box-shadow: none; border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
 .listaCartoes { gap: var(--space-3); flex: 0 1 auto; }
 .cartaoCabecalho { align-items: flex-start; }
 .cartaoNome { white-space: normal; line-height: var(--ui-bodyLine); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .cardMenu { margin-top: calc(var(--space-1) * -1); margin-right: calc(var(--space-2) * -1); color: var(--color-inkMuted); }
 .cardTags { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .cardTags:empty { display: none; }
-.addDeal { flex: 0 0 auto; min-height: var(--ui-controlLarge); width: 100%; justify-content: flex-start; padding-inline: var(--space-4); color: var(--color-inkMuted); border: var(--ui-hairline) solid transparent; border-radius: var(--radius-sm); }
+.addDeal { flex: 0 0 auto; min-height: var(--ui-controlLarge); width: 100%; justify-content: flex-start; padding-inline: var(--space-4); color: var(--color-inkMuted); border: var(--ui-hairline) solid transparent; border-radius: var(--radius-sm); corner-shape: var(--radius-shape); }
 .colunaCabecalho { position: relative; padding: var(--space-2); padding-right: var(--space-8); min-height: var(--ui-controlLarge); }
 .stageSettings { position: absolute; inset-inline-end: 0; top: var(--space-1); }
 .coluna { border-top: var(--space-1) solid var(--color-lineStrong); }

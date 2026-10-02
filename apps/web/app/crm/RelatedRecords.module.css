@@ -14,7 +14,7 @@
   align-content: start;
   padding: var(--space-4);
   border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
   background: var(--color-surface);
 }
 
@@ -34,7 +34,7 @@
   margin: 0;
   padding: var(--space-4);
   border: var(--ui-hairline) solid var(--color-lineSubtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
   background: var(--color-surface2);
 }
 

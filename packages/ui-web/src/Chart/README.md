@@ -15,7 +15,7 @@ Os componentes recebem dados e callbacks da aplicação. Não consultam forneced
 - `state`: `ready`, `loading`, `empty` ou `error`. Carregamento e erro escondem valores anteriores. `onRetry` delega a recuperação à aplicação.
 - `DashboardToolbar`: seleção controlada do período e espaço para filtros adicionais. `DashboardGrid`: grade responsiva de gráficos ou indicadores.
 
-Tokens centralizam espaços, cores, espessuras e dimensões. A captura `docs/inspiration/intercom/capturas/054-relatorios-visao-geral.png` orienta cards planos e gráficos; a paleta de séries é uma aproximação visual, não uma medição exata do CSS do Intercom.
+Tokens centralizam espaços, cores, espessuras e dimensões conforme ADR-0039. A série principal usa tinta e as demais pigmentos independentes de status. `comparison` e `estimated` aplicam tracejado; `comparison` também usa a tinta de comparação. As curvas interpolam os pontos; `null` continua interrompendo a linha. Movimento acompanha dados recebidos, respeita `prefers-reduced-motion` e não simula dados ao vivo.
 
 ## Cobertura ainda pendente
 

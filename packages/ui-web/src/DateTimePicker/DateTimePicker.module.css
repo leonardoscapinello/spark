@@ -7,14 +7,14 @@
 .month { position: relative; }
 .caption { min-height: var(--ui-controlLarge); display: flex; align-items: center; font-weight: var(--typography-weight-semibold); }
 .nav { display: flex; justify-content: flex-end; gap: var(--space-2); }
-.navButton { border: 0; background: var(--ui-subtle); border-radius: var(--radius-sm); width: var(--ui-controlMedium); height: var(--ui-controlMedium); display: grid; place-items: center; cursor: pointer; }
+.navButton { border: 0; background: var(--ui-subtle); border-radius: var(--radius-full); width: var(--ui-controlMedium); height: var(--ui-controlMedium); display: grid; place-items: center; cursor: pointer; }
 .chevron { width: var(--ui-icon); height: var(--ui-icon); fill: var(--color-ink); }
 .grid { width: 100%; table-layout: fixed; border-collapse: collapse; }
 .weekday { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); padding-block: var(--space-2); }
 .day { text-align: center; padding: 0; }
-.dayButton { width: 100%; min-height: var(--ui-touchTarget); border: 0; border-radius: var(--radius-sm); background: transparent; font: inherit; color: var(--color-ink); cursor: pointer; }
+.dayButton { width: 100%; min-height: var(--ui-touchTarget); border: 0; border-radius: var(--radius-full); background: transparent; font: inherit; color: var(--color-ink); cursor: pointer; }
 .dayButton:hover { background: var(--color-accentWash); }
-.selected .dayButton { background: var(--color-accent); color: var(--ui-buttonInk); }
+.selected .dayButton { background: var(--color-accent); color: var(--color-onAccent); }
 .today .dayButton { font-weight: var(--typography-weight-bold); text-decoration: underline; }
 .outside:not(.selected) .dayButton { color: var(--color-inkFaint); }
 :is(.dayButton,.navButton):focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
@@ -31,3 +31,9 @@
 .hint { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
 /* Vazio é dica de formato, não valor: fica apagado como um placeholder. */
 .trigger[data-empty="true"] { color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }
+
+.trigger { border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); font-weight: var(--typography-weight-regular); padding-inline: var(--space-4); }
+.trigger:focus-visible, .trigger[aria-expanded="true"] { box-shadow: var(--ui-fieldFocusShadow); }
+.dayButton, .navButton { transition: background-color var(--motion-duration-control) var(--motion-ease-out), box-shadow var(--motion-duration-control) var(--motion-ease-out); }
+.selected .dayButton { box-shadow: var(--ui-buttonShadow); }
+@media (prefers-reduced-motion: reduce) { .dayButton, .navButton { transition: none; } }

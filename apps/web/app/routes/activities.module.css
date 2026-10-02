@@ -7,7 +7,7 @@
 .activityCell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 .activityCell > div { min-width: 0; }
 .activityCell strong, .secondary { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.typeIcon { display: grid; flex: 0 0 var(--space-8); place-items: center; width: var(--space-8); height: var(--space-8); border-radius: var(--radius-sm); background: var(--color-surface2); color: var(--color-inkMuted); }
+.typeIcon { display: grid; flex: 0 0 var(--space-8); place-items: center; width: var(--space-8); height: var(--space-8); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-surface2); color: var(--color-inkMuted); }
 .typeIcon svg { width: var(--ui-icon); height: var(--ui-icon); }
 .secondary { margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .overdue { color: var(--color-statusDanger); font-weight: var(--typography-weight-medium); }

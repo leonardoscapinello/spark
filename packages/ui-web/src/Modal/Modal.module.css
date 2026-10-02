@@ -1,12 +1,8 @@
 .backdrop { position: fixed; inset: 0; background: var(--ui-scrim); z-index: var(--ui-modalLayer); transition: opacity var(--motion-duration-moderate) var(--motion-ease-out); }
 .backdrop[data-starting-style],.backdrop[data-ending-style] { opacity: 0; }
 .viewport { box-sizing: border-box; min-width: 0; min-height: 0; position: fixed; inset: 0; z-index: var(--ui-modalLayer); display: grid; place-items: center; padding: var(--space-6); overflow: clip; }
-.popup { min-width: 0; min-height: 0; box-sizing: border-box; width: min(var(--ui-modalWidth), 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--color-surface); color: var(--color-ink); border-radius: var(--ui-popupRadius); box-shadow: var(--ui-popupShadow); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); outline: none; transition: opacity var(--motion-duration-moderate) var(--motion-ease-out), transform var(--motion-duration-moderate) var(--motion-ease-out); }
-.popup[data-starting-style],.popup[data-ending-style] { opacity: 0; transform: scale(var(--motion-scale-popup)); }
-/* Medidas da modal Intercom (docs/inspiration/intercom, captura 031): 640px,
- * raio 12, cabeçalho de 64px com título 16px e hairline embaixo, corpo com 24px,
- * rodapé de 64px com hairline em cima. Antes: 560px, raio 16, cabeçalho solto
- * de 24px com título 19px e sem linha. */
+.popup { min-width: 0; min-height: 0; box-sizing: border-box; width: min(var(--ui-modalWidth), 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--color-surface); color: var(--color-ink); border-radius: var(--ui-modalRadius); corner-shape: var(--radius-shape); box-shadow: var(--ui-modalShadow); background-image: var(--ui-paperTexture); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); outline: none; transition: opacity var(--motion-duration-moderate) var(--motion-ease-out), transform var(--motion-duration-moderate) var(--motion-ease-out); }
+.popup[data-starting-style],.popup[data-ending-style] { opacity: 0; transform: translateY(var(--space-3)) scale(var(--motion-scale-popup)); }
 .header { box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--space-16); padding: var(--space-4) var(--space-6); border-bottom: var(--ui-hairline) solid var(--color-line); }
 .title { font-size: var(--typography-size-md); line-height: var(--ui-tabLine); margin: 0; font-weight: var(--typography-weight-semibold); }
 .description { margin: var(--space-2) 0 0; line-height: var(--ui-bodyLine); color: var(--color-inkMuted); }
@@ -16,7 +12,7 @@
 .popup[data-size="wide"] { width: min(var(--ui-modalWide), 100%); }
 .popup[data-size="workspace"] { width: min(var(--ui-modalWorkspace), 100%); }
 .columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-modalColumn)), 1fr)); gap: var(--space-4); }
-.column { min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: var(--space-3); }
+.column { min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); display: flex; flex-direction: column; gap: var(--space-3); }
 .column h3 { margin: 0; font-size: var(--typography-size-sm); }
 
 .viewport:not([data-placement="center"]) { padding: var(--space-2); }
@@ -39,3 +35,6 @@
 @media (prefers-reduced-motion: reduce) { .popup { transition-property: opacity; } .popup:is([data-starting-style],[data-ending-style]) { transform: none; } }
 
 .header > div:first-child { flex: 1; min-width: 0; }
+
+.popup { overflow: hidden; }
+.popup[data-ending-style], .backdrop[data-ending-style] { transition-duration: var(--motion-duration-exit); transition-timing-function: var(--motion-ease-exit); }

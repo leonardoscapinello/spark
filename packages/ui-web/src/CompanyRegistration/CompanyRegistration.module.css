@@ -93,7 +93,7 @@
 
 /* Esperando: linhas na posição exata em que o nome e o fantasia vão entrar,
  * para que a troca não desloque nada. */
-.skeleton { height: var(--space-3); border-radius: var(--radius-sm); background: var(--ui-subtle); }
+.skeleton { height: var(--space-3); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--ui-subtle); }
 .skeleton[data-short="true"] { width: 60%; }
 
 @media (prefers-reduced-motion: reduce) {

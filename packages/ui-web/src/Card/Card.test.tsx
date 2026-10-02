@@ -14,5 +14,8 @@ describe("indicadores de dashboard",()=>{
     expect(retry).toHaveBeenCalledOnce();
     rerender(<MetricCard title="Conversas" value={0} />);
     expect(screen.getByText("0")).toBeInTheDocument();
+    rerender(<MetricCard title="Conversas" value="1.240" />);
+    expect(screen.getByText("1.240")).toBeInTheDocument();
+    expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 });

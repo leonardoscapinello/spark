@@ -2,6 +2,7 @@ import { useId, type ReactNode } from "react";
 import { Button } from "../Button/Button.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
 import { Skeleton } from "../Feedback/Feedback.js";
+import { AnimatedValue } from "./AnimatedValue.js";
 import s from "./Card.module.css";
 export interface CardProps { title: string; description?: string; leading?: ReactNode; actions?: ReactNode; footer?: ReactNode; children?: ReactNode; appearance?: "outlined" | "elevated" }
 export function Card({ title, description, leading, actions, footer, children, appearance = "outlined" }: CardProps) {
@@ -34,7 +35,7 @@ export function CardContentState({ state, children, emptyText = "Nenhum dado nes
 }
 export interface MetricCardProps extends Pick<CardProps,"title"|"description"|"actions"> { value: ReactNode; comparison?: string; sentiment?: "neutral" | "positive" | "negative"; state?: CardState; onRetry?: () => void }
 export function MetricCard({ title, description, actions, value, comparison, sentiment = "neutral", state = "ready", onRetry }: MetricCardProps) {
-  return <Card title={title} {...(description !== undefined ? {description} : {})} actions={actions}><CardContentState state={state} onRetry={onRetry}><div className={s.value}>{value}</div>{comparison && <p className={s.comparison} data-sentiment={sentiment}>{comparison}</p>}</CardContentState></Card>;
+  return <Card title={title} {...(description !== undefined ? {description} : {})} actions={actions}><CardContentState state={state} onRetry={onRetry}><div className={s.value}>{typeof value === "string" || typeof value === "number" ? <AnimatedValue value={value} /> : value}</div>{comparison && <p className={s.comparison} data-sentiment={sentiment}>{comparison}</p>}</CardContentState></Card>;
 }
 export function ProgressCard({ title, value, max = 100, label, footer }: { title: string; value: number; max?: number; label: string; footer?: ReactNode }) {
   return <Card title={title} footer={footer}><div className={s.progressLabel}>{label}</div><ProgressBar label={title} value={value} max={max} /></Card>;

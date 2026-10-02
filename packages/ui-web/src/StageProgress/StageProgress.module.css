@@ -46,7 +46,7 @@
 }
 .step:first-child .action { clip-path: polygon(0 0, calc(100% - var(--space-2)) 0, 100% 50%, calc(100% - var(--space-2)) 100%, 0 100%); border-start-start-radius: var(--radius-sm); border-end-start-radius: var(--radius-sm); }
 .step:last-child .action { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--space-2) 50%); border-start-end-radius: var(--radius-sm); border-end-end-radius: var(--radius-sm); }
-.step:only-child .action { clip-path: none; border-radius: var(--radius-sm); }
+.step:only-child .action { clip-path: none; border-radius: var(--radius-sm); corner-shape: var(--radius-shape); }
 
 button.action { cursor: pointer; }
 button.action:hover { background: var(--color-line); color: var(--color-ink); }
@@ -74,9 +74,9 @@ button.action:hover { background: var(--color-line); color: var(--color-ink); }
 .tooltip > b { font-size: var(--typography-size-sm); font-variant-numeric: tabular-nums; }
 .stagePopover { display: flex; flex-direction: column; width: var(--ui-drawerWidth); overflow: hidden; }
 .stagePopoverContent { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-.summary { display: grid; gap: var(--space-1); padding: var(--space-3); border-radius: var(--ui-fieldRadius); background: var(--color-accentWash); }
+.summary { display: grid; gap: var(--space-1); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface2); }
 .summary > span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.summary > strong { color: var(--color-accent); font-size: var(--typography-size-md); font-variant-numeric: tabular-nums; }
+.summary > strong { color: var(--color-ink); font-size: var(--typography-size-md); font-variant-numeric: tabular-nums; }
 .summary > small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
 .passages { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
 .passages > li { display: grid; gap: var(--space-2); padding-block-end: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }

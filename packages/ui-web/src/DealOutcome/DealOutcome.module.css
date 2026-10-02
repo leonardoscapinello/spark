@@ -1,4 +1,4 @@
-.root { position: fixed; top: var(--space-6); left: 50%; z-index: var(--ui-modalLayer); display: flex; align-items: center; gap: var(--space-3); min-width: min(var(--ui-toastWidth), calc(100vw - var(--space-8))); padding: var(--space-3) var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-ink); box-shadow: var(--ui-popupShadow); pointer-events: none; transform: translateX(-50%); animation: outcomeIn var(--motion-duration-moderate) var(--motion-ease-out); }
+.root { position: fixed; top: var(--space-6); left: 50%; z-index: var(--ui-modalLayer); display: flex; align-items: center; gap: var(--space-3); min-width: min(var(--ui-toastWidth), calc(100vw - var(--space-8))); padding: var(--space-3) var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); color: var(--color-ink); box-shadow: var(--ui-popupShadow); pointer-events: none; transform: translateX(-50%); animation: outcomeIn var(--motion-duration-moderate) var(--motion-ease-out); }
 .root[data-outcome="won"] { border-color: color-mix(in srgb, var(--color-statusSuccess) 38%, var(--color-line)); }
 .root[data-outcome="lost"] { border-color: color-mix(in srgb, var(--color-statusDanger) 30%, var(--color-line)); }
 .root strong, .root span { display: block; }
@@ -8,7 +8,7 @@
 [data-outcome="won"] .mark { color: var(--color-statusSuccess); background: color-mix(in srgb, var(--color-statusSuccess) 14%, transparent); }
 [data-outcome="lost"] .mark { color: var(--color-statusDanger); background: color-mix(in srgb, var(--color-statusDanger) 12%, transparent); }
 .confetti { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
-.confetti span { position: absolute; top: -var(--space-2); width: var(--space-2); height: var(--space-1); border-radius: var(--radius-sm); background: var(--color-statusSuccess); animation: confettiFall var(--motion-duration-moderate) var(--motion-ease-out) both; }
+.confetti span { position: absolute; top: -var(--space-2); width: var(--space-2); height: var(--space-1); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-statusSuccess); animation: confettiFall var(--motion-duration-moderate) var(--motion-ease-out) both; }
 .confetti span:nth-child(3n) { background: var(--color-accent); }
 .confetti span:nth-child(4n) { background: var(--color-statusWarning); }
 .confetti span:nth-child(1) { left: 8%; }

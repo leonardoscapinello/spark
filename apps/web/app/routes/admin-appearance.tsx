@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { organizationThemeControllerUpdate } from "@spark/api-client";
+import { isDefaultTheme } from "@spark/tokens";
 import { OrganizationThemeSchema, type UpdateOrganizationThemeInput } from "@spark/core";
 import { Button, Card, Field, Input, Label, PageFrame, PageHeader, Select, notify } from "@spark/ui-web";
 import type { Route } from "./+types/admin-appearance";
@@ -40,6 +41,7 @@ export default function AdminAppearance(_: Route.ComponentProps) {
 
   useEffect(() => {
     if (!persisted || hydrated) return;
+    if (isDefaultTheme(persisted)) { setDraft(DEFAULT_THEME); setHydrated(true); return; }
     setDraft({
       accentColor: persisted.accentColor ?? DEFAULT_THEME.accentColor,
       accentStrongColor: persisted.accentStrongColor ?? DEFAULT_THEME.accentStrongColor,

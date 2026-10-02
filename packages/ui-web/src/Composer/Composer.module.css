@@ -1,5 +1,5 @@
 /* Cartão do compositor: barra de abas + corpo (Pipedrive, captura 001). */
-.root { min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
+.root { min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); overflow: hidden; }
 
 .tabs { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; padding: var(--space-2) var(--space-3); min-width: 0; background: var(--color-surface2); border-bottom: var(--ui-hairline) solid var(--color-line); }
 
@@ -8,7 +8,7 @@
   display: inline-flex; align-items: center; gap: var(--space-2); flex-shrink: 0;
   min-height: var(--ui-controlMedium); padding: var(--space-2) var(--space-3);
   margin: 0;
-  border: 0; border-radius: var(--radius-sm);
+  border: 0; border-radius: var(--radius-sm); corner-shape: var(--radius-shape);
   background: transparent; color: var(--color-inkMuted);
   font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium);
   cursor: pointer;
@@ -32,6 +32,6 @@
 }
 .prompt:hover:not(:disabled) { color: var(--color-inkMuted); }
 .prompt:disabled { cursor: not-allowed; }
-.prompt:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); border-radius: var(--radius-sm); }
+.prompt:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); }
 
 @media (prefers-reduced-motion: reduce) { .tab { transition: none; } }

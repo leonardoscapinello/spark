@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Button } from "../Button/Button.js";
 import styles from "./SegmentedControl.module.css";
 
@@ -16,7 +17,10 @@ export interface SegmentedControlProps<Value extends string> {
 }
 
 export function SegmentedControl<Value extends string>({ label, value, options, onValueChange, className }: SegmentedControlProps<Value>) {
-  return <div className={[styles.root, className].filter(Boolean).join(" ")} role="group" aria-label={label}>
+  const index = options.findIndex(option => option.value === value);
+  const geometry: CSSProperties & Record<`--segment-${string}`, number> = { "--segment-count": Math.max(1, options.length), "--segment-index": index };
+  return <div style={geometry} className={[styles.root, className].filter(Boolean).join(" ")} role="group" aria-label={label}>
+    {index >= 0 && <span aria-hidden="true" className={styles.indicator} />}
     {options.map((option) => <Button
       key={option.value}
       type="button"

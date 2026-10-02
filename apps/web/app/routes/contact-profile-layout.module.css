@@ -7,7 +7,7 @@
 .workColumn { grid-area: work; }
 .identityColumn { grid-area: identity; }
 .columnTitle { margin: 0; font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); }
-.profileColumn > div, .profileColumn > form, .profileColumn > section, .workColumn > section, .identityColumn > section { min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); }
+.profileColumn > div, .profileColumn > form, .profileColumn > section, .workColumn > section, .identityColumn > section { min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-surface); }
 .profileColumn > div > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: center; gap: var(--space-2); }
 .profileColumn > div > div > * { min-width: 0; overflow-wrap: anywhere; }
 .workColumn > section h2, .identityColumn > section h2 { font-size: var(--typography-size-sm); }

@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import type { OrganizationTheme, UpdateOrganizationThemeInput } from "@spark/core";
-import { DEFAULT_THEME_VALUES } from "@spark/tokens";
+import { DEFAULT_THEME_VALUES, isDefaultTheme } from "@spark/tokens";
 import { getOrganizationThemesCollection } from "./organization-themes-collection.client";
 
 export type ThemeDraft = UpdateOrganizationThemeInput;
@@ -9,6 +9,7 @@ export type ThemeDraft = UpdateOrganizationThemeInput;
 export const DEFAULT_THEME: ThemeDraft = { ...DEFAULT_THEME_VALUES };
 
 export const FONT_FAMILY_OPTIONS = [
+  { value: "geist", label: "Geist", description: "Padrão Spark" },
   { value: "inter", label: "Inter", description: "Neutra e compacta" },
   { value: "system", label: "Sistema", description: "A fonte nativa de cada dispositivo" },
   { value: "rounded", label: "Arredondada", description: "Mais amigável em interfaces de atendimento" },
@@ -16,6 +17,7 @@ export const FONT_FAMILY_OPTIONS = [
 ] as const;
 
 const FONT_STACKS: Record<ThemeDraft["fontBody"], string> = {
+  geist: "Geist, Inter, system-ui, sans-serif",
   inter: "Inter, system-ui, sans-serif",
   system: "ui-sans-serif, system-ui, sans-serif",
   rounded: "ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif",
@@ -63,9 +65,9 @@ export function applyOrganizationTheme(theme: OrganizationTheme | ThemeDraft | n
   for (const variable of DERIVED_VARIABLES) root.style.removeProperty(variable);
   root.style.removeProperty("--typography-fontFamily-body");
   root.style.removeProperty("--typography-fontFamily-display");
-  if (!theme) return;
+  if (!theme || isDefaultTheme(theme)) return;
   for (const [key, variable] of Object.entries(COLOR_VARIABLES)) {
-    const value = theme[key as keyof typeof COLOR_VARIABLES] as string;
+    const value = theme[key as keyof typeof COLOR_VARIABLES] ?? DEFAULT_THEME[key as keyof typeof COLOR_VARIABLES];
     root.style.setProperty(variable, value);
   }
   root.style.setProperty("--color-accentWash", `color-mix(in srgb, ${theme.accentColor} 12%, transparent)`);

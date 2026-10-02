@@ -9,7 +9,7 @@
   min-height: calc(var(--space-16) + var(--space-8));
   padding: var(--space-4);
   border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
   color: var(--color-ink);
   text-decoration: none;
   transition: background-color var(--motion-duration-instant) var(--motion-ease-out), box-shadow var(--motion-duration-instant) var(--motion-ease-out);
@@ -28,7 +28,7 @@
   flex: 0 0 var(--space-10);
   width: var(--space-10);
   height: var(--space-10);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
   background: var(--color-accentWash);
   color: var(--color-accent);
 }

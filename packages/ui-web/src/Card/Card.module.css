@@ -1,5 +1,5 @@
-.card { box-sizing: border-box; min-width: 0; background: var(--color-surface); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); font-family: var(--typography-fontFamily-body); }
-.card[data-appearance="elevated"] { border-color: transparent; border-radius: var(--radius-lg); box-shadow: var(--ui-panelShadow); }
+.card { box-sizing: border-box; min-width: 0; background: var(--color-surface); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-cardRadius); corner-shape: var(--radius-shape); box-shadow: var(--ui-panelShadow); font-family: var(--typography-fontFamily-body); }
+.card[data-appearance="elevated"] { border-color: transparent; border-radius: var(--ui-cardRadius); corner-shape: var(--radius-shape); box-shadow: var(--ui-popupShadow); }
 .actionCard { box-sizing: border-box; display: grid; grid-template-columns: var(--ui-icon) minmax(0, 1fr); grid-template-rows: auto 1fr auto; align-content: start; column-gap: var(--space-3); row-gap: var(--space-1); min-width: 0; padding: var(--space-3) 0; border-top: var(--ui-hairline) solid var(--color-line); color: var(--color-ink); font-family: var(--typography-fontFamily-body); }
 .actionIcon { grid-column: 1; grid-row: 1; display: grid; place-items: center; width: var(--ui-icon); height: var(--ui-icon); color: var(--color-inkMuted); }
 .actionCard h3 { grid-column: 2; grid-row: 1; margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
@@ -17,7 +17,7 @@
 .actions { flex-shrink: 0; display: flex; gap: var(--space-1); }
 .body { padding: 0 var(--space-5) var(--space-5); }
 .footer { border-top: var(--ui-hairline) solid var(--color-line); padding: var(--space-3) var(--space-5); font-size: var(--typography-size-compact); color: var(--color-inkMuted); }
-.value { font-size: var(--typography-size-2xl); font-weight: var(--typography-weight-semibold); line-height: var(--typography-lineHeight-tight); font-variant-numeric: tabular-nums; }
+.value { font-size: var(--typography-size-metric); font-weight: var(--typography-weight-regular); letter-spacing: var(--typography-tracking-metric); line-height: var(--typography-lineHeight-tight); font-variant-numeric: tabular-nums; }
 .comparison { margin: var(--space-2) 0 0; font-size: var(--typography-size-compact); color: var(--color-inkMuted); }
 .comparison[data-sentiment="positive"] { color: var(--color-statusSuccess); }
 .comparison[data-sentiment="negative"] { color: var(--color-statusDanger); }

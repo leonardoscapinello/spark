@@ -1,0 +1,7 @@
+.root { display: inline-block; max-width: 100%; font-variant-numeric: tabular-nums; }
+.accessible { position: absolute; width: 0; height: 0; overflow: hidden; clip-path: inset(50%); }
+.visual { display: inline-flex; white-space: pre; line-height: 1; }
+.digit { display: inline-block; width: 1ch; height: 1em; overflow: hidden; }
+.reel { display: block; transition: transform var(--motion-duration-slow) var(--motion-ease-out); }
+.reel::before { display: block; white-space: pre; content: "0\a 1\a 2\a 3\a 4\a 5\a 6\a 7\a 8\a 9"; }
+@media (prefers-reduced-motion: reduce) { .reel { transition: none; } }

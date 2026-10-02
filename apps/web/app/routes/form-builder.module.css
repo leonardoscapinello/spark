@@ -12,12 +12,12 @@
 .sectionHeading p { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
 .fieldList { display: grid; gap: var(--space-3); min-width: 0; }
 .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: var(--space-3); }
-.fieldCard { display: grid; gap: var(--space-4); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); transition: border-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out); }
+.fieldCard { display: grid; gap: var(--space-4); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); transition: border-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out); }
 .fieldCard:focus-within { border-color: var(--color-focusRing); box-shadow: var(--ui-selectionShadow); }
 .fieldCardHeader { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
 .fieldCardHeader > strong { flex: 1; min-width: 0; overflow: hidden; color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
 .fieldActions { flex-shrink: 0; }
-.fieldNumber { display: grid; place-items: center; flex: 0 0 var(--space-6); width: var(--space-6); height: var(--space-6); border-radius: var(--radius-sm); background: var(--color-accentWash); color: var(--color-accent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); font-variant-numeric: tabular-nums; }
+.fieldNumber { display: grid; place-items: center; flex: 0 0 var(--space-6); width: var(--space-6); height: var(--space-6); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-accentWash); color: var(--color-accent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); font-variant-numeric: tabular-nums; }
 .fieldActions > :nth-child(2) svg { transform: rotate(180deg); }
 .preview { position: sticky; top: var(--space-6); display: grid; gap: var(--space-3); min-width: 0; padding: var(--space-4) 0 var(--space-4) var(--space-5); border-left: var(--ui-hairline) solid var(--color-line); }
 .previewHeader { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
