@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { Button } from "../Button/Button.js";
 import { UserAvatar } from "../UserAvatar/UserAvatar.js";
 import { Tooltip } from "../Tooltip/Tooltip.js";
 import styles from "./Timeline.module.css";
@@ -32,19 +33,9 @@ export interface TimelineItem {
  * de 1px (--bd2), cada um com o seu ponto de 7px e anel de 3px do papel. Hora
  * em mono; quem fez, em avatar de 24. Realce de tinta no hover.
  */
-export function Timeline({ items, emptyText = "Nenhum evento registrado.", initialCount, pageSize = 25, density = "default", groupByDay = false }: { items: readonly TimelineItem[]; emptyText?: string; initialCount?: number; pageSize?: number; density?: "default" | "compact"; groupByDay?: boolean }) {
+export function Timeline({ items, emptyText = "Nenhum evento registrado.", initialCount, pageSize = 25, density = "default", groupByDay = false, collapseChanges = false }: { items: readonly TimelineItem[]; emptyText?: string; initialCount?: number; pageSize?: number; density?: "default" | "compact"; groupByDay?: boolean; collapseChanges?: boolean }) {
   const [visibleCount, setVisibleCount] = useState(initialCount ?? items.length);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => setVisibleCount(initialCount ?? items.length), [initialCount, items.length]);
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || visibleCount >= items.length) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) setVisibleCount((count) => Math.min(items.length, count + pageSize));
-    });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [items.length, pageSize, visibleCount]);
   if (!items.length) return <div className={styles.empty}>{emptyText}</div>;
   const visibleItems = items.slice(0, visibleCount);
   return <><ol className={styles.root} data-density={density}>{visibleItems.map((item, index) => {
@@ -65,13 +56,13 @@ export function Timeline({ items, emptyText = "Nenhum evento registrado.", initi
             </div>)}
           </details>}
 
-          {item.changes && item.changes.length > 0 && <dl className={styles.changes}>{item.changes.map((change, changeIndex) => <div key={`${change.label}:${changeIndex}`}>
+          {item.changes && item.changes.length > 0 && <details open={collapseChanges ? undefined : true} className={styles.group}><summary>Ver alterações ({item.changes.length})</summary><dl className={styles.changes}>{item.changes.map((change, changeIndex) => <div key={`${change.label}:${changeIndex}`}>
             <dt>{change.label}</dt><dd><span>{change.before}</span><span aria-hidden="true">→</span><strong>{change.after}</strong></dd>
-          </div>)}</dl>}
+          </div>)}</dl></details>}
         </div>
       </li>
     </Fragment>;
-  })}</ol>{visibleCount < items.length && <div ref={sentinelRef} className={styles.sentinel} aria-label="Carregando mais eventos" />}</>;
+  })}</ol>{visibleCount < items.length && <Button variant="secondary" onClick={() => setVisibleCount((count) => Math.min(items.length, count + pageSize))}>Mostrar mais eventos ({items.length - visibleCount})</Button>}</>;
 }
 
 function Actor({ actor }: { actor: TimelineActor }) {

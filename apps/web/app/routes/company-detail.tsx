@@ -7,11 +7,11 @@ import { ActionModal, Avatar, BackLink, Button, Card, Field, InlineField, Icon, 
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
-import { getDealsCollection } from "../lib/deals-collections.client";
+import { getDealsCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
 import { getCompanyEventsCollection } from "../lib/events-collection.client";
-import { toTimelineItem } from "../lib/event-presentation";
+import { groupTimelineEvents } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { useLinkPreviewRequest } from "../lib/link-previews.client";
 import styles from "./company-detail.module.css";
@@ -23,7 +23,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     getUsersCollection().preload(),
     getCompanyEventsCollection(companyIdFactory.from(params.companyId)).preload(),
     ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
-    ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
+    ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload(), getStagesCollection().preload()] : []),
   ]);
   return null;
 }
@@ -52,6 +52,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
   const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: dealsCollection }).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
   const { data: events = [] } = useLiveQuery({ query: (q) => q.from({ events: getCompanyEventsCollection(companyIdFactory.from(companyId)) }).orderBy(({ events: item }) => item.occurredAt, "desc") });
+  const { data: stages = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ stages: getStagesCollection() }) : undefined });
   const canWrite = session?.capabilities.includes("companies:write") ?? false;
   const canLinkContacts = canReadContacts && (session?.capabilities.includes("contacts:write") ?? false);
   const canLinkDeals = canReadDeals && (session?.capabilities.includes("deals:write") ?? false);
@@ -168,7 +169,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
           {linkedDeals.length ? <RowList label="Negócios desta empresa">{linkedDeals.map((deal, index) => <ListRow key={deal.id} index={index} icon="briefcase" title={deal.name} description={deal.status === "open" ? "Em aberto" : deal.status === "won" ? <Signal tone="success">Ganho</Signal> : <Signal tone="danger">Perdido</Signal>} meta={formatBRL(syncedAmount(deal.amount))} render={<Link to={`/deals/${deal.id}`} />} trailing={canLinkDeals ? <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button> : undefined} />)}</RowList> : <Text size="pequeno" tone="muted">Nenhum negócio vinculado.</Text>}
         </Card> }] : []),
         { value: "history", label: "Histórico", content: <Card title="Histórico" description="Mudanças registradas nesta empresa e em seus vínculos comerciais.">
-        <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={events.map((event) => toTimelineItem(event, { users, contacts, companies }))} emptyText="As próximas alterações desta empresa aparecerão aqui." />
+        <Timeline collapseChanges initialCount={10} pageSize={10} density="compact" groupByDay items={groupTimelineEvents(events, { users, contacts, companies, stages })} emptyText="As próximas alterações desta empresa aparecerão aqui." />
       </Card> },
         ]} />
       </div>

@@ -29,4 +29,4 @@ export const Variantes: Story = {
   </Secao></Prancha>,
 };
 
-export const MuitosEventos: Story = { render: () => <Mesa largura={460}><Timeline groupByDay density="compact" initialCount={10} pageSize={10} items={Array.from({ length: 40 }, (_, index) => ({ id: String(index), title: `Campo alterado ${index + 1}`, timestamp: at(Math.floor(index / 6), 18 - (index % 6)), changes: [{ label: "Origem", before: "Site", after: "Indicação" }] }))} /></Mesa> };
+export const MuitosEventos: Story = { render: () => <Mesa largura={460}><Timeline collapseChanges groupByDay density="compact" initialCount={10} pageSize={10} items={Array.from({ length: 40 }, (_, index) => ({ id: String(index), title: `Campo alterado ${index + 1}`, timestamp: at(Math.floor(index / 6), 18 - (index % 6)), changes: [{ label: "Origem", before: "Site", after: "Indicação" }] }))} /></Mesa> };

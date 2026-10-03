@@ -740,11 +740,11 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const historyContent = <Surface as="section" className={styles.block} aria-label="Histórico">
       <SectionTitle level="card" actions={<Button size="sm" variant="ghost" trailingIcon={<Icon name="right" />} onClick={() => setHistoryOpen(true)}>Expandir histórico</Button>}>Histórico</SectionTitle>
       <div className={styles.historyTabs}><Tabs variant="segmented" label="Filtrar o histórico" defaultValue="tudo" items={[
-        { value: "tudo", label: "Tudo", content: <Timeline items={timelineItems} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
+        { value: "tudo", label: "Tudo", content: <Timeline collapseChanges items={timelineItems} initialCount={10} pageSize={10} density="compact" groupByDay emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
         { value: "notas", label: `Notas (${dealNotes.length})`, content: dealNotes.length === 0
           ? <Text size="pequeno" tone="muted">Nenhuma nota ainda. Use o campo acima para registrar o que foi conversado.</Text>
           : <div className={styles.notes}>{dealNotes.map((note) => { const author = users.find((user) => user.id === note.authorId); return <NoteCard key={note.id} author={author?.name ?? "Alguém"} authorAvatarUrl={author?.avatarUrl ?? null} createdAt={note.createdAt} body={note.body} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} />; })}</div> },
-        { value: "mudancas", label: "Mudanças", content: <Timeline items={groupTimelineEvents(events.filter((item) => item.type !== "activity.created"), { users, stages, contacts, companies, customFields })} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
+        { value: "mudancas", label: "Mudanças", content: <Timeline collapseChanges items={groupTimelineEvents(events.filter((item) => item.type !== "activity.created"), { users, stages, contacts, companies, customFields })} initialCount={10} pageSize={10} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
       ]} /></div>
     </Surface>;
   const activityHistoryTabs = [
@@ -1064,7 +1064,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
 
     <Panel open={historyOpen} onOpenChange={setHistoryOpen}>
       <PanelContent side="right" title="Histórico completo" description={`${events.length} ${events.length === 1 ? "evento registrado" : "eventos registrados"}`} closeLabel="Fechar histórico">
-        <Timeline items={timelineItems} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma alteração registrada." />
+        <Timeline collapseChanges items={timelineItems} initialCount={10} pageSize={10} density="compact" groupByDay emptyText="Nenhuma alteração registrada." />
       </PanelContent>
     </Panel>
 

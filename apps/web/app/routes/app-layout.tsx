@@ -235,7 +235,8 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     (item.to === "/" && location.pathname === "/") ||
     (item.to === "/deals" && location.pathname === "/deals") ||
     pathMatches(location.pathname, item.to, location.search);
-  const showSidebar = current.id === "admin" || current.id === "leads" || current.id === "overview" || (current.id === "automations" && location.pathname === "/automations");
+  const isRecordDetail = /^\/(contacts|companies|deals)\/[^/]+\/?$/.test(location.pathname);
+  const showSidebar = current.id === "admin" || (current.id === "leads" && !isRecordDetail) || current.id === "overview" || (current.id === "automations" && location.pathname === "/automations");
   const visibleSections = current.sections.map((section) => ({
     title: section.title,
     icon: section.icon,

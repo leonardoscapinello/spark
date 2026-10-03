@@ -307,7 +307,7 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
     </div>
   </Card>;
   const historyContent = <Card title="Histórico" description="Alterações e registros relacionados a esta pessoa.">
-    <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={groupTimelineEvents(events, { users, companies, customFields, stages })} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
+    <Timeline collapseChanges initialCount={10} pageSize={10} density="compact" groupByDay items={groupTimelineEvents(events, { users, companies, customFields, stages })} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
   </Card>;
 
   return (
