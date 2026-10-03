@@ -44,7 +44,7 @@ export class ContactsRepository {
           source: input.source ?? null,
           ownerId: input.ownerId ?? null,
           companyId: input.companyId ?? null,
-          score: input.score ?? 0,
+          score: 0,
         })
         .returning();
 
@@ -101,7 +101,6 @@ export class ContactsRepository {
           source: input.source,
           ownerId: input.ownerId,
           companyId: input.companyId,
-          score: input.score,
           updatedAt: new Date(),
         })
         .where(eq(contacts.id, id))
@@ -215,6 +214,9 @@ function toContact(row: {
   ownerId: string | null;
   companyId: string | null;
   score: number;
+  scoreCalculatedAt: Date | null;
+  scorePreviousWeek: number | null;
+  scoreHasEvidence: boolean;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -230,6 +232,9 @@ function toContact(row: {
     ownerId: row.ownerId,
     companyId: row.companyId,
     score: row.score,
+    scoreCalculatedAt: row.scoreCalculatedAt?.toISOString() ?? null,
+    scorePreviousWeek: row.scorePreviousWeek,
+    scoreHasEvidence: row.scoreHasEvidence,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,

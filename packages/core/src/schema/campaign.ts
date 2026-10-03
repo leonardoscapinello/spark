@@ -20,7 +20,7 @@ export type AudienceFilter = z.infer<typeof AudienceFilterSchema>;
  * e são reunidas pela camada de leitura local, não um JSON escondido aqui. */
 export const AudienceRowSchema = z.object({
   id: zAudienceId, orgId: zOrgId, name: z.string().min(1), description: z.string().nullable(),
-  operator: z.enum(AUDIENCE_OPERATORS), minimumScore: z.number().int().min(0).max(100).nullable(),
+  operator: z.enum(AUDIENCE_OPERATORS), minimumScore: z.number().int().min(0).max(1000).nullable(),
   createdBy: zUserId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp,
 });
 export type AudienceRow = z.infer<typeof AudienceRowSchema>;

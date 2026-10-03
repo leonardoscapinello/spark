@@ -51,3 +51,5 @@ export * from "./business-hours.js";
 export * from "./holidays.js";
 
 export * from "./contact-companies.js";
+
+export * from "./scoring.js";

@@ -1,3 +1,4 @@
+import { getScoreSnapshotsCollection } from "../lib/score-collection.client";
 import { MergePerson } from "../crm/MergePerson";
 import { type FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -13,7 +14,7 @@ import {
   type IdentityChannel,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity, writeAccepted } from "@spark/data";
-import { Accordion, Avatar, BackLink, Button, Card, DateTimePicker, EmptyState, Field, Form, Icon, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, ScoreGauge, Tabs, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
+import { Accordion, Avatar, BackLink, Button, Card, DateTimePicker, DataChart, EmptyState, Field, Form, Icon, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, ScoreGauge, Tabs, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -255,6 +256,8 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
     }));
   }
 
+  const { data: scoreSnapshots = [] } = useLiveQuery({ query: q => q.from({ snapshots: getScoreSnapshotsCollection(contactId) }).orderBy(({ snapshots }) => snapshots.day, "asc") });
+
   if (!data) {
     return (
       <div className={layout.page}>
@@ -270,6 +273,8 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
   const now = new Date().toISOString();
   const busy = contactFieldPending !== null;
 
+  const latestScore = scoreSnapshots.at(-1);
+  const scoreChart = scoreSnapshots.map(snapshot => ({ label: snapshot.day, score: snapshot.hasEvidence && snapshot.modelId === latestScore?.modelId ? snapshot.value : null }));
   const pendingActivities = activities.filter((activity) => !activity.completed);
   const completedActivities = activities.filter((activity) => activity.completed);
   const activityList = (completed: boolean) => {
@@ -323,7 +328,7 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
               <InlineField label="E-mail" value={data.email ?? "Sem e-mail"} empty={!data.email} disabled={!canWrite}>{(close) => <Input aria-label="E-mail" type="email" defaultValue={data.email ?? ""} placeholder="nome@empresa.com.br" onBlur={(event) => close(saveContact("email", event.currentTarget.value))} />}</InlineField>
               <InlineField label="Telefone" numeric value={data.phone ? formatPhone(data.phone) : "Sem telefone"} empty={!data.phone} disabled={!canWrite}>{(close) => <Input aria-label="Telefone" type="tel" numeric defaultValue={data.phone ? formatPhone(data.phone) : ""} placeholder="DDD + número" onBlur={(event) => close(saveContact("phone", event.currentTarget.value))} />}</InlineField>
             </div> }, { value: "relationship", title: "Relacionamento", content: <div className={layout.fields}>
-              <ScoreGauge value={data.score} />
+              <ScoreGauge value={data.scoreCalculatedAt && data.scoreHasEvidence ? data.score : null} previousValue={data.scorePreviousWeek ?? null} />
               <InlineField label="Etapa do relacionamento" value={LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus} disabled={!canWrite || busy}>{(close) => <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) close(updateLifecycle("leadStatus", value)); }} />}</InlineField>
               <InlineField label="Origem" value={LEAD_SOURCE_OPTIONS.find((option) => option.value === data.source)?.label ?? data.source ?? "Sem origem"} empty={!data.source} disabled={!canWrite || busy}>{(close) => <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => close(updateLifecycle("source", value))} />}</InlineField>
               <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite || busy}>{(close) => <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => close(updateLifecycle("ownerId", value))} />}</InlineField>
@@ -344,6 +349,10 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
             ...(canReadInbox ? [{ value: "conversas", label: `Conversas (${conversations.length})`, content: <Card title="Conversas">
             {conversations.length === 0 ? <Text size="pequeno" tone="muted">Nenhuma conversa desta pessoa.</Text> : <RowList label="Conversas desta pessoa">{conversations.map((conversation, index) => <ListRow key={conversation.id} index={index} icon="message" title={conversation.subject} description={conversation.channel === "email" ? "E-mail" : conversation.channel === "instagram" ? "Instagram" : conversation.channel === "whatsapp" ? "WhatsApp" : conversation.channel === "messenger" ? "Messenger" : "Interno"} render={<Link to={`/inbox?box=all&conversation=${conversation.id}`} />} />)}</RowList>}
           </Card> }] : []),
+            { value: "score", label: "Score", content: <div className={layout.stack}>
+              <DataChart title="Evolução do score" description="Até 90 dias · índice comercial de 0 a 1.000. Mudanças de modelo não são comparadas." data={scoreChart} series={[{ key: "score", label: "Score", color: 2 }]} />
+              <Card title="O que compõe o score">{latestScore ? <RowList label="Contribuições do score">{latestScore.contributions.filter(item => item.points !== 0).map((item, index) => <ListRow key={item.ruleId} index={index} title={item.label} meta={`${item.points > 0 ? "+" : ""}${Math.round(item.points)} pontos`} />)}</RowList> : <Text tone="secondary">O histórico começa com o primeiro cálculo do motor.</Text>}</Card>
+            </div> },
             { value: "historico", label: "Histórico", content: historyContent },
             { value: "canais", label: "Canais", content: <Card title="Canais e identidades">
             <div className={layout.stack}>

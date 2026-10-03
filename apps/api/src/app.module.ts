@@ -1,3 +1,4 @@
+import { ScoringModule } from "./modules/scoring/scoring.module.js";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { LoggerModule } from "nestjs-pino";
@@ -45,6 +46,7 @@ import { CompanyRegistrationsModule } from "./modules/company-registrations/comp
     IdentityModule,
     SyncModule,
     ContactsModule,
+    ScoringModule,
     CrmModule,
     ActivitiesModule,
     CompaniesModule,

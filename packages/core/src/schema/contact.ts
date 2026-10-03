@@ -29,7 +29,10 @@ export const ContactSchema = z.object({
   source: z.string().trim().min(1).max(100).nullable().default(null),
   ownerId: zUserId.nullable().default(null),
   companyId: zCompanyId.nullable().default(null),
-  score: z.number().int().min(0).max(100).default(0),
+  score: z.number().int().min(0).max(1000).default(0),
+  scoreCalculatedAt: zServerTimestamp.nullable().optional(),
+  scorePreviousWeek: z.number().int().min(0).max(1000).nullable().optional(),
+  scoreHasEvidence: z.boolean().optional(),
   /* Campo personalizado e marcação NÃO são coluna deste registro (ADR-0035):
    * moram em `custom_field_values` e em `tags` + vínculo, e a tela os junta
    * localmente. Continuam aqui, opcionais, porque é esta a forma que a
@@ -55,6 +58,9 @@ export type Contact = z.infer<typeof ContactSchema>;
 // authorization boundary, it's just the identity of the resource being created.
 export const CreateContactInputSchema = ContactSchema.omit({
   orgId: true,
+  scoreCalculatedAt: true,
+  scorePreviousWeek: true,
+  scoreHasEvidence: true,
   createdAt: true,
   updatedAt: true,
   deletedAt: true,

@@ -674,9 +674,17 @@ export type SearchContactsResponseDtoContactsItem = {
   companyId?: string | null;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1000
      */
   score?: number;
+  scoreCalculatedAt?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 1000
+     * @nullable
+     */
+  scorePreviousWeek?: number | null;
+  scoreHasEvidence?: boolean;
   customFields?: SearchContactsResponseDtoContactsItemCustomFields;
   tags?: string[];
   createdAt: string;
@@ -846,7 +854,7 @@ export interface CreateContactDto {
   companyId?: string | null;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1000
      */
   score?: number;
   customFields?: CreateContactDtoCustomFields;
@@ -905,9 +913,17 @@ export type CreateContactResponseDtoContact = {
   companyId?: string | null;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1000
      */
   score?: number;
+  scoreCalculatedAt?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 1000
+     * @nullable
+     */
+  scorePreviousWeek?: number | null;
+  scoreHasEvidence?: boolean;
   customFields?: CreateContactResponseDtoContactCustomFields;
   tags?: string[];
   createdAt: string;
@@ -972,7 +988,7 @@ export interface UpdateContactDto {
   companyId?: string | null;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1000
      */
   score?: number;
   customFields?: UpdateContactDtoCustomFields;
@@ -1031,9 +1047,17 @@ export type UpdateContactResponseDtoContact = {
   companyId?: string | null;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1000
      */
   score?: number;
+  scoreCalculatedAt?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 1000
+     * @nullable
+     */
+  scorePreviousWeek?: number | null;
+  scoreHasEvidence?: boolean;
   customFields?: UpdateContactResponseDtoContactCustomFields;
   tags?: string[];
   createdAt: string;
@@ -1342,6 +1366,203 @@ export interface OrganizationThemeWriteResponseDto {
      * @maximum 9007199254740991
      */
   txid: number;
+}
+
+export type PublishModelDtoModelKind = typeof PublishModelDtoModelKind[keyof typeof PublishModelDtoModelKind];
+
+
+export const PublishModelDtoModelKind = {
+  'rules-v1': 'rules-v1',
+} as const;
+
+export type PublishModelDtoModelRulesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  signal: string;
+  /**
+     * @minimum -1000
+     * @maximum 1000
+     */
+  points: number;
+  /**
+     * @minimum 1
+     * @maximum 1000
+     */
+  cap: number;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  maxPerDay: number;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
+  halfLifeDays: number;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
+  windowDays: number;
+};
+
+export type PublishModelDtoModel = {
+  kind: PublishModelDtoModelKind;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  objective: string;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
+  horizonDays: number;
+  /**
+     * @minItems 1
+     * @maxItems 64
+     */
+  rules: PublishModelDtoModelRulesItem[];
+};
+
+export interface PublishModelDto {
+  /** @pattern ^[a-zA-Z0-9_.-]{1,80}$ */
+  scope?: string;
+  model: PublishModelDtoModel;
+}
+
+export interface WriteResultDto {
+  id: string;
+  status: string;
+}
+
+export type PreviewDtoModelKind = typeof PreviewDtoModelKind[keyof typeof PreviewDtoModelKind];
+
+
+export const PreviewDtoModelKind = {
+  'rules-v1': 'rules-v1',
+} as const;
+
+export type PreviewDtoModelRulesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  signal: string;
+  /**
+     * @minimum -1000
+     * @maximum 1000
+     */
+  points: number;
+  /**
+     * @minimum 1
+     * @maximum 1000
+     */
+  cap: number;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  maxPerDay: number;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
+  halfLifeDays: number;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
+  windowDays: number;
+};
+
+export type PreviewDtoModel = {
+  kind: PreviewDtoModelKind;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  objective: string;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
+  horizonDays: number;
+  /**
+     * @minItems 1
+     * @maxItems 64
+     */
+  rules: PreviewDtoModelRulesItem[];
+};
+
+export type PreviewDtoDaysItem = {
+  signal: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$ */
+  day: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  count: number;
+};
+
+export interface PreviewDto {
+  model: PreviewDtoModel;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  at: string;
+  /** @maxItems 25000 */
+  days: PreviewDtoDaysItem[];
+}
+
+export interface SignalDto {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  contactId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  key: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  signal: string;
+  /** @pattern ^[a-zA-Z0-9_.-]{1,80}$ */
+  scope?: string;
+  /** @pattern ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$ */
+  occurredAt: string;
 }
 
 export interface AddDealFollowerDto {
@@ -8398,6 +8619,339 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getOrganizationThemeControllerUpdateMutationOptions(options), queryClient);
+    }
+
+export const scoringControllerPublish = (
+    publishModelDto: PublishModelDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<WriteResultDto>(
+      {url: `/v1/scoring/models`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: publishModelDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getScoringControllerPublishMutationKey = () => ['scoringControllerPublish'] as const;
+
+export const getScoringControllerPublishMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoringControllerPublish>>, TError,ScoringControllerPublishMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof scoringControllerPublish>>, TError,ScoringControllerPublishMutationVariables, TContext> => {
+
+const mutationKey = getScoringControllerPublishMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scoringControllerPublish>>, ScoringControllerPublishMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  scoringControllerPublish(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ScoringControllerPublishMutationResult = NonNullable<Awaited<ReturnType<typeof scoringControllerPublish>>>
+    export type ScoringControllerPublishMutationBody = PublishModelDto
+    export type ScoringControllerPublishMutationError = unknown
+    export type ScoringControllerPublishMutationVariables = {data: PublishModelDto}
+
+    export const useScoringControllerPublish = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoringControllerPublish>>, TError,ScoringControllerPublishMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof scoringControllerPublish>>,
+        TError,
+        ScoringControllerPublishMutationVariables,
+        TContext
+      > => {
+      return useMutation(getScoringControllerPublishMutationOptions(options), queryClient);
+    }
+
+export const scoringControllerModels = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/scoring/models`, method: 'GET', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getScoringControllerModelsQueryKey = () => {
+    return [
+    `/v1/scoring/models`
+    ] as const;
+    }
+
+
+export const getScoringControllerModelsQueryOptions = <TData = Awaited<ReturnType<typeof scoringControllerModels>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof scoringControllerModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getScoringControllerModelsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof scoringControllerModels>>> = ({ signal }) => scoringControllerModels(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof scoringControllerModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ScoringControllerModelsQueryResult = NonNullable<Awaited<ReturnType<typeof scoringControllerModels>>>
+export type ScoringControllerModelsQueryError = unknown
+
+
+export function useScoringControllerModels<TData = Awaited<ReturnType<typeof scoringControllerModels>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof scoringControllerModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof scoringControllerModels>>,
+          TError,
+          Awaited<ReturnType<typeof scoringControllerModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useScoringControllerModels<TData = Awaited<ReturnType<typeof scoringControllerModels>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof scoringControllerModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof scoringControllerModels>>,
+          TError,
+          Awaited<ReturnType<typeof scoringControllerModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useScoringControllerModels<TData = Awaited<ReturnType<typeof scoringControllerModels>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof scoringControllerModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useScoringControllerModels<TData = Awaited<ReturnType<typeof scoringControllerModels>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof scoringControllerModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getScoringControllerModelsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const scoringControllerActivate = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<WriteResultDto>(
+      {url: `/v1/scoring/models/${id}/activate`, method: 'POST', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getScoringControllerActivateMutationKey = () => ['scoringControllerActivate'] as const;
+
+export const getScoringControllerActivateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoringControllerActivate>>, TError,ScoringControllerActivateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof scoringControllerActivate>>, TError,ScoringControllerActivateMutationVariables, TContext> => {
+
+const mutationKey = getScoringControllerActivateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scoringControllerActivate>>, ScoringControllerActivateMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  scoringControllerActivate(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ScoringControllerActivateMutationResult = NonNullable<Awaited<ReturnType<typeof scoringControllerActivate>>>
+
+    export type ScoringControllerActivateMutationError = unknown
+    export type ScoringControllerActivateMutationVariables = {id: string}
+
+    export const useScoringControllerActivate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoringControllerActivate>>, TError,ScoringControllerActivateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof scoringControllerActivate>>,
+        TError,
+        ScoringControllerActivateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getScoringControllerActivateMutationOptions(options), queryClient);
+    }
+
+export const scoringControllerPreview = (
+    previewDto: PreviewDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<void>(
+      {url: `/v1/scoring/preview`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: previewDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getScoringControllerPreviewMutationKey = () => ['scoringControllerPreview'] as const;
+
+export const getScoringControllerPreviewMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoringControllerPreview>>, TError,ScoringControllerPreviewMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof scoringControllerPreview>>, TError,ScoringControllerPreviewMutationVariables, TContext> => {
+
+const mutationKey = getScoringControllerPreviewMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scoringControllerPreview>>, ScoringControllerPreviewMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  scoringControllerPreview(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ScoringControllerPreviewMutationResult = NonNullable<Awaited<ReturnType<typeof scoringControllerPreview>>>
+    export type ScoringControllerPreviewMutationBody = PreviewDto
+    export type ScoringControllerPreviewMutationError = unknown
+    export type ScoringControllerPreviewMutationVariables = {data: PreviewDto}
+
+    export const useScoringControllerPreview = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoringControllerPreview>>, TError,ScoringControllerPreviewMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof scoringControllerPreview>>,
+        TError,
+        ScoringControllerPreviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getScoringControllerPreviewMutationOptions(options), queryClient);
+    }
+
+export const scoringControllerSignal = (
+    signalDto: SignalDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<WriteResultDto>(
+      {url: `/v1/scoring/signals`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: signalDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getScoringControllerSignalMutationKey = () => ['scoringControllerSignal'] as const;
+
+export const getScoringControllerSignalMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoringControllerSignal>>, TError,ScoringControllerSignalMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof scoringControllerSignal>>, TError,ScoringControllerSignalMutationVariables, TContext> => {
+
+const mutationKey = getScoringControllerSignalMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scoringControllerSignal>>, ScoringControllerSignalMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  scoringControllerSignal(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ScoringControllerSignalMutationResult = NonNullable<Awaited<ReturnType<typeof scoringControllerSignal>>>
+    export type ScoringControllerSignalMutationBody = SignalDto
+    export type ScoringControllerSignalMutationError = unknown
+    export type ScoringControllerSignalMutationVariables = {data: SignalDto}
+
+    export const useScoringControllerSignal = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scoringControllerSignal>>, TError,ScoringControllerSignalMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof scoringControllerSignal>>,
+        TError,
+        ScoringControllerSignalMutationVariables,
+        TContext
+      > => {
+      return useMutation(getScoringControllerSignalMutationOptions(options), queryClient);
     }
 
 export const dealFollowersControllerAdd = (

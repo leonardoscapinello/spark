@@ -57,6 +57,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   calendar_events: { column: "org_id" },
   notes: { column: "org_id" },
   events: { column: "org_id" },
+  score_snapshots: { column: "org_id" },
   identities: { column: "org_id" },
   users: { column: "org_id", views: { directory: [...CHAVES, "name", "email", "avatar_url", "deactivated_at"] } },
   conversations: { column: "org_id" },

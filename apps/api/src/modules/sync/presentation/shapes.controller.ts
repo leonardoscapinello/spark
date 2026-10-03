@@ -123,6 +123,12 @@ export class ShapesController {
     if (table === "deals") appendDealShapeScope(query, filters, params);
     if (table === "deal_followers") appendDealFollowerShapeScope(query, filters, params);
     if (table === "events") appendEventShapeScope(query, filters, params);
+    if (table === "score_snapshots") {
+      appendEventShapeScope({ contactId: query.contactId }, filters, params);
+      filters.push(`"scope" = 'general'`);
+      params.push(new Date(Date.now() - 90 * 86400000).toISOString().slice(0,10));
+      filters.push(`"day" >= $${params.length}`);
+    }
     upstream.searchParams.set("where", filters.join(" AND "));
     params.forEach((value, index) => upstream.searchParams.set(`params[${index + 1}]`, value));
     /* Recorte de COLUNA, decidido aqui — nunca pelo cliente.

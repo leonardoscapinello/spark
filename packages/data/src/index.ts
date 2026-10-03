@@ -43,3 +43,5 @@ export * from "./tag-collections.js";
 export { subscribeDealPresence, type DealPresenceState } from "./deal-presence.js";
 
 export { createContactCompaniesCollection } from "./contact-companies-collection.js";
+
+export { createScoreSnapshotsCollection } from "./score-snapshots-collection.js";

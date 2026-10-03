@@ -1,6 +1,7 @@
+import { createScoreWorker } from "./scoring/score-worker.js";
 import { Worker, type ConnectionOptions, type Job } from "bullmq";
 import { and, desc, eq } from "drizzle-orm";
-import { automationJobs, automationRuns, automationRunSteps, automationTimers, automationVersions, contactTags, contacts, createDbClient, events, tags, withOrgContext, type SparkDb } from "@spark/db";
+import { scoreSignals, automationJobs, automationRuns, automationRunSteps, automationTimers, automationVersions, contactTags, contacts, createDbClient, events, tags, withOrgContext, type SparkDb } from "@spark/db";
 import { automationJobId, automationStepId, automationTimerId, contactId as contactIdFactory, eventId, orgId as orgIdFactory, resolveAutomationTransition, automationWaitMilliseconds, tagDisplayName, tagSlug, type AutomationNode, type ContactId, type OrgId } from "@spark/core";
 
 export const APP_NAME = "@spark/worker" as const;
@@ -33,7 +34,7 @@ export async function executeAutomationJob(db: SparkDb, data: AutomationJobData)
       return;
     }
 
-    const result = node.type === "action" ? await executeAction(tx, orgId, contactIdFactory.from(run.contactId), node) : {};
+    const result = node.type === "action" ? await executeAction(tx, orgId, contactIdFactory.from(run.contactId), node, jobRow.id) : {};
     const transition = resolveAutomationTransition(version.graph, node, run.context);
     const completedAt = new Date();
     await tx.update(automationRunSteps).set({ status: "completed", result: { ...result, ...transition.result }, finishedAt: completedAt }).where(eq(automationRunSteps.id, stepId));
@@ -48,7 +49,7 @@ export async function executeAutomationJob(db: SparkDb, data: AutomationJobData)
   });
 }
 
-async function executeAction(tx: SparkDb, orgId: OrgId, contactId: ContactId, node: AutomationNode): Promise<Record<string, unknown>> {
+async function executeAction(tx: SparkDb, orgId: OrgId, contactId: ContactId, node: AutomationNode, sourceJobId: string): Promise<Record<string, unknown>> {
   const operation = node.data.config.operation;
   const value = node.data.config.value;
   const [contact] = await tx.select().from(contacts).where(and(eq(contacts.id, contactId), eq(contacts.orgId, orgId))).limit(1);
@@ -81,9 +82,10 @@ async function executeAction(tx: SparkDb, orgId: OrgId, contactId: ContactId, no
     return { operation, status: value };
   }
   if (operation === "contact.add_score" && typeof value === "number") {
-    const score = Math.max(0, Math.min(100, contact.score + value));
-    await tx.update(contacts).set({ score, updatedAt: new Date() }).where(eq(contacts.id, contact.id));
-    return { operation, score };
+    if (!Number.isFinite(value) || value === 0) return { operation, contributed: 0 };
+    const units = Math.min(100, Math.max(1, Math.round(Math.abs(value))));
+    await tx.insert(scoreSignals).values({ orgId, contactId: contact.id, sourceKey: `automation:${sourceJobId}`, signal: value > 0 ? "automation.score_positive" : "automation.score_negative", units, occurredAt: new Date() }).onConflictDoNothing();
+    return { operation, contributed: units, status: "queued" };
   }
   return { operation: typeof operation === "string" ? operation : "noop" };
 }
@@ -108,3 +110,5 @@ function required(name: string): string { const value = process.env[name]; if (!
 function redisConnection(value: string): ConnectionOptions { const url = new URL(value); return { host: url.hostname, port: Number(url.port || 6379), ...(url.username ? { username: decodeURIComponent(url.username) } : {}), ...(url.password ? { password: decodeURIComponent(url.password) } : {}), ...(url.protocol === "rediss:" ? { tls: {} } : {}) }; }
 
 if (process.env.NODE_ENV !== "test" && process.env.REDIS_URL && process.env.DATABASE_URL) createAutomationWorker();
+
+if (process.env.NODE_ENV !== "test" && process.env.SCORING_ENABLED === "true" && process.env.REDIS_URL && process.env.DATABASE_URL) createScoreWorker(process.env.DATABASE_URL, redisConnection(process.env.REDIS_URL));

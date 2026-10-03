@@ -27,7 +27,7 @@ export async function ensureMessagePartitions(db: SparkDb, now = new Date(), mon
   return ensureMonthlyPartitions(db, "messages", now, monthsAhead);
 }
 
-async function ensureMonthlyPartitions(db: SparkDb, table: "events" | "messages", now: Date, monthsAhead: number): Promise<string[]> {
+async function ensureMonthlyPartitions(db: SparkDb, table: "events" | "messages" | "score_snapshots", now: Date, monthsAhead: number): Promise<string[]> {
   const ensured: string[] = [];
   for (const partition of eventPartitionsFor(now, monthsAhead)) {
     const name = partition.name.replace("events_", `${table}_`);
@@ -38,3 +38,5 @@ async function ensureMonthlyPartitions(db: SparkDb, table: "events" | "messages"
   }
   return ensured;
 }
+
+export async function ensureScorePartitions(db: SparkDb, now = new Date(), monthsAhead = 3): Promise<string[]> { return ensureMonthlyPartitions(db, "score_snapshots", now, monthsAhead); }
