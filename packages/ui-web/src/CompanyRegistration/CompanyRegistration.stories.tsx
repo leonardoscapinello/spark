@@ -1,11 +1,12 @@
 import { useState } from "react";
-import type { Meta } from "@storybook/react-vite";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { CompanyRegistration, CompanyRegistrationActivity, CompanyRegistrationMember, CompanyRegistrationTaxRegime } from "@spark/core";
 import { Modal, ModalContent } from "../Modal/Modal.js";
 import { CompanyRegistrationCard } from "./CompanyRegistration.js";
 import { CompanyRegistrationDetails } from "./CompanyRegistrationDetails.js";
 
 const meta: Meta<typeof CompanyRegistrationCard> = { title: "Dados/Cadastro da Receita", component: CompanyRegistrationCard };
+type Story = StoryObj<typeof CompanyRegistrationCard>;
 export default meta;
 
 const registro = (overrides: Partial<CompanyRegistration> = {}): CompanyRegistration => ({
@@ -70,3 +71,15 @@ export const CadastroCompleto = () => {
     </ModalContent>
   </Modal>;
 };
+
+/** Controles: troque a situação e o estado para conferir cada caixa. */
+export const Interativo: Story = { render: (args) => <CompanyRegistrationCard {...args} registration={registro()} activities={atividades} onExpand={() => undefined} /> };
+
+/** Matriz: estados (consultando, pronto, não encontrado, falhou) × situação. */
+export const Variantes = () => <div style={{ display: "grid", gap: 24 }}>
+  <Estados />
+  <Situacoes />
+</div>;
+
+/** Razão social longa: o cartão cresce em vez de cortar no meio da palavra. */
+export const RazaoSocialLonga = () => <CompanyRegistrationCard registration={registro({ legalName: "COOPERATIVA DE CRÉDITO, POUPANÇA E INVESTIMENTO DOS ASSOCIADOS DA REGIÃO DAS MISSÕES E DO NOROESTE DO ESTADO", tradeName: "Cooperativa Missões" })} activities={atividades} onExpand={() => undefined} />;

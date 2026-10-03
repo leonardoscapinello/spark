@@ -1,0 +1,16 @@
+/* Mesa do Storybook: o mesmo papel do app, para cada história ser vista
+ * exatamente como na tela. Só tokens (spark/identidade). */
+html,
+body {
+  background: var(--bg) var(--grain);
+  color: var(--tx);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-corpo);
+}
+
+/* A página de documentação usa a mesma mesa. */
+.sbdocs-wrapper,
+.sbdocs.sbdocs-preview {
+  background: var(--bg) var(--grain);
+}

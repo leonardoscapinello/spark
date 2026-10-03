@@ -1,0 +1,124 @@
+/* Prancha de componente — o equivalente da folha de componentes do Figma.
+ * Só para histórias do Storybook: mostra variantes e estados lado a lado,
+ * com rótulo, sobre o papel do app. */
+
+.prancha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  max-width: 1180px;
+}
+
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--ui-hairline) solid var(--bd);
+}
+
+.titulo {
+  margin: 0;
+  color: var(--tx);
+  font-family: var(--font-display);
+  font-size: var(--fs-card);
+  font-weight: var(--fw-titulo);
+  line-height: var(--lh-corpo);
+}
+
+.descricao {
+  max-width: 76ch;
+  margin: 0;
+  color: var(--tx2);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-corpo);
+}
+
+.fileira {
+  display: grid;
+  grid-template-columns: minmax(120px, 168px) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.fileira[data-alinhar="topo"] { align-items: start; }
+
+.rotulo {
+  color: var(--tx3);
+  font-size: var(--fs-pequeno);
+  line-height: var(--lh-pequeno);
+}
+
+.itens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.itens[data-coluna] {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.matriz {
+  display: grid;
+  grid-template-columns: minmax(120px, 168px) repeat(var(--colunas), minmax(0, max-content));
+  gap: var(--space-4) var(--space-6);
+  align-items: center;
+  overflow-x: auto;
+  padding: var(--space-1);
+}
+
+.cabecaColuna {
+  color: var(--tx3);
+  font-size: var(--fs-pequeno);
+  line-height: var(--lh-pequeno);
+}
+
+.amostra {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.legenda {
+  color: var(--tx3);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-legenda);
+  font-family: var(--mono);
+}
+
+.mesa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: var(--largura, 400px);
+}
+
+.palco {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--altura, 220px);
+  padding: var(--space-6);
+  border-radius: var(--r-xl);
+  corner-shape: var(--r-shape);
+  background: var(--sf) var(--grain);
+  box-shadow: var(--e2);
+}
+
+@media (max-width: 640px) {
+  .fileira { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+  .matriz { grid-template-columns: minmax(96px, 120px) repeat(var(--colunas), minmax(0, max-content)); }
+}

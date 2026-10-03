@@ -4,7 +4,7 @@ import { AnimatedValue } from "./AnimatedValue.js";
 import { MetricCard } from "./Card.js";
 import { Button } from "../Button/Button.js";
 
-const meta: Meta<typeof AnimatedValue> = { title: "Dashboard/Valor animado", component: AnimatedValue, args: { value: "R$ 1.250,00" } };
+const meta: Meta<typeof AnimatedValue> = { title: "Dados/Valor animado", component: AnimatedValue, args: { value: "R$ 1.250,00" } };
 export default meta;
 type Story = StoryObj<typeof AnimatedValue>;
 export const Valor: Story = {};

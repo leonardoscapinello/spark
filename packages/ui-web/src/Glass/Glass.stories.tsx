@@ -1,59 +1,43 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Glass } from "./Glass.js";
+import { Prancha, Secao } from "../storybook/Prancha.js";
+import s from "../storybook/Identidade.module.css";
+import { Glass, type GlassTier } from "./Glass.js";
+
+const TIERS: readonly [GlassTier, string][] = [
+  ["subtle", "Barra flutuante discreta."],
+  ["panel", "Menu, seletor, popover: o mesmo vidro em todo dropdown."],
+  ["modal", "Camada sobre o véu."],
+  ["help", "Dica em carvão."],
+];
 
 const meta: Meta<typeof Glass> = {
-  title: "Glass",
+  title: "Camadas/Vidro",
   component: Glass,
+  args: { tier: "panel", children: "Barra de navegação flutuante" },
+  argTypes: { tier: { control: "inline-radio", options: TIERS.map(([tier]) => tier) } },
+  decorators: [Story => <div className={s.listras}><Story /></div>],
   parameters: {
-    // gradient background so the glass has something to refract — without
-    // it the surface just looks like a grey box (docs/adr/0025).
-    backgrounds: { default: "gradient" },
+    docs: { description: { component: "O único lugar do sistema com backdrop-filter (ADR-0025). Vive na navegação flutuante; conteúdo é sempre papel sólido. tier escolhe desfoque, fundo e borda juntos." } },
   },
-  decorators: [
-    (Story) => (
-      <div
-        style={{
-          padding: 48,
-          minHeight: 200,
-          background: "linear-gradient(135deg, var(--color-void), var(--color-blue-600))",
-          display: "grid",
-          placeItems: "center",
-        }}
-      >
-        <Story />
-      </div>
-    ),
-  ],
 };
-export default meta;
 
+export default meta;
 type Story = StoryObj<typeof Glass>;
 
-export const Panel: Story = {
-  args: { children: "Floating navigation bar", tier: "panel" },
-  render: (args) => <Glass {...args} style={{ padding: "12px 24px" }} />,
+export const Interativo: Story = {
+  render: args => <Glass {...args}><div className={s.vidroConteudo}>{args.children}</div></Glass>,
 };
 
-export const Subtle: Story = {
+export const Camadas: Story = {
   render: () => (
-    <Glass tier="subtle" style={{ padding: "6px 14px" }}>
-      Chip / tag
-    </Glass>
-  ),
-};
-
-export const Modal: Story = {
-  render: () => (
-    <Glass tier="modal" style={{ padding: "24px 32px" }}>
-      Modal / confirmation
-    </Glass>
-  ),
-};
-
-export const AsNav: Story = {
-  render: () => (
-    <Glass as="nav" style={{ padding: "12px 24px" }}>
-      Sidebar / topbar — the floating nav layer (ADR-0025)
-    </Glass>
+    <Prancha>
+      <Secao titulo="Os quatro vidros">
+        <div className={s.grade}>
+          {TIERS.map(([tier, uso]) => (
+            <Glass key={tier} tier={tier}><div className={s.vidroConteudo}><strong>tier="{tier}"</strong><small>{uso}</small></div></Glass>
+          ))}
+        </div>
+      </Secao>
+    </Prancha>
   ),
 };
