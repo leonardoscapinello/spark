@@ -15,22 +15,28 @@ import {
 } from "@spark/core";
 import {
   ActionModal,
-  Badge,
   Button,
+  Chip,
   CollectionToolbar,
   EmptyState,
   Field,
+  FieldDescription,
   Icon,
+  IconTile,
   Input,
   Label,
   MenuButton,
   MenuItem,
   PageFrame,
   PageHeader,
+  SearchField,
   SearchSelect,
+  SectionTitle,
   Select,
   SettingsSection,
+  Surface,
   Switch,
+  Text,
   userSelectOption,
   notify,
   type IconName,
@@ -234,12 +240,11 @@ export default function Integrations() {
   return (
     <PageFrame width="content">
       <PageHeader
-        icon="bolt"
         title="Integrações"
         description="Conecte os canais e serviços usados pela sua equipe. Gerencie cada conexão em um só lugar."
       />
       {showToolbar && <CollectionToolbar
-        search={<Input aria-label="Buscar integrações" placeholder="Buscar serviço ou canal" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+        search={<SearchField label="Buscar integrações" placeholder="Buscar serviço ou canal" value={search} onValueChange={setSearch} />}
         filters={<Select appearance="filter" label="Filtrar integrações por situação" value={statusFilter} options={[{ value: "all", label: "Todas as situações" }, { value: "connected", label: "Conectadas" }, { value: "not_configured", label: "Não configuradas" }, { value: "error", label: "Com erro" }, { value: "disabled", label: "Desabilitadas" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
         count={`${visibleProviders.length} ${visibleProviders.length === 1 ? "integração" : "integrações"}`}
       />}
@@ -248,31 +253,29 @@ export default function Integrations() {
         {visibleProviders.filter((item) => item.category === category).map((definition) => {
           const providerConnections = connectionsByProvider.get(definition.provider) ?? [];
           return (
-            <div key={definition.provider} className={styles.providerCard}>
+            <Surface key={definition.provider} className={styles.providerCard}>
               <div className={styles.providerHeading}>
-                <span className={styles.providerIcon}><Icon name={definition.icon} /></span>
-                <div><h3>{definition.name}</h3><p>{definition.description}</p></div>
+                <IconTile icon={definition.icon} />
+                <SectionTitle level="card" description={definition.description}>{definition.name}</SectionTitle>
               </div>
               {providerConnections.length === 0 && (
                 <div className={styles.providerFooter}>
-                  <div className={styles.providerMeta}><Badge tone="neutral">{statusLabel(undefined)}</Badge></div>
+                  <Chip>{statusLabel(undefined)}</Chip>
                   {canManage && <Button variant="secondary" onClick={() => open(definition)}>Conectar</Button>}
                 </div>
               )}
               {providerConnections.map((connection) => (
-                <div key={connection.id} className={styles.connectionRow}>
+                <Surface key={connection.id} elevation="cavada" radius="lista" className={styles.connectionRow}>
                   <div className={styles.connectionInfo}>
-                    <strong>{connection.name}</strong>
-                    <span>{connection.credentialsConfigured ? `Credencial ${connection.credentialHint ?? "configurada"}` : "Credencial pendente"}</span>
-                    <span>{connection.lastCheckedAt ? `Verificada em ${formatDate(connection.lastCheckedAt)}` : "Ainda não verificada"}</span>
-                    {connection.lastError && <small>{connection.lastError}</small>}
+                    <Text weight="medium" truncate>{connection.name}</Text>
+                    <Text size="pequeno" tone="secondary">{connection.credentialsConfigured ? `Credencial ${connection.credentialHint ?? "configurada"}` : "Credencial pendente"}</Text>
+                    <Text size="pequeno" tone="secondary">{connection.lastCheckedAt ? `Verificada em ${formatDate(connection.lastCheckedAt)}` : "Ainda não verificada"}</Text>
+                    {connection.lastError && <Text size="pequeno" tone="danger">{connection.lastError}</Text>}
                   </div>
                   <div className={styles.providerFooter}>
-                    <div className={styles.providerMeta}>
-                      <Badge tone={connection.status === "connected" ? "success" : connection.status === "error" ? "danger" : connection.status === "disabled" ? "warning" : "neutral"}>
-                        {statusLabel(connection.status)}
-                      </Badge>
-                    </div>
+                    <Chip dot={connection.status === "connected" ? "var(--ok)" : connection.status === "error" ? "var(--er)" : "var(--tx3)"}>
+                      {statusLabel(connection.status)}
+                    </Chip>
                     {canManage && (
                       <div className={styles.actions}>
                         <Button variant="secondary" onClick={() => open(definition, connection)}>Configurar</Button>
@@ -283,10 +286,10 @@ export default function Integrations() {
                       </div>
                     )}
                   </div>
-                </div>
+                </Surface>
               ))}
               {canManage && providerConnections.length > 0 && <Button variant="ghost" size="sm" icon={<Icon name="plus" />} onClick={() => open(definition)}>Adicionar outra conexão</Button>}
-            </div>
+            </Surface>
           );
         })}
       </SettingsSection>)}
@@ -302,7 +305,7 @@ export default function Integrations() {
       >
         {editing && (
           <div className={styles.fields}>
-          <Field><Label>Nome da conexão</Label><Input value={connectionName} placeholder={editing.name} onChange={(event) => setConnectionName(event.target.value)} /><span className={styles.fieldHint}>Aparece na caixa de entrada — dá pra diferenciar dois números do mesmo canal (ex.: "WhatsApp Vendas", "WhatsApp Suporte").</span></Field>
+          <Field><Label>Nome da conexão</Label><Input value={connectionName} placeholder={editing.name} onChange={(event) => setConnectionName(event.target.value)} /><FieldDescription>Aparece na caixa de entrada — dá pra diferenciar dois números do mesmo canal (ex.: "WhatsApp Vendas", "WhatsApp Suporte").</FieldDescription></Field>
           <IntegrationFields
             provider={editing.provider}
             config={config}
@@ -348,7 +351,7 @@ function IntegrationFields({
     return <div className={styles.fields}>
       <Field><Label>Responsável pela agenda</Label><SearchSelect label="Responsável pela agenda" searchPlacement="dropdown" placeholder="Buscar usuário" options={options} value={options.find((option) => option.value === config.ownerId) ?? null} onValueChange={(option) => publicField("ownerId", option?.value ?? "")} /></Field>
       <Field><Label>Nome da agenda</Label><Input value={text(config.calendarName)} placeholder="Agenda principal" onChange={(event) => publicField("calendarName", event.target.value)} /></Field>
-      <Field><Label>Endereço privado iCal (.ics)</Label><Input type="password" value={credentials.feedUrl ?? ""} placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Cole o endereço privado da agenda"} onChange={(event) => secretField("feedUrl", event.target.value)} /><span className={styles.fieldHint}>O endereço fica criptografado e os eventos são copiados para a agenda local do CRM.</span></Field>
+      <Field><Label>Endereço privado iCal (.ics)</Label><Input type="password" value={credentials.feedUrl ?? ""} placeholder={hasExistingCredentials ? "Deixe vazio para manter" : "Cole o endereço privado da agenda"} onChange={(event) => secretField("feedUrl", event.target.value)} /><FieldDescription>O endereço fica criptografado e os eventos são copiados para a agenda local do CRM.</FieldDescription></Field>
     </div>;
   }
   if (provider === "smtp")
@@ -533,7 +536,7 @@ function IntegrationFields({
         {connectionId && <Field>
           <Label>URL de callback para a Meta</Label>
           <Input value={metaCallbackUrl("instagram", connectionId)} readOnly onFocus={(event) => event.target.select()} />
-          <span className={styles.fieldHint}>Cadastre esta URL e o token de verificação no painel da Meta; assine o evento de mensagens. A URL precisa ser pública em HTTPS para a Meta entregar as DMs.</span>
+          <FieldDescription>Cadastre esta URL e o token de verificação no painel da Meta; assine o evento de mensagens. A URL precisa ser pública em HTTPS para a Meta entregar as DMs.</FieldDescription>
         </Field>}
       </div>
     );
@@ -560,7 +563,7 @@ function IntegrationFields({
         <Field>
           <Label>ID da conta do WhatsApp Business (WABA)</Label>
           <Input value={text(config.wabaId)} placeholder="WABA ID" onChange={(event) => publicField("wabaId", event.target.value)} />
-          <span className={styles.fieldHint}>Necessário só pra sincronizar os modelos aprovados — o número em si funciona sem isso.</span>
+          <FieldDescription>Necessário só pra sincronizar os modelos aprovados — o número em si funciona sem isso.</FieldDescription>
         </Field>
         <SecretToken name="Token de acesso" field="accessToken" value={credentials.accessToken ?? ""} existing={hasExistingCredentials} onChange={secretField} />
         <SecretToken name="App Secret da Meta" field="appSecret" value={credentials.appSecret ?? ""} existing={hasExistingCredentials} onChange={secretField} />
@@ -568,7 +571,7 @@ function IntegrationFields({
         {connectionId && <Field>
           <Label>URL de callback para a Meta</Label>
           <Input value={metaCallbackUrl("whatsapp", connectionId)} readOnly onFocus={(event) => event.target.select()} />
-          <span className={styles.fieldHint}>Cadastre esta URL e o token de verificação no painel da Meta (WhatsApp Cloud API); assine o evento "messages". A URL precisa ser pública em HTTPS.</span>
+          <FieldDescription>Cadastre esta URL e o token de verificação no painel da Meta (WhatsApp Cloud API); assine o evento "messages". A URL precisa ser pública em HTTPS.</FieldDescription>
         </Field>}
         {connectionId && <WhatsAppTemplatesSync connectionId={connectionId} />}
       </div>
@@ -598,7 +601,7 @@ function IntegrationFields({
         {connectionId && <Field>
           <Label>URL de callback para a Meta</Label>
           <Input value={metaCallbackUrl("messenger", connectionId)} readOnly onFocus={(event) => event.target.select()} />
-          <span className={styles.fieldHint}>Cadastre esta URL e o token de verificação no painel da Meta; assine o evento de mensagens da página.</span>
+          <FieldDescription>Cadastre esta URL e o token de verificação no painel da Meta; assine o evento de mensagens da página.</FieldDescription>
         </Field>}
       </div>
     );
@@ -610,7 +613,7 @@ function IntegrationFields({
         {connectionId && <Field>
           <Label>URL de callback</Label>
           <Input value={telegramCallbackUrl(connectionId)} readOnly onFocus={(event) => event.target.select()} />
-          <span className={styles.fieldHint}>O Telegram não tem painel de configuração — registre esta URL chamando setWebhook da Bot API, com "secret_token" igual ao token acima.</span>
+          <FieldDescription>O Telegram não tem painel de configuração — registre esta URL chamando setWebhook da Bot API, com "secret_token" igual ao token acima.</FieldDescription>
         </Field>}
       </div>
     );
@@ -640,7 +643,7 @@ function IntegrationFields({
         {connectionId && <Field>
           <Label>URL de callback</Label>
           <Input value={postmarkCallbackUrl(connectionId)} readOnly onFocus={(event) => event.target.select()} />
-          <span className={styles.fieldHint}>Cadastre esta URL no webhook de entrada do servidor Postmark, com autenticação HTTP Basic usando o usuário e a senha acima.</span>
+          <FieldDescription>Cadastre esta URL no webhook de entrada do servidor Postmark, com autenticação HTTP Basic usando o usuário e a senha acima.</FieldDescription>
         </Field>}
       </div>
     );
@@ -705,14 +708,14 @@ function WhatsAppTemplatesSync({ connectionId }: { connectionId: string }) {
       <Label>Modelos aprovados</Label>
       <div className={styles.columns}>
         <Button type="button" variant="secondary" loading={syncing} onClick={() => void sync()}>Sincronizar modelos agora</Button>
-        {count !== null && <span className={styles.fieldHint}>{count} modelo(s) encontrado(s).</span>}
+        {count !== null && <FieldDescription>{count} modelo(s) encontrado(s).</FieldDescription>}
       </div>
     </Field>
   );
 }
 function WidgetEmbedSnippet({ publicKey }: { publicKey: string }) {
   const [copied, setCopied] = useState(false);
-  if (!publicKey) return <Field><Label>Código de instalação</Label><span className={styles.fieldHint}>Salve a conexão para gerar o código — ele aparece aqui na próxima vez que você abrir "Configurar".</span></Field>;
+  if (!publicKey) return <Field><Label>Código de instalação</Label><FieldDescription>Salve a conexão para gerar o código — ele aparece aqui na próxima vez que você abrir "Configurar".</FieldDescription></Field>;
   const snippet = `<script async src="${window.location.origin}/widget.js" data-spark-widget="${publicKey}"></script>`;
   async function copy() {
     await navigator.clipboard.writeText(snippet);
@@ -726,7 +729,7 @@ function WidgetEmbedSnippet({ publicKey }: { publicKey: string }) {
         <Input value={snippet} readOnly onFocus={(event) => event.target.select()} />
         <Button type="button" variant="secondary" size="sm" icon={<Icon name={copied ? "check" : "copy"} />} onClick={() => void copy()}>{copied ? "Copiado" : "Copiar"}</Button>
       </div>
-      <span className={styles.fieldHint}>Cole antes de {"</body>"} em qualquer página do site. A bolha aparece sozinha — não precisa de mais nada.</span>
+      <FieldDescription>Cole antes de {"</body>"} em qualquer página do site. A bolha aparece sozinha — não precisa de mais nada.</FieldDescription>
     </Field>
   );
 }

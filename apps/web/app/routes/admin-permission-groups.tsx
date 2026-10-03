@@ -13,19 +13,23 @@ import {
 } from "@spark/core";
 import {
   ActionModal,
+  Alert,
   Button,
   Checkbox,
   CollectionToolbar,
   DataTable,
   EmptyState,
   Field,
-  Icon,
   Input,
   Label,
   PageHeader,
   PageFrame,
+  PageState,
   RecordIdentity,
-  TableIconAction,
+  SearchField,
+  SectionTitle,
+  Surface,
+  Text,
   type TableColumn,
 } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
@@ -112,7 +116,7 @@ export default function AdminPermissionGroups() {
   const firstRun = !loading && groups.length === 0 && !search;
   const columns: TableColumn<PermissionGroupDto>[] = [
     { id: "name", label: "Grupo", cell: (group) => <RecordIdentity icon="settings" title={group.name} />, sortValue: (group) => group.name },
-    { id: "permissions", label: "Permissões", cell: (group) => <div className={styles.groupSummary}><strong>{group.capabilities.length} {group.capabilities.length === 1 ? "permissão" : "permissões"}</strong><span>{group.capabilities.length ? group.capabilities.slice(0, 3).map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" · ") : "Sem acesso configurado"}</span></div>, sortValue: (group) => group.capabilities.length },
+    { id: "permissions", label: "Permissões", cell: (group) => <div className={styles.groupSummary}><Text weight="medium">{group.capabilities.length} {group.capabilities.length === 1 ? "permissão" : "permissões"}</Text><Text size="pequeno" tone="secondary" truncate>{group.capabilities.length ? group.capabilities.slice(0, 3).map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" · ") : "Sem acesso configurado"}</Text></div>, sortValue: (group) => group.capabilities.length },
   ];
 
   function openCreate() {
@@ -161,28 +165,23 @@ export default function AdminPermissionGroups() {
   return (
     <PageFrame width="content">
       <PageHeader
-        icon="settings"
         eyebrow="Administração"
         title="Grupos de permissões"
         description="Defina o que cada equipe pode consultar, criar e administrar."
         actions={groups.length > 0 ? <Button onClick={openCreate}>Novo grupo</Button> : undefined}
       />
 
-      {feedback && (
-        <p className={styles.feedback} role="status">
-          {feedback}
-        </p>
-      )}
+      {feedback && <Alert tone="success" title={feedback} />}
 
       {loadError
-        ? <EmptyState icon="settings" title="Não foi possível carregar os grupos" description="Tente novamente para consultar as permissões." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} />
+        ? <PageState kind="error" title="Não foi possível carregar os grupos" description="Tente de novo para consultar as permissões. O resto da administração segue normal." onRetry={() => { setLoading(true); setReloadKey((value) => value + 1); }} />
         : <>
           {firstRun && <EmptyState variant="featured" icon="settings" title="Defina o primeiro grupo" description="Reúna permissões por função para controlar o que cada pessoa pode consultar e alterar." action={<Button onClick={openCreate}>Novo grupo</Button>} />}
           {!firstRun && <CollectionToolbar
-            search={<Input aria-label="Buscar grupos de permissões" placeholder="Buscar grupo ou permissão" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+            search={<SearchField label="Buscar grupos de permissões" placeholder="Buscar grupo ou permissão" value={search} onValueChange={setSearch} />}
             count={loading ? "Carregando grupos…" : `${filteredGroups.length} ${filteredGroups.length === 1 ? "grupo" : "grupos"}`}
           />}
-          {!firstRun && <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} state={loading ? "loading" : "ready"} emptyText="Nenhum grupo encontrado." actions={(group) => <TableIconAction label={`Editar ${group.name}`} icon={<Icon name="right" />} onClick={() => openEdit(group)} />} />}
+          {!firstRun && <DataTable label="Grupos de permissões" rows={filteredGroups} columns={columns} rowKey={(group) => group.id} rowLabel={(group) => group.name} state={loading ? "loading" : "ready"} emptyText="Nenhum grupo encontrado." onRowOpen={(group) => openEdit(group)} />}
         </>}
 
       <ActionModal
@@ -204,17 +203,17 @@ export default function AdminPermissionGroups() {
             />
           </Field>
           <div className={styles.capabilityPicker} role="group" aria-labelledby={capabilityLabelId}>
-            <p id={capabilityLabelId} className={styles.capabilityLegend}>
+            <Text as="p" id={capabilityLabelId} weight="medium" className={styles.capabilityLegend}>
               Permissões
-            </p>
-            {CAPABILITY_SECTIONS.map((section) => <section key={section.title} className={styles.capabilityGroup} aria-label={section.title}>
-              <h3>{section.title}</h3>
+            </Text>
+            {CAPABILITY_SECTIONS.map((section) => <Surface key={section.title} as="section" elevation="cavada" radius="lista" className={styles.capabilityGroup} aria-label={section.title}>
+              <SectionTitle level="block" as="h3">{section.title}</SectionTitle>
               {CAPABILITIES.filter((capability) => section.prefixes.some((prefix) => capability.startsWith(prefix))).map((capability) => <Checkbox
                 key={capability}
                 checked={capabilities.includes(capability)}
                 onCheckedChange={(checked) => toggleCapability(capability, checked)}
               >{CAPABILITY_LABELS[capability]}</Checkbox>)}
-            </section>)}
+            </Surface>)}
           </div>
         </div>
       </ActionModal>

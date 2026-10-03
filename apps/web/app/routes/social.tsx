@@ -12,22 +12,23 @@ import {
   ActionCard,
   ActionCardGroup,
   ActionModal,
-  Avatar,
-  Badge,
   Button,
   CalendarMonth,
+  Chip,
   CollectionToolbar,
   DataTable,
   DateTimePicker,
   EmptyState,
   Field,
-  Icon,
-  Input,
+  FieldDescription,
   Label,
   PageHeader,
   PageFrame,
+  PersonIdentity,
+  SearchField,
   Select,
   SegmentedControl,
+  Text,
   Textarea,
   notify,
   type TableColumn,
@@ -104,9 +105,9 @@ export default function Social() {
     id: post.id,
     date: localDateKey(post.scheduledAt ?? post.publishedAt ?? post.createdAt),
     content: <div className={styles.calendarPost}>
-      <strong>{channelById.get(post.channelId)?.name ?? "Canal indisponível"}</strong>
-      <span>{post.text}</span>
-      <Badge tone={statusTone(post.status)}>{statusLabel(post.status)}</Badge>
+      <Text size="pequeno" weight="medium" truncate>{channelById.get(post.channelId)?.name ?? "Canal indisponível"}</Text>
+      <Text size="pequeno" tone="secondary" truncate>{post.text}</Text>
+      <Chip size="sm" dot={STATUS_DOT[post.status]}>{statusLabel(post.status)}</Chip>
     </div>,
   }));
   const firstRun = channelView
@@ -116,9 +117,9 @@ export default function Social() {
     ? channels.length === 0 && channelsLoading
     : posts.length === 0 && isLoading;
   const channelColumns: TableColumn<SocialChannel>[] = [
-    { id: "name", label: "Canal", cell: (channel) => <div className={styles.channelIdentity}><Avatar name={channel.name} src={channel.avatarUrl} /><strong>{channel.name}</strong></div>, sortValue: (channel) => channel.name },
+    { id: "name", label: "Canal", cell: (channel) => <PersonIdentity name={channel.name} src={channel.avatarUrl} />, sortValue: (channel) => channel.name },
     { id: "service", label: "Rede", cell: (channel) => serviceLabel(channel.service), sortValue: (channel) => serviceLabel(channel.service) },
-    { id: "status", label: "Situação", cell: (channel) => <Badge tone={channel.active ? "success" : "neutral"}>{channel.active ? "Conectado" : "Indisponível"}</Badge>, sortValue: (channel) => channel.active ? 1 : 0 },
+    { id: "status", label: "Situação", cell: (channel) => <Chip dot={channel.active ? "var(--ok)" : "var(--tx3)"}>{channel.active ? "Conectado" : "Indisponível"}</Chip>, sortValue: (channel) => channel.active ? 1 : 0 },
   ];
   const columns: TableColumn<SocialPost>[] = [
     {
@@ -130,7 +131,7 @@ export default function Social() {
     {
       id: "content",
       label: "Conteúdo",
-      cell: (post) => <span className={styles.postText}>{post.text}</span>,
+      cell: (post) => <Text lines={2} className={styles.postText}>{post.text}</Text>,
       sortValue: (post) => post.text,
     },
     {
@@ -142,7 +143,7 @@ export default function Social() {
     {
       id: "status",
       label: "Status",
-      cell: (post) => <Badge tone={statusTone(post.status)}>{statusLabel(post.status)}</Badge>,
+      cell: (post) => <Chip dot={STATUS_DOT[post.status]}>{statusLabel(post.status)}</Chip>,
       sortValue: (post) => post.status,
     },
   ];
@@ -191,7 +192,6 @@ export default function Social() {
   return (
     <PageFrame className={styles.page}>
       <PageHeader
-        icon={channelView ? "team" : "calendar"}
         title={channelView ? "Canais conectados" : "Publicações"}
         actions={
           canWrite ? (
@@ -215,7 +215,7 @@ export default function Social() {
         {canWrite && activeChannels.length > 0 && <ActionCard icon="calendar" title="Planeje o conteúdo" description="Escreva uma publicação e escolha quando enviá-la." action={<Button variant="secondary" onClick={() => setComposerOpen(true)}>Nova publicação</Button>} />}
       </ActionCardGroup>}
       {!firstRun && <><CollectionToolbar
-        search={<Input aria-label={channelView ? "Buscar canais" : "Buscar publicações"} placeholder={channelView ? "Buscar canal ou rede" : "Buscar texto ou canal"} value={channelView ? channelSearch : postSearch} startAdornment={<Icon name="search" />} onChange={(event) => channelView ? setChannelSearch(event.target.value) : setPostSearch(event.target.value)} />}
+        search={<SearchField label={channelView ? "Buscar canais" : "Buscar publicações"} placeholder={channelView ? "Buscar canal ou rede" : "Buscar texto ou canal"} value={channelView ? channelSearch : postSearch} onValueChange={(value) => channelView ? setChannelSearch(value) : setPostSearch(value)} />}
         filters={<>
           <Select appearance="filter" label="Filtrar por situação" value={channelView ? channelStatusFilter : postStatusFilter} options={channelView ? [{ value: "all", label: "Todas as situações" }, { value: "active", label: "Conectados" }, { value: "inactive", label: "Indisponíveis" }] : [{ value: "all", label: "Todas as situações" }, ...(["draft", "scheduled", "publishing", "published", "failed", "cancelled"] as const).map((value) => ({ value, label: statusLabel(value) }))]} onValueChange={(value) => channelView ? setChannelStatusFilter(value ?? "all") : setPostStatusFilter(value ?? "all")} />
           {!channelView && <Select appearance="filter" label="Filtrar por canal" value={channelFilter} options={[{ value: "all", label: "Todos os canais" }, ...channels.map((channel) => ({ value: channel.id, label: channel.name }))]} onValueChange={(value) => setChannelFilter(value ?? "all")} />}
@@ -268,7 +268,7 @@ export default function Social() {
               placeholder="Escreva a legenda da publicação…"
               onChange={(event) => setText(event.target.value)}
             />
-            <span className={styles.counter}>{text.length.toLocaleString("pt-BR")} / 10.000</span>
+            <FieldDescription className={styles.counter}>{text.length.toLocaleString("pt-BR")} / 10.000</FieldDescription>
           </Field>
           <Field>
             <Label>Quando publicar</Label>
@@ -302,12 +302,7 @@ export default function Social() {
 }
 
 function ChannelName({ channel }: { channel: SocialChannel | undefined }) {
-  return (
-    <div className={styles.channelName}>
-      <strong>{channel?.name ?? "Canal removido"}</strong>
-      <span>{channel ? serviceLabel(channel.service) : ""}</span>
-    </div>
-  );
+  return <PersonIdentity name={channel?.name ?? "Canal removido"} src={channel?.avatarUrl ?? null} {...(channel ? { detail: serviceLabel(channel.service) } : {})} />;
 }
 function serviceLabel(service: SocialChannel["service"]): string {
   return {
@@ -334,12 +329,8 @@ function statusLabel(status: SocialPost["status"]): string {
     cancelled: "Cancelado",
   }[status];
 }
-function statusTone(status: SocialPost["status"]): "neutral" | "success" | "danger" | "warning" {
-  if (status === "published") return "success";
-  if (status === "failed") return "danger";
-  if (status === "publishing") return "warning";
-  return "neutral";
-}
+/** Situação num ponto de cor; a etiqueta fica neutra. */
+const STATUS_DOT: Record<SocialPost["status"], string> = { draft: "var(--tx3)", scheduled: "var(--in)", publishing: "var(--wa)", published: "var(--ok)", failed: "var(--er)", cancelled: "var(--tx3)" };
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
     new Date(value),

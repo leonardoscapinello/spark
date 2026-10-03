@@ -1,9 +1,9 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { organizationThemeControllerUpdate } from "@spark/api-client";
 import { isDefaultTheme } from "@spark/tokens";
 import { OrganizationThemeSchema, type UpdateOrganizationThemeInput } from "@spark/core";
-import { Button, Card, Field, Input, Label, PageFrame, PageHeader, Select, notify } from "@spark/ui-web";
+import { Button, Card, ColorInput, Field, Label, PageFrame, PageHeader, Select, ThemePreview, notify } from "@spark/ui-web";
 import type { Route } from "./+types/admin-appearance";
 import { getSession } from "../lib/auth.client";
 import { applyOrganizationTheme, cacheOrganizationTheme, DEFAULT_THEME, fontStackFor, FONT_FAMILY_OPTIONS, type ThemeDraft } from "../lib/organization-theme.client";
@@ -81,7 +81,6 @@ export default function AdminAppearance(_: Route.ComponentProps) {
 
   return <PageFrame>
     <PageHeader
-      icon="image"
       eyebrow="Identidade da organização"
       title="Aparência"
       description="Defina as cores e a tipografia que todas as pessoas verão no Spark. A prévia muda aqui; salvar aplica no produto inteiro."
@@ -91,10 +90,7 @@ export default function AdminAppearance(_: Route.ComponentProps) {
     <div className={styles.layout}>
       <div className={styles.form}>
         <Card title="Cores da interface" description="Comece pelo acento e pelas superfícies. As telas usam estes tokens sem precisar de ajustes individuais.">
-          <div className={styles.colorGrid}>{COLOR_FIELDS.map((field) => <Field key={field.key} className={styles.colorField}>
-            <span className={styles.colorLabel}><Label>{field.label}</Label><small>{field.description}</small></span>
-            <Input type="color" value={draft[field.key] ?? DEFAULT_THEME[field.key]} aria-label={field.label} onChange={(event) => setColor(field.key, event.currentTarget.value)} />
-          </Field>)}</div>
+          <div className={styles.colorGrid}>{COLOR_FIELDS.map((field) => <ColorInput key={field.key} label={field.label} description={field.description} value={draft[field.key] ?? DEFAULT_THEME[field.key] ?? ""} onValueChange={(value) => setColor(field.key, value)} />)}</div>
         </Card>
 
         <Card title="Tipografia" description="Use uma combinação que preserve leitura e personalidade em todas as áreas do produto.">
@@ -105,13 +101,11 @@ export default function AdminAppearance(_: Route.ComponentProps) {
         </Card>
       </div>
 
-      <aside className={styles.preview} aria-label="Prévia da aparência">
-        <div className={styles.previewHeader}><span>Prévia</span><span className={styles.previewDot} /></div>
-        <div className={styles.previewCanvas} style={{ "--preview-accent": draft.accentColor, "--preview-strong": draft.accentStrongColor, "--preview-ground": draft.groundColor, "--preview-surface": draft.surfaceColor, "--preview-ink": draft.inkColor, "--preview-muted": draft.inkMutedColor, "--preview-line": draft.lineColor, "--preview-font-body": fontStackFor(draft.fontBody), "--preview-font-display": fontStackFor(draft.fontDisplay) } as CSSProperties}>
-          <div className={styles.previewTop}><span className={styles.previewLogo}>spark</span><span className={styles.previewAvatar}>LS</span></div>
-          <div className={styles.previewBody}><span className={styles.previewEyebrow}>NEGÓCIOS</span><h2>Pipeline comercial</h2><p>Uma prévia rápida da identidade no dia a dia.</p><div className={styles.previewCard}><span className={styles.previewBadge}>Em aberto</span><strong>Implantação assistida</strong><span>R$ 3.200,00</span><div className={styles.previewProgress}><i /></div></div><Button variant="primary" shape="pill" className={styles.previewAction}>Adicionar negócio</Button></div>
-        </div>
-      </aside>
+      <ThemePreview
+        colors={{ accent: draft.accentColor ?? "", accentStrong: draft.accentStrongColor ?? "", ground: draft.groundColor ?? "", surface: draft.surfaceColor ?? "", ink: draft.inkColor ?? "", muted: draft.inkMutedColor ?? "", line: draft.lineColor ?? "" }}
+        fontBody={fontStackFor(draft.fontBody)}
+        fontDisplay={fontStackFor(draft.fontDisplay)}
+      />
     </div>
   </PageFrame>;
 }

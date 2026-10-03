@@ -3,7 +3,7 @@ import { Link, redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/contact-import";
 import { contactsControllerImportCsv } from "@spark/api-client";
 import { contactId as contactIdFactory, parseContactCsv, type ParsedContactCsvRow } from "@spark/core";
-import { BackLink, Badge, Button, DataTable, FilePicker, PageFrame, PageHeader, notify, type TableColumn } from "@spark/ui-web";
+import { BackLink, Button, Chip, DashboardGrid, DataTable, FilePicker, FormMessage, KpiCard, PageFrame, PageHeader, SectionTitle, Text, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./contact-import.module.css";
 
@@ -27,11 +27,11 @@ export default function ContactImport(_props: Route.ComponentProps) {
   const previewRows = rows.slice(0, 50);
 
   const columns: TableColumn<ParsedContactCsvRow>[] = [
-    { id: "line", label: "Linha", cell: (row) => row.line, sortValue: (row) => row.line },
+    { id: "line", label: "Linha", align: "end", cell: (row) => row.line, sortValue: (row) => row.line },
     { id: "name", label: "Nome", cell: (row) => row.name || "—", sortValue: (row) => row.name },
     { id: "email", label: "E-mail", cell: (row) => row.email ?? "—", sortValue: (row) => row.email ?? "" },
     { id: "phone", label: "Telefone", cell: (row) => row.phone ?? "—", sortValue: (row) => row.phone ?? "" },
-    { id: "status", label: "Situação", cell: (row) => row.errors.length ? <span className={styles.rowIssue}><Badge tone="danger">Revisar</Badge><span>{row.errors.join(" · ")}</span></span> : <Badge tone="success">Pronto</Badge>, sortValue: (row) => row.errors.join(" ") },
+    { id: "status", label: "Situação", cell: (row) => row.errors.length ? <span className={styles.rowIssue}><Chip tone="danger" dot>Revisar</Chip><Text size="pequeno" tone="secondary">{row.errors.join(" · ")}</Text></span> : <Chip tone="success" dot>Pronto</Chip>, sortValue: (row) => row.errors.join(" ") },
   ];
 
   async function selectFile(file: File | undefined) {
@@ -77,25 +77,24 @@ export default function ContactImport(_props: Route.ComponentProps) {
   }
 
   return <PageFrame className={styles.page}>
-    <PageHeader back={<BackLink render={<Link to="/" />}>Pessoas</BackLink>} icon="upload" title="Importar pessoas" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
+    <PageHeader back={<BackLink render={<Link to="/" />}>Pessoas</BackLink>} title="Importar pessoas" description="Traga uma lista CSV, revise os dados e grave apenas as linhas válidas." />
 
     <section className={styles.uploadSection} aria-label="Selecionar arquivo CSV">
-      <div className={styles.sectionTitle}><h2>Selecione o arquivo</h2><span>1 de 2</span></div>
-      <FilePicker accept=".csv,text/csv" multiple={false} label="Solte o CSV aqui ou escolha no computador" hint="Até 5 MB · até 2.000 pessoas" onFiles={(files) => void selectFile(files[0])} />
-      <p>Coluna obrigatória: <strong>Nome</strong>. Também reconhecemos E-mail, Telefone, Origem e Tags. Use vírgula ou ponto e vírgula.</p>
-      {fileName && <span className={styles.fileName}>{fileName}</span>}
-      {fileErrors.map((error) => <p key={error} className={styles.error} role="alert">{error}</p>)}
+      <SectionTitle level="card" meta="Etapa 1 de 2">Selecione o arquivo</SectionTitle>
+      <FilePicker accept=".csv,text/csv" multiple={false} label="Solte o CSV aqui ou escolha no computador" hint="Até 5 MB · até 2.000 pessoas" {...(fileName ? { selectedName: fileName } : {})} onFiles={(files) => void selectFile(files[0])} />
+      <Text as="p" size="pequeno" tone="secondary">Coluna obrigatória: <Text as="strong" size="pequeno" weight="medium">Nome</Text>. Também reconhecemos E-mail, Telefone, Origem e Tags. Use vírgula ou ponto e vírgula.</Text>
+      {fileErrors.map((error) => <FormMessage key={error}>{error}</FormMessage>)}
     </section>
 
     {rows.length > 0 && <>
-      <div className={styles.sectionTitle}><h2>Revise as linhas</h2><span>2 de 2</span></div>
-      <div className={styles.summary}>
-        <div><span>Linhas lidas</span><strong>{rows.length}</strong></div>
-        <div><span>Prontas</span><strong>{validRows.length}</strong></div>
-        <div><span>Com problema</span><strong>{invalidRows}</strong></div>
-      </div>
+      <SectionTitle level="card" meta="Etapa 2 de 2">Revise as linhas</SectionTitle>
+      <DashboardGrid metrics>
+        <KpiCard label="Linhas lidas" value={rows.length.toLocaleString("pt-BR")} />
+        <KpiCard label="Prontas" value={validRows.length.toLocaleString("pt-BR")} />
+        <KpiCard label="Com problema" value={invalidRows.toLocaleString("pt-BR")} {...(invalidRows > 0 ? { delta: { label: "Revisar", tone: "negative" as const } } : {})} />
+      </DashboardGrid>
       <DataTable label="Prévia da importação" rows={previewRows} columns={columns} rowKey={(row) => String(row.line)} rowLabel={(row) => `Linha ${row.line}`} emptyText="Nenhuma linha encontrada." />
-      {rows.length > previewRows.length && <p className={styles.previewNotice}>Mostrando as primeiras {previewRows.length} linhas de {rows.length}.</p>}
+      {rows.length > previewRows.length && <Text as="p" size="pequeno" tone="secondary">Mostrando as primeiras {previewRows.length} linhas de {rows.length}.</Text>}
       <div className={styles.footerActions}>
         <Button variant="secondary" onClick={() => navigate("/")}>Cancelar</Button>
         <Button loading={importing} disabled={!validRows.length || fileErrors.length > 0} onClick={() => void importContacts()}>Importar {validRows.length} {validRows.length === 1 ? "pessoa" : "pessoas"}</Button>

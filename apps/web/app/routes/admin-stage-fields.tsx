@@ -10,7 +10,7 @@ import {
   type StageFieldLevel,
 } from "@spark/core";
 import { optimisticStageFieldRule } from "@spark/data";
-import { EmptyState, Icon, PageFrame, PageHeader, Select, notify } from "@spark/ui-web";
+import { Alert, DataTable, EmptyState, PageFrame, PageHeader, Select, Text, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
@@ -58,6 +58,14 @@ export default function AdminStageFields() {
       .map((field) => ({ key: `custom:${field.key}`, label: field.label, group: "Personalizados" })),
   ], [customFields]);
 
+  type FieldRow = (typeof fields)[number];
+  /** O grupo aparece só na primeira linha de cada um, como subtítulo da coluna de campos. */
+  const firstOfGroup = new Set(fields.filter((field, index) => index === 0 || fields[index - 1]?.group !== field.group).map((field) => field.key));
+  const columns: TableColumn<FieldRow>[] = [
+    { id: "field", label: "Campo", alwaysVisible: true, cell: (field) => <div className={styles.field}><Text weight="medium">{field.label}</Text>{firstOfGroup.has(field.key) && <Text size="legenda" tone="muted">{field.group}</Text>}</div> },
+    ...pipelineStages.map((stage): TableColumn<FieldRow> => ({ id: stage.id, label: stage.name, cell: (field) => <Select label={`${field.label} em ${stage.name}`} appearance="filter" value={levelAt(stage.id, field.key)} options={LEVEL_OPTIONS} onValueChange={(value) => { if (value) void changeLevel(stage.id, field.key, value); }} /> })),
+  ];
+
   function levelAt(stageId: string, fieldKey: string): string {
     return rules.find((rule) => rule.stageId === stageId && rule.fieldKey === fieldKey)?.level ?? "none";
   }
@@ -88,36 +96,16 @@ export default function AdminStageFields() {
 
   return <PageFrame>
     <PageHeader
-      icon="briefcase"
+      eyebrow="Administração"
       title="O que cada etapa exige"
       description="Campo obrigatório impede o negócio de avançar enquanto estiver vazio. Importante apenas sinaliza. Cada funil tem as suas regras."
-      actions={pipelines.length > 1 ? <Select label="Funil" value={pipeline?.id ?? null} options={pipelines.map((item) => ({ value: item.id, label: item.name }))} onValueChange={setSelectedPipeline} /> : undefined}
+      actions={pipelines.length > 1 ? <Select appearance="filter" label="Funil" value={pipeline?.id ?? null} options={pipelines.map((item) => ({ value: item.id, label: item.name }))} onValueChange={setSelectedPipeline} /> : undefined}
     />
 
     {!pipeline || pipelineStages.length === 0
       ? <EmptyState variant="featured" icon="briefcase" title="Nenhum funil com etapas" description="Crie um funil e suas etapas no CRM para definir o que cada uma exige." />
-      : <div className={styles.grade} role="table" aria-label={`Campos exigidos em ${pipeline.name}`}>
-          <div className={styles.linha} role="row" data-head="true">
-            <span className={styles.campo} role="columnheader">Campo</span>
-            {pipelineStages.map((stage) => <span key={stage.id} className={styles.etapa} role="columnheader">{stage.name}</span>)}
-          </div>
-          {fields.map((field, index) => <div key={field.key} className={styles.linha} role="row">
-            <span className={styles.campo} role="rowheader">
-              {field.label}
-              {(index === 0 || fields[index - 1]?.group !== field.group) && <small>{field.group}</small>}
-            </span>
-            {pipelineStages.map((stage) => <span key={stage.id} className={styles.etapa} role="cell">
-              <Select
-                label={`${field.label} em ${stage.name}`}
-                appearance="filter"
-                value={levelAt(stage.id, field.key)}
-                options={LEVEL_OPTIONS}
-                onValueChange={(value) => { if (value) void changeLevel(stage.id, field.key, value); }}
-              />
-            </span>)}
-          </div>)}
-        </div>}
+      : <DataTable label={`Campos exigidos em ${pipeline.name}`} rows={fields} columns={columns} rowKey={(field) => field.key} rowLabel={(field) => field.label} />}
 
-    <p className={styles.nota}><Icon name="bolt" />Obrigatório vale para sair da etapa: mover um negócio para uma etapa posterior exige os campos de todas as etapas do caminho. Voltar atrás nunca é bloqueado.</p>
+    <Alert tone="info" title="Obrigatório vale para sair da etapa">Mover um negócio para uma etapa posterior exige os campos de todas as etapas do caminho. Voltar atrás nunca é bloqueado.</Alert>
   </PageFrame>;
 }

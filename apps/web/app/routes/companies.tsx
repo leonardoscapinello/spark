@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, phone as buildPhone, userId as userIdFactory, type Company } from "@spark/core";
 import { optimisticCompany } from "@spark/data";
-import { ActionCard, ActionCardGroup, ActionModal, Avatar, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, TableIconAction, Textarea, userSelectOption, notify, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonIdentity, SearchField, Select, Text, Textarea, userSelectOption, notify, type TableColumn } from "@spark/ui-web";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getDealsCollection } from "../lib/deals-collections.client";
@@ -25,6 +25,8 @@ export async function clientLoader() {
 
 export default function Companies() {
   const navigate = useNavigate();
+  // Regra do produto: a linha abre a página do registro; Cmd/Ctrl ou botão do meio abre em outra aba.
+  const openRecord = (url: string, newTab: boolean) => { if (newTab) window.open(url, "_blank"); else void navigate(url); };
   const collection = getCompaniesCollection();
   const { data: companies, isLoading } = useLiveQuery({ query: (q) => q.from({ companies: collection }).orderBy(({ companies: item }) => item.name, "asc") });
   const session = getSession();
@@ -63,11 +65,11 @@ export default function Companies() {
   const firstRun = !isLoading && companies.length === 0 && !search && visibility === "active";
 
   const columns: TableColumn<Company>[] = [
-    { id: "name", label: "Empresa", cell: (company) => <div className={styles.companyCell}><Avatar name={company.name} /><div><strong>{company.name}</strong><span className={styles.secondary}>{company.legalName ?? company.website ?? "Sem dados complementares"}</span></div></div>, sortValue: (company) => company.name },
-    { id: "industry", label: "Segmento", cell: (company) => company.industry ?? "—", sortValue: (company) => company.industry ?? "" },
-    { id: "contacts", label: "Pessoas", cell: (company) => contactCounts.get(company.id) ?? 0, sortValue: (company) => contactCounts.get(company.id) ?? 0 },
-    { id: "deals", label: "Negócios", cell: (company) => dealCounts.get(company.id) ?? 0, sortValue: (company) => dealCounts.get(company.id) ?? 0 },
-    { id: "owner", label: "Responsável", cell: (company) => company.ownerId ? ownerNames.get(company.ownerId) ?? "Indisponível" : "Não atribuído", sortValue: (company) => company.ownerId ? ownerNames.get(company.ownerId) ?? "" : "" },
+    { id: "name", label: "Empresa", cell: (company) => <PersonIdentity name={company.name} detail={company.legalName ?? company.website ?? "Sem dados complementares"} />, sortValue: (company) => company.name },
+    { id: "industry", label: "Segmento", cell: (company) => company.industry ?? <Text tone="muted">—</Text>, sortValue: (company) => company.industry ?? "" },
+    { id: "contacts", label: "Pessoas", align: "end", cell: (company) => contactCounts.get(company.id) ?? 0, sortValue: (company) => contactCounts.get(company.id) ?? 0 },
+    { id: "deals", label: "Negócios", align: "end", cell: (company) => dealCounts.get(company.id) ?? 0, sortValue: (company) => dealCounts.get(company.id) ?? 0 },
+    { id: "owner", label: "Responsável", cell: (company) => company.ownerId ? ownerNames.get(company.ownerId) ?? "Indisponível" : <Text tone="muted">Não atribuído</Text>, sortValue: (company) => company.ownerId ? ownerNames.get(company.ownerId) ?? "" : "" },
   ];
 
   function resetForm() {
@@ -129,14 +131,14 @@ export default function Companies() {
   }
 
   return <PageFrame>
-    <PageHeader icon="building" title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
+    <PageHeader title={visibility === "archived" ? "Empresas arquivadas" : "Empresas"} actions={canWrite && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="building" title="Cadastre sua primeira empresa" description="Reúna as pessoas e oportunidades de uma organização em um único perfil." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova empresa</Button> : undefined} />}
     {firstRun && (canReadContacts || canReadDeals) && <ActionCardGroup title="Explore os vínculos">
       {canReadContacts && <ActionCard icon="team" title="Pessoas da empresa" description="Encontre as pessoas da sua base e conecte cada uma à organização certa." action={<Button variant="secondary" onClick={() => void navigate("/")}>Abrir pessoas</Button>} />}
       {canReadDeals && <ActionCard icon="briefcase" title="Oportunidades" description="Acompanhe os negócios associados às empresas no funil de vendas." action={<Button variant="secondary" onClick={() => void navigate("/deals")}>Abrir negócios</Button>} />}
     </ActionCardGroup>}
     {!firstRun && <CollectionToolbar
-      search={<Input aria-label="Buscar empresas" startAdornment={<Icon name="search" />} placeholder="Buscar por nome, segmento ou documento" value={search} onChange={(event) => setSearch(event.target.value)} />}
+      search={<SearchField label="Buscar empresas" placeholder="Buscar por nome, segmento ou documento" value={search} onValueChange={setSearch} />}
       filters={<Select appearance="filter" label="Visibilidade das empresas" value={visibility} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }, { value: "all", label: "Todas" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
       actions={selectedCompanies.length > 0 ? <>
         <Button variant="secondary" loading={bulkRunning} onClick={() => void toggleArchiveMany(selectedCompanies, bulkArchives)}>{bulkArchives ? "Arquivar" : "Restaurar"}</Button>
@@ -144,7 +146,7 @@ export default function Companies() {
       </> : undefined}
       count={<span role="status">{isLoading ? "Carregando empresas…" : selectedCompanies.length > 0 ? `${selectedCompanies.length} de ${filtered.length} selecionadas` : `${filtered.length} ${filtered.length === 1 ? "empresa" : "empresas"}`}</span>}
     />}
-    {!firstRun && <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} {...(canWrite ? { selectedIds, onSelectionChange: setSelectedIds } : {})} emptyText="Nenhuma empresa neste filtro." actions={(company) => <><TableIconAction label={`Abrir ${company.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/companies/${company.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${company.name}`} loading={busyId === company.id} menu={<MenuItem icon={<Icon name="folder" />} onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>} />}
+    {!firstRun && <DataTable label="Empresas" rows={filtered} columns={columns} rowKey={(company) => company.id} rowLabel={(company) => company.name} state={isLoading && !companies.length ? "loading" : "ready"} {...(canWrite ? { selectedIds, onSelectionChange: setSelectedIds } : {})} emptyText="Nenhuma empresa neste filtro." onRowOpen={(company, { newTab }) => openRecord(`/companies/${company.id}`, newTab)} {...(canWrite ? { actions: (company: Company) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${company.name}`} loading={busyId === company.id} menu={<MenuItem icon={<Icon name="folder" />} onClick={() => void toggleArchive(company)}>{company.deletedAt ? "Restaurar" : "Arquivar"}</MenuItem>} /> } : {})} />}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova empresa" confirmLabel="Criar empresa" errorText="Revise os dados da empresa." onConfirm={createCompany}>
       <div className={styles.form}>
         <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nome comercial" /></Field>

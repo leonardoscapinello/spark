@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { and, eq, isNull, useLiveQuery } from "@tanstack/react-db";
 import { optimisticContact, optimisticSavedView } from "@spark/data";
 import { companyId as companyIdFactory, contactMatches, contactMatchesFilterSet, decodeContactFilterSet, encodeContactFilterSet, filterSetConditions, email as buildEmail, formatCustomFieldValue, phone as buildPhone, formatPhone, userId as userIdFactory, type Contact, type ContactFilter, type ContactFilterSet, type LeadStatus, type SavedViewVisibility } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Avatar, Badge, Button, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Popover, PopoverContent, PopoverTrigger, Select, TableIconAction, userSelectOption, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
+import { ActionCard, ActionCardGroup, ActionModal, Button, Chip, CollectionToolbar, DataTable, EmptyState, ErrorText, Field, FilterBar, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonIdentity, Popover, PopoverContent, PopoverTrigger, SearchField, Select, TableIconAction, Text, userSelectOption, notify, type FilterFieldDefinition, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { usePreference } from "../lib/preferences.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -16,6 +16,9 @@ import { getSavedViewsCollection } from "../lib/saved-views-collection.client";
 import { requireCapability } from "../lib/route-access.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS, leadStatusLabel } from "../lib/lead-options";
 import styles from "./contacts.module.css";
+
+/** Cor da etapa num ponto de 6px: a etiqueta continua neutra (identidade, "Selo e etiqueta"). */
+const STAGE_DOT: Record<LeadStatus, string> = { new: "var(--in)", qualified: "var(--ok)", nurturing: "var(--wa)", customer: "var(--tx)", unqualified: "var(--er)" };
 
 
 export async function clientLoader() {
@@ -33,6 +36,8 @@ export async function clientLoader() {
 export default function Contacts() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  // Regra do produto: a linha abre a página do registro; Cmd/Ctrl ou botão do meio abre em outra aba.
+  const openRecord = (url: string, newTab: boolean) => { if (newTab) window.open(url, "_blank"); else void navigate(url); };
   const collection = getContactsCollection();
   const usersCollection = getUsersCollection();
   const { data: contacts, isLoading } = useLiveQuery({
@@ -150,42 +155,42 @@ export default function Contacts() {
       id: "name",
       label: "Pessoa",
       alwaysVisible: true,
-      cell: (contact) => <div className={styles.contactCell}><Avatar name={contact.name} /><div><strong>{contact.name}</strong><span className={styles.secondary}>{contact.email ?? "Sem e-mail"}</span></div></div>,
+      cell: (contact) => <PersonIdentity name={contact.name} detail={contact.email ?? "Sem e-mail"} />,
       sortValue: (contact) => contact.name,
     },
     {
       id: "company",
       group: "Dados da pessoa",
       label: "Empresa",
-      cell: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "Empresa indisponível" : <span className={styles.muted}>Não vinculada</span>,
+      cell: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "Empresa indisponível" : <Text tone="muted">Não vinculada</Text>,
       sortValue: (contact) => contact.companyId ? companyNames.get(contact.companyId) ?? "" : "",
     },
     {
       id: "phone",
       group: "Dados da pessoa",
       label: "Telefone",
-      cell: (contact) => contact.phone ? formatPhone(contact.phone) : <span className={styles.muted}>Não informado</span>,
+      cell: (contact) => contact.phone ? formatPhone(contact.phone) : <Text tone="muted">Não informado</Text>,
       sortValue: (contact) => contact.phone ?? "",
     },
     {
       id: "status",
       group: "Dados da pessoa",
       label: "Etapa",
-      cell: (contact) => <Badge tone={contact.leadStatus === "qualified" || contact.leadStatus === "customer" ? "success" : contact.leadStatus === "unqualified" ? "danger" : contact.leadStatus === "nurturing" ? "warning" : "neutral"}>{leadStatusLabel(contact.leadStatus)}</Badge>,
+      cell: (contact) => <Chip dot={STAGE_DOT[contact.leadStatus]}>{leadStatusLabel(contact.leadStatus)}</Chip>,
       sortValue: (contact) => leadStatusLabel(contact.leadStatus),
     },
     {
       id: "owner",
       group: "Dados da pessoa",
       label: "Responsável",
-      cell: (contact) => contact.ownerId ? userNames.get(contact.ownerId) ?? "Usuário indisponível" : <span className={styles.muted}>Não atribuído</span>,
+      cell: (contact) => contact.ownerId ? userNames.get(contact.ownerId) ?? "Usuário indisponível" : <Text tone="muted">Não atribuído</Text>,
       sortValue: (contact) => contact.ownerId ? userNames.get(contact.ownerId) ?? "" : "",
     },
     ...customFields.filter((field) => field.entityType === "contact" && !field.archivedAt).map((field) => ({
       id: `custom:${field.key}`,
       group: "Campos personalizados",
       label: field.label,
-      cell: (contact: Contact) => formatCustomFieldValue(field, customValuesByContact.get(contact.id)?.[field.key]) || <span className={styles.muted}>—</span>,
+      cell: (contact: Contact) => formatCustomFieldValue(field, customValuesByContact.get(contact.id)?.[field.key]) || <Text tone="muted">—</Text>,
       sortValue: (contact: Contact) => formatCustomFieldValue(field, customValuesByContact.get(contact.id)?.[field.key]),
     })),
   ];
@@ -296,7 +301,7 @@ export default function Contacts() {
   }
 
   return <PageFrame>
-    <PageHeader icon="user" title={viewTitle} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Nova pessoa</Button></> : undefined} />
+    <PageHeader title={viewTitle} actions={canWrite && !isLoading && !firstRun ? <><Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar CSV</Button><Button onClick={() => setModalOpen(true)}>Nova pessoa</Button></> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="user" title="Cadastre a primeira pessoa" description="Reúna pessoas, empresas e conversas em uma base que a equipe pode acompanhar." action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nova pessoa</Button> : undefined} />}
     {firstRun && (canWrite || canReadCompanies || canReadIntegrations) && <ActionCardGroup title="Prepare sua base de leads">
       {canWrite && <ActionCard icon="upload" title="Traga sua lista" description="Importe um CSV e revise os dados antes de salvar as pessoas." action={<Button variant="secondary" onClick={() => void navigate("/contacts/import")}>Importar pessoas</Button>} />}
@@ -304,7 +309,7 @@ export default function Contacts() {
       {canReadIntegrations && <ActionCard icon="message" title="Conecte seus canais" description="Receba novas conversas por e-mail e redes sociais." action={<Button variant="secondary" onClick={() => void navigate("/integrations")}>Abrir integrações</Button>} />}
     </ActionCardGroup>}
     {!firstRun && <CollectionToolbar
-      search={<Input aria-label="Buscar pessoas" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou telefone" />}
+      search={<SearchField label="Buscar pessoas" value={search} onValueChange={setSearch} placeholder="Buscar por nome, e-mail ou telefone" />}
       filters={<>
         <FilterBar fields={filterFields} value={filters} onChange={changeFilters} />
         <Popover open={savedViewsOpen} onOpenChange={setSavedViewsOpen}>
@@ -312,10 +317,10 @@ export default function Contacts() {
           <PopoverContent title="Visualizações salvas">
             <div className={styles.savedViews}>
               {savedViews.length === 0
-                ? <p className={styles.savedViewsEmpty}>Nenhuma visualização salva ainda.</p>
+                ? <Text as="p" tone="secondary">Nenhuma visualização salva ainda.</Text>
                 : savedViews.map((view) => <div key={view.id} className={styles.savedViewRow}>
                     <Button variant="ghost" className={styles.savedViewApply} onClick={() => applySavedView(view.filters)}>{view.name}</Button>
-                    {view.visibility === "private" && <Badge>Só eu</Badge>}
+                    {view.visibility === "private" && <Chip>Só eu</Chip>}
                     {(view.createdBy === getSession()?.userId || canWrite) && <TableIconAction label={`Remover visualização ${view.name}`} icon={<Icon name="trash" />} onClick={() => void removeSavedView(view)} />}
                   </div>)}
             </div>
@@ -342,7 +347,8 @@ export default function Contacts() {
       hiddenColumnIds={hiddenColumnIds}
       onHiddenColumnsChange={changeHiddenColumns}
       emptyText={archiveView ? "Nenhuma pessoa arquivada." : search ? `Nenhuma pessoa encontrada para “${search}”.` : "Nenhuma pessoa cadastrada."}
-      actions={(contact) => <><TableIconAction label={`Abrir ${contact.name}`} icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${contact.id}`)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem icon={<Icon name="folder" />} onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} />}</>}
+      onRowOpen={(contact, { newTab }) => openRecord(`/contacts/${contact.id}`, newTab)}
+      {...(canWrite ? { actions: (contact: Contact) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${contact.name}`} menu={<MenuItem icon={<Icon name="folder" />} onClick={() => void updateArchived(contact, !archiveView)}>{archiveView ? "Restaurar" : "Arquivar"}</MenuItem>} /> } : {})}
     />}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova pessoa" confirmLabel="Cadastrar pessoa" errorText="Não foi possível cadastrar a pessoa. Corrija os campos marcados ou tente novamente." onConfirm={addContact}>
       <form className={styles.modalFields} onSubmit={submitFromForm}>

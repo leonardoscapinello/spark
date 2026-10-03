@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import type { Capability } from "@spark/core";
-import { Icon, PageFrame, PageHeader, SettingsSection, type IconName } from "@spark/ui-web";
+import { IconTile, PageFrame, PageHeader, SettingsSection, Surface, Text, type IconName } from "@spark/ui-web";
 import type { Route } from "./+types/admin-home";
 import { ADMIN_CAPABILITIES, requireAnyCapability } from "../lib/route-access.client";
 import styles from "./admin-home.module.css";
@@ -40,15 +40,15 @@ export default function AdminHome({ loaderData }: Route.ComponentProps) {
   const allowed = (capability: Capability) => loaderData.session.capabilities.includes(capability);
 
   return <PageFrame>
-    <PageHeader icon="grid" title="Início" />
+    <PageHeader eyebrow="Administração" title="Início" />
     <div className={styles.sections}>{sections.map((section) => {
       const visible = section.areas.filter((area) => allowed(area.capability));
       if (visible.length === 0) return null;
       return <SettingsSection key={section.title} title={section.title}>
-        {visible.map((area) => <Link key={area.to} to={area.to} className={styles.card}>
-          <span className={styles.icon}><Icon name={area.icon} /></span>
-          <span className={styles.copy}><strong>{area.title}</strong><span>{area.description}</span></span>
-        </Link>)}
+        {visible.map((area) => <Surface key={area.to} as={Link} to={area.to} radius="bloco" interactive className={styles.card}>
+          <IconTile icon={area.icon} />
+          <span className={styles.copy}><Text weight="medium">{area.title}</Text><Text size="pequeno" tone="secondary">{area.description}</Text></span>
+        </Surface>)}
       </SettingsSection>;
     })}</div>
   </PageFrame>;

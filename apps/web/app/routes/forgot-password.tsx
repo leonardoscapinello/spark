@@ -1,13 +1,13 @@
 import { Form, Link, useNavigation } from "react-router";
 import type { Route } from "./+types/forgot-password";
-import { Button, Field, Input, Label } from "@spark/ui-web";
+import { AuthCard, BackLink, Button, Field, FormMessage, IconTile, Input, Label } from "@spark/ui-web";
 import { requestPasswordReset } from "../lib/auth.client";
 import styles from "./login.module.css";
 
 export async function clientLoader() { return null; }
 
 export function HydrateFallback() {
-  return <div className={styles.card} role="status">Preparando recuperação de acesso…</div>;
+  return <AuthCard title="Recuperar acesso" pending="Preparando recuperação de acesso…" />;
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
@@ -29,31 +29,23 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
 
   if (actionData?.sent) {
     return (
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <h2>Confira seu e-mail</h2>
-          <p>Se houver uma conta com esse endereço, enviaremos as instruções para criar uma nova senha.</p>
-        </div>
-        <Link to="/login" className={styles.returnLink}>Voltar para o login</Link>
-      </div>
+      <AuthCard mark={<IconTile icon="mail" size="xl" tone="success" />} title="Confira seu e-mail" description="Se houver uma conta com esse endereço, enviaremos as instruções para criar uma nova senha.">
+        <BackLink render={<Link to="/login" />}>Voltar para o login</BackLink>
+      </AuthCard>
     );
   }
 
   return (
-    <Form method="post" className={styles.card}>
-      <div className={styles.cardHeader}>
-        <h2>Recuperar acesso</h2>
-        <p>Informe seu e-mail para receber as instruções de recuperação.</p>
-      </div>
-      <div className={styles.form}>
+    <AuthCard title="Recuperar acesso" description="Informe seu e-mail para receber as instruções de recuperação.">
+      <Form method="post" className={styles.form}>
         <Field invalid={!!actionData?.error}>
           <Label>E-mail</Label>
           <Input type="email" name="email" placeholder="voce@empresa.com" required autoFocus autoComplete="email" />
         </Field>
-        {actionData?.error && <p className={styles.erroGeral} role="alert">{actionData.error}</p>}
-      </div>
-      <Button type="submit" size="lg" loading={isSubmitting} className={styles.submit}>Enviar instruções</Button>
-      <Link to="/login" className={styles.returnLink}>Voltar para o login</Link>
-    </Form>
+        {actionData?.error && <FormMessage>{actionData.error}</FormMessage>}
+        <Button type="submit" size="lg" loading={isSubmitting} className={styles.submit}>Enviar instruções</Button>
+        <BackLink render={<Link to="/login" />}>Voltar para o login</BackLink>
+      </Form>
+    </AuthCard>
   );
 }

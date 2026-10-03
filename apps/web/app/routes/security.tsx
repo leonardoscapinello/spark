@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { redirect, useNavigate } from "react-router";
-import { ActionModal, Badge, Button, Field, Input, Label, PageFrame, PageHeader, notify } from "@spark/ui-web";
+import { ActionModal, Alert, Button, Card, Chip, Field, Input, Label, PageFrame, PageHeader, SettingsRow, Surface, Text, notify } from "@spark/ui-web";
 import {
   beginMfaEnrollment,
   getAuthSessionDetails,
@@ -98,83 +98,58 @@ export default function Security() {
 
   return (
     <PageFrame width="content" className={styles.page}>
-      <PageHeader icon="account" eyebrow="Perfil" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." />
+      <PageHeader eyebrow="Perfil" title="Segurança da conta" description="Proteja seu acesso e gerencie os dispositivos conectados." />
 
-      <section className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div>
-            <h2>Autenticação em dois fatores</h2>
-            <p>Além da senha, o acesso exige um código de seis dígitos do aplicativo autenticador.</p>
-          </div>
-          <Badge tone={loading || loadError ? "neutral" : factors.length > 0 ? "success" : "warning"}>{loading ? "Carregando" : loadError ? "Indisponível" : factors.length > 0 ? "Ativada" : "Desativada"}</Badge>
-        </div>
+      <Card title="Autenticação em dois fatores" description="Além da senha, o acesso exige um código de seis dígitos do aplicativo autenticador." actions={<Chip {...(loading || loadError ? {} : { dot: factors.length > 0 ? "var(--ok)" : "var(--wa)" })}>{loading ? "Carregando" : loadError ? "Indisponível" : factors.length > 0 ? "Ativada" : "Desativada"}</Chip>}>
+        <div className={styles.body}>
+          {loadError && <Alert tone="danger" title="Não foi possível consultar a segurança da conta." action={<Button size="sm" variant="secondary" onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} />}
 
-        {loadError && <div className={styles.loadError} role="alert"><span>Não foi possível consultar a segurança da conta.</span><Button size="sm" variant="secondary" onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button></div>}
+          {factors.length > 0 ? factors.map((factor) => (
+            <SettingsRow key={factor.id} title={factor.name} description={`Ativado em ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(factor.createdAt))}`}>
+              <Button size="sm" variant="ghost" tone="danger" onClick={() => setRemoveId(factor.id)}>Remover</Button>
+            </SettingsRow>
+          )) : !enrollment && !loading && !loadError && <Text as="p" tone="secondary">Sua conta usa somente senha. Ative a segunda etapa para impedir acesso quando uma senha for descoberta.</Text>}
 
-        {factors.length > 0 ? factors.map((factor) => (
-          <div className={styles.factor} key={factor.id}>
-            <div><strong>{factor.name}</strong><span>Ativado em {new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(factor.createdAt))}</span></div>
-            <Button size="sm" variant="ghost" onClick={() => setRemoveId(factor.id)}>Remover</Button>
-          </div>
-        )) : !enrollment && !loading && !loadError && <p className={styles.explanation}>Sua conta usa somente senha. Ative a segunda etapa para impedir acesso quando uma senha for descoberta.</p>}
+          {!enrollment && !loading && !loadError && factors.length === 0 && <div className={styles.start}><Button onClick={() => void startEnrollment()} loading={busy}>Ativar com aplicativo autenticador</Button></div>}
 
-        {!enrollment && !loading && !loadError && factors.length === 0 && <Button onClick={() => void startEnrollment()} loading={busy}>Ativar com aplicativo autenticador</Button>}
-
-        {enrollment && (
-          <div className={styles.enrollment}>
-            <div className={styles.instructions}>
-              <span className={styles.step}>1</span>
-              <div><strong>Leia o QR code</strong><p>Use Google Authenticator, 1Password, Authy ou outro aplicativo compatível.</p></div>
+          {enrollment && (
+            <div className={styles.enrollment}>
+              <div className={styles.step}>
+                <Chip tone="ink">1</Chip>
+                <div className={styles.stepCopy}><Text weight="medium">Leia o QR code</Text><Text size="pequeno" tone="secondary">Use Google Authenticator, 1Password, Authy ou outro aplicativo compatível.</Text></div>
+              </div>
+              <Surface radius="md" className={styles.qr}><img className={styles.qrImage} src={enrollment.qrCode} alt="QR code para configurar o aplicativo autenticador" /></Surface>
+              <div className={styles.secret}><Text size="pequeno" tone="secondary">Chave para configuração manual</Text><Text mono>{enrollment.secret}</Text></div>
+              <div className={styles.step}>
+                <Chip tone="ink">2</Chip>
+                <div className={styles.stepCopy}><Text weight="medium">Confirme o código</Text><Text size="pequeno" tone="secondary">Digite o código atual para concluir a ativação.</Text></div>
+              </div>
+              <Field>
+                <Label>Código de seis dígitos</Label>
+                <Input numeric value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" />
+              </Field>
+              <div className={styles.actions}>
+                <Button onClick={() => void confirmEnrollment()} loading={busy} disabled={code.length !== 6}>Confirmar e ativar</Button>
+                <Button variant="secondary" onClick={() => setEnrollment(null)} disabled={busy}>Cancelar</Button>
+              </div>
             </div>
-            <img className={styles.qrCode} src={enrollment.qrCode} alt="QR code para configurar o aplicativo autenticador" />
-            <div className={styles.secret}><span>Chave para configuração manual</span><code>{enrollment.secret}</code></div>
-            <div className={styles.instructions}>
-              <span className={styles.step}>2</span>
-              <div><strong>Confirme o código</strong><p>Digite o código atual para concluir a ativação.</p></div>
-            </div>
-            <Field>
-              <Label>Código de seis dígitos</Label>
-              <Input value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" />
-            </Field>
-            <div className={styles.actions}>
-              <Button onClick={() => void confirmEnrollment()} loading={busy} disabled={code.length !== 6}>Confirmar e ativar</Button>
-              <Button variant="secondary" onClick={() => setEnrollment(null)} disabled={busy}>Cancelar</Button>
-            </div>
-          </div>
-        )}
-      </section>
-
-
-      <section className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div>
-            <h2>Sessões da conta</h2>
-            <p>Controle onde sua conta permanece conectada.</p>
-          </div>
-          <Badge tone="success">Sessão atual</Badge>
+          )}
         </div>
+      </Card>
 
-        <div className={styles.sessionDetails}>
-          <div><span>Conta</span><strong>{currentSession?.email ?? "—"}</strong></div>
-          <div><span>Último acesso</span><strong>{currentSession ? formatDateTime(currentSession.lastSignInAt) : "—"}</strong></div>
-          <div><span>Renovação da sessão</span><strong>{currentSession ? formatDateTime(currentSession.expiresAt) : "—"}</strong></div>
-        </div>
-
-        <div className={styles.sessionActions}>
-          <div>
-            <strong>Outros dispositivos</strong>
-            <p>Revoga as sessões abertas em outros navegadores e aparelhos.</p>
-          </div>
+      <Card title="Sessões da conta" description="Controle onde sua conta permanece conectada." actions={<Chip tone="success" dot>Sessão atual</Chip>}>
+        <dl className={styles.sessionDetails}>
+          <div><Text as="dt" size="pequeno" tone="secondary">Conta</Text><Text as="dd" weight="medium" truncate>{currentSession?.email ?? "—"}</Text></div>
+          <div><Text as="dt" size="pequeno" tone="secondary">Último acesso</Text><Text as="dd" weight="medium">{currentSession ? formatDateTime(currentSession.lastSignInAt) : "—"}</Text></div>
+          <div><Text as="dt" size="pequeno" tone="secondary">Renovação da sessão</Text><Text as="dd" weight="medium">{currentSession ? formatDateTime(currentSession.expiresAt) : "—"}</Text></div>
+        </dl>
+        <SettingsRow title="Outros dispositivos" description="Revoga as sessões abertas em outros navegadores e aparelhos.">
           <Button variant="secondary" onClick={() => setSessionAction("others")}>Encerrar outras sessões</Button>
-        </div>
-        <div className={styles.sessionActions}>
-          <div>
-            <strong>Todos os dispositivos</strong>
-            <p>Revoga todas as sessões, inclusive esta, e volta para o login.</p>
-          </div>
-          <Button variant="secondary" onClick={() => setSessionAction("global")}>Sair de todos</Button>
-        </div>
-      </section>
+        </SettingsRow>
+        <SettingsRow title="Todos os dispositivos" description="Revoga todas as sessões, inclusive esta, e volta para o login.">
+          <Button variant="secondary" tone="danger" onClick={() => setSessionAction("global")}>Sair de todos</Button>
+        </SettingsRow>
+      </Card>
 
       <ActionModal open={removeId !== null} onOpenChange={(open) => { if (!open) setRemoveId(null); }} title="Remover proteção em dois fatores?" confirmLabel="Remover proteção" onConfirm={confirmRemoval} errorText="Não foi possível remover a proteção.">
         Sua conta voltará a depender somente da senha para entrar.

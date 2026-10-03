@@ -4,7 +4,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { catalogControllerArchiveProduct, catalogControllerCreateDiscount, catalogControllerCreateProduct, catalogControllerCreateVariant, catalogControllerRestoreProduct, catalogControllerUpdateDiscount, catalogControllerUpdateProduct } from "@spark/api-client";
 import { discountRuleId, formatBRL, money, productId, productVariantId, toCents, toDecimal, type DiscountRule, type Money, type Product, type ProductVariant } from "@spark/core";
 import { catalogMoney } from "@spark/data";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, Panel, PanelContent, RecordIdentity, Select, Switch, TableIconAction, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Button, Chip, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MoneyInput, PageFrame, PageHeader, Panel, PanelContent, RecordIdentity, SearchField, SectionTitle, Select, Switch, Text, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getDiscountRulesCollection, getProductsCollection, getProductVariantsCollection } from "../lib/catalog-collections.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -27,25 +27,25 @@ export default function Catalog() {
   const selectedVariants = variants.filter((item) => item.productId === selectedProductId);
   const variantColumns: TableColumn<ProductVariant>[] = [
     { id: "variant", label: "Variação", cell: (item) => <RecordIdentity icon="file" title={item.name} subtitle={item.sku} subtitleVariant="code" /> },
-    { id: "price", label: "Preço final", cell: (item) => selectedProduct ? formatMoney(money(toCents(catalogMoney(selectedProduct.price)) + toCents(catalogMoney(item.priceAdjustment))), selectedProduct.currency) : "—" },
-    { id: "stock", label: "Estoque", cell: (item) => item.stock === null ? "Sem controle" : String(item.stock) },
+    { id: "price", label: "Preço final", align: "end", cell: (item) => selectedProduct ? formatMoney(money(toCents(catalogMoney(selectedProduct.price)) + toCents(catalogMoney(item.priceAdjustment))), selectedProduct.currency) : "—" },
+    { id: "stock", label: "Estoque", align: "end", cell: (item) => item.stock === null ? "Sem controle" : String(item.stock) },
   ];
   const shownProducts = products.filter((item) => (visibility === "all" || (visibility === "archived" ? Boolean(item.deletedAt) : !item.deletedAt)) && (!search.trim() || `${item.name} ${item.sku}`.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR"))));
   const discountTerm = discountSearch.trim().toLocaleLowerCase("pt-BR");
   const shownDiscounts = discounts.filter((item) => !discountTerm || item.name.toLocaleLowerCase("pt-BR").includes(discountTerm));
   const productColumns: TableColumn<Product>[] = [
     { id: "product", label: "Produto", cell: (item) => <RecordIdentity icon="file" title={item.name} subtitle={item.sku} />, sortValue: (item) => item.name },
-    { id: "price", label: "Preço", cell: (item) => formatMoney(catalogMoney(item.price), item.currency), sortValue: (item) => toCents(catalogMoney(item.price)) },
-    { id: "stock", label: "Estoque", cell: (item) => item.stock === null ? "Sem controle" : `${item.stock} ${item.unit}`, sortValue: (item) => item.stock ?? Number.MAX_SAFE_INTEGER },
-    { id: "variants", label: "Variações", cell: (item) => countVariants.get(item.id) ?? 0, sortValue: (item) => countVariants.get(item.id) ?? 0 },
-    { id: "status", label: "Status", cell: (item) => <Badge tone={item.deletedAt || !item.active ? "neutral" : "success"}>{item.deletedAt ? "Arquivado" : item.active ? "Ativo" : "Inativo"}</Badge>, sortValue: (item) => item.deletedAt ? 0 : item.active ? 2 : 1 },
+    { id: "price", label: "Preço", align: "end", cell: (item) => formatMoney(catalogMoney(item.price), item.currency), sortValue: (item) => toCents(catalogMoney(item.price)) },
+    { id: "stock", label: "Estoque", align: "end", cell: (item) => item.stock === null ? "Sem controle" : `${item.stock} ${item.unit}`, sortValue: (item) => item.stock ?? Number.MAX_SAFE_INTEGER },
+    { id: "variants", label: "Variações", align: "end", cell: (item) => countVariants.get(item.id) ?? 0, sortValue: (item) => countVariants.get(item.id) ?? 0 },
+    { id: "status", label: "Status", cell: (item) => productStatus(item), sortValue: (item) => item.deletedAt ? 0 : item.active ? 2 : 1 },
   ];
   const discountColumns: TableColumn<DiscountRule>[] = [
     { id: "name", label: "Regra", cell: (item) => <RecordIdentity icon="bolt" title={item.name} subtitle={item.type === "percentage" ? "Desconto percentual" : "Valor fixo"} />, sortValue: (item) => item.name },
-    { id: "value", label: "Desconto", cell: (item) => item.type === "percentage" ? `${(item.value / 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%` : formatBRL(money(item.value)), sortValue: (item) => item.value },
-    { id: "minimum", label: "Pedido mínimo", cell: (item) => formatBRL(catalogMoney(item.minimumSubtotal)), sortValue: (item) => toCents(catalogMoney(item.minimumSubtotal)) },
+    { id: "value", label: "Desconto", align: "end", cell: (item) => item.type === "percentage" ? `${(item.value / 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%` : formatBRL(money(item.value)), sortValue: (item) => item.value },
+    { id: "minimum", label: "Pedido mínimo", align: "end", cell: (item) => formatBRL(catalogMoney(item.minimumSubtotal)), sortValue: (item) => toCents(catalogMoney(item.minimumSubtotal)) },
     { id: "period", label: "Período", cell: (item) => period(item), sortValue: (item) => item.startsAt ?? "" },
-    { id: "active", label: "Status", cell: (item) => <Badge tone={item.active ? "success" : "neutral"}>{item.active ? "Ativa" : "Inativa"}</Badge>, sortValue: (item) => Number(item.active) },
+    { id: "active", label: "Status", cell: (item) => <Chip dot={item.active ? "var(--ok)" : "var(--tx3)"}>{item.active ? "Ativa" : "Inativa"}</Chip>, sortValue: (item) => Number(item.active) },
   ];
   function openProduct(item?: Product) { setEditingProduct(item ?? null); setSku(item?.sku ?? ""); setName(item?.name ?? ""); setDescription(item?.description ?? ""); setPrice(item ? catalogMoney(item.price) : null); setCurrency(item?.currency ?? "BRL"); setUnit(item?.unit ?? "un"); setStock(item?.stock === null || item?.stock === undefined ? "" : String(item.stock)); setProductModal(true); }
   function openDiscount(item?: DiscountRule) { setEditingDiscount(item ?? null); setDiscountName(item?.name ?? ""); setDiscountType(item?.type ?? "percentage"); setPercentage(item?.type === "percentage" ? String(item.value / 100) : ""); setFixedAmount(item?.type === "fixed_amount" ? money(item.value) : null); setMinimum(item ? catalogMoney(item.minimumSubtotal) : money(0)); setStartsAt(item?.startsAt ? localDateTime(item.startsAt) : ""); setEndsAt(item?.endsAt ? localDateTime(item.endsAt) : ""); setDiscountModal(true); }
@@ -59,29 +59,34 @@ export default function Catalog() {
   const productsPanel = <div className={styles.panel}>
     {firstProduct && <EmptyState variant="featured" icon="file" title="Adicione seu primeiro produto" description="Cadastre preço, unidade e estoque para usar o produto nos negócios." action={canWrite ? <Button onClick={() => openProduct()}>Novo produto</Button> : undefined} />}
     {!firstProduct && <CollectionToolbar
-      search={<Input aria-label="Buscar produtos" placeholder="Buscar por nome ou SKU" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+      search={<SearchField label="Buscar produtos" placeholder="Buscar por nome ou SKU" value={search} onValueChange={setSearch} />}
       filters={<Select appearance="filter" label="Visibilidade" value={visibility} options={[{ value: "active", label: "Ativos" }, { value: "archived", label: "Arquivados" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setVisibility(value ?? "active")} />}
       count={`${shownProducts.length} ${shownProducts.length === 1 ? "produto" : "produtos"}`}
     />}
-    {!firstProduct && <DataTable label="Produtos" rows={shownProducts} columns={productColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !products.length ? "loading" : "ready"} emptyText="Nenhum produto neste filtro." actions={(item) => <><TableIconAction label={`Ver ${item.name} e suas variações`} icon={<Icon name="right" />} onClick={() => setSelectedProductId(item.id)} />{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${item.name}`} loading={busyId === item.id} menu={<><MenuItem onClick={() => openProduct(item)}>Editar produto</MenuItem><MenuItem onClick={() => setVariantProduct(item)}>Adicionar variação</MenuItem><MenuItem onClick={() => void toggleProduct(item)}>{item.deletedAt ? "Restaurar" : "Arquivar"}</MenuItem></>} />}</>} />}
+    {!firstProduct && <DataTable label="Produtos" rows={shownProducts} columns={productColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !products.length ? "loading" : "ready"} emptyText="Nenhum produto neste filtro." onRowOpen={(item) => setSelectedProductId(item.id)} {...(canWrite ? { actions: (item: Product) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${item.name}`} loading={busyId === item.id} menu={<><MenuItem onClick={() => openProduct(item)}>Editar produto</MenuItem><MenuItem onClick={() => setVariantProduct(item)}>Adicionar variação</MenuItem><MenuItem onClick={() => void toggleProduct(item)}>{item.deletedAt ? "Restaurar" : "Arquivar"}</MenuItem></>} /> } : {})} />}
   </div>;
   const discountsPanel = <div className={styles.panel}>
     {firstDiscount && <EmptyState variant="featured" icon="bolt" title="Crie sua primeira oferta" description="Defina descontos por valor ou percentual, com período e pedido mínimo." action={canWrite ? <Button onClick={() => openDiscount()}>Nova regra</Button> : undefined} />}
-    {!firstDiscount && <CollectionToolbar search={<Input aria-label="Buscar ofertas" placeholder="Buscar regra de desconto" value={discountSearch} startAdornment={<Icon name="search" />} onChange={(event) => setDiscountSearch(event.target.value)} />} count={`${shownDiscounts.length} ${shownDiscounts.length === 1 ? "regra" : "regras"}`} />}
-    {!firstDiscount && <DataTable label="Regras de desconto" rows={shownDiscounts} columns={discountColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={discountsLoading && !discounts.length ? "loading" : "ready"} emptyText="Nenhuma regra encontrada." actions={(item) => canWrite ? <><Switch checked={item.active} disabled={busyId === item.id} onCheckedChange={() => void toggleDiscount(item)}>Ativa</Switch><TableIconAction label={`Editar ${item.name}`} icon={<Icon name="right" />} onClick={() => openDiscount(item)} /></> : undefined} />}
+    {!firstDiscount && <CollectionToolbar search={<SearchField label="Buscar ofertas" placeholder="Buscar regra de desconto" value={discountSearch} onValueChange={setDiscountSearch} />} count={`${shownDiscounts.length} ${shownDiscounts.length === 1 ? "regra" : "regras"}`} />}
+    {!firstDiscount && <DataTable label="Regras de desconto" rows={shownDiscounts} columns={discountColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={discountsLoading && !discounts.length ? "loading" : "ready"} emptyText="Nenhuma regra encontrada." {...(canWrite ? { onRowOpen: (item: DiscountRule) => openDiscount(item), actions: (item: DiscountRule) => <Switch checked={item.active} disabled={busyId === item.id} onCheckedChange={() => void toggleDiscount(item)}>Ativa</Switch> } : {})} />}
   </div>;
   const activeLoading = activeTab === "discounts" ? discountsLoading : isLoading;
   const activeEmpty = activeTab === "discounts" ? discounts.length === 0 : products.length === 0;
   return <PageFrame className={styles.page}>
-    <PageHeader icon={activeTab === "discounts" ? "bolt" : "file"} title={activeTab === "discounts" ? "Ofertas e descontos" : visibility === "archived" ? "Produtos arquivados" : "Produtos"} actions={canWrite && !activeLoading && !activeEmpty ? <Button onClick={activeTab === "discounts" ? () => openDiscount() : () => openProduct()}>{activeTab === "discounts" ? "Nova regra" : "Novo produto"}</Button> : undefined} />
+    <PageHeader title={activeTab === "discounts" ? "Ofertas e descontos" : visibility === "archived" ? "Produtos arquivados" : "Produtos"} actions={canWrite && !activeLoading && !activeEmpty ? <Button onClick={activeTab === "discounts" ? () => openDiscount() : () => openProduct()}>{activeTab === "discounts" ? "Nova regra" : "Novo produto"}</Button> : undefined} />
     {activeTab === "discounts" ? discountsPanel : productsPanel}
     <Panel open={Boolean(selectedProduct)} onOpenChange={(open) => { if (!open) setSelectedProductId(null); }}>
       {selectedProduct && <PanelContent title={selectedProduct.name} description={selectedProduct.sku} footer={canWrite ? <><Button variant="secondary" onClick={() => { setSelectedProductId(null); openProduct(selectedProduct); }}>Editar produto</Button><Button onClick={() => { setSelectedProductId(null); setVariantProduct(selectedProduct); }}>Nova variação</Button></> : undefined}>
         <div className={styles.productDetails}>
-          {selectedProduct.description && <p className={styles.productDescription}>{selectedProduct.description}</p>}
-          <dl className={styles.productFacts}><div><dt>Preço base</dt><dd>{formatMoney(catalogMoney(selectedProduct.price), selectedProduct.currency)}</dd></div><div><dt>Unidade</dt><dd>{selectedProduct.unit}</dd></div><div><dt>Estoque</dt><dd>{selectedProduct.stock === null ? "Sem controle" : selectedProduct.stock}</dd></div><div><dt>Status</dt><dd><Badge tone={selectedProduct.deletedAt || !selectedProduct.active ? "neutral" : "success"}>{selectedProduct.deletedAt ? "Arquivado" : selectedProduct.active ? "Ativo" : "Inativo"}</Badge></dd></div></dl>
-          <div className={styles.variantsHeading}><h3>Variações</h3><span>{selectedVariants.length}</span></div>
-          {selectedVariants.length ? <DataTable label={`Variações de ${selectedProduct.name}`} rows={selectedVariants} columns={variantColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} /> : <p className={styles.noVariants}>Este produto ainda não tem variações.</p>}
+          {selectedProduct.description && <Text as="p" tone="secondary">{selectedProduct.description}</Text>}
+          <dl className={styles.productFacts}>
+            <div><Text as="dt" size="pequeno" tone="secondary">Preço base</Text><Text as="dd" weight="medium" mono>{formatMoney(catalogMoney(selectedProduct.price), selectedProduct.currency)}</Text></div>
+            <div><Text as="dt" size="pequeno" tone="secondary">Unidade</Text><Text as="dd" weight="medium">{selectedProduct.unit}</Text></div>
+            <div><Text as="dt" size="pequeno" tone="secondary">Estoque</Text><Text as="dd" weight="medium" mono>{selectedProduct.stock === null ? "Sem controle" : selectedProduct.stock}</Text></div>
+            <div><Text as="dt" size="pequeno" tone="secondary">Status</Text><dd className={styles.factValue}>{productStatus(selectedProduct)}</dd></div>
+          </dl>
+          <SectionTitle level="block" actions={<Text size="pequeno" tone="muted" mono>{selectedVariants.length}</Text>}>Variações</SectionTitle>
+          {selectedVariants.length ? <DataTable label={`Variações de ${selectedProduct.name}`} rows={selectedVariants} columns={variantColumns} rowKey={(item) => item.id} rowLabel={(item) => item.name} /> : <Text as="p" tone="secondary">Este produto ainda não tem variações.</Text>}
         </div>
       </PanelContent>}
     </Panel>
@@ -90,6 +95,7 @@ export default function Catalog() {
     <ActionModal open={discountModal} onOpenChange={setDiscountModal} title={editingDiscount ? "Editar oferta" : "Nova regra de desconto"} confirmLabel={editingDiscount ? "Salvar alterações" : "Criar regra"} errorText="Revise o valor e o período." onConfirm={saveDiscount}><div className={styles.form}><Field><Label>Nome</Label><Input value={discountName} onChange={(event) => setDiscountName(event.target.value)} /></Field><div className={styles.columns}><Field><Label>Tipo</Label><Select label="Tipo de desconto" value={discountType} options={[{ value: "percentage", label: "Percentual" }, { value: "fixed_amount", label: "Valor fixo" }]} onValueChange={(value) => setDiscountType(value === "fixed_amount" ? "fixed_amount" : "percentage")} /></Field>{discountType === "percentage" ? <Field><Label>Percentual</Label><Input type="number" min="0.01" max="100" step="0.01" value={percentage} endAdornment="%" onChange={(event) => setPercentage(event.target.value)} /></Field> : <Field><Label>Valor</Label><MoneyInput label="Valor do desconto" value={fixedAmount} onValueChange={setFixedAmount} /></Field>}</div><Field><Label>Subtotal mínimo</Label><MoneyInput label="Subtotal mínimo" value={minimum} onValueChange={setMinimum} /></Field><div className={styles.columns}><Field><Label>Começa em</Label><DateTimePicker label="Início da oferta" mode="datetime" value={startsAt} onValueChange={setStartsAt} /></Field><Field><Label>Termina em</Label><DateTimePicker label="Fim da oferta" mode="datetime" value={endsAt} onValueChange={setEndsAt} /></Field></div></div></ActionModal>
   </PageFrame>;
 }
+function productStatus(item: Product) { return <Chip dot={item.deletedAt || !item.active ? "var(--tx3)" : "var(--ok)"}>{item.deletedAt ? "Arquivado" : item.active ? "Ativo" : "Inativo"}</Chip>; }
 function formatMoney(value: Money, currency: "BRL" | "USD"): string { return new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(toDecimal(value)); }
 function period(item: DiscountRule): string { if (!item.startsAt && !item.endsAt) return "Sempre"; const format = (value: string) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(value)); return `${item.startsAt ? format(item.startsAt) : "Agora"} – ${item.endsAt ? format(item.endsAt) : "Sem fim"}`; }
 function localDateTime(value: string): string { const date = new Date(value); const pad = (part: number) => String(part).padStart(2, "0"); return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`; }

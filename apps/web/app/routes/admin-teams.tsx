@@ -10,7 +10,7 @@ import {
   type TeamDto,
 } from "@spark/api-client";
 import { teamId as teamIdFactory } from "@spark/core";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonChoice, RecordIdentity, Select, Textarea, UserAvatar, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Avatar, AvatarStack, Button, Chip, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PageState, PersonChoice, RecordIdentity, SearchField, Select, Text, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
 
@@ -56,12 +56,12 @@ export default function AdminTeams() {
     { id: "members", label: "Membros", cell: (team) => {
       const members = team.memberIds.map((id) => usersById.get(id) ?? { name: "Usuário indisponível", avatarUrl: null });
       const names = members.map((member) => member.name);
-      return members.length ? <div className={styles.memberSummary} title={names.join(", ")} aria-label={names.join(", ")}>
-        <span className={styles.memberAvatars}>{members.slice(0, 3).map((member, index) => <UserAvatar key={`${team.id}:${index}`} user={member} size="small" />)}</span>
-        <span className={styles.memberNames}>{names.slice(0, 2).join(", ")}{names.length > 2 ? ` +${names.length - 2}` : ""}</span>
-      </div> : "Nenhum membro";
+      return members.length ? <div className={styles.memberSummary} title={names.join(", ")}>
+        <AvatarStack overflow={Math.max(0, members.length - 3)}>{members.slice(0, 3).map((member, index) => <Avatar key={`${team.id}:${index}`} name={member.name} src={member.avatarUrl} size="small" />)}</AvatarStack>
+        <Text tone="secondary" truncate>{names.slice(0, 2).join(", ")}{names.length > 2 ? ` +${names.length - 2}` : ""}</Text>
+      </div> : <Text tone="muted">Nenhum membro</Text>;
     }, sortValue: (team) => team.memberIds.length },
-    { id: "status", label: "Situação", cell: (team) => <Badge tone={team.archivedAt ? "neutral" : "success"}>{team.archivedAt ? "Arquivado" : "Ativo"}</Badge>, sortValue: (team) => team.archivedAt ?? "" },
+    { id: "status", label: "Situação", cell: (team) => <Chip dot={team.archivedAt ? "var(--tx3)" : "var(--ok)"}>{team.archivedAt ? "Arquivado" : "Ativo"}</Chip>, sortValue: (team) => team.archivedAt ?? "" },
   ];
 
   function openCreate() {
@@ -115,11 +115,11 @@ export default function AdminTeams() {
   const firstRun = !loading && !loadError && teams.length === 0 && !search && !showArchived;
 
   return <PageFrame width="content">
-    <PageHeader icon="team" eyebrow="Administração" title={showArchived ? "Times arquivados" : "Times"} description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={teams.length > 0 ? <Button onClick={openCreate}>Novo time</Button> : undefined} />
-    {loadError ? <EmptyState icon="team" title="Não foi possível carregar os times" description="Tente novamente para consultar a equipe." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} /> : <>
+    <PageHeader eyebrow="Administração" title={showArchived ? "Times arquivados" : "Times"} description="Organize as pessoas responsáveis por vendas, atendimento e operações." actions={teams.length > 0 ? <Button onClick={openCreate}>Novo time</Button> : undefined} />
+    {loadError ? <PageState kind="error" title="Não foi possível carregar os times" description="Tente de novo para consultar a equipe. O resto da administração segue normal." onRetry={() => { setLoading(true); setReloadKey((value) => value + 1); }} /> : <>
     {firstRun && <EmptyState variant="featured" icon="team" title="Organize seu primeiro time" description="Reúna as pessoas responsáveis por vendas, atendimento ou operações e defina quem participa de cada equipe." action={<Button onClick={openCreate}>Novo time</Button>} />}
     {!firstRun && <CollectionToolbar
-      search={<Input aria-label="Buscar times" placeholder="Buscar por nome ou descrição" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+      search={<SearchField label="Buscar times" placeholder="Buscar por nome ou descrição" value={search} onValueChange={setSearch} />}
       filters={<Select appearance="filter" label="Situação dos times" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativos" }, { value: "archived", label: "Arquivados" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
       count={loading ? "Carregando times…" : `${visibleTeams.length} ${visibleTeams.length === 1 ? "time" : "times"}`}
     />}
@@ -131,6 +131,7 @@ export default function AdminTeams() {
       rowKey={(team) => team.id}
       rowLabel={(team) => team.name}
       emptyText={showArchived ? "Nenhum time arquivado." : "Nenhum time criado."}
+      onRowOpen={(team) => openEdit(team)}
       actions={(team) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${team.name}`} loading={busyId === team.id} menu={<><MenuItem onClick={() => openEdit(team)}>Editar time</MenuItem><MenuItem onClick={() => void toggleArchive(team)}>{team.archivedAt ? "Restaurar time" : "Arquivar time"}</MenuItem></>} />}
     />}</>}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar time" : "Novo time"} confirmLabel={editingId ? "Salvar alterações" : "Criar time"} errorText="Não foi possível salvar o time. Revise os dados e tente novamente." onConfirm={save}>
@@ -138,7 +139,7 @@ export default function AdminTeams() {
         <Field><Label>Nome</Label><Input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Vendas" /></Field>
         <Field><Label>Descrição</Label><Textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Responsabilidade principal deste time" /></Field>
         <div className={styles.members} role="group" aria-labelledby={membersLabelId}>
-          <p id={membersLabelId}>Membros</p>
+          <Text as="p" id={membersLabelId} weight="medium">Membros</Text>
           {users.filter((user) => !user.deactivatedAt).map((user) => <PersonChoice key={user.id} name={user.name} detail={user.email} avatarUrl={user.avatarUrl} checked={memberIds.includes(user.id)} onCheckedChange={(checked) => toggleMember(user.id, checked)} />)}
         </div>
       </div>

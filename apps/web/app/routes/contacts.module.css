@@ -1,11 +1,5 @@
-.contactCell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
-.contactCell > div { min-width: 0; }
-.contactCell strong, .secondary { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.secondary, .muted { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.secondary { margin-top: 0; line-height: var(--ui-tabLine); }
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
 
 .savedViews { display: flex; flex-direction: column; gap: var(--space-1); max-height: var(--ui-previewHeight); overflow-y: auto; margin-block: var(--space-3); }
-.savedViewsEmpty { margin: var(--space-2) 0; color: var(--color-inkMuted); }
 .savedViewRow { display: flex; align-items: center; gap: var(--space-1); }
 .savedViewApply { flex: 1 1 auto; justify-content: flex-start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

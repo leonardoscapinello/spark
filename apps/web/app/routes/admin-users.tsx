@@ -3,7 +3,7 @@ import { redirect, useSearchParams } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto, type PermissionGroupDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Badge, Button, CollectionToolbar, DataTable, Field, Icon, InlineEdit, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, Select, UserAvatar, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Alert, Button, Chip, CollectionToolbar, DataTable, Field, Icon, InlineEdit, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonIdentity, SearchField, Select, Text, UserAvatar, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -65,7 +65,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
     (!searchTerm || `${user.name} ${user.email}`.toLocaleLowerCase("pt-BR").includes(searchTerm)),
   );
   const columns: TableColumn<AdminUserDto>[] = [
-    { id: "name", label: "Pessoa", cell: (user) => <div className={styles.person}><UserAvatar user={user} /><div><strong>{user.name}</strong><span className={styles.email}>{user.email}</span></div></div>, sortValue: (user) => user.name },
+    { id: "name", label: "Pessoa", cell: (user) => <PersonIdentity name={user.name} detail={user.email} avatar={<UserAvatar user={user} />} />, sortValue: (user) => user.name },
     { id: "group", label: "Grupo", cell: (user) => (
       <InlineEdit
         label={`Grupo de ${user.name}`}
@@ -76,7 +76,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
         disabled={busyUserId === user.id || user.id === loaderData.session.userId}
       />
     ) },
-    { id: "status", label: "Acesso", cell: (user) => <Badge tone={accessStatus(user) === "active" ? "success" : accessStatus(user) === "disabled" ? "danger" : "warning"}>{accessStatusLabel(user)}</Badge>, sortValue: accessStatusLabel },
+    { id: "status", label: "Acesso", cell: (user) => <Chip dot={accessStatus(user) === "active" ? "var(--ok)" : accessStatus(user) === "disabled" ? "var(--tx3)" : "var(--wa)"}>{accessStatusLabel(user)}</Chip>, sortValue: accessStatusLabel },
   ];
 
   function resetForm() {
@@ -149,17 +149,16 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   return (
     <PageFrame width="content">
       <PageHeader
-        icon="user"
         eyebrow="Administração"
         title="Usuários"
         description="Controle quem acessa o sistema e quais permissões cada pessoa recebe."
         actions={<Button disabled={loading || groups.length === 0} onClick={() => setModalOpen(true)}>Convidar usuário</Button>}
       />
 
-      {lastInvited && <p className={styles.feedback} role="status">Convite enviado para {lastInvited}.</p>}
-      {actionError && <p className={styles.error} role="alert">{actionError}</p>}
+      {lastInvited && <Alert tone="success" title={`Convite enviado para ${lastInvited}.`} />}
+      {actionError && <Alert tone="danger" title={actionError} />}
       <CollectionToolbar
-        search={<Input aria-label="Buscar usuários" placeholder="Buscar por nome ou e-mail" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+        search={<SearchField label="Buscar usuários" placeholder="Buscar por nome ou e-mail" value={search} onValueChange={setSearch} />}
         filters={<Select appearance="filter" label="Filtrar usuários por acesso" value={statusFilter} options={[{ value: "all", label: "Todos os acessos" }, { value: "active", label: "Ativos" }, { value: "pending", label: "Convite enviado" }, { value: "disabled", label: "Desativados" }]} onValueChange={(value) => setStatusFilter(value ?? "all")} />}
         count={loading ? "Carregando usuários…" : loadError ? "Usuários indisponíveis" : `${filteredUsers.length} ${filteredUsers.length === 1 ? "usuário" : "usuários"}`}
       />
@@ -215,8 +214,8 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
             </div>
             {emailCheck && (
               <div className={styles.emailCheck}>
-                <Badge tone={emailCheck.accepted ? "success" : "danger"}>{emailCheck.accepted ? "Verificado" : "Não confirmado"}</Badge>
-                <span>{emailCheck.message}{emailCheck.cacheHit ? " Resultado salvo." : ""}</span>
+                <Chip tone={emailCheck.accepted ? "success" : "danger"} dot>{emailCheck.accepted ? "Verificado" : "Não confirmado"}</Chip>
+                <Text size="pequeno" tone="secondary">{emailCheck.message}{emailCheck.cacheHit ? " Resultado salvo." : ""}</Text>
               </div>
             )}
           </Field>

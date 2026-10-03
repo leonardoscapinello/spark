@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { redirect } from "react-router";
 import { auditLogsControllerList, type AdminAuditLogDto } from "@spark/api-client";
-import { Button, CollectionToolbar, DataTable, EmptyState, Icon, Input, PageFrame, PageHeader, RecordIdentity, Select, type TableColumn } from "@spark/ui-web";
+import { CollectionToolbar, DataTable, EmptyState, PageFrame, PageHeader, PageState, RecordIdentity, SearchField, Select, Text, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 
 const ACTION_LABELS: Record<AdminAuditLogDto["action"], string> = {
@@ -55,29 +55,28 @@ export default function AdminAuditLog() {
     {
       id: "date",
       label: "Data e hora",
-      cell: (entry) => formatDate(entry.createdAt),
+      cell: (entry) => <Text mono size="pequeno">{formatDate(entry.createdAt)}</Text>,
       sortValue: (entry) => entry.createdAt,
     },
     { id: "actor", label: "Responsável", cell: (entry) => <RecordIdentity title={entry.actorName} icon="user" />, sortValue: (entry) => entry.actorName },
     { id: "target", label: "Registro e ação", cell: (entry) => <RecordIdentity title={entry.targetLabel} subtitle={ACTION_LABELS[entry.action]} icon={entry.action.startsWith("team.") ? "team" : entry.action.startsWith("permission_group.") ? "settings" : "user"} />, sortValue: (entry) => `${entry.targetLabel} ${ACTION_LABELS[entry.action]}` },
-    { id: "details", label: "Detalhes", cell: describeEntry },
+    { id: "details", label: "Detalhes", cell: (entry) => { const detail = describeEntry(entry); return detail === "—" ? <Text tone="muted">—</Text> : detail; } },
   ];
 
   return (
     <PageFrame width="content">
       <PageHeader
-        icon="file"
         eyebrow="Administração"
         title="Auditoria"
         description="Acompanhe alterações de acesso, usuários, times e grupos de permissão."
       />
       {firstRun && <EmptyState variant="featured" icon="file" title="O histórico de auditoria está pronto" description="Convites, mudanças de acesso e alterações nos times aparecerão aqui conforme acontecerem." />}
       {!loadError && !firstRun && <CollectionToolbar
-        search={<Input aria-label="Buscar auditoria" placeholder="Buscar pessoa, registro ou ação" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+        search={<SearchField label="Buscar auditoria" placeholder="Buscar pessoa, registro ou ação" value={search} onValueChange={setSearch} />}
         filters={<Select appearance="filter" label="Filtrar auditoria por ação" value={actionFilter} options={[{ value: "all", label: "Todas as ações" }, ...actionOptions]} onValueChange={(value) => setActionFilter(value ?? "all")} />}
         count={loading ? "Carregando auditoria…" : `${filteredLogs.length} ${filteredLogs.length === 1 ? "registro" : "registros"}`}
       />}
-      {loadError ? <EmptyState icon="file" title="Não foi possível carregar a auditoria" description="Tente novamente para consultar o histórico." action={<Button onClick={() => { setLoading(true); setReloadKey((value) => value + 1); }}>Tentar novamente</Button>} /> : !firstRun && <DataTable
+      {loadError ? <PageState kind="error" title="Não foi possível carregar a auditoria" description="Tente de novo para consultar o histórico. O resto da administração segue normal." onRetry={() => { setLoading(true); setReloadKey((value) => value + 1); }} /> : !firstRun && <DataTable
         label="Histórico de auditoria"
         rows={filteredLogs}
         columns={columns}

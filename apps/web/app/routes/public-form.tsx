@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLoaderData } from "react-router";
 import { publicFormsControllerGet, publicFormsControllerSubmit } from "@spark/api-client";
 import { formSubmissionId, type LeadFormField } from "@spark/core";
-import { Field, Input, Label, LeadFormRenderer, notify } from "@spark/ui-web";
+import { Field, Input, Label, LeadFormRenderer, Spinner, Text, notify } from "@spark/ui-web";
 import styles from "./public-form.module.css";
 export async function clientLoader({ params }: { params: { publicKey?: string } }) {
   if (!params.publicKey) throw new Error("Formulário inválido.");
@@ -10,8 +10,9 @@ export async function clientLoader({ params }: { params: { publicKey?: string } 
 }
 export function HydrateFallback() {
   return (
-    <main className={styles.page}>
-      <span>Carregando formulário…</span>
+    <main className={styles.page} role="status">
+      <Spinner />
+      <Text tone="secondary">Carregando formulário…</Text>
     </main>
   );
 }

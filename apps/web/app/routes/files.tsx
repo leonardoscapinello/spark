@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { filesControllerComplete, filesControllerDownload, filesControllerRemove, filesControllerUpload } from "@spark/api-client";
 import { fileId, type StoredFile } from "@spark/core";
-import { Badge, Card, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, Input, PageFrame, PageHeader, RecordIdentity, Select, Skeleton, TableIconAction, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
+import { Card, Chip, CollectionToolbar, DataTable, EmptyState, FilePicker, Icon, IconTile, PageFrame, PageHeader, RecordIdentity, SearchField, Select, Skeleton, TableIconAction, Text, ViewSwitcher, notify, type TableColumn } from "@spark/ui-web";
 import { getFilesCollection } from "../lib/files-collection.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -21,7 +21,7 @@ export default function Files() {
   const columns: TableColumn<StoredFile>[] = [
     { id: "name", label: "Arquivo", cell: (item) => <RecordIdentity icon={fileKind(item.mimeType) === "image" ? "image" : "file"} title={item.name} subtitle={item.mimeType} />, sortValue: (item) => item.name },
     { id: "folder", label: "Pasta", cell: (item) => item.folder ?? "Geral", sortValue: (item) => item.folder ?? "" },
-    { id: "size", label: "Tamanho", cell: (item) => formatBytes(item.sizeBytes), sortValue: (item) => item.sizeBytes },
+    { id: "size", label: "Tamanho", align: "end", cell: (item) => formatBytes(item.sizeBytes), sortValue: (item) => item.sizeBytes },
     { id: "status", label: "Status", cell: (item) => fileStatusBadge(item), sortValue: (item) => item.status },
     { id: "created", label: "Enviado em", cell: (item) => formatDate(item.createdAt), sortValue: (item) => item.createdAt },
   ];
@@ -33,23 +33,23 @@ export default function Files() {
   async function remove(item: StoredFile) { setBusyId(item.id); try { await filesControllerRemove(item.id); notify({ title: "Arquivo excluído", description: item.name, tone: "success" }); } catch { notify({ title: "Não foi possível excluir", description: item.name, tone: "error" }); } finally { setBusyId(null); } }
   function fileActions(item: StoredFile) { return <><TableIconAction label={`Baixar ${item.name}`} icon={<Icon name="download" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void download(item)} />{canWrite && <TableIconAction label={`Excluir ${item.name}`} icon={<Icon name="trash" />} disabled={item.status !== "ready" || busyId === item.id} onClick={() => void remove(item)} />}</>; }
   return <PageFrame className={styles.page}>
-    <PageHeader icon="folder" title="Arquivos" actions={canWrite && hasFiles ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />
+    <PageHeader title="Arquivos" actions={canWrite && hasFiles ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="folder" title="Envie seu primeiro arquivo" description="Organize imagens e documentos para reutilizá-los em toda a equipe." action={canWrite ? <FilePicker appearance="button" disabled={Boolean(uploading)} onFiles={(selected) => void upload(selected)} label={uploading ? `Enviando ${uploading}` : "Enviar arquivos"} /> : undefined} />}
       {!firstRun && <><CollectionToolbar
-        search={<Input aria-label="Buscar arquivos" placeholder="Buscar por nome" value={search} startAdornment={<Icon name="search" />} onChange={(event) => setSearch(event.target.value)} />}
+        search={<SearchField label="Buscar arquivos" placeholder="Buscar por nome" value={search} onValueChange={setSearch} />}
         filters={<><Select appearance="filter" label="Tipo de arquivo" value={kind} options={[{ value: "all", label: "Todos os tipos" }, { value: "image", label: "Imagens" }, { value: "video", label: "Vídeos" }, { value: "document", label: "Documentos" }, { value: "other", label: "Outros" }]} onValueChange={(value) => setKind(value ?? "all")} /><Select appearance="filter" label="Status do arquivo" value={status} options={[{ value: "all", label: "Todos os status" }, { value: "ready", label: "Disponíveis" }, { value: "pending", label: "Processando" }, { value: "failed", label: "Com falha" }]} onValueChange={(value) => setStatus(value ?? "all")} /></>}
         count={`${files.length} ${files.length === 1 ? "arquivo" : "arquivos"}`}
         actions={<ViewSwitcher label="Visualização dos arquivos" value={layout} onValueChange={setLayout} />}
       />
       {layout === "table" ? <DataTable label="Biblioteca de arquivos" rows={files} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !allFiles.length ? "loading" : "ready"} emptyText={emptyText} actions={fileActions} /> : <div className={styles.fileGrid} aria-label="Biblioteca de arquivos">
         {isLoading && !allFiles.length && [0, 1, 2].map((item) => <Skeleton key={item} className={styles.cardLoading} />)}
-        {!isLoading && files.length === 0 && <p className={styles.empty}>{emptyText}</p>}
-        {files.map((item) => <Card key={item.id} title={item.name} description={`${item.folder ?? "Geral"} · ${formatBytes(item.sizeBytes)}`} actions={fileStatusBadge(item)} footer={<div className={styles.cardFooter}><span>{formatDate(item.createdAt)}</span><div>{fileActions(item)}</div></div>}><div className={styles.cardBody}><span className={styles.fileIcon}><Icon name={fileKind(item.mimeType) === "image" ? "image" : "file"} /></span><span>{fileTypeLabel(item.mimeType)}</span></div></Card>)}
+        {!isLoading && files.length === 0 && <div className={styles.empty}><EmptyState icon="search" title="Nenhum arquivo encontrado" description={emptyText} /></div>}
+        {files.map((item) => <Card key={item.id} title={item.name} description={`${item.folder ?? "Geral"} · ${formatBytes(item.sizeBytes)}`} actions={fileStatusBadge(item)} footer={<div className={styles.cardFooter}><Text size="pequeno" tone="secondary" truncate>{formatDate(item.createdAt)}</Text><div className={styles.cardActions}>{fileActions(item)}</div></div>}><div className={styles.cardBody}><IconTile icon={fileKind(item.mimeType) === "image" ? "image" : "file"} /><Text tone="secondary">{fileTypeLabel(item.mimeType)}</Text></div></Card>)}
       </div>}</>}
   </PageFrame>;
 }
 function fileKind(mime: string): string { if (mime.startsWith("image/")) return "image"; if (mime.startsWith("video/")) return "video"; if (mime.includes("pdf") || mime.includes("document") || mime.includes("sheet") || mime.startsWith("text/")) return "document"; return "other"; }
 function fileTypeLabel(mime: string): string { return ({ image: "Imagem", video: "Vídeo", document: "Documento", other: "Arquivo" } as Record<string, string>)[fileKind(mime)] ?? "Arquivo"; }
-function fileStatusBadge(item: StoredFile) { return <Badge tone={item.status === "ready" ? "success" : item.status === "failed" ? "danger" : "warning"}>{item.status === "ready" ? "Disponível" : item.status === "failed" ? "Falhou" : "Processando"}</Badge>; }
+function fileStatusBadge(item: StoredFile) { return <Chip dot={item.status === "ready" ? "var(--ok)" : item.status === "failed" ? "var(--er)" : "var(--wa)"}>{item.status === "ready" ? "Disponível" : item.status === "failed" ? "Falhou" : "Processando"}</Chip>; }
 function formatBytes(value: number): string { if (value < 1024) return `${value} B`; const units = ["KB", "MB", "GB"]; let size = value / 1024; let unit = units[0]; for (let index = 1; size >= 1024 && index < units.length; index += 1) { size /= 1024; unit = units[index]; } return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(size)} ${unit}`; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
