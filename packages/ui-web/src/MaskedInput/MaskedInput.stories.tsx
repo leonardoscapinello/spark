@@ -86,9 +86,10 @@ function Mascaras() {
           <Dinheiro inicial={money(50000)} desabilitado />
         </Mesa>
       </Secao>
-      <Secao titulo="Porcentagem" descricao="Guardada em pontos-base: 12,5 % é 1250.">
+      <Secao titulo="Porcentagem" descricao="Digite 11 para 11% ou 12,5 para 12,5%. Sem completar zeros; guardada em pontos-base.">
         <Mesa>
           <Porcentagem inicial={null} />
+          <Porcentagem inicial={0} />
           <Porcentagem inicial={6250} />
         </Mesa>
       </Secao>

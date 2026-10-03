@@ -1,5 +1,5 @@
 import { NumericFormat, PatternFormat, type PatternFormatProps } from "react-number-format";
-import { maskTaxDocumentInput, money, toCents, type Money } from "@spark/core";
+import { maskTaxDocumentInput, money, parseBasisPoints, toCents, type Money } from "@spark/core";
 import { Input, type InputProps } from "../Input/Input.js";
 import { Select } from "../Select/Select.js";
 import s from "./MaskedInput.module.css";
@@ -58,16 +58,29 @@ function formatCents(centavos:number,currency:"BRL"|"USD"):string{
 }
 
 /**
- * Porcentagem com duas casas e o símbolo no campo: «12,50 %».
+ * Porcentagem com até duas casas. O símbolo fica fora do texto editável,
+ * e as casas não são preenchidas enquanto a pessoa digita.
  *
  * Trabalha em PONTO-BASE (1% = 100), a mesma unidade que o banco guarda — o
  * mesmo motivo de dinheiro ser centavo: 0,1 + 0,2 em ponto flutuante não fecha,
  * e desconto errado por um centavo aparece na soma do negócio.
  */
 export function PercentInput({value,onValueChange,label,disabled=false,onBlur}:{value:number|null;onValueChange:(basisPoints:number|null)=>void;label:string;disabled?:boolean;onBlur?:()=>void}){
-  return <NumericFormat customInput={Input} aria-label={label} disabled={disabled} onBlur={onBlur} inputMode="decimal"
-    value={value===null?"":(value/100).toFixed(2)} valueIsNumericString
-    decimalScale={2} fixedDecimalScale decimalSeparator="," thousandSeparator="." suffix=" %" allowNegative={false}
+  return <NumericFormat customInput={Input} aria-label={label} disabled={disabled} onBlur={onBlur} inputMode="decimal" numeric
+    endAdornment={<span aria-hidden="true">%</span>}
+    value={value===null?"":String(value/100)} valueIsNumericString
+    onFocus={event=>{if(value===0)event.target.select();}}
+    onPaste={event=>{
+      const pasted=event.clipboardData.getData("text");
+      // NumericFormat reconhece ponto digitado, mas não em uma colagem inteira.
+      if(!pasted.includes("."))return;
+      event.preventDefault();
+      const input=event.currentTarget;
+      const next=input.value.slice(0,input.selectionStart??0)+pasted.replace(".",",")+input.value.slice(input.selectionEnd??input.value.length);
+      const parsed=parseBasisPoints(next);
+      if(parsed!==null)onValueChange(parsed);
+    }}
+    decimalScale={2} decimalSeparator="," allowedDecimalSeparators={[",", "."]} allowNegative={false}
     isAllowed={({floatValue})=>floatValue===undefined || (floatValue>=0 && floatValue<=100)}
     onValueChange={(values,source)=>{if(source.source!=="event")return;onValueChange(values.value===""?null:Math.round(Number(values.value)*100));}} />;
 }

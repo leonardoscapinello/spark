@@ -103,6 +103,7 @@ export { LinkTabs, type LinkTab } from "./LinkTabs/LinkTabs.js";
 export * from "./Chip/Chip.js";
 export * from "./SearchField/SearchField.js";
 export * from "./Text/Text.js";
+export { AmountSummary, type AmountSummaryProps } from "./AmountSummary/AmountSummary.js";
 export * from "./IconTile/IconTile.js";
 export * from "./PersonIdentity/PersonIdentity.js";
 export * from "./EmptyState/EmptyState.js";

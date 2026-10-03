@@ -10,6 +10,7 @@ import {
   companyId as companyIdFactory,
   dealId as dealIdFactory,
   formatBRL,
+  InvalidMoneyError,
   toCents,
   stageId as stageIdFactory,
   userId as userIdFactory,
@@ -45,7 +46,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, Alert, AvatarStack, Chip, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, Composer, ComposerPrompt, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, KpiCard, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, AmountSummary, Alert, AvatarStack, Chip, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, Composer, ComposerPrompt, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, KpiCard, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -325,6 +326,16 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     };
   }, [customFields, customValues, deal, dealItems.length, fieldRules]);
   const itemsSummary = useMemo(() => dealProductsSummary(dealItems.map((item) => ({ ...item, unitAmount: syncedAmount(item.unitAmount) }))), [dealItems]);
+  const itemPreview = useMemo(() => {
+    const quantityMilli = parseQuantity(itemQuantity);
+    if (quantityMilli === null || itemUnitAmount === null || itemDiscount === null || itemTax === null) return null;
+    try {
+      return dealProductTotals({ quantityMilli, unitAmount: itemUnitAmount, discountBasisPoints: itemDiscount, taxBasisPoints: itemTax });
+    } catch (error) {
+      if (error instanceof InvalidMoneyError) return null;
+      throw error;
+    }
+  }, [itemQuantity, itemUnitAmount, itemDiscount, itemTax]);
   // «Foco» é o que ainda não foi feito, do mais antigo para o mais novo — o que
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
   const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
@@ -736,7 +747,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   </>;
 
   const itemEditorContent = <div className={styles.modalFields}>
-    {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="dropdown" placeholder={catalogLoading ? "Carregando catálogo…" : "Escolher um produto cadastrado (opcional)"} options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(item.price)}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
+    {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="field" placeholder={catalogLoading ? "Carregando catálogo…" : "Buscar produto no catálogo (opcional)"} options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(syncedAmount(item.price))}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
     <Field><Label>Nome do item</Label><Input value={itemName} onChange={(event) => setItemName(event.target.value)} placeholder="Escreva um item avulso ou escolha do catálogo" /></Field>
     <div className={styles.modalLinha}>
       <Field><Label>Quantidade</Label><Input inputMode="decimal" numeric value={itemQuantity} onChange={(event) => setItemQuantity(event.target.value)} placeholder="1" /></Field>
@@ -746,6 +757,12 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       <Field><Label>Desconto</Label><PercentInput label="Desconto do item" value={itemDiscount} onValueChange={setItemDiscount} /></Field>
       <Field><Label>Imposto</Label><PercentInput label="Imposto do item" value={itemTax} onValueChange={setItemTax} /></Field>
     </div>
+    <AmountSummary label="Resumo do item" items={[
+      { label: "Subtotal", value: itemPreview ? formatBRL(itemPreview.gross) : "—" },
+      { label: "Descontos", value: itemPreview ? `−${formatBRL(itemPreview.discount)}` : "—" },
+      { label: "Impostos", value: itemPreview ? `+${formatBRL(itemPreview.tax)}` : "—" },
+    ]} totalLabel="Total do item" total={itemPreview ? formatBRL(itemPreview.net) : "—"} />
+    {!itemPreview && <Text size="pequeno" tone="muted">Preencha valores válidos para calcular o total.</Text>}
   </div>;
 
   /* Itens: o valor do negócio nasce aqui (packages/core/rules/dealProducts). */
@@ -768,12 +785,11 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
               </> : undefined}
             />;
           })}</RowList>
-          <div className={styles.fields}>
-            <InlineField label="Subtotal" numeric value={formatBRL(itemsSummary.gross)} />
-            {toCents(itemsSummary.discount) > 0 && <InlineField label="Descontos" numeric value={`−${formatBRL(itemsSummary.discount)}`} />}
-            {toCents(itemsSummary.tax) > 0 && <InlineField label="Impostos" numeric value={`+${formatBRL(itemsSummary.tax)}`} />}
-            <InlineField label="Valor do negócio" numeric value={formatBRL(itemsSummary.net)} />
-          </div>
+          <AmountSummary label="Resumo do negócio" items={[
+            { label: "Subtotal", value: formatBRL(itemsSummary.gross) },
+            { label: "Descontos", value: `−${formatBRL(itemsSummary.discount)}` },
+            { label: "Impostos", value: `+${formatBRL(itemsSummary.tax)}` },
+          ]} totalLabel="Valor do negócio" total={formatBRL(itemsSummary.net)} />
         </>}
     {canWrite && <div className={styles.inlineAction}><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemEditor()}>Adicionar produto</Button></div>}
   </div>;
