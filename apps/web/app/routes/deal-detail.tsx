@@ -1072,7 +1072,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       * devolve exatamente onde se estava. */}
     <Panel open={ficha !== null} onOpenChange={(aberta) => { if (!aberta) setFicha(null); }}>
       <PanelContent side="right" title={ficha?.tipo === "empresa" ? "Empresa" : "Pessoa"} closeLabel="Fechar e voltar ao negócio">
-        {ficha?.tipo === "contato" && <ContactProfile contactId={ficha.id} embedded />}
+        {ficha?.tipo === "contato" && <ContactProfile contactId={ficha.id} embedded onBack={() => setFicha(null)} />}
         {ficha?.tipo === "empresa" && <CompanyProfile companyId={ficha.id} embedded />}
       </PanelContent>
     </Panel>

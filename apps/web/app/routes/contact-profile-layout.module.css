@@ -28,3 +28,22 @@
 
 /* Dentro do painel do negócio a ficha é estreita: uma coluna só. */
 .embedded .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "work" "identity"; }
+
+/* Pessoa: detalhes legíveis e uma área de trabalho por vez. Cada coluna
+ * possui uma única rolagem; o histórico não empurra as outras seções. */
+.personPage { height: 100%; min-height: 0; overflow: hidden; }
+.personPage > :first-child { flex: none; }
+.personGrid { display: grid; flex: 1; min-height: 0; min-width: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); grid-template-areas: "profile work"; gap: var(--space-5); }
+.personGrid > .profileColumn { overflow: auto; min-height: 0; padding: var(--space-1); }
+.personWork { grid-area: work; min-width: 0; min-height: 0; overflow: hidden; }
+.backContext { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.personPage .formActions { gap: var(--space-2); flex-wrap: wrap; }
+.personPage.embedded { height: auto; overflow: visible; }
+.embedded .personGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "work"; }
+.embedded .personGrid > .profileColumn, .embedded .personWork { overflow: visible; }
+
+@media (max-width: 760px) {
+  .personPage { height: auto; overflow: visible; }
+  .personGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "work"; }
+  .personGrid > .profileColumn, .personWork { overflow: visible; }
+}

@@ -13,16 +13,16 @@ import {
   type IdentityChannel,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity, writeAccepted } from "@spark/data";
-import { Avatar, BackLink, Button, Card, DateTimePicker, Field, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
+import { Avatar, BackLink, Button, Card, DateTimePicker, EmptyState, Field, Form, Icon, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, Tabs, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getUsersCollection } from "../lib/users-collection.client";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
-import { getDealsCollection } from "../lib/deals-collections.client";
+import { getDealsCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { getContactEventsCollection } from "../lib/events-collection.client";
-import { toTimelineItem } from "../lib/event-presentation";
+import { groupTimelineEvents } from "../lib/event-presentation";
 import { getIdentitiesCollection } from "../lib/identities-collection.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
 import { getSession } from "../lib/auth.client";
@@ -45,7 +45,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     getCustomFieldOptionsCollection().preload(),
     ...(session.capabilities.includes("activities:read") ? [getActivitiesCollection().preload()] : []),
     ...(session.capabilities.includes("companies:read") ? [getCompaniesCollection().preload()] : []),
-    ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload()] : []),
+    ...(session.capabilities.includes("deals:read") ? [getDealsCollection().preload(), getStagesCollection().preload()] : []),
     ...(session.capabilities.includes("inbox:read") ? [getConversationsCollection().preload()] : []),
   ]);
   return null;
@@ -81,10 +81,9 @@ export default function ContactDetail({ params }: Route.ComponentProps) {
  * dentro do painel sobreposto do negócio. Duplicar seria garantir que as duas
  * divergissem na primeira mudança.
  *
- * `embedded` some com o link de voltar: dentro do painel, voltar levaria para
- * fora do negócio — que é justamente o que o painel evita.
+ * Dentro do painel, `onBack` fecha a ficha e devolve ao negócio sem navegar.
  */
-export function ContactProfile({ contactId, embedded = false }: { contactId: string; embedded?: boolean }) {
+export function ContactProfile({ contactId, embedded = false, onBack }: { contactId: string; embedded?: boolean; onBack?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const requestedReturn = new URLSearchParams(location.search).get("returnTo");
@@ -106,6 +105,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
   const [selectedType, setSelectedType] = useState<ActivityType>("task");
   const [activityTitle, setActivityTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [activityComposerOpen, setActivityComposerOpen] = useState(false);
   const [activityPending, setActivityPending] = useState(false);
   const [contactFieldPending, setContactFieldPending] = useState<string | null>(null);
   const [identityChannel, setIdentityChannel] = useState<IdentityChannel>("email");
@@ -141,6 +141,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
   const customValues = useCustomFieldValues("contact", contactId, customFields);
   const fieldOptions = useCustomFieldOptions();
   const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }).where(({ deals: item }) => eq(item.contactId, contactId)).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
+  const { data: stages = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ stages: getStagesCollection() }) : undefined });
   const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, contactId)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
 
   async function addIdentity(event: FormEvent<HTMLFormElement>) {
@@ -206,6 +207,7 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
       await transaction.isPersisted.promise;
       setActivityTitle("");
       setScheduledAt("");
+      setActivityComposerOpen(false);
       notify({ title: "Atividade agendada", description: `${title} foi adicionada à pessoa.`, tone: "success" });
     } catch {
       notify({ title: "Não foi possível agendar", description: "Tente novamente em instantes.", tone: "error" });
@@ -268,49 +270,25 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
   const now = new Date().toISOString();
   const busy = contactFieldPending !== null;
 
-  return (
-    <div className={[layout.page, embedded ? layout.embedded : ""].filter(Boolean).join(" ")}>
-      <RecordPageHeader back={embedded ? null : <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite || canWriteInbox ? <>{canWrite && <MergePerson contactId={contactId} name={data.name} />}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star", numeric: true }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: company?.name ?? "Não vinculada", icon: "building" }]} />
-      <div className={layout.contentGrid}>
-        <div className={layout.profileColumn}>
-          {/* Todo valor da ficha passa pelo InlineField: a mesma caixa parada,
-            * vazia e editando, como na ficha do negócio. */}
-          <Card title="Detalhes">
-            <div className={layout.fields}>
-              <InlineField label="Nome" value={data.name} disabled={!canWrite}>{(close) => <Input aria-label="Nome" defaultValue={data.name} onBlur={(event) => close(saveContact("name", event.currentTarget.value))} />}</InlineField>
-              <InlineField label="E-mail" value={data.email ?? "Sem e-mail"} empty={!data.email} disabled={!canWrite}>{(close) => <Input aria-label="E-mail" type="email" defaultValue={data.email ?? ""} placeholder="nome@empresa.com.br" onBlur={(event) => close(saveContact("email", event.currentTarget.value))} />}</InlineField>
-              <InlineField label="Telefone" numeric value={data.phone ? formatPhone(data.phone) : "Sem telefone"} empty={!data.phone} disabled={!canWrite}>{(close) => <Input aria-label="Telefone" type="tel" numeric defaultValue={data.phone ? formatPhone(data.phone) : ""} placeholder="DDD + número" onBlur={(event) => close(saveContact("phone", event.currentTarget.value))} />}</InlineField>
-              <InlineField label="Pontuação" numeric value={String(data.score)} />
-              <InlineField label="Etapa do relacionamento" value={LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus} disabled={!canWrite || busy}>{(close) => <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) close(updateLifecycle("leadStatus", value)); }} />}</InlineField>
-              <InlineField label="Origem" value={LEAD_SOURCE_OPTIONS.find((option) => option.value === data.source)?.label ?? data.source ?? "Sem origem"} empty={!data.source} disabled={!canWrite || busy}>{(close) => <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => close(updateLifecycle("source", value))} />}</InlineField>
-              <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite || busy}>{(close) => <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => close(updateLifecycle("ownerId", value))} />}</InlineField>
-              <InlineField label="Empresa" value={company?.name ?? "Não vinculada"} empty={!company} {...(company ? { leading: <Avatar name={company.name} size="small" />, action: { label: `Abrir ${company.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${company.id}`) } } : {})} disabled={!canWrite || !canReadCompanies || busy}>{(close) => <Select label="Empresa da pessoa" value={data.companyId} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(updateLifecycle("companyId", value))} />}</InlineField>
-            </div>
-          </Card>
-          {activeCustomFields.length > 0 && <Card title="Campos personalizados">
-            <div className={layout.fields}>
-              {activeCustomFields.map((field) => <EnrichedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
-            </div>
-          </Card>}
-        </div>
-        <div className={layout.workColumn}>
-          {canReadDeals && <Card title="Negócios" actions={canWriteDeals ? <Button size="sm" variant="secondary" onClick={() => void navigate(`/deals?createFor=${contactId}`)}>Novo negócio</Button> : undefined}>
-            {deals.length === 0 ? <Text size="pequeno" tone="muted">Nenhum negócio desta pessoa.</Text> : <RowList label="Negócios desta pessoa">{deals.map((deal, index) => <ListRow key={deal.id} index={index} icon="briefcase" title={deal.name} description={deal.status === "open" ? "Em aberto" : deal.status === "won" ? <Signal tone="success">Ganho</Signal> : <Signal tone="danger">Perdido</Signal>} render={<Link to={`/deals/${deal.id}`} />} />)}</RowList>}
-          </Card>}
-          {canReadInbox && <Card title="Conversas">
-            {conversations.length === 0 ? <Text size="pequeno" tone="muted">Nenhuma conversa desta pessoa.</Text> : <RowList label="Conversas desta pessoa">{conversations.map((conversation, index) => <ListRow key={conversation.id} index={index} icon="message" title={conversation.subject} description={conversation.channel === "email" ? "E-mail" : conversation.channel === "instagram" ? "Instagram" : conversation.channel === "whatsapp" ? "WhatsApp" : conversation.channel === "messenger" ? "Messenger" : "Interno"} render={<Link to={`/inbox?box=all&conversation=${conversation.id}`} />} />)}</RowList>}
-          </Card>}
-          <Card title="Histórico">
-            <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={events.map((event) => toTimelineItem(event, { users, companies, customFields }))} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
-          </Card>
-          {canReadActivities && <Card title="Atividades">
-            <div className={layout.stack}>
-              {activities.length === 0 ? <Text size="pequeno" tone="muted">Nenhuma atividade desta pessoa.</Text> : <RowList label="Atividades desta pessoa">{activities.map((activity, index) => {
+  const pendingActivities = activities.filter((activity) => !activity.completed);
+  const completedActivities = activities.filter((activity) => activity.completed);
+  const activityList = (completed: boolean) => {
+    const items = completed ? completedActivities : pendingActivities;
+    if (items.length === 0) return <EmptyState variant="onboarding" icon="calendar" title={completed ? "Nenhuma atividade concluída" : "Nenhuma atividade pendente"} description={completed ? "As atividades concluídas ficam disponíveis aqui." : "Agende o próximo contato com esta pessoa."} />;
+    return <RowList label={completed ? "Atividades concluídas" : "Atividades pendentes"}>{items.map((activity, index) => {
                 const overdue = !activity.completed && activity.scheduledAt < now;
                 const kind = TYPES.find((t) => t.value === activity.type)?.label ?? activity.type;
                 return <ListRow key={activity.id} index={index} icon={activity.type === "call" ? "phone" : activity.type === "meeting" ? "team" : activity.type === "email" ? "mail" : "check"} done={activity.completed} title={activity.title} description={overdue ? <Signal tone="danger">Atrasada · {kind}</Signal> : kind} meta={formatDateTime(activity.scheduledAt)} trailing={canWriteActivities ? <Button variant="ghost" size="sm" onClick={() => void toggleCompleted(activity.id, activity.title, !activity.completed)}>{activity.completed ? "Reabrir" : "Concluir"}</Button> : undefined} />;
-              })}</RowList>}
-              {canWriteActivities && <form className={layout.form} onSubmit={addActivity}>
+    })}</RowList>;
+  };
+  const returnDeal = deals.find((deal) => returnTo?.split("?")[0] === `/deals/${deal.id}`);
+  const backControl = embedded
+    ? (onBack ? <Button variant="secondary" icon={<Icon name="left" />} onClick={onBack}>Voltar ao negócio</Button> : null)
+    : returnTo ? <div className={layout.backContext}><Button variant="secondary" icon={<Icon name="left" />} render={<Link to={backHref} />}>Voltar ao negócio</Button>{returnDeal && <Text size="pequeno" tone="secondary">{returnDeal.name}</Text>}</div>
+    : <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>;
+  const activitiesContent = <Card title="Atividades" description="Próximos contatos e tarefas desta pessoa." actions={canWriteActivities ? <Button variant="secondary" size="sm" icon={<Icon name="plus" />} onClick={() => setActivityComposerOpen(true)} disabled={activityComposerOpen}>Agendar atividade</Button> : undefined}>
+    <div className={layout.stack}>
+      {canWriteActivities && activityComposerOpen && <Form className={layout.form} onSubmit={addActivity}>
                 <SegmentedControl label="Tipo de atividade" value={selectedType} options={TYPES} onValueChange={setSelectedType} />
                 <Field>
                   <Label>Título</Label>
@@ -320,25 +298,67 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
                   <Label>Quando</Label>
                   <DateTimePicker label="Data e hora da atividade" mode="datetime" value={scheduledAt} onValueChange={setScheduledAt} placeholder="Selecionar data e hora" />
                 </Field>
-                <div className={layout.formActions}><Button type="submit" size="sm" loading={activityPending} disabled={!activityTitle.trim() || !scheduledAt}>Adicionar atividade</Button></div>
-              </form>}
+                <div className={layout.formActions}><Button type="button" variant="ghost" size="sm" disabled={activityPending} onClick={() => setActivityComposerOpen(false)}>Cancelar</Button><Button type="submit" size="sm" loading={activityPending} disabled={!activityTitle.trim() || !scheduledAt}>Adicionar atividade</Button></div>
+              </Form>}
+      <Tabs variant="segmented" label="Situação das atividades" defaultValue="pendentes" items={[
+        { value: "pendentes", label: `Pendentes (${pendingActivities.length})`, content: activityList(false) },
+        { value: "concluidas", label: `Concluídas (${completedActivities.length})`, content: activityList(true) },
+      ]} />
+    </div>
+  </Card>;
+  const historyContent = <Card title="Histórico" description="Alterações e registros relacionados a esta pessoa.">
+    <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={groupTimelineEvents(events, { users, companies, customFields, stages })} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
+  </Card>;
+
+  return (
+    <div className={[layout.page, layout.personPage, embedded ? layout.embedded : ""].filter(Boolean).join(" ")}>
+      <RecordPageHeader back={backControl} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite || canWriteInbox ? <>{canWrite && <MergePerson contactId={contactId} name={data.name} />}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star", numeric: true }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: company?.name ?? "Não vinculada", icon: "building" }]} />
+      <div className={layout.personGrid}>
+        <div className={layout.profileColumn}>
+          {/* Todo valor da ficha passa pelo InlineField: a mesma caixa parada,
+            * vazia e editando, como na ficha do negócio. */}
+          <Card title="Detalhes">
+            <div className={layout.fields}>
+              <InlineField block label="Nome" value={data.name} disabled={!canWrite}>{(close) => <Input aria-label="Nome" defaultValue={data.name} onBlur={(event) => close(saveContact("name", event.currentTarget.value))} />}</InlineField>
+              <InlineField block label="E-mail" value={data.email ?? "Sem e-mail"} empty={!data.email} disabled={!canWrite}>{(close) => <Input aria-label="E-mail" type="email" defaultValue={data.email ?? ""} placeholder="nome@empresa.com.br" onBlur={(event) => close(saveContact("email", event.currentTarget.value))} />}</InlineField>
+              <InlineField block label="Telefone" numeric value={data.phone ? formatPhone(data.phone) : "Sem telefone"} empty={!data.phone} disabled={!canWrite}>{(close) => <Input aria-label="Telefone" type="tel" numeric defaultValue={data.phone ? formatPhone(data.phone) : ""} placeholder="DDD + número" onBlur={(event) => close(saveContact("phone", event.currentTarget.value))} />}</InlineField>
+              <InlineField block label="Pontuação" numeric value={String(data.score)} />
+              <InlineField block label="Etapa do relacionamento" value={LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus} disabled={!canWrite || busy}>{(close) => <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) close(updateLifecycle("leadStatus", value)); }} />}</InlineField>
+              <InlineField block label="Origem" value={LEAD_SOURCE_OPTIONS.find((option) => option.value === data.source)?.label ?? data.source ?? "Sem origem"} empty={!data.source} disabled={!canWrite || busy}>{(close) => <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => close(updateLifecycle("source", value))} />}</InlineField>
+              <InlineField block label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite || busy}>{(close) => <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => close(updateLifecycle("ownerId", value))} />}</InlineField>
+              <InlineField block label="Empresa" value={company?.name ?? "Não vinculada"} empty={!company} {...(company ? { leading: <Avatar name={company.name} size="small" />, action: { label: `Abrir ${company.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${company.id}`) } } : {})} disabled={!canWrite || !canReadCompanies || busy}>{(close) => <Select label="Empresa da pessoa" value={data.companyId} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(updateLifecycle("companyId", value))} />}</InlineField>
+            </div>
+          </Card>
+          {activeCustomFields.length > 0 && <Card title="Campos personalizados">
+            <div className={layout.fields}>
+              {activeCustomFields.map((field) => <EnrichedCustomFieldValue layout="stacked" key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
             </div>
           </Card>}
         </div>
-        <div className={layout.identityColumn}>
-          <Card title="Canais e identidades">
+        <div className={layout.personWork}>
+          <Tabs fill={!embedded} label="Área de trabalho da pessoa" items={[
+            ...(canReadActivities ? [{ value: "atividades", label: "Atividades", content: activitiesContent }] : []),
+            ...(canReadDeals ? [{ value: "negocios", label: `Negócios (${deals.length})`, content: <Card title="Negócios" actions={canWriteDeals ? <Button size="sm" variant="secondary" onClick={() => void navigate(`/deals?createFor=${contactId}`)}>Novo negócio</Button> : undefined}>
+            {deals.length === 0 ? <Text size="pequeno" tone="muted">Nenhum negócio desta pessoa.</Text> : <RowList label="Negócios desta pessoa">{deals.map((deal, index) => <ListRow key={deal.id} index={index} icon="briefcase" title={deal.name} description={deal.status === "open" ? "Em aberto" : deal.status === "won" ? <Signal tone="success">Ganho</Signal> : <Signal tone="danger">Perdido</Signal>} render={<Link to={`/deals/${deal.id}`} />} />)}</RowList>}
+          </Card> }] : []),
+            ...(canReadInbox ? [{ value: "conversas", label: `Conversas (${conversations.length})`, content: <Card title="Conversas">
+            {conversations.length === 0 ? <Text size="pequeno" tone="muted">Nenhuma conversa desta pessoa.</Text> : <RowList label="Conversas desta pessoa">{conversations.map((conversation, index) => <ListRow key={conversation.id} index={index} icon="message" title={conversation.subject} description={conversation.channel === "email" ? "E-mail" : conversation.channel === "instagram" ? "Instagram" : conversation.channel === "whatsapp" ? "WhatsApp" : conversation.channel === "messenger" ? "Messenger" : "Interno"} render={<Link to={`/inbox?box=all&conversation=${conversation.id}`} />} />)}</RowList>}
+          </Card> }] : []),
+            { value: "historico", label: "Histórico", content: historyContent },
+            { value: "canais", label: "Canais", content: <Card title="Canais e identidades">
             <div className={layout.stack}>
-              {identities.length === 0 ? <Text size="pequeno" tone="muted">Nenhum canal adicional.</Text> : <div className={layout.fields}>{identities.map((identity) => <InlineField key={identity.id} label={IDENTITY_CHANNEL_OPTIONS.find((option) => option.value === identity.channel)?.label ?? identity.channel} value={identity.channel === "instagram" ? `@${identity.externalValue}` : identity.externalValue} numeric={identity.channel === "phone" || identity.channel === "whatsapp"} />)}</div>}
-              {canWrite && <form className={layout.form} onSubmit={addIdentity}>
+              {identities.length === 0 ? <Text size="pequeno" tone="muted">Nenhum canal adicional.</Text> : <div className={layout.fields}>{identities.map((identity) => <InlineField block key={identity.id} label={IDENTITY_CHANNEL_OPTIONS.find((option) => option.value === identity.channel)?.label ?? identity.channel} value={identity.channel === "instagram" ? `@${identity.externalValue}` : identity.externalValue} numeric={identity.channel === "phone" || identity.channel === "whatsapp"} />)}</div>}
+              {canWrite && <Form className={layout.form} onSubmit={addIdentity}>
                 <Field><Label>Tipo de canal</Label><Select label="Tipo de canal" value={identityChannel} options={IDENTITY_CHANNEL_OPTIONS} onValueChange={(value) => { if (value) setIdentityChannel(value as IdentityChannel); }} /></Field>
                 <Field>
                   <Label>Identificador</Label>
                   <Input value={identityValue} onChange={(event) => setIdentityValue(event.target.value)} placeholder={identityChannel === "email" ? "nome@empresa.com" : identityChannel === "instagram" ? "@usuario" : "DDD + número"} />
                 </Field>
                 <div className={layout.formActions}><Button type="submit" size="sm" variant="secondary" loading={identityPending} disabled={!identityValue.trim()}>Adicionar canal</Button></div>
-              </form>}
+              </Form>}
             </div>
-          </Card>
+          </Card> },
+          ]} />
         </div>
       </div>
     </div>
