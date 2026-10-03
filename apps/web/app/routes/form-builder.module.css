@@ -1,36 +1,29 @@
+/* Editor de formulário — só layout (ADR-0045). Seções em Card, cada campo
+ * numa folha (Surface), prévia numa moldura cavada; a aparência é do ui-web. */
 .page { gap: var(--space-5); }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loading > :first-child { width: var(--ui-menuWidth); }
-.headerActions,.fieldActions { display: flex; align-items: center; gap: var(--space-2); }
 .mobileViewSwitch { display: none; }
-.workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(var(--ui-drawerWidth), .85fr); align-items: start; min-width: 0; border-top: var(--ui-hairline) solid var(--color-line); }
-.editor { display: grid; gap: var(--space-5); min-width: 0; padding: var(--space-4) var(--space-5) var(--space-4) 0; }
-.editorSection,.form { display: grid; gap: var(--space-4); min-width: 0; }
-.editorSection + .editorSection { padding-top: var(--space-5); border-top: var(--ui-hairline) solid var(--color-line); }
-.sectionHeading { display: grid; gap: var(--space-1); }
-.sectionHeading h2 { margin: 0; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
-.sectionHeading p { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.fieldList { display: grid; gap: var(--space-3); min-width: 0; }
-.columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: var(--space-3); }
-.fieldCard { display: grid; gap: var(--space-4); min-width: 0; padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); transition: border-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out); }
-.fieldCard:focus-within { border-color: var(--color-focusRing); box-shadow: var(--ui-selectionShadow); }
-.fieldCardHeader { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.fieldCardHeader > strong { flex: 1; min-width: 0; overflow: hidden; color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
-.fieldActions { flex-shrink: 0; }
-.fieldNumber { display: grid; place-items: center; flex: 0 0 var(--space-6); width: var(--space-6); height: var(--space-6); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-accentWash); color: var(--color-accent); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); font-variant-numeric: tabular-nums; }
-.fieldActions > :nth-child(2) svg { transform: rotate(180deg); }
-.preview { position: sticky; top: var(--space-6); display: grid; gap: var(--space-3); min-width: 0; padding: var(--space-4) 0 var(--space-4) var(--space-5); border-left: var(--ui-hairline) solid var(--color-line); }
-.previewHeader { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
-.previewHeader > div { display: grid; gap: var(--space-1); }
-.previewHeader strong { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
-.previewHeader span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(var(--ui-drawerWidth), .85fr); align-items: start; gap: var(--space-6); min-width: 0; }
+.editor { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.form { display: grid; gap: var(--space-4); min-width: 0; }
+.columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: var(--space-3) var(--space-4); min-width: 0; }
+.fieldList { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.fieldItem { display: grid; gap: var(--space-4); min-width: 0; padding: var(--space-4) 18px var(--space-5); }
+/* O interruptor fica no meio da altura do campo ao lado (40). */
+.switchCell { display: flex; align-items: center; min-height: var(--h-field); }
+.addField { align-self: flex-start; }
+.preview { position: sticky; top: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.stage { display: flex; justify-content: center; min-width: 0; padding: var(--space-8) var(--space-6); }
 @media (max-width: 1100px) {
   .mobileViewSwitch { display: flex; }
   .workspace { grid-template-columns: minmax(0, 1fr); }
   .workspace[data-mobile-view="editor"] .preview,
   .workspace[data-mobile-view="preview"] .editor { display: none; }
-  .editor { padding-right: 0; }
-  .preview { position: static; padding: var(--space-4) 0; border-left: 0; border-top: 0; }
+  .preview { position: static; }
 }
-@media (max-width: 720px) { .columns { grid-template-columns: 1fr; } .headerActions { flex-wrap: wrap; } .fieldCard { padding: var(--space-3); } }
-@media (prefers-reduced-motion: reduce) { .fieldCard { transition: none; } }
+@media (max-width: 720px) {
+  .columns { grid-template-columns: minmax(0, 1fr); }
+  .fieldItem { padding: var(--space-3) var(--space-4) var(--space-4); }
+  .stage { padding: var(--space-5) var(--space-3); }
+}

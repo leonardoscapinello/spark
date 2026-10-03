@@ -1,10 +1,51 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { Link, useNavigate, useParams } from "react-router";
 import { lightTheme } from "@spark/tokens/native-theme";
 import { automationsControllerPublish, automationsControllerRun } from "@spark/api-client";
 import { validateAutomationGraph, type AutomationEdge, type AutomationGraph, type AutomationNode, type AutomationNodeType } from "@spark/core";
-import { ActionModal, BackLink, Badge, Button, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageHeader, SearchSelect, Select, Skeleton, Textarea, notify, type IconName, type SelectOption } from "@spark/ui-web";
+import {
+  ActionModal,
+  Alert,
+  BackLink,
+  Button,
+  Chip,
+  EmptyState,
+  FLOW_NODE_SIZE,
+  Field,
+  FlowCanvas,
+  FlowEdge,
+  FlowEdges,
+  FlowNode,
+  FlowPort,
+  Icon,
+  IconTile,
+  Input,
+  Label,
+  ListRow,
+  ListRowButton,
+  MenuButton,
+  MenuItem,
+  PageHeader,
+  PageState,
+  RowList,
+  SearchSelect,
+  SectionTitle,
+  Select,
+  SidePanel,
+  Signal,
+  Skeleton,
+  Textarea,
+  Toolbar,
+  ToolbarSeparator,
+  ToolbarText,
+  flowInputAnchor,
+  flowOutputAnchor,
+  notify,
+  type FlowPoint,
+  type IconName,
+  type SelectOption,
+} from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getAutomationRunsCollection, getAutomationRunStepsCollection, getAutomationVersionsCollection, getAutomationsCollection } from "../lib/automations-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -17,15 +58,34 @@ const NODE_DEFAULTS: Record<AutomationNodeType, { label: string; description: st
   condition: { label: "Nova condição", description: "Divide o caminho por uma regra" },
   wait: { label: "Nova espera", description: "Aguarda um período ou evento" },
 };
-const NODE_ICONS: Record<AutomationNodeType, IconName> = { trigger: "bolt", action: "plus", condition: "grid", wait: "calendar" };
-const NODE_WIDTH = Number.parseFloat(lightTheme["ui-automationNodeWidth"]);
-const NODE_HEIGHT = Number.parseFloat(lightTheme["ui-automationNodeHeight"]);
-const NODE_ORIGIN_X = Number.parseFloat(lightTheme["space-16"]) - Number.parseFloat(lightTheme["space-2"]);
-const NODE_ORIGIN_Y = Number.parseFloat(lightTheme["space-16"]);
-const NODE_STEP_X = NODE_WIDTH + Number.parseFloat(lightTheme["space-8"]) + Number.parseFloat(lightTheme["space-1"]);
-const NODE_STEP_Y = NODE_HEIGHT + Number.parseFloat(lightTheme["space-10"]);
-const CONDITION_BRANCH_OFFSET = (Number.parseFloat(lightTheme["ui-touchTarget"]) + Number.parseFloat(lightTheme["space-1"])) / 2;
-const CANVAS_MARGIN = Number.parseFloat(lightTheme["space-16"]);
+const NODE_ICONS: Record<AutomationNodeType, IconName> = { trigger: "bolt", action: "play", condition: "funnel", wait: "clock" };
+// O tipo da etapa vive num ponto de pigmento, na ordem fixa da identidade.
+const NODE_DOT: Record<AutomationNodeType, string> = { trigger: "var(--v1)", action: "var(--v2)", condition: "var(--v3)", wait: "var(--v4)" };
+const space = (token: "space-1" | "space-2" | "space-8" | "space-10" | "space-16") => Number.parseFloat(lightTheme[token]);
+const NODE_ORIGIN = { x: space("space-16") - space("space-2"), y: space("space-16") };
+const NODE_STEP = { x: FLOW_NODE_SIZE.width + space("space-8") + space("space-1"), y: FLOW_NODE_SIZE.height + space("space-10") };
+const CANVAS_MARGIN = space("space-16");
+// Como no kanban: até 4px de deslocamento é clique, não arrasto.
+const DRAG_THRESHOLD = space("space-1");
+const ZOOM = { min: 0.5, max: 1.5, step: 0.25 };
+const BRANCHES = ["sim", "não"] as const;
+type Branch = (typeof BRANCHES)[number];
+type PanelMode = "closed" | "palette" | "inspector" | "runs";
+type RunStatus = "queued" | "running" | "waiting" | "completed" | "failed" | "cancelled";
+const AUTOMATION_STATUS = {
+  draft: { label: "Rascunho", dot: "var(--tx3)" },
+  active: { label: "Ativa", dot: "var(--ok)" },
+  paused: { label: "Pausada", dot: "var(--wa)" },
+} as const;
+const RUN_STATUS: Record<RunStatus, { label: string; icon: IconName; tone: "muted" | "info" | "warning" | "success" | "danger" }> = {
+  queued: { label: "Na fila", icon: "clock", tone: "muted" },
+  running: { label: "Executando", icon: "play", tone: "info" },
+  waiting: { label: "Aguardando", icon: "clock", tone: "warning" },
+  completed: { label: "Concluída", icon: "check", tone: "success" },
+  failed: { label: "Falhou", icon: "alert", tone: "danger" },
+  cancelled: { label: "Cancelada", icon: "x", tone: "muted" },
+};
+const RUN_DATE = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
 export async function clientLoader() { const session = await requireCapability("automations:read"); void Promise.allSettled([getAutomationsCollection().preload(), getAutomationVersionsCollection().preload(), getAutomationRunsCollection().preload(), getAutomationRunStepsCollection().preload(), ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : [])]); return null; }
 
@@ -43,14 +103,16 @@ export default function AutomationBuilder() {
   const [graph, setGraph] = useState<AutomationGraph>({ nodes: [], edges: [] });
   const [zoom, setZoom] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [panelMode, setPanelMode] = useState<"closed" | "palette" | "inspector">("closed");
-  const [connectingFrom, setConnectingFrom] = useState<{ nodeId: string; label?: "sim" | "não" } | null>(null);
+  const [panelMode, setPanelMode] = useState<PanelMode>("closed");
+  const [connectingFrom, setConnectingFrom] = useState<{ nodeId: string; label?: Branch } | null>(null);
+  const [pointer, setPointer] = useState<FlowPoint | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [runModalOpen, setRunModalOpen] = useState(false);
-  const [runsOpen, setRunsOpen] = useState(false);
   const [runContact, setRunContact] = useState<SelectOption | null>(null);
   const hydratedId = useRef<string | null>(null);
-  const drag = useRef<{ id: string; startX: number; startY: number; originX: number; originY: number } | null>(null);
+  const drag = useRef<{ id: string; startX: number; startY: number; originX: number; originY: number; moved: boolean } | null>(null);
+  const pointerFrame = useRef(0);
   const canWrite = session?.capabilities.includes("automations:write") ?? false;
   const canPublish = session?.capabilities.includes("automations:publish") ?? false;
 
@@ -62,43 +124,86 @@ export default function AutomationBuilder() {
     }
   }, [automation]);
 
+  // Arrasto: depois de 4px a etapa vira fantasma (FlowNode `dragging`) e segue
+  // o ponteiro um quadro por vez; ao soltar, pousa pela física global.
   useEffect(() => {
+    let frame = 0;
+    let next: { id: string; x: number; y: number } | null = null;
     function move(event: PointerEvent) {
       const current = drag.current;
       if (!current) return;
-      setGraph((value) => ({ ...value, nodes: value.nodes.map((node) => node.id === current.id ? { ...node, position: { x: Math.max(0, current.originX + (event.clientX - current.startX) / zoom), y: Math.max(0, current.originY + (event.clientY - current.startY) / zoom) } } : node) }));
+      const dx = event.clientX - current.startX;
+      const dy = event.clientY - current.startY;
+      if (!current.moved) {
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+        current.moved = true;
+        setDraggingId(current.id);
+      }
+      next = { id: current.id, x: Math.max(0, current.originX + dx / zoom), y: Math.max(0, current.originY + dy / zoom) };
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const target = next;
+        if (!target) return;
+        setGraph((value) => ({ ...value, nodes: value.nodes.map((node) => node.id === target.id ? { ...node, position: { x: target.x, y: target.y } } : node) }));
+      });
     }
-    function end() { drag.current = null; }
+    function end() { drag.current = null; setDraggingId(null); }
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);
-    return () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", end); };
+    window.addEventListener("pointercancel", end);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", end); window.removeEventListener("pointercancel", end); };
   }, [zoom]);
+
+  // Esc desiste da ligação em andamento.
+  useEffect(() => {
+    if (!connectingFrom) return;
+    function cancel(event: KeyboardEvent) { if (event.key === "Escape") { setConnectingFrom(null); setPointer(null); } }
+    window.addEventListener("keydown", cancel);
+    return () => window.removeEventListener("keydown", cancel);
+  }, [connectingFrom]);
+
+  useEffect(() => () => cancelAnimationFrame(pointerFrame.current), []);
 
   const selected = graph.nodes.find((node) => node.id === selectedId) ?? null;
   const issues = useMemo(() => validateAutomationGraph(graph), [graph]);
   const canvasBounds = useMemo(() => graph.nodes.reduce((bounds, node) => ({
-    width: Math.max(bounds.width, node.position.x + NODE_WIDTH + CANVAS_MARGIN),
-    height: Math.max(bounds.height, node.position.y + NODE_HEIGHT + CANVAS_MARGIN),
+    width: Math.max(bounds.width, node.position.x + FLOW_NODE_SIZE.width + CANVAS_MARGIN),
+    height: Math.max(bounds.height, node.position.y + FLOW_NODE_SIZE.height + CANVAS_MARGIN),
   }), { width: 0, height: 0 }), [graph.nodes]);
+  const contactNames = useMemo(() => new Map<string, string>(contacts.map((contact) => [contact.id, contact.name] as const)), [contacts]);
 
-  function addNode(type: AutomationNodeType) {
-    const id = `${type}-${crypto.randomUUID()}`;
-    const count = graph.nodes.length;
-    const node: AutomationNode = { id, type, position: { x: NODE_ORIGIN_X + (count % 3) * NODE_STEP_X, y: NODE_ORIGIN_Y + Math.floor(count / 3) * NODE_STEP_Y }, data: { ...NODE_DEFAULTS[type], config: {} } };
-    setGraph((value) => ({ ...value, nodes: [...value.nodes, node] }));
+  function openNode(id: string) {
     setSelectedId(id);
     setPanelMode("inspector");
   }
 
-  function startDrag(event: ReactPointerEvent, node: AutomationNode) {
-    if (!canWrite) return;
-    event.preventDefault();
-    setSelectedId(node.id);
-    setPanelMode("inspector");
-    drag.current = { id: node.id, startX: event.clientX, startY: event.clientY, originX: node.position.x, originY: node.position.y };
+  function closePanel() {
+    setPanelMode("closed");
+    setSelectedId(null);
   }
 
-  function startConnection(nodeId: string, label?: "sim" | "não") {
+  function addNode(type: AutomationNodeType) {
+    const id = `${type}-${crypto.randomUUID()}`;
+    const count = graph.nodes.length;
+    const node: AutomationNode = { id, type, position: { x: NODE_ORIGIN.x + (count % 3) * NODE_STEP.x, y: NODE_ORIGIN.y + Math.floor(count / 3) * NODE_STEP.y }, data: { ...NODE_DEFAULTS[type], config: {} } };
+    setGraph((value) => ({ ...value, nodes: [...value.nodes, node] }));
+    openNode(id);
+  }
+
+  function pressNode(event: ReactPointerEvent<HTMLElement>, node: AutomationNode) {
+    event.stopPropagation();
+    if (event.button !== 0) return;
+    // Ligando: tocar a folha de destino conclui a ligação (alvo maior que a porta).
+    if (connectingFrom && connectingFrom.nodeId !== node.id) { finishConnection(node.id); return; }
+    openNode(node.id);
+    if (!canWrite) return;
+    event.preventDefault();
+    drag.current = { id: node.id, startX: event.clientX, startY: event.clientY, originX: node.position.x, originY: node.position.y, moved: false };
+  }
+
+  function startConnection(nodeId: string, label?: Branch) {
+    setPointer(null);
     setConnectingFrom((current) => current?.nodeId === nodeId && current.label === label ? null : { nodeId, ...(label ? { label } : {}) });
   }
 
@@ -111,6 +216,17 @@ export default function AutomationBuilder() {
       return { ...value, edges: [...value.edges, { id: `edge-${crypto.randomUUID()}`, source: source.nodeId, target: targetId, ...(source.label ? { label: source.label } : {}) }] };
     });
     setConnectingFrom(null);
+    setPointer(null);
+  }
+
+  // A linha tracejada da ligação em andamento segue o ponteiro, em px do fluxo.
+  function trackPointer(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!connectingFrom) return;
+    const viewport = event.currentTarget;
+    const rect = viewport.getBoundingClientRect();
+    const next = { x: (event.clientX - rect.left + viewport.scrollLeft) / zoom, y: (event.clientY - rect.top + viewport.scrollTop) / zoom };
+    cancelAnimationFrame(pointerFrame.current);
+    pointerFrame.current = requestAnimationFrame(() => setPointer(next));
   }
 
   function updateSelected(data: Partial<AutomationNode["data"]>) {
@@ -121,8 +237,7 @@ export default function AutomationBuilder() {
   function removeSelected() {
     if (!selectedId) return;
     setGraph((value) => ({ nodes: value.nodes.filter((node) => node.id !== selectedId), edges: value.edges.filter((edge) => edge.source !== selectedId && edge.target !== selectedId) }));
-    setSelectedId(null);
-    setPanelMode("closed");
+    closePanel();
     setConnectingFrom(null);
   }
 
@@ -131,7 +246,8 @@ export default function AutomationBuilder() {
     setSaving(true);
     try {
       await collection.update(automation.id, (draft) => { draft.name = name.trim() || automation.name; draft.draftGraph = graph; }).isPersisted.promise;
-      notify({ title: "Rascunho salvo", description: `${graph.nodes.length} blocos sincronizados.`, tone: "success" });
+      const count = graph.nodes.length;
+      notify({ title: "Rascunho salvo", description: `${count} ${count === 1 ? "etapa sincronizada" : "etapas sincronizadas"}.`, tone: "success" });
     } catch { notify({ title: "Não foi possível salvar", tone: "error" }); }
     finally { setSaving(false); }
   }
@@ -155,69 +271,142 @@ export default function AutomationBuilder() {
     setRunContact(null);
   }
 
-  if (!automation) return <div className={styles.page}><PageHeader back={<BackLink render={<Link to="/automations" />}>Automações</BackLink>} title="Editor de automação" />{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando automação"><Skeleton /><Skeleton /><Skeleton /></div> : <EmptyState icon="bolt" title="Automação não encontrada" description="Este fluxo não está mais disponível ou você não tem acesso a ele." action={<Button onClick={() => navigate("/automations")}>Ver automações</Button>} />}</div>;
+  const back = <BackLink render={<Link to="/automations" />}>Automações</BackLink>;
+  if (!automation) return <div className={styles.fallback}>
+    <PageHeader back={back} title="Editor de automação" />
+    {isLoading
+      ? <div className={styles.loading} role="status" aria-label="Carregando automação"><Skeleton /><Skeleton /><Skeleton /></div>
+      : <PageState kind="not-found" title="Automação não encontrada" description="Este fluxo não está mais disponível ou você não tem acesso a ele." action={<Button variant="secondary" onClick={() => navigate("/automations")}>Ver automações</Button>} />}
+  </div>;
 
-  return <div className={`${styles.page} ${styles.editorPage}`}>
-    <div className={styles.editorHeader}>
-    <PageHeader back={<BackLink render={<Link to="/automations" />}>Automações</BackLink>} title={automation.name} actions={<div className={styles.headerActions}>
-      <Badge tone={automation.status === "active" ? "success" : automation.status === "paused" ? "warning" : "neutral"}>{automation.status === "active" ? "Ativa" : automation.status === "paused" ? "Pausada" : "Rascunho"}</Badge>
-      <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label="Mais ações do fluxo" menu={<>
-        <MenuItem onClick={() => setRunsOpen((open) => !open)}>{runsOpen ? "Ocultar execuções" : `Ver execuções (${runs.length})`}</MenuItem>
-        {selected && panelMode === "palette" && <MenuItem onClick={() => setPanelMode("inspector")}>Configurar bloco</MenuItem>}
-        {canWrite && automation.status === "active" && canReadContacts && <MenuItem onClick={() => setRunModalOpen(true)}>Executar agora</MenuItem>}
-      </>} />
-      {canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}
-      {canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}
-    </div>} />
-    </div>
-    {runsOpen && <section className={styles.runBar} aria-label="Execuções recentes"><div><strong>Execuções recentes</strong><span>{runs.length ? `${runs.length} registradas nesta automação` : "Nenhuma execução iniciada"}</span></div><div className={styles.runList}>{runs.slice(0, 5).map((run) => <span key={run.id}><Badge tone={run.status === "completed" ? "success" : run.status === "failed" ? "danger" : run.status === "waiting" ? "warning" : "neutral"}>{runStatusLabel(run.status)}</Badge><small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(run.startedAt))}</small></span>)}</div></section>}
-    <div className={styles.workspace} data-panel={panelMode}>
-      {panelMode !== "closed" && <aside className={styles.panel} aria-label={panelMode === "palette" || !selected ? "Adicionar blocos" : "Configurar bloco"}>
-        <Button iconOnly size="sm" variant="ghost" className={styles.panelClose} aria-label="Fechar painel" onClick={() => { setPanelMode("closed"); setSelectedId(null); }}><Icon name="close" /></Button>
-        {panelMode === "palette" || !selected ? <div className={styles.palette}>
-          <header><strong>Adicionar etapa</strong><span>Escolha o que acontece neste ponto do fluxo.</span></header>
-          <div className={styles.paletteGroup}><strong>Passo inicial</strong><div className={styles.paletteGrid}>
-            <Button variant="row" shape="rounded" className={styles.paletteButton} data-type="trigger" disabled={!canWrite} onClick={() => addNode("trigger")}><span className={styles.nodeIcon}><Icon name={NODE_ICONS.trigger} /></span><span><strong>Gatilho</strong><small>{NODE_DEFAULTS.trigger.description}</small></span></Button>
-          </div></div>
-          <div className={styles.paletteGroup}><strong>Lógica e execução</strong><div className={styles.paletteGrid}>
-            {(["action", "condition", "wait"] as const).map((type) => <Button key={type} variant="row" shape="rounded" className={styles.paletteButton} data-type={type} disabled={!canWrite} onClick={() => addNode(type)}><span className={styles.nodeIcon}><Icon name={NODE_ICONS[type]} /></span><span><strong>{typeLabel(type)}</strong><small>{NODE_DEFAULTS[type].description}</small></span></Button>)}
-          </div></div>
-          <div className={styles.validation}><strong>Pronto para publicar</strong>{issues.length ? issues.map((issue) => <span key={`${issue.code}-${issue.nodeId ?? issue.edgeId ?? "graph"}`}>{issue.message}</span>) : <span data-valid="true">Fluxo válido e conectado.</span>}</div>
-        </div> : <div className={styles.inspector} data-type={selected.type}>
-          <header><div><span className={styles.inspectorType}><Icon name={NODE_ICONS[selected.type]} />{typeLabel(selected.type)}</span><strong>{selected.data.label}</strong></div></header>
-          <Field><Label>Nome do bloco</Label><Input value={selected.data.label} disabled={!canWrite} onChange={(event) => updateSelected({ label: event.target.value })} /></Field>
-          <Field><Label>Descrição</Label><Textarea value={selected.data.description} disabled={!canWrite} rows={4} onChange={(event) => updateSelected({ description: event.target.value })} /></Field>
-          <NodeConfiguration node={selected} disabled={!canWrite} onChange={(config) => updateSelected({ config })} />
-          {canWrite && <Button variant="ghost" className={styles.deleteButton} onClick={removeSelected}>Excluir bloco</Button>}
-        </div>}
-      </aside>}
-      <div className={styles.canvasViewport}>
-      {canWrite && <Button iconOnly size="lg" className={styles.canvasAdd} aria-label="Adicionar bloco" onClick={() => setPanelMode("palette")}><Icon name="plus" /></Button>}
-      <main className={styles.canvas} onPointerDown={() => { setSelectedId(null); setPanelMode("closed"); setConnectingFrom(null); }}>
-        <div className={styles.canvasStage} style={{ transform: `scale(${zoom})`, minWidth: `max(100%, ${canvasBounds.width}px)`, minHeight: `max(100%, ${canvasBounds.height}px)` }}>
-        <svg className={styles.edges} aria-hidden="true">{graph.edges.map((edge) => <EdgeLine key={edge.id} edge={edge} nodes={graph.nodes} />)}</svg>
-        {graph.nodes.length === 0 && <div className={styles.canvasEmpty}><strong>O fluxo começa com um gatilho</strong><span>Adicione o primeiro bloco para definir quando a automação começa.</span><Button disabled={!canWrite} onClick={(event) => { event.stopPropagation(); addNode("trigger"); }}>Adicionar gatilho</Button></div>}
-        {graph.nodes.map((node) => <article key={node.id} className={styles.node} data-type={node.type} data-selected={selectedId === node.id || undefined} style={{ transform: `translate(${node.position.x}px, ${node.position.y}px)` }} onPointerDown={(event) => { event.stopPropagation(); startDrag(event, node); }}>
-          <header><span className={styles.nodeIcon}><Icon name={NODE_ICONS[node.type]} /></span><small>{typeLabel(node.type)}</small></header>
-          <strong>{node.data.label}</strong><p>{node.data.description || "Sem descrição"}</p>
-          {canWrite && connectingFrom && connectingFrom.nodeId !== node.id && <Button iconOnly size="sm" variant="ghost" className={`${styles.nodePort} ${styles.inputPort}`} aria-label={`Conectar a ${node.data.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => finishConnection(node.id)} />}
-          {canWrite && <div className={styles.nodeOutputs} data-condition={node.type === "condition" || undefined}>
-            {(node.type === "condition" ? (["sim", "não"] as const) : ([undefined] as const)).map((label, index) => <div key={label ?? "next"} className={styles.nodeOutput}>
-              {label && <span className={styles.nodeOutputLabel}>{label === "sim" ? "Sim" : "Não"}</span>}
-              <Button iconOnly size="sm" variant="ghost" className={styles.nodePort} data-branch={label} data-connecting={connectingFrom?.nodeId === node.id && connectingFrom.label === label || undefined} aria-label={connectingFrom?.nodeId === node.id && connectingFrom.label === label ? "Cancelar ligação" : `Conectar ${label ? `saída ${label}` : "próxima etapa"} de ${node.data.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => startConnection(node.id, label)} />
-              {!label && index === 0 && <span className={styles.nodeOutputHint}>Próximo passo</span>}
-            </div>)}
-          </div>}
-        </article>)}
+  const status = AUTOMATION_STATUS[automation.status];
+  const pendingSource = connectingFrom ? graph.nodes.find((node) => node.id === connectingFrom.nodeId) : undefined;
+  const panel = panelContent();
+
+  function panelContent(): { eyebrow: string; title: string; description?: string; footer?: ReactNode; body: ReactNode } {
+    if (panelMode === "inspector" && selected) return {
+      eyebrow: `Etapa · ${typeLabel(selected.type)}`,
+      title: selected.data.label || "Etapa sem nome",
+      ...(canWrite ? { footer: <Button variant="secondary" tone="danger" icon={<Icon name="trash" />} onClick={removeSelected}>Excluir etapa</Button> } : {}),
+      body: <>
+        <Field><Label>Nome da etapa</Label><Input value={selected.data.label} disabled={!canWrite} onChange={(event) => updateSelected({ label: event.target.value })} /></Field>
+        <Field><Label>Descrição</Label><Textarea value={selected.data.description} disabled={!canWrite} rows={3} onChange={(event) => updateSelected({ description: event.target.value })} /></Field>
+        <NodeConfiguration node={selected} disabled={!canWrite} onChange={(config) => updateSelected({ config })} />
+      </>,
+    };
+    if (panelMode === "runs") return {
+      eyebrow: "Histórico",
+      title: "Execuções",
+      ...(runs.length ? { description: `${runs.length} ${runs.length === 1 ? "registrada" : "registradas"} nesta automação.` } : {}),
+      body: runs.length
+        ? <RowList label="Execuções recentes">{runs.slice(0, 20).map((run, index) => <ListRow
+          key={run.id}
+          index={index}
+          leading={<IconTile icon={RUN_STATUS[run.status].icon} size="sm" tone={RUN_STATUS[run.status].tone} />}
+          title={RUN_STATUS[run.status].label}
+          description={contactNames.get(run.contactId) ?? "Pessoa do fluxo"}
+          meta={RUN_DATE.format(new Date(run.startedAt))}
+        />)}</RowList>
+        : <EmptyState icon="play" title="Nenhuma execução ainda" description="Quando alguém entrar no fluxo, a execução aparece aqui." />,
+    };
+    return {
+      eyebrow: "Fluxo",
+      title: "Adicionar etapa",
+      description: "Escolha o que acontece neste ponto do fluxo.",
+      body: <>
+        <div className={styles.paletteGroup}>
+          <SectionTitle level="block" as="h3">Passo inicial</SectionTitle>
+          <RowList><ListRowButton index={0} icon={NODE_ICONS.trigger} dot={NODE_DOT.trigger} title="Gatilho" description={NODE_DEFAULTS.trigger.description} disabled={!canWrite} onClick={() => addNode("trigger")} /></RowList>
         </div>
-      </main>
-      <div className={styles.zoomControls} role="group" aria-label="Zoom do fluxo">
-        <Button iconOnly size="sm" variant="ghost" aria-label="Ampliar zoom" disabled={zoom >= 1.5} onClick={() => setZoom((value) => Math.min(1.5, value + 0.25))}><Icon name="plus" /></Button>
-        <Button size="sm" variant="ghost" aria-label="Voltar ao zoom de 100%" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</Button>
-        <Button iconOnly size="sm" variant="ghost" aria-label="Reduzir zoom" disabled={zoom <= 0.5} onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}><Icon name="minus" /></Button>
-      </div>
-      </div>
+        <div className={styles.paletteGroup}>
+          <SectionTitle level="block" as="h3">Lógica e execução</SectionTitle>
+          <RowList>{(["action", "condition", "wait"] as const).map((type, index) => <ListRowButton key={type} index={index + 1} icon={NODE_ICONS[type]} dot={NODE_DOT[type]} title={typeLabel(type)} description={NODE_DEFAULTS[type].description} disabled={!canWrite} onClick={() => addNode(type)} />)}</RowList>
+        </div>
+        <div className={styles.validation}>
+          <Alert tone={issues.length ? "warning" : "success"} title={issues.length ? "Antes de publicar" : "Pronto para publicar"}>
+            {issues.length ? issues.map((issue) => issue.message).join(" ") : "Fluxo válido e conectado."}
+          </Alert>
+        </div>
+      </>,
+    };
+  }
+
+  return <div className={styles.page}>
+    <div className={styles.header}>
+      <PageHeader back={back} title={automation.name} actions={<>
+        <Chip dot={status.dot}>{status.label}</Chip>
+        <MenuButton size="sm" variant="ghost" iconOnly indicator={false} icon={<Icon name="more" />} aria-label="Mais ações do fluxo" menu={<>
+          <MenuItem onClick={() => panelMode === "runs" ? closePanel() : setPanelMode("runs")}>{panelMode === "runs" ? "Ocultar execuções" : `Ver execuções (${runs.length})`}</MenuItem>
+          {selected && panelMode !== "inspector" && <MenuItem onClick={() => setPanelMode("inspector")}>Configurar etapa</MenuItem>}
+          {canWrite && automation.status === "active" && canReadContacts && <MenuItem onClick={() => setRunModalOpen(true)}>Executar agora</MenuItem>}
+        </>} />
+        {canWrite && <Button variant="secondary" loading={saving} onClick={() => void saveDraft()}>Salvar rascunho</Button>}
+        {canPublish && <Button disabled={Boolean(issues.length)} loading={saving} onClick={() => void publish()}>Publicar</Button>}
+      </>} />
     </div>
+    <FlowCanvas
+      className={styles.canvas}
+      label="Fluxo da automação"
+      zoom={zoom}
+      contentSize={canvasBounds}
+      onPointerDown={() => { closePanel(); setConnectingFrom(null); setPointer(null); }}
+      onPointerMove={trackPointer}
+      overlay={<>
+        <Toolbar label="Etapas do fluxo" className={styles.toolbarStart}>
+          {canWrite && <><Button size="sm" variant="ghost" icon={<Icon name="plus" />} onClick={() => setPanelMode("palette")}>Adicionar etapa</Button><ToolbarSeparator /></>}
+          <ToolbarText><Signal tone={issues.length ? "warning" : "success"}>{issues.length ? `${issues.length} ${issues.length === 1 ? "pendência" : "pendências"}` : "Pronto para publicar"}</Signal></ToolbarText>
+        </Toolbar>
+        <Toolbar label="Zoom do fluxo" className={styles.toolbarZoom}>
+          <Button iconOnly size="sm" variant="ghost" icon={<Icon name="minus" />} aria-label="Reduzir zoom" disabled={zoom <= ZOOM.min} onClick={() => setZoom((value) => Math.max(ZOOM.min, value - ZOOM.step))} />
+          <Button size="sm" variant="ghost" aria-label="Voltar ao zoom de 100%" onClick={() => setZoom(1)}>{`${Math.round(zoom * 100)}%`}</Button>
+          <Button iconOnly size="sm" variant="ghost" icon={<Icon name="plus" />} aria-label="Ampliar zoom" disabled={zoom >= ZOOM.max} onClick={() => setZoom((value) => Math.min(ZOOM.max, value + ZOOM.step))} />
+        </Toolbar>
+        {graph.nodes.length === 0 && <div className={styles.empty}>
+          <EmptyState icon="bolt" title="O fluxo começa com um gatilho" description="Adicione o primeiro passo para definir quando a automação começa." action={canWrite ? <Button icon={<Icon name="plus" />} onClick={() => addNode("trigger")}>Adicionar gatilho</Button> : undefined} />
+        </div>}
+        <SidePanel open={panelMode !== "closed"} onClose={closePanel} eyebrow={panel.eyebrow} title={panel.title} description={panel.description} footer={panel.footer}>{panel.body}</SidePanel>
+      </>}
+    >
+      <FlowEdges>
+        {graph.edges.map((edge) => <EdgeLine key={edge.id} edge={edge} nodes={graph.nodes} />)}
+        {pendingSource && pointer && <FlowEdge kind="pending" from={outputAnchor(pendingSource, connectingFrom?.label)} to={pointer} />}
+      </FlowEdges>
+      {graph.nodes.map((node) => {
+        const outputs: readonly (Branch | undefined)[] = node.type === "condition" ? BRANCHES : [undefined];
+        return <FlowNode
+          key={node.id}
+          position={node.position}
+          kind={typeLabel(node.type)}
+          dot={NODE_DOT[node.type]}
+          title={node.data.label}
+          description={node.data.description || undefined}
+          selected={selectedId === node.id}
+          dragging={draggingId === node.id}
+          movable={canWrite}
+          branched={canWrite && node.type === "condition"}
+          tabIndex={0}
+          aria-label={`${typeLabel(node.type)}: ${node.data.label}`}
+          onPointerDown={(event) => pressNode(event, node)}
+          onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); if (connectingFrom && connectingFrom.nodeId !== node.id) finishConnection(node.id); else openNode(node.id); } }}
+          input={canWrite && connectingFrom && connectingFrom.nodeId !== node.id
+            ? <FlowPort side="in" aria-label={`Conectar a ${node.data.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => finishConnection(node.id)} />
+            : undefined}
+          outputs={canWrite ? outputs.map((label) => {
+            const active = connectingFrom?.nodeId === node.id && connectingFrom.label === label;
+            return <FlowPort
+              key={label ?? "next"}
+              side="out"
+              label={label === "sim" ? "Sim" : label === "não" ? "Não" : undefined}
+              hint={label ? undefined : "Próximo passo"}
+              active={active}
+              aria-label={active ? "Cancelar ligação" : `Conectar ${label ? `saída ${label}` : "próxima etapa"} de ${node.data.label}`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => startConnection(node.id, label)}
+            />;
+          }) : undefined}
+        />;
+      })}
+    </FlowCanvas>
     <ActionModal open={runModalOpen} onOpenChange={setRunModalOpen} title="Executar automação" confirmLabel="Iniciar execução" errorText="Selecione uma pessoa." onConfirm={startRun}><Field><Label>Pessoa</Label><SearchSelect label="Pessoa da execução" searchPlacement="dropdown" placeholder="Buscar pessoa" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={runContact} onValueChange={setRunContact} /></Field></ActionModal>
   </div>;
 }
@@ -232,13 +421,16 @@ function NodeConfiguration({ node, disabled, onChange }: { node: AutomationNode;
 }
 
 function EdgeLine({ edge, nodes }: { edge: AutomationEdge; nodes: AutomationNode[] }) {
-  const source = nodes.find((node) => node.id === edge.source); const target = nodes.find((node) => node.id === edge.target);
+  const source = nodes.find((node) => node.id === edge.source);
+  const target = nodes.find((node) => node.id === edge.target);
   if (!source || !target) return null;
-  const x1 = source.position.x + NODE_WIDTH; const y1 = source.position.y + NODE_HEIGHT / 2 + (edge.label === "sim" ? -CONDITION_BRANCH_OFFSET : edge.label === "não" ? CONDITION_BRANCH_OFFSET : 0); const x2 = target.position.x; const y2 = target.position.y + NODE_HEIGHT / 2;
-  const middle = (x1 + x2) / 2;
-  return <path data-branch={edge.label} d={`M ${x1} ${y1} C ${middle} ${y1}, ${middle} ${y2}, ${x2} ${y2}`} />;
+  // Ramo de condição é tracejado; a ligação direta é contínua.
+  return <FlowEdge kind={edge.label ? "conditional" : "solid"} from={outputAnchor(source, edge.label)} to={flowInputAnchor(target.position)} />;
+}
+
+function outputAnchor(node: AutomationNode, label: string | undefined): FlowPoint {
+  return node.type === "condition" ? flowOutputAnchor(node.position, label === "não" ? 1 : 0, BRANCHES.length) : flowOutputAnchor(node.position);
 }
 function typeLabel(type: AutomationNodeType): string { return ({ trigger: "Gatilho", action: "Ação", condition: "Condição", wait: "Espera" })[type]; }
-function runStatusLabel(status: "queued" | "running" | "waiting" | "completed" | "failed" | "cancelled"): string { return ({ queued: "Na fila", running: "Executando", waiting: "Aguardando", completed: "Concluída", failed: "Falhou", cancelled: "Cancelada" })[status]; }
 function stringConfig(value: unknown): string { return typeof value === "string" ? value : ""; }
 function numberConfig(value: unknown): number { return typeof value === "number" && Number.isFinite(value) ? value : 0; }
