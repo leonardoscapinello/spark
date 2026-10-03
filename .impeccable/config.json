@@ -20,6 +20,15 @@
         ],
         "createdAt": "2026-10-03T01:08:15.695Z",
         "reason": "Claude (lead agent) decided: Chart.module.css L38 transitions SVG stroke-width on donut segments (origin spec: ring 10 to 14 on hover), a paint property that does not trigger layout; the rule matched 'width' inside 'stroke-width'."
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "packages/ui-web/src/Composer/Composer.module.css"
+        ],
+        "createdAt": "2026-10-03T22:23:33.575Z",
+        "reason": "Agent review: existing absolutely positioned Base UI tab indicator intentionally interpolates active-tab dimensions with tokenized motion, as documented in Composer and ADR-0044. It does not resize the surrounding layout; preserve the established indicator design."
       }
     ]
   }
