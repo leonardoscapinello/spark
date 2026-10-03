@@ -13,7 +13,7 @@ import {
   type IdentityChannel,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity, writeAccepted } from "@spark/data";
-import { Accordion, Avatar, BackLink, Button, Card, DateTimePicker, EmptyState, Field, Form, Icon, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, Tabs, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
+import { Accordion, Avatar, BackLink, Button, Card, DateTimePicker, EmptyState, Field, Form, Icon, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, ScoreGauge, Tabs, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -312,7 +312,7 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
 
   return (
     <div className={[layout.page, layout.personPage, embedded ? layout.embedded : ""].filter(Boolean).join(" ")}>
-      <RecordPageHeader back={backControl} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite || canWriteInbox ? <>{canWrite && <MergePerson contactId={contactId} name={data.name} />}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star", numeric: true }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: company?.name ?? "Não vinculada", icon: "building" }]} />
+      <RecordPageHeader back={backControl} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite || canWriteInbox ? <>{canWrite && <MergePerson contactId={contactId} name={data.name} />}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: company?.name ?? "Não vinculada", icon: "building" }]} />
       <div className={layout.personGrid}>
         <div className={layout.profileColumn}>
           {/* Todo valor da ficha passa pelo InlineField: a mesma caixa parada,
@@ -323,7 +323,7 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
               <InlineField label="E-mail" value={data.email ?? "Sem e-mail"} empty={!data.email} disabled={!canWrite}>{(close) => <Input aria-label="E-mail" type="email" defaultValue={data.email ?? ""} placeholder="nome@empresa.com.br" onBlur={(event) => close(saveContact("email", event.currentTarget.value))} />}</InlineField>
               <InlineField label="Telefone" numeric value={data.phone ? formatPhone(data.phone) : "Sem telefone"} empty={!data.phone} disabled={!canWrite}>{(close) => <Input aria-label="Telefone" type="tel" numeric defaultValue={data.phone ? formatPhone(data.phone) : ""} placeholder="DDD + número" onBlur={(event) => close(saveContact("phone", event.currentTarget.value))} />}</InlineField>
             </div> }, { value: "relationship", title: "Relacionamento", content: <div className={layout.fields}>
-              <InlineField label="Pontuação" numeric value={String(data.score)} />
+              <ScoreGauge value={data.score} />
               <InlineField label="Etapa do relacionamento" value={LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus} disabled={!canWrite || busy}>{(close) => <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) close(updateLifecycle("leadStatus", value)); }} />}</InlineField>
               <InlineField label="Origem" value={LEAD_SOURCE_OPTIONS.find((option) => option.value === data.source)?.label ?? data.source ?? "Sem origem"} empty={!data.source} disabled={!canWrite || busy}>{(close) => <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => close(updateLifecycle("source", value))} />}</InlineField>
               <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite || busy}>{(close) => <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => close(updateLifecycle("ownerId", value))} />}</InlineField>

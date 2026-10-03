@@ -134,3 +134,5 @@ export { ReplyComposer, ReplyComposerPreview, type ReplyComposerProps, type Repl
 export { NoteCard, type NoteCardProps } from "./NoteCard/NoteCard.js";
 export { LinkRecordsPreview, type LinkRecordsPreviewProps } from "./LinkRecordsPreview/LinkRecordsPreview.js";
 export { AppShell, AppContent } from "./AppShell/AppShell.js";
+
+export { ScoreGauge, type ScoreGaugeProps } from "./ScoreGauge/ScoreGauge.js";
