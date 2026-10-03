@@ -1,101 +1,110 @@
+/* Trilha de etapas (origem: Controles §5 "Segmentado" e Navegação §22
+ * "Stepper"): trilho cavado em pílula, padding 4, 2 entre etapas. A etapa
+ * atual é carvão — a folha [data-ind] desliza até ela em 550 ms. Vencidas em
+ * tinta 2, a fazer em tinta 3. Desfecho: fundo suave do estado, nunca cor cheia. */
 .frame { display: grid; gap: var(--space-1); min-width: 0; }
-.cooldown { display: grid; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); text-align: end; }
-.cooldown i { display: block; justify-self: end; width: var(--cooldown-progress); height: var(--space-1); border-radius: var(--radius-full); background: var(--color-accent); transition: width var(--motion-duration-fast) linear; }
+.cooldown { display: grid; gap: var(--space-1); color: var(--tx3); font-size: var(--fs-pequeno); text-align: end; }
+.cooldown i { display: block; justify-self: end; width: var(--cooldown-progress); height: 3px; border-radius: var(--r-pill); background: var(--tx); }
+
 .root {
   display: flex;
   align-items: stretch;
-  gap: var(--space-1);
+  gap: 2px;
   min-width: 0;
   margin: 0;
   padding: var(--space-1);
-  border-radius: var(--ui-fieldRadius);
-  corner-shape: var(--radius-shape);
-  background: var(--color-surface2);
-  box-shadow: var(--ui-fieldShadow);
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  box-shadow: var(--deb);
   list-style: none;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .root::-webkit-scrollbar { display: none; }
 
-.step { flex: 1 0 calc(var(--space-16) + var(--space-8)); min-width: calc(var(--space-16) + var(--space-8)); display: flex; }
+.indicator { border-radius: var(--r-pill); background: var(--ac); box-shadow: var(--ink); }
+.root[data-tone="won"] > .indicator { background: var(--oks); box-shadow: none; }
+.root[data-tone="lost"] > .indicator { background: var(--ers); box-shadow: none; }
+
+.step { display: flex; flex: 1 0 104px; min-width: 104px; }
 
 .action {
   position: relative;
   box-sizing: border-box;
-  flex: 1;
   display: flex;
+  flex: 1;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: var(--space-0);
+  gap: 2px;
   min-width: 0;
-  min-height: var(--ui-controlLarge);
-  padding: var(--space-1) var(--space-4);
+  min-height: var(--h-field);
+  padding: 0 var(--space-4);
   border: 0;
-  font-family: var(--typography-fontFamily-body);
-  font-size: var(--typography-size-compact);
-  font-weight: var(--typography-weight-medium);
-  line-height: var(--ui-tabLine);
-  white-space: nowrap;
+  border-radius: var(--r-pill);
   background: transparent;
-  color: var(--color-inkMuted);
-  border-radius: var(--ui-controlRadius);
-  corner-shape: var(--radius-shape);
-  transition: background-color var(--motion-duration-control) var(--motion-ease-out), color var(--motion-duration-control) var(--motion-ease-out), transform var(--motion-duration-control) var(--motion-ease-out);
+  color: var(--tx3);
+  font-family: var(--font);
+  font-size: var(--fs-pequeno);
+  font-weight: var(--fw-500);
+  line-height: var(--lh-controle);
+  white-space: nowrap;
+  outline: none;
 }
-button.action:active { transform: scale(var(--ui-controlPressScale)); }
 
 button.action { cursor: pointer; }
-button.action:hover { background: var(--color-surface); color: var(--color-ink); }
-.action:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(var(--ui-focusWidth) * -1); }
+button.action:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+button.action:active { transform: scale(var(--scale-press)); transition-duration: var(--t-instant); }
 
-.step[data-state="done"] .action { background: var(--color-accentWash); color: var(--color-accent); }
-.step[data-state="done"] button.action:hover { background: var(--color-surface); color: var(--color-ink); }
-.step[data-state="current"] .action { background: var(--color-accent); color: var(--ui-buttonInk); font-weight: var(--typography-weight-semibold); }
-.step[data-state="current"] button.action:hover { background: var(--ui-buttonHover); color: var(--ui-buttonInk); }
-
-/* Desfecho: ganho pinta a trilha inteira, perdido marca só a etapa onde parou. */
-.root[data-tone="won"] .step[data-state="done"] .action { background: color-mix(in srgb, var(--color-statusSuccess) 16%, transparent); color: var(--color-statusSuccess); }
-.root[data-tone="lost"] .step[data-state="current"] .action { background: var(--color-statusDanger); color: var(--ui-buttonInk); }
-
-.label { display: flex; align-items: center; justify-content: center; gap: var(--space-1); max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.label svg { flex: 0 0 var(--space-3); width: var(--space-3); height: var(--space-3); }
-.lockReason { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.lockReason svg { flex: 0 0 var(--space-4); width: var(--space-4); height: var(--space-4); }
-/* O tempo fica numa cápsula translúcida, para separar do nome da etapa sem
- * competir com ele — é o que o Pipedrive faz dentro da seta. */
-.hint { flex-shrink: 0; color: currentColor; font-weight: var(--typography-weight-regular); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
-.tooltip { display: grid; gap: var(--space-1); min-width: var(--ui-menuWidth); padding: var(--space-3); }
-.tooltip > strong { font-size: var(--typography-size-sm); }
-.tooltip > span, .tooltip > small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.tooltip > b { font-size: var(--typography-size-sm); font-variant-numeric: tabular-nums; }
-.stagePopover { display: flex; flex-direction: column; width: var(--ui-drawerWidth); overflow: hidden; }
-.stagePopoverContent { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-.summary { display: grid; gap: var(--space-1); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface2); }
-.summary > span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.summary > strong { color: var(--color-ink); font-size: var(--typography-size-md); font-variant-numeric: tabular-nums; }
-.summary > small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
-.passages { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
-.passages > li { display: grid; gap: var(--space-2); padding-block-end: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.passages > li:last-child { padding-block-end: 0; border-bottom: 0; }
-.passageMeta { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: var(--space-3); }
-.passageMeta > strong { font-size: var(--typography-size-sm); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.passageMeta > span { min-width: 0; color: var(--color-inkMuted); font-size: var(--typography-size-xs); text-align: end; white-space: nowrap; }
-.transitions { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
-.transitions > li { display: grid; grid-template-columns: var(--space-5) minmax(0, 1fr); align-items: center; gap: var(--space-2); }
-.directionIcon { display: grid; place-items: center; width: var(--space-5); height: var(--space-5); border-radius: var(--radius-full); color: var(--color-accent); background: var(--color-accentWash); }
-.directionIcon svg { width: var(--space-3); height: var(--space-3); }
-.directionIcon[data-direction="forward"] { color: var(--color-statusSuccess); background: color-mix(in srgb, var(--color-statusSuccess) 14%, var(--color-surface)); }
-.directionIcon[data-direction="backward"] { color: var(--color-statusWarning); background: color-mix(in srgb, var(--color-statusWarning) 16%, var(--color-surface)); }
-.directionIcon[data-direction="backward"] svg { transform: rotate(180deg); }
-.transitions div { display: grid; min-width: 0; }
-.transitions small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.transitions strong { font-size: var(--typography-size-xs); font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine); }
-.error { margin: 0; color: var(--color-statusDanger); font-size: var(--typography-size-xs); line-height: var(--ui-buttonLine); }
-
-@media (max-width: 760px) {
-  .step { flex-basis: calc(var(--space-16) + var(--space-16)); min-width: calc(var(--space-16) + var(--space-16)); }
+@media (hover: hover) and (pointer: fine) {
+  .step:not([data-on]) button.action:hover { background-color: var(--acs); color: var(--tx); }
 }
 
-@media (prefers-reduced-motion: reduce) { .action { transition: none; } button.action:active { transform: none; } }
+.step[data-state="done"] .action { color: var(--tx2); }
+.step[data-on] .action { color: var(--acf); }
+.root[data-tone="won"] .step[data-on] .action { color: var(--ok); }
+.root[data-tone="lost"] .step[data-on] .action { color: var(--er); }
+
+.label { display: flex; align-items: center; justify-content: center; gap: var(--space-1); max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.label svg { flex: none; width: 12px; height: 12px; }
+/* O tempo da etapa: mono pequeno, na mesma tinta da etapa e mais leve. */
+.hint { flex-shrink: 0; font-family: var(--mono); font-size: var(--fs-micro); font-weight: var(--fw-400); font-variant-numeric: tabular-nums; opacity: 0.8; }
+
+/* Detalhe da etapa (popover e dica). */
+.lockReason { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; color: var(--tx2); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); }
+.lockReason svg { flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); margin-top: 1px; }
+.tooltip { display: grid; gap: var(--space-1); min-width: var(--ui-menuWidth); padding: var(--space-3); }
+.tooltip > strong { font-size: var(--fs-corpo); font-weight: var(--fw-500); }
+.tooltip > span, .tooltip > small { color: var(--tx3); font-size: var(--fs-pequeno); }
+.tooltip > b { font-family: var(--mono); font-size: var(--fs-pequeno); font-weight: var(--fw-500); font-variant-numeric: tabular-nums; }
+.stagePopover { display: flex; flex-direction: column; width: var(--ui-drawerWidth); overflow: hidden; }
+.stagePopoverContent { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+
+/* Resumo do tempo: bloco cavado, número em mono. */
+.summary { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: var(--r-lista); corner-shape: var(--r-shape); background: var(--sf2); box-shadow: var(--deb); }
+.summary > span { color: var(--tx3); font-size: var(--fs-pequeno); }
+.summary > strong { color: var(--tx); font-family: var(--mono); font-size: var(--fs-corpo-l); font-weight: var(--fw-500); font-variant-numeric: tabular-nums; }
+.summary > small { color: var(--tx3); font-family: var(--mono); font-size: var(--fs-legenda); font-variant-numeric: tabular-nums; }
+
+/* Passagens: tempo e período em mono; entrada e saída com seta em disco suave. */
+.passages { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.passages > li { display: grid; gap: var(--space-2); padding-block-end: var(--space-3); border-bottom: var(--ui-hairline) solid var(--bd); }
+.passages > li:last-child { padding-block-end: 0; border-bottom: 0; }
+.passageMeta { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: var(--space-3); }
+.passageMeta > strong { font-family: var(--mono); font-size: var(--fs-pequeno); font-weight: var(--fw-500); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.passageMeta > span { min-width: 0; color: var(--tx3); font-family: var(--mono); font-size: var(--fs-legenda); text-align: end; white-space: nowrap; }
+.transitions { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.transitions > li { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: var(--space-2); }
+.directionIcon { display: grid; place-items: center; width: 20px; height: 20px; border-radius: var(--r-pill); background: var(--sf2); color: var(--tx2); }
+.directionIcon svg { width: 12px; height: 12px; }
+.directionIcon[data-direction="forward"] { background: var(--oks); color: var(--ok); }
+.directionIcon[data-direction="backward"] { background: var(--was); color: var(--wa); }
+.directionIcon[data-direction="backward"] svg { transform: rotate(180deg); }
+.transitions div { display: grid; min-width: 0; }
+.transitions small { color: var(--tx3); font-size: var(--fs-legenda); }
+.transitions strong { font-size: var(--fs-pequeno); font-weight: var(--fw-500); line-height: var(--lh-pequeno); }
+.error { margin: 0; color: var(--er); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); }
+
+@media (max-width: 760px) {
+  .step { flex-basis: 128px; min-width: 128px; }
+}

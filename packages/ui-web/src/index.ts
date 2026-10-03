@@ -1,6 +1,7 @@
 // packages/ui-web — design system web. Único lugar do repositório onde um
 // elemento HTML nativo de formulário pode ser escrito (ADR-0020). Verificado
 // por lint em todo o resto do monorepo.
+import "./identidade.css";
 export * from "./Glass/Glass.js";
 export * from "./Button/Button.js";
 export * from "./Input/Input.js";
@@ -73,6 +74,7 @@ export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } fr
 export { CalendarMonth, type CalendarMonthProps, type CalendarMonthItem } from "./CalendarMonth/CalendarMonth.js";
 export { CalendarWeek, type CalendarWeekProps, type CalendarWeekItem } from "./CalendarWeek/CalendarWeek.js";
 export { Avatar, type AvatarProps } from "./Avatar/Avatar.js";
+export { AvatarStack } from "./Avatar/AvatarStack.js";
 export { UserAvatar, userSelectOption, type UserAvatarProps } from "./UserAvatar/UserAvatar.js";
 export { PersonChoice, type PersonChoiceProps } from "./PersonChoice/PersonChoice.js";
 export { RecordSelect, type RecordSelectProps } from "./RecordSelect/RecordSelect.js";
@@ -89,3 +91,45 @@ export * from "./ViewerStack/ViewerStack.js";
 export * from "./SlaProgress/SlaProgress.js";
 
 export * from "./CrmWorkspace/CrmWorkspace.js";
+
+// Física da identidade para telas que compõem os próprios controles (ADR-0044).
+export { useSlidingIndicator } from "./motion/useSlidingIndicator.js";
+export { useLabelMorph } from "./motion/useLabelMorph.js";
+export { prefersReducedMotion, useReducedMotion } from "./motion/useReducedMotion.js";
+export { Surface, type SurfaceProps, type SurfaceElevation, type SurfaceRadius } from "./Surface/Surface.js";
+export { SectionTitle } from "./SectionTitle/SectionTitle.js";
+export { LinkTabs, type LinkTab } from "./LinkTabs/LinkTabs.js";
+// Listas, painéis e acesso na identidade (ADR-0044/0045): busca, texto, disco de ícone, identidade de linha, KPI, estados de página, acesso e aparência.
+export * from "./Chip/Chip.js";
+export * from "./SearchField/SearchField.js";
+export * from "./Text/Text.js";
+export * from "./IconTile/IconTile.js";
+export * from "./PersonIdentity/PersonIdentity.js";
+export * from "./EmptyState/EmptyState.js";
+export * from "./SettingsSection/SettingsSection.js";
+export * from "./AuthCard/AuthCard.js";
+export * from "./ColorPicker/ColorPicker.js";
+export * from "./ThemePreview/ThemePreview.js";
+// Construtores (automação, formulário, página): mesa do fluxo, painel lateral, barra flutuante e linha de escolha.
+export * from "./Flow/Flow.js";
+export * from "./SidePanel/SidePanel.js";
+export * from "./Toolbar/Toolbar.js";
+export * from "./ListRowButton/ListRowButton.js";
+export { ListRow, RowList, type ListRowProps } from "./ListRow/ListRow.js";
+export { Signal, type SignalProps, type SignalTone } from "./Signal/Signal.js";
+// CRM (ADR-0044/0045): lista de escolhas, responsável, kanban com pouso e compromisso no calendário.
+export { ActionList, type ActionListItem, type ActionListProps } from "./ActionList/ActionList.js";
+export { OwnerPicker, type OwnerPickerPerson, type OwnerPickerProps } from "./OwnerPicker/OwnerPicker.js";
+export { KanbanBoard, KanbanColumn, KanbanCard, KanbanCardContent, KanbanPlaceholder, KanbanGhost, KanbanAddButton, KanbanSkeleton, KanbanDropBar, KanbanDropZone, type KanbanColumnProps, type KanbanCardProps, type KanbanCardContentProps } from "./Kanban/Kanban.js";
+export { useKanbanDrag, type KanbanDragState } from "./Kanban/useKanbanDrag.js";
+export { CalendarEntry, type CalendarEntryProps } from "./CalendarEntry/CalendarEntry.js";
+export { landFrom, growIn, ghostTransform, type LandingOrigin } from "./motion/land.js";
+// Atendimento (ADR-0044/0045): lista densa de conversas, canal da pessoa, conversa, campo de resposta e chat do site.
+export { ConversationList, ConversationRow, ConversationListHeader, type ConversationListProps, type ConversationRowProps, type ConversationRowChannel, type ConversationListHeaderProps, type ConversationListLayout } from "./ConversationList/ConversationList.js";
+export { ChannelChip, channelGlyph, type ChannelChipProps, type ChannelKind } from "./ChannelChip/ChannelChip.js";
+export { ChatThread, ChatDay, ChatTyping, ChatAttachment, MessageBubble, MessageReceipt, ConversationHeader, messageStatusLabel, type ChatThreadProps, type MessageBubbleProps, type MessageDirection, type MessageStatus, type ChatAttachmentState, type ConversationHeaderProps } from "./Chat/Chat.js";
+export { ChatLauncher, ChatWindow, ChatInput, type ChatWindowProps, type ChatInputProps } from "./ChatWidget/ChatWidget.js";
+export { ReplyComposer, ReplyComposerPreview, type ReplyComposerProps, type ReplyComposerMode } from "./Composer/ReplyComposer.js";
+export { NoteCard, type NoteCardProps } from "./NoteCard/NoteCard.js";
+export { LinkRecordsPreview, type LinkRecordsPreviewProps } from "./LinkRecordsPreview/LinkRecordsPreview.js";
+export { AppShell, AppContent } from "./AppShell/AppShell.js";

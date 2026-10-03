@@ -38,10 +38,12 @@ export function Glass<T extends ElementType = "div">({
   );
 }
 
-/** O wrapper permanece opaco: opacidade ancestral cria um Backdrop Root e corta o blur. */
+/** Véu de papel + quatro camadas de desfoque progressivo (2/6/14/28px) + vinheta.
+ * O wrapper permanece opaco: opacidade ancestral cria um Backdrop Root e corta o blur. */
 export function GlassBackdrop({ className, placement = "center", ...props }: ComponentProps<"div"> & { placement?: "center" | "right" | "left" | "top" | "bottom" }) {
   return <div {...props} data-placement={placement} className={[styles.backdrop, className].filter(Boolean).join(" ")}>
     <span className={styles.veil} aria-hidden="true" />
     {[1, 2, 3, 4].map(layer => <span key={layer} className={styles.blurLayer} data-blur={layer} aria-hidden="true" />)}
+    <span className={styles.vignette} aria-hidden="true" />
   </div>;
 }

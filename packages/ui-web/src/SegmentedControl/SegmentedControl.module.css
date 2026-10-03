@@ -1,7 +1,53 @@
-.root { position: relative; isolation: isolate; display: inline-grid; grid-template-columns: repeat(var(--segment-count), minmax(max-content, 1fr)); align-items: center; gap: var(--space-1); min-width: 0; max-width: 100%; overflow-x: auto; padding: var(--space-1); border-radius: var(--radius-full); background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); }
-.root > button { min-width: max-content; padding-inline: var(--space-4); border-radius: var(--radius-full); color: var(--color-inkMuted); position: relative; z-index: 1; background: transparent; box-shadow: none;  }
-.root > button:hover:not([data-disabled]) { background: transparent; box-shadow: none; transform: none; }
-.indicator { position: absolute; z-index: 0; inset-block: var(--space-1); left: var(--space-1); width: calc((100% - var(--space-1) * 2 - (var(--segment-count) - 1) * var(--space-1)) / var(--segment-count)); transform: translateX(calc(var(--segment-index) * (100% + var(--space-1)))); border-radius: var(--radius-full); background: var(--ui-selected); box-shadow: var(--ui-panelShadow); pointer-events: none; transition: transform var(--motion-duration-selection) var(--motion-ease-out); }
-@media (prefers-reduced-motion: reduce) { .indicator { transition: none; } }
+/* Segmentado papel: trilho cavado (--sf2 + --deb), folha --sf3 + --sh1 que
+ * desliza. Carvão: trilho --ac, folha --bg, para a troca de modo principal.
+ * Itens de 32 (md) ou 30 (sm), 500 13/12, texto ativo --tx, demais --tx3. */
 
-.root > button[aria-pressed="true"] { color: var(--color-ink); }
+.root {
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  gap: 2px;
+  padding: var(--space-1);
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  box-shadow: var(--deb);
+  scrollbar-width: none;
+}
+
+.indicator { border-radius: var(--r-pill); background: var(--sf3); box-shadow: var(--sh1); }
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx3);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  font-weight: var(--fw-500);
+  line-height: var(--lh-controle);
+  cursor: pointer;
+  transition: color var(--t-chevron) var(--ease), transform var(--t-base) var(--ease);
+}
+
+.item[data-on="true"] { color: var(--tx); }
+.item:disabled { color: var(--tx4); cursor: not-allowed; }
+.item:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover:not([data-on="true"], :disabled) { color: var(--tx2); }
+}
+
+.root[data-size="sm"] { padding: 3px; }
+.root[data-size="sm"] .item { height: 30px; padding: 0 var(--space-3); font-size: var(--fs-pequeno); }
+
+.root[data-tone="carvao"] { background: var(--ac); box-shadow: var(--ink); }
+.root[data-tone="carvao"] .indicator { background: var(--bg); box-shadow: none; }
+.root[data-tone="carvao"] .item { color: var(--acf); }
+.root[data-tone="carvao"] .item[data-on="true"] { color: var(--tx); }

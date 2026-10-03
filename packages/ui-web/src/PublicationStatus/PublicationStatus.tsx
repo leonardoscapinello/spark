@@ -22,7 +22,7 @@ export function PublicationStatus({ published, publishedLabel = "Publicado", pub
   }
 
   return <div className={[styles.root, className].filter(Boolean).join(" ")} role="status">
-    <Badge tone={published ? "success" : "neutral"}>{published ? publishedLabel : "Rascunho"}</Badge>
+    <Badge tone={published ? "success" : "neutral"} dot={published}>{published ? publishedLabel : "Rascunho"}</Badge>
     <span>{published ? "Disponível para visitantes" : "Visível apenas para sua equipe"}</span>
     {published && publicUrl && <Button size="sm" variant="ghost" onClick={() => void copyPublicLink()}>Copiar link</Button>}
   </div>;

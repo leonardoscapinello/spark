@@ -1,0 +1,20 @@
+.root { display: flex; gap: var(--space-6); min-height: var(--h-lg); overflow-x: auto; scrollbar-width: none; }
+.root::-webkit-scrollbar { display: none; }
+.indicator { border-radius: var(--r-mark); background: var(--tx); }
+.tab { display: flex; flex: 0 0 auto; align-items: center; color: var(--tx3); font-family: var(--font); font-size: var(--fs-corpo); font-weight: var(--fw-500); text-decoration: none; white-space: nowrap; outline: none; }
+.tab[data-on="true"] { color: var(--tx); }
+.tab:focus-visible { box-shadow: inset 0 0 0 var(--ui-focusWidth) var(--ring); border-radius: var(--r-mark); }
+@media (hover: hover) and (pointer: fine) { .tab:hover:not([data-on="true"]) { color: var(--tx2); } }
+
+/* Barra de abas no topo da folha de conteúdo. */
+.root[data-placement="sheet"] {
+  position: sticky;
+  z-index: 2;
+  inset-block-start: 0;
+  padding-inline: var(--space-8);
+  border-bottom: var(--ui-hairline) solid var(--bd);
+  background: var(--sf) var(--grain);
+}
+@media (max-width: 760px) {
+  .root[data-placement="sheet"] { padding-inline: var(--space-4); }
+}

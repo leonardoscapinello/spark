@@ -1,24 +1,33 @@
 import type { DealViewer } from "@spark/core";
 import { UserAvatar } from "../UserAvatar/UserAvatar.js";
+import { AvatarStack } from "../Avatar/AvatarStack.js";
 import { Icon } from "../Icon/Icon.js";
 import { Tooltip } from "../Tooltip/Tooltip.js";
 import styles from "./ViewerStack.module.css";
 
-export interface ViewerStackProps { viewers: readonly DealViewer[]; currentUserId?: string; status: "connecting" | "connected" | "unavailable" }
+export interface ViewerStackProps {
+  viewers: readonly DealViewer[];
+  currentUserId?: string;
+  status: "connecting" | "connected" | "unavailable";
+  /** Nome do grupo para leitor de tela. Padrão: o negócio. */
+  label?: string;
+  /** Texto de cada pessoa. Padrão: "{nome} também está visualizando". */
+  describe?: (name: string) => string;
+}
 
-export function ViewerStack({ viewers, currentUserId, status }: ViewerStackProps) {
+export function ViewerStack({ viewers, currentUserId, status, label: groupLabel = "Pessoas visualizando este negócio", describe = name => `${name} também está visualizando` }: ViewerStackProps) {
   if (status !== "connected") return <span className={styles.notice} role="status">{status === "connecting" ? "Conectando presença…" : "Presença indisponível"}</span>;
   const otherViewers = currentUserId ? viewers.filter((viewer) => viewer.userId !== currentUserId) : viewers;
   if (otherViewers.length === 0) return null;
-  const label = (viewer: DealViewer) => `${viewer.name} também está visualizando`;
+  const label = (viewer: DealViewer) => describe(viewer.name);
   const overflow = otherViewers.slice(4);
-  return <div className={styles.root} role="group" aria-label="Pessoas visualizando este negócio">
+  return <div className={styles.root} role="group" aria-label={groupLabel}>
     <span className={styles.label}><Icon name="eye" />Também aqui</span>
-    <span className={styles.stack}>
+    <AvatarStack>
       {otherViewers.slice(0, 4).map((viewer) => <Tooltip key={viewer.userId} content={label(viewer)}>
         <button type="button" className={styles.viewer} aria-label={label(viewer)}><UserAvatar user={viewer} size="small" /></button>
       </Tooltip>)}
       {overflow.length > 0 && <Tooltip content={overflow.map((viewer) => viewer.name).join(", ")}><button type="button" className={styles.more} aria-label={`Mais ${overflow.length} pessoas visualizando`}>+{overflow.length}</button></Tooltip>}
-    </span>
+    </AvatarStack>
   </div>;
 }

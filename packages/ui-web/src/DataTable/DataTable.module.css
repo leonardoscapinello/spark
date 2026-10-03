@@ -1,59 +1,176 @@
-.root { min-width: 0; width: 100%; font-family: var(--typography-fontFamily-body); color: var(--color-ink); font-size: var(--typography-size-sm); }
-.scroll { max-width: 100%; overflow-x: auto; background: var(--color-surface); overscroll-behavior-inline: contain; }
-.scroll:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.table { border-collapse: collapse; width: max-content; min-width: 100%; text-align: start; }
+/* Tabela da identidade (ADR-0044; origem: Dados, "Tabela"). Linhas de 52 com
+ * fio --bd entre elas, cabeçalho de 44 em 11px tinta 3, números em mono à
+ * direita. O hover ergue a linha como uma tira de papel (--sf3 + --sh1,
+ * pílula) que desliza de uma linha para a outra; a linha inteira abre o
+ * registro quando a tabela recebe onRowOpen. As linhas entram em cascata. */
+
+.root { position: relative; width: 100%; min-width: 0; color: var(--tx); font-family: var(--font); font-size: var(--fs-corpo); }
+
+.scroll {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  border-radius: var(--r-lista);
+  scrollbar-width: thin;
+}
+
+.scroll:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+.table {
+  position: relative;
+  z-index: 1;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: start;
+}
+
 .table caption { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-/* Medidas da tabela Intercom (docs/inspiration/intercom, captura 028): cabeçalho
- * 40px com rótulo 14px semibold apagado; linhas 14px regular com ~16px de
- * respiro vertical e hairline entre elas. Antes: rótulo 13px medium em ~30px,
- * linhas com 12px — mais apertado e mais "planilha" que a referência. */
-.table th,.table td { padding: var(--space-4); border-bottom: var(--ui-hairline) solid var(--color-line); text-align: start; overflow-wrap: anywhere; max-width: var(--ui-popoverWidth); line-height: var(--ui-tabLine); }
-.table th { height: var(--ui-controlLarge); padding-block: 0; vertical-align: middle; background: var(--color-surface); color: var(--color-inkMuted); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); white-space: nowrap;position: relative; }
-.table th .sortButton { padding-inline: 0; color: inherit; font-weight: inherit; }
-.sortIcon { width: var(--space-3); height: var(--space-3); color: var(--color-accent); }
-.visuallyHidden { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.table [data-align="end"] { text-align: end; font-variant-numeric: tabular-nums; }
-.table tbody tr:last-child td { border-bottom: 0; }
-.table tbody tr { transition: background-color var(--motion-duration-instant) var(--motion-ease-out); }
-.table tbody tr:hover { background: var(--ui-subtle); }
-.actions { white-space: nowrap; }
-.select { width: var(--space-10); padding-inline: var(--space-4) var(--space-0); }
-.catalog { width: var(--space-10); padding-inline: var(--space-0) var(--space-2); }
+
+.table th,
+.table td {
+  max-width: var(--ui-popoverWidth);
+  padding: 0 var(--space-4);
+  text-align: start;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.table th:first-child,
+.table td:first-child { padding-inline-start: 18px; }
+
+.table th:last-child,
+.table td:last-child { padding-inline-end: 18px; }
+
+.table th {
+  position: relative;
+  height: var(--h-lg);
+  color: var(--tx3);
+  font-size: var(--fs-legenda);
+  font-weight: var(--fw-400);
+  white-space: nowrap;
+}
+
+.table td {
+  height: 52px;
+  padding-block: var(--space-2);
+  border-top: var(--ui-hairline) solid var(--bd);
+  line-height: var(--lh-corpo);
+}
+
+.table [data-align="end"] { text-align: end; font-family: var(--mono); font-size: var(--fs-pequeno); font-variant-numeric: tabular-nums; }
+
+.table th .sortButton {
+  height: auto;
+  padding: 0;
+  gap: var(--space-1);
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.table th .sortButton:hover { background: transparent; color: var(--tx); }
+.sortIcon { width: 12px; height: 12px; color: var(--tx); }
+
+/* A tira de papel que segue o ponteiro. */
+.strip {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-radius: var(--r-pill);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--t-fast) var(--ease),
+    height var(--t-fast) var(--ease),
+    opacity var(--t-fast) var(--ease);
+}
+
+.strip[data-visible] { opacity: 1; }
+
+/* Sob a tira, o fio da linha some para ela parecer solta da mesa. */
+.table tbody tr[data-hover] > td,
+.table tbody tr[data-hover] + tr > td { border-top-color: transparent; }
+
+.table tbody tr[data-selected] > td { background: var(--acs); }
+.table tbody tr[data-selected] > td:first-child { border-start-start-radius: var(--r-pill); border-end-start-radius: var(--r-pill); }
+.table tbody tr[data-selected] > td:last-child { border-start-end-radius: var(--r-pill); border-end-end-radius: var(--r-pill); }
+
+/* Linha que abre o registro: o ponteiro diz que dá para entrar. */
+.table tbody tr[data-openable] { cursor: pointer; }
+.table tbody tr[data-openable]:focus-visible { outline: none; }
+.table tbody tr[data-openable]:focus-visible > td { background: var(--acs); }
+
+/* Nada surge do nada: as linhas entram em cascata de 30 ms. */
+.table tbody tr { animation: var(--anim-item) var(--t-item) var(--ease) both; animation-delay: calc(min(var(--i, 0), 12) * var(--t-item-stagger)); }
+
+.actions { width: 1%; white-space: nowrap; }
+.select { width: var(--space-10); padding-inline-end: 0; }
+.catalog { width: var(--space-10); padding-inline-start: 0; text-align: end; }
+
 /* Largura declarada é a que se vê: sem border-box o padding somaria à medida
    arrastada e a coluna pararia mais larga do que o ponteiro pediu. */
 .table[data-fixed] { table-layout: fixed; width: 100%; }
-.table[data-fixed] th,.table[data-fixed] td { box-sizing: border-box; }
+.table[data-fixed] th,
+.table[data-fixed] td { box-sizing: border-box; }
 .table[data-fixed] td { overflow: hidden; text-overflow: ellipsis; }
+
 .table th[draggable] { cursor: grab; }
 .table th[draggable]:active { cursor: grabbing; }
-.table th[data-drop]::before { content: ""; position: absolute; inset-block: var(--space-1); inset-inline-start: 0; width: var(--ui-tabIndicator); background: var(--color-accent); border-radius: var(--radius-full); }
+.table th[data-drop]::before { content: ""; position: absolute; inset-block: var(--space-2); inset-inline-start: 0; width: 2px; border-radius: var(--r-mark); background: var(--tx); }
+
 .resizer { position: absolute; inset-block: 0; inset-inline-end: calc(var(--space-1) * -1); width: var(--space-2); cursor: col-resize; touch-action: none; }
-.resizer::after { content: ""; position: absolute; inset-block: var(--space-1); inset-inline-start: 50%; width: var(--ui-hairline); background: var(--color-line); opacity: 0; transition: opacity var(--motion-duration-instant) var(--motion-ease-out); }
-.resizer:hover::after,.resizer:focus-visible::after { opacity: 1; background: var(--color-accent); }
-.resizer:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-@media (prefers-reduced-motion: reduce) { .resizer::after { transition: none; } }
-.catalogList { display: flex; flex-direction: column; gap: var(--space-2); max-height: var(--ui-previewHeight); overflow-y: auto; margin-top: var(--space-3); }
-.catalogGroup { margin: var(--space-2) 0 var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
-.catalogEmpty { margin: 0; color: var(--color-inkMuted); }
-.select :global(label) { gap: var(--space-0); }
-.table tbody tr[data-selected] { background: var(--color-accentWash); }
-.table tbody tr[data-selected]:hover { background: var(--color-accentWash); }
-.emptyState { box-sizing: border-box; width: 100%; padding: var(--space-8) var(--space-4); border-top: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); text-align: center; line-height: var(--ui-bodyLine); overflow-wrap: anywhere; }
-.hint { font-size: var(--typography-size-compact); color: var(--color-inkMuted); margin: var(--space-2) 0 0; }
-.loadingLine { display: block; width: 100%; max-width: var(--ui-menuWidth); height: var(--space-3); border-radius: var(--radius-full); background: var(--color-surface2); }
+.resizer::after { content: ""; position: absolute; inset-block: var(--space-2); inset-inline-start: 50%; width: var(--ui-hairline); background: var(--bd2); opacity: 0; }
+.resizer:hover::after,
+.resizer:focus-visible::after { opacity: 1; background: var(--tx); }
+.resizer:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+.catalogList { display: flex; flex-direction: column; gap: 2px; max-height: var(--ui-recordPickerListHeight); margin-top: var(--space-2); overflow-y: auto; }
+.catalogGroup { margin: var(--space-2) 0 var(--space-1); color: var(--tx3); font-size: var(--fs-legenda); }
+.catalogEmpty { margin: 0; color: var(--tx3); font-size: var(--fs-pequeno); }
+.select :global(label) { gap: 0; min-height: 0; }
+
+.emptyState {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-8) var(--space-4);
+  border-top: var(--ui-hairline) solid var(--bd);
+  color: var(--tx3);
+  font-size: var(--fs-corpo);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.hint { margin: var(--space-2) 0 0; color: var(--tx3); font-size: var(--fs-legenda); }
+
+/* Carregando: esqueletos que brilham, sem cascata. */
+.table tbody tr[data-loading] { animation: none; }
+.loadingLine {
+  display: block;
+  width: 100%;
+  max-width: var(--ui-menuWidth);
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--sf2) 0, var(--bd) 50%, var(--sf2) 100%);
+  background-size: 400px 100%;
+  animation: var(--anim-shimmer) var(--t-shimmer) linear infinite;
+}
+
 .table td:nth-child(2n) .loadingLine { max-width: var(--space-16); }
 
-.actionGroup { display: flex; align-items: center; gap: var(--space-1); }
+.actionGroup { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-1); }
 .actionGroup > * { flex-shrink: 0; }
 
 @media (hover: hover) and (pointer: fine) {
-  .table tbody tr .actionGroup { opacity: 0; transition: opacity var(--motion-duration-instant) var(--motion-ease-out); }
+  .table tbody tr .actionGroup { opacity: 0; transition: opacity var(--t-fast) var(--ease); }
   .table tbody tr:hover .actionGroup,
   .table tbody tr:focus-within .actionGroup { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .table tbody tr, .table tbody tr .actionGroup { transition: none; }
 }
 
 @media (max-width: 720px) {
@@ -67,17 +184,12 @@
     inset-inline-start: 0;
     z-index: 1;
     max-width: var(--ui-menuWidth);
-    background: var(--color-surface);
-    box-shadow: var(--ui-hairline) 0 0 var(--color-line);
+    background: var(--sf);
   }
   .table[data-selectable] th:nth-child(2),
   .table[data-selectable] tbody tr > td:nth-child(2):not([colspan]) { inset-inline-start: var(--space-10); }
-  .table[data-selectable] th:first-child,
-  .table[data-selectable] tbody tr > td:first-child:not([colspan]) { box-shadow: none; }
   .table th:first-child,
   .table[data-selectable] th:nth-child(2) { z-index: 2; }
-  .table tbody tr:hover > td:first-child:not([colspan]),
-  .table[data-selectable] tbody tr:hover > td:nth-child(2):not([colspan]) { background: var(--color-surface2); }
-  .table tbody tr[data-selected] > td:first-child:not([colspan]),
-  .table[data-selectable] tbody tr[data-selected] > td:nth-child(2):not([colspan]) { background: var(--color-accentWash); }
 }
+
+.visuallyHidden { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

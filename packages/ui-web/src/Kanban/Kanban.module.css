@@ -1,0 +1,88 @@
+/* Kanban (origem: Perfil §15). Quadro: colunas a 12 uma da outra, rolagem
+ * horizontal. Coluna: cavada (Surface), padding 12, 8 entre cartões. Cartão:
+ * folha pousada (Surface) de raio 24. Fantasma: folha segurada que segue o
+ * ponteiro. Destino: espaço tracejado de 1,5px em --bd2 com --acs. */
+.board { display: flex; flex: 1; gap: var(--space-3); min-height: 0; padding: var(--space-1) 2px var(--space-3); overflow-x: auto; user-select: none; }
+
+.column {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 var(--ui-kanbanColumnWidth);
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-3);
+}
+
+/* Realce do destino: uma camada --acs por cima do papel cavado. */
+.column::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: transparent; pointer-events: none; transition: background-color var(--t-base) var(--ease); }
+.column[data-over]::before { background-color: var(--acs); }
+
+.head { position: relative; display: flex; align-items: center; gap: var(--space-2); min-height: var(--h-sm); padding: 6px var(--space-2) var(--space-1); }
+.dot { flex: none; width: 8px; height: 8px; border-radius: var(--r-pill); background: var(--kanban-dot, var(--tx3)); }
+.title { display: flex; flex: 1; align-items: center; min-width: 0; overflow: hidden; color: var(--tx); font-size: var(--fs-corpo); font-weight: var(--fw-500); text-overflow: ellipsis; white-space: nowrap; }
+.count { display: flex; flex: none; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: var(--r-pill); background: var(--sf3); box-shadow: var(--sh1); color: var(--tx2); font-family: var(--mono); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
+.total { position: relative; padding: 0 var(--space-2); margin-top: calc(-1 * var(--space-2)); color: var(--tx3); font-family: var(--mono); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
+
+/* A lista rola por dentro; a folga de 2px (e 6px embaixo) deixa a sombra e o
+ * cartão erguido no hover caberem sem serem cortados pela rolagem. */
+.cards { position: relative; display: flex; flex-direction: column; gap: var(--space-2); min-height: var(--h-lg); margin: -2px -2px -6px; padding: 2px 2px 6px; overflow-y: auto; }
+
+.card {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  animation: var(--anim-item) var(--t-item) var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * var(--t-item-stagger));
+}
+
+.card[hidden] { display: none; }
+.card[draggable="true"] { cursor: grab; }
+.card[draggable="true"]:active { cursor: grabbing; }
+.card[data-entering] { animation: var(--anim-toast-in) var(--t-toast) var(--ease); }
+.card:focus-within { box-shadow: var(--sh1), 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+.line1 { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); min-width: 0; }
+.heading { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.name { display: -webkit-box; overflow: hidden; color: var(--tx); font-size: var(--fs-corpo); font-weight: var(--fw-500); line-height: 1.35; overflow-wrap: anywhere; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.name > a { color: inherit; text-decoration: none; outline: none; }
+.subtitle { overflow: hidden; color: var(--tx3); font-size: var(--fs-pequeno); text-overflow: ellipsis; white-space: nowrap; }
+.grip { display: flex; flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--tx4); }
+.grip > svg { width: 100%; height: 100%; }
+.line1 > :last-child:not(.heading) { flex: none; margin: -6px -6px 0 0; }
+
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); min-width: 0; }
+
+.line2 { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.value { flex: none; color: var(--tx); font-family: var(--mono); font-size: var(--fs-pequeno); font-weight: var(--fw-500); font-variant-numeric: tabular-nums; }
+.signal { display: flex; flex: 1; justify-content: flex-end; min-width: 0; }
+
+.foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; }
+.owner { display: flex; align-items: center; gap: var(--space-1-5); min-width: 0; }
+.ownerName { overflow: hidden; color: var(--tx2); font-size: var(--fs-pequeno); text-overflow: ellipsis; white-space: nowrap; }
+.date { flex: none; color: var(--tx3); font-family: var(--mono); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
+
+.placeholder { flex: none; box-sizing: border-box; border: 1.5px dashed var(--bd2); border-radius: var(--r-lista); corner-shape: var(--r-shape); background: var(--acs); }
+
+.ghost { position: fixed; top: 0; left: 0; z-index: 120; pointer-events: none; will-change: transform; cursor: grabbing; }
+.ghostCard { display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 12px; }
+
+.add { width: 100%; flex: none; }
+
+.skeletonTitle { width: var(--space-16); height: var(--space-3); margin: var(--space-2); }
+.skeletonCard { height: calc(var(--space-16) + var(--space-8)); }
+
+/* Barra de ações do arrasto: presa ao pé da tela, sobe como toast. */
+.dropBar { position: fixed; bottom: var(--space-4); left: 0; right: 0; z-index: var(--ui-modalLayer); width: max-content; max-width: calc(100% - var(--space-8)); margin-inline: auto; flex-wrap: wrap; justify-content: center; animation: var(--anim-toast-in) var(--t-toast) var(--ease); }
+.zone { display: inline-flex; transition: transform var(--t-base) var(--ease-spring); }
+.zone[data-over] { transform: translateY(calc(-2 * var(--press-y))) scale(var(--scale-drag)); }
+
+@media (max-width: 640px) {
+  .board { scroll-snap-type: x proximity; }
+  .column { flex-basis: 100%; scroll-snap-align: start; }
+}

@@ -1,19 +1,21 @@
-.root { display: grid; gap: var(--space-4); min-width: 0; color: var(--color-ink); font-family: var(--typography-fontFamily-body); }
-.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
-.header > div:first-child { display: grid; gap: var(--space-1); }
-.header h2 { margin: 0; font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); text-transform: capitalize; }
-.header span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.controls { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border-radius: var(--radius-full); background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); }
-.controls > :nth-child(2) svg { transform: rotate(180deg); }
-.scroll { max-width: 100%; overflow-x: auto; border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); }
-.scroll:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); min-width: calc(var(--space-16) * 14); }
-.weekday { padding: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-weight: var(--typography-weight-semibold); text-align: center; }
-.day { min-width: 0; min-height: calc(var(--space-16) * 2); padding: var(--space-2); border-top: var(--ui-hairline) solid var(--color-line); border-inline-end: var(--ui-hairline) solid var(--color-line); }
-.day:nth-child(7n) { border-inline-end: 0; }
-.day[data-outside] { background: var(--color-surface2); }
-.dayNumber { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); margin-bottom: var(--space-2); border-radius: var(--radius-full); color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
-.day[data-today] .dayNumber { background: var(--color-accent); color: var(--ui-buttonInk); font-weight: var(--typography-weight-semibold); }
-.items { display: grid; align-content: start; gap: var(--space-1); }
-.item { min-width: 0; padding: var(--space-2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-surface); }
-.item p { margin: var(--space-1) 0; }
+/* Calendário do mês (origem: Perfil §7): folha pousada com padding 24/26;
+ * mês 15/500, setas de tinta; dias da semana 10,5 em tinta 3; número do dia
+ * em mono 12 numa pílula de 28, hoje com anel de 1px em tinta 3. */
+.root { display: flex; flex-direction: column; gap: 14px; min-width: 0; padding: var(--space-6) 26px; font-family: var(--font); }
+.header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.heading { display: grid; gap: 2px; }
+.heading h2 { margin: 0; color: var(--tx); font-size: var(--fs-card); font-weight: var(--fw-titulo); line-height: 1.2; text-transform: capitalize; }
+.heading span { color: var(--tx3); font-size: var(--fs-pequeno); }
+.controls { display: flex; align-items: center; gap: 2px; }
+
+.scroll { max-width: 100%; overflow-x: auto; border-radius: var(--r-lista); corner-shape: var(--r-shape); outline: none; }
+.scroll:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+.grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); min-width: calc(var(--space-16) * 12); }
+.weekday { padding: var(--space-2) 0; color: var(--tx3); font-size: var(--fs-meta); text-align: center; }
+.day { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; min-height: calc(var(--space-16) + var(--space-12)); padding: var(--space-1); border-top: var(--ui-hairline) solid var(--bd); }
+.day + .day:not(:nth-child(7n + 1)) { border-inline-start: var(--ui-hairline) solid var(--bd); }
+.dayNumber { display: grid; place-items: center; align-self: flex-start; width: var(--h-sm); height: var(--h-sm); border-radius: var(--r-pill); color: var(--tx); font-family: var(--mono); font-size: var(--fs-pequeno); font-variant-numeric: tabular-nums; }
+.day[data-outside] .dayNumber { color: var(--tx3); }
+.day[data-today] .dayNumber { box-shadow: inset 0 0 0 var(--ui-hairline) var(--tx3); font-weight: var(--fw-500); }
+.items { display: grid; align-content: start; gap: var(--space-1); min-width: 0; }
+.item { min-width: 0; padding: var(--space-1-5) var(--space-2); border-radius: var(--r-sm); corner-shape: var(--r-shape); background: var(--sf3) var(--grain); box-shadow: var(--sh1); animation: var(--anim-item) var(--t-item) var(--ease) backwards; }

@@ -1,3 +1,11 @@
-.root { display: grid; align-content: start; gap: var(--space-5); width: 100%; max-width: calc(var(--ui-settingsCardWidth) * 3 + var(--space-6) * 2); min-width: 0; margin-inline: auto; }
-.root h2 { margin: 0; font-size: var(--typography-size-md); font-weight: var(--typography-weight-semibold); }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); column-gap: var(--space-6); row-gap: var(--space-4); width: 100%; min-width: 0; }
+.root { display: grid; align-content: start; gap: var(--space-4); width: 100%; max-width: calc(var(--ui-settingsCardWidth) * 3 + var(--space-6) * 2); min-width: 0; margin-inline: auto; font-family: var(--font); }
+.root h2 { margin: 0; color: var(--tx); font-size: var(--fs-card); font-weight: var(--fw-titulo); line-height: 1.2; letter-spacing: var(--ls-h4); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-settingsCardMinWidth)), 1fr)); gap: var(--space-3); width: 100%; min-width: 0; }
+
+/* Linha de configuração: 13/500 + apoio 12 em tinta 2; fio --bd entre linhas. */
+.row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-width: 0; padding-block: var(--space-4); border-top: var(--ui-hairline) solid var(--bd); font-family: var(--font); }
+.rowCopy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rowTitle { color: var(--tx); font-size: var(--fs-corpo); font-weight: var(--fw-500); line-height: var(--lh-corpo); overflow-wrap: anywhere; }
+.rowDescription { color: var(--tx2); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); }
+.rowAction { display: flex; flex: none; align-items: center; gap: var(--space-2); }
+@media (max-width: 640px) { .row { align-items: flex-start; flex-direction: column; } }

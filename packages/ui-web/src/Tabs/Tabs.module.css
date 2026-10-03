@@ -1,17 +1,86 @@
-.root { font-family: var(--typography-fontFamily-body); color: var(--color-ink); min-width: 0; }
-.list { position: relative; display: flex; gap: var(--space-6); padding-inline: var(--space-0); border-bottom: var(--ui-hairline) solid var(--color-line); overflow-x: auto; }
-.tab { box-sizing: border-box; background: transparent; color: var(--color-inkMuted); font: inherit; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); line-height: var(--ui-tabLine); height: var(--ui-tabHeight); padding: var(--ui-tabPadding) 0; border: 0; border-bottom: var(--ui-focusWidth) solid transparent; cursor: pointer; white-space: nowrap; }
-.tab[data-active] { color: var(--color-ink);  }
-.tab[data-disabled] { color: var(--ui-disabledInk); cursor: not-allowed; }
-.tab:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
-.panel { padding: var(--space-5) var(--space-0) var(--space-0); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+/* Abas da identidade (ADR-0044; origem: Navegação, "Tabs"). Sublinhadas: gap
+ * 24, fio --bd na base, abas de 36 em 500 13, inativa --tx3; o traço de 2px em
+ * tinta desliza até a aba ativa em 550 ms. Segmentadas: o segmentado papel. */
+
+.root { min-width: 0; color: var(--tx); font-family: var(--font); }
+
+.list {
+  position: relative;
+  display: flex;
+  gap: var(--space-6);
+  border-bottom: var(--ui-hairline) solid var(--bd);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  height: var(--h-md);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tx3);
+  font: inherit;
+  font-size: var(--fs-corpo);
+  font-weight: var(--fw-500);
+  line-height: var(--lh-controle);
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+}
+
+.tab[data-active] { color: var(--tx); }
+.tab[data-disabled] { color: var(--tx4); cursor: not-allowed; }
+.tab:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); border-radius: var(--r-mark); }
+
+@media (hover: hover) and (pointer: fine) {
+  .tab:hover:not([data-active], [data-disabled]) { color: var(--tx2); }
+}
+
+.indicator {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--active-tab-width);
+  height: 2px;
+  border-radius: var(--r-mark);
+  background: var(--tx);
+  transform: translateX(var(--active-tab-left));
+  transition: transform var(--t-default) var(--ease), width var(--t-default) var(--ease);
+}
+
+.panel { padding-top: var(--space-5); font-size: var(--fs-corpo); line-height: var(--ui-bodyLine); }
 .panel[hidden] { display: none; }
 
-.indicator { position: absolute; left: 0; bottom: 0; height: var(--ui-focusWidth); width: 100%; background: var(--ui-tabIndicator); clip-path: inset(0 calc(100% - var(--active-tab-left) - var(--active-tab-width)) 0 var(--active-tab-left)); transition: clip-path var(--motion-duration-selection) var(--motion-ease-out); }
-@media (prefers-reduced-motion: reduce) { .indicator { transition: none; } }
+/* Segmentado papel. */
+.root[data-variant="segmented"] > .list {
+  display: inline-flex;
+  max-width: 100%;
+  gap: 2px;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  box-shadow: var(--deb);
+}
 
-.root[data-variant="segmented"] > .list { gap: var(--space-1); padding: var(--space-1); border: 0; background: var(--color-surface2); border-radius: var(--radius-full); box-shadow: var(--ui-fieldShadow); flex-wrap: nowrap; isolation: isolate; }
-.root[data-variant="segmented"] > .list > .tab { height: auto; min-height: var(--ui-controlMedium); padding: var(--space-2) var(--space-3); border-radius: var(--radius-full); position: relative; z-index: 1; font-size: var(--typography-size-compact); line-height: var(--ui-buttonLine); }
-.root[data-variant="segmented"] > .list > .tab[data-active] { color: var(--color-ink); }
-.root[data-variant="segmented"] > .list > .indicator { z-index: 0; top: 0; bottom: auto; left: 0; width: var(--active-tab-width); height: var(--active-tab-height); transform: translate(var(--active-tab-left), var(--active-tab-top)); clip-path: none; background: var(--ui-selected); border-radius: var(--radius-full); box-shadow: var(--ui-panelShadow); transition: transform var(--motion-duration-selection) var(--motion-ease-out), width var(--motion-duration-selection) var(--motion-ease-out); }
-@media (prefers-reduced-motion: reduce) { .root[data-variant="segmented"] > .list > .indicator { transition: none; } }
+.root[data-variant="segmented"] > .list > .tab { height: 32px; padding: 0 18px; border-radius: var(--r-pill); transition: color var(--t-chevron) var(--ease); }
+
+.root[data-variant="segmented"] > .list > .indicator {
+  z-index: 0;
+  top: 0;
+  bottom: auto;
+  height: var(--active-tab-height);
+  border-radius: var(--r-pill);
+  background: var(--sf3);
+  box-shadow: var(--sh1);
+  transform: translate(var(--active-tab-left), var(--active-tab-top));
+}
+
+/* Preenchendo o pai: a lista fica, o painel ativo rola. */
+.root[data-fill] { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.root[data-fill] > .list { flex: none; }
+.root[data-fill] > .panel { flex: 1; min-height: 0; overflow: auto; }
+.root[data-fill] > .panel[hidden] { display: none; }

@@ -1,35 +1,334 @@
-.root { box-sizing: border-box; display: flex; flex-direction: column; width: var(--ui-sidebarWidth); flex-shrink: 0; background: var(--color-surface2); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-panelRadius); corner-shape: var(--radius-shape); box-shadow: var(--ui-panelShadow); font-family: var(--typography-fontFamily-body); color: var(--color-ink); min-height: 0; }
-.header { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; min-height: var(--space-16); padding: 0 var(--space-3) 0 var(--space-6); }
-.header h2 { margin: 0; font-size: var(--typography-size-lg); font-weight: var(--typography-weight-semibold); }
-.body { position: relative; isolation: isolate; flex: 1; min-height: 0; overflow: auto; padding: 0 var(--space-3) var(--space-3); }
-.item { position: relative; isolation: isolate; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding: var(--space-1) var(--space-3); border-radius: var(--ui-navigationRadius); text-decoration: none; color: inherit; font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); transition: background-color var(--motion-duration-control) var(--motion-ease-out), box-shadow var(--motion-duration-control) var(--motion-ease-out), color var(--motion-duration-control) var(--motion-ease-out); }
-.item:is(button) { appearance: none; width: 100%; border: 0; background: transparent; font-family: inherit; font-size: var(--typography-size-sm); line-height: inherit; text-align: start; cursor: pointer; }
-.item::before, .sectionToggle::before { content: ""; position: absolute; z-index: -1; inset: 0; border-radius: inherit; background: var(--ui-optionHover); opacity: 0; pointer-events: none; transition: opacity var(--motion-duration-control) var(--motion-ease-out); }
-.item:hover::before, .sectionToggle:hover::before { opacity: 1; }
-.item[aria-current] { color: var(--color-ink); font-weight: var(--typography-weight-semibold); }
-.item:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); }
-.label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.count { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-variant-numeric: tabular-nums; font-weight: var(--typography-weight-regular); }
-.section + .section { margin-top: var(--space-5); }
-.section h3 { box-sizing: border-box; display: flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); margin: 0; padding: var(--space-1) var(--space-3); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); }
-.sectionIcon { display: inline-flex; flex: 0 0 var(--ui-icon); align-items: center; justify-content: center; width: var(--ui-icon); height: var(--ui-icon); color: var(--color-inkMuted); }
-.sectionIcon svg { width: var(--ui-icon); height: var(--ui-icon); }
-.sectionTitle { flex: 1; min-width: 0; }
-.section[data-icon] > .item { padding-inline-start: var(--space-6); }
-.section[data-collapsible] { margin-top: var(--space-1); }
-.sectionToggle { position: relative; isolation: isolate; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); width: 100%; min-height: var(--ui-controlMedium); padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--ui-navigationRadius); background: transparent; color: var(--color-ink); font: inherit; font-size: var(--typography-size-sm); text-align: left; cursor: pointer; transition: background-color var(--motion-duration-control) var(--motion-ease-out); }
+/* Sidebar da identidade (ADR-0044; origem: Navegação, "Sidebar"). A sidebar é
+ * uma folha erguida (--sf + granulação, borda --bd, --e2, raio 44 em
+ * squircle), solta da borda. O item ativo é uma folha pousada (--sf3 +
+ * granulação, borda --bd, --sh1, pílula) que desliza até ele em 550 ms; o
+ * próprio item não se pinta. Itens de 36: tinta 2 em 400, ativo tinta 1 em 500.
+ * O trilho de módulos é a sidebar compacta: 68 de largura, itens de 44. */
 
-.sectionToggle:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); }
-.sectionToggle > svg { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); transition: transform var(--motion-duration-control) var(--motion-ease-out); }
-.sectionToggle[aria-expanded="true"] > svg { transform: rotate(90deg); }
-.sectionItems { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--motion-duration-control) var(--motion-ease-out), opacity var(--motion-duration-control) var(--motion-ease-out); }
-.sectionItems[data-open] { grid-template-rows: 1fr; opacity: 1; }
-.sectionItemsInner { display: grid; gap: var(--space-1); min-height: 0; overflow: hidden; }
-.sectionItems .item { padding-inline-start: var(--space-6); }
-.footer { padding: var(--space-2) var(--space-3); border-top: var(--ui-hairline) solid var(--color-line); }
-.rail { box-sizing: border-box; width: var(--ui-railWidth); flex-shrink: 0; display: flex; align-items: center; flex-direction: column; gap: var(--space-1); padding-block: var(--space-3); }
-@media (prefers-reduced-motion: reduce) { .item, .sectionToggle, .sectionToggle svg, .sectionItems { transition: none; } }
+.root {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: var(--ui-sidebarWidth);
+  min-height: 0;
+  padding: var(--space-4) var(--space-3);
+  gap: 18px;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-xl);
+  corner-shape: var(--r-shape);
+  background: var(--sf) var(--grain);
+  box-shadow: var(--e2);
+  color: var(--tx);
+  font-family: var(--font);
+}
 
-.selection { position: absolute; z-index: -1; top: 0; left: 0; width: var(--selection-width); height: var(--selection-height); transform: translate(var(--selection-x), var(--selection-y)); border-radius: var(--ui-navigationRadius); background: var(--ui-selected); box-shadow: var(--ui-panelShadow); pointer-events: none; transition: transform var(--motion-duration-selection) var(--motion-ease-out), height var(--motion-duration-selection) var(--motion-ease-out), opacity var(--motion-duration-control) var(--motion-ease-out); }
+.header {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) 6px 0 var(--space-3);
+}
+
+.header h2 { margin: 0; font-size: var(--fs-card); font-weight: var(--fw-titulo); letter-spacing: var(--ls-h4); line-height: 1.2; }
+
+/* A lista rola, e quem rola corta a borda: 4px de folga para a sombra e o
+ * halo da folha ativa, devolvidos pela margem negativa. */
+.body {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  margin: 0 calc(var(--space-1) * -1);
+  padding: 2px var(--space-1);
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.item {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--h-md);
+  padding: 0 var(--space-3);
+  border: var(--ui-hairline) solid transparent;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx2);
+  font-family: inherit;
+  font-size: var(--fs-corpo);
+  font-weight: var(--fw-400);
+  line-height: var(--lh-controle);
+  text-decoration: none;
+  transition: color var(--t-default) var(--ease), font-weight var(--t-default) var(--ease);
+}
+
+.item:is(button) { appearance: none; width: 100%; text-align: start; cursor: pointer; }
+.item > svg { width: var(--ui-icon); height: var(--ui-icon); flex-shrink: 0; }
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover { color: var(--tx); }
+}
+
+.item[aria-current] { color: var(--tx); font-weight: var(--fw-500); }
+.item[data-pending] { color: var(--tx); }
+.item:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+.label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  color: var(--tx2);
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-600);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Folha do item ativo: desliza até ele. */
+.selection {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  width: var(--selection-width);
+  height: var(--selection-height);
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-pill);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+  pointer-events: none;
+  transform: translate(var(--selection-x), var(--selection-y));
+  transition:
+    transform var(--t-default) var(--ease),
+    width var(--t-default) var(--ease),
+    height var(--t-default) var(--ease),
+    opacity var(--t-fast) var(--ease);
+}
+
 .body[data-selection="hidden"] > .selection { opacity: 0; }
-@media (prefers-reduced-motion: reduce) { .selection, .item::before, .sectionToggle::before { transition: none; } }
+
+/* Grupos: título de 11 em tinta 3, sem cara de botão. */
+.section { display: flex; flex-direction: column; gap: 2px; }
+.section + .section { margin-top: var(--space-4); }
+
+.section h3 {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-1-5);
+  color: var(--tx3);
+  font-size: var(--fs-legenda);
+  font-weight: var(--fw-400);
+}
+
+.sectionIcon { display: inline-flex; flex: 0 0 var(--ui-iconSm); align-items: center; justify-content: center; width: var(--ui-iconSm); height: var(--ui-iconSm); color: inherit; }
+.sectionIcon svg { width: 100%; height: 100%; }
+.sectionTitle { flex: 1; min-width: 0; }
+.section[data-icon] > .item { padding-inline-start: var(--space-3); }
+.section[data-collapsible] { margin-top: var(--space-1); }
+
+.sectionToggle {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--h-md);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx2);
+  font: inherit;
+  font-size: var(--fs-corpo);
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sectionToggle:hover { background-color: var(--acs); color: var(--tx); }
+}
+
+.sectionToggle:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+.sectionToggle > svg { flex: 0 0 var(--ui-iconSm); width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--tx3); transition: transform var(--t-chevron) var(--ease); }
+.sectionToggle[aria-expanded="true"] > svg { transform: rotate(90deg); }
+
+/* Abrir/fechar grupo: o espaço escoa de 0 até a altura (colapso). */
+.sectionItems {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  filter: blur(2px);
+  transition:
+    grid-template-rows var(--t-collapse) var(--ease),
+    opacity var(--t-base) var(--ease),
+    filter var(--t-shadow) var(--ease);
+}
+
+.sectionItems[data-open] { grid-template-rows: 1fr; opacity: 1; filter: none; }
+.sectionItemsInner { display: grid; gap: 2px; min-height: 0; overflow: hidden; }
+.sectionItems .item { padding-inline-start: var(--space-6); }
+
+.footer { padding: var(--space-3) 6px 0; border-top: var(--ui-hairline) solid var(--bd); }
+
+/* Sidebar compacta (trilho de módulos): 68, raio da metade, itens de 44. */
+.rail {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1-5);
+  width: var(--ui-railWidth);
+  padding: var(--space-4) 10px;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: calc(var(--ui-railWidth) / 2);
+  corner-shape: var(--r-shape);
+  background: var(--sf) var(--grain);
+  box-shadow: var(--e2);
+}
+
+.rail[data-expanded] { width: var(--ui-railFlyoutWidth); align-items: stretch; border-radius: var(--r-xl); }
+/* Abrir o trilho escoa a largura e o raio na mesma física (550 ms Respiro). */
+.rail { transition-property: width, border-radius, background-color, border-color, box-shadow; transition-duration: var(--t-default); transition-timing-function: var(--ease); }
+
+/* Item do trilho: o mesmo para link, botão e gatilho de menu. */
+.railItem {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: var(--h-lg);
+  height: var(--h-lg);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx2);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  font-weight: var(--fw-400);
+  line-height: var(--lh-controle);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.railItemIcon { display: flex; flex: none; align-items: center; justify-content: center; width: var(--ui-iconLg); height: var(--ui-iconLg); }
+.railItemIcon > svg { width: 100%; height: 100%; }
+.railItemIcon:has([data-pigment]) { width: 24px; height: 24px; }
+
+/* Recolhido, o rótulo sai de cena sem ocupar espaço; aberto, entra na linha. */
+.railItemLabel {
+  position: absolute;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.rail[data-expanded] .railItem { justify-content: flex-start; width: 100%; height: var(--h-md); padding: 0 var(--space-3); }
+.rail[data-expanded] .railItemIcon { width: var(--ui-icon); height: var(--ui-icon); }
+.rail[data-expanded] .railItemIcon:has([data-pigment]) { width: 24px; height: 24px; margin-inline: -4px; }
+.rail[data-expanded] .railItemLabel { position: static; flex: 1; opacity: 1; visibility: visible; }
+
+@media (hover: hover) and (pointer: fine) {
+  .railItem:hover { color: var(--tx); }
+}
+
+.railItem:is([aria-current], [data-pending], [aria-expanded="true"]) { color: var(--tx); }
+.railItem[aria-current] { font-weight: var(--fw-500); }
+.railItem:active { transform: scale(var(--scale-press)); transition-duration: var(--t-instant); }
+.railItem:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+/* Fora da lista deslizante (ações do rodapé), o ativo se pinta sozinho. */
+.railItem[data-standalone][aria-current] {
+  border: var(--ui-hairline) solid var(--bd);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+}
+
+/* Busca da área: o campo no alto da lista, 8px antes do primeiro item. */
+.search { flex: none; margin-bottom: var(--space-2); }
+
+/* Grupo do trilho e a folha do item ativo, que desliza até ele (RailGroup). */
+.railGroup { position: relative; }
+.railIndicator {
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-pill);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+}
+
+/* Marca do trilho (RailBrand): símbolo de 24; o nome por extenso entra com o
+ * trilho aberto, empurrado pela mesma física. */
+.railBrand {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  color: var(--tx2);
+  text-decoration: none;
+  outline: none;
+}
+.railBrand:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+.railBrandSymbol { flex: 0 0 auto; width: var(--space-6); height: var(--space-6); object-fit: contain; }
+.railBrandWordmark {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--space-2);
+  width: calc(var(--ui-railFlyoutWidth) - var(--space-8));
+  max-height: var(--h-md);
+  object-fit: contain;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+@media (min-width: 761px) {
+  .rail[data-expanded] .railBrand { justify-content: flex-start; padding-inline-start: var(--space-3); }
+  /* O nome cede espaço ao controle ao lado (percevejo): flyout − padding − símbolo − gaps − botão sm. */
+  .rail[data-expanded] .railBrandWordmark { position: static; flex: 1 1 auto; min-width: 0; width: auto; max-width: calc(var(--ui-railFlyoutWidth) - var(--space-4) - var(--space-6) - var(--space-2) - var(--h-sm) - var(--space-2)); opacity: 1; visibility: visible; transform: none; }
+}
+
+/* Celular: o trilho vira uma pílula horizontal; o grupo de baixo ganha o fio. */
+@media (max-width: 760px) {
+  .rail { flex-direction: row; border-radius: var(--r-pill); }
+  .railGroup[data-divided] { border-left: var(--ui-hairline) solid var(--bd); }
+  .railBrandWordmark { display: none; }
+}

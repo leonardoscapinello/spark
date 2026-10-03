@@ -1,1 +1,11 @@
-.root { min-height: var(--ui-textareaHeight); height: auto; resize: vertical; padding: var(--space-3) var(--space-4); border-radius: var(--ui-textareaRadius); corner-shape: var(--radius-shape); }
+/* Área de texto: mesmo campo cavado, raio de folha de lista em squircle,
+ * 13/1.55, padding 14 18 (ADR-0044). */
+.root {
+  min-height: var(--ui-textareaHeight);
+  height: auto;
+  resize: vertical;
+  padding: 14px 18px;
+  border-radius: var(--r-lista);
+  corner-shape: var(--r-shape);
+  line-height: 1.55;
+}

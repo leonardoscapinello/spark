@@ -1,0 +1,48 @@
+/* Canal da pessoa: etiqueta cavada de 26 (--sf2, tinta 2, 12/500) com glifo
+ * de 14 e o endereço em tinta 3. Escolhido: folha pousada (--sf3 +
+ * granulação, borda, --sh1). Sem conversa ainda: só o contorno. */
+.root {
+  --icon: var(--ui-iconSm);
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1-5);
+  max-width: 100%;
+  height: 26px;
+  margin: 0;
+  padding: 0 10px 0 var(--space-2);
+  border: var(--ui-hairline) solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  color: var(--tx2);
+  font-family: var(--font);
+  font-size: var(--fs-pequeno);
+  font-weight: var(--fw-500);
+  line-height: var(--lh-controle);
+  white-space: nowrap;
+}
+
+.title,
+.handle { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.title { flex: 0 1 auto; }
+.handle { flex: 0 2 auto; color: var(--tx3); font-weight: var(--fw-400); }
+
+.root[data-idle] { border-color: var(--bd); background: transparent; color: var(--tx3); }
+
+button.root { cursor: pointer; }
+
+@media (hover: hover) and (pointer: fine) {
+  button.root:hover:not([data-selected], :disabled) { color: var(--tx); }
+}
+
+button.root[data-selected] {
+  --press-sh: var(--sh1);
+  border-color: var(--bd);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+  color: var(--tx);
+}
+
+button.root:focus-visible { outline: none; box-shadow: var(--press-sh, 0 0 0 0 transparent), 0 0 0 var(--ui-focusWidth) var(--ring); }
+button.root:disabled { color: var(--tx4); cursor: not-allowed; }

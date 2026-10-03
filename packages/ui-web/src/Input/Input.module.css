@@ -1,19 +1,107 @@
-.root, .adorned {
-  box-sizing: border-box; width: 100%; height: var(--ui-fieldHeight);
-  padding-inline: var(--space-4); color: var(--color-ink);
-  background: var(--color-surface2); border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--ui-fieldRadius); box-shadow: var(--ui-fieldShadow);
-  transition: background-color var(--motion-duration-selection) var(--motion-ease-out), border-color var(--motion-duration-control) var(--motion-ease-out), box-shadow var(--motion-duration-selection) var(--motion-ease-out);
+/* Campo da identidade (ADR-0044; origem: Campos, "Campo de texto"). Campo é
+ * baixo-relevo: pílula cavada (--sf2 + --deb), borda transparente. Foco: borda
+ * de grafite (--tx3) + halo de 3px. Erro/sucesso: anel de 1px somado ao relevo.
+ * Altura: md 40 (padrão), sm 36 (compacto), lg 44 (cartão). */
+
+.root,
+.adorned {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--h-field);
+  padding: 0 var(--pad-md);
+  border: var(--ui-hairline) solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  box-shadow: var(--deb);
+  color: var(--tx);
+  outline: none;
 }
-.root { font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); }
-.root::placeholder { color: var(--color-inkFaint); }
-.root[data-invalid], .adorned:has([data-invalid]) { border-color: var(--color-statusDanger); box-shadow: var(--ui-fieldErrorShadow); }
-.root:focus, .root[data-focused], .adorned:focus-within { border-color: var(--color-lineStrong); box-shadow: var(--ui-fieldFocusShadow); outline: var(--ui-focusWidth) solid transparent; outline-offset: 0; }
-.root[data-disabled], .adorned[data-disabled] { cursor: not-allowed; color: var(--color-inkFaint); box-shadow: none; }
-.sm { height: var(--ui-controlMedium); }
-.lg { height: var(--space-12); }
-.adorned { display: flex; align-items: center; min-width: 0; gap: var(--space-2); }
-.adorned > input { flex: 1; height: 100%; min-width: 0; padding-inline: 0; border: 0; background: transparent; }
-.adorned > input, .adorned > input:focus { outline: none; box-shadow: none; }
-.adornment { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); color: var(--color-inkMuted); }
-@media (prefers-reduced-motion: reduce) { .root, .adorned { transition: none; } }
+
+.root {
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  font-weight: var(--fw-400);
+  line-height: var(--lh-controle);
+}
+
+.root::placeholder { color: var(--tx3); }
+
+.root:focus,
+.root[data-focused],
+.adorned:focus-within {
+  border-color: var(--tx3);
+  box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ring);
+}
+
+.root[data-invalid],
+.adorned:has([data-invalid]) {
+  box-shadow: var(--deb), 0 0 0 var(--ui-hairline) var(--er);
+}
+
+.root[data-invalid]:focus,
+.adorned:has([data-invalid]):focus-within {
+  border-color: var(--er);
+  box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ers);
+}
+
+.root[data-valid-mark],
+.adorned:has([data-valid-mark]) {
+  box-shadow: var(--deb), 0 0 0 var(--ui-hairline) var(--ok);
+}
+
+/* Desabilitado: sem relevo, tinta 4, desbotado. */
+.root[data-disabled],
+.adorned[data-disabled] {
+  cursor: not-allowed;
+  color: var(--tx4);
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.root[data-readonly] { box-shadow: none; }
+
+.sm { height: var(--h-md); }
+.lg { height: var(--h-lg); }
+
+/* Caixa com prefixo, sufixo ou botão interno. */
+.adorned {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
+.adorned:has(> .adornment:first-child > svg, > .adornment:first-child > [data-icon]) { padding-inline-start: calc(var(--pad-md) - 2px); }
+.adorned:has(> .adornment:last-child button) { padding-inline-end: var(--space-1); }
+
+.adorned > input {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.adorned > input:focus,
+.adorned > input[data-invalid] {
+  border: 0;
+  box-shadow: none;
+}
+
+.adornment {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-controle);
+  color: var(--tx3);
+}
+
+.adornment > svg { width: var(--ui-icon); height: var(--ui-icon); }
+
+/* Valor numérico (moeda, porcentagem, documento) em mono tabular. */
+.numeric { font-family: var(--mono); font-variant-numeric: tabular-nums; }

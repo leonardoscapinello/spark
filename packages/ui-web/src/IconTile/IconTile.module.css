@@ -1,0 +1,32 @@
+/* Disco de ícone: squircle de raio igual à metade da altura. Cavado (--sf2 +
+ * --deb, tinta 2) é o estado em repouso; folha (--sf3 + granulação + --sh1)
+ * convida ao toque. Estado ganha o fundo suave e a tinta do estado. */
+.root {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  corner-shape: var(--r-shape);
+  background: var(--sf2);
+  box-shadow: var(--deb);
+  color: var(--tx2);
+}
+
+.root > svg { width: var(--ui-iconLg); height: var(--ui-iconLg); }
+.root[data-size="sm"] { width: 28px; height: 28px; }
+.root[data-size="sm"] > svg { width: var(--ui-icon); height: var(--ui-icon); }
+.root[data-size="lg"] { width: 44px; height: 44px; }
+.root[data-size="xl"] { width: 48px; height: 48px; }
+.root:is([data-size="lg"], [data-size="xl"]) > svg { width: 20px; height: 20px; }
+
+.root[data-surface="folha"] { background: var(--sf3) var(--grain); box-shadow: var(--sh1); color: var(--tx); }
+
+.root[data-tone="muted"] { color: var(--tx3); }
+.root[data-tone="success"] { background: var(--oks); box-shadow: none; color: var(--ok); }
+.root[data-tone="warning"] { background: var(--was); box-shadow: none; color: var(--wa); }
+.root[data-tone="danger"] { background: var(--ers); box-shadow: none; color: var(--er); }
+.root[data-tone="info"] { background: var(--ins); box-shadow: none; color: var(--in); }

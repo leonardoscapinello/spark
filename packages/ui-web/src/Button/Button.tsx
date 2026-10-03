@@ -1,22 +1,56 @@
 import { Button as BaseButton } from "@base-ui/react/button";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useRef, type ComponentPropsWithoutRef, type MouseEvent, type ReactNode } from "react";
+import { useLabelMorph } from "../motion/useLabelMorph.js";
+import { Spinner } from "../Spinner/Spinner.js";
 import styles from "./Button.module.css";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "raised" | "row";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "raised" | "row" | "link";
 export type ButtonSize = "sm" | "md" | "lg";
 
 export type ButtonProps = {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  tone?: "neutral" | "success" | "danger";
-  /** Estado de carregamento — desabilita o botão e mostra um spinner, sem trocar o texto de lugar. */
-  loading?: boolean;
+  /** primary = carvão (um por área) · secondary/raised = folha · ghost = tinta · row = linha de lista · link = texto sublinhado. */
+  variant?: ButtonVariant | undefined;
+  size?: ButtonSize | undefined;
+  /** danger = shu (destrutivo); success = estado positivo. */
+  tone?: "neutral" | "success" | "danger" | undefined;
+  /** Carregando — o rótulo fica e o ensō entra no lugar do ícone; desabilita o clique. */
+  loading?: boolean | undefined;
   icon?: ReactNode;
   trailingIcon?: ReactNode;
-  shape?: "pill" | "rounded";
-  iconOnly?: boolean;
+  /** @deprecated Controles são sempre pílula (ADR-0044). Mantido para compatibilidade. */
+  shape?: "pill" | "rounded" | undefined;
+  iconOnly?: boolean | undefined;
   children?: ReactNode;
 } & Omit<ComponentPropsWithoutRef<typeof BaseButton>, "children">;
+
+const PRESS: Record<ButtonVariant, "ink" | "sheet" | "ghost"> = {
+  primary: "ink",
+  secondary: "sheet",
+  raised: "sheet",
+  ghost: "ghost",
+  row: "ghost",
+  link: "ghost",
+};
+
+function isText(node: ReactNode): boolean {
+  if (typeof node === "string" || typeof node === "number") return true;
+  return Array.isArray(node) && node.length > 0 && node.every(item => typeof item === "string" || typeof item === "number");
+}
+
+/** Rótulo que não cabe desliza de lado a lado no hover (marquee). */
+function startMarquee(event: MouseEvent<HTMLElement>) {
+  const label = event.currentTarget.querySelector<HTMLElement>("[data-lbl]");
+  if (!label) return;
+  const overflow = label.scrollWidth - label.clientWidth;
+  if (overflow <= 1) return;
+  label.style.setProperty("--mq", `-${overflow + 8}px`);
+  label.style.setProperty("--mqd", `${Math.max(1.6, overflow / 35)}s`);
+  label.setAttribute("data-mq", "");
+}
+
+function stopMarquee(event: MouseEvent<HTMLElement>) {
+  event.currentTarget.querySelector("[data-lbl]")?.removeAttribute("data-mq");
+}
 
 export function Button({
   variant = "primary",
@@ -25,19 +59,44 @@ export function Button({
   loading = false,
   icon,
   trailingIcon,
-  shape = "rounded",
+  shape: _shape,
   iconOnly = false,
   disabled,
   children,
   className,
+  onMouseEnter,
+  onMouseLeave,
   ...rest
 }: ButtonProps) {
-  const cls = [styles.root, styles[variant], styles[size], styles[shape], iconOnly && styles.iconOnly, className].filter(Boolean).join(" ");
+  const ref = useRef<HTMLButtonElement>(null);
+  const text = isText(children);
+  /* Rótulo que muda, forma que escoa: Salvar → Salvando… morfa a largura. */
+  useLabelMorph(ref, text ? String(Array.isArray(children) ? children.join("") : children) : null);
+  const leading = !iconOnly && (loading || Boolean(icon));
+  const cls = [
+    styles.root,
+    styles[variant],
+    styles[size],
+    iconOnly && styles.iconOnly,
+    leading && styles.leading,
+    !iconOnly && trailingIcon && styles.trailing,
+    className,
+  ].filter(Boolean).join(" ");
   return (
-    <BaseButton data-tone={tone} aria-busy={loading || undefined} className={cls} disabled={disabled || loading} {...rest}>
-      {loading && <span className={styles.spinner} aria-hidden="true" />}
+    <BaseButton
+      ref={ref}
+      data-press={PRESS[variant]}
+      data-tone={tone === "neutral" ? undefined : tone}
+      aria-busy={loading || undefined}
+      className={cls}
+      disabled={disabled || loading}
+      onMouseEnter={event => { startMarquee(event); onMouseEnter?.(event); }}
+      onMouseLeave={event => { stopMarquee(event); onMouseLeave?.(event); }}
+      {...rest}
+    >
+      {loading && <span className={styles.icon} aria-hidden="true"><Spinner size="sm" /></span>}
       {!loading && icon && <span className={styles.icon} aria-hidden="true">{icon}</span>}
-      {children}
+      {text ? <span data-lbl=""><span>{children}</span></span> : children}
       {trailingIcon && <span className={styles.icon} aria-hidden="true">{trailingIcon}</span>}
     </BaseButton>
   );

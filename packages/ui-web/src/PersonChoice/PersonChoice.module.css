@@ -1,41 +1,26 @@
+/* Escolha de pessoa (caixa de seleção + avatar 24 + duas linhas): a linha é
+ * tinta; hover dá --acs; marcada vira folha pousada em --r-rico — o mesmo
+ * realce da linha de lista selecionada. */
 .root {
   box-sizing: border-box;
   min-width: 0;
-  padding: var(--space-2) var(--space-3);
-  border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
-  background: var(--color-surface);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--r-rico);
+  corner-shape: var(--r-shape);
+  background: transparent;
 }
 
-.root:hover,
-.root[data-checked] {
-  border-color: var(--color-lineStrong);
-  background: var(--color-surface2);
+@media (hover: hover) and (pointer: fine) {
+  .root:hover { background-color: var(--acs); }
 }
+
+.root[data-checked] { background: var(--sf3) var(--grain); box-shadow: var(--sh1); }
 
 .root > label { width: 100%; }
-.root > label > span { min-width: 0; flex: 1; }
+.root > label > span { flex: 1; min-width: 0; }
 
-.person {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: 0;
-}
-
-.copy strong,
-.copy small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.copy strong { font-weight: var(--typography-weight-medium); line-height: var(--ui-tabLine); }
-.copy small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-tabLine); }
+.person { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.copy { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.copy strong, .copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.copy strong { color: var(--tx); font-size: var(--fs-corpo); font-weight: var(--fw-500); line-height: var(--lh-h4); }
+.copy small { color: var(--tx3); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); }

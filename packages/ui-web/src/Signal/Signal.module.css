@@ -1,0 +1,23 @@
+/* Sinal de estado (README da identidade, "Status pequeno"; origem: liveDot):
+ * ponto de 7px + texto curto 11 em tinta 3. */
+.root {
+  --signal: var(--bd2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--tx3);
+  font-family: var(--font);
+  font-size: var(--fs-legenda);
+  line-height: var(--lh-legenda);
+}
+
+.root[data-tone="info"] { --signal: var(--in); }
+.root[data-tone="success"] { --signal: var(--ok); }
+.root[data-tone="warning"] { --signal: var(--wa); }
+.root[data-tone="danger"] { --signal: var(--er); }
+
+.dot { position: relative; flex: none; width: 7px; height: 7px; border-radius: var(--r-pill); background: var(--signal); }
+.ping { position: absolute; inset: 0; border-radius: inherit; background: var(--signal); animation: var(--anim-ping) var(--t-ping) var(--ease-out) infinite; }
+.text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

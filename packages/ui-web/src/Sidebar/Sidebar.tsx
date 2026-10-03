@@ -1,5 +1,7 @@
 import { cloneElement, useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type ReactElement, type ReactNode } from "react";
 import { Icon } from "../Icon/Icon.js";
+import { SearchField, type SearchFieldProps } from "../SearchField/SearchField.js";
+import { useSlidingIndicator } from "../motion/useSlidingIndicator.js";
 import styles from "./Sidebar.module.css";
 export interface SidebarProps { title: string; children: ReactNode; actions?: ReactNode; footer?: ReactNode; className?: string | undefined }
 export function Sidebar({ title, children, actions, footer, className }: SidebarProps) {
@@ -49,6 +51,83 @@ export function SidebarSection({ title, icon, children, collapsible = false, def
     {collapsible ? <div id={contentId} className={styles.sectionItems} data-open={open || undefined} aria-hidden={!open} inert={!open}><div className={styles.sectionItemsInner}>{children}</div></div> : children}
   </section>;
 }
-export function NavigationRail({ children, label = "Módulos", className, ...props }: ComponentProps<"nav"> & { children: ReactNode; label?: string; className?: string | undefined }) {
-  return <nav {...props} className={[styles.rail, className].filter(Boolean).join(" ")} aria-label={label}>{children}</nav>;
+/** Sidebar compacta (trilho de módulos). `expanded` mostra os rótulos dos itens. */
+export function NavigationRail({ children, label = "Módulos", expanded = false, className, ...props }: ComponentProps<"nav"> & { children: ReactNode; label?: string; expanded?: boolean; className?: string | undefined }) {
+  return <nav {...props} data-rail="" data-expanded={expanded || undefined} className={[styles.rail, className].filter(Boolean).join(" ")} aria-label={label}>{children}</nav>;
+}
+
+/**
+ * Grupo de itens do trilho com a folha do item ativo deslizando até ele em
+ * 550 ms (a mesma física da seleção da sidebar). `selection` muda quando o
+ * item ativo muda. `divided` põe o fio que separa o grupo no trilho de celular.
+ */
+export function RailGroup({ selection, divided = false, children, className, ref, ...props }: ComponentProps<"div"> & { selection: string; divided?: boolean }) {
+  const own = useRef<HTMLDivElement | null>(null);
+  useSlidingIndicator(own, selection);
+  return <div
+    {...props}
+    ref={(node) => { own.current = node; if (typeof ref === "function") ref(node); else if (ref) ref.current = node; }}
+    data-slide=""
+    data-divided={divided || undefined}
+    className={[styles.railGroup, className].filter(Boolean).join(" ")}
+  >
+    <span data-ind="" aria-hidden="true" className={styles.railIndicator} />
+    {children}
+  </div>;
+}
+
+/**
+ * Marca no alto do trilho: símbolo sempre; nome por extenso só com o trilho
+ * aberto. `render` é o link do roteador; sem ele, a marca é só imagem.
+ */
+export function RailBrand({ symbol, wordmark, label, render, className }: { symbol: string; wordmark?: string | undefined; label: string; render?: ReactElement | undefined; className?: string | undefined }) {
+  const content = <><img className={styles.railBrandSymbol} src={symbol} alt="" />{wordmark && <img className={styles.railBrandWordmark} src={wordmark} alt="" />}</>;
+  const props = { className: [styles.railBrand, className].filter(Boolean).join(" "), "aria-label": label, children: content };
+  if (render) return cloneElement(render as ReactElement<ComponentProps<"a">>, props);
+  return <span role="img" {...props} />;
+}
+
+/**
+ * Item do trilho — um componente só para todo item: módulo (link), ação
+ * (botão) ou gatilho de menu (perfil). Ícone num encaixe fixo e rótulo
+ * alinhado à esquerda; recolhido, só o ícone num círculo de 44; aberto, linha
+ * de 36 com rótulo. `data-on` alimenta a folha deslizante da lista.
+ */
+export function RailItem({ icon, label, active, pending, render, className, ...props }: Omit<ComponentProps<"a">, "children"> & { icon: ReactNode; label: string; active?: boolean; pending?: boolean; render?: ReactElement }) {
+  const itemProps = {
+    ...props,
+    "aria-label": props["aria-label"] ?? label,
+    "aria-current": active ? "page" as const : undefined,
+    "data-pending": pending || undefined,
+    "data-on": String(Boolean(active || pending)),
+    className: [styles.railItem, className].filter(Boolean).join(" "),
+    children: <><span className={styles.railItemIcon} aria-hidden="true">{icon}</span><span className={styles.railItemLabel}>{label}</span></>,
+  };
+  if (render) return cloneElement(render as ReactElement<ComponentProps<"a">>, itemProps);
+  if (!props.href) return <button type="button" {...(itemProps as unknown as ComponentProps<"button">)} />;
+  return <a {...itemProps} />;
+}
+
+/**
+ * Busca da área no topo da sidebar: um campo de verdade (SearchField), não um
+ * item que abre outra coisa. `shortcut` liga a tecla (ex.: "/", como num
+ * cliente de e-mail) e a mostra no campo; a tecla não age enquanto se digita
+ * em outro campo.
+ */
+export function SidebarSearch({ shortcut, ...props }: SearchFieldProps) {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!shortcut) return;
+    const focus = (event: KeyboardEvent) => {
+      if (event.key !== shortcut || event.metaKey || event.ctrlKey || event.altKey) return;
+      if ((event.target as HTMLElement | null)?.closest("input, textarea, select, [contenteditable=\"true\"]")) return;
+      const input = root.current?.querySelector("input");
+      if (!input) return;
+      event.preventDefault();
+      input.focus();
+    };
+    window.addEventListener("keydown", focus);
+    return () => window.removeEventListener("keydown", focus);
+  }, [shortcut]);
+  return <div ref={root} className={styles.search} role="search"><SearchField {...props} {...(shortcut ? { shortcut } : {})} /></div>;
 }

@@ -1,5 +1,13 @@
+/* Erro de campo: 11px em shu. Nada surge do nada — ao montar, abre espaço de 0
+ * até a altura (mesma física do colapso). */
 .root {
-  font-family: var(--typography-fontFamily-body);
-  font-size: var(--typography-size-xs);
-  color: var(--color-statusDanger);
+  display: grid;
+  grid-template-rows: 1fr;
+  font-family: var(--font);
+  font-size: var(--fs-legenda);
+  line-height: var(--lh-legenda);
+  color: var(--er);
+  animation: var(--anim-open) var(--t-open) var(--ease);
 }
+
+.text { overflow: hidden; min-height: 0; }

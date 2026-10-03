@@ -1,20 +1,26 @@
+/* Voltar: pílula transparente de 30, padding 0 10 0 6, gap 4, 500 12 em tinta
+ * 2. O hover é o realce de tinta (--acs), como os botões de tinta. */
 .root {
   box-sizing: border-box;
-  width: fit-content;
-  min-height: var(--ui-controlMedium);
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding-inline: var(--space-2);
-  margin-inline-start: calc(var(--space-2) * -1);
-  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
-  color: var(--color-inkMuted);
-  font-family: var(--typography-fontFamily-body);
-  font-size: var(--typography-size-sm);
-  font-weight: var(--typography-weight-medium);
+  gap: var(--space-1);
+  width: fit-content;
+  height: 30px;
+  padding: 0 10px 0 var(--space-1-5);
+  margin-inline-start: calc(var(--space-1-5) * -1);
+  border-radius: var(--r-pill);
+  color: var(--tx2);
+  font-family: var(--font);
+  font-size: var(--fs-pequeno);
+  font-weight: var(--fw-500);
+  line-height: var(--lh-controle);
   text-decoration: none;
 }
 
-.root:hover { color: var(--color-ink); background: var(--color-surface2); }
-.root:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.arrow { transform: rotate(180deg); }
+@media (hover: hover) and (pointer: fine) {
+  .root:hover { background-color: var(--acs); color: var(--tx); }
+}
+
+.root:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+.arrow { --icon: var(--ui-iconSm); }

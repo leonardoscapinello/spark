@@ -6,8 +6,8 @@
 .root > button:focus-visible { position: relative; z-index: 1; }
 .identity { display: flex; align-items: center; gap: var(--space-3); min-width: 0; padding: var(--space-3) var(--space-2); }
 .identityCopy { display: grid; gap: 0; min-width: 0; }
-.identityCopy strong { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); line-height: var(--ui-tabLine); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.identityCopy small { color: var(--color-inkMuted); font-size: var(--typography-size-compact); line-height: var(--ui-tabLine); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.identityCopy strong { color: var(--tx); font-size: var(--fs-corpo); font-weight: var(--fw-500); line-height: var(--lh-corpo); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.identityCopy small { color: var(--tx2); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .root > [data-split-part="menu"] { position: relative; }
 .root > [data-split-part="menu"]::before { content: ""; position: absolute; inset-inline-start: 0; top: var(--space-2); bottom: var(--space-2); width: var(--ui-hairline); background: currentColor; opacity: var(--ui-splitDividerOpacity); pointer-events: none; }

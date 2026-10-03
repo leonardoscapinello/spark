@@ -1,22 +1,20 @@
 /* A largura pertence ao cartão, não só ao tooltip especializado. A prévia
  * também aparece dentro do tooltip genérico de InlineField; sem largura aqui,
  * ela colapsava enquanto mantinha a altura e virava uma faixa vertical. */
-.popup { --floating-width: var(--ui-popoverWidth); --floating-padding: 0; --surface-background: var(--color-surface); overflow: hidden; color: var(--color-ink); }
-.card { display: flex; flex-direction: column; width: var(--ui-popoverWidth); max-width: 100%; min-width: 0; background: var(--color-surface); color: var(--color-ink); }
+.popup { --floating-width: var(--ui-popoverWidth); --floating-padding: 0; --surface-background: var(--sf); overflow: hidden; color: var(--tx); }
+.card { display: flex; flex-direction: column; width: var(--ui-popoverWidth); max-width: 100%; min-width: 0; background: var(--sf); color: var(--tx); }
 
-.image, .imagePlaceholder { display: block; flex: 0 0 auto; width: 100%; aspect-ratio: var(--ui-linkPreviewAspectRatio); object-fit: cover; background: var(--ui-subtle); }
+.image, .imagePlaceholder { display: block; flex: 0 0 auto; width: 100%; aspect-ratio: var(--ui-linkPreviewAspectRatio); object-fit: cover; background: var(--sf2); }
 /* Sem imagem: o ícone do site no meio, grande o bastante para identificar. */
-.imagePlaceholder { display: grid; place-items: center; color: var(--color-inkFaint); }
+.imagePlaceholder { display: grid; place-items: center; color: var(--tx3); }
 .favicon { display: block; flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); max-width: var(--ui-icon); max-height: var(--ui-icon); object-fit: contain; }
 
 .body { display: flex; flex: 1 1 auto; flex-direction: column; gap: var(--space-1); min-width: 0; min-height: 0; padding: var(--space-3); }
-.body strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--typography-size-sm); }
-.site { display: flex; align-items: center; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.description { display: -webkit-box; overflow: hidden; color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.body strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-corpo); }
+.site { display: flex; align-items: center; gap: var(--space-1); color: var(--tx2); font-size: var(--fs-pequeno); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.description { display: -webkit-box; overflow: hidden; color: var(--tx2); font-size: var(--fs-pequeno); line-height: var(--ui-bodyLine); -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 
 /* Indisponível e carregando usam a MESMA caixa: trocar de forma no meio da
  * espera é a própria coisa que se quer evitar. */
-.unavailable { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; gap: var(--space-1); padding: var(--space-3); background: var(--color-surface); color: var(--color-inkMuted); }
-.unavailable strong { color: var(--color-ink); }
-.loadingLine { height: var(--space-3); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--ui-subtle); }
-.loadingLine:last-child { width: var(--ui-previewColumn); max-width: 70%; }
+.unavailable { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; gap: var(--space-1); padding: var(--space-3); background: var(--sf); color: var(--tx2); }
+.unavailable strong { color: var(--tx); }

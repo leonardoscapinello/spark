@@ -1,8 +1,10 @@
-.root { display: inline-flex; flex: none; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding: var(--space-1) var(--space-2); border-radius: var(--radius-full); background: var(--ui-subtle); }
-.label { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); white-space: nowrap; }
-.label svg { width: var(--space-3); height: var(--space-3); }
-.stack { display: inline-flex; align-items: center; padding-inline-start: var(--space-2); }
-.viewer, .more { display: inline-flex; align-items: center; justify-content: center; padding: 0; margin-inline-start: calc(-1 * var(--space-2)); border: var(--ui-focusWidth) solid var(--color-surface); border-radius: var(--radius-full); background: var(--color-surface); color: var(--color-inkMuted); cursor: pointer; }
-.viewer:focus-visible, .more:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); position: relative; z-index: 1; }
-.more { box-sizing: content-box; min-width: var(--ui-controlSmall); height: var(--ui-controlSmall); font-size: var(--typography-size-xs); }
-.notice { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+/* Quem mais está vendo (origem: Perfil §1, "avatar-grupo"): avatares de 24
+ * sobrepostos em −8px com anel de 2px do papel; legenda 12 em tinta 2. */
+.root { display: inline-flex; flex: none; align-items: center; gap: 10px; min-height: var(--h-md); }
+.label { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--tx2); font-size: var(--fs-pequeno); white-space: nowrap; }
+.label svg { width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--tx3); }
+/* Sobreposição e anel vêm do AvatarStack; aqui só o botão de cada pessoa. */
+.viewer, .more { display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; cursor: pointer; outline: none; }
+.viewer:focus-visible, .more:focus-visible { position: relative; z-index: 1; box-shadow: 0 0 0 2px var(--stack-ring, var(--sf)), 0 0 0 calc(2px + var(--ui-focusWidth)) var(--ring); }
+.more { box-sizing: border-box; min-width: 24px; height: 24px; padding: 0 var(--space-1); background: var(--sf2); color: var(--tx2); font-size: var(--fs-iniciais); font-weight: var(--fw-500); }
+.notice { color: var(--tx3); font-size: var(--fs-pequeno); }

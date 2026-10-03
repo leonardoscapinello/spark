@@ -1,5 +1,9 @@
+/* Grupo de campo: rótulo, campo e ajuda a 6px um do outro (ADR-0044). --g é o
+ * gap que a mensagem de erro recolhe ao abrir. */
 .root {
+  --g: var(--ui-fieldGap);
   display: flex;
   flex-direction: column;
   gap: var(--ui-fieldGap);
+  min-width: 0;
 }

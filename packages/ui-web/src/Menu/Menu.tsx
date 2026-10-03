@@ -10,10 +10,14 @@ import styles from "./Menu.module.css";
 export const Menu = BaseMenu.Root;
 export const MenuTrigger = BaseMenu.Trigger;
 export function MenuContent({ children, ...props }: ComponentProps<typeof BaseMenu.Popup>) {
-  return <BaseMenu.Portal><BaseMenu.Positioner sideOffset={Number.parseFloat(lightTheme["space-1"])} align="start" className={s.positioner}><BaseMenu.Popup render={<Glass tier="panel" />} className={s.popup} {...props}>{children}</BaseMenu.Popup></BaseMenu.Positioner></BaseMenu.Portal>;
+  return <BaseMenu.Portal><BaseMenu.Positioner sideOffset={Number.parseFloat(lightTheme["pop-gap"])} align="start" className={s.positioner}><BaseMenu.Popup render={<Glass tier="panel" />} className={s.popup} {...props}>{children}</BaseMenu.Popup></BaseMenu.Positioner></BaseMenu.Portal>;
 }
 export function MenuItem({ icon, shortcut, danger, children, ...props }: ComponentProps<typeof BaseMenu.Item> & { icon?: ReactNode; shortcut?: string; danger?: boolean }) {
-  return <BaseMenu.Item className={s.item} data-danger={danger || undefined} {...props}>{icon}<span className={s.label}>{children}</span>{shortcut && <span className={s.shortcut}>{shortcut}</span>}</BaseMenu.Item>;
+  return <BaseMenu.Item className={s.item} data-danger={danger || undefined} {...props}>{icon && <span className={s.leading} aria-hidden="true">{icon}</span>}<span className={s.label}>{children}</span>{shortcut && <span className={s.shortcut}>{shortcut}</span>}</BaseMenu.Item>;
+}
+/** Linha informativa do menu (ex.: «Ninguém segue este negócio»): legível, sem cara de opção. */
+export function MenuNote({ children }: { children: ReactNode }) {
+  return <div className={s.note} role="presentation">{children}</div>;
 }
 export function MenuCheckboxItem({ children, ...props }: ComponentProps<typeof BaseMenu.CheckboxItem>) {
   return <BaseMenu.CheckboxItem className={s.item} {...props}><span className={s.indicator}><BaseMenu.CheckboxItemIndicator><Icon name="check" /></BaseMenu.CheckboxItemIndicator></span>{children}</BaseMenu.CheckboxItem>;

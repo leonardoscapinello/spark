@@ -1,0 +1,175 @@
+/* Fluxo de automação (ADR-0044, ADR-0045). A mesa é o fundo da página
+ * (--bg + granulação) com grade de pontos --grid, afundada na folha que a
+ * contém. Cada etapa é uma folha pousada de raio 24, como o cartão do kanban
+ * (origem: Mais, "Kanban"); o tipo vive num ponto de pigmento, nunca pinta a
+ * folha. Ligação em tinta clara; ramo de condição e ligação em andamento,
+ * tracejados (--tracejado). */
+
+.canvas {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--r-bloco);
+  corner-shape: var(--r-shape);
+  background: var(--bg) var(--grain);
+  box-shadow: var(--deb);
+}
+
+/* A grade acompanha o zoom do palco no mesmo tempo da física, e rola junto. */
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background-image: radial-gradient(circle, var(--grid) 0 1.5px, transparent 2px);
+  background-size: calc(var(--space-6) * var(--flow-zoom, 1)) calc(var(--space-6) * var(--flow-zoom, 1));
+  background-attachment: local;
+  transition: background-size var(--t-default) var(--ease);
+}
+
+.stage { position: relative; width: 100%; height: 100%; transform-origin: 0 0; }
+
+.edges { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.edge { fill: none; stroke: var(--bd2); stroke-width: 1.5px; stroke-linecap: round; }
+.edge:is([data-kind="conditional"], [data-kind="pending"]) { stroke: var(--tx3); stroke-dasharray: var(--tracejado); }
+
+/* Etapa. A folha (fundo, borda, sombra, hover que ergue) vem do Surface; aqui
+ * ficam medida, halo de seleção e a física do arrasto. */
+.node {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: var(--ui-automationNodeWidth);
+  height: var(--ui-automationNodeHeight);
+  padding: 14px 14px var(--space-3);
+  font-family: var(--font);
+  user-select: none;
+  outline: none;
+}
+
+.node[data-movable] { cursor: grab; touch-action: none; }
+.node[data-selected] { z-index: 1; border-color: var(--tx3); box-shadow: var(--sh1), 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+@media (hover: hover) and (pointer: fine) {
+  .node[data-selected]:hover { box-shadow: var(--e2), 0 0 0 var(--ui-focusWidth) var(--ring); }
+}
+
+/* Fantasma do kanban: 1,6° e 1,035, segurada (--e3); o pouso é do landFrom. */
+.node[data-dragging] { z-index: 2; cursor: grabbing; transform: rotate(var(--drag-tilt)) scale(var(--scale-drag)); }
+.node[data-dragging][data-selected] { box-shadow: var(--e3), 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; }
+.kind { display: inline-flex; align-items: center; gap: var(--space-1-5); min-width: 0; color: var(--tx2); font-size: var(--fs-pequeno); font-weight: var(--fw-500); line-height: var(--lh-controle); white-space: nowrap; }
+.dot { flex: none; width: var(--space-2); height: var(--space-2); border-radius: var(--r-pill); background: var(--flow-dot, var(--tx3)); }
+.grip { display: flex; flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--tx3); }
+.grip > svg { width: 100%; height: 100%; }
+
+.title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--tx);
+  font-size: var(--fs-corpo);
+  font-weight: var(--fw-500);
+  line-height: var(--lh-h4);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.description {
+  display: -webkit-box;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--tx2);
+  font-size: var(--fs-pequeno);
+  line-height: var(--lh-pequeno);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Rótulos Sim/Não ficam dentro da folha: o texto não passa por baixo deles. */
+.node[data-branched] :is(.title, .description) { padding-inline-end: var(--space-10); }
+
+.input,
+.outputs { position: absolute; top: 50%; translate: 0 -50%; }
+.input { inset-inline-start: calc(var(--h-lg) / -2); }
+.outputs { display: flex; flex-direction: column; gap: var(--space-1); inset-inline-end: calc(var(--h-lg) / -2); }
+
+/* Porta: alvo de 44 (toque), ponto de 14 sobre a borda da folha. */
+.port {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--h-lg);
+  height: var(--h-lg);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx2);
+  font-family: var(--font);
+  cursor: crosshair;
+  outline: none;
+}
+
+.port:is(:disabled, [data-disabled]) { cursor: not-allowed; }
+
+.portDot {
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--bd2);
+  border-radius: var(--r-pill);
+  background: var(--sf3);
+  box-shadow: var(--sh1);
+}
+
+.port[data-side="in"] .portDot { border-color: var(--tx2); }
+
+@media (hover: hover) and (pointer: fine) {
+  .port:hover:not(:disabled, [data-disabled]) .portDot { border-color: var(--tx2); transform: scale(1.25); }
+}
+
+.port[data-active] .portDot { border-color: var(--tx); background: var(--tx); transform: scale(1.25); }
+.port:focus-visible .portDot { box-shadow: var(--sh1), 0 0 0 var(--ui-focusWidth) var(--ring); }
+.port:is(:disabled, [data-disabled]) .portDot { opacity: var(--disabled); }
+
+.portLabel,
+.portHint {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--tx2);
+  font-size: var(--fs-legenda);
+  font-weight: var(--fw-500);
+  line-height: var(--lh-controle);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.port[data-side="out"] :is(.portLabel, .portHint) { inset-inline-end: calc(100% + var(--space-1)); }
+.port[data-side="in"] :is(.portLabel, .portHint) { inset-inline-start: calc(100% + var(--space-1)); }
+
+/* Dica: etiqueta de folha que entra com o atraso da dica (250 ms). */
+.portHint {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-pill);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+  opacity: 0;
+  transform: translateX(var(--space-1));
+}
+
+.port[data-side="in"] .portHint { transform: translateX(calc(var(--space-1) * -1)); }
+.port:is(:hover, :focus-visible) .portHint { opacity: 1; transform: none; transition-delay: var(--t-tip-delay); }

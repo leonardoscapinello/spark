@@ -1,3 +1,5 @@
-.root { display: flex; flex-direction: column; gap: var(--space-5); font-family: var(--typography-fontFamily-body); }
-.description { margin: 0; font-size: var(--ui-helpSize); color: var(--color-inkMuted); line-height: var(--ui-tabLine); }
+.root { display: flex; flex-direction: column; gap: var(--space-5); font-family: var(--font); }
+/* Ajuda: 11px em tinta 3, 6px abaixo do campo. */
+.description { margin: 0; font-size: var(--fs-legenda); line-height: var(--lh-legenda); color: var(--tx3); }
+.description[data-disabled] { color: var(--tx4); }
 .actions { display: flex; gap: var(--space-2); justify-content: flex-end; padding-top: var(--space-3); }

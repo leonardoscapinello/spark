@@ -1,21 +1,21 @@
 /* Recuo lateral igual ao do Card (--space-5): os dois aparecem lado a lado na
  * mesma tela, e 24px contra 20px fazia a coluna da esquerda parecer centrada
  * de um jeito estranho. Uma medida só para bloco de conteúdo. */
-.root { font-family: var(--typography-fontFamily-body); color: var(--color-ink); }
-.item { border-bottom: var(--ui-hairline) solid var(--color-line); }
+.root { font-family: var(--font); color: var(--tx); }
+.item { border-bottom: var(--ui-hairline) solid var(--bd); }
 .header { margin: 0; }
-.trigger { display: flex; align-items: center; width: 100%; gap: var(--space-4); padding: var(--space-3) var(--space-5); border: 0; background: transparent; color: inherit; font-family: inherit; font-size: var(--typography-size-sm); font-weight: var(--typography-weight-semibold); line-height: var(--ui-bodyLine); text-align: left; cursor: pointer; }
+.trigger { display: flex; align-items: center; width: 100%; gap: var(--space-4); padding: var(--space-3) var(--space-5); border: 0; background: transparent; color: inherit; font-family: inherit; font-size: var(--fs-corpo); font-weight: var(--fw-600); line-height: var(--ui-bodyLine); text-align: left; cursor: pointer; }
 .title { flex: 1; }
 .chevron { display: flex; transform: rotate(-0.25turn); }
 .trigger[data-panel-open] .chevron { transform: none; }
-.trigger:hover { background: var(--ui-subtle); }
-.trigger[data-disabled] { color: var(--ui-disabledInk); cursor: not-allowed; }
-.trigger:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
-.content { padding: calc(var(--ui-focusWidth) + var(--ui-focusOffset)) var(--space-5) var(--space-4); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
+.trigger:hover { background: var(--acs); }
+.trigger[data-disabled] { color: var(--tx3); cursor: not-allowed; }
+.trigger:focus-visible { outline: var(--ui-focusWidth) solid var(--ring); outline-offset: calc(-1 * var(--ui-focusWidth)); }
+.content { padding: calc(var(--ui-focusWidth) + var(--ui-focusOffset)) var(--space-5) var(--space-4); font-size: var(--fs-corpo); line-height: var(--ui-bodyLine); }
 
-.panel { height: var(--accordion-panel-height); overflow: hidden; transition: height var(--motion-duration-fast) var(--motion-ease-out), opacity var(--motion-duration-fast) var(--motion-ease-out); }
+.panel { height: var(--accordion-panel-height); overflow: hidden; transition: height var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease); }
 .panel[data-starting-style],.panel[data-ending-style] { height: 0; opacity: 0; }
-.chevron { transition: transform var(--motion-duration-fast) var(--motion-ease-out); }
+.chevron { transition: transform var(--t-fast) var(--ease); }
 @media (prefers-reduced-motion: reduce) { .panel,.chevron { transition: none; } }
 
 /* Marca de campo em branco na aba fechada. Número, e não só um ponto: saber
@@ -27,10 +27,10 @@
   min-width: var(--ui-icon);
   height: var(--ui-icon);
   padding-inline: var(--space-1);
-  border-radius: var(--radius-full);
-  font-size: var(--typography-size-xs);
-  font-weight: var(--typography-weight-semibold);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-pequeno);
+  font-weight: var(--fw-600);
   line-height: 1;
 }
-.badge[data-level="required"] { background: var(--color-statusDanger); color: var(--ui-buttonInk); }
-.badge[data-level="important"] { background: var(--color-statusWarning); color: var(--ui-buttonInk); }
+.badge[data-level="required"] { background: var(--er); color: var(--sobre-cor); }
+.badge[data-level="important"] { background: var(--wa); color: var(--sobre-cor); }

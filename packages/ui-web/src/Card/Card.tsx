@@ -1,13 +1,38 @@
-import { useId, type ReactNode } from "react";
+import { cloneElement, useId, type ReactElement, type ReactNode } from "react";
 import { Button } from "../Button/Button.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
 import { Skeleton } from "../Feedback/Feedback.js";
 import { AnimatedValue } from "./AnimatedValue.js";
 import s from "./Card.module.css";
-export interface CardProps { title: string; description?: string; leading?: ReactNode; actions?: ReactNode; footer?: ReactNode; children?: ReactNode; appearance?: "outlined" | "elevated" }
-export function Card({ title, description, leading, actions, footer, children, appearance = "outlined" }: CardProps) {
+export interface CardProps {
+  title: string;
+  description?: string | undefined;
+  leading?: ReactNode;
+  actions?: ReactNode;
+  footer?: ReactNode;
+  children?: ReactNode;
+  appearance?: "outlined" | "elevated" | undefined;
+  /** Cartão inteiro clicável: o título vira o link e a área toda responde. As ações continuam clicáveis por cima. */
+  href?: string | undefined;
+  /** Link do roteador no lugar de `href` (ex.: <Link to="/forms/1" />). O título vira o conteúdo dele. */
+  linkRender?: ReactElement<{ className?: string | undefined; children?: ReactNode }> | undefined;
+}
+
+export function Card({ title, description, leading, actions, footer, children, appearance = "outlined", href, linkRender }: CardProps) {
   const id = useId();
-  return <section aria-labelledby={id} className={s.card} data-appearance={appearance}><header className={s.header}>{leading && <span className={s.leading}>{leading}</span>}<div className={s.headerCopy}><h2 id={id}>{title}</h2>{description && <p>{description}</p>}</div>{actions && <div className={s.actions}>{actions}</div>}</header>{children !== undefined && <div className={s.body}>{children}</div>}{footer && <footer className={s.footer}>{footer}</footer>}</section>;
+  const clickable = Boolean(href || linkRender);
+  const heading = linkRender
+    ? cloneElement(linkRender, { className: s.titleLink, children: title })
+    : href ? <a className={s.titleLink} href={href}>{title}</a> : title;
+  return <section aria-labelledby={id} className={s.card} data-appearance={appearance} data-clickable={clickable || undefined}>
+    <header className={s.header}>
+      {leading && <span className={s.leading}>{leading}</span>}
+      <div className={s.headerCopy}><h2 id={id}>{heading}</h2>{description && <p>{description}</p>}</div>
+      {actions && <div className={s.actions}>{actions}</div>}
+    </header>
+    {children !== undefined && <div className={s.body}>{children}</div>}
+    {footer && <footer className={s.footer}>{footer}</footer>}
+  </section>;
 }
 export interface ActionCardProps { icon: IconName; title: string; description: string; action: ReactNode }
 export function ActionCard({ icon, title, description, action }: ActionCardProps) {

@@ -1,0 +1,16 @@
+/* Ensō (origem: Feedback §10): um traço de 1,5 que gira em 700 ms, na cor do
+ * texto ao redor. 20 (padrão) ou 14. É o único indicador de espera do
+ * sistema: botão, bloco e página usam este. */
+.root {
+  box-sizing: border-box;
+  display: inline-block;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--r-pill);
+  animation: var(--anim-spin) var(--t-spin) linear infinite;
+}
+
+.root[data-size="sm"] { width: var(--ui-iconSm); height: var(--ui-iconSm); }

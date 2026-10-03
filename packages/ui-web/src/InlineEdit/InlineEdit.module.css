@@ -1,27 +1,96 @@
-.value { font: inherit; color: var(--color-accent); line-height: var(--ui-tabLine); text-align: start; background: transparent; border: 0; border-radius: var(--radius-sm); corner-shape: var(--radius-shape); padding: var(--space-1); cursor: pointer; overflow-wrap: anywhere; }
-.value:hover:not(:disabled) { background: var(--color-accentWash); }
-.value:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.value:disabled { color: var(--ui-disabledInk); cursor: default; }
-.value[data-appearance="title"] {
+/* Texto que vira campo no lugar (contrato do InlineField): a caixa é a mesma
+ * parada e editando — 36 (44 no título), pílula, 12 de recuo. Parada é tinta;
+ * hover dá --acs e o lápis; editando é papel cavado, borda --tx3 e halo. */
+.root { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; max-width: 100%; }
+
+.box {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
   max-width: 100%;
-  padding: var(--ui-focusWidth) var(--space-1);
-  margin: calc(var(--ui-focusWidth) * -1) 0;
+  height: var(--h-md);
+  border: var(--ui-hairline) solid transparent;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-controle);
+}
+
+.root[data-appearance="title"] .box { height: var(--h-lg); margin-inline-start: calc(-1 * var(--space-3) - var(--ui-hairline)); font-size: inherit; font-weight: inherit; letter-spacing: inherit; }
+.root[data-appearance="compact"] .box { height: var(--h-sm); margin-inline-start: calc(-1 * var(--space-2) - var(--ui-hairline)); font-size: inherit; font-weight: inherit; }
+.root[data-appearance="compact"] .value { padding-inline: var(--space-2); }
+.root[data-appearance="compact"] .editor { padding-inline-start: var(--space-2); }
+.box[data-state="display"] { align-self: flex-start; }
+
+@media (hover: hover) and (pointer: fine) {
+  .box[data-state="display"]:not([data-disabled]):hover { background-color: var(--acs); }
+}
+
+.box[data-state="display"]:has(> .value:focus-visible) { background-color: var(--acs); box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+.box[data-state="editing"] {
+  width: min(var(--ui-modalWidth), 100%);
+  padding-inline-end: 4px;
+  border-color: var(--tx3);
+  background: var(--sf2);
+  box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ring);
+}
+
+.root:not([data-appearance="title"]) .box[data-state="editing"] { width: 100%; }
+.root[data-appearance="compact"] .box[data-state="editing"] { width: calc(100% + var(--space-2)); }
+.box[data-error] { border-color: var(--er); box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ers); }
+
+.value {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+  height: 100%;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
   color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+}
+
+.value:disabled { cursor: default; }
+.value[data-empty] { color: var(--tx3); }
+.text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mark { display: flex; flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--tx3); opacity: 0; }
+.mark > svg { width: 100%; height: 100%; }
+.box:hover .mark,
+.value:focus-visible .mark { opacity: 1; }
+
+.editor { display: flex; flex: 1; align-items: center; min-width: 0; height: 100%; padding-inline-start: var(--space-3); }
+
+.root .box[data-state="editing"] > .editor > * {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding-inline: 0;
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   font-size: inherit;
   font-weight: inherit;
-  line-height: inherit;
+  outline: none;
 }
-.value[data-appearance="title"]:hover:not(:disabled) { color: var(--color-accent); }
-.editor[data-appearance="title"] { width: min(var(--ui-panelWidth), 100%); }
-.editor[data-appearance="title"] .control > :is(input, [role="combobox"]) {
-  height: var(--ui-controlLarge);
-  min-height: var(--ui-controlLarge);
-  font-size: inherit;
-  font-weight: inherit;
-  line-height: inherit;
-}
-.editor { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-1); }
-.control { min-width: 0; }
-.control > :is(input, [role="combobox"]) { width: 100%; min-width: 0; height: var(--ui-controlMedium); min-height: var(--ui-controlMedium); }
-.actions { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-1); }
-.error { grid-column: 1 / -1; margin: 0; font-size: var(--typography-size-sm); color: var(--color-statusDanger); }
+
+/* O erro abre espaço de 0 até a altura (sp-open), nunca aparece seco. */
+.errorSlot { --g: var(--space-1); display: grid; grid-template-rows: 1fr; animation: var(--anim-open) var(--t-collapse) var(--ease); }
+.errorSlot > * { overflow: hidden; min-height: 0; }
+.error { margin: 0; padding-inline-start: var(--space-3); color: var(--er); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }

@@ -1,1 +1,1 @@
-.root { width: var(--ui-icon); height: var(--ui-icon); flex-shrink: 0; }
+.root { display: block; flex-shrink: 0; width: var(--icon, var(--ui-icon)); height: var(--icon, var(--ui-icon)); }

@@ -1,0 +1,8 @@
+/* Identidade de linha: avatar 32 + duas linhas de 18. Cabe nos 52 da linha da
+ * tabela sem esticar; o texto de todos os itens começa na mesma coluna. */
+.root { display: flex; align-items: center; gap: var(--space-3); min-width: 0; max-width: 100%; }
+.copy { display: flex; flex-direction: column; min-width: 0; }
+.name,
+.detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: var(--lh-legenda); }
+.name { color: var(--tx); font-size: var(--fs-corpo); font-weight: var(--fw-500); }
+.detail { color: var(--tx2); font-size: var(--fs-pequeno); font-weight: var(--fw-400); }

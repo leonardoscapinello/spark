@@ -1,3 +1,31 @@
-.root { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-full); }
+/* Grupo de botões: trilho cavado, padding 3, gap 2; a folha --sf3 + --sh1
+ * desliza; itens 30, ícone 16. */
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  box-shadow: var(--deb);
+}
 
-.root { background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); border-color: transparent; }
+.indicator { border-radius: var(--r-pill); background: var(--sf3); box-shadow: var(--sh1); }
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx3);
+  cursor: pointer;
+}
+
+.item > svg { width: var(--ui-icon); height: var(--ui-icon); }
+.item[data-on="true"] { color: var(--tx); }
+.item:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }

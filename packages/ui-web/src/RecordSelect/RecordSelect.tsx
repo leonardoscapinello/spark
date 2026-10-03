@@ -84,7 +84,7 @@ function RecordSelectInput({ label, options, value, onValueChange, onCancel, pla
       />
     </Combobox.InputGroup>
     <Combobox.Portal>
-      <Combobox.Positioner align="start" sideOffset={Number.parseFloat(lightTheme["space-1"])} className={s.positioner}>
+      <Combobox.Positioner align="start" sideOffset={Number.parseFloat(lightTheme["pop-gap"])} className={s.positioner}>
         <Combobox.Popup render={<Glass tier="panel" />} className={`${surface.popup} ${s.popup}`} data-inline-editor>
           <Combobox.List className={s.list}>
             {(item: SelectOption) => <Fragment key={item.value}>{item.group && visible[visible.indexOf(item) - 1]?.group !== item.group && <div className={s.groupLabel}>{item.group}</div>}<Combobox.Item key={item.value} value={item} disabled={loading || (item.disabled ?? false)} className={`${surface.item} ${s.option}`}>

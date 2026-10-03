@@ -13,8 +13,8 @@
   min-height: var(--ui-registrationCardHeight);
   max-width: 100%;
   min-width: 0;
-  background: var(--color-surface);
-  color: var(--color-ink);
+  background: var(--sf);
+  color: var(--tx);
 }
 
 .head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) var(--space-3) 0; }
@@ -25,24 +25,23 @@
   display: inline-flex;
   align-items: center;
   padding: 0 var(--space-2);
-  border-radius: var(--radius-full);
-  font-size: var(--typography-size-xs);
-  font-weight: var(--typography-weight-semibold);
-  line-height: var(--ui-tabLine);
-  letter-spacing: var(--typography-tracking-wide);
-  text-transform: uppercase;
-  background: var(--ui-subtle);
-  color: var(--color-inkMuted);
+  border-radius: var(--r-pill);
+  height: 22px;
+  font-size: var(--fs-legenda);
+  font-weight: var(--fw-500);
+  line-height: var(--lh-controle);
+  background: var(--sf2);
+  color: var(--tx2);
 }
-.pill[data-tone="success"] { background: var(--color-statusSuccessSoft); color: var(--color-statusSuccess); }
-.pill[data-tone="warning"] { background: var(--color-statusWarningSoft); color: var(--color-statusWarning); }
-.pill[data-tone="danger"] { background: var(--color-statusDangerSoft); color: var(--color-statusDanger); }
+.pill[data-tone="success"] { background: var(--oks); color: var(--ok); }
+.pill[data-tone="warning"] { background: var(--was); color: var(--wa); }
+.pill[data-tone="danger"] { background: var(--ers); color: var(--er); }
 
-.branch { color: var(--color-inkFaint); font-size: var(--typography-size-xs); }
+.branch { color: var(--tx3); font-size: var(--fs-pequeno); }
 
 .body { display: flex; flex: 1 1 auto; flex-direction: column; gap: var(--space-1); min-width: 0; padding: var(--space-2) var(--space-3) var(--space-3); }
-.name { font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); overflow-wrap: break-word; }
-.muted { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
+.name { font-size: var(--fs-corpo); line-height: var(--ui-bodyLine); overflow-wrap: break-word; }
+.muted { color: var(--tx2); font-size: var(--fs-pequeno); line-height: var(--ui-bodyLine); }
 
 /* Atividade em duas linhas no máximo: a descrição do CNAE é escrita por
  * legislador, não por redator, e algumas passam de cem caracteres. */
@@ -50,17 +49,17 @@
   display: -webkit-box;
   gap: var(--space-1);
   overflow: hidden;
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-xs);
+  color: var(--tx2);
+  font-size: var(--fs-pequeno);
   line-height: var(--ui-bodyLine);
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
-.activityIcon { display: inline-flex; margin-inline-end: var(--space-1); vertical-align: text-bottom; color: var(--color-inkFaint); }
+.activityIcon { display: inline-flex; margin-inline-end: var(--space-1); vertical-align: text-bottom; color: var(--tx3); }
 .activityIcon > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
 
 .meta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); padding: 0 var(--space-3) var(--space-3); }
-.document { color: var(--color-ink); font-size: var(--typography-size-xs); font-family: var(--typography-fontFamily-mono); }
+.document { color: var(--tx); font-size: var(--fs-pequeno); font-family: var(--mono); }
 
 /* Rodapé colado embaixo, separado por fio: é ação, não informação. */
 .expand {
@@ -72,31 +71,31 @@
   margin-top: auto;
   padding: var(--space-2) var(--space-3);
   border: 0;
-  border-top: var(--ui-hairline) solid var(--color-line);
+  border-top: var(--ui-hairline) solid var(--bd);
   background: transparent;
-  color: var(--color-accent);
+  color: var(--tx);
   font: inherit;
-  font-size: var(--typography-size-xs);
-  font-weight: var(--typography-weight-semibold);
+  font-size: var(--fs-pequeno);
+  font-weight: var(--fw-500);
   text-align: start;
   cursor: pointer;
   /* Propriedades nomeadas, nunca `all`: `all` anima também o que não deveria,
    * e num cartão dentro de tooltip isso briga com a entrada do próprio popup. */
-  transition: background var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-instant) var(--motion-ease-out);
+  transition: background var(--t-fast) var(--ease), transform var(--t-instant) var(--ease);
 }
-.expand:hover { background: var(--ui-subtle); }
+.expand:hover { background: var(--acs); }
 /* Responde ao toque: sem isto o botão parece não ter ouvido o clique. */
 .expand:active { transform: scale(0.98); }
-.expand:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusOffset)); }
-.chevron { display: inline-flex; color: var(--color-inkFaint); }
+.expand:focus-visible { outline: var(--ui-focusWidth) solid var(--ring); outline-offset: calc(-1 * var(--ui-focusOffset)); }
+.chevron { display: inline-flex; color: var(--tx3); }
 .chevron > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
 
 /* Esperando: linhas na posição exata em que o nome e o fantasia vão entrar,
  * para que a troca não desloque nada. */
-.skeleton { height: var(--space-3); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--ui-subtle); }
+.skeleton { height: 10px; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--sf2) 0, var(--bd) 50%, var(--sf2) 100%); background-size: 400px 100%; animation: var(--anim-shimmer) var(--t-shimmer) linear infinite; }
 .skeleton[data-short="true"] { width: 60%; }
 
 @media (prefers-reduced-motion: reduce) {
-  .expand { transition-duration: var(--motion-duration-instant); }
+  .expand { transition-duration: var(--t-instant); }
   .expand:active { transform: none; }
 }

@@ -1,0 +1,199 @@
+/* Chat — atendimento (identidade, spec §17). */
+
+.thread {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: 18px 22px var(--space-2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  outline: none;
+}
+
+/* Pouca conversa fica no fim, perto do campo de resposta. */
+.thread > :first-child { margin-top: auto; }
+.thread:focus-visible { box-shadow: inset 0 0 0 var(--ui-focusWidth) var(--ring); }
+.threadEmpty { max-width: calc(var(--space-16) * 5); margin: auto; color: var(--tx3); font-family: var(--font); font-size: var(--fs-corpo); line-height: var(--lh-corpo); text-align: center; text-wrap: pretty; }
+
+.day { display: flex; justify-content: center; }
+
+.day > span {
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  color: var(--tx3);
+  font-family: var(--font);
+  font-size: var(--fs-legenda);
+  line-height: var(--lh-legenda);
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: flex-start;
+  gap: var(--space-1);
+  max-width: 78%;
+  min-width: 0;
+}
+
+.message:not([data-direction="inbound"]) { align-items: flex-end; align-self: flex-end; }
+
+.bubble {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 100%;
+  min-width: 0;
+  padding: 11px 14px;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-rico) var(--r-rico) var(--r-rico) 8px;
+  corner-shape: var(--r-shape);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+  color: var(--tx);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-corpo);
+}
+
+/* A bolha de quem escreve daqui é carvão; o widget do site troca pela cor da
+ * marca do cliente por --bolha-eu (com --bolha-eu-tinta para o texto). */
+.message[data-direction="outbound"] .bubble {
+  border-color: transparent;
+  border-radius: var(--r-rico) var(--r-rico) 8px var(--r-rico);
+  background: var(--bolha-eu, var(--ac));
+  box-shadow: var(--ink);
+  color: var(--bolha-eu-tinta, var(--acf));
+}
+
+.message[data-direction="internal"] .bubble {
+  border-color: transparent;
+  border-radius: var(--r-rico) var(--r-rico) 8px var(--r-rico);
+  background: var(--was);
+  box-shadow: none;
+  color: var(--tx);
+}
+
+.text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.text a { color: inherit; text-decoration: underline; text-decoration-thickness: var(--ui-hairline); text-underline-offset: 2px; }
+.attachment { display: flex; min-width: 0; }
+
+/* Mensagem que chega agora: a da pessoa sobe pousando; a da equipe é lançada
+ * do campo de resposta (origem no canto de baixo). */
+.message[data-fresh] { animation: var(--anim-bubble) var(--t-default) var(--ease) backwards; }
+.message[data-fresh]:not([data-direction="inbound"]) { transform-origin: bottom right; animation: var(--anim-launch) var(--t-deliberate) var(--ease-spring) backwards; }
+
+.meta {
+  --icon: 12px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  min-width: 0;
+  padding: 0 6px;
+  color: var(--tx3);
+  font-family: var(--font);
+  font-size: var(--fs-legenda);
+  line-height: var(--lh-legenda);
+  white-space: nowrap;
+}
+
+.author { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); font-weight: var(--fw-500); }
+.inbox,
+.note { display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; }
+.inboxLabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.note { color: var(--wa); }
+
+.receipt { display: inline-flex; flex: none; color: var(--tx3); transition: color var(--t-slow) var(--ease); }
+.receipt > svg { width: 18px; height: 12px; }
+.receipt[data-status="read"] { color: var(--in); }
+
+.second {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  transition: stroke-dashoffset var(--t-deliberate) var(--ease) calc(var(--t-item-stagger) * 3);
+}
+
+.receipt:is([data-status="delivered"], [data-status="read"]) .second { stroke-dashoffset: 0; }
+
+.failed { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--er); font-weight: var(--fw-500); }
+
+.typing { display: flex; align-items: center; gap: var(--space-2); padding: 0 22px var(--space-2); color: var(--tx3); font-family: var(--font); font-size: var(--fs-legenda); }
+
+.dots {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: 9px 12px;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-rico) var(--r-rico) var(--r-rico) 8px;
+  corner-shape: var(--r-shape);
+  background: var(--sf3);
+}
+
+.dots > span {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--tx2);
+  animation: var(--anim-dot) calc(var(--t-default) * 2) ease-in-out infinite;
+}
+
+.dots > span:nth-child(2) { animation-delay: calc(var(--t-item-stagger) * 5); }
+.dots > span:nth-child(3) { animation-delay: calc(var(--t-item-stagger) * 10); }
+.typingText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.media { display: block; max-width: 100%; max-height: 320px; border-radius: 8px; corner-shape: var(--r-shape); object-fit: contain; }
+.audio { display: block; width: 100%; min-width: calc(var(--space-16) * 4); }
+.file { --icon: var(--ui-icon); display: inline-flex; align-items: center; gap: var(--space-2); color: inherit; font-weight: var(--fw-500); text-decoration: underline; text-decoration-thickness: var(--ui-hairline); text-underline-offset: 2px; }
+.fileNote { color: inherit; font-size: var(--fs-pequeno); opacity: 0.8; }
+
+/* Cabeçalho da conversa (§17): 18 22, avatar 40, nome 15/500, apoio 12 em
+ * tinta 3 e os canais da pessoa embaixo do nome. */
+.header {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 18px 22px var(--space-4);
+  border-bottom: var(--ui-hairline) solid var(--bd);
+}
+
+/* Voltar (celular) e avatar no mesmo encaixe: botão escondido não deixa vão. */
+.headerLeading { display: flex; flex: none; align-items: center; gap: var(--space-2); min-height: 40px; }
+.identity { display: flex; flex: 1 1 calc(var(--space-16) * 2); flex-direction: column; gap: 3px; min-width: 0; padding-top: 1px; }
+
+.name {
+  margin: 0;
+  overflow: hidden;
+  color: var(--tx);
+  font-family: var(--font);
+  font-size: var(--fs-card);
+  font-weight: var(--fw-titulo);
+  letter-spacing: var(--ls-h4);
+  line-height: var(--lh-h4);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtitle {
+  margin: 0;
+  overflow: hidden;
+  color: var(--tx3);
+  font-family: var(--font);
+  font-size: var(--fs-pequeno);
+  line-height: var(--lh-pequeno);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channels { display: flex; flex-wrap: wrap; gap: var(--space-1-5); margin-top: var(--space-2); }
+.headerActions { display: flex; flex: none; align-items: center; gap: var(--space-2); min-height: 40px; margin-inline-start: auto; }

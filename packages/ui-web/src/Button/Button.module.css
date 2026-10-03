@@ -1,44 +1,157 @@
+/* Botões da identidade (ADR-0044; origem: seção Botões e Especificação por
+ * estado). Todos pílula. Um carvão por área — a ação principal. O resto é
+ * folha ou só tinta. A física de toque vem de [data-press] (src/identidade.css);
+ * aqui ficam só superfície, medidas e estados. */
+
 .root {
-  box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
-  gap: var(--space-2); font-family: var(--typography-fontFamily-body);
-  font-weight: var(--typography-weight-medium); line-height: var(--ui-buttonLine);
-  border: 0; text-decoration: none; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
+  border: 0;
+  border-radius: var(--r-pill);
+  font-family: var(--font);
+  font-weight: var(--fw-controle);
+  line-height: var(--lh-controle);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--press-sh);
 }
-.pill { border-radius: var(--radius-full); }
-.rounded { border-radius: var(--ui-controlRadius); corner-shape: var(--radius-shape); }
-.sm { height: var(--ui-controlSmall); padding: var(--space-1) var(--space-3); font-size: var(--typography-size-compact); }
-.md { height: var(--ui-controlMedium); padding: var(--space-2) var(--space-4); font-size: var(--typography-size-sm); }
-.lg { height: var(--ui-controlLarge); padding: var(--space-3) var(--space-5); font-size: var(--typography-size-sm); }
-.primary { background: var(--color-accent); color: var(--color-onAccent); box-shadow: var(--ui-buttonShadow); }
-.primary:hover:not([data-disabled]) { background: var(--color-accentStrong); }
-.secondary { background: var(--ui-selected); color: var(--color-ink); box-shadow: var(--ui-panelShadow); }
-.ghost { background: transparent; color: var(--color-ink); }
-.raised { background: var(--ui-selected); color: var(--color-ink); box-shadow: var(--ui-panelShadow); }
-:is(.secondary,.ghost,.raised):hover:not([data-disabled]) { background: var(--color-surface2); }
-.root[data-disabled] { cursor: not-allowed; color: var(--ui-disabledInk); background: var(--ui-subtle); box-shadow: none; }
-.root:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.iconOnly { padding: var(--space-1); aspect-ratio: 1; }
-.icon { display: inline-flex; width: var(--ui-icon); height: var(--ui-icon); align-items: center; justify-content: center; }
+
+/* Medidas: sm 28 / md 36 / lg 44 · ícone 14 / 16 / 18 · gap 4 / 6 / 8 ·
+ * padding 12 / 16 / 20 · fonte 12 / 13 / 14. O lado do ícone perde 2px para
+ * compensar o peso óptico. */
+.sm { --icon: var(--ui-iconSm); --btn-h: var(--h-sm); height: var(--h-sm); gap: var(--space-1); padding: 0 var(--pad-sm); font-size: var(--fs-pequeno); }
+.md { --icon: var(--ui-icon); --btn-h: var(--h-md); height: var(--h-md); gap: var(--space-1-5); padding: 0 var(--pad-md); font-size: var(--fs-corpo); }
+.lg { --icon: var(--ui-iconLg); --btn-h: var(--h-lg); height: var(--h-lg); gap: var(--space-2); padding: 0 var(--pad-lg); font-size: var(--fs-corpo-l); }
+
+/* O que vem à esquerda — ícone ou avatar — ocupa SEMPRE o mesmo encaixe de
+ * 24 (20 no sm), centralizado na curva da pílula. Assim o texto começa no
+ * mesmo lugar com ícone ou com avatar: "Responsável" e "Seguidores" são o
+ * mesmo botão e não podem divergir. */
+.sm { --slot: 20px; }
+.md,
+.lg { --slot: 24px; }
+.leading,
+.root:has(> :is([data-pigment], [data-icon], [data-avatar-stack]):first-child:not(:only-child)) { padding-inline-start: max(var(--space-1), calc((var(--btn-h) - var(--slot)) / 2)); }
+.leading > .icon:first-child { min-width: var(--slot); width: auto; height: var(--slot); }
+/* Ícone passado como filho direto ocupa o mesmo encaixe que o da prop icon. */
+.root > [data-icon]:first-child:not(:only-child) { margin-inline: calc((var(--slot) - var(--icon)) / 2); }
+.leading > .icon:first-child > svg { width: var(--icon); height: var(--icon); }
+.sm.trailing { padding-inline-end: calc(var(--pad-sm) - 2px); }
+.md.trailing { padding-inline-end: calc(var(--pad-md) - 2px); }
+.lg.trailing { padding-inline-end: calc(var(--pad-lg) - 2px); }
+
+/* Só ícone: círculo do tamanho da altura. */
+.root.iconOnly { justify-content: center; padding: 0; aspect-ratio: 1; }
+.sm.iconOnly { width: var(--h-sm); }
+.md.iconOnly { width: var(--h-md); }
+.lg.iconOnly { width: var(--h-lg); }
+
+/* Carvão — primário. */
+.primary { --press-sh: var(--ink); --stack-ring: var(--ac); background: var(--ac); color: var(--acf); }
+
+/* Folha — secundário. */
+.secondary,
+.raised {
+  --press-sh: var(--sh1);
+  --stack-ring: var(--sf3);
+  border: var(--ui-hairline) solid var(--bd);
+  background: var(--sf3) var(--grain);
+  color: var(--tx);
+}
+
+/* Tinta — ghost. */
+.ghost { --press-sh: 0 0 0 0 transparent; background: transparent; color: var(--tx2); }
+
+@media (hover: hover) and (pointer: fine) {
+  .ghost:hover:not([data-disabled]) { background-color: var(--acs); color: var(--tx); }
+}
+
+/* Linha de lista: tinta que, selecionada, vira folha pousada. */
+.row {
+  --press-sh: 0 0 0 0 transparent;
+  justify-content: flex-start;
+  border: var(--ui-hairline) solid transparent;
+  background: transparent;
+  color: var(--tx2);
+  font-weight: var(--fw-400);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover:not([data-disabled]) { background-color: var(--acs); color: var(--tx); }
+}
+
+.row[data-selected]:not([data-disabled]) {
+  --press-sh: var(--sh1);
+  border-color: var(--bd);
+  background: var(--sf3) var(--grain);
+  color: var(--tx);
+  font-weight: var(--fw-500);
+}
+
+/* Shu — destrutivo. Carvão em vermelho; folha e tinta mudam só a tinta. */
+.primary[data-tone="danger"] { background: var(--er); color: var(--sobre-cor); }
+.secondary[data-tone="danger"],
+.raised[data-tone="danger"] { --press-sh: 0 0 0 0 transparent; border-color: transparent; background: var(--ers); color: var(--er); }
+.ghost[data-tone="danger"] { color: var(--er); }
+.primary[data-tone="success"] { background: var(--ok); color: var(--sobre-cor); }
+.secondary[data-tone="success"],
+.raised[data-tone="success"] { --press-sh: 0 0 0 0 transparent; border-color: transparent; background: var(--oks); color: var(--ok); }
+.ghost[data-tone="success"] { color: var(--ok); }
+
+@media (hover: hover) and (pointer: fine) {
+  .ghost[data-tone="danger"]:hover:not([data-disabled]) { background-color: var(--ers); color: var(--er); }
+  .ghost[data-tone="success"]:hover:not([data-disabled]) { background-color: var(--oks); color: var(--ok); }
+}
+
+/* Carregando: o rótulo fica, o ensō (Spinner) entra no encaixe do ícone. */
+.root[aria-busy="true"] { cursor: progress; }
+:is(.primary, .secondary[data-tone], .raised[data-tone])[aria-busy="true"] { opacity: var(--loading); }
+:is(.secondary, .raised):not([data-tone="danger"], [data-tone="success"])[aria-busy="true"] { color: var(--tx2); }
+.ghost[aria-busy="true"] { color: var(--tx3); }
+
+/* Desabilitado: carvão e shu desbotam a .35 sem sombra; folha vira papel
+ * cavado com tinta 4; tinta vira tinta 4. */
+.root[data-disabled]:not([aria-busy="true"]) { cursor: not-allowed; }
+.primary[data-disabled]:not([aria-busy="true"]) { --press-sh: 0 0 0 0 transparent; opacity: var(--disabled-ink); }
+:is(.secondary, .raised)[data-disabled]:not([aria-busy="true"]) { --press-sh: 0 0 0 0 transparent; background: var(--sf2); color: var(--tx4); }
+:is(.ghost, .row, .link)[data-disabled]:not([aria-busy="true"]) { color: var(--tx4); }
+
+.icon {
+  display: flex;
+  flex: none;
+  width: var(--icon);
+  height: var(--icon);
+  align-items: center;
+  justify-content: center;
+}
+
 .icon > svg { width: 100%; height: 100%; }
-.spinner { box-sizing: border-box; flex-shrink: 0; width: var(--space-3); height: var(--space-3); border: var(--ui-focusWidth) solid currentColor; border-right-color: transparent; border-radius: var(--radius-full); animation: spin var(--ui-spinDuration) linear infinite; }
-@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: var(--ui-spinReducedDuration); } }
-@media (pointer: coarse) { .root { min-height: var(--ui-touchTarget); min-width: var(--ui-touchTarget); } }
-@keyframes spin { to { transform: rotate(1turn); } }
 
-.root { transition: transform var(--motion-duration-moderate) var(--motion-ease-out), box-shadow var(--motion-duration-selection) var(--motion-ease-out), background-color var(--motion-duration-moderate) var(--motion-ease-out), color var(--motion-duration-control) var(--motion-ease-out); }
-.root:active:not([data-disabled]) { transform: translateY(var(--ui-pressOffset)) scale(var(--ui-controlPressScale)); transition-duration: var(--motion-duration-instant); }
-.primary:active:not([data-disabled]) { box-shadow: var(--ui-buttonPressedShadow); }
-:is(.secondary,.raised):active:not([data-disabled]) { box-shadow: var(--ui-fieldShadow); }
-@media (hover: hover) and (pointer: fine) { :is(.secondary,.raised):hover:not(:active):not([data-disabled]) { transform: translateY(calc(-1 * var(--ui-pressOffset))); box-shadow: var(--ui-popupShadow); } }
-@media (prefers-reduced-motion: reduce) { .root { transition: none; } .root:is(:hover,:active):not([data-disabled]) { transform: none; } }
+/* Alvo mínimo 44 no toque, sem mudar o desenho. */
+@media (pointer: coarse) {
+  .root::after { content: ""; position: absolute; inset: min(0px, calc((var(--h-lg) - 100%) / 2)); }
+}
 
-/* A intenção muda a tinta; geometria, superfície e feedback permanecem comuns. */
-.root[data-tone="success"] { --button-tone: var(--color-statusSuccess); }
-.root[data-tone="danger"] { --button-tone: var(--color-statusDanger); }
-.root:is([data-tone="success"], [data-tone="danger"]):not([data-disabled]) { color: var(--button-tone); }
-.root:is([data-tone="success"], [data-tone="danger"]):hover:not([data-disabled]) { background: color-mix(in srgb, var(--button-tone) 8%, var(--color-surface)); }
-.primary:is([data-tone="success"], [data-tone="danger"]):not([data-disabled]) { background: var(--button-tone); color: var(--color-onAccent); }
+/* Botão-link: tinta sublinhada por um fio. */
+.link {
+  --press-sh: 0 0 0 0 transparent;
+  height: auto;
+  gap: var(--space-1);
+  padding: 0 0 1px;
+  border-radius: 0;
+  border-bottom: var(--ui-hairline) solid var(--bd2);
+  background: transparent;
+  color: var(--tx);
+  font-size: var(--fs-corpo);
+}
 
-.row { background: transparent; color: var(--color-ink); border: var(--ui-hairline) solid transparent; }
-.row:hover:not([data-disabled]) { background: var(--color-surface2); }
-.row[data-selected]:not([data-disabled]) { background: var(--color-surface); border-color: var(--color-line); box-shadow: var(--ui-panelShadow); }
+@media (hover: hover) and (pointer: fine) {
+  .link:hover:not([data-disabled]) { border-bottom-color: var(--tx); }
+}

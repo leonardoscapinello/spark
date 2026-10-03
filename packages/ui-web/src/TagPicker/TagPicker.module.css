@@ -1,14 +1,39 @@
-.root { display: grid; gap: var(--space-2); }
-.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.chips:empty { display: none; }
-.chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: color-mix(in srgb, currentColor 10%, var(--color-surface)); font-size: var(--typography-size-xs); }
-.chip > button { color: inherit; height: var(--space-5); min-height: var(--space-5); padding: 0; }
-.input { width: 100%; min-width: 0; box-sizing: border-box; border: 0; border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: transparent; color: var(--color-ink); font: inherit; font-size: var(--typography-size-sm); padding: var(--space-2); min-height: var(--ui-controlMedium); }
-.input:focus { outline: var(--ui-focusWidth) solid var(--color-focusRing); }
-.positioner { z-index: var(--ui-overlayLayer); }
-.popup { --floating-width: var(--anchor-width); }
-.swatch { width: var(--space-3); height: var(--space-3); border-radius: var(--radius-full); flex-shrink: 0; }
-.empty { display: block; padding: var(--space-2); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.create { width: 100%; justify-content: flex-start; min-height: var(--ui-controlLarge); }
+/* Etiquetas (origem: Seleção §19): caixa cavada em --r-rico, padding 4 12 4 4,
+ * chips de 28 em folha (--sf3 + granulação + --sh1) com o ponto de 6px da cor
+ * e o × de 26 em tinta 3; a busca segue na mesma linha. */
+.root {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: var(--h-field);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  border: var(--ui-hairline) solid transparent;
+  border-radius: var(--r-rico);
+  corner-shape: var(--r-shape);
+  background: var(--sf2);
+  box-shadow: var(--deb);
+}
 
+.root:focus-within { border-color: var(--tx3); box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ring); }
+.root[data-disabled] { padding-inline-start: var(--space-1); box-shadow: none; }
+
+.chip { box-sizing: border-box; display: inline-flex; align-items: center; gap: var(--space-1-5); max-width: 100%; height: var(--h-sm); padding: 0 var(--space-3); border-radius: var(--r-pill); background: var(--sf3) var(--grain); box-shadow: var(--sh1); color: var(--tx); font-size: var(--fs-pequeno); }
+.chip:has(> .remove) { padding-inline-end: 1px; }
+.dot { flex: none; width: 6px; height: 6px; border-radius: var(--r-pill); background: var(--tag-dot, var(--tx3)); }
+.chipLabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.remove { display: flex; flex: none; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--tx3); cursor: pointer; outline: none; }
+.remove > svg { width: 12px; height: 12px; }
+.remove:is(:hover, :focus-visible) { background-color: var(--acs); color: var(--tx); }
+
+.input { flex: 1 1 96px; min-width: 96px; height: var(--h-sm); padding: 0 0 0 var(--space-2); border: 0; outline: none; background: transparent; color: var(--tx); font-family: var(--font); font-size: var(--fs-corpo); }
+.input::placeholder { color: var(--tx3); }
+.placeholder { padding-inline-start: var(--space-2); color: var(--tx3); font-size: var(--fs-corpo); }
+
+.positioner { z-index: var(--ui-overlayLayer); }
+.popup { --floating-width: max(var(--anchor-width), var(--ui-menuWidth)); }
 .options { max-height: var(--ui-recordPickerListHeight); overflow: auto; overscroll-behavior: contain; }
+.swatch { width: 8px; height: 8px; border-radius: var(--r-pill); background: var(--tag-dot, var(--tx3)); }
+.empty { display: block; padding: var(--space-2) 10px; color: var(--tx3); font-size: var(--fs-pequeno); }

@@ -1,6 +1,6 @@
 .root { display: flex; flex: 1; align-items: center; gap: var(--space-2); min-width: 0; text-align: start; }
 .copy { display: flex; flex: 1; flex-direction: column; gap: 0; min-width: 0; overflow-wrap: anywhere; white-space: normal; }
-.name { display: block; font-weight: var(--typography-weight-medium); line-height: var(--ui-tabLine); }
+.name { display: block; font-weight: var(--fw-400); line-height: var(--lh-pequeno); }
 .copy[data-compact="true"] .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.description { color: var(--color-inkMuted); font-size: var(--typography-size-compact); line-height: var(--ui-tabLine); }
-.search { position: sticky; top: 0; background: var(--color-surface); padding-bottom: var(--space-2); }
+.description { color: var(--tx3); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
+.search { position: sticky; top: 0; background: var(--sf); padding-bottom: var(--space-2); }

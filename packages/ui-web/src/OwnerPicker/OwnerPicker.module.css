@@ -1,0 +1,3 @@
+/* Gatilho do responsável: o Button secondary (folha) com o avatar no encaixe
+ * de ícone; o nome corta com reticências pelo próprio rótulo do botão. */
+.trigger { min-width: 0; max-width: 100%; }

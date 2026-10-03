@@ -1,0 +1,55 @@
+/* Painel lateral (origem: Drawer). A folha segurada vem do Surface; aqui
+ * ficam a posição solta 12px das bordas, o cabeçalho 22/22/16/26 com título
+ * 500 20, o corpo 22 26 com intervalo 18, o rodapé 16 22 e o movimento:
+ * entra deslizando em 450 ms (Respiro) e sai em 220 ms. */
+
+.root {
+  position: absolute;
+  z-index: 4;
+  inset-block: var(--ui-drawerInset);
+  inset-inline-end: var(--ui-drawerInset);
+  display: flex;
+  flex-direction: column;
+  width: min(var(--ui-drawerWidth), calc(100% - var(--ui-drawerInset) * 2));
+  overflow: hidden;
+  font-family: var(--font);
+  animation: var(--anim-drawer-in) var(--t-drawer) var(--ease);
+}
+
+.root[data-closing] { pointer-events: none; animation: var(--anim-drawer-out) var(--t-drawer-out) var(--ease-out) forwards; }
+
+.header {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 22px 22px var(--space-4) 26px;
+  border-bottom: var(--ui-hairline) solid var(--bd);
+}
+
+.heading { display: flex; flex: 1; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.eyebrow { color: var(--tx3); font-family: var(--mono); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
+.title { margin: 0; color: var(--tx); font-size: var(--fs-modal); font-weight: var(--fw-titulo); line-height: var(--lh-h2); letter-spacing: var(--ls-modal); overflow-wrap: anywhere; }
+.description { margin: var(--space-1) 0 0; color: var(--tx2); font-size: var(--fs-corpo); line-height: var(--lh-corpo); }
+
+.body { display: flex; flex: 1 1 auto; flex-direction: column; gap: 18px; min-height: 0; padding: 22px 26px; overflow: auto; overscroll-behavior: contain; }
+
+.footer { display: flex; flex: none; gap: var(--space-2); padding: var(--space-4) 22px; border-top: var(--ui-hairline) solid var(--bd); }
+.footer > * { flex: 1 1 0; }
+
+/* Celular: folha inferior, sobe da base e afunda ao sair. */
+@media (max-width: 760px) {
+  .root {
+    inset-block-start: auto;
+    inset-inline-start: var(--ui-drawerInset);
+    width: auto;
+    max-height: calc(100% - var(--ui-drawerInset) * 2);
+    animation-name: var(--anim-rise);
+    animation-duration: var(--t-rise);
+  }
+
+  .root[data-closing] { animation-name: var(--anim-sink); animation-duration: var(--t-sink); }
+  .header { padding: var(--space-4) var(--space-4) var(--space-3) var(--space-5); }
+  .body { padding: var(--space-4) var(--space-5); }
+}

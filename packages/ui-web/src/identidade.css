@@ -1,0 +1,309 @@
+/*
+ * Física global da identidade visual (ADR-0044). Folha global, não modular:
+ * é a parte "uma só física" + keyframes da origem (docs/referencias/identidade/
+ * origem/base.css), traduzida para tokens. Carregada por src/index.ts — quem
+ * importa @spark/ui-web recebe — e pelo Storybook.
+ *
+ * Componentes ativam a física por atributo, como na origem:
+ *   data-press="ink|sheet|ghost"   toque: carvão afunda, folha ergue, tinta encolhe
+ *   data-lbl                       rótulo que nunca quebra: reticências + marquee
+ *   data-collapse + data-open      mensagem que abre espaço de 0 até a altura
+ *   data-slide > data-ind          indicador que desliza até o item ativo
+ *   data-tipwrap > data-tip        dica com atraso de 250 ms
+ *   data-instant                   desliga a física (arrasto, fita do odômetro)
+ *
+ * Nomes de keyframes vão por custom property (--anim-*): CSS Modules localiza
+ * nomes de animação escritos literalmente, mas nunca toca em var().
+ */
+
+:root {
+  --anim-pop: sp-pop;
+  --anim-pop-up: sp-pop-up;
+  --anim-pop-out: sp-pop-out;
+  --anim-rise: sp-rise;
+  --anim-sink: sp-sink;
+  --anim-fade: sp-fade;
+  --anim-fade-out: sp-fade-out;
+  --anim-blur-in: sp-blur-in;
+  --anim-blur-out: sp-blur-out;
+  --anim-toast-in: sp-toast-in;
+  --anim-toast-out: sp-toast-out;
+  --anim-item: sp-item;
+  --anim-item-b: sp-item-b;
+  --anim-ping: sp-ping;
+  --anim-spin: sp-spin;
+  --anim-shimmer: sp-shimmer;
+  --anim-marquee: sp-marquee;
+  --anim-drawer-in: sp-drawer-in;
+  --anim-drawer-out: sp-drawer-out;
+  --anim-side-in: sp-side-in;
+  --anim-side-out: sp-side-out;
+  --anim-draw: sp-draw;
+  --anim-indet: sp-indet;
+  --anim-pop-icon: sp-pop-icon;
+  --anim-badge-in: sp-badge-in;
+  --anim-halo: sp-halo;
+  --anim-halo-b: sp-halo-b;
+  --anim-msg: sp-msg;
+  --anim-bubble: sp-bubble;
+  --anim-launch: sp-launch;
+  --anim-msg-b: sp-msg-b;
+  --anim-dot: sp-dot;
+  --anim-caret: sp-caret;
+  --anim-swing: sp-swing;
+  --anim-flip: sp-flip;
+  --anim-drop: sp-drop;
+  --anim-lift: sp-lift;
+  --anim-shake: sp-shake;
+  --anim-seek: sp-seek;
+  --anim-nudge: sp-nudge;
+  --anim-blink: sp-blink;
+  --anim-open: sp-open;
+  --anim-hold: sp-hold;
+}
+
+/* Uma só física: tudo que muda, escoa — Respiro, 550 ms. Sombra, cor, borda,
+ * elevação e opacidade herdam isto; componente nenhum precisa lembrar de
+ * animar. Campo de texto não anima transform nem filter (o cursor pisca). */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, box-shadow, transform, opacity, filter, outline-color;
+  transition-duration: var(--t-default);
+  transition-timing-function: var(--ease);
+}
+
+input,
+textarea {
+  transition-property: background-color, border-color, color, box-shadow;
+}
+
+[data-instant],
+[data-instant] * {
+  transition: none !important;
+}
+
+/* Toque. Rápido ao tocar (100 ms), lento ao soltar (450 ms). */
+[data-press] {
+  white-space: nowrap;
+  max-width: 100%;
+  transition:
+    transform var(--t-base) var(--ease),
+    box-shadow var(--t-shadow) var(--ease),
+    filter var(--t-base) var(--ease),
+    background-color var(--t-base) var(--ease),
+    color var(--t-base) var(--ease),
+    border-color var(--t-base) var(--ease);
+}
+
+[data-press]:is(:disabled, [data-disabled]) {
+  cursor: not-allowed;
+}
+
+[data-press]:active:not(:disabled, [data-disabled]) {
+  transition-duration: var(--t-instant);
+}
+
+[data-press="ink"]:active:not(:disabled, [data-disabled]) {
+  transform: translateY(var(--press-y)) scale(var(--scale-press));
+  box-shadow: var(--inkp);
+  filter: brightness(var(--press-brightness));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-press="sheet"]:hover:not(:active, :disabled, [data-disabled]) {
+    box-shadow: var(--e2);
+    transform: translateY(calc(-1 * var(--press-y)));
+  }
+}
+
+[data-press="sheet"]:active:not(:disabled, [data-disabled]) {
+  transform: translateY(var(--press-y)) scale(var(--scale-sheet));
+  box-shadow: var(--deb);
+}
+
+[data-press="ghost"]:active:not(:disabled, [data-disabled]) {
+  transform: scale(var(--scale-press));
+}
+
+/* Foco: halo de grafite de 3px (a tinta se espalha), somado à sombra da
+ * variante. Quem usa data-press declara a própria sombra em --press-sh. */
+[data-press]:focus-visible {
+  outline: none;
+  box-shadow: var(--press-sh, 0 0 0 0 transparent), 0 0 0 var(--ui-focusWidth) var(--ring);
+  transition-duration: var(--t-fast);
+}
+
+[data-press] > span:not([data-lbl]) {
+  flex: none;
+}
+
+/* O rótulo nunca quebra: reticências no limite, marquee no hover. */
+[data-lbl] {
+  display: inline-block;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: top;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-lbl][data-mq] {
+  text-overflow: clip;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, var(--tx) 8px, var(--tx) calc(100% - 8px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, var(--tx) 8px, var(--tx) calc(100% - 8px), transparent 100%);
+}
+
+[data-lbl][data-mq] > span {
+  display: inline-block;
+  animation: var(--anim-marquee) var(--mqd) ease-in-out infinite alternate;
+}
+
+/* Nada surge do nada: a mensagem abre espaço de 0 até sua altura. --g é o gap
+ * do pai, para o bloco fechado não ocupar o gap. */
+[data-collapse] {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: calc(var(--g, 0px) * -1);
+  filter: blur(2px);
+  transition:
+    grid-template-rows var(--t-collapse) var(--ease),
+    opacity var(--t-base) var(--ease),
+    margin-top var(--t-collapse) var(--ease),
+    filter var(--t-shadow) var(--ease);
+}
+
+[data-collapse][data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 0;
+  filter: none;
+}
+
+[data-collapse] > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Indicador deslizante. A primeira posição não anima (data-ready só depois
+ * de dois quadros). */
+[data-slide] {
+  position: relative;
+}
+
+[data-ind] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, width;
+}
+
+[data-slide][data-ready] > [data-ind] {
+  transition:
+    transform var(--t-default) var(--ease),
+    width var(--t-default) var(--ease),
+    height var(--t-default) var(--ease),
+    opacity var(--t-fast);
+}
+
+[data-slide] > :not([data-ind]) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dica com atraso: entra depois de 250 ms, sai na hora. */
+[data-tip] {
+  opacity: 0;
+  transform: translate(-6px, -50%) scale(0.96);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+[data-tipwrap]:hover > [data-tip],
+[data-tipwrap]:focus-visible > [data-tip] {
+  opacity: 1;
+  transform: translate(0, -50%);
+  filter: none;
+  transition-delay: var(--t-tip-delay);
+}
+
+/* Ícone redesenha o traço no hover. */
+[data-ai] svg {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+[data-ai]:hover svg * {
+  stroke-dasharray: 100;
+  animation: var(--anim-draw) var(--t-draw) var(--ease-move) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  [data-press]:focus-visible {
+    outline: var(--ui-focusWidth) solid CanvasText;
+  }
+}
+
+/* Keyframes da origem, com prefixo sp-. */
+@keyframes sp-pop { from { opacity: 0; transform: translateY(var(--pop-y)) scale(var(--scale-pop)); } to { opacity: 1; transform: none; } }
+@keyframes sp-pop-up { from { opacity: 0; transform: translateY(var(--pop-y-up)) scale(var(--scale-sheet)); } to { opacity: 1; transform: none; } }
+@keyframes sp-pop-out { to { opacity: 0; transform: translateY(calc(var(--pop-y-up) * -1)) scale(var(--scale-pop)); filter: blur(1px); } }
+@keyframes sp-rise { from { opacity: 0; transform: translateY(var(--rise-y)) scale(var(--scale-rise)); } to { opacity: 1; transform: none; } }
+@keyframes sp-sink { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(var(--rise-y-out)) scale(var(--scale-press)); } }
+@keyframes sp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sp-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes sp-blur-in { from { backdrop-filter: blur(0px) saturate(1); -webkit-backdrop-filter: blur(0px) saturate(1); } }
+@keyframes sp-blur-out { to { backdrop-filter: blur(0px) saturate(1); -webkit-backdrop-filter: blur(0px) saturate(1); } }
+@keyframes sp-toast-in { from { opacity: 0; transform: translateY(var(--toast-y)) scale(0.96); } }
+@keyframes sp-toast-out { to { opacity: 0; transform: translateY(var(--toast-y-out)) scale(0.96); filter: blur(2px); } }
+@keyframes sp-item { from { opacity: 0; transform: translateY(8px); } }
+@keyframes sp-item-b { from { opacity: 0; transform: translateY(8px); } }
+@keyframes sp-ping { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes sp-spin { to { transform: rotate(360deg); } }
+@keyframes sp-shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
+@keyframes sp-marquee { 0%, 12% { transform: translateX(0); } 88%, 100% { transform: translateX(var(--mq)); } }
+@keyframes sp-drawer-in { from { transform: translateX(104%); } to { transform: none; } }
+@keyframes sp-drawer-out { from { transform: none; } to { transform: translateX(104%); } }
+@keyframes sp-side-in { from { transform: translateX(-104%); } to { transform: none; } }
+@keyframes sp-side-out { from { transform: none; } to { transform: translateX(-104%); } }
+@keyframes sp-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes sp-indet { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+@keyframes sp-pop-icon { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+@keyframes sp-badge-in { from { opacity: 0; transform: scale(0.4); } }
+@keyframes sp-halo { 0% { box-shadow: 0 0 0 0 currentColor; opacity: 0.55; } 100% { box-shadow: 0 0 0 10px currentColor; opacity: 0; } }
+@keyframes sp-halo-b { 0% { box-shadow: 0 0 0 0 currentColor; opacity: 0.55; } 100% { box-shadow: 0 0 0 10px currentColor; opacity: 0; } }
+@keyframes sp-msg { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } }
+@keyframes sp-msg-b { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } }
+/* Conversa (origem §17): a resposta sobe 10 px e assenta; a minha mensagem é
+ * lançada de baixo, da direita, e só fica opaca aos 55 %. */
+@keyframes sp-bubble { from { opacity: 0; transform: translateY(10px) scale(0.97); filter: blur(2px); } }
+@keyframes sp-launch { 0% { opacity: 0; transform: translateY(46px) scale(0.86); filter: blur(3px); } 55% { opacity: 1; filter: blur(0); } 100% { transform: none; } }
+@keyframes sp-dot { 0%, 80%, 100% { transform: translateY(0); opacity: 0.35; } 40% { transform: translateY(-4px); opacity: 1; } }
+@keyframes sp-caret { 50% { opacity: 0; } }
+@keyframes sp-swing { 0% { transform: rotate(0); } 20% { transform: rotate(14deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(6deg); } 80% { transform: rotate(-3deg); } 100% { transform: rotate(0); } }
+@keyframes sp-flip { 0% { transform: none; } 40% { transform: perspective(60px) rotateX(-40deg); } 100% { transform: none; } }
+@keyframes sp-drop { 0%, 100% { transform: none; } 45% { transform: translateY(3px); } }
+@keyframes sp-lift { 0%, 100% { transform: none; } 45% { transform: translateY(-3px); } }
+@keyframes sp-shake { 0%, 100% { transform: none; } 20% { transform: rotate(-9deg); } 40% { transform: rotate(8deg); } 60% { transform: rotate(-5deg); } 80% { transform: rotate(3deg); } }
+@keyframes sp-seek { 0%, 100% { transform: none; } 35% { transform: translate(-2px, -2px) scale(1.1); } 70% { transform: translate(1px, 1px); } }
+@keyframes sp-nudge { 0%, 100% { transform: none; } 45% { transform: translateX(3px); } }
+@keyframes sp-blink { 0%, 100% { transform: none; } 45% { transform: scaleY(0.15); } }
+/* Mensagem que entra montada (erro de campo): abre espaço de 0 até a altura. */
+@keyframes sp-open { from { grid-template-rows: 0fr; opacity: 0; margin-top: calc(var(--g, 0px) * -1); filter: blur(2px); } }
+/* Segura o elemento montado enquanto os filhos animam a saída. */
+@keyframes sp-hold { from { visibility: visible; } to { visibility: visible; } }

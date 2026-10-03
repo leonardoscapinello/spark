@@ -14,16 +14,23 @@ function isDealOutcome(value: unknown): value is DealOutcome {
   return (candidate.status === "won" || candidate.status === "lost") && (candidate.name === undefined || typeof candidate.name === "string");
 }
 
+/**
+ * Aviso de desfecho (origem: Feedback, "Toast"): pílula de carvão que sobe do
+ * fundo suave, com o disco do estado que dá um pulo (ganho ainda solta um
+ * halo). Sai descendo e desfocando, nunca some seco.
+ */
 export function DealOutcomeCelebration() {
   const [outcome, setOutcome] = useState<DealOutcome | null>(null);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout> | undefined;
     const listener = (event: Event) => {
       if (!(event instanceof CustomEvent) || !isDealOutcome(event.detail)) return;
       setOutcome(event.detail);
+      setLeaving(false);
       if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => setOutcome(null), 2200);
+      timeout = setTimeout(() => setLeaving(true), 2200);
     };
     window.addEventListener("spark:deal-outcome", listener);
     return () => { window.removeEventListener("spark:deal-outcome", listener); if (timeout) clearTimeout(timeout); };
@@ -31,9 +38,8 @@ export function DealOutcomeCelebration() {
 
   if (!outcome) return null;
   const won = outcome.status === "won";
-  return <div className={styles.root} data-outcome={outcome.status} role="status" aria-live="polite">
-    {won && <div className={styles.confetti} aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <span key={index} />)}</div>}
-    <div className={styles.mark}><Icon name={won ? "check" : "minus"} /></div>
-    <div><strong>{won ? "Negócio ganho" : "Negócio perdido"}</strong><span>{outcome.name ?? (won ? "Boa notícia para o funil." : "O motivo fica registrado para o próximo aprendizado.")}</span></div>
+  return <div className={styles.root} data-outcome={outcome.status} data-leaving={leaving || undefined} role="status" aria-live="polite" onAnimationEnd={(event) => { if (leaving && event.target === event.currentTarget) setOutcome(null); }}>
+    <span className={styles.mark} aria-hidden="true"><Icon name={won ? "check" : "minus"} /></span>
+    <span className={styles.copy}><strong>{won ? "Negócio ganho" : "Negócio perdido"}</strong><span>{outcome.name ?? (won ? "Boa notícia para o funil." : "O motivo fica registrado para o próximo aprendizado.")}</span></span>
   </div>;
 }

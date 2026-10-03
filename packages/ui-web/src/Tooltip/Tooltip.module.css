@@ -1,7 +1,27 @@
-.root { --floating-min-width: 0; --floating-max-width: var(--ui-popoverWidth); --floating-padding: var(--space-2) var(--space-3); --floating-radius: var(--radius-sm); --floating-border: 0; --surface-background: var(--glass-fallback, var(--surface-background)); line-height: var(--ui-bodyLine); background: var(--glass-fallback, var(--surface-background)); color: var(--ui-helpInk); }
-.root[data-instant] { transition: none; }
-.compact { --floating-padding: var(--space-1) var(--space-2); --floating-font-size: var(--typography-size-xs); line-height: var(--ui-buttonLine); white-space: nowrap; }
-.surface { --floating-padding: 0; --surface-background: var(--color-surface); overflow: hidden; background: var(--color-surface); color: var(--color-ink); --floating-border: var(--ui-hairline) solid var(--color-line); }
+/* Dica (origem: Sobreposições, "Tooltip"): pílula de carvão, 12px, uma linha,
+ * --e2; entra com a física das camadas flutuantes. "surface" é a ficha de
+ * identidade: folha erguida com conteúdo. */
+.root {
+  --floating-min-width: 0;
+  --floating-max-width: var(--ui-popoverWidth);
+  --floating-padding: 7px var(--space-3);
+  --floating-radius: var(--r-pill);
+  --floating-font-size: var(--fs-pequeno);
+  line-height: var(--lh-pequeno);
+  background: var(--ac);
+  color: var(--acf);
+}
 
-@media (prefers-reduced-transparency: reduce) { .root { background: var(--ui-helpSolid); } }
+.compact { white-space: nowrap; }
+
+.surface {
+  --floating-padding: 0;
+  --floating-radius: var(--r-lista);
+  overflow: hidden;
+  border: var(--ui-hairline) solid var(--bd);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--e2);
+  color: var(--tx);
+}
+
 @media (forced-colors: active) { .root { background: Canvas; color: CanvasText; } }

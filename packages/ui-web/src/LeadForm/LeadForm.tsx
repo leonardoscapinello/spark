@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import type { LeadFormField } from "@spark/core";
 import { Button } from "../Button/Button.js";
 import { Field } from "../Field/Field.js";
+import { IconTile } from "../IconTile/IconTile.js";
 import { Input } from "../Input/Input.js";
 import { Label } from "../Label/Label.js";
 import { Select } from "../Select/Select.js";
@@ -14,7 +15,7 @@ export function LeadFormRenderer({ title, description, fields, submitLabel, valu
     event.preventDefault();
     await onSubmit();
   }
-  if (successMessage) return <div className={styles.success}><strong>Enviado</strong><p>{successMessage}</p></div>;
+  if (successMessage) return <div className={styles.success} role="status"><IconTile icon="check" size="xl" tone="success" /><strong>Enviado</strong><p>{successMessage}</p></div>;
   return <form className={styles.root} onSubmit={(event) => void submit(event)}>
     <header><h1>{title}</h1>{description && <p>{description}</p>}</header>
     <div className={styles.fields}>{fields.map((item) => <Field key={item.id}>
@@ -25,7 +26,7 @@ export function LeadFormRenderer({ title, description, fields, submitLabel, valu
           : <Input type={item.type === "email" ? "email" : item.type === "phone" ? "tel" : "text"} value={string(values[item.id])} required={item.required} disabled={disabled} onChange={(event) => onValueChange(item.id, event.target.value)} />}
       </>}
     </Field>)}</div>
-    <Button type="submit" loading={Boolean(submitting)} disabled={Boolean(disabled)}>{submitLabel}</Button>
+    <Button type="submit" size="lg" loading={Boolean(submitting)} disabled={Boolean(disabled)}>{submitLabel}</Button>
   </form>;
 }
 function string(value: string | boolean | undefined): string { return typeof value === "string" ? value : ""; }

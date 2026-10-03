@@ -1,68 +1,40 @@
+/* Cabeçalho de página da identidade (ADR-0044; origem: Tipografia "H1 ·
+ * página" e o shell responsivo): 500, 22 no celular e no tablet, 28 no
+ * desktop, tracking −0,025em. Sem ícone: a navegação já diz onde se está. */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-3) var(--space-4);
+  font-family: var(--font);
 }
 
-.copy {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.back { display: flex; align-items: center; flex: 0 0 auto; margin-inline-end: var(--space-2); }
-
-.titleRow { display: flex; align-items: center; gap: var(--space-3); }
-.titleIcon { flex: 0 0 var(--ui-icon); width: var(--ui-icon); height: var(--ui-icon); color: var(--color-ink); }
-.copy[data-icon] .description { margin-inline-start: calc(var(--ui-icon) + var(--space-3)); }
+.copy { display: flex; flex: 1 1 auto; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.back { display: flex; flex: 0 0 auto; align-items: center; }
 
 .header h1 {
   margin: 0;
-  font-family: var(--typography-fontFamily-body);
-  font-size: var(--typography-size-lg);
-  font-weight: var(--typography-weight-semibold);
-  line-height: var(--typography-lineHeight-tight);
+  color: var(--tx);
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-titulo);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
   overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
-.eyebrow {
-  position: absolute;
-  width: var(--ui-hairline);
-  height: var(--ui-hairline);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
+.eyebrow { margin: 0; color: var(--tx3); font-family: var(--mono); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
+.description { max-width: 64ch; margin: 0; color: var(--tx2); font-size: var(--fs-corpo); line-height: var(--lh-corpo); text-wrap: pretty; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
 
-.description {
-  margin: var(--space-1) 0 0;
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-compact);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+@media (min-width: 1024px) {
+  .header h1 { font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); }
 }
 
 @media (max-width: 640px) {
   .header { align-items: stretch; }
-  .back { margin-inline-end: 0; }
   .copy, .actions { width: 100%; }
   .actions > * { flex: 1 1 auto; }
-  .eyebrow {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0 0 var(--space-1);
-    overflow: visible;
-    clip-path: none;
-    white-space: normal;
-    color: var(--color-inkMuted);
-    font-size: var(--typography-size-compact);
-    font-weight: var(--typography-weight-medium);
-  }
 }

@@ -1,39 +1,61 @@
-/* Uma data é sempre curta («14/09/2026 às 15:30»): ela não quebra linha, e o
- * que não couber vira reticências em vez de empurrar o campo para baixo. */
-.trigger { width: 100%; justify-content: flex-start; min-height: var(--ui-fieldHeight); text-align: start; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.layout { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-5); }
-.calendar { flex: 1 1 var(--ui-popoverWidth); min-width: min(100%, var(--ui-popoverWidth)); width: 100%; font-family: var(--typography-fontFamily-body); }
-.months,.month { width: 100%; }
-.month { position: relative; }
-.caption { min-height: var(--ui-controlLarge); display: flex; align-items: center; font-weight: var(--typography-weight-semibold); }
-.nav { display: flex; justify-content: flex-end; gap: var(--space-2); }
-.navButton { border: 0; background: var(--ui-subtle); border-radius: var(--radius-full); width: var(--ui-controlMedium); height: var(--ui-controlMedium); display: grid; place-items: center; cursor: pointer; }
-.chevron { width: var(--ui-icon); height: var(--ui-icon); fill: var(--color-ink); }
-.grid { width: 100%; table-layout: fixed; border-collapse: collapse; }
-.weekday { color: var(--color-inkMuted); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); padding-block: var(--space-2); }
-.day { text-align: center; padding: 0; }
-.dayButton { width: 100%; min-height: var(--ui-touchTarget); border: 0; border-radius: var(--radius-full); background: transparent; font: inherit; color: var(--color-ink); cursor: pointer; }
-.dayButton:hover { background: var(--color-accentWash); }
-.selected .dayButton { background: var(--color-accent); color: var(--color-onAccent); }
-.today .dayButton { font-weight: var(--typography-weight-bold); text-decoration: underline; }
-.outside:not(.selected) .dayButton { color: var(--color-inkFaint); }
-:is(.dayButton,.navButton):focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
-.time { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); max-width: 100%; }
-.clock { width: var(--ui-clockSize); max-width: 100%; height: auto; }
-.face { fill: var(--ui-subtle); stroke: var(--color-lineStrong); stroke-width: var(--ui-chartStroke); }
-.tick { stroke: var(--color-inkMuted); stroke-width: var(--ui-chartStroke); }
-.hand { stroke: var(--color-accent); stroke-width: var(--ui-chartStroke); stroke-linecap: round; }
-.center { fill: var(--color-accent); }
-/* Os dois seletores são filhos de um flex sem base própria: encolhiam até a
- * seta comer os dígitos. Largura fixa resolve, e é a mesma nos dois. */
-.timeFields { display: flex; align-items: center; gap: var(--space-2); }
-.timeField { flex: 0 0 var(--ui-timeFieldWidth); width: var(--ui-timeFieldWidth); }
-.hint { margin: 0; color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
-/* Vazio é dica de formato, não valor: fica apagado como um placeholder. */
-.trigger[data-empty="true"] { color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }
+/* Seletores temporais (origem: Seleção §12–§14). Gatilho: o de escolha
+ * compartilhado, com ícone 16 em tinta 3 e valor em mono 12,5. Folha sólida
+ * segurada (--sf3 + granulação), raio 32, padding 14, 10 entre blocos; data
+ * 280, data e hora 340, hora 220. */
+.trigger { justify-content: flex-start; padding-inline-start: 14px; }
+.triggerIcon { display: flex; flex: none; width: var(--ui-icon); height: var(--ui-icon); color: var(--tx3); }
+.triggerIcon > svg { width: 100%; height: 100%; }
+.value { font-family: var(--mono); font-size: var(--fs-valor); font-variant-numeric: tabular-nums; }
+.trigger[data-empty] .value { color: var(--tx3); }
 
-.trigger { border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-fieldRadius); background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); font-weight: var(--typography-weight-regular); padding-inline: var(--space-4); }
-.trigger:focus-visible, .trigger[aria-expanded="true"] { box-shadow: var(--ui-fieldFocusShadow); }
-.dayButton, .navButton { transition: background-color var(--motion-duration-control) var(--motion-ease-out), box-shadow var(--motion-duration-control) var(--motion-ease-out); }
-.selected .dayButton { box-shadow: var(--ui-buttonShadow); }
-@media (prefers-reduced-motion: reduce) { .dayButton, .navButton { transition: none; } }
+.sheet {
+  --floating-radius: var(--r-bloco);
+  --floating-padding: 14px;
+  --floating-width: 280px;
+  --floating-min-width: 0;
+  --glass-fallback: var(--sf3) var(--grain);
+  gap: 10px;
+}
+.sheet[data-mode="datetime"] { --floating-width: 340px; }
+.sheet[data-mode="time"] { --floating-width: 220px; }
+
+/* Calendário: mês 13/500 à esquerda, setas de tinta à direita, semana 10 em
+ * tinta 3, dia em pílula de 32 com número em mono 12. */
+.calendar { min-width: 0; font-family: var(--font); }
+.months { position: relative; }
+.month { display: flex; flex-direction: column; gap: var(--space-1); }
+.caption { display: flex; align-items: center; min-height: var(--h-sm); padding: 0 6px; }
+.captionLabel { color: var(--tx); font-size: var(--fs-corpo); font-weight: var(--fw-500); text-transform: capitalize; }
+.nav { position: absolute; top: 0; right: 0; display: flex; gap: 2px; }
+.navButton { display: grid; place-items: center; width: var(--h-sm); height: var(--h-sm); padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--tx2); cursor: pointer; outline: none; }
+.navButton:is(:hover, :focus-visible) { background-color: var(--acs); color: var(--tx); }
+.navButton:disabled { color: var(--tx4); cursor: default; }
+.chevron { width: var(--ui-iconSm); height: var(--ui-iconSm); fill: currentColor; }
+.grid { width: 100%; border-collapse: separate; border-spacing: 0 2px; table-layout: fixed; }
+.weekday { padding: 0 0 var(--space-1); color: var(--tx3); font-size: var(--fs-micro); font-weight: var(--fw-400); text-align: center; text-transform: uppercase; }
+.day { padding: 0 1px; text-align: center; }
+.dayButton { width: 100%; height: 32px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--tx); font-family: var(--mono); font-size: var(--fs-pequeno); font-variant-numeric: tabular-nums; cursor: pointer; outline: none; transition: background-color var(--t-fast) var(--ease); }
+.dayButton:hover { outline: var(--ui-hairline) solid var(--bd2); }
+.dayButton:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+.today:not(.selected) .dayButton { box-shadow: inset 0 0 0 var(--ui-hairline) var(--tx3); }
+.selected .dayButton { background: var(--tx); color: var(--sf); box-shadow: var(--ink); font-weight: var(--fw-600); }
+.outside:not(.selected) .dayButton { color: var(--tx3); }
+.disabled .dayButton { color: var(--tx4); cursor: default; }
+
+/* Data e hora: calendário + coluna de 72 com os horários. */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: var(--space-3); }
+.split > .timeList { max-height: 250px; padding-inline-start: 10px; border-inline-start: var(--ui-hairline) solid var(--bd); }
+
+/* Hora: colunas de hora e minuto. */
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.column { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.columnTitle { padding: 0 6px; color: var(--tx3); font-size: var(--fs-meta); }
+.columns .timeList { max-height: 200px; }
+
+.timeList { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.timeOption { flex: none; height: 30px; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--tx); font-family: var(--mono); font-size: var(--fs-pequeno); font-variant-numeric: tabular-nums; cursor: pointer; outline: none; transition: background-color var(--t-fast) var(--ease); }
+.timeOption:hover { background-color: var(--acs); }
+.timeOption:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+.timeOption[aria-pressed="true"] { background: var(--tx); color: var(--sf); box-shadow: var(--ink); }
+
+.footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding-top: var(--space-2); border-top: var(--ui-hairline) solid var(--bd); }

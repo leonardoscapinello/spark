@@ -1,18 +1,56 @@
-.chart { height: var(--ui-chartHeight); width: 100%; min-width: 0; font-size: var(--typography-size-compact); }
-.legend { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-3) 0; }
-.legendItem { display: inline-flex; align-items: center; gap: var(--space-2); border: 0; background: transparent; color: var(--color-ink); padding: var(--space-1); font-family: inherit; font-size: var(--typography-size-compact); cursor: pointer; }
-.legendItem[aria-pressed="false"] { opacity: var(--ui-disabledOpacity); text-decoration: line-through; }
-.legendItem:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); }
-.swatch { display: inline-block; flex-shrink: 0; width: var(--space-2); height: var(--space-2); border-radius: var(--radius-full); }
-.tableScroll { overflow-x: auto; }
-.table { width: 100%; border-collapse: collapse; font-size: var(--typography-size-compact); font-variant-numeric: tabular-nums; }
-.table caption { text-align: left; font-weight: var(--typography-weight-semibold); padding: var(--space-3) 0; }
-.table th,.table td { text-align: right; padding: var(--space-2); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.table th:first-child { text-align: left; }
-.donutLegend { margin: 0; padding: 0; list-style: none; }
-.donutLegend li { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) 0; font-size: var(--typography-size-compact); }
-.donutLegend li > span:nth-child(2) { flex: 1; }
-.zero { min-height: var(--ui-textareaHeight); display: grid; place-items: center; font-size: var(--typography-size-sm); color: var(--color-inkMuted); }
+/* Gráficos da identidade (ADR-0044; origem: Dados, "Gráfico de linha / área",
+ * "Barras" e "Donut"). Rótulos em mono 10 tinta 3; a dica é carvão; a cor de
+ * série segue a ordem fixa de pigmentos. */
+.chart { width: 100%; height: var(--ui-chartHeight); min-width: 0; font-family: var(--mono); font-size: var(--fs-micro); font-variant-numeric: tabular-nums; }
 
-.chart { font-family: var(--typography-fontFamily-mono); font-variant-numeric: tabular-nums; }
-.swatch[data-comparison] { height: var(--ui-hairline); border-radius: 0; }
+/* Dica sobre carvão: raio 18, padding 8 12, --e2. */
+.tooltip { display: flex; flex-direction: column; gap: 3px; padding: var(--space-2) var(--space-3); border-radius: var(--r-sm); corner-shape: var(--r-shape); background: var(--ac); box-shadow: var(--e2); color: var(--acf); font-family: var(--font); white-space: nowrap; pointer-events: none; }
+.tipDate { font-size: var(--fs-meta); opacity: 0.65; }
+.tipRow { display: flex; align-items: center; gap: var(--space-1-5); }
+.tipName { font-size: var(--fs-legenda); opacity: 0.8; }
+.tipValue { margin-inline-start: auto; font-family: var(--mono); font-size: var(--fs-h4); font-weight: var(--fw-500); line-height: 1; }
+.tipSwatch { width: 14px; height: 2px; border-radius: var(--r-mark); background: var(--swatch); }
+.tipSwatch[data-comparison] { height: 0; border-top: 1.5px dashed var(--swatch); background: none; }
+
+/* Legenda: amostra de 14 (linha), tracejada na comparação; 12 tinta 2. */
+.footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding-top: var(--space-3); }
+.legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); }
+.legendItem { display: inline-flex; align-items: center; gap: var(--space-1-5); min-height: var(--h-sm); padding: 0 var(--space-1); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--tx2); font-family: var(--font); font-size: var(--fs-pequeno); cursor: pointer; }
+.legendItem[aria-pressed="false"] { opacity: var(--disabled); text-decoration: line-through; }
+.legendItem:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+.swatch { display: inline-block; flex-shrink: 0; width: 14px; height: 2px; border-radius: var(--r-mark); background: var(--swatch); }
+.swatch[data-kind="bar"] { width: var(--space-2); height: var(--space-2); border-radius: var(--r-pill); }
+.swatch[data-comparison] { height: 0; border-top: 1.5px dashed var(--swatch); border-radius: 0; background: none; }
+
+/* Dados em tabela: o mesmo número, para quem não lê o gráfico. */
+.tableScroll { overflow-x: auto; margin-top: var(--space-3); }
+.table { width: 100%; border-collapse: collapse; font-family: var(--font); font-size: var(--fs-pequeno); font-variant-numeric: tabular-nums; }
+.table caption { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.table th, .table td { height: var(--h-md); padding: 0 var(--space-2); border-top: var(--ui-hairline) solid var(--bd); text-align: end; font-family: var(--mono); }
+.table thead th { border-top: 0; color: var(--tx3); font-family: var(--font); font-size: var(--fs-legenda); font-weight: var(--fw-400); }
+.table th:first-child { text-align: start; font-family: var(--font); }
+
+/* Rosca: 170 de diâmetro, anel 10 sobre trilho cavado. */
+.donutWrap { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-6); }
+.donut { position: relative; flex: none; width: 170px; height: 170px; }
+.donut svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+.track { fill: none; stroke: var(--sf2); stroke-width: 10; }
+.segment { fill: none; stroke-width: 10; cursor: pointer; transition: stroke-width var(--t-chevron) var(--ease), opacity var(--t-chevron) var(--ease); }
+.segment[data-active] { stroke-width: 14; }
+.segment[data-dim] { opacity: 0.35; }
+.donutCenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); pointer-events: none; text-align: center; }
+.centerName { max-width: 70%; overflow: hidden; color: var(--tx3); font-family: var(--font); font-size: var(--fs-legenda); text-overflow: ellipsis; white-space: nowrap; }
+.centerPercent { color: var(--tx); font-family: var(--font); font-size: var(--fs-numero-s); font-weight: var(--fw-numero); line-height: 1; letter-spacing: -0.03em; }
+.centerValue { color: var(--tx2); font-family: var(--mono); font-size: var(--fs-micro); }
+
+.donutLegend { display: flex; flex: 1; flex-direction: column; min-width: 140px; margin: 0; padding: 0; list-style: none; }
+.legendRow { display: flex; align-items: center; gap: 10px; width: 100%; padding: var(--space-2) 0; border: 0; border-bottom: var(--ui-hairline) solid var(--bd); background: transparent; color: var(--tx); font-family: var(--font); font-size: var(--fs-corpo); text-align: start; cursor: pointer; transition: opacity var(--t-chevron) var(--ease); }
+.legendRow[data-dim] { opacity: 0.35; }
+.legendRow:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+.legendDot { flex: none; width: var(--space-2); height: var(--space-2); border-radius: var(--r-pill); background: var(--swatch); }
+.legendName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legendValue { color: var(--tx2); font-family: var(--mono); font-size: var(--fs-legenda); }
+.legendPercent { min-width: 34px; color: var(--tx3); font-family: var(--mono); font-size: var(--fs-legenda); text-align: end; }
+.zero { display: grid; place-items: center; min-height: var(--ui-textareaHeight); margin: 0; color: var(--tx2); font-size: var(--fs-corpo); }
+
+@media (prefers-reduced-motion: reduce) { .segment, .legendRow { transition: none; } }

@@ -1,103 +1,126 @@
-/* Only file in the repo where backdrop-filter is allowed — enforced by
- * lint (eslint.config.mjs) and by convention (docs/adr/0025,
- * docs/adr/0031). Glass now spans two contexts: the floating nav layer
- * (sidebar, topbar, sheet, modal, toast) and, since ADR-0031,
- * content-adjacent surfaces in moderate quantity (card, dropdown,
- * drawer). Never a scrolling table row or list item, and never more than
- * a few glass surfaces visible at once. */
+/* Único arquivo do repositório onde backdrop-filter é permitido — lint
+ * (eslint.config.mjs, spark/identidade) e ADR-0025. Vidro é a camada de papel
+ * translúcido: deixa passar luz, nunca imagem (ADR-0044). Usado só por camadas
+ * flutuantes: menus, dropdowns, popovers, topbar, tab bar. Conteúdo é sólido. */
 
 :where(.root) {
-  --surface-background: var(--color-glassBg);
+  --surface-background: var(--glass);
+  --surface-border: var(--gbd);
   background: var(--glass-fallback, var(--surface-background));
-  border: 1px solid var(--color-glassEdge);
-  /* isolates paint bounds — mitigates rasterization cost (ADR-0017) */
+  border: var(--ui-hairline) solid var(--gbd);
+  /* isola a área de pintura — reduz o custo de rasterização (ADR-0017) */
   contain: paint;
 }
 
-:where(.subtle) {
-  backdrop-filter: blur(var(--effect-glass-subtle-blur)) saturate(var(--effect-glass-subtle-saturate));
-  -webkit-backdrop-filter: blur(var(--effect-glass-subtle-blur)) saturate(var(--effect-glass-subtle-saturate));
-  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
-  box-shadow:
-    inset 0 1px 0 var(--color-glassEdge),
-    var(--effect-shadow-sm);
-}
-
+/* Folha de lista: dropdown, menu, select, combobox, popover. */
 :where(.panel) {
-  backdrop-filter: blur(var(--effect-glass-panel-blur)) saturate(var(--effect-glass-panel-saturate));
-  -webkit-backdrop-filter: blur(var(--effect-glass-panel-blur)) saturate(var(--effect-glass-panel-saturate));
-  border-radius: var(--radius-lg); corner-shape: var(--radius-shape);
-  box-shadow:
-    inset 0 1px 0 var(--color-glassEdge),
-    var(--effect-shadow-sm);
+  --surface-background: var(--glass-lista);
+  backdrop-filter: var(--vidro-menu);
+  -webkit-backdrop-filter: var(--vidro-menu);
+  border-radius: var(--r-lista);
+  corner-shape: var(--r-shape);
+  box-shadow: var(--e2);
 }
 
+/* Barra flutuante: topbar, tab bar, chip de vidro. */
+:where(.subtle) {
+  backdrop-filter: var(--vidro-barra);
+  -webkit-backdrop-filter: var(--vidro-barra);
+  border-radius: var(--r-pill);
+  box-shadow: var(--e2);
+}
+
+/* Painel sobre o véu: vidro mais denso, segurado na mão (--e3). */
 :where(.modal) {
-  backdrop-filter: blur(var(--effect-glass-modal-blur)) saturate(var(--effect-glass-modal-saturate));
-  -webkit-backdrop-filter: blur(var(--effect-glass-modal-blur)) saturate(var(--effect-glass-modal-saturate));
-  border-radius: var(--radius-xl); corner-shape: var(--radius-shape);
-  box-shadow:
-    inset 0 1px 0 var(--color-glassEdge),
-    var(--effect-shadow-md);
+  backdrop-filter: var(--vidro-barra);
+  -webkit-backdrop-filter: var(--vidro-barra);
+  border-radius: var(--r-xl);
+  corner-shape: var(--r-shape);
+  box-shadow: var(--e3);
 }
 
-/* No backdrop-filter support, or the user asked for less transparency:
- * fall back to a solid surface, never invisible. */
+/* Sem suporte, ou quem usa pediu menos transparência: superfície sólida. */
 @media (prefers-reduced-transparency: reduce) {
-  :where(.root) {
-    --glass-fallback: var(--color-surface);
-    background: var(--glass-fallback);
-  }
+  :where(.root) { --glass-fallback: var(--sf3); background: var(--glass-fallback); }
   .subtle,
   .panel,
-  :where(.modal) {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
+  :where(.modal) { backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
 @media (forced-colors: active) {
-  :where(.root) {
-    --glass-fallback: Canvas;
-    background: var(--glass-fallback);
-    border: 1px solid CanvasText;
-  }
+  :where(.root) { --glass-fallback: Canvas; background: var(--glass-fallback); border: var(--ui-hairline) solid CanvasText; }
   .subtle,
   .panel,
-  :where(.modal) {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
+  :where(.modal) { backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :where(.root) {
-    --glass-fallback: var(--color-surface);
-    background: var(--glass-fallback);
-  }
+  :where(.root) { --glass-fallback: var(--sf3); background: var(--glass-fallback); }
 }
 
-.help { --surface-background: var(--ui-helpBg); background: var(--glass-fallback, var(--surface-background)); color: var(--ui-buttonInk); border: 0; border-radius: var(--radius-sm); corner-shape: var(--radius-shape); box-shadow: var(--ui-popupShadow); backdrop-filter: blur(var(--effect-glass-subtle-blur)); -webkit-backdrop-filter: blur(var(--effect-glass-subtle-blur)); }
-@media (prefers-reduced-transparency: reduce) { .help { --glass-fallback: var(--ui-helpSolid); background: var(--glass-fallback); backdrop-filter: none; -webkit-backdrop-filter: none; } }
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .help { --glass-fallback: var(--ui-helpSolid); background: var(--glass-fallback); } }
-@media (forced-colors: active) { .help { --glass-fallback: Canvas; background: var(--glass-fallback); color: CanvasText; border: var(--ui-hairline) solid CanvasText; backdrop-filter: none; -webkit-backdrop-filter: none; } }
+/* Dica: pílula de carvão sólido, sem vidro (origem: Tooltip). */
+.help {
+  --surface-background: var(--ac);
+  background: var(--ac);
+  color: var(--acf);
+  border: 0;
+  border-radius: var(--r-pill);
+  box-shadow: var(--e2);
+}
 
+@media (forced-colors: active) { .help { background: Canvas; color: CanvasText; border: var(--ui-hairline) solid CanvasText; } }
 
-/* Apenas as folhas visuais fazem fade; o ancestral nunca cria um Backdrop Root. */
-.backdrop { --backdrop-mask1: var(--effect-backdrop-mask1); --backdrop-mask2: var(--effect-backdrop-mask2); --backdrop-mask3: var(--effect-backdrop-mask3); --backdrop-mask4: var(--effect-backdrop-mask4); }
-.veil, .blurLayer { position: absolute; inset: 0; pointer-events: none; opacity: 1; transition: opacity var(--motion-duration-moderate) var(--motion-ease-out); }
-.veil { background: var(--ui-scrim); mask-image: var(--effect-backdrop-veilCenter); }
-.blurLayer { backdrop-filter: blur(var(--backdrop-blur)); -webkit-backdrop-filter: blur(var(--backdrop-blur)); mask-image: var(--backdrop-mask); }
-.blurLayer[data-blur="1"] { --backdrop-blur: var(--effect-backdrop-blur1); --backdrop-mask: var(--backdrop-mask1); }
-.blurLayer[data-blur="2"] { --backdrop-blur: var(--effect-backdrop-blur2); --backdrop-mask: var(--backdrop-mask2); }
-.blurLayer[data-blur="3"] { --backdrop-blur: var(--effect-backdrop-blur3); --backdrop-mask: var(--backdrop-mask3); }
-.blurLayer[data-blur="4"] { --backdrop-blur: var(--effect-backdrop-blur4); --backdrop-mask: var(--backdrop-mask4); }
-.backdrop[data-placement="right"] { --backdrop-mask1: var(--effect-backdrop-maskRight1); --backdrop-mask2: var(--effect-backdrop-maskRight2); --backdrop-mask3: var(--effect-backdrop-maskRight3); --backdrop-mask4: var(--effect-backdrop-maskRight4); --backdrop-veil: var(--effect-backdrop-veilRight); }
-.backdrop[data-placement="left"] { --backdrop-mask1: var(--effect-backdrop-maskLeft1); --backdrop-mask2: var(--effect-backdrop-maskLeft2); --backdrop-mask3: var(--effect-backdrop-maskLeft3); --backdrop-mask4: var(--effect-backdrop-maskLeft4); --backdrop-veil: var(--effect-backdrop-veilLeft); }
-.backdrop[data-placement="top"] { --backdrop-mask1: var(--effect-backdrop-maskTop1); --backdrop-mask2: var(--effect-backdrop-maskTop2); --backdrop-mask3: var(--effect-backdrop-maskTop3); --backdrop-mask4: var(--effect-backdrop-maskTop4); --backdrop-veil: var(--effect-backdrop-veilTop); }
-.backdrop[data-placement="bottom"] { --backdrop-mask1: var(--effect-backdrop-maskBottom1); --backdrop-mask2: var(--effect-backdrop-maskBottom2); --backdrop-mask3: var(--effect-backdrop-maskBottom3); --backdrop-mask4: var(--effect-backdrop-maskBottom4); --backdrop-veil: var(--effect-backdrop-veilBottom); }
-.backdrop:not([data-placement="center"]) .veil { mask-image: var(--backdrop-veil); }
-.backdrop:is([data-starting-style],[data-ending-style]) > span { opacity: 0; }
-.backdrop[data-ending-style] > span { transition-duration: var(--motion-duration-exit); transition-timing-function: var(--motion-ease-exit); }
-@media (prefers-reduced-motion: reduce) { .veil, .blurLayer { transition: none; } }
+/* Véu de overlay (modal, drawer, palette): véu de papel + quatro camadas de
+ * desfoque progressivo com máscara, crescendo de 0 a 2/6/14/28px. Apenas as
+ * folhas visuais animam; o ancestral nunca cria um Backdrop Root. */
+.backdrop {
+  --m1: var(--backdrop-mask1);
+  --m2: var(--backdrop-mask2);
+  --m3: var(--backdrop-mask3);
+  --m4: var(--backdrop-mask4);
+  --veil-in: var(--t-default);
+  --blur-in: var(--t-blur-in);
+  --out: var(--t-sink);
+}
+
+.veil,
+.blurLayer,
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.veil { background: var(--veil); animation: var(--anim-fade) var(--veil-in) var(--ease) both; }
+.vignette { background: radial-gradient(ellipse 60% 55% at 50% 50%, transparent 40%, var(--vig) 100%); animation: var(--anim-fade) var(--veil-in) var(--ease) both; }
+
+.blurLayer {
+  backdrop-filter: blur(var(--b)) saturate(0.85);
+  -webkit-backdrop-filter: blur(var(--b)) saturate(0.85);
+  mask-image: var(--m);
+  -webkit-mask-image: var(--m);
+  animation: var(--anim-blur-in) var(--blur-in) var(--ease) both;
+}
+
+.blurLayer[data-blur="1"] { --b: var(--backdrop-blur1); --m: var(--m1); }
+.blurLayer[data-blur="2"] { --b: var(--backdrop-blur2); --m: var(--m2); }
+.blurLayer[data-blur="3"] { --b: var(--backdrop-blur3); --m: var(--m3); }
+.blurLayer[data-blur="4"] { --b: var(--backdrop-blur4); --m: var(--m4); }
+
+/* Drawer: o desfoque vem da borda de onde o painel entra. */
+.backdrop[data-placement="right"] { --m1: var(--backdrop-maskRight1); --m2: var(--backdrop-maskRight2); --m3: var(--backdrop-maskRight3); --m4: var(--backdrop-maskRight4); --mv: var(--backdrop-veilRight); --veil-in: var(--t-scrim-in); --blur-in: var(--t-blur-side); --out: var(--t-drawer-out); }
+.backdrop[data-placement="left"] { --m1: var(--backdrop-maskLeft1); --m2: var(--backdrop-maskLeft2); --m3: var(--backdrop-maskLeft3); --m4: var(--backdrop-maskLeft4); --mv: var(--backdrop-veilLeft); --veil-in: var(--t-scrim-in); --blur-in: var(--t-blur-side); --out: var(--t-drawer-out); }
+.backdrop[data-placement="top"] { --m1: var(--backdrop-maskTop1); --m2: var(--backdrop-maskTop2); --m3: var(--backdrop-maskTop3); --m4: var(--backdrop-maskTop4); --mv: var(--backdrop-veilTop); }
+.backdrop[data-placement="bottom"] { --m1: var(--backdrop-maskBottom1); --m2: var(--backdrop-maskBottom2); --m3: var(--backdrop-maskBottom3); --m4: var(--backdrop-maskBottom4); --mv: var(--backdrop-veilBottom); }
+.backdrop:not([data-placement="center"]) .veil { mask-image: var(--mv); -webkit-mask-image: var(--mv); }
+.backdrop:not([data-placement="center"]) .vignette { display: none; }
+
+/* Saída: véu, vinheta e desfoque se dissolvem juntos em 280 ms (Saída). O
+ * wrapper "segura" o mesmo tempo sem mudar nada visível: o Base UI espera as
+ * animações do próprio elemento antes de desmontar. */
+.backdrop[data-closed] { animation: var(--anim-hold) var(--out) linear forwards; }
+.backdrop[data-closed] .veil,
+.backdrop[data-closed] .vignette { animation: var(--anim-fade-out) var(--out) var(--ease-out) forwards; }
+.backdrop[data-closed] .blurLayer { animation: var(--anim-blur-out) var(--out) var(--ease-out) forwards; }
+
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) { .blurLayer { display: none; } }

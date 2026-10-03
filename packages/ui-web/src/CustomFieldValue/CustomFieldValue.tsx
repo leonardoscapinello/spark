@@ -11,6 +11,9 @@ import type { IconName } from "../Icon/Icon.js";
 import s from "./CustomFieldValue.module.css";
 
 
+/* Número, data e documento se leem em mono tabular, como no resto da ficha. */
+const NUMERIC_TYPES: ReadonlySet<CustomFieldDefinition["type"]> = new Set(["number", "currency", "date", "datetime", "phone", "document"]);
+
 export interface CustomFieldValueProps {
   field: CustomFieldDefinition;
   value: unknown;
@@ -118,6 +121,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, layo
     hint={hint}
     value={shown === "" ? "Adicionar" : shown}
     empty={shown === ""}
+    numeric={NUMERIC_TYPES.has(field.type)}
     disabled={disabled}
     onCancel={discardDraft}
     {...(href === undefined ? {} : { href })}

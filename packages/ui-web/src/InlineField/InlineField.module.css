@@ -1,218 +1,167 @@
-/* Linha «rótulo · valor» que vira campo ao clicar — é como o Pipedrive deixa
- * mudar responsável, situação e previsão sem abrir formulário nenhum.
- *
- * Mesma geometria de CustomFieldValue e da linha só de leitura da tela: a
- * coluna do rótulo vem do mesmo token, e o recuo do valor é o mesmo. É isso
- * que faz o painel inteiro alinhar em vez de ziguezaguear entre linha com
- * campo e linha sem campo. */
-.field { container-type: inline-size; }
+/* Linha «rótulo · valor» (origem: Perfil §11 e Campos §2). Rótulo 12 em tinta
+ * 3 na coluna fixa; a caixa do valor tem a MESMA geometria nos três estados —
+ * 36, pílula, 12 de recuo — e só a superfície muda: tinta (parado), --acs
+ * (hover), papel cavado com borda --tx3 e halo (editando). A física global de
+ * 550 ms escoa fundo, borda e sombra; nada pula. */
+.field { container-type: inline-size; min-width: 0; }
 
 .row {
   display: grid;
   grid-template-columns: var(--ui-fieldLabelColumn) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-3);
-  padding-block: var(--space-3);
-  border-top: var(--ui-hairline) solid var(--color-line);
+  align-items: start;
+  column-gap: var(--space-3);
+  padding-block: var(--space-1);
 }
-.field:first-child .row { border-top: 0; padding-top: 0; }
 
-.label {
-  display: block;
-  min-width: 0;
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
-  line-height: var(--ui-tabLine);
-  /* Uma linha só: a altura da linha do painel fica igual em todo campo. */
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.control { min-width: 0; font-size: var(--typography-size-sm); }
-.identity { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.identity > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Fio de 1px entre linhas seguidas (origem: "linha de detalhe"). */
+.field + .field > .row { border-top: var(--ui-hairline) solid var(--bd); }
 
-/* Valor e ação lado a lado: o valor cresce, a ação fica do tamanho dela. */
-.readRow { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
-.readRow > :first-child { flex: 1 1 auto; min-width: 0; }
-.action {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: var(--ui-controlMedium);
-  height: var(--ui-controlMedium);
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--color-inkMuted);
-  cursor: pointer;
-}
-.action:hover { background: var(--ui-subtle); color: var(--color-accent); }
-.action:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.required { margin-inline-start: var(--space-1); color: var(--color-statusDanger); }
+.labelColumn { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; min-height: var(--h-md); }
+.label { display: block; min-width: 0; overflow: hidden; color: var(--tx3); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); text-overflow: ellipsis; white-space: nowrap; }
+.required { margin-inline-start: var(--space-1); color: var(--er); }
+.hint { color: var(--tx3); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
 
-/* Campo que precisa da largura toda (texto longo): o controle desce. */
-.row[data-block="true"] { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+.control { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
 
-/* Em edição: o campo ocupa o espaço e o «fechar» fica ao lado, do tamanho
- * dele. Desistir tem de ser visível, não só uma tecla que ninguém adivinha. */
-.editing { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.editor { flex: 1 1 auto; min-width: 0; }
-.shortcut { flex: 0 0 auto; color: var(--color-inkMuted); font-size: var(--typography-size-xs); white-space: nowrap; }
-.cancel {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: var(--ui-controlMedium);
-  height: var(--ui-controlMedium);
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--color-inkMuted);
-  cursor: pointer;
-}
-.cancel:hover { background: var(--ui-subtle); color: var(--color-ink); }
-.cancel:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-
-/* Feedback colado ao valor: aparece no instante em que o editor fecha e fica
- * até a Promise real da escrita confirmar. Não desloca nem bloqueia a linha. */
-.persistence {
-  position: absolute;
-  z-index: 1;
-  inset-inline-end: var(--space-2);
-  top: 50%;
-  display: grid;
-  place-items: center;
-  width: var(--ui-icon);
-  height: var(--ui-icon);
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
-  color: var(--color-inkMuted);
-  transform: translateY(-50%);
-  box-shadow: var(--ui-panelShadow);
-}
-.persistence[data-state="saved"] { color: var(--color-statusSuccess); }
-.persistence[data-state="error"] { color: var(--color-statusDanger); }
-.persistence > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
-.spinner {
+/* A caixa: o mesmo encaixe parado, vazio e editando. */
+.box {
+  position: relative;
   box-sizing: border-box;
-  width: var(--space-3);
-  height: var(--space-3);
-  border: var(--ui-focusWidth) solid currentColor;
-  border-right-color: transparent;
-  border-radius: var(--radius-full);
-  animation: spin var(--ui-spinDuration) linear infinite;
-}
-.control { position: relative; }
-
-/* O valor parado parece texto; ao passar o mouse mostra que é editável. É o
- * meio-termo do Pipedrive: nada de campo desenhado o tempo todo, e nada de
- * esconder que dá para mudar. */
-.value {
   display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  height: var(--h-md);
+  padding-inline-end: 4px;
+  border: var(--ui-hairline) solid transparent;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  font-weight: var(--fw-400);
+  line-height: var(--lh-controle);
+}
+
+.box[data-state="display"]:not([data-readonly]) { cursor: pointer; }
+
+@media (hover: hover) and (pointer: fine) {
+  .box[data-state="display"]:not([data-readonly]):hover { background-color: var(--acs); }
+}
+
+.box[data-state="display"]:has(> .value:focus-visible) { background-color: var(--acs); box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+.box[data-state="editing"] {
+  border-color: var(--tx3);
+  background: var(--sf2);
+  box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ring);
+}
+
+.box[data-persistence="error"] { box-shadow: 0 0 0 var(--ui-hairline) var(--er); }
+.box[data-state="editing"][data-persistence="error"] { border-color: var(--er); box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ers); }
+
+/* Valor parado: tinta 1, 13/400; o texto começa a 12 da borda. */
+.value {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
   align-items: center;
   gap: var(--space-2);
-  width: 100%;
-  min-height: var(--ui-controlMedium);
-  padding: var(--space-1) var(--space-2);
-  margin-inline-start: calc(-1 * var(--space-2));
-  border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--ui-fieldRadius);
+  min-width: 0;
+  height: 100%;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border: 0;
+  border-radius: inherit;
   background: transparent;
+  color: inherit;
   font: inherit;
-  font-size: var(--typography-size-sm);
-  font-weight: var(--typography-weight-medium);
-  color: var(--color-ink);
   text-align: start;
-  cursor: pointer;
-  /* `anywhere` reduziria a largura mínima do item flex ao caractere mais
-   * largo, e o valor quebraria uma letra por linha. */
-  overflow-wrap: break-word;
-}
-.value > span:first-child { flex: 1 1 auto; min-width: 0; }
-/* Endereço longo não empurra a linha: corta com reticências, e o valor inteiro
- * continua no rótulo acessível e a um clique de distância. */
-.value[data-link="true"] > span:first-child { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.value:hover { background: var(--ui-subtle); border-color: var(--color-line); }
-.value:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-/* Valor que aponta para um endereço se lê como link. */
-.value[data-link="true"]:not([data-empty="true"]) { color: var(--color-accent); }
-.value[data-disabled="true"] { cursor: default; }
-.value[data-disabled="true"]:hover { background: transparent; border-color: transparent; }
-
-/* Campo vazio convida em vez de esconder — o «Clique aqui para adicionar» do
- * Pipefy. Tracejado porque não é link de navegação. */
-.value[data-empty="true"] {
-  color: var(--color-inkMuted);
-  font-weight: var(--typography-weight-regular);
-  background: var(--color-surface2);
-  border-color: var(--color-line);
-  box-shadow: var(--ui-fieldShadow);
+  cursor: inherit;
+  outline: none;
 }
 
-.confirmation {
-  position: fixed;
-  z-index: var(--ui-overlayLayer);
-  top: var(--space-5);
-  left: 50%;
-  transform: translateX(-50%);
+.leading { display: flex; flex: none; align-items: center; }
+.text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.text[data-numeric] { font-family: var(--mono); font-size: var(--fs-valor); font-variant-numeric: tabular-nums; }
+.box[data-empty] .text { color: var(--tx3); }
+.box[data-link] .text { text-decoration: underline; text-decoration-color: var(--bd2); text-underline-offset: 3px; }
+
+/* Lápis (ou ＋ no vazio) de 14 em tinta 3, na ponta: aparece no hover. */
+.mark { display: flex; flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--tx3); opacity: 0; }
+.mark > svg { width: 100%; height: 100%; }
+.box[data-empty] .mark,
+.box:hover .mark,
+.value:focus-visible .mark { opacity: 1; }
+
+/* Botões de tinta de 28 dentro da caixa: ação do registro e desistir. */
+.iconButton {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: var(--space-4);
-  max-width: calc(100% - var(--space-6));
-  padding: var(--space-3) var(--space-4);
-  border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--ui-popupRadius); corner-shape: var(--radius-shape);
-  background: var(--color-surface);
-  color: var(--color-ink);
-  box-shadow: var(--ui-popupShadow);
-  font-size: var(--typography-size-sm);
+  justify-content: center;
+  width: var(--h-sm);
+  height: var(--h-sm);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tx3);
+  cursor: pointer;
+  outline: none;
 }
-.confirmationActions { display: flex; align-items: center; gap: var(--space-2); }
-.save,.discard { min-height: var(--ui-controlMedium); padding: 0 var(--space-3); border-radius: var(--radius-full); font: inherit; font-weight: var(--typography-weight-semibold); cursor: pointer; }
-.save { border: var(--ui-hairline) solid var(--color-accent); background: var(--color-accent); color: var(--color-onAccent); }
-.discard { border: var(--ui-hairline) solid var(--color-line); background: var(--color-surface); color: var(--color-ink); }
-.save:focus-visible,.discard:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-.confirmation kbd { margin-inline-start: var(--space-1); color: inherit; font-family: var(--typography-fontFamily-mono); font-size: var(--typography-size-xs); }
 
-.pencil { display: flex; flex: 0 0 auto; margin-inline-start: auto; opacity: 0; color: var(--color-inkMuted); }
-.value:hover .pencil, .value:focus-visible .pencil { opacity: 1; }
+.iconButton > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
+.iconButton:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+@media (hover: hover) and (pointer: fine) {
+  .iconButton:hover { background-color: var(--acs); color: var(--tx); }
+  /* A ação do registro só aparece quando a linha está sob o ponteiro. */
+  .action { opacity: 0; }
+  .box:hover .action,
+  .action:focus-visible { opacity: 1; }
+}
+
+/* Editando: o controle é só o miolo — a caixa já é o campo. */
+.editor { display: flex; flex: 1; align-items: center; min-width: 0; height: 100%; padding-inline-start: var(--space-3); }
+
+.field .box[data-state="editing"] > .editor > * {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding-inline: 0;
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+/* O ícone do gatilho de data sairia do lugar do texto: some dentro da caixa. */
+.field .box[data-state="editing"] [data-picker-icon] { display: none; }
+
+/* Gravando, gravado, falhou: ícone de 14 na ponta da mesma caixa. */
+.persistence { display: flex; flex: none; align-items: center; justify-content: center; width: var(--h-sm); height: var(--h-sm); color: var(--tx3); animation: var(--anim-badge-in) var(--t-fast) var(--ease); }
+.persistence[data-state="saved"] { color: var(--ok); }
+.persistence[data-state="error"] { color: var(--er); }
+.persistence > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
+
+.errorSlot { padding-inline-start: var(--space-3); }
+.error { display: block; color: var(--er); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
+
+/* Texto longo: o rótulo sobe, a caixa cresce com o conteúdo (raio de lista). */
+.field[data-block] > .row { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
+.field[data-block] .labelColumn { min-height: 0; padding-top: var(--space-1); }
+.field[data-block] .box { align-items: flex-start; height: auto; min-height: var(--h-md); border-radius: var(--r-lista); corner-shape: var(--r-shape); }
+.field[data-block] .value { align-items: flex-start; height: auto; min-height: calc(var(--h-md) - 2px); padding-block: var(--space-2); }
+.field[data-block] .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.field[data-block] .mark { margin-top: 1px; }
+.field[data-block] .box[data-state="editing"] { padding-block: var(--space-1); }
+.field[data-block] .box[data-state="editing"] > .editor { align-items: stretch; }
+.field[data-block] .box[data-state="editing"] > .editor > * { height: auto; padding-block: var(--space-1); resize: none; }
 
 @container (max-width: 240px) {
-  .row { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
-  .label { font-size: var(--typography-size-compact); }
+  .row { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
+  .labelColumn { min-height: 0; }
 }
-@media (max-width: 640px) {
-  .shortcut { display: none; }
-  .confirmation { right: var(--space-3); left: var(--space-3); transform: none; flex-direction: column; align-items: stretch; }
-  .confirmationActions { justify-content: flex-end; }
-}
-@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: var(--ui-spinReducedDuration); } }
-@keyframes spin { to { transform: rotate(1turn); } }
-
-/* Formulário de etapa: rótulo integral acima de um alvo de edição claro. */
-.stackedLabel { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: anywhere; }
-.stackedLabel small { font-size: var(--typography-size-xs); color: var(--color-inkMuted); font-weight: var(--typography-weight-regular); }
-.row[data-block="true"] { border-top: 0; padding-block: var(--space-2); }
-.row[data-block="true"] .value { margin: 0; min-height: var(--ui-controlLarge); padding: var(--space-3) var(--space-4); background: var(--color-surface2); border-color: var(--color-line); box-shadow: var(--ui-fieldShadow); text-decoration: none; }
-.row[data-block="true"] .value:hover:not(:disabled) { border-color: var(--color-accent); background: var(--color-accentWash); }
-.row[data-block="true"] .pencil { opacity: 1; }
-
-.value { transition: background-color var(--motion-duration-control) var(--motion-ease-out), box-shadow var(--motion-duration-selection) var(--motion-ease-out), border-color var(--motion-duration-control) var(--motion-ease-out); }
-.value[data-empty="true"]:hover, .row[data-block="true"] .value:hover:not(:disabled) { background: var(--color-surface2); border-color: var(--color-lineStrong); box-shadow: var(--ui-fieldFocusShadow); }
-@media (prefers-reduced-motion: reduce) { .value { transition: none; } }
-
-/* Um valor ausente convida à edição sem simular um input já aberto. */
-.row:not([data-block="true"]) .value[data-empty="true"] { width: fit-content; max-width: 100%; background: transparent; border-color: transparent; box-shadow: none; color: var(--color-inkMuted); font-weight: var(--typography-weight-medium); }
-.row:not([data-block="true"]) .value[data-empty="true"]:hover { color: var(--color-ink); background: var(--color-surface2); }
-.value[data-empty="true"] .pencil { opacity: 1; }
-.editing { animation: editIn var(--motion-duration-control) var(--motion-ease-out); }
-@keyframes editIn { from { opacity: 0; transform: translateY(var(--space-1)); } }
-@media (prefers-reduced-motion: reduce) { .editing { animation: none; } }
-
-.labelGroup { display: grid; min-width: 0; gap: var(--space-1); }
-.labelGroup > small { color: var(--color-inkMuted); font-size: var(--typography-size-xs); line-height: var(--ui-bodyLine); }
-
-.row:not([data-block="true"]) .readRow > .value[data-empty="true"] { flex: 0 1 auto; }

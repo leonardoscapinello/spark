@@ -1,0 +1,21 @@
+/* Texto: a escala de corpo da identidade (13/1.5, 12/1.45, 11/1.4, 14/1.6) em
+ * cinco tintas. Margem zero: o espaço entre blocos é layout da tela. */
+.root { margin: 0; color: var(--tx); font-family: var(--font); font-size: var(--fs-corpo); font-weight: var(--fw-400); line-height: var(--lh-corpo); overflow-wrap: anywhere; }
+
+.root[data-size="corpo-l"] { font-size: var(--fs-corpo-l); line-height: var(--lh-corpo-l); }
+.root[data-size="pequeno"] { font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); }
+.root[data-size="legenda"] { font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
+
+.root[data-tone="secondary"] { color: var(--tx2); }
+.root[data-tone="muted"] { color: var(--tx3); }
+.root[data-tone="success"] { color: var(--ok); }
+.root[data-tone="warning"] { color: var(--wa); }
+.root[data-tone="danger"] { color: var(--er); }
+
+.root[data-weight="medium"] { font-weight: var(--fw-500); }
+.root[data-mono] { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.root[data-truncate] { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.root[data-lines] { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; }
+.root[data-lines="2"] { -webkit-line-clamp: 2; }
+.root[data-lines="3"] { -webkit-line-clamp: 3; }

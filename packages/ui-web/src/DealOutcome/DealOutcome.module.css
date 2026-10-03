@@ -1,28 +1,38 @@
-.root { position: fixed; top: var(--space-6); left: 50%; z-index: var(--ui-modalLayer); display: flex; align-items: center; gap: var(--space-3); min-width: min(var(--ui-toastWidth), calc(100vw - var(--space-8))); padding: var(--space-3) var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-md); corner-shape: var(--radius-shape); background: var(--color-surface); color: var(--color-ink); box-shadow: var(--ui-popupShadow); pointer-events: none; transform: translateX(-50%); animation: outcomeIn var(--motion-duration-moderate) var(--motion-ease-out); }
-.root[data-outcome="won"] { border-color: color-mix(in srgb, var(--color-statusSuccess) 38%, var(--color-line)); }
-.root[data-outcome="lost"] { border-color: color-mix(in srgb, var(--color-statusDanger) 30%, var(--color-line)); }
-.root strong, .root span { display: block; }
-.root span { margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-compact); }
-.mark { display: grid; place-items: center; flex: 0 0 var(--ui-controlLarge); width: var(--ui-controlLarge); height: var(--ui-controlLarge); border-radius: var(--radius-full); }
-.mark svg { width: var(--space-4); height: var(--space-4); }
-[data-outcome="won"] .mark { color: var(--color-statusSuccess); background: color-mix(in srgb, var(--color-statusSuccess) 14%, transparent); }
-[data-outcome="lost"] .mark { color: var(--color-statusDanger); background: color-mix(in srgb, var(--color-statusDanger) 12%, transparent); }
-.confetti { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
-.confetti span { position: absolute; top: -var(--space-2); width: var(--space-2); height: var(--space-1); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-statusSuccess); animation: confettiFall var(--motion-duration-moderate) var(--motion-ease-out) both; }
-.confetti span:nth-child(3n) { background: var(--color-accent); }
-.confetti span:nth-child(4n) { background: var(--color-statusWarning); }
-.confetti span:nth-child(1) { left: 8%; }
-.confetti span:nth-child(2) { left: 17%; }
-.confetti span:nth-child(3) { left: 29%; }
-.confetti span:nth-child(4) { left: 42%; }
-.confetti span:nth-child(5) { left: 53%; }
-.confetti span:nth-child(6) { left: 64%; }
-.confetti span:nth-child(7) { left: 75%; }
-.confetti span:nth-child(8) { left: 84%; }
-.confetti span:nth-child(9) { left: 22%; }
-.confetti span:nth-child(10) { left: 38%; }
-.confetti span:nth-child(11) { left: 69%; }
-.confetti span:nth-child(12) { left: 91%; }
-@keyframes outcomeIn { from { opacity: 0; transform: translate(-50%, calc(var(--space-2) * -1)); } to { opacity: 1; transform: translate(-50%, 0); } }
-@keyframes confettiFall { to { opacity: 0; transform: translateY(var(--space-16)) rotate(180deg); } }
-@media (prefers-reduced-motion: reduce) { .root { animation: none; } .confetti { display: none; } }
+/* Desfecho do negócio no formato do toast (origem: Feedback §18): pílula de
+ * carvão de 54, --e3, sobe do fundo em 600 ms e sai em 340 ms. O disco do
+ * estado pula (pop) e, no ganho, solta um halo. */
+.root {
+  position: fixed;
+  top: var(--space-6);
+  left: 0;
+  right: 0;
+  z-index: var(--ui-modalLayer);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: max-content;
+  max-width: min(var(--ui-toastWidth), calc(100vw - var(--space-8)));
+  min-height: var(--toast-h);
+  margin-inline: auto;
+  padding: 0 var(--space-5) 0 var(--space-2);
+  border-radius: var(--r-pill);
+  background: var(--ac);
+  box-shadow: var(--e3);
+  color: var(--acf);
+  font-family: var(--font);
+  pointer-events: none;
+  animation: var(--anim-toast-in) var(--t-toast) var(--ease);
+}
+
+.root[data-leaving] { animation: var(--anim-toast-out) var(--t-toast-out) var(--ease-out) forwards; }
+
+.mark { position: relative; display: grid; flex: none; place-items: center; width: var(--h-md); height: var(--h-md); border-radius: var(--r-pill); color: var(--sobre-cor); animation: var(--anim-pop-icon) var(--t-slow) var(--ease-spring) var(--t-fast) backwards; }
+.mark svg { width: var(--ui-icon); height: var(--ui-icon); }
+.root[data-outcome="won"] .mark { background: var(--ok); }
+.root[data-outcome="lost"] .mark { background: var(--er); }
+.root[data-outcome="won"] .mark::after { content: ""; position: absolute; inset: 0; border-radius: inherit; color: var(--ok); animation: var(--anim-halo) var(--t-halo) var(--ease) var(--t-fast) backwards; }
+
+.copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.copy strong { font-size: var(--fs-corpo); font-weight: var(--fw-500); }
+.copy span { overflow: hidden; color: var(--acf); font-size: var(--fs-pequeno); opacity: 0.72; text-overflow: ellipsis; white-space: nowrap; }

@@ -1,9 +1,40 @@
-.badge,.tag { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-full); background: var(--ui-subtle); color: var(--color-ink); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-compact); line-height: var(--ui-buttonLine); }
-.tag { padding-block: 0; border-radius: var(--radius-full); }
-.alert { padding: var(--space-4); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); background: var(--ui-subtle); color: var(--color-ink); }
-.alert > div { margin-top: var(--space-1); }
-:is(.badge,.alert)[data-tone="danger"] { color: var(--color-statusDanger); }
-:is(.badge,.alert)[data-tone="success"] { color: var(--color-statusSuccess); }
-:is(.badge,.alert)[data-tone="warning"] { color: var(--color-statusWarning); }
-:is(.badge,.alert)[data-tone="info"] { color: var(--color-accent); }
-.skeleton { height: var(--ui-controlMedium); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-line); }
+/* Feedback da identidade (ADR-0044; origem: Controles e feedback, §9–§10).
+ * Selo e etiqueta são do Chip; alerta é da Notification. Aqui ficam a mensagem
+ * de formulário, o esqueleto, o ensō e a barra indeterminada. */
+
+/* Mensagem de formulário: 12 na cor do estado, ícone de 14; abre espaço ao
+ * montar (mesma física do colapso). */
+.formMessage {
+  display: grid;
+  grid-template-rows: 1fr;
+  margin: 0;
+  color: var(--er);
+  font-family: var(--font);
+  font-size: var(--fs-pequeno);
+  line-height: var(--lh-pequeno);
+  animation: var(--anim-open) var(--t-open) var(--ease);
+}
+
+.formMessage[data-tone="success"] { color: var(--ok); }
+.formMessage[data-tone="info"] { color: var(--tx2); }
+.formMessageText { display: flex; align-items: flex-start; gap: var(--space-1-5); min-height: 0; overflow: hidden; }
+.formMessageIcon { display: flex; flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); margin-top: 1px; }
+.formMessageIcon > svg { width: 100%; height: 100%; }
+
+/* Esqueleto: linha de 10 que brilha. O raio é da superfície; numa linha baixa
+ * ele vira pílula sozinho, num bloco alto continua folha. */
+.skeleton {
+  display: block;
+  width: 100%;
+  height: 10px;
+  border-radius: var(--r-item);
+  corner-shape: var(--r-shape);
+  background: linear-gradient(90deg, var(--sf2) 0, var(--bd) 50%, var(--sf2) 100%);
+  background-size: 400px 100%;
+  animation: var(--anim-shimmer) var(--t-shimmer) linear infinite;
+}
+.skeleton[data-round] { border-radius: var(--r-pill); }
+
+/* Barra indeterminada: trilho cavado de 3, a tinta corre da esquerda. */
+.indeterminate { display: block; width: 100%; height: 3px; border-radius: var(--r-pill); background: var(--sf2); overflow: hidden; pointer-events: none; }
+.indeterminate > span { display: block; width: 40%; height: 100%; border-radius: var(--r-pill); background: linear-gradient(90deg, transparent, var(--tx)); animation: var(--anim-indet) var(--t-halo) var(--ease-move) infinite; }

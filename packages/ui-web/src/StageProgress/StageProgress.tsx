@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSlidingIndicator } from "../motion/useSlidingIndicator.js";
 import type { CSSProperties } from "react";
 import { Button } from "../Button/Button.js";
 import { Icon } from "../Icon/Icon.js";
@@ -59,20 +60,32 @@ export function StagePassageHistory({ passages, limit }: { passages: readonly St
   </li>)}</ol>;
 }
 
-/** Trilha segmentada: ordem, etapa atual, tempos e ações preservados (ADR-0042). */
+/**
+ * Trilha de etapas no vocabulário do segmentado (origem: Controles §5 e
+ * Navegação §22): trilho cavado em pílula; a etapa atual é carvão e o carvão
+ * desliza até ela quando o negócio muda de etapa. Etapas vencidas ficam em
+ * tinta 2, as que faltam em tinta 3 — sem cortes em seta, sem cor pesada.
+ * Ganho marca a última etapa com o fundo suave do ok; perdido marca onde parou
+ * com o fundo suave do erro. Ordem, tempos e ações preservados (ADR-0042).
+ */
 export function StageProgress<Id extends string = string>({ stages, currentId, durations, details, outcome, onSelect, onMove, interaction = "popover", label = "Etapas do funil", cooldownRemainingMs = 0 }: StageProgressProps<Id>) {
   const currentStep = useRef<HTMLElement>(null);
+  const track = useRef<HTMLOListElement>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const currentIndex = stages.findIndex((stage) => stage.id === currentId);
   const tone = outcome === "lost" ? "lost" : outcome === "won" ? "won" : "open";
+  /* O carvão (ou o fundo suave do desfecho) mora numa folha só que desliza. */
+  const markedIndex = outcome === "won" ? stages.length - 1 : currentIndex;
+  useSlidingIndicator(track, `${markedIndex}:${tone}:${stages.length}`);
   useEffect(() => { if (typeof currentStep.current?.scrollIntoView === "function") currentStep.current.scrollIntoView({ block: "nearest", inline: "nearest" }); }, [currentId]);
 
   return <div className={s.frame}>
     {cooldownRemainingMs > 0 && <div className={s.cooldown} role="status"><span>Aguarde {Math.ceil(cooldownRemainingMs / 1_000)} s para mover novamente</span><i style={{ "--cooldown-progress": `${Math.min(100, cooldownRemainingMs / 30)}%` } as CSSProperties} /></div>}
-    <ol className={s.root} aria-label={label} data-tone={tone} aria-disabled={cooldownRemainingMs > 0 || undefined}>
+    <ol ref={track} className={s.root} data-slide="" aria-label={label} data-tone={tone} aria-disabled={cooldownRemainingMs > 0 || undefined}>
+    <li data-ind="" className={s.indicator} role="presentation" aria-hidden="true" />
     {stages.map((stage, index) => {
       const state = outcome === "won" ? "done"
         : index < currentIndex ? "done"
@@ -88,7 +101,7 @@ export function StageProgress<Id extends string = string>({ stages, currentId, d
           ? <button ref={state === "current" ? (node) => { currentStep.current = node; } : undefined} type="button" className={s.action} aria-current={state === "current" ? "step" : undefined} onClick={() => onSelect?.(stage.id)}>{content}</button>
           : <span ref={state === "current" ? (node) => { currentStep.current = node; } : undefined} className={s.action} aria-current={state === "current" ? "step" : undefined}>{content}</span>;
       const detail = details?.[stage.id];
-      return <li key={stage.id} className={s.step} data-state={state}>
+      return <li key={stage.id} className={s.step} data-state={state} data-on={index === markedIndex ? "true" : undefined}>
         {interactive && interaction === "popover" ? <Popover open={openId === stage.id} onOpenChange={(open) => { setError(null); setExpandedId(null); setOpenId(open ? stage.id : null); }}>
           <PopoverTrigger render={<button ref={state === "current" ? (node) => { currentStep.current = node; } : undefined} type="button" className={s.action} aria-current={state === "current" ? "step" : undefined}>{content}</button>} />
           <PopoverContent title={stage.label} className={s.stagePopover} {...(s.stagePopoverContent ? { contentClassName: s.stagePopoverContent } : {})}>

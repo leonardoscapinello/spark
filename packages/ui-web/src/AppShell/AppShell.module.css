@@ -1,0 +1,73 @@
+/* Casco do app (ADR-0044): trilho de módulos, sidebar da área e folha de
+ * conteúdo, soltos 16 px da borda sobre a mesa de papel. O trilho aberto
+ * empurra a coluna (a trilha do grid cresce junto, em 550 ms). */
+.root {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: var(--ui-railWidth) var(--ui-sidebarWidth) minmax(0, 1fr);
+  gap: var(--ui-sidebarInset);
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--ui-sidebarInset);
+  color: var(--tx);
+}
+
+.root[data-sidebar="hidden"] { grid-template-columns: var(--ui-railWidth) minmax(0, 1fr); }
+
+@media (min-width: 761px) {
+  .root { transition: grid-template-columns var(--t-default) var(--ease); }
+  .root:has(> [data-rail][data-expanded]) { grid-template-columns: var(--ui-railFlyoutWidth) var(--ui-sidebarWidth) minmax(0, 1fr); }
+  .root[data-sidebar="hidden"]:has(> [data-rail][data-expanded]) { grid-template-columns: var(--ui-railFlyoutWidth) minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .root { display: flex; flex-direction: column; }
+}
+
+/* Folha de conteúdo: pousada, raio 44 em squircle. "workspace" é a área que
+ * desenha as próprias folhas (atendimento); "record" é a ficha que rola por
+ * dentro. Cada tela entra subindo 8 px em 600 ms ao montar. */
+.content {
+  box-sizing: border-box;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-xl);
+  corner-shape: var(--r-shape);
+  background: var(--sf) var(--grain);
+  box-shadow: var(--sh1);
+}
+
+.content[data-surface="workspace"] { overflow: hidden; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.content[data-surface="record"] { overflow: hidden; }
+
+.body { display: contents; }
+.body > * { animation: var(--anim-item) var(--t-item) var(--ease) both; }
+
+/* Navegando: um traço de carvão no alto da folha até a tela chegar. */
+.content[aria-busy="true"]::before {
+  content: "";
+  position: sticky;
+  z-index: 10;
+  display: block;
+  inset-block-start: 0;
+  width: 100%;
+  height: var(--ui-focusWidth);
+  margin-bottom: calc(var(--ui-focusWidth) * -1);
+  background: var(--ac);
+}
+
+.notice { flex-shrink: 0; padding: var(--space-4) var(--space-8) 0; }
+
+@media (max-width: 760px) {
+  .content { flex: 1; }
+  .notice { padding-inline: var(--space-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root { transition: none; }
+}

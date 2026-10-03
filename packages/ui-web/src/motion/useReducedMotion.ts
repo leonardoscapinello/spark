@@ -16,3 +16,6 @@ function getServerSnapshot() { return true; }
 
 /** Uma consulta compartilhada; SSR estático e preferência atualizada em tempo real. */
 export function useReducedMotion() { return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot); }
+
+/** Leitura pontual, fora do React (animações imperativas com WAAPI). */
+export function prefersReducedMotion() { return getMedia()?.matches ?? true; }

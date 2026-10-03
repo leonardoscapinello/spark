@@ -1,16 +1,18 @@
-.root { min-width: 0; background: var(--color-surface); border: var(--ui-hairline) solid var(--color-line); border-radius: var(--ui-cardRadius); corner-shape: var(--radius-shape); overflow: hidden; }
-.tabs { position: relative; isolation: isolate; display: flex; flex-wrap: nowrap; gap: var(--space-1); padding: var(--space-2); overflow-x: auto; scrollbar-width: thin; border-bottom: var(--ui-hairline) solid var(--color-line); background: var(--color-surface2); }
-.tab { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); flex: 1 0 auto; min-height: var(--ui-controlMedium); padding: var(--space-2); border: 0; border-radius: var(--radius-full); background: transparent; color: var(--color-inkMuted); font: inherit; font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-compact); font-weight: var(--typography-weight-medium); white-space: nowrap; cursor: pointer; transition: color var(--motion-duration-control) var(--motion-ease-out); }
+/* Compositor de registro (ficha do negócio): folha pousada de raio 28 com as
+ * formas de registrar num trilho cavado; a folha do item ativo desliza até
+ * ele (Base UI mede, a física é a da identidade). */
+.root { min-width: 0; border: var(--ui-hairline) solid var(--bd); border-radius: var(--r-md); corner-shape: var(--r-shape); background: var(--sf) var(--grain); box-shadow: var(--sh1); overflow: hidden; }
+.tabs { position: relative; isolation: isolate; display: flex; flex-wrap: nowrap; gap: 2px; margin: var(--space-2); padding: var(--space-1); overflow-x: auto; scrollbar-width: none; border-radius: var(--r-pill); background: var(--sf2); box-shadow: var(--deb); }
+.tab { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1-5); flex: 1 0 auto; min-height: 30px; padding: 0 var(--space-3); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--tx3); font-family: var(--font); font-size: var(--fs-pequeno); font-weight: var(--fw-500); line-height: var(--lh-controle); white-space: nowrap; cursor: pointer; }
 .tab svg { width: var(--ui-iconSm); height: var(--ui-iconSm); flex-shrink: 0; }
-.tab[data-active], .tab:hover:not([data-disabled]) { color: var(--color-ink); }
-.tab[data-disabled] { color: var(--ui-disabledInk); cursor: not-allowed; }
-.tab:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
-.indicator { position: absolute; z-index: 0; top: 0; left: 0; width: var(--active-tab-width); height: var(--active-tab-height); transform: translate(var(--active-tab-left), var(--active-tab-top)); background: var(--ui-selected); box-shadow: var(--ui-selectionShadow); border-radius: var(--radius-full); transition: transform var(--motion-duration-selection) var(--motion-ease-out), width var(--motion-duration-selection) var(--motion-ease-out); pointer-events: none; }
-.body { padding: var(--space-3); min-width: 0; animation: reveal var(--motion-duration-control) var(--motion-ease-out); }
-.prompt { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; min-height: var(--ui-controlLarge); padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--ui-fieldRadius); background: transparent; color: var(--color-inkMuted); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); text-align: start; cursor: pointer; transition: background-color var(--motion-duration-control) var(--motion-ease-out), color var(--motion-duration-control) var(--motion-ease-out); }
+.tab[data-active] { color: var(--tx); }
+.tab[data-disabled] { color: var(--tx4); cursor: not-allowed; }
+.tab:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+@media (hover: hover) and (pointer: fine) { .tab:hover:not([data-disabled], [data-active]) { color: var(--tx2); } }
+.indicator { position: absolute; z-index: 0; top: 0; left: 0; width: var(--active-tab-width); height: var(--active-tab-height); transform: translate(var(--active-tab-left), var(--active-tab-top)); background: var(--sf3); box-shadow: var(--sh1); border-radius: var(--r-pill); transition: transform var(--t-default) var(--ease), width var(--t-default) var(--ease), height var(--t-default) var(--ease); pointer-events: none; }
+.body { padding: 0 var(--space-3) var(--space-3); min-width: 0; animation: var(--anim-item) var(--t-base) var(--ease) backwards; }
+.prompt { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; min-height: var(--h-lg); padding: 0 var(--space-3) 0 var(--pad-md); border: 0; border-radius: var(--r-pill); background: var(--sf2); box-shadow: var(--deb); color: var(--tx3); font-family: var(--font); font-size: var(--fs-corpo); text-align: start; cursor: pointer; }
 .prompt svg { flex-shrink: 0; width: var(--ui-iconSm); height: var(--ui-iconSm); }
-.prompt:hover:not(:disabled) { background: var(--color-surface2); color: var(--color-ink); }
-.prompt:disabled { cursor: not-allowed; }
-.prompt:focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: calc(-1 * var(--ui-focusWidth)); }
-@keyframes reveal { from { opacity: 0; transform: translateY(var(--space-1)); } }
-@media (prefers-reduced-motion: reduce) { .tab, .indicator, .prompt { transition: none; } .body { animation: none; } }
+@media (hover: hover) and (pointer: fine) { .prompt:hover:not(:disabled) { color: var(--tx2); } }
+.prompt:disabled { color: var(--tx4); cursor: not-allowed; }
+.prompt:focus-visible { outline: none; box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ring); }

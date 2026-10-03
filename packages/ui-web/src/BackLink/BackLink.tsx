@@ -7,11 +7,13 @@ export type BackLinkProps = Omit<ComponentProps<"a">, "children"> & {
   render?: ReactElement;
 };
 
+/** Voltar (origem: Padrões, "Voltar"): tinta 2, 500 12, pílula de 30 com chevron de 14; o hover pinta de --acs. */
 export function BackLink({ children, render, className, ...props }: BackLinkProps) {
   const linkProps = {
     ...props,
+    "data-press": "ghost",
     className: [styles.root, className].filter(Boolean).join(" "),
-    children: <><Icon name="right" className={styles.arrow} /><span>{children}</span></>,
+    children: <><Icon name="chevronLeft" className={styles.arrow} /><span>{children}</span></>,
   };
   return render ? cloneElement(render as ReactElement<ComponentProps<"a">>, linkProps) : <a {...linkProps} />;
 }

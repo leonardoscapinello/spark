@@ -1,0 +1,19 @@
+/* A aparência da linha é da ListRow; aqui só o botão nativo zerado e o ponto
+ * da cor do tipo (8px, como no ActionList). */
+
+.button {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.button:disabled { cursor: not-allowed; opacity: var(--disabled); }
+
+.title { display: flex; align-items: center; gap: var(--space-1-5); min-width: 0; }
+.titleText { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dot { flex: none; width: var(--space-2); height: var(--space-2); border-radius: var(--r-pill); background: var(--row-dot); }

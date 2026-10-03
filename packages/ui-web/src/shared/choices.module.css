@@ -1,22 +1,137 @@
-.label { display: flex; align-items: center; gap: var(--space-2); font-family: var(--typography-fontFamily-body); color: var(--color-ink); font-size: var(--typography-size-sm); line-height: var(--ui-tabLine); cursor: pointer; }
-.label:has([data-disabled]) { color: var(--ui-disabledInk); cursor: not-allowed; }
-.checkbox,.radio { box-sizing: border-box; display: flex; justify-content: center; align-items: center; width: var(--space-5); height: var(--space-5); padding: 0; background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); border: var(--ui-hairline) solid var(--color-lineStrong); border-radius: var(--ui-checkboxRadius); flex-shrink: 0; }
-.checkbox[data-checked],.checkbox[data-indeterminate],.radio[data-checked] { background: var(--ui-buttonBg); border-color: var(--ui-buttonBg); color: var(--ui-buttonInk); }
-.indicator { display: flex; align-items: center; justify-content: center; }
-.checkbox .indicator > svg { width: var(--ui-checkboxMark); height: var(--ui-checkboxMark); }
-.radio { border-radius: var(--radius-full); }
-.dot { width: var(--space-2); height: var(--space-2); background: var(--ui-buttonInk); border-radius: var(--radius-full); }
-.group { display: flex; flex-direction: column; gap: var(--space-3); }
-.legend { font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); color: var(--color-ink); }
-.switch { box-sizing: border-box; width: var(--ui-switchWidth); height: var(--ui-switchHeight); padding: var(--ui-switchInset); border: 0; border-radius: var(--radius-full); background: var(--color-surface2); box-shadow: var(--ui-fieldShadow); flex-shrink: 0; cursor: pointer; }
-.switch[data-checked] { background: var(--ui-buttonBg); }
-.thumb { display: block; width: var(--ui-switchThumb); height: var(--ui-switchThumb); border-radius: var(--radius-full); background: var(--ui-selected); box-shadow: var(--ui-panelShadow); transition: transform var(--motion-duration-selection) var(--motion-ease-spring); }
-.thumb[data-checked] { transform: translateX(calc(var(--ui-switchWidth) - var(--ui-switchThumb) - var(--ui-switchInset) * 2)); }
-:is(.checkbox,.radio,.switch):focus-visible { outline: var(--ui-focusWidth) solid var(--color-focusRing); outline-offset: var(--ui-focusOffset); }
-:is(.checkbox,.radio,.switch)[data-disabled] { opacity: var(--ui-disabledOpacity); cursor: not-allowed; }
-@media (prefers-reduced-motion: reduce) { .thumb { transition: none; } }
+/* Escolhas da identidade (ADR-0044; origem: Controles). Peças cavadas que,
+ * ligadas, viram carvão: switch 42×24 com pastilha de 18 que salta com mola,
+ * checkbox 20 em squircle com ✓ desenhado num traço, rádio 20 com ponto que
+ * nasce do centro. */
 
-.checkbox { corner-shape: var(--radius-shape); }
-.checkbox, .radio, .switch { transition: background-color var(--motion-duration-control) var(--motion-ease-out), box-shadow var(--motion-duration-selection) var(--motion-ease-out); }
-:is(.checkbox,.radio)[data-checked], .checkbox[data-indeterminate] { box-shadow: var(--ui-buttonShadow); }
-@media (prefers-reduced-motion: reduce) { .checkbox, .radio, .switch { transition: none; } }
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--h-md);
+  color: var(--tx);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-corpo);
+  cursor: pointer;
+}
+
+.label:has([data-disabled]) { color: var(--tx4); cursor: not-allowed; }
+
+.group { display: flex; flex-direction: column; gap: var(--space-1); }
+.legend { font-family: var(--font); font-size: var(--fs-pequeno); font-weight: var(--fw-500); color: var(--tx); }
+
+/* Checkbox: caixa 20, raio 7 squircle. Escurece em 310 ms; a tinta do ✓ chega
+ * 60 ms depois, desenhada em 510 ms. */
+.checkbox {
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-checkbox);
+  height: var(--ui-checkbox);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-check);
+  corner-shape: var(--r-shape);
+  background: var(--sf2);
+  box-shadow: var(--deb), inset 0 0 0 var(--ui-hairline) var(--bd2);
+  outline: none;
+  transition: background-color var(--t-check) var(--ease), box-shadow var(--t-check) var(--ease);
+}
+
+.checkbox:is([data-checked], [data-indeterminate]) { background: var(--tx); box-shadow: var(--ink); }
+
+.indicator { display: flex; align-items: center; justify-content: center; }
+
+.mark { width: var(--ui-checkboxMark); height: var(--ui-checkboxMark); fill: none; stroke: var(--sf); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+
+.mark path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  transition: stroke-dashoffset var(--t-knob) var(--ease) var(--t-check-delay);
+}
+
+.checkbox[data-checked] .mark path { stroke-dashoffset: 0; }
+
+.dash { display: block; width: 9px; height: 2.4px; border-radius: 2px; background: var(--sf); }
+
+/* Rádio: bolinha 20; ligado, o ponto de 7 nasce com mola forte. */
+.radio {
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-checkbox);
+  height: var(--ui-checkbox);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  box-shadow: var(--deb), inset 0 0 0 var(--ui-hairline) var(--bd2);
+  outline: none;
+  transition: background-color var(--t-chevron) var(--ease), box-shadow var(--t-chevron) var(--ease);
+}
+
+.radio[data-checked] { background: var(--tx); box-shadow: var(--ink); }
+
+.dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--sf);
+  transform: scale(0);
+  transition: transform var(--t-dot) var(--ease-pop);
+}
+
+.radio[data-checked] .dot { transform: scale(1); }
+
+/* Switch: trilho cavado, pastilha em folha; ligado, o trilho vira carvão e a
+ * pastilha corre 18px com mola em 510 ms. */
+.switch {
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: var(--ui-switchWidth);
+  height: var(--ui-switchHeight);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  box-shadow: var(--deb), inset 0 0 0 var(--ui-hairline) var(--bd);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--t-track) var(--ease), box-shadow var(--t-track) var(--ease);
+}
+
+.switch[data-checked] { background: var(--tx); box-shadow: var(--sombra-trilho-on); }
+
+.thumb {
+  position: absolute;
+  top: var(--ui-switchInset);
+  left: var(--ui-switchInset);
+  display: block;
+  width: var(--ui-switchThumb);
+  height: var(--ui-switchThumb);
+  border-radius: var(--r-pill);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sombra-pastilha);
+  transition: transform var(--t-knob) var(--ease-spring);
+}
+
+.thumb[data-checked] { transform: translateX(calc(var(--ui-switchWidth) - var(--ui-switchThumb) - var(--ui-switchInset) * 2)); }
+
+/* Foco: halo de 3px; desabilitado: desbotado, sem relevo. */
+:is(.checkbox, .radio, .switch):focus-visible { box-shadow: var(--deb), 0 0 0 var(--ui-focusWidth) var(--ring); }
+:is(.checkbox, .radio):is([data-checked], [data-indeterminate]):focus-visible { box-shadow: var(--ink), 0 0 0 var(--ui-focusWidth) var(--ring); }
+.switch[data-checked]:focus-visible { box-shadow: var(--sombra-trilho-on), 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+:is(.checkbox, .radio, .switch)[data-disabled] { opacity: 0.45; cursor: not-allowed; }
+:is(.checkbox, .radio):not([data-checked], [data-indeterminate])[data-disabled] { box-shadow: inset 0 0 0 var(--ui-hairline) var(--bd); }
+
+@media (forced-colors: active) {
+  :is(.checkbox, .radio, .switch) { border: var(--ui-hairline) solid CanvasText; }
+  :is(.checkbox, .radio, .switch):focus-visible { outline: var(--ui-focusWidth) solid CanvasText; }
+}

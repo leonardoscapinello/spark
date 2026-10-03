@@ -26,6 +26,12 @@ export interface TimelineItem {
   entries?: readonly TimelineItem[];
 }
 
+/**
+ * Linha do tempo (origem: Perfil §5, "Atividade / Linha do tempo"): grupos por
+ * dia com ponto de 7px em tinta 3 e título 13/500; os eventos penduram num fio
+ * de 1px (--bd2), cada um com o seu ponto de 7px e anel de 3px do papel. Hora
+ * em mono; quem fez, em avatar de 24. Realce de tinta no hover.
+ */
 export function Timeline({ items, emptyText = "Nenhum evento registrado.", initialCount, pageSize = 25, density = "default", groupByDay = false }: { items: readonly TimelineItem[]; emptyText?: string; initialCount?: number; pageSize?: number; density?: "default" | "compact"; groupByDay?: boolean }) {
   const [visibleCount, setVisibleCount] = useState(initialCount ?? items.length);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -45,7 +51,7 @@ export function Timeline({ items, emptyText = "Nenhum evento registrado.", initi
     const previousItem = visibleItems[index - 1];
     const startsDay = groupByDay && (!previousItem || dayKey(previousItem.timestamp) !== dayKey(item.timestamp));
     return <Fragment key={item.id}>
-      {startsDay && <li className={styles.dayBreak} role="presentation"><time dateTime={item.timestamp}>{formatDay(item.timestamp)}</time></li>}
+      {startsDay && <li className={styles.dayBreak} role="presentation"><span className={styles.dayDot} aria-hidden="true" /><time dateTime={item.timestamp}>{formatDay(item.timestamp)}</time></li>}
       <li className={styles.item} data-tone={item.tone ?? "neutral"}>
         <span className={styles.marker} aria-hidden="true" />
         <div className={styles.content}>

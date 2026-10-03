@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from "react";
 import { Button } from "../Button/Button.js";
 import { Icon } from "../Icon/Icon.js";
+import { Surface } from "../Surface/Surface.js";
 import styles from "./CalendarWeek.module.css";
 
 export interface CalendarWeekItem {
@@ -27,6 +28,11 @@ function mondayOf(date: Date): Date {
   return monday;
 }
 
+/**
+ * Agenda da semana (origem: Perfil §7): folha pousada, intervalo 15/500, setas
+ * de tinta, cabeçalho do dia com número em mono numa pílula de 28 (hoje com
+ * anel de 1px), horas em mono e compromissos em folhas pequenas.
+ */
 export function CalendarWeek({ label, week, items, onWeekChange }: CalendarWeekProps) {
   const titleId = useId();
   const monday = mondayOf(week);
@@ -46,13 +52,13 @@ export function CalendarWeek({ label, week, items, onWeekChange }: CalendarWeekP
   const todayKey = dateKey(new Date());
   const rangeFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
-  return <section className={styles.root} aria-labelledby={titleId}>
+  return <Surface as="section" className={styles.root ?? ""} aria-labelledby={titleId}>
     <header className={styles.header}>
-      <div><h2 id={titleId}>{rangeFormatter.format(days[0])} – {rangeFormatter.format(days[6])}</h2><span>{visible.length} {visible.length === 1 ? "atividade nesta semana" : "atividades nesta semana"}</span></div>
+      <div className={styles.heading}><h2 id={titleId}>{rangeFormatter.format(days[0])} – {rangeFormatter.format(days[6])}</h2><span>{visible.length} {visible.length === 1 ? "atividade nesta semana" : "atividades nesta semana"}</span></div>
       <div className={styles.controls} role="group" aria-label={`Navegar na agenda de ${label}`}>
-        <Button shape="pill" size="sm" variant="secondary" onClick={() => onWeekChange(new Date())}>Hoje</Button>
-        <Button shape="pill" size="sm" variant="ghost" iconOnly aria-label="Semana anterior" onClick={() => onWeekChange(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 7))}><Icon name="right" /></Button>
-        <Button shape="pill" size="sm" variant="ghost" iconOnly aria-label="Próxima semana" onClick={() => onWeekChange(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7))}><Icon name="right" /></Button>
+        <Button size="sm" variant="secondary" onClick={() => onWeekChange(new Date())}>Hoje</Button>
+        <Button size="sm" variant="ghost" iconOnly icon={<Icon name="chevronLeft" />} aria-label="Semana anterior" onClick={() => onWeekChange(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 7))} />
+        <Button size="sm" variant="ghost" iconOnly icon={<Icon name="chevronRight" />} aria-label="Próxima semana" onClick={() => onWeekChange(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7))} />
       </div>
     </header>
     <div className={styles.scroll} role="region" aria-label={`Agenda semanal de ${label}`} tabIndex={0}>
@@ -67,5 +73,5 @@ export function CalendarWeek({ label, week, items, onWeekChange }: CalendarWeekP
         </div>)}
       </div>
     </div>
-  </section>;
+  </Surface>;
 }

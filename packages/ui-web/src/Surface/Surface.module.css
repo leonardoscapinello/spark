@@ -1,0 +1,32 @@
+/* Folha nas quatro alturas da identidade (ADR-0044). */
+.root {
+  box-sizing: border-box;
+  min-width: 0;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-xl);
+  corner-shape: var(--r-shape);
+  background: var(--sf) var(--grain);
+  box-shadow: var(--sh1);
+  color: var(--tx);
+}
+
+.root[data-elevation="erguida"] { box-shadow: var(--e2); }
+.root[data-elevation="segurada"] { background: var(--sf3) var(--grain); box-shadow: var(--e3); }
+.root[data-elevation="cavada"] { border-color: transparent; background: var(--sf2); box-shadow: var(--deb); }
+
+.root[data-radius="sm"] { border-radius: var(--r-sm); }
+.root[data-radius="item"] { border-radius: var(--r-item); }
+.root[data-radius="rico"] { border-radius: var(--r-rico); }
+.root[data-radius="lista"] { border-radius: var(--r-lista); }
+.root[data-radius="md"] { border-radius: var(--r-md); }
+.root[data-radius="bloco"] { border-radius: var(--r-bloco); }
+.root[data-radius="lg"] { border-radius: var(--r-lg); }
+.root[data-radius="kpi"] { border-radius: var(--r-kpi); }
+.root[data-radius="2xl"] { border-radius: var(--r-2xl); }
+
+@media (hover: hover) and (pointer: fine) {
+  .root[data-interactive]:hover { box-shadow: var(--e2); transform: translateY(calc(-1 * var(--press-y))); }
+}
+
+.root[data-interactive] { cursor: pointer; }
+.root[data-interactive]:focus-visible { outline: none; box-shadow: var(--sh1), 0 0 0 var(--ui-focusWidth) var(--ring); }

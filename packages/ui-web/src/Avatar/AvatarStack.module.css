@@ -1,0 +1,30 @@
+/* Grupo de avatares: 24 sobrepostos em −8 px, anel de 2 px do papel onde o
+ * grupo está (--stack-ring; o botão define o dele). */
+.root {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+.root > * {
+  border-radius: var(--r-pill);
+  box-shadow: 0 0 0 2px var(--stack-ring, var(--sf));
+}
+
+.root > * + * { margin-inline-start: -8px; }
+
+.more {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--space-1);
+  background: var(--sf2);
+  color: var(--tx2);
+  font-family: var(--font);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-500);
+  line-height: 1;
+}

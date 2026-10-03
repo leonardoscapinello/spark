@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { Input } from "../Input/Input.js";
 import { Button } from "../Button/Button.js";
 import { Icon } from "../Icon/Icon.js";
@@ -11,12 +11,12 @@ export interface CrmColorOption {
 }
 
 export const CRM_COLOR_OPTIONS: readonly CrmColorOption[] = [
-  { value: "neutral", label: "Cinza", swatch: "var(--color-inkMuted)" },
-  { value: "blue", label: "Azul", swatch: "var(--color-accent)" },
-  { value: "green", label: "Verde", swatch: "var(--color-statusSuccess)" },
-  { value: "red", label: "Vermelho", swatch: "var(--color-statusDanger)" },
-  { value: "amber", label: "Âmbar", swatch: "var(--color-statusWarning)" },
-  { value: "purple", label: "Roxo", swatch: "color-mix(in srgb, var(--color-accent), var(--color-statusDanger))" },
+  { value: "neutral", label: "Cinza", swatch: "var(--tx2)" },
+  { value: "blue", label: "Azul", swatch: "var(--ac)" },
+  { value: "green", label: "Verde", swatch: "var(--ok)" },
+  { value: "red", label: "Vermelho", swatch: "var(--er)" },
+  { value: "amber", label: "Âmbar", swatch: "var(--wa)" },
+  { value: "purple", label: "Roxo", swatch: "color-mix(in srgb, var(--ac), var(--er))" },
   { value: "#06BFF5", label: "Ciano", swatch: "#06BFF5" },
   { value: "#C8A65D", label: "Dourado", swatch: "#C8A65D" },
   { value: "#6B5DD3", label: "Íris", swatch: "#6B5DD3" },
@@ -78,3 +78,16 @@ export function ColorPicker({ label, value, onValueChange, options = CRM_COLOR_O
 }
 
 function isHex(value: string): boolean { return /^#[0-9a-fA-F]{6}$/.test(value); }
+
+/**
+ * Cor de marca com amostra (aparência da organização): rótulo 12/500, uma
+ * frase de apoio em tinta 3 e a amostra em pílula cavada de 40 que abre o
+ * seletor do sistema.
+ */
+export function ColorInput({ label, description, value, onValueChange }: { label: string; description?: string; value: string; onValueChange: (value: string) => void }) {
+  const id = useId();
+  return <div className={s.colorInput}>
+    <label htmlFor={id} className={s.colorInputCopy}><span className={s.colorInputLabel}>{label}</span>{description && <span className={s.colorInputDescription}>{description}</span>}</label>
+    <input id={id} className={s.colorInputSwatch} type="color" value={value} onChange={(event) => onValueChange(event.currentTarget.value)} />
+  </div>;
+}

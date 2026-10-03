@@ -1,0 +1,51 @@
+/* Acesso (ADR-0044; origem: Padrões, "Login"). O cartão é folha erguida de
+ * raio 44 sobre a moldura cavada (--sf2 + --deb, raio 56). */
+.card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(360px, 100%);
+  padding: var(--space-8) 28px;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-xl);
+  corner-shape: var(--r-shape);
+  background: var(--sf) var(--grain);
+  box-shadow: var(--e2);
+  color: var(--tx);
+  font-family: var(--font);
+  animation: var(--anim-rise) var(--t-rise) var(--ease);
+}
+
+.header { display: flex; flex-direction: column; gap: var(--space-1-5); }
+.mark { display: flex; margin-bottom: 10px; }
+.mark > img { display: block; width: auto; height: 40px; }
+.header h1 { margin: 0; font-size: var(--fs-h2); font-weight: var(--fw-titulo); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); }
+.header p { margin: 0; color: var(--tx2); font-size: var(--fs-corpo); line-height: var(--lh-corpo); }
+
+/* Entrando…: ensō de 20 e uma frase, no lugar do formulário. */
+.pending { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); padding: var(--space-10) 0; color: var(--tx2); font-size: var(--fs-corpo); }
+.pending > span:first-child { color: var(--tx); }
+
+.shell { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); min-height: 100vh; background: var(--bg) var(--grain); color: var(--tx); font-family: var(--font); }
+.intro { display: flex; flex-direction: column; min-height: 100%; padding: var(--space-10) var(--space-12); }
+.brand { display: flex; }
+.brand > a, .brand > img { display: inline-flex; }
+.brand img { display: block; width: min(100%, var(--ui-menuWidth)); height: auto; }
+.introCopy { display: flex; flex-direction: column; gap: var(--space-4); max-width: var(--ui-popupMaxWidth); margin-block: auto; }
+.headline { margin: 0; font-family: var(--font-display); font-size: clamp(var(--fs-h1), 3.2vw, var(--fs-display)); font-weight: var(--fw-titulo); line-height: var(--lh-display); letter-spacing: var(--ls-display); text-wrap: balance; }
+.lead { max-width: var(--ui-drawerWidth); margin: 0; color: var(--tx2); font-size: var(--fs-corpo-l); line-height: var(--lh-corpo-l); }
+.footer { margin: var(--space-10) 0 0; color: var(--tx3); font-size: var(--fs-pequeno); }
+.stage { display: flex; align-items: center; justify-content: center; margin: var(--space-4); padding: var(--space-8) var(--space-6); border-radius: var(--r-2xl); corner-shape: var(--r-shape); background: var(--sf2); box-shadow: var(--deb); }
+
+@media (max-width: 1024px) {
+  .shell { display: flex; flex-direction: column; min-height: 100dvh; }
+  .intro { min-height: 0; padding: var(--space-6) var(--space-4) 0; }
+  .brand img { width: min(100%, calc(var(--space-16) * 3)); }
+  .introCopy, .footer { display: none; }
+  .stage { flex: 1; align-items: flex-start; margin: 0; padding: var(--space-6) var(--space-4); border-radius: 0; background: transparent; box-shadow: none; }
+}
+
+@media (min-width: 761px) and (max-width: 1024px) {
+  .stage { align-items: center; }
+}

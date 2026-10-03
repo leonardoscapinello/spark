@@ -1,0 +1,15 @@
+.root { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); min-width: 0; }
+.copy { display: flex; flex-direction: column; gap: var(--space-1-5); min-width: 0; }
+.title { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--tx); font-weight: var(--fw-titulo); }
+.icon { display: flex; flex: none; width: var(--ui-icon); height: var(--ui-icon); color: var(--tx2); }
+.icon > svg { width: 100%; height: 100%; }
+.meta { color: var(--tx3); font-family: var(--mono); font-size: var(--fs-legenda); }
+.description { max-width: 580px; margin: 0; color: var(--tx2); font-size: var(--fs-corpo); line-height: 1.55; }
+.actions { display: flex; flex: none; align-items: center; gap: var(--space-2); }
+
+.root[data-level="page"] .title { font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); }
+.root[data-level="page"] .icon { width: var(--ui-iconLg); height: var(--ui-iconLg); }
+.root[data-level="section"] .title { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); }
+.root[data-level="card"] .title { font-size: var(--fs-card); line-height: 1.2; letter-spacing: var(--ls-h4); }
+.root[data-level="block"] .title { font-size: var(--fs-corpo); line-height: var(--lh-h4); }
+.root[data-level="block"] .icon { width: var(--ui-iconSm); height: var(--ui-iconSm); }

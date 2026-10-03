@@ -1,0 +1,112 @@
+/* Campo de resposta (identidade: Chat §17/§18, Textarea §10, Botões). Folha
+ * pousada de raio 28 em squircle, padding 14 16 12, 10 entre as faixas. */
+.root {
+  --g: 10px;
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--g);
+  min-width: 0;
+  padding: 14px var(--space-4) var(--space-3);
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-md);
+  corner-shape: var(--r-shape);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+  color: var(--tx);
+  font-family: var(--font);
+}
+
+/* Escrevendo, a folha se ergue. */
+.root:focus-within { box-shadow: var(--e2); }
+
+/* Nota: véu suave de aviso sobre a folha inteira — não um bloco bege. */
+.root::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  corner-shape: var(--r-shape);
+  background: var(--was);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.root[data-mode="note"]::before { opacity: 0.6; }
+.root[data-mode="note"] { border-color: color-mix(in srgb, var(--wa) 20%, var(--bd)); }
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; }
+.context { display: flex; flex: 0 1 auto; justify-content: flex-end; min-width: 0; }
+
+.notice { display: grid; grid-template-rows: 1fr; animation: var(--anim-open) var(--t-collapse) var(--ease) both; }
+.notice > div { min-height: 0; overflow: hidden; }
+
+.text {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: var(--h-lg);
+  max-height: calc(var(--ui-composerExpandedHeight) * 2);
+  margin: 0;
+  padding: 2px 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--tx);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-corpo);
+  resize: none;
+  outline: none;
+  overflow-y: auto;
+}
+
+.text::placeholder { color: var(--tx3); }
+
+.file {
+  --icon: var(--ui-iconSm);
+  box-sizing: border-box;
+  display: flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  min-height: var(--h-sm);
+  padding: 0 var(--space-1) 0 10px;
+  border-radius: var(--r-pill);
+  background: var(--sf2);
+  color: var(--tx2);
+  font-size: var(--fs-pequeno);
+}
+
+.fileName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file:not(:has(button)) { padding-inline-end: var(--space-3); }
+
+.bar { display: flex; align-items: center; gap: var(--space-2); min-height: var(--h-md); }
+.tools { display: flex; flex: 1 1 auto; align-items: center; gap: 2px; min-width: 0; margin-inline-start: calc(var(--space-1) * -1); }
+
+.counter {
+  flex: none;
+  color: var(--tx3);
+  font-family: var(--mono);
+  font-size: var(--fs-legenda);
+  font-variant-numeric: tabular-nums;
+}
+
+.counter[data-over] { color: var(--er); }
+
+.preview {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  corner-shape: var(--r-shape);
+  background: var(--sf2);
+  box-shadow: var(--deb);
+  color: var(--tx2);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-corpo);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,26 @@
+/* Barra flutuante (folha erguida em pílula). Mesma altura dos botões de 28
+ * mais o padding de 4: 38 no total, como a barra do segmentado. Estreita
+ * demais, rola de lado em vez de vazar da caixa. */
+
+.root {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: var(--space-1);
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-pill);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--e2);
+  color: var(--tx);
+  font-family: var(--font);
+}
+
+.root > * { flex: none; }
+.separator { flex: none; align-self: stretch; width: var(--ui-hairline); margin: var(--space-1); background: var(--bd); }
+
+.text { display: inline-flex; align-items: center; min-width: 0; height: var(--h-sm); padding-inline: var(--space-2) var(--space-3); }

@@ -14,7 +14,7 @@ export type ErrorTextProps = ComponentPropsWithoutRef<typeof BaseField.Error>;
  * uma regra de validação HTML5 (required, pattern...), que não é o nosso
  * modelo. O pai controla a visibilidade renderizando <ErrorText> condicionalmente.
  */
-export function ErrorText({ className, match = true, ...rest }: ErrorTextProps) {
+export function ErrorText({ className, match = true, children, ...rest }: ErrorTextProps) {
   const cls = className ? `${styles.root} ${className}` : styles.root;
-  return <BaseField.Error className={cls} match={match} {...rest} />;
+  return <BaseField.Error className={cls} match={match} {...rest}><span className={styles.text}>{children}</span></BaseField.Error>;
 }

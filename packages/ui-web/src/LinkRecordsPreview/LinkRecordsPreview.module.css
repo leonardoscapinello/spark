@@ -1,0 +1,16 @@
+/* Prévia do vínculo: papel cavado com os dois registros e a ponte tracejada;
+ * o elo é um selo de carvão que nasce com mola. */
+.root { display: grid; gap: var(--space-4); color: var(--tx); font-family: var(--font); font-size: var(--fs-corpo); }
+.diagram { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; padding: var(--space-5) var(--space-4); }
+.node { display: grid; justify-items: center; gap: var(--space-2); min-width: 0; font-weight: var(--fw-500); text-align: center; }
+.name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bridge { position: relative; display: grid; place-items: center; width: var(--space-16); height: var(--space-10); }
+.bridge::before { content: ""; position: absolute; inset-inline: 0; top: 50%; border-top: 1.5px dashed var(--bd2); }
+.badge { position: relative; display: grid; place-items: center; width: var(--space-8); height: var(--space-8); border-radius: var(--r-pill); background: var(--ac); box-shadow: var(--ink); color: var(--acf); animation: var(--anim-badge-in) var(--t-base) var(--ease-pop) both; }
+.badge > svg { width: var(--ui-icon); height: var(--ui-icon); }
+.lead { margin: 0; line-height: var(--lh-corpo); }
+.lead strong, .effects strong { font-weight: var(--fw-500); }
+.effects { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; color: var(--tx2); }
+.effects li { display: flex; align-items: center; gap: var(--space-2); }
+.effects li > svg { flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--ok); }
+.note { margin: 0; color: var(--tx3); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); }

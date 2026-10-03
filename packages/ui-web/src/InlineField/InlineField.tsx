@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Icon, type IconName } from "../Icon/Icon.js";
+import { Spinner } from "../Spinner/Spinner.js";
 import { Tooltip } from "../Tooltip/Tooltip.js";
 import s from "./InlineField.module.css";
 
@@ -7,21 +8,22 @@ export interface InlineFieldProps {
   label: string;
   /** O que se lê quando o campo está parado. */
   value: ReactNode;
-  /** Identidade visual ao lado do texto, sem perder o nome acessível do campo. */
+  /** Avatar de 24 (pigmento) antes do nome de um registro. */
   leading?: ReactNode;
-  /** Sem valor: o texto sai apagado e convida a preencher. */
+  /** Sem valor: a mesma caixa mostra «Adicionar» em tinta 3 com o ＋. */
   empty?: boolean;
-  /** Só leitura: continua legível, deixa de ser clicável. */
+  /** Só leitura: mesma caixa, sem ação. Sem `children` o campo também é só leitura. */
   disabled?: boolean;
   /** Marca o campo como obrigatório ao lado do rótulo. */
   required?: boolean;
-  /** Campo que precisa da largura toda: o controle desce para baixo do rótulo. */
+  /** Campo que precisa da largura toda (texto longo): o rótulo sobe e a caixa cresce. */
   block?: boolean;
+  /** Valor em mono tabular: data, dinheiro, documento, telefone. */
+  numeric?: boolean;
   hint?: ReactNode;
   /**
    * Endereço que o valor aponta. Com ele, o valor parado vira link: um clique
-   * edita, dois cliques abrem. Quem só quer ver para onde vai não precisa
-   * entrar em modo de edição para descobrir.
+   * edita, dois cliques abrem.
    */
   href?: string;
   preview?: ReactNode;
@@ -29,46 +31,57 @@ export interface InlineFieldProps {
   /** Descarta o rascunho antes de fechar por Escape ou pelo botão cancelar. */
   onCancel?: () => void;
   /**
-   * Ação ao lado do valor, além de editar. É como «Pessoa» e «Empresa» abrem a
-   * ficha sem trocar de tela: clicar no valor continua editando o vínculo, e o
-   * botão ao lado abre o registro. Botão irmão, nunca dentro do valor — um
-   * botão dentro de outro não é HTML válido nem navegável por teclado.
+   * Ação sobre o valor (abrir a ficha da pessoa, por exemplo): botão de tinta
+   * que aparece no hover, na ponta direita da mesma caixa. Botão irmão do
+   * valor, nunca dentro dele.
    */
   action?: { label: string; icon: IconName; onClick: () => void };
+  /** Começa editando (histórias e telas que abrem já no campo). */
+  defaultEditing?: boolean;
   /**
    * O campo de edição. Recebe `close`, que a tela chama depois de gravar —
    * um `Select` fecha ao escolher, um texto fecha ao sair do campo.
    */
-  children: (close: (persistence?: Promise<unknown>) => void, trackPersistence: (persistence: Promise<unknown>) => void) => ReactNode;
+  children?: (close: (persistence?: Promise<unknown>) => void, trackPersistence: (persistence: Promise<unknown>) => void) => ReactNode;
 }
 
 type PersistenceState = "idle" | "saving" | "saved" | "error";
 
 /**
- * Campo que vira campo ao clicar (Pipedrive: responsável, situação e previsão
- * mudam no lugar, sem formulário).
+ * Linha «rótulo · valor» que vira campo no lugar (origem: Perfil §11, "linha
+ * de detalhe rótulo/valor"; Campos §2). É o contrato único de valor editável
+ * do produto — texto, data, dinheiro, responsável, pessoa, empresa e campos
+ * personalizados passam todos por aqui:
  *
- * O que ele resolve, e por isso vive aqui e não numa tela: o valor parado tem
- * de parecer texto, o controle tem de aparecer no mesmo lugar sem empurrar
- * nada, e o foco tem de ir para o controle — senão quem usa teclado clica e
- * fica sem saber onde caiu.
+ * - **Linha:** rótulo 12 em tinta 3 numa coluna fixa (--ui-fieldLabelColumn),
+ *   caixa do valor à direita; linhas separadas por um fio de 1px (--bd).
+ * - **Caixa:** a MESMA nos três estados — 36 de altura, pílula, 12 de recuo,
+ *   mesmo lugar. Nada pula ao trocar de estado.
+ * - **Preenchido:** caixa de tinta (sem fundo, sem borda), valor 13/400 em
+ *   tinta 1, avatar de 24 antes de nome de registro. No hover/foco a caixa
+ *   ganha --acs e o lápis de 14 (tinta 3) aparece na ponta; a ação do registro
+ *   (o olho) aparece ao lado dele.
+ * - **Vazio:** a mesma caixa, «Adicionar» em tinta 3 no lugar do texto e o ＋
+ *   de 14 na ponta.
+ * - **Editando:** a mesma caixa vira o campo — papel cavado (--sf2 + --deb),
+ *   borda --tx3 e halo de foco — e o controle (texto, data, seleção, busca de
+ *   registro) ocupa o miolo. A troca é só a superfície aparecendo pela física
+ *   global de 550 ms. Gravando e erro aparecem dentro da caixa; o erro ganha o
+ *   anel de 1px --er e a frase abre espaço embaixo.
  *
- * **Sair do campo grava.** É a regra única: `Enter`, clicar fora e o botão de
- * fechar fazem a mesma coisa — tiram o foco do controle, e é o `onBlur` dele
- * que grava. Clicou por engano e não digitou nada? Nada muda, porque não há o
- * que gravar.
- *
- * Não há passo de confirmação. Ele existiu por um tempo e fazia duas coisas
- * erradas: ocupava a largura do campo com um aviso de atalho, e segurava o
- * clique de fora para perguntar — com isso o `onBlur` nunca disparava, e
- * link, data e dinheiro simplesmente não gravavam.
+ * **Sair do campo grava.** `Enter`, clicar fora e o botão de fechar fazem a
+ * mesma coisa — tiram o foco do controle, e é o `onBlur` dele que grava.
+ * `Escape` desiste. Não há passo de confirmação.
  */
-export function InlineField({ label, value, leading, empty = false, disabled = false, required = false, block = false, hint, href, action, preview, onPreviewRequest, onCancel, children }: InlineFieldProps) {
-  const [open, setOpen] = useState(false);
+export function InlineField({ label, value, leading, empty = false, disabled = false, required = false, block = false, numeric = false, hint, href, action, preview, onPreviewRequest, onCancel, defaultEditing = false, children }: InlineFieldProps) {
+  const readOnly = disabled || children === undefined;
+  const [open, setOpen] = useState(defaultEditing);
   const [persistenceState, setPersistenceState] = useState<PersistenceState>("idle");
   const holder = useRef<HTMLDivElement>(null);
+  const restoreFocus = useRef(false);
   const persistenceRevision = useRef(0);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editing = open && !readOnly;
 
   function trackPersistence(persistence: Promise<unknown>) {
     const revision = ++persistenceRevision.current;
@@ -98,6 +111,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
   /** Cancela sem tirar o foco primeiro: `blur` é o gesto de salvar. */
   function cancel() {
     onCancel?.();
+    restoreFocus.current = true;
     setOpen(false);
   }
 
@@ -105,65 +119,62 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
   }, []);
 
-  /* O controle acabou de substituir um botão: sem levar o foco junto, quem
-   * navega por teclado perde o lugar na tela.
-   *
-   * E quando o controle é um GATILHO — calendário, seleção, busca — ele abre
-   * sozinho. Sem isso são dois cliques para uma ação só: o primeiro troca o
-   * texto pelo botão, o segundo abre o calendário. Num painel com dez campos
-   * isso é o dobro de cliques o dia inteiro.
-   *
-   * Campo de digitar (`input`, `textarea`) só recebe o foco: abrir não
-   * significa nada ali, e o cursor já está no lugar certo. */
+  /* O controle acabou de substituir o valor: o foco vai junto. E quando o
+   * controle é um GATILHO — calendário, seleção — ele abre sozinho: sem isso
+   * são dois cliques para uma ação só. Campo de digitar só recebe o foco. */
   useEffect(() => {
-    if (!open) return;
-    const control = holder.current?.querySelector<HTMLElement>("input, select, textarea, button, [tabindex]");
+    if (!editing) return;
+    const control = holder.current?.querySelector<HTMLElement>("input, select, textarea, button:not([data-inline-cancel]), [tabindex]");
     if (!control) return;
     control.focus();
     if (control.tagName === "BUTTON" || control.getAttribute("aria-haspopup") !== null) control.click();
-  }, [open]);
+  }, [editing]);
 
-  /* Clicar fora fecha, e fechar grava — a mesma coisa que sair do campo com
-   * Tab faria. `pointerdown` e não `click`: o clique num item de menu suspenso
-   * chega depois de o menu já ter saído do documento, e a verificação de «está
-   * dentro?» daria falso, fechando antes de escolher. */
+  /* Clicar fora fecha, e fechar grava. `pointerdown` e não `click`: o clique
+   * num item de menu suspenso chega depois de o menu sair do documento. */
   useEffect(() => {
-    if (!open) return;
+    if (!editing) return;
     function onPointerDown(event: PointerEvent) {
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (holder.current?.contains(target)) return;
-      // Menu e calendário são desenhados fora da linha, num portal: o que sai
-      // deles ainda é «dentro» da edição.
+      // Menu e calendário são desenhados fora da linha, num portal.
       if (target instanceof Element && target.closest("[role='dialog'], [role='listbox'], [role='menu'], [data-inline-editor]")) return;
       close();
     }
     document.addEventListener("pointerdown", onPointerDown, true);
     return () => document.removeEventListener("pointerdown", onPointerDown, true);
-  }, [open]);
+  }, [editing]);
 
+  /* Rótulo em UMA linha, cortado com reticências; a dica mostra o inteiro. */
+  const labelText = <>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</>;
+  const rotulo = <span className={s.labelColumn}>
+    {block ? <span className={s.label}>{labelText}</span> : <Tooltip content={label} pinOnClick={false} size="compact"><span className={s.label}>{labelText}</span></Tooltip>}
+    {hint && <small className={s.hint}>{hint}</small>}
+  </span>;
 
-  /* Rótulo em UMA linha, cortado com reticências, e a dica mostra o inteiro.
-   *
-   * «Orçamento do cliente» quebrava em duas linhas e desalinhava a coluna toda,
-   * e um painel com dez campos ficava com altura irregular. Cortar mantém o
-   * ritmo; a dica devolve o que foi cortado sem custar um clique. */
-  const rotulo = block ? <span className={s.stackedLabel}><span>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</span>{hint && <small>{hint}</small>}</span> : (
-    <span className={s.labelGroup}><Tooltip content={label} pinOnClick={false} size="compact">
-      <span className={s.label}>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</span>
-    </Tooltip>{hint && <small>{hint}</small>}</span>
-  );
+  const shown = empty && !readOnly ? "Adicionar" : value;
+  const text = <span className={s.text} data-numeric={numeric && !empty ? "" : undefined}>{shown}</span>;
+  const content = leading && !empty ? <>{<span className={s.leading}>{leading}</span>}{text}</> : text;
 
-  if (!open || disabled) {
+  let body: ReactNode;
+  if (editing) {
+    body = <>
+      <div className={s.editor}>{children!(close, trackPersistence)}</div>
+      <PersistenceFeedback state={persistenceState} label={label} />
+      <button type="button" data-inline-cancel="" className={s.iconButton} aria-label={`Cancelar alteração em ${label}`} onPointerDown={(event) => event.preventDefault()} onClick={cancel}>
+        <Icon name="close" />
+      </button>
+    </>;
+  } else if (readOnly) {
+    body = <><span className={s.value}>{content}</span><PersistenceFeedback state={persistenceState} label={label} /></>;
+  } else {
     const valueButton = (
       <button
         type="button"
         className={s.value}
-        data-empty={empty}
-        data-disabled={disabled}
-        data-link={href !== undefined}
-        aria-label={disabled ? `${label}: ${textOf(value)}` : `Alterar ${label}. Valor atual: ${textOf(value)}${href ? ". Dois cliques abrem o endereço." : ""}`}
-        disabled={disabled}
+        ref={(node) => { if (node && restoreFocus.current) { restoreFocus.current = false; node.focus(); } }}
+        aria-label={`Alterar ${label}. Valor atual: ${empty ? "vazio" : textOf(value)}${href ? ". Dois cliques abrem o endereço." : ""}`}
         onClick={() => setOpen(true)}
         onDoubleClick={() => {
           if (href === undefined) return;
@@ -171,57 +182,48 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
           window.open(href, "_blank", "noopener,noreferrer");
         }}
       >
-        {leading ? <span className={s.identity}>{leading}<span>{value}</span></span> : <span>{value}</span>}
-        {!disabled && <span className={s.pencil} aria-hidden="true"><Icon name={empty ? "plus" : href === undefined ? "pencil" : "link"} /></span>}
+        {content}
+        <span className={s.mark} aria-hidden="true"><Icon name={empty ? "plus" : href === undefined ? "pencil" : "link"} /></span>
       </button>
     );
-    return (
-      <div className={s.field}>
-        <div className={s.row} data-block={block}>
-          {rotulo}
-          <div className={s.control}>
-            <div className={s.readRow}>
-              {preview ? <Tooltip content={preview} appearance="surface" pinOnClick={false} {...(onPreviewRequest ? { onOpen: onPreviewRequest } : {})}>{valueButton}</Tooltip> : valueButton}
-              {action && !empty && <button type="button" className={s.action} aria-label={action.label} onClick={action.onClick}><Icon name={action.icon} /></button>}
-              <PersistenceFeedback state={persistenceState} label={label} />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    body = <>
+      {preview ? <Tooltip content={preview} appearance="surface" pinOnClick={false} {...(onPreviewRequest ? { onOpen: onPreviewRequest } : {})}>{valueButton}</Tooltip> : valueButton}
+      {action && !empty && <button type="button" className={`${s.iconButton} ${s.action}`} aria-label={action.label} onClick={action.onClick}><Icon name={action.icon} /></button>}
+      <PersistenceFeedback state={persistenceState} label={label} />
+    </>;
   }
 
   return (
-    <div className={s.field}>
-      <div className={s.row} data-block={block}>
+    <div className={s.field} data-block={block || undefined}>
+      <div className={s.row}>
         {rotulo}
-        <div
-          className={s.control}
-          ref={holder}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); return; }
-            if (event.key !== "Enter") return;
-            const alvo = event.target;
-            if (!(alvo instanceof HTMLElement)) return;
-            /* Enter grava. Em vez de um botão «confirmar» por linha — que é o
-             * que tinha antes e comia metade da largura do painel — o Enter
-             * tira o foco, e sair do campo já é o gesto que grava. Uma regra
-             * só para teclado e mouse.
-             *
-             * Em texto longo, Enter é quebra de linha: ali grava com
-             * Ctrl/Cmd+Enter, que é a convenção de todo campo multilinha. */
-            const multilinha = alvo.tagName === "TEXTAREA";
-            if (multilinha && !(event.metaKey || event.ctrlKey)) return;
-            event.preventDefault();
-            alvo.blur();
-          }}
-        >
-          <div className={s.editing}>
-            <div className={s.editor}>{children(close, trackPersistence)}</div>
-            <PersistenceFeedback state={persistenceState} label={label} />
-            <button type="button" className={s.cancel} aria-label={`Cancelar alteração em ${label}`} onPointerDown={(event) => event.preventDefault()} onClick={cancel}>
-              <Icon name="close" />
-            </button>
+        <div className={s.control}>
+          <div
+            ref={holder}
+            className={s.box}
+            data-state={editing ? "editing" : "display"}
+            data-empty={empty && !editing ? "" : undefined}
+            data-readonly={readOnly ? "" : undefined}
+            data-link={href !== undefined && !empty ? "" : undefined}
+            data-persistence={persistenceState === "idle" ? undefined : persistenceState}
+            onKeyDown={editing ? (event) => {
+              if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); return; }
+              if (event.key !== "Enter") return;
+              const alvo = event.target;
+              if (!(alvo instanceof HTMLElement)) return;
+              /* Enter grava: tira o foco, e sair do campo é o gesto que grava.
+               * Em texto longo, Enter é quebra de linha: grava com Ctrl/Cmd+Enter. */
+              const multilinha = alvo.tagName === "TEXTAREA";
+              if (multilinha && !(event.metaKey || event.ctrlKey)) return;
+              event.preventDefault();
+              restoreFocus.current = true;
+              alvo.blur();
+            } : undefined}
+          >{body}</div>
+          {/* Erro de gravação: a frase abre espaço embaixo da caixa. O anúncio
+            * fica com o status da caixa; aqui é só a leitura. */}
+          <div data-collapse="" data-open={persistenceState === "error" ? "true" : "false"} className={s.errorSlot} style={{ "--g": "var(--space-1)" } as CSSProperties}>
+            <div><span className={s.error} aria-hidden="true">Não foi possível salvar. Tente de novo.</span></div>
           </div>
         </div>
       </div>
@@ -233,7 +235,7 @@ function PersistenceFeedback({ state, label }: { state: PersistenceState; label:
   if (state === "idle") return null;
   const text = state === "saving" ? `Salvando ${label}` : state === "saved" ? `${label} salvo` : `Falha ao salvar ${label}`;
   return <span className={s.persistence} data-state={state} role="status" aria-label={text} title={text}>
-    {state === "saving" ? <span className={s.spinner} aria-hidden="true" /> : <Icon name={state === "saved" ? "check" : "close"} />}
+    {state === "saving" ? <Spinner size="sm" /> : <Icon name={state === "saved" ? "check" : "close"} />}
   </span>;
 }
 

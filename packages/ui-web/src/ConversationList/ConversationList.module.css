@@ -1,0 +1,226 @@
+/* Lista densa de conversas (README da identidade, «O que o usuário cobrou» 2;
+ * auditoria de componentes, família «Linha de lista»). Avatar 32, três
+ * linhas de 17/17/16, linha de 70. Retângulo: sem espaço entre as linhas, um
+ * fio de 1px --bd que começa na coluna do texto. Raio só no realce: --acs com
+ * --r-item no hover; a seleção é a folha pousada (--sf3 + granulação, borda,
+ * --sh1, --r-rico) que desliza até a linha. */
+
+.root {
+  container-type: inline-size;
+  isolation: isolate;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-1-5) var(--space-2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.sheet {
+  box-sizing: border-box;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-rico);
+  corner-shape: var(--r-shape);
+  background: var(--sf3) var(--grain);
+  box-shadow: var(--sh1);
+}
+
+.item {
+  --row-avatar: 32px;
+  --row-pad: var(--space-3);
+  flex: none;
+  height: 70px;
+  animation: var(--anim-item) var(--t-item) var(--ease) backwards;
+  animation-delay: calc(min(var(--i, 0), 12) * var(--t-item-stagger));
+}
+
+/* O fio entre as linhas começa no texto, não no avatar. Some ao lado da
+ * linha realçada, para ela parecer solta da lista. */
+.item + .item::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  inset-inline: calc(var(--row-pad) + var(--row-avatar) + var(--space-3)) var(--row-pad);
+  height: var(--ui-hairline);
+  background: var(--bd);
+  pointer-events: none;
+  transition: opacity var(--t-fast) var(--ease);
+}
+
+.item[data-on="true"]::before,
+.item[data-on="true"] + .item::before { opacity: 0; }
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover::before,
+  .item:hover + .item::before { opacity: 0; }
+  .item:not([data-on="true"]) > .row:hover { background-color: var(--acs); }
+}
+
+.row {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: var(--row-avatar) minmax(0, 1fr);
+  grid-template-rows: 17px 17px 16px;
+  column-gap: var(--space-3);
+  align-content: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 var(--row-pad);
+  border: 0;
+  border-radius: var(--r-item);
+  corner-shape: var(--r-shape);
+  background: transparent;
+  color: var(--tx2);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+
+.row:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+
+.avatar { display: flex; grid-row: 1 / -1; align-self: start; }
+
+.line,
+.meta { display: flex; align-items: center; gap: var(--space-1-5); min-width: 0; }
+
+.name,
+.subject,
+.snippet,
+.channelLabel,
+.owner { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.name { flex: 1 1 auto; color: var(--tx2); font-weight: var(--fw-400); line-height: 17px; }
+.subject { flex: 0 1 auto; color: var(--tx2); font-weight: var(--fw-400); line-height: 17px; }
+
+.item[data-unread] .name,
+.item[data-unread] .subject { color: var(--tx); font-weight: var(--fw-500); }
+
+.item[data-on="true"] .name { color: var(--tx); }
+
+.when { display: inline-flex; flex: none; align-items: center; gap: var(--space-1-5); }
+
+.time {
+  color: var(--tx3);
+  font-family: var(--mono);
+  font-size: var(--fs-legenda);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-controle);
+}
+
+/* Não lida: ponto de carvão de 6px depois da hora. */
+.dot { width: 6px; height: 6px; border-radius: var(--r-pill); background: var(--ac); }
+
+.star { --icon: 12px; display: inline-flex; flex: none; color: var(--wa); }
+
+.meta { color: var(--tx3); font-size: var(--fs-pequeno); line-height: 16px; white-space: nowrap; }
+
+.channel { --icon: 12px; display: inline-flex; flex: 0 1 auto; align-items: center; gap: var(--space-1); min-width: 0; }
+.owner { flex: 0 1 auto; }
+.sla { display: inline-flex; flex: none; min-width: 0; margin-inline-start: auto; }
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Caixa larga (estilo cliente de e-mail): uma linha de 44 por conversa —
+ * pessoa · assunto — trecho · caixa · prazo · hora. Linha de uma altura só
+ * leva raio curto, para a seleção não virar estádio. */
+.root[data-layout="wide"] .item { --row-avatar: 24px; height: var(--h-lg); }
+.root[data-layout="wide"] .sheet { border-radius: 8px; }
+
+.root[data-layout="wide"] .row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: 8px;
+}
+
+.root[data-layout="wide"] .avatar { align-self: center; }
+.root[data-layout="wide"] .name { flex: 0 0 calc(var(--space-16) * 3); }
+.root[data-layout="wide"] .line { flex: 1 1 auto; gap: var(--space-1-5); }
+.root[data-layout="wide"] .channel { --icon: var(--ui-iconSm); flex: 0 1 auto; max-width: calc(var(--space-16) * 3); color: var(--tx3); font-size: var(--fs-pequeno); }
+.root[data-layout="wide"] .sla { margin-inline-start: 0; }
+.root[data-layout="wide"] .when { justify-content: flex-end; min-width: var(--space-12); }
+
+.dash { flex: none; color: var(--tx3); }
+.snippet { flex: 1 1 0; color: var(--tx3); }
+
+/* A lista larga encolhe quando a conversa abre ao lado: some primeiro a
+ * caixa, depois o trecho da mensagem. */
+@container (max-width: 760px) {
+  .root[data-layout="wide"] .channel { display: none; }
+}
+
+@container (max-width: 520px) {
+  .root[data-layout="wide"] .dash,
+  .root[data-layout="wide"] .snippet { display: none; }
+  .root[data-layout="wide"] .name { flex-basis: 40%; }
+}
+
+/* Cabeçalho: o título começa na coluna dos avatares (8 + 12). */
+.header {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--h-md) + var(--space-6));
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+  border-bottom: var(--ui-hairline) solid var(--bd);
+}
+
+.title {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  color: var(--tx);
+  font-size: var(--fs-card);
+  font-weight: var(--fw-titulo);
+  letter-spacing: var(--ls-h4);
+  line-height: var(--lh-h4);
+}
+
+.titleText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.count {
+  flex: none;
+  color: var(--tx3);
+  font-family: var(--mono);
+  font-size: var(--fs-legenda);
+  font-weight: var(--fw-400);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.actions { display: flex; flex: none; align-items: center; gap: var(--space-2); }
+
+.empty {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 0;
+  padding: var(--space-8) var(--space-5);
+  color: var(--tx3);
+  font-family: var(--font);
+  font-size: var(--fs-corpo);
+  line-height: var(--lh-corpo);
+  text-align: center;
+}

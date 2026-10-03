@@ -1,17 +1,88 @@
-.notification { box-sizing: border-box; width: 100%; display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); background: var(--color-surface); color: var(--color-ink); border: var(--ui-hairline) solid var(--color-line); border-inline-start: var(--ui-focusWidth) solid var(--color-accent); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); font-family: var(--typography-fontFamily-body); font-size: var(--typography-size-sm); line-height: var(--ui-bodyLine); }
-.notification[data-tone="success"] { border-inline-start-color: var(--color-statusSuccess); }
-.notification[data-tone="warning"] { border-inline-start-color: var(--color-statusWarning); }
-.notification[data-tone="error"] { border-inline-start-color: var(--color-statusDanger); }
-.content { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.content p { margin: var(--space-1) 0 0; color: var(--color-inkMuted); }
-.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
-.unread { display: block; color: var(--color-accent); font-size: var(--typography-size-compact); }
-.list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
-.empty { color: var(--color-inkMuted); }
-/* Toast é uma superfície inversa; a cor da marca não altera o feedback. */
-.toast { width: min(var(--ui-toastWidth), calc(100vw - var(--space-6) * 2)); border: 0; border-radius: var(--ui-toastRadius); corner-shape: var(--radius-shape); box-shadow: var(--ui-popupShadow); }
-.toast .notification { background: var(--ui-helpSolid); color: var(--ui-helpInk); border: 0; border-radius: inherit; corner-shape: inherit; padding-inline: var(--space-5); align-items: center; }
-.toast .content p { color: inherit; opacity: var(--ui-chartGridOpacity); }
-.toast button { color: inherit; background: transparent; box-shadow: none; }
-.toast button:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
-.toast button:focus-visible { outline-color: currentColor; }
+/* Alerta da identidade (ADR-0044; origem: Feedback, "Alerta inline"): folha
+ * pousada (--sf + granulação, borda --bd, --sh1), raio 32 em squircle,
+ * padding 16 18, gap 14. Ícone de 28 com fundo suave da cor do estado. */
+.notification {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  padding: var(--space-4) 18px;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-bloco);
+  corner-shape: var(--r-shape);
+  background: var(--sf) var(--grain);
+  box-shadow: var(--sh1);
+  color: var(--tx);
+  font-family: var(--font);
+}
+
+.icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  corner-shape: var(--r-shape);
+  background: var(--ins);
+  color: var(--in);
+}
+
+.notification[data-tone="success"] .icon { background: var(--oks); color: var(--ok); }
+.notification[data-tone="warning"] .icon { background: var(--was); color: var(--wa); }
+.notification[data-tone="error"] .icon { background: var(--ers); color: var(--er); }
+
+.content { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
+.content strong { font-size: var(--fs-corpo); font-weight: var(--fw-500); line-height: var(--lh-corpo); }
+.content p { margin: 0; font-size: var(--fs-pequeno); line-height: 1.5; color: var(--tx2); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-1-5); margin-top: var(--space-2); }
+.unread { color: var(--shu); font-size: var(--fs-legenda); font-weight: var(--fw-500); }
+
+.list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.list > li { animation: var(--anim-item) var(--t-item) var(--ease) both; }
+.empty { color: var(--tx3); font-size: var(--fs-pequeno); }
+
+/* Toast: pílula de carvão segurada (--ac, --e3), entra subindo 18px em 600 ms
+ * e sai em 340 ms com desfoque. A cor do estado fica só no ícone. */
+.toast {
+  box-sizing: border-box;
+  width: min(var(--ui-toastWidth), calc(100vw - var(--space-6) * 2));
+}
+
+.toast .notification {
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--toast-h);
+  padding: 0 var(--space-2) 0 var(--space-4);
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--ac);
+  box-shadow: var(--e3);
+  color: var(--acf);
+  font-size: var(--fs-corpo);
+}
+
+.toast .notification:not(:has(p, .actions)) { border-radius: var(--r-pill); }
+.toast .icon { width: 18px; height: 18px; background: transparent; }
+.toast .icon > svg { width: var(--ui-icon); height: var(--ui-icon); }
+.toast .notification[data-tone="info"] .icon { color: var(--in); }
+.toast .content { padding-block: var(--space-3); }
+.toast .content strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toast .content p { color: inherit; opacity: 0.7; }
+.toast button { color: var(--acf); opacity: 0.6; }
+
+@media (hover: hover) and (pointer: fine) {
+  .toast button:hover:not([data-disabled]) { background-color: color-mix(in srgb, var(--acf) 12%, transparent); color: var(--acf); opacity: 1; }
+}
+
+/* Pilha do Sonner na física da identidade. */
+:global([data-sonner-toaster] [data-sonner-toast]) {
+  transition: transform var(--t-toast) var(--ease), opacity var(--t-shadow) var(--ease), height var(--t-toast) var(--ease);
+}
+
+:global([data-sonner-toaster] [data-sonner-toast][data-removed="true"]) {
+  transition-duration: var(--t-toast-out);
+  transition-timing-function: var(--ease-out);
+}

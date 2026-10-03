@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from "react";
 import { Button } from "../Button/Button.js";
 import { Icon } from "../Icon/Icon.js";
+import { Surface } from "../Surface/Surface.js";
 import styles from "./CalendarMonth.module.css";
 
 export interface CalendarMonthItem {
@@ -18,6 +19,12 @@ export interface CalendarMonthProps {
 
 const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
+/**
+ * Calendário do mês (origem: Perfil §7): folha pousada, mês 15/500, setas de
+ * tinta de 28, dias da semana 10,5 em tinta 3, número do dia em mono numa
+ * pílula de 28 — hoje com anel de 1px em tinta 3. Cada compromisso é uma
+ * folha pequena com o conteúdo do `CalendarEntry`.
+ */
 export function CalendarMonth({ label, month, items, onMonthChange }: CalendarMonthProps) {
   const titleId = useId();
   const year = month.getFullYear();
@@ -35,13 +42,13 @@ export function CalendarMonth({ label, month, items, onMonthChange }: CalendarMo
   }
   const visibleCount = Array.from(itemsByDay).reduce((count, [key, dayItems]) => key.startsWith(`${year}-${String(monthIndex + 1).padStart(2, "0")}-`) ? count + dayItems.length : count, 0);
 
-  return <section className={styles.root} aria-labelledby={titleId}>
+  return <Surface as="section" className={styles.root ?? ""} aria-labelledby={titleId}>
     <header className={styles.header}>
-      <div><h2 id={titleId}>{new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(month)}</h2><span>{visibleCount} {visibleCount === 1 ? "item neste mês" : "itens neste mês"}</span></div>
+      <div className={styles.heading}><h2 id={titleId}>{new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(month)}</h2><span>{visibleCount} {visibleCount === 1 ? "item neste mês" : "itens neste mês"}</span></div>
       <div className={styles.controls} role="group" aria-label={`Navegar no calendário de ${label}`}>
-        <Button shape="pill" size="sm" variant="secondary" onClick={() => onMonthChange(new Date(today.getFullYear(), today.getMonth(), 1))}>Hoje</Button>
-        <Button shape="pill" size="sm" variant="ghost" iconOnly aria-label="Mês anterior" onClick={() => onMonthChange(new Date(year, monthIndex - 1, 1))}><Icon name="right" /></Button>
-        <Button shape="pill" size="sm" variant="ghost" iconOnly aria-label="Próximo mês" onClick={() => onMonthChange(new Date(year, monthIndex + 1, 1))}><Icon name="right" /></Button>
+        <Button size="sm" variant="secondary" onClick={() => onMonthChange(new Date(today.getFullYear(), today.getMonth(), 1))}>Hoje</Button>
+        <Button size="sm" variant="ghost" iconOnly icon={<Icon name="chevronLeft" />} aria-label="Mês anterior" onClick={() => onMonthChange(new Date(year, monthIndex - 1, 1))} />
+        <Button size="sm" variant="ghost" iconOnly icon={<Icon name="chevronRight" />} aria-label="Próximo mês" onClick={() => onMonthChange(new Date(year, monthIndex + 1, 1))} />
       </div>
     </header>
     <div className={styles.scroll} role="region" aria-label={`Calendário mensal de ${label}`} tabIndex={0}>
@@ -59,7 +66,7 @@ export function CalendarMonth({ label, month, items, onMonthChange }: CalendarMo
         })}
       </div>
     </div>
-  </section>;
+  </Surface>;
 }
 
 function dateKey(date: Date): string {
