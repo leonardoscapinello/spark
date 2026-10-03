@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { availableCannedReplies, contactId, conversationId, conversationSlaState, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
+import { availableCannedReplies, personThreads, contactId, conversationId, conversationSlaState, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, FilePicker, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, FilePicker, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type IconName, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
@@ -93,11 +93,14 @@ export default function Inbox() {
   const currentQueueTitle = filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filter.startsWith("connection:") ? connectionNames.get(integrationConnectionId.from(filter.slice(11))) ?? "Caixa" : filterLabel(filter);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const firstRun = !isLoading && conversations.length === 0 && !searchTerm && (filter === "open" || filter === "all");
-  const filtered = conversations.filter((item) => matchesFilter(item, filter, session?.userId ?? null)
+  const filtered = personThreads(conversations.filter((item) => matchesFilter(item, filter, session?.userId ?? null)
     && (!searchTerm || [item.subject, contactNames.get(item.contactId), channelLabel(item.channel), item.teamId ? teamNames.get(item.teamId) : null]
-      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm))))
+      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm)))))
     .sort((a, b) => sortOrder === "recent" ? b.lastMessageAt.localeCompare(a.lastMessageAt) : a.lastMessageAt.localeCompare(b.lastMessageAt));
-  const selected = filtered.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+  const requested = conversations.find((item) => item.id === selectedId);
+  const selected = requested && filtered.some((item) => item.contactId === requested.contactId) ? requested : filtered[0] ?? null;
+  const personRoutes = conversations.filter((item) => item.contactId === selected?.contactId);
+  const routesById = new Map(personRoutes.map((item) => [item.id, item]));
   const self = useMemo(() => session ? { id: session.userId, name: userNames.get(userId.from(session.userId)) ?? "Você" } : null, [session, userNames]);
   const { viewers, typingUsers, notifyTyping } = useConversationPresence(selected ? `conversation:${selected.id}` : null, self);
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
@@ -106,19 +109,19 @@ export default function Inbox() {
   const selectedTemplate = connectionTemplates.find((item) => item.id === templateId) ?? null;
   const templatePreview = selectedTemplate ? fillTemplate(selectedTemplate.bodyText, templateParams) : "";
   const queueCounts = useMemo(() => {
-    const counts = new Map<InboxFilter, number>();
-    const increment = (box: InboxFilter) => counts.set(box, (counts.get(box) ?? 0) + 1);
+    const people = new Map<InboxFilter, Set<string>>();
+    const increment = (box: InboxFilter, person: string) => { const ids = people.get(box) ?? new Set<string>(); ids.add(person); people.set(box, ids); };
     for (const conversation of conversations) {
-      increment("all");
-      increment(conversation.status);
+      increment("all", conversation.contactId);
+      increment(conversation.status, conversation.contactId);
       if (conversation.status !== "open") continue;
-      if (conversation.assigneeId === session?.userId) increment("mine");
-      if (conversation.assigneeId === null) increment("unassigned");
-      if (conversation.teamId) increment(`team:${conversation.teamId}`);
-      increment(`channel:${conversation.channel}`);
-      if (conversation.connectionId) increment(`connection:${conversation.connectionId}`);
+      if (conversation.assigneeId === session?.userId) increment("mine", conversation.contactId);
+      if (conversation.assigneeId === null) increment("unassigned", conversation.contactId);
+      if (conversation.teamId) increment(`team:${conversation.teamId}`, conversation.contactId);
+      increment(`channel:${conversation.channel}`, conversation.contactId);
+      if (conversation.connectionId) increment(`connection:${conversation.connectionId}`, conversation.contactId);
     }
-    return counts;
+    return new Map([...people].map(([box, ids]) => [box, ids.size]));
   }, [conversations, session?.userId]);
   const queueCount = (box: InboxFilter) => queueCounts.get(box) ?? 0;
   // Canal com mais de uma conexão (mais de um número de WhatsApp, mais de um
@@ -147,7 +150,7 @@ export default function Inbox() {
     { label: "Fechadas", box: "closed" as const, to: "/inbox?box=closed", icon: "check" as const },
     { label: "Todas", box: "all" as const, to: "/inbox?box=all", icon: "grid" as const },
   ];
-  const { data: messages = [] } = useLiveQuery({ query: (q) => selected ? q.from({ messages: messagesCollection }).where(({ messages: item }) => eq(item.conversationId, selected.id)).orderBy(({ messages: item }) => item.createdAt, "asc") : undefined });
+  const { data: messages = [] } = useLiveQuery({ query: (q) => selected ? q.from({ messages: messagesCollection }).where(({ messages: item }) => eq(item.contactId, selected.contactId)).orderBy(({ messages: item }) => item.createdAt, "asc") : undefined });
 
   useEffect(() => {
     if (selected && selected.id !== selectedId) setSelectedId(selected.id);
@@ -278,7 +281,7 @@ export default function Inbox() {
         </div>
         <Accordion defaultValue={["attributes"]} items={[
           { value: "attributes", title: "Atributos da conversa", icon: <Icon name="message" />, content: <dl className={styles.metadata}><div><dt>Situação</dt><dd>{statusLabel(selected.status)}</dd></div><div><dt>Prioridade</dt><dd>{selected.priority === "priority" ? "Prioritária" : "Normal"}</dd></div><div><dt>Canal</dt><dd>{channelLabel(selected.channel)}</dd></div><div><dt>Primeira resposta</dt><dd><SlaBadge conversation={selected} now={now} /></dd></div><div><dt>Criada em</dt><dd>{formatDateTime(selected.createdAt)}</dd></div></dl> },
-          { value: "recent", title: "Conversas recentes", icon: <Icon name="message" />, content: recentConversations.length ? <div className={styles.recentConversations}>{recentConversations.map((conversation) => <Button key={conversation.id} variant="ghost" shape="rounded" className={styles.recentConversation} onClick={() => { setDetailsOpen(false); void navigate(`/inbox?box=all&conversation=${conversation.id}`); }}><strong>{conversation.subject}</strong><span>{channelLabel(conversation.channel)} · {statusLabel(conversation.status)}</span></Button>)}</div> : <p className={styles.recentEmpty}>Nenhuma outra conversa desta pessoa.</p> },
+          { value: "recent", title: "Histórico por canal", icon: <Icon name="message" />, content: recentConversations.length ? <div className={styles.recentConversations}>{recentConversations.map((conversation) => <Button key={conversation.id} variant="ghost" shape="rounded" className={styles.recentConversation} onClick={() => { setDetailsOpen(false); void navigate(`/inbox?box=all&conversation=${conversation.id}`); }}><strong>{conversation.subject}</strong><span>{channelLabel(conversation.channel)} · {statusLabel(conversation.status)}</span></Button>)}</div> : <p className={styles.recentEmpty}>Nenhum outro canal com histórico desta pessoa.</p> },
         ]} />
       </> },
       { value: "person", label: "Pessoa", content: <div className={styles.contactDetails}><div className={styles.contactCard}><Avatar name={contactNames.get(selected.contactId) ?? "Pessoa"} size="large" /><div><strong>{contactNames.get(selected.contactId) ?? "Pessoa"}</strong><span>{contact?.email ?? "Sem e-mail"}</span></div></div><dl className={styles.metadata}><div><dt>Telefone</dt><dd>{contact?.phone ? formatPhone(contact.phone) : "Não informado"}</dd></div></dl>{canReadContacts && <Button variant="secondary" size="sm" onClick={() => navigate(`/contacts/${selected.contactId}`)}>Abrir perfil</Button>}</div> },
@@ -295,7 +298,7 @@ export default function Inbox() {
       {sidebarChannelItems.length > 0 && <SidebarSection title="Canais">
         {sidebarChannelItems.map((item) => <SidebarItem key={item.key} render={<Link ref={filter === item.box ? activeQueueLink : undefined} to={`/inbox?box=${item.box}`} onClick={() => setMobileView("list")} />} active={filter === item.box} icon={<Icon name="message" />} count={queueCount(item.box)}>{item.label}</SidebarItem>)}
       </SidebarSection>}
-      <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
+      <SidebarSection title="Ferramentas" icon={<Icon name="settings" />}><SidebarItem render={<Link to="/inbox/replies" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
     </Sidebar>
     <div className={styles.mobileQueueMenu}>
       <MenuButton variant="ghost" shape="rounded" className={styles.mobileQueueTrigger} icon={<Icon name="inbox" />} aria-label="Selecionar caixa de atendimento" menu={<>
@@ -314,7 +317,7 @@ export default function Inbox() {
           {firstRun && layout === "chat" ? <div className={styles.listFirstRun} role="status"><span className={styles.listFirstRunIcon}><Icon name="message" /></span><strong>Nenhuma conversa ainda</strong><span>As conversas recebidas aparecem nesta lista.</span><div className={styles.listFirstRunAction}>{startConversationAction()}</div></div> : layout === "table" ? <><DataTable label="Conversas" rows={filtered} columns={tableColumns} rowKey={(item) => item.id} rowLabel={(item) => item.subject} state={isLoading && conversations.length === 0 ? "loading" : "ready"} emptyText={searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."} actions={(item) => <TableIconAction label={`Abrir conversa ${item.subject}`} icon={<Icon name="right" />} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }} />} />{firstRun && <div className={styles.listFirstRunAction}>{startConversationAction()}</div>}</> : <>
           {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
           {!isLoading && filtered.length === 0 && <p className={styles.empty}>{searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."}</p>}
-          {filtered.map((item) => <Button key={item.id} variant="row" shape="rounded" className={styles.conversationButton} data-selected={selected?.id === item.id || undefined} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>
+          {filtered.map((item) => <Button key={item.id} variant="row" shape="rounded" className={styles.conversationButton} data-selected={selected?.contactId === item.contactId || undefined} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>
             <Avatar name={contactNames.get(item.contactId) ?? "Pessoa"} />
             <span className={styles.preview}><span><strong>{contactNames.get(item.contactId) ?? "Pessoa"}</strong><time>{relativeTime(item.lastMessageAt)}</time></span><b>{item.subject}</b><small>{channelLabel(item.channel)} · {item.teamId ? teamNames.get(item.teamId) ?? "Equipe" : item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída"}</small><SlaBadge conversation={item} now={now} /></span>
             {item.priority === "priority" && <Icon name="star" />}
@@ -327,25 +330,32 @@ export default function Inbox() {
         {selected ? <>
           <header className={styles.threadHeader}>
             <Button type="button" size="sm" variant="ghost" className={styles.mobileBack} onClick={() => setMobileView("list")}>Conversas</Button>
-            <div><strong>{selected.subject}</strong><span>{contactNames.get(selected.contactId) ?? "Pessoa"} · {channelLabel(selected.channel)}</span></div>
+            <div className={styles.threadIdentity}><strong>{contactNames.get(selected.contactId) ?? "Pessoa"}</strong><span>{selected.subject}</span></div>
             {viewers.length > 0 && <div className={styles.presenceViewers} aria-label={`${viewers.map((viewer) => viewer.name).join(", ")} também ${viewers.length === 1 ? "está vendo" : "estão vendo"} esta conversa`}>
               {viewers.slice(0, 4).map((viewer) => <span key={viewer.id} className={styles.presenceViewer} title={viewer.name}><Avatar name={viewer.name} size="small" /></span>)}
               {viewers.length > 4 && <span className={styles.presenceViewerMore}>+{viewers.length - 4}</span>}
             </div>}
-            <div className={styles.threadActions}>
+            <div className={styles.threadActions} role="group" aria-label="Ferramentas da conversa">
               <Button iconOnly size="sm" variant="ghost" className={styles.tablePreviewClose} aria-label="Fechar prévia da conversa" onClick={() => { setSelectedId(null); setMobileView("list"); }}><Icon name="close" /></Button>
               <Button iconOnly size="sm" variant="ghost" className={styles.detailsTrigger} aria-label="Abrir detalhes da conversa" onClick={() => setDetailsOpen(true)}><Icon name="user" /></Button>
               <Button iconOnly size="sm" variant={selected.priority === "priority" ? "raised" : "ghost"} aria-label={selected.priority === "priority" ? "Remover prioridade" : "Marcar como prioridade"} disabled={!canWrite || saving} onClick={() => void updateConversation({ priority: selected.priority === "priority" ? "normal" : "priority" })}><Icon name="star" /></Button>
-              <Button size="sm" variant="secondary" disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
+              <Button size="sm" variant="secondary" disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })} icon={<Icon name={selected.status === "closed" ? "message" : "check"} />}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
             </div>
           </header>
+          <div className={styles.channelBar} role="group" aria-label="Canais desta pessoa">
+            <MenuButton size="sm" variant="secondary" icon={<Icon name={channelIcon(selected.channel)} />} menu={<MenuGroup label="Responder por um canal">{CHANNELS.filter((channel) => channel.value !== "manual").map((channel) => {
+              const routes = personRoutes.filter((route) => route.channel === channel.value);
+              return routes.length ? routes.map((route) => <MenuItem key={route.id} icon={<Icon name={channelIcon(channel.value)} />} onClick={() => { setSelectedId(route.id); setComposerMode("reply"); }}>{channel.label}{route.connectionId ? ` · ${connectionNames.get(route.connectionId) ?? "Conexão"}` : ""}{selected.id === route.id ? " · Em uso" : ""}</MenuItem>) : <MenuItem key={channel.value} icon={<Icon name={channelIcon(channel.value)} />} disabled>{channel.label} · Sem histórico</MenuItem>;
+            })}</MenuGroup>}>{channelLabel(selected.channel)}</MenuButton>
+            <span>Histórico unificado · Todos os canais</span>
+          </div>
           <div className={styles.messages}>
             {messages.length === 0 && <div className={styles.threadEmpty}><Icon name="message" /><strong>Conversa iniciada</strong><span>Adicione uma nota interna para registrar o contexto do atendimento.</span></div>}
             {messages.map((message) => <article key={message.id} className={styles.message} data-direction={message.direction}>
               <header><strong>{message.direction === "internal" ? (message.authorUserId ? userNames.get(message.authorUserId) : null) ?? "Equipe" : message.direction === "inbound" ? contactNames.get(message.contactId) ?? "Pessoa" : "Equipe"}</strong><time>{formatDateTime(message.createdAt)}</time></header>
               <p><LinkifiedText text={message.body} /></p>
               {message.attachmentFileId && <MessageAttachment fileId={message.attachmentFileId} />}
-              <small>{message.direction === "internal" ? "Nota interna" : message.status}</small>
+              <small>{message.direction === "internal" ? "Nota interna" : `${channelLabel(routesById.get(message.conversationId)?.channel ?? "manual")} · ${message.status}`}</small>
             </article>)}
           </div>
           {typingUsers.length > 0 && <p className={styles.typingIndicator} role="status"><Icon name="message" />{typingUsers.length === 1 ? `${typingUsers[0]!.name} está digitando…` : `${typingUsers.map((item) => item.name).join(", ")} estão digitando…`}</p>}
@@ -444,3 +454,5 @@ function MessageAttachment({ fileId }: { fileId: string }) {
   if (state.mimeType.startsWith("audio/")) return <audio className={styles.attachmentAudio} src={state.downloadUrl} controls preload="metadata" />;
   return <a className={styles.attachmentFile} href={state.downloadUrl} target="_blank" rel="noopener noreferrer"><Icon name="file" />{state.name}</a>;
 }
+
+function channelIcon(channel: ConversationChannel): IconName { return ({ manual: "file", email: "mail", instagram: "image", whatsapp: "phone", messenger: "message", telegram: "send", widget: "message" } satisfies Record<ConversationChannel, IconName>)[channel]; }

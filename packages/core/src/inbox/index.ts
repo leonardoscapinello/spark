@@ -6,3 +6,4 @@ export * from "./messengerWebhook.js";
 export * from "./telegramWebhook.js";
 export * from "./postmarkWebhook.js";
 export * from "./whatsappWindow.js";
+export * from "./personThreads.js";
