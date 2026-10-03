@@ -18,17 +18,18 @@
 
 /* Abas da área de trabalho: o painel ativo rola por dentro. */
 .workspaceTabs, .workspaceTabs > div { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.workspaceTabs > div > [role="tablist"] { flex: none; }
 .workspaceTabs > div > [role="tabpanel"] { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 .workspaceTabs > div > [role="tabpanel"][hidden] { display: none; }
 
 /* Blocos do fluxo (folhas): próximas atividades e histórico. */
-.pageActivity { display: flex; flex: 1; flex-direction: column; gap: var(--space-3); min-height: 0; }
+.pageActivity { display: flex; flex: none; flex-direction: column; gap: var(--space-3); }
 .block { display: flex; flex: none; flex-direction: column; gap: var(--space-3); min-width: 0; padding: var(--space-5) var(--space-6); }
-.focusList { max-height: var(--ui-registrationCardHeight); overflow: auto; overscroll-behavior: contain; }
-.historyBlock { flex: 1; min-height: var(--ui-registrationCardHeight); }
-.historyTabs, .historyTabs > div { display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.historyTabs > div > [role="tablist"] { flex: none; align-self: flex-start; max-width: 100%; }
-.historyTabs > div > [role="tabpanel"] { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.focusList { min-width: 0; }
+/* Uma só rolagem: o painel de trabalho (ou quickPhase) contém todo o histórico. */
+.historyTabs, .historyTabs > div { min-width: 0; }
+.historyTabs > div > [role="tablist"] { max-width: 100%; }
+.historyTabs > div > [role="tabpanel"] { overflow: visible; }
 .historyTabs > div > [role="tabpanel"][hidden] { display: none; }
 .notes { display: grid; gap: var(--space-2); }
 
@@ -80,7 +81,6 @@
   .contentGrid { grid-template-columns: minmax(0, 1fr); }
   .side, .flow { overflow: visible; }
   .workspaceTabs, .workspaceTabs > div, .workspaceTabs > div > [role="tabpanel"], .pageActivity, .historyTabs, .historyTabs > div { display: block; height: auto; min-height: 0; overflow: visible; }
-  .historyTabs > div > [role="tabpanel"] { max-height: var(--ui-previewColumn); overflow: auto; }
   .activityModalLayout { grid-template-columns: minmax(0, 1fr); }
 }
 

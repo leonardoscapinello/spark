@@ -1,5 +1,6 @@
 import { Tabs } from "@base-ui/react/tabs";
 import type { ReactNode } from "react";
+import { Button } from "../Button/Button.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
 import s from "./Composer.module.css";
 
@@ -34,5 +35,5 @@ export function Composer<Id extends string = string>({ tabs, value, onValueChang
 }
 
 export function ComposerPrompt({ children, disabled = false, onClick }: { children: ReactNode; disabled?: boolean; onClick: () => void }) {
-  return <button type="button" className={s.prompt} disabled={disabled} onClick={onClick}><span>{children}</span><Icon name="plus" /></button>;
+  return <Button variant="secondary" icon={<Icon name="calendar" />} aria-haspopup="dialog" disabled={disabled} onClick={onClick}>{children}</Button>;
 }

@@ -33,7 +33,7 @@ function Exemplo({ tabs = TABS, inicial = "atividade", rascunho = "" }: { tabs?:
   return <Composer tabs={tabs} value={tab} onValueChange={setTab}>
     {tab === "nota"
       ? <Textarea aria-label="Nova nota" rows={note ? 4 : 2} value={note} placeholder="Clique aqui para escrever uma nota…" onChange={(event) => setNote(event.target.value)} />
-      : <ComposerPrompt onClick={() => undefined}>Clique aqui para agendar uma atividade…</ComposerPrompt>}
+      : <ComposerPrompt onClick={() => undefined}>Agendar atividade</ComposerPrompt>}
   </Composer>;
 }
 

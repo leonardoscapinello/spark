@@ -694,7 +694,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   >
     {composerTab !== "note"
       ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal(undefined, composerTab)}>
-          {canWriteActivities ? `Agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}…` : "Você não pode agendar atividades."}
+          {canWriteActivities ? `Agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}` : "Você não pode agendar atividades."}
         </ComposerPrompt>
       : <div className={styles.noteComposer}>
           <Textarea aria-label="Nova nota" disabled={!canWrite || savingNote} rows={noteDraft.trim() ? 4 : 2} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={(event) => setNoteDraft(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
@@ -731,7 +731,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       <SectionTitle level="card" meta={`${focusActivities.length} ${focusActivities.length === 1 ? "pendente" : "pendentes"}`}>Próximas atividades</SectionTitle>
       <div className={styles.focusList}><RowList label="Atividades pendentes">{focusActivities.map(activityRow)}</RowList></div>
     </Surface>}
-    <Surface as="section" className={`${styles.block} ${styles.historyBlock}`} aria-label="Histórico">
+    <Surface as="section" className={styles.block} aria-label="Histórico">
       <SectionTitle level="card" actions={<Button size="sm" variant="ghost" trailingIcon={<Icon name="right" />} onClick={() => setHistoryOpen(true)}>Expandir histórico</Button>}>Histórico</SectionTitle>
       <div className={styles.historyTabs}><Tabs variant="segmented" label="Filtrar o histórico" defaultValue="tudo" items={[
         { value: "tudo", label: "Tudo", content: <Timeline items={timelineItems} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
