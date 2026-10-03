@@ -1,9 +1,9 @@
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount, writeAccepted } from "@spark/data";
-import { ActionModal, Avatar, BackLink, Badge, Button, Card, Field, Input, Label, PageFrame, RecordPageHeader, SearchSelect, Select, Skeleton, Textarea, Timeline, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Avatar, BackLink, Button, Card, Field, InlineField, Input, Label, ListRow, PageFrame, RecordPageHeader, RowList, SearchSelect, Select, Signal, Skeleton, Text, Textarea, Timeline, UserAvatar, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -13,7 +13,7 @@ import { getSession } from "../lib/auth.client";
 import { getCompanyEventsCollection } from "../lib/events-collection.client";
 import { toTimelineItem } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
-import { ExternalPreviewLink, useLinkPreviewRequest } from "../lib/link-previews.client";
+import { useLinkPreviewRequest } from "../lib/link-previews.client";
 import styles from "./company-detail.module.css";
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
@@ -56,13 +56,6 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
   const canWrite = session?.capabilities.includes("companies:write") ?? false;
   const canLinkContacts = canReadContacts && (session?.capabilities.includes("contacts:write") ?? false);
   const canLinkDeals = canReadDeals && (session?.capabilities.includes("deals:write") ?? false);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [name, setName] = useState(""); const [legalName, setLegalName] = useState("");
-  const [industry, setIndustry] = useState(""); const [taxId, setTaxId] = useState("");
-  const [website, setWebsite] = useState(""); const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState(""); const [address, setAddress] = useState("");
-  const [ownerId, setOwnerId] = useState(""); const [parentCompanyId, setParentCompanyId] = useState("");
   const [linkContactOpen, setLinkContactOpen] = useState(false); const [selectedContact, setSelectedContact] = useState<SelectOption | null>(null);
   const [linkDealOpen, setLinkDealOpen] = useState(false); const [selectedDeal, setSelectedDeal] = useState<SelectOption | null>(null);
   const [busyLink, setBusyLink] = useState<string | null>(null);
@@ -73,30 +66,44 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
   const parent = company?.parentCompanyId ? companies.find((item) => item.id === company.parentCompanyId) : undefined;
   const openValue = linkedDeals.filter((item) => item.status === "open").reduce((sum, item) => sum + Number(formatRawAmount(item.amount)), 0);
 
-  function beginEditing() {
+  /**
+   * Cada dado da empresa muda no lugar (InlineField). Site, e-mail e telefone
+   * passam pela mesma validação do core; o erro volta para a linha.
+   */
+  async function saveCompany(field: "name" | "legalName" | "industry" | "taxId" | "website" | "email" | "phone" | "address" | "ownerId" | "parentCompanyId", raw: string | null) {
     if (!company) return;
-    setName(company.name); setLegalName(company.legalName ?? ""); setIndustry(company.industry ?? ""); setTaxId(company.taxId ?? "");
-    setWebsite(company.website ?? ""); setEmail(company.email ?? ""); setPhone(company.phone ? formatPhone(company.phone) : ""); setAddress(company.address ?? "");
-    setOwnerId(company.ownerId ?? ""); setParentCompanyId(company.parentCompanyId ?? ""); setEditing(true);
-  }
-
-  async function saveCompany(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!company || !name.trim()) return;
-    setSaving(true);
+    const text = (raw ?? "").trim();
+    let value: string | null = text || null;
     try {
-      const parsedWebsite = website.trim() ? new URL(/^https?:\/\//i.test(website.trim()) ? website.trim() : `https://${website.trim()}`).toString() : null;
-      const parsedEmail = email.trim() ? buildEmail(email) : null;
-      const parsedPhone = phone.trim() ? buildPhone(phone) : null;
+      if (field === "website" && text) value = new URL(/^https?:\/\//i.test(text) ? text : `https://${text}`).toString();
+      if (field === "email" && text) value = buildEmail(text);
+      if (field === "phone" && text) value = buildPhone(text);
+    } catch {
+      const message = field === "website" ? "Endereço do site inválido." : field === "email" ? "E-mail inválido." : "Telefone inválido — use DDD + número.";
+      notify({ title: message, tone: "error" });
+      throw new Error(message);
+    }
+    if (field === "name" && !value) throw new Error("O nome não pode ficar vazio.");
+    const current = field === "ownerId" ? company.ownerId : field === "parentCompanyId" ? company.parentCompanyId : company[field];
+    if ((current ?? null) === value) return;
+    try {
       await writeAccepted((metadata) => companiesCollection.update(company.id, { metadata }, (draft) => {
-        draft.name = name.trim(); draft.legalName = legalName.trim() || null; draft.industry = industry.trim() || null; draft.taxId = taxId.trim() || null;
-        draft.website = parsedWebsite; draft.email = parsedEmail; draft.phone = parsedPhone; draft.address = address.trim() || null;
-        draft.ownerId = ownerId ? userIdFactory.from(ownerId) : null; draft.parentCompanyId = parentCompanyId ? companyIdFactory.from(parentCompanyId) : null;
+        if (field === "name" && value) draft.name = value;
+        if (field === "legalName") draft.legalName = value;
+        if (field === "industry") draft.industry = value;
+        if (field === "taxId") draft.taxId = value;
+        if (field === "website") draft.website = value;
+        if (field === "email") draft.email = value as typeof draft.email;
+        if (field === "phone") draft.phone = value as typeof draft.phone;
+        if (field === "address") draft.address = value;
+        if (field === "ownerId") draft.ownerId = value ? userIdFactory.from(value) : null;
+        if (field === "parentCompanyId") draft.parentCompanyId = value ? companyIdFactory.from(value) : null;
       }));
-      if (parsedWebsite) requestLinkPreview(parsedWebsite);
-      setEditing(false); notify({ title: "Empresa atualizada", tone: "success" });
-    } catch { notify({ title: "Não foi possível salvar a empresa", description: "Revise site, e-mail e telefone.", tone: "error" }); }
-    finally { setSaving(false); }
+    } catch (cause) {
+      notify({ title: "Não foi possível salvar a empresa", tone: "error" });
+      throw cause;
+    }
+    if (field === "website" && value) requestLinkPreview(value);
   }
 
   async function linkContact() {
@@ -123,38 +130,48 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
     catch { notify({ title: "Não foi possível desvincular", tone: "error" }); } finally { setBusyLink(null); }
   }
 
-  if (!company) return <PageFrame>{!embedded && <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>}{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Empresa não encontrada.</p>}</PageFrame>;
+  if (!company) return <PageFrame>{!embedded && <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>}{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando empresa"><Skeleton className={styles.loadingLine} /><Skeleton className={styles.loadingLine} /><Skeleton className={styles.loadingLine} /></div> : <Text tone="secondary">Empresa não encontrada.</Text>}</PageFrame>;
+
+  const activeUsers = users.filter((item) => !item.deactivatedAt).map(userSelectOption);
+  /* Texto livre: um Input que grava ao sair do campo. */
+  const textEditor = (field: "name" | "legalName" | "industry" | "taxId" | "website" | "email" | "phone", label: string, current: string | null, extra: { type?: string; placeholder?: string; numeric?: boolean } = {}) =>
+    (close: (persistence?: Promise<unknown>) => void) => <Input aria-label={label} defaultValue={current ?? ""} {...(extra.type ? { type: extra.type } : {})} {...(extra.placeholder ? { placeholder: extra.placeholder } : {})} numeric={extra.numeric ?? false} onBlur={(event) => close(saveCompany(field, event.currentTarget.value))} />;
 
   return <PageFrame className={embedded ? styles.embedded : undefined}>
-    <RecordPageHeader back={embedded ? null : <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>} icon="building" eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} actions={canWrite && !editing ? <Button variant="secondary" onClick={beginEditing}>Editar empresa</Button> : undefined} metrics={[...(canReadContacts ? [{ label: "Pessoas", value: linkedContacts.length, icon: "user" as const }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length, icon: "briefcase" as const }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)), icon: "chart" as const }] : [])]} />
+    <RecordPageHeader back={embedded ? null : <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>} icon="building" avatarName={company.name} eyebrow={company.industry ?? "Empresa"} title={company.name} {...(company.legalName ? { description: company.legalName } : {})} metrics={[...(canReadContacts ? [{ label: "Pessoas", value: linkedContacts.length, icon: "user" as const, numeric: true }] : []), ...(canReadDeals ? [{ label: "Negócios", value: linkedDeals.length, icon: "briefcase" as const, numeric: true }, { label: "Valor em aberto", value: formatBRL(syncedAmount(openValue)), icon: "chart" as const, numeric: true }] : [])]} />
 
-    <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}><div className={styles.profileColumn}>{editing ? <Card title="Editar empresa"><form className={styles.editForm} onSubmit={saveCompany}>
-      <Field><Label>Nome</Label><Input value={name} onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Razão social</Label><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
-      <Field><Label>Segmento</Label><Input value={industry} onChange={(event) => setIndustry(event.target.value)} /></Field><Field><Label>Documento fiscal</Label><Input value={taxId} onChange={(event) => setTaxId(event.target.value)} /></Field>
-      <Field><Label>Site</Label><Input value={website} onChange={(event) => setWebsite(event.target.value)} /></Field><Field><Label>E-mail</Label><Input value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
-      <Field><Label>Telefone</Label><Input value={phone} onChange={(event) => setPhone(event.target.value)} /></Field><Field><Label>Responsável</Label><Select label="Responsável" value={ownerId || null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(value) => setOwnerId(value ?? "")} /></Field>
-      <Field><Label>Empresa controladora</Label><Select label="Empresa controladora" value={parentCompanyId || null} placeholder="Nenhuma" options={companies.filter((item) => item.id !== company.id && !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setParentCompanyId(value ?? "")} /></Field>
-      <Field><Label>Endereço</Label><Textarea value={address} onChange={(event) => setAddress(event.target.value)} /></Field>
-      <div className={styles.formActions}><Button type="submit" loading={saving}>Salvar</Button><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancelar</Button></div>
-    </form></Card> : <Card title="Detalhes da empresa"><div className={styles.details}>
-      <Info label="Responsável" value={owner?.name ?? "Não atribuído"} /><Info label="Empresa controladora" value={parent?.name ?? "Nenhuma"} />
-      <Info label="Documento fiscal" value={company.taxId ?? "—"} /><Info label="Telefone" value={company.phone ? formatPhone(company.phone) : "—"} />
-      <Info label="E-mail" value={company.email ?? "—"} /><Info label="Site" value={company.website ?? "—"} link={company.website} />
-      <Info label="Endereço" value={company.address ?? "—"} wide />
-    </div></Card>}</div>
+    <div className={styles.contentGrid} data-relations={hasRelations ? "visible" : "hidden"}>
+      <div className={styles.profileColumn}>
+        {/* Todo valor da empresa passa pelo InlineField: a mesma caixa
+          * parada, vazia e editando. */}
+        <Card title="Detalhes da empresa">
+          <div className={styles.fields}>
+            <InlineField label="Nome" value={company.name} disabled={!canWrite}>{textEditor("name", "Nome", company.name)}</InlineField>
+            <InlineField label="Razão social" value={company.legalName ?? "Não informada"} empty={!company.legalName} disabled={!canWrite}>{textEditor("legalName", "Razão social", company.legalName)}</InlineField>
+            <InlineField label="Segmento" value={company.industry ?? "Não informado"} empty={!company.industry} disabled={!canWrite}>{textEditor("industry", "Segmento", company.industry)}</InlineField>
+            <InlineField label="Documento fiscal" numeric value={company.taxId ?? "Não informado"} empty={!company.taxId} disabled={!canWrite}>{textEditor("taxId", "Documento fiscal", company.taxId, { numeric: true })}</InlineField>
+            <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>{(close) => <Select label="Responsável" value={company.ownerId ?? null} placeholder="Não atribuído" options={activeUsers} onValueChange={(value) => close(saveCompany("ownerId", value))} />}</InlineField>
+            <InlineField label="Empresa controladora" value={parent?.name ?? "Nenhuma"} empty={!parent} {...(parent ? { leading: <Avatar name={parent.name} size="small" /> } : {})} disabled={!canWrite}>{(close) => <Select label="Empresa controladora" value={company.parentCompanyId ?? null} placeholder="Nenhuma" options={companies.filter((item) => item.id !== company.id && !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(saveCompany("parentCompanyId", value))} />}</InlineField>
+            <InlineField label="Telefone" numeric value={company.phone ? formatPhone(company.phone) : "Não informado"} empty={!company.phone} disabled={!canWrite}>{textEditor("phone", "Telefone", company.phone ? formatPhone(company.phone) : null, { type: "tel", placeholder: "DDD + número", numeric: true })}</InlineField>
+            <InlineField label="E-mail" value={company.email ?? "Não informado"} empty={!company.email} disabled={!canWrite}>{textEditor("email", "E-mail", company.email, { type: "email", placeholder: "contato@empresa.com.br" })}</InlineField>
+            <InlineField label="Site" value={company.website ?? "Não informado"} empty={!company.website} disabled={!canWrite} {...(company.website ? { href: company.website } : {})}>{textEditor("website", "Site", company.website, { placeholder: "empresa.com.br" })}</InlineField>
+            <InlineField label="Endereço" block value={company.address ?? "Não informado"} empty={!company.address} disabled={!canWrite}>{(close) => <Textarea aria-label="Endereço" rows={3} defaultValue={company.address ?? ""} onBlur={(event) => close(saveCompany("address", event.currentTarget.value))} />}</InlineField>
+          </div>
+        </Card>
+      </div>
 
-    {hasRelations && <div className={styles.relations}>
-      {canReadContacts && <div className={styles.relationCard}><Card title="Pessoas" description="Pessoas que trabalham ou se relacionam com esta empresa." actions={canLinkContacts ? <Button size="sm" onClick={() => setLinkContactOpen(true)}>Vincular pessoa</Button> : undefined}>
-        {linkedContacts.length ? <ul>{linkedContacts.map((contact) => <li key={contact.id}><div className={styles.personIdentity}><Avatar name={contact.name} /><div><Link to={`/contacts/${contact.id}`}>{contact.name}</Link><span>{contact.email ?? "Sem e-mail"}</span></div></div>{canLinkContacts && <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button>}</li>)}</ul> : <p className={styles.empty}>Nenhuma pessoa vinculada.</p>}
-      </Card></div>}
-      {canReadDeals && <div className={styles.relationCard}><Card title="Negócios" description="Oportunidades comerciais desta empresa." actions={canLinkDeals ? <Button size="sm" onClick={() => setLinkDealOpen(true)}>Vincular negócio</Button> : undefined}>
-        {linkedDeals.length ? <ul>{linkedDeals.map((deal) => <li key={deal.id}><div><Link to={`/deals/${deal.id}`}>{deal.name}</Link><span>{formatBRL(syncedAmount(deal.amount))}</span></div><div className={styles.dealActions}><Badge tone={deal.status === "won" ? "success" : deal.status === "lost" ? "danger" : "neutral"}>{deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</Badge>{canLinkDeals && <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button>}</div></li>)}</ul> : <p className={styles.empty}>Nenhum negócio vinculado.</p>}
-      </Card></div>}
-    </div>}
+      {hasRelations && <div className={styles.relations}>
+        {canReadContacts && <Card title="Pessoas" description="Pessoas que trabalham ou se relacionam com esta empresa." actions={canLinkContacts ? <Button size="sm" variant="secondary" onClick={() => setLinkContactOpen(true)}>Vincular pessoa</Button> : undefined}>
+          {linkedContacts.length ? <RowList label="Pessoas desta empresa">{linkedContacts.map((contact, index) => <ListRow key={contact.id} index={index} leading={<Avatar name={contact.name} />} title={contact.name} description={contact.email ?? "Sem e-mail"} render={<Link to={`/contacts/${contact.id}`} />} trailing={canLinkContacts ? <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button> : undefined} />)}</RowList> : <Text size="pequeno" tone="muted">Nenhuma pessoa vinculada.</Text>}
+        </Card>}
+        {canReadDeals && <Card title="Negócios" description="Oportunidades comerciais desta empresa." actions={canLinkDeals ? <Button size="sm" variant="secondary" onClick={() => setLinkDealOpen(true)}>Vincular negócio</Button> : undefined}>
+          {linkedDeals.length ? <RowList label="Negócios desta empresa">{linkedDeals.map((deal, index) => <ListRow key={deal.id} index={index} icon="briefcase" title={deal.name} description={deal.status === "open" ? "Em aberto" : deal.status === "won" ? <Signal tone="success">Ganho</Signal> : <Signal tone="danger">Perdido</Signal>} meta={formatBRL(syncedAmount(deal.amount))} render={<Link to={`/deals/${deal.id}`} />} trailing={canLinkDeals ? <Button size="sm" variant="ghost" loading={busyLink === deal.id} onClick={() => void unlinkDeal(deal.id)}>Desvincular</Button> : undefined} />)}</RowList> : <Text size="pequeno" tone="muted">Nenhum negócio vinculado.</Text>}
+        </Card>}
+      </div>}
 
-    <div className={`${styles.relationCard} ${styles.history}`}><Card title="Histórico" description="Mudanças registradas nesta empresa e em seus vínculos comerciais.">
-      <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={events.map((event) => toTimelineItem(event, { users, contacts, companies }))} emptyText="As próximas alterações desta empresa aparecerão aqui." />
-    </Card></div>
+      <div className={styles.history}><Card title="Histórico" description="Mudanças registradas nesta empresa e em seus vínculos comerciais.">
+        <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={events.map((event) => toTimelineItem(event, { users, contacts, companies }))} emptyText="As próximas alterações desta empresa aparecerão aqui." />
+      </Card></div>
     </div>
 
     <ActionModal open={linkContactOpen} onOpenChange={setLinkContactOpen} title="Vincular pessoa" confirmLabel="Vincular" errorText="Selecione uma pessoa." onConfirm={linkContact}>
@@ -166,5 +183,4 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
   </PageFrame>;
 }
 
-function Info({ label, value, link, wide = false }: { label: string; value: string; link?: string | null; wide?: boolean }) { return <div className={wide ? styles.wide : undefined}><span>{label}</span>{link ? <ExternalPreviewLink href={link}>{value}</ExternalPreviewLink> : <strong>{value}</strong>}</div>; }
 function formatRawAmount(value: unknown): number { return toCents(syncedAmount(value)); }

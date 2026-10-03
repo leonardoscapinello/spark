@@ -3,7 +3,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { settingsControllerCreate } from "@spark/api-client";
 import { customFieldDefinitionId, CustomFieldDefinitionSchema, CreateCustomFieldInputSchema, CUSTOM_FIELD_TYPES, CUSTOM_FIELD_TYPE_LABELS, DEAL_BUILT_IN_FIELDS, DEAL_BUILT_IN_FIELD_LABELS, StageFieldRuleSchema, ConfigureStageInputSchema, StageColorSchema, type Stage } from "@spark/core";
 import { configureStage, optimisticStageFieldRule } from "@spark/data";
-import { ActionModal, Button, Checkbox, ColorPicker, Tabs, CrmSection, Field, Input, Label, Select, Switch, Icon, notify } from "@spark/ui-web";
+import { ActionModal, Button, Checkbox, ColorPicker, Tabs, CrmSection, Field, Input, Label, ListRow, RowList, SectionTitle, Select, Surface, Switch, Icon, Text, notify } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getStageTransitionsCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collection.client";
@@ -85,50 +85,57 @@ function StageSettings({ stage, stages, onClose }: { stage: Stage; stages: reado
         <div className={styles.fieldRulesToolbar}>
           <div className={styles.fieldRulesActions}>
             <Field><Label>Pesquisar campos</Label><Input type="search" value={fieldQuery} onChange={(event) => setFieldQuery(event.target.value)} placeholder="Buscar pelo nome do campo" startAdornment={<Icon name="search" />} /></Field>
-            {getSession()?.capabilities.includes("settings:manage") && <Button size="sm" variant="secondary" shape="rounded" icon={<Icon name="plus" />} onClick={() => setNewField((current) => !current)}>{newField ? "Fechar novo campo" : "Criar campo"}</Button>}
+            {getSession()?.capabilities.includes("settings:manage") && <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => setNewField((current) => !current)}>{newField ? "Fechar novo campo" : "Criar campo"}</Button>}
           </div>
           <div className={styles.fieldRulesActions}>
             <Checkbox checked={onlyEnabled} onCheckedChange={setOnlyEnabled}>Mostrar apenas ativos</Checkbox>
-            <span className={styles.fieldRulesSummary}>{requiredCount} {requiredCount === 1 ? "obrigatório" : "obrigatórios"} · {importantCount} {importantCount === 1 ? "importante" : "importantes"}</span>
+            <Text size="pequeno" tone="muted">{requiredCount} {requiredCount === 1 ? "obrigatório" : "obrigatórios"} · {importantCount} {importantCount === 1 ? "importante" : "importantes"}</Text>
           </div>
         </div>
-        {getSession()?.capabilities.includes("settings:manage") && newField && <div className={styles.newField}>
-          <div className={styles.newFieldHeader}><strong>Novo campo de negócio</strong><Button variant="ghost" size="sm" iconOnly icon={<Icon name="close" />} aria-label="Fechar novo campo" onClick={() => setNewField(false)} /></div>
+        {getSession()?.capabilities.includes("settings:manage") && newField && <Surface elevation="cavada" radius="lista" className={styles.newField}>
+          <SectionTitle level="block" actions={<Button variant="ghost" size="sm" iconOnly icon={<Icon name="close" />} aria-label="Fechar novo campo" onClick={() => setNewField(false)} />}>Novo campo de negócio</SectionTitle>
           <div className={styles.newFieldInputs}>
             <Field><Label>Nome</Label><Input autoFocus value={fieldName} onChange={(e) => setFieldName(e.target.value)} placeholder="Ex.: Orçamento aprovado" /></Field>
             <Field><Label>Tipo</Label><Select label="Tipo do novo campo" value={fieldType} options={CUSTOM_FIELD_TYPES.map((value) => ({ value, label: CUSTOM_FIELD_TYPE_LABELS[value] }))} onValueChange={(v) => { if (v) setFieldType(v); }} /></Field>
           </div>
           {(fieldType === "single_select" || fieldType === "multi_select") && <Field><Label>Opções, separadas por vírgulas</Label><Input value={fieldOptions} onChange={(e) => setFieldOptions(e.target.value)} placeholder="Ex.: Pequena, Média, Grande" /></Field>}
-          <div><Button shape="rounded" size="sm" loading={creatingField} onClick={() => void createField()} disabled={!fieldName.trim()}>Criar e ativar nesta etapa</Button></div>
-        </div>}
-        <div className={styles.fieldRules} role="group" aria-label="Campos disponíveis nesta etapa">
-          <div className={styles.fieldRulesHead}><span>Ativo</span><span>Campo</span><span>Obrigatório</span><span>Importante</span></div>
-          {visibleFields.length === 0 && <p className={styles.fieldRulesEmpty}>Nenhum campo encontrado. Tente outro nome ou remova o filtro.</p>}
-          {visibleFields.map((field) => {
+          <div><Button size="sm" loading={creatingField} onClick={() => void createField()} disabled={!fieldName.trim()}>Criar e ativar nesta etapa</Button></div>
+        </Surface>}
+        {/* Cada campo numa linha: ativo à esquerda; obrigatório e importante à
+          * direita. Ativo vira folha (seleção da linha). */}
+        <div className={styles.fieldRules}>
+          {visibleFields.length === 0 && <Text size="pequeno" tone="muted">Nenhum campo encontrado. Tente outro nome ou remova o filtro.</Text>}
+          <RowList label="Campos disponíveis nesta etapa">{visibleFields.map((field, index) => {
             const level = fieldLevel(field.key);
             const enabled = level !== "none";
-            return <div className={styles.fieldRule} data-active={enabled || undefined} key={field.key}>
-              <Checkbox aria-label={`Ativar ${field.label}`} checked={enabled} onCheckedChange={(checked) => setFieldLevel(field.key, checked ? "optional" : "none")}>Ativo</Checkbox>
-              <div className={styles.fieldRuleName}><strong>{field.label}</strong><span className={styles.fieldKind}>{field.key.startsWith("custom:") ? "Personalizado" : "Padrão"}</span></div>
-              <Checkbox aria-label={`${field.label} obrigatório`} checked={level === "required"} disabled={!enabled} onCheckedChange={(checked) => setFieldLevel(field.key, checked ? "required" : "optional")}>Obrigatório</Checkbox>
-              <Checkbox aria-label={`${field.label} importante`} checked={level === "important"} disabled={!enabled} onCheckedChange={(checked) => setFieldLevel(field.key, checked ? "important" : "optional")}>Importante</Checkbox>
-            </div>;
-          })}
+            return <ListRow
+              key={field.key}
+              index={index}
+              selected={enabled}
+              leading={<Checkbox aria-label={`Ativar ${field.label}`} checked={enabled} onCheckedChange={(checked) => setFieldLevel(field.key, checked ? "optional" : "none")}>{""}</Checkbox>}
+              title={field.label}
+              description={field.key.startsWith("custom:") ? "Personalizado" : "Padrão"}
+              trailing={<>
+                <Checkbox aria-label={`${field.label} obrigatório`} checked={level === "required"} disabled={!enabled} onCheckedChange={(checked) => setFieldLevel(field.key, checked ? "required" : "optional")}>Obrigatório</Checkbox>
+                <Checkbox aria-label={`${field.label} importante`} checked={level === "important"} disabled={!enabled} onCheckedChange={(checked) => setFieldLevel(field.key, checked ? "important" : "optional")}>Importante</Checkbox>
+              </>}
+            />;
+          })}</RowList>
         </div>
-        <p className={styles.help}>Obrigatório impede avançar sem preencher. Importante sinaliza uma pendência, mas permite continuar.</p>
+        <Text size="pequeno" tone="muted">Obrigatório impede avançar sem preencher. Importante sinaliza uma pendência, mas permite continuar.</Text>
       </div> },
       { value: "movimentacao", label: "Movimentação", content: <div className={styles.movement}>
         <CrmSection title="Destinos permitidos" description="Defina para onde a equipe pode mover um negócio a partir desta etapa.">
           <Switch checked={restricted} onCheckedChange={setRestricted}>Escolher destinos específicos</Switch>
-          {!restricted && <p>Todos os destinos do funil estão disponíveis.</p>}
+          {!restricted && <Text size="pequeno" tone="secondary">Todos os destinos do funil estão disponíveis.</Text>}
           {restricted && <div className={styles.destinations}>
             <CrmSection title="Avançar">
               {destinationsByDirection("forward").map((s) => <Checkbox key={s.id} checked={selected.includes(s.id)} onCheckedChange={(checked) => setDestinations(checked ? [...selected, s.id] : selected.filter((id) => id !== s.id))}>{s.name}</Checkbox>)}
-              {destinationsByDirection("forward").length === 0 && <p>Esta é a última etapa.</p>}
+              {destinationsByDirection("forward").length === 0 && <Text size="pequeno" tone="muted">Esta é a última etapa.</Text>}
             </CrmSection>
             <CrmSection title="Retornar">
               {destinationsByDirection("backward").map((s) => <Checkbox key={s.id} checked={selected.includes(s.id)} onCheckedChange={(checked) => setDestinations(checked ? [...selected, s.id] : selected.filter((id) => id !== s.id))}>{s.name}</Checkbox>)}
-              {destinationsByDirection("backward").length === 0 && <p>Esta é a primeira etapa.</p>}
+              {destinationsByDirection("backward").length === 0 && <Text size="pequeno" tone="muted">Esta é a primeira etapa.</Text>}
             </CrmSection>
           </div>}
         </CrmSection>

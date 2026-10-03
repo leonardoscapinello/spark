@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { contactId as contactIdFactory, type Activity, type ActivityType } from "@spark/core";
 import { optimisticActivity } from "@spark/data";
-import { ActionModal, Badge, Button, CalendarWeek, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, TableIconAction, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Button, CalendarEntry, CalendarWeek, Chip, CollectionToolbar, DataTable, DateTimePicker, EmptyState, Field, IconTile, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonIdentity, SearchSelect, SegmentedControl, Select, Signal, TableIconAction, Text, Textarea, Icon, notify, type SelectOption, type TableColumn } from "@spark/ui-web";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getSession } from "../lib/auth.client";
@@ -76,28 +76,29 @@ export default function Activities() {
     id: activity.id,
     date: localDateKey(activity.scheduledAt),
     hour: new Date(activity.scheduledAt).getHours(),
-    content: <div className={styles.calendarActivity}>
-      <span className={styles.calendarTime}>{new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(activity.scheduledAt))}</span>
-      <strong>{activity.title}</strong>
-      <span>{activity.contactId ? contactNames.get(activity.contactId) ?? "Pessoa indisponível" : typeLabel(activity.type)}</span>
-      <Badge tone={activity.completed ? "success" : isOverdue(activity, now) ? "danger" : "neutral"}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : typeLabel(activity.type)}</Badge>
-    </div>,
+    content: <CalendarEntry
+      time={new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(activity.scheduledAt))}
+      title={activity.title}
+      detail={activity.contactId ? contactNames.get(activity.contactId) ?? "Pessoa indisponível" : typeLabel(activity.type)}
+      done={activity.completed}
+      status={<Signal tone={activity.completed ? "success" : isOverdue(activity, now) ? "danger" : "info"}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : typeLabel(activity.type)}</Signal>}
+    />,
   })), ...externalEvents.filter((event) => event.status !== "cancelled").map((event) => ({
     id: event.id,
     date: localDateKey(event.startsAt),
     hour: new Date(event.startsAt).getHours(),
-    content: <div className={styles.calendarActivity}>
-      <span className={styles.calendarTime}>{event.allDay ? "Dia todo" : formatTimeRange(event.startsAt, event.endsAt)}</span>
-      <strong>{event.title}</strong>
-      <span>{event.calendarName}</span>
-      <Badge tone={event.status === "tentative" ? "warning" : "neutral"}>{providerLabel(event.provider)}</Badge>
-    </div>,
+    content: <CalendarEntry
+      time={event.allDay ? "Dia todo" : formatTimeRange(event.startsAt, event.endsAt)}
+      title={event.title}
+      detail={event.calendarName}
+      status={<Signal tone={event.status === "tentative" ? "warning" : "neutral"}>{providerLabel(event.provider)}</Signal>}
+    />,
   }))];
   const columns: TableColumn<Activity>[] = [
-    { id: "title", label: "Atividade", cell: (activity) => <div className={styles.activityCell}><span className={styles.typeIcon}><Icon name={activity.type === "call" ? "phone" : activity.type === "meeting" ? "team" : activity.type === "email" ? "mail" : "check"} /></span><div><strong>{activity.title}</strong><span className={styles.secondary}>{typeLabel(activity.type)}</span></div></div>, sortValue: (activity) => activity.title },
+    { id: "title", label: "Atividade", cell: (activity) => <PersonIdentity name={activity.title} detail={typeLabel(activity.type)} avatar={<IconTile icon={activity.type === "call" ? "phone" : activity.type === "meeting" ? "team" : activity.type === "email" ? "mail" : "check"} size="sm" />} />, sortValue: (activity) => activity.title },
     { id: "contact", label: "Pessoa", cell: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "Pessoa indisponível" : "—", sortValue: (activity) => activity.contactId ? contactNames.get(activity.contactId) ?? "" : "" },
-    { id: "date", label: "Data e hora", cell: (activity) => <span className={isOverdue(activity, now) ? styles.overdue : undefined}>{formatDateTime(activity.scheduledAt)}</span>, sortValue: (activity) => activity.scheduledAt },
-    { id: "status", label: "Situação", cell: (activity) => <Badge tone={activity.completed ? "success" : isOverdue(activity, now) ? "danger" : "neutral"}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : "Pendente"}</Badge>, sortValue: (activity) => activity.completed ? 2 : isOverdue(activity, now) ? 0 : 1 },
+    { id: "date", label: "Data e hora", cell: (activity) => <Text size="pequeno" mono tone={isOverdue(activity, now) ? "danger" : "default"}>{formatDateTime(activity.scheduledAt)}</Text>, sortValue: (activity) => activity.scheduledAt },
+    { id: "status", label: "Situação", cell: (activity) => <Chip dot tone={activity.completed ? "success" : isOverdue(activity, now) ? "danger" : "neutral"}>{activity.completed ? "Concluída" : isOverdue(activity, now) ? "Atrasada" : "Pendente"}</Chip>, sortValue: (activity) => activity.completed ? 2 : isOverdue(activity, now) ? 0 : 1 },
   ];
 
   function resetForm() {
@@ -124,19 +125,28 @@ export default function Activities() {
     } finally { setBusyId(null); }
   }
 
+  /* Regra do produto: a linha abre o registro. A atividade não tem página
+   * própria — abre o negócio dela; sem negócio, a pessoa. */
+  function openActivityRecord(activity: Activity, newTab: boolean) {
+    const href = activity.dealId ? `/deals/${activity.dealId}` : activity.contactId && canReadContacts ? `/contacts/${activity.contactId}` : null;
+    if (!href) return;
+    if (newTab) window.open(href, "_blank", "noopener,noreferrer");
+    else void navigate(href);
+  }
+
   function submit(event: FormEvent) { event.preventDefault(); void createActivity().catch(() => undefined); }
 
   return <PageFrame className={styles.page}>
     <PageHeader icon="calendar" title="Atividades" actions={canCreate && contacts.length > 0 && !isLoading && !firstRun ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="calendar" title={contacts.length > 0 ? "Planeje a primeira atividade" : canReadContacts ? "Comece com uma pessoa" : "Nenhuma atividade por enquanto"} description={contacts.length > 0 ? "Agende uma tarefa, ligação ou reunião e acompanhe o que sua equipe precisa fazer." : canReadContacts ? "Cadastre uma pessoa para poder agendar tarefas, ligações e reuniões." : "A equipe ainda não registrou atividades nesta agenda."} action={contacts.length > 0 && canCreate ? <Button onClick={() => setModalOpen(true)}>Nova atividade</Button> : canReadContacts ? <Button onClick={() => void navigate("/")}>Adicionar pessoa</Button> : undefined} />}
-    {!firstRun && <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="row" shape="rounded" className={styles.periodOption} aria-pressed={period === option.value} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<strong>{option.count}</strong></Button>)}</div>}
+    {!firstRun && <div className={styles.periods} role="group" aria-label="Período das atividades">{periods.map((option) => <Button key={option.value} variant="row" aria-pressed={period === option.value} data-selected={period === option.value || undefined} onClick={() => setPeriod(option.value)}>{option.label}<Text as="span" size="pequeno" tone="muted" mono>{option.count}</Text></Button>)}</div>}
     {!firstRun && <CollectionToolbar
       search={<Input aria-label="Buscar atividades" startAdornment={<Icon name="search" />} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar atividade ou pessoa" />}
       filters={<Select appearance="filter" label="Tipo de atividade" value={typeFilter} options={[{ value: "all", label: "Todos os tipos" }, ...TYPE_OPTIONS]} onValueChange={(value) => setTypeFilter(value ?? "all")} />}
       count={isLoading ? "Carregando atividades…" : `${filtered.length} ${filtered.length === 1 ? "atividade" : "atividades"}`}
       actions={<SegmentedControl label="Visualização das atividades" value={layout} options={[{ value: "list", label: "Lista" }, { value: "calendar", label: "Calendário" }]} onValueChange={setLayout} />}
     />}
-    {!firstRun && (layout === "calendar" ? <CalendarWeek label="atividades" week={calendarWeek} items={calendarItems} onWeekChange={setCalendarWeek} /> : <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText={activities.length ? "Nenhuma atividade neste filtro." : "Nenhuma atividade cadastrada."} actions={(activity) => <>{canReadContacts && activity.contactId && <TableIconAction label="Abrir pessoa" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}{canWrite && <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${activity.title}`} loading={busyId === activity.id} menu={<MenuItem onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</MenuItem>} />}</>} />)}
+    {!firstRun && (layout === "calendar" ? <CalendarWeek label="atividades" week={calendarWeek} items={calendarItems} onWeekChange={setCalendarWeek} /> : <DataTable label="Agenda de atividades" rows={filtered} columns={columns} rowKey={(activity) => activity.id} rowLabel={(activity) => activity.title} state={isLoading && activities.length === 0 ? "loading" : "ready"} emptyText={activities.length ? "Nenhuma atividade neste filtro." : "Nenhuma atividade cadastrada."} onRowOpen={(activity, { newTab }) => openActivityRecord(activity, newTab)} actions={(activity) => <>{canReadContacts && activity.contactId && <TableIconAction label="Abrir pessoa" icon={<Icon name="right" />} onClick={() => void navigate(`/contacts/${activity.contactId}`)} />}{canWrite && <MenuButton size="sm" variant="ghost" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Mais ações de ${activity.title}`} loading={busyId === activity.id} menu={<MenuItem onClick={() => void toggle(activity)}>{activity.completed ? "Reabrir" : "Concluir"}</MenuItem>} />}</>} />)}
     <ActionModal open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }} title="Nova atividade" confirmLabel="Agendar" errorText="Preencha pessoa, título e data para agendar." onConfirm={createActivity}>
       <form className={styles.form} onSubmit={submit}>
         <Field><Label>Pessoa</Label><SearchSelect label="Buscar pessoa" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((contact) => !contact.deletedAt).map((contact) => ({ value: contact.id, label: contact.name, ...(contact.email ? { description: contact.email } : {}) }))} value={selectedContact} onValueChange={setSelectedContact} /></Field>

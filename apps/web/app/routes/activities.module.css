@@ -1,18 +1,6 @@
+/* Atividades: só layout (ADR-0045). Filtros, tabela e calendário vêm de @spark/ui-web. */
 .page { gap: var(--space-6); }
-.periods { display: flex; align-items: center; gap: var(--space-2); overflow-x: auto; border-bottom: var(--ui-hairline) solid var(--color-line); scrollbar-width: none; }
+.periods { display: flex; align-items: center; gap: var(--space-1); overflow-x: auto; scrollbar-width: none; }
 .periods::-webkit-scrollbar { display: none; }
-.periodOption { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--ui-controlMedium); padding-inline: var(--space-3); white-space: nowrap; }
-.periodOption strong { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
-.activityCell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
-.activityCell > div { min-width: 0; }
-.activityCell strong, .secondary { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.typeIcon { display: grid; flex: 0 0 var(--space-8); place-items: center; width: var(--space-8); height: var(--space-8); border-radius: var(--radius-sm); corner-shape: var(--radius-shape); background: var(--color-surface2); color: var(--color-inkMuted); }
-.typeIcon svg { width: var(--ui-icon); height: var(--ui-icon); }
-.secondary { margin-top: var(--space-1); color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.overdue { color: var(--color-statusDanger); font-weight: var(--typography-weight-medium); }
-.calendarActivity { display: grid; justify-items: start; gap: var(--space-1); min-width: 0; }
-.calendarActivity > strong, .calendarActivity > span:not(.calendarTime) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.calendarActivity > strong { font-size: var(--typography-size-compact); font-weight: var(--typography-weight-semibold); }
-.calendarActivity > span:not(.calendarTime) { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.calendarTime { color: var(--color-inkMuted); font-size: var(--typography-size-xs); font-variant-numeric: tabular-nums; }
+.periods > * { flex: none; }
 .form { display: flex; flex-direction: column; gap: var(--space-4); }

@@ -13,7 +13,7 @@ import {
   type IdentityChannel,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity, writeAccepted } from "@spark/data";
-import { BackLink, Button, DateTimePicker, ErrorText, Field, Input, Label, RecordPageHeader, Select, Skeleton, Timeline, userSelectOption, notify } from "@spark/ui-web";
+import { Avatar, BackLink, Button, Card, DateTimePicker, Field, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -27,7 +27,6 @@ import { getIdentitiesCollection } from "../lib/identities-collection.client";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../lib/lead-options";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
-import styles from "./contact-detail.module.css";
 import layout from "./contact-profile-layout.module.css";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
@@ -113,12 +112,6 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
   const [identityValue, setIdentityValue] = useState("");
   const [identityPending, setIdentityPending] = useState(false);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [nameEdit, setNameEdit] = useState("");
-  const [emailEdit, setEmailEdit] = useState("");
-  const [phoneEdit, setPhoneEdit] = useState("");
-  const [emailEditError, setEmailEditError] = useState<string | null>(null);
-  const [phoneEditError, setPhoneEditError] = useState<string | null>(null);
 
   const { data, isLoading } = useLiveQuery({
     query: (q) =>
@@ -179,8 +172,10 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
         if (field === "companyId") draft.companyId = value ? companyIdFactory.from(value) : null;
       }));
       notify({ title: "Lead atualizado", tone: "success" });
-    } catch {
+    } catch (cause) {
       notify({ title: "Não foi possível atualizar o lead", tone: "error" });
+      // A linha (InlineField) mostra a falha na própria caixa.
+      throw cause;
     } finally {
       setContactFieldPending(null);
     }
@@ -231,239 +226,119 @@ export function ContactProfile({ contactId, embedded = false }: { contactId: str
     }
   }
 
-  function startEditing() {
+  /**
+   * Nome, e-mail e telefone mudam no lugar (InlineField): a mesma validação do
+   * core, e o erro volta para a linha em vez de um formulário à parte.
+   */
+  async function saveContact(field: "name" | "email" | "phone", raw: string) {
     if (!data) return;
-    setNameEdit(data.name);
-    setEmailEdit(data.email ?? "");
-    setPhoneEdit(data.phone ? formatPhone(data.phone) : "");
-    setEmailEditError(null);
-    setPhoneEditError(null);
-    setIsEditing(true);
-  }
-
-  function saveEdit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!data) return;
-    const trimmedName = nameEdit.trim();
-    if (!trimmedName) return;
-
-    setEmailEditError(null);
-    setPhoneEditError(null);
-
-    let validEmail = null;
+    const text = raw.trim();
+    let next: string | null = text || null;
+    if (field === "name" && !text) throw new Error("O nome não pode ficar vazio.");
     try {
-      validEmail = emailEdit.trim() ? buildEmail(emailEdit) : null;
+      if (field === "email" && text) next = buildEmail(text);
+      if (field === "phone" && text) next = buildPhone(text);
     } catch {
-      setEmailEditError("E-mail inválido.");
-      return;
+      const message = field === "email" ? "E-mail inválido." : "Telefone inválido — use DDD + número.";
+      notify({ title: message, tone: "error" });
+      throw new Error(message);
     }
-
-    let validPhone = null;
-    try {
-      validPhone = phoneEdit.trim() ? buildPhone(phoneEdit) : null;
-    } catch {
-      setPhoneEditError("Telefone inválido — use DDD + número.");
-      return;
-    }
-
-    collection.update(data.id, (draft) => {
-      draft.name = trimmedName;
-      draft.email = validEmail;
-      draft.phone = validPhone;
-    });
-    setIsEditing(false);
+    if (field === "name" && next === data.name) return;
+    if (field === "email" && next === data.email) return;
+    if (field === "phone" && next === data.phone) return;
+    await writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => {
+      if (field === "name" && next) draft.name = next;
+      if (field === "email") draft.email = next as typeof draft.email;
+      if (field === "phone") draft.phone = next as typeof draft.phone;
+    }));
   }
 
   if (!data) {
     return (
       <div className={layout.page}>
         {!embedded && <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>}
-        {isLoading ? <div className={layout.loading} role="status" aria-label="Carregando pessoa"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Pessoa não encontrada.</p>}
+        {isLoading ? <div className={layout.loading} role="status" aria-label="Carregando pessoa"><Skeleton className={layout.loadingLine} /><Skeleton className={layout.loadingLine} /><Skeleton className={layout.loadingLine} /></div> : <Text tone="secondary">Pessoa não encontrada.</Text>}
       </div>
     );
   }
 
+  const owner = data.ownerId ? users.find((user) => user.id === data.ownerId) : undefined;
+  const company = data.companyId ? companies.find((item) => item.id === data.companyId) : undefined;
+  const activeCustomFields = customFields.filter((field) => !field.archivedAt);
+  const now = new Date().toISOString();
+  const busy = contactFieldPending !== null;
+
   return (
-    <div className={layout.page}>
-      <RecordPageHeader back={embedded ? null : <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={(canWrite && !isEditing) || canWriteInbox ? <>{canWrite && !isEditing && <><Button variant="secondary" onClick={startEditing}>Editar pessoa</Button><MergePerson contactId={contactId} name={data.name} /></>}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star" }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: companies.find((company) => company.id === data.companyId)?.name ?? "Não vinculada", icon: "building" }]} />
-      <div className={[layout.contentGrid, embedded ? styles.embeddedGrid : ""].join(" ")}>
+    <div className={[layout.page, embedded ? layout.embedded : ""].filter(Boolean).join(" ")}>
+      <RecordPageHeader back={embedded ? null : <BackLink render={<Link to={backHref} />}>{backLabel}</BackLink>} icon="user" avatarName={data.name} eyebrow="Pessoa" title={data.name} description={`${data.email ?? "Sem e-mail"} · ${data.phone ? formatPhone(data.phone) : "Sem telefone"}`} actions={canWrite || canWriteInbox ? <>{canWrite && <MergePerson contactId={contactId} name={data.name} />}{canWriteInbox && <Button onClick={() => void navigate(`/inbox?box=all&createFor=${contactId}`)}>Nova conversa</Button>}</> : undefined} metrics={[{ label: "Pontuação", value: data.score, icon: "star", numeric: true }, { label: "Etapa", value: LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus, icon: "check" }, { label: "Empresa", value: company?.name ?? "Não vinculada", icon: "building" }]} />
+      <div className={layout.contentGrid}>
         <div className={layout.profileColumn}>
-      <h2 className={layout.columnTitle}>Detalhes</h2>
-      {isEditing ? (
-        <form className={styles.campos} onSubmit={saveEdit}>
-          <Field>
-            <Label>Nome</Label>
-            <Input value={nameEdit} onChange={(event) => setNameEdit(event.target.value)} />
-          </Field>
-          <Field invalid={!!emailEditError}>
-            <Label>E-mail</Label>
-            <Input
-              value={emailEdit}
-              onChange={(event) => {
-                setEmailEdit(event.target.value);
-                setEmailEditError(null);
-              }}
-              placeholder="opcional"
-            />
-            <ErrorText>{emailEditError}</ErrorText>
-          </Field>
-          <Field invalid={!!phoneEditError}>
-            <Label>Telefone</Label>
-            <Input
-              value={phoneEdit}
-              onChange={(event) => {
-                setPhoneEdit(event.target.value);
-                setPhoneEditError(null);
-              }}
-              placeholder="opcional"
-            />
-            <ErrorText>{phoneEditError}</ErrorText>
-          </Field>
-          <div className={styles.acoesEdicao}>
-            <Button type="submit" size="sm" disabled={!nameEdit.trim()}>
-              Salvar
-            </Button>
-            <Button type="button" variant="secondary" size="sm" onClick={() => setIsEditing(false)}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <div className={styles.campos}>
-          <div className={styles.campo}>
-            <span className={styles.rotulo}>E-mail</span>
-            <span className={styles.valor}>{data.email ?? "—"}</span>
-          </div>
-          <div className={styles.campo}>
-            <span className={styles.rotulo}>Telefone</span>
-            <span className={styles.valor}>{data.phone ? formatPhone(data.phone) : "—"}</span>
-          </div>
-          <div className={styles.campo}>
-            <span className={styles.rotulo}>Pontuação</span>
-            <span className={styles.valor}>{data.score}</span>
-          </div>
-        </div>
-      )}
-
-      <div className={styles.campos}>
-        <div className={styles.campo}>
-          <span className={styles.rotulo}>Etapa do relacionamento</span>
-          <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} disabled={!canWrite || contactFieldPending !== null} onValueChange={(value) => { if (value) void updateLifecycle("leadStatus", value); }} />
-        </div>
-        <div className={styles.campo}>
-          <span className={styles.rotulo}>Origem</span>
-          <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} disabled={!canWrite || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("source", value)} />
-        </div>
-        <div className={styles.campo}>
-          <span className={styles.rotulo}>Responsável</span>
-          <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} disabled={!canWrite || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("ownerId", value)} />
-        </div>
-        <div className={styles.campo}>
-          <span className={styles.rotulo}>Empresa</span>
-          <Select label="Empresa da pessoa" value={data.companyId} placeholder="Não vinculada" options={companies.filter((company) => !company.deletedAt).map((company) => ({ value: company.id, label: company.name }))} disabled={!canWrite || !canReadCompanies || contactFieldPending !== null} onValueChange={(value) => void updateLifecycle("companyId", value)} />
-        </div>
-      </div>
-
-      {customFields.filter((field) => !field.archivedAt).length > 0 && <section className={styles.atividades}>
-        <h2 className={styles.subtitulo}>Campos personalizados</h2>
-        <div className={styles.campos}>
-          {customFields.filter((field) => !field.archivedAt).map((field) => <EnrichedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
-        </div>
-      </section>}
-
+          {/* Todo valor da ficha passa pelo InlineField: a mesma caixa parada,
+            * vazia e editando, como na ficha do negócio. */}
+          <Card title="Detalhes">
+            <div className={layout.fields}>
+              <InlineField label="Nome" value={data.name} disabled={!canWrite}>{(close) => <Input aria-label="Nome" defaultValue={data.name} onBlur={(event) => close(saveContact("name", event.currentTarget.value))} />}</InlineField>
+              <InlineField label="E-mail" value={data.email ?? "Sem e-mail"} empty={!data.email} disabled={!canWrite}>{(close) => <Input aria-label="E-mail" type="email" defaultValue={data.email ?? ""} placeholder="nome@empresa.com.br" onBlur={(event) => close(saveContact("email", event.currentTarget.value))} />}</InlineField>
+              <InlineField label="Telefone" numeric value={data.phone ? formatPhone(data.phone) : "Sem telefone"} empty={!data.phone} disabled={!canWrite}>{(close) => <Input aria-label="Telefone" type="tel" numeric defaultValue={data.phone ? formatPhone(data.phone) : ""} placeholder="DDD + número" onBlur={(event) => close(saveContact("phone", event.currentTarget.value))} />}</InlineField>
+              <InlineField label="Pontuação" numeric value={String(data.score)} />
+              <InlineField label="Etapa do relacionamento" value={LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus} disabled={!canWrite || busy}>{(close) => <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) close(updateLifecycle("leadStatus", value)); }} />}</InlineField>
+              <InlineField label="Origem" value={LEAD_SOURCE_OPTIONS.find((option) => option.value === data.source)?.label ?? data.source ?? "Sem origem"} empty={!data.source} disabled={!canWrite || busy}>{(close) => <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => close(updateLifecycle("source", value))} />}</InlineField>
+              <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite || busy}>{(close) => <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => close(updateLifecycle("ownerId", value))} />}</InlineField>
+              <InlineField label="Empresa" value={company?.name ?? "Não vinculada"} empty={!company} {...(company ? { leading: <Avatar name={company.name} size="small" />, action: { label: `Abrir ${company.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${company.id}`) } } : {})} disabled={!canWrite || !canReadCompanies || busy}>{(close) => <Select label="Empresa da pessoa" value={data.companyId} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(updateLifecycle("companyId", value))} />}</InlineField>
+            </div>
+          </Card>
+          {activeCustomFields.length > 0 && <Card title="Campos personalizados">
+            <div className={layout.fields}>
+              {activeCustomFields.map((field) => <EnrichedCustomFieldValue key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
+            </div>
+          </Card>}
         </div>
         <div className={layout.workColumn}>
-      {canReadDeals && <section className={styles.atividades}>
-        <div className={styles.sectionHeading}><h2 className={styles.subtitulo}>Negócios</h2>{canWriteDeals && <Button size="sm" variant="secondary" onClick={() => void navigate(`/deals?createFor=${contactId}`)}>Novo negócio</Button>}</div>
-        {deals.length === 0 ? <span className={styles.valor}>Nenhum negócio desta pessoa.</span> : <ul className={styles.listaAtividades}>{deals.map((deal) => <li key={deal.id} className={styles.atividade}><Link className={layout.recordLink} to={`/deals/${deal.id}`}><strong>{deal.name}</strong><span>{deal.status === "open" ? "Em aberto" : deal.status === "won" ? "Ganho" : "Perdido"}</span></Link></li>)}</ul>}
-      </section>}
-      {canReadInbox && <section className={styles.atividades}>
-        <div className={styles.sectionHeading}><h2 className={styles.subtitulo}>Conversas</h2></div>
-        {conversations.length === 0 ? <span className={styles.valor}>Nenhuma conversa desta pessoa.</span> : <ul className={styles.listaAtividades}>{conversations.map((conversation) => <li key={conversation.id} className={styles.atividade}><Link className={layout.recordLink} to={`/inbox?box=all&conversation=${conversation.id}`}><strong>{conversation.subject}</strong><span>{conversation.channel === "email" ? "E-mail" : conversation.channel === "instagram" ? "Instagram" : conversation.channel === "whatsapp" ? "WhatsApp" : conversation.channel === "messenger" ? "Messenger" : "Interno"}</span></Link></li>)}</ul>}
-      </section>}
-      <section className={styles.atividades}>
-        <h2 className={styles.subtitulo}>Histórico</h2>
-        <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={events.map((event) => toTimelineItem(event, { users, companies, customFields }))} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
-      </section>
-
-      {canReadActivities && <section className={styles.atividades}>
-        <h2 className={styles.subtitulo}>Atividades</h2>
-
-        <ul className={styles.listaAtividades}>
-          {activities.map((activity) => (
-            <li
-              key={activity.id}
-              className={[styles.atividade, activity.completed ? styles.atividadeConcluida : ""]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <div className={styles.atividadeInfo}>
-                <span className={styles.atividadeTipo}>
-                  {TYPES.find((t) => t.value === activity.type)?.label ?? activity.type}
-                </span>
-                <span className={styles.atividadeTitulo}>{activity.title}</span>
-                <span className={styles.atividadeData}>{formatDateTime(activity.scheduledAt)}</span>
-              </div>
-              {canWriteActivities && <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => void toggleCompleted(activity.id, activity.title, !activity.completed)}
-              >
-                {activity.completed ? "Reabrir" : "Concluir"}
-              </Button>}
-            </li>
-          ))}
-        </ul>
-
-        {canWriteActivities && <form className={styles.formAtividade} onSubmit={addActivity}>
-          <div className={styles.tipoLinha}>
-            {TYPES.map((option) => (
-              <Button
-                key={option.value}
-                type="button"
-                size="sm"
-                variant={selectedType === option.value ? "primary" : "secondary"}
-                onClick={() => setSelectedType(option.value)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-          <Field>
-            <Label>Título</Label>
-            <Input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="O que precisa ser feito" />
-          </Field>
-          <Field>
-            <Label>Quando</Label>
-            <DateTimePicker label="Data e hora da atividade" mode="datetime" value={scheduledAt} onValueChange={setScheduledAt} placeholder="Selecionar data e hora" />
-          </Field>
-          <Button type="submit" size="sm" loading={activityPending} disabled={!activityTitle.trim() || !scheduledAt}>
-            Adicionar atividade
-          </Button>
-        </form>}
-      </section>}
+          {canReadDeals && <Card title="Negócios" actions={canWriteDeals ? <Button size="sm" variant="secondary" onClick={() => void navigate(`/deals?createFor=${contactId}`)}>Novo negócio</Button> : undefined}>
+            {deals.length === 0 ? <Text size="pequeno" tone="muted">Nenhum negócio desta pessoa.</Text> : <RowList label="Negócios desta pessoa">{deals.map((deal, index) => <ListRow key={deal.id} index={index} icon="briefcase" title={deal.name} description={deal.status === "open" ? "Em aberto" : deal.status === "won" ? <Signal tone="success">Ganho</Signal> : <Signal tone="danger">Perdido</Signal>} render={<Link to={`/deals/${deal.id}`} />} />)}</RowList>}
+          </Card>}
+          {canReadInbox && <Card title="Conversas">
+            {conversations.length === 0 ? <Text size="pequeno" tone="muted">Nenhuma conversa desta pessoa.</Text> : <RowList label="Conversas desta pessoa">{conversations.map((conversation, index) => <ListRow key={conversation.id} index={index} icon="message" title={conversation.subject} description={conversation.channel === "email" ? "E-mail" : conversation.channel === "instagram" ? "Instagram" : conversation.channel === "whatsapp" ? "WhatsApp" : conversation.channel === "messenger" ? "Messenger" : "Interno"} render={<Link to={`/inbox?box=all&conversation=${conversation.id}`} />} />)}</RowList>}
+          </Card>}
+          <Card title="Histórico">
+            <Timeline initialCount={10} pageSize={10} density="compact" groupByDay items={events.map((event) => toTimelineItem(event, { users, companies, customFields }))} emptyText="As próximas alterações desta pessoa aparecerão aqui." />
+          </Card>
+          {canReadActivities && <Card title="Atividades">
+            <div className={layout.stack}>
+              {activities.length === 0 ? <Text size="pequeno" tone="muted">Nenhuma atividade desta pessoa.</Text> : <RowList label="Atividades desta pessoa">{activities.map((activity, index) => {
+                const overdue = !activity.completed && activity.scheduledAt < now;
+                const kind = TYPES.find((t) => t.value === activity.type)?.label ?? activity.type;
+                return <ListRow key={activity.id} index={index} icon={activity.type === "call" ? "phone" : activity.type === "meeting" ? "team" : activity.type === "email" ? "mail" : "check"} done={activity.completed} title={activity.title} description={overdue ? <Signal tone="danger">Atrasada · {kind}</Signal> : kind} meta={formatDateTime(activity.scheduledAt)} trailing={canWriteActivities ? <Button variant="ghost" size="sm" onClick={() => void toggleCompleted(activity.id, activity.title, !activity.completed)}>{activity.completed ? "Reabrir" : "Concluir"}</Button> : undefined} />;
+              })}</RowList>}
+              {canWriteActivities && <form className={layout.form} onSubmit={addActivity}>
+                <SegmentedControl label="Tipo de atividade" value={selectedType} options={TYPES} onValueChange={setSelectedType} />
+                <Field>
+                  <Label>Título</Label>
+                  <Input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="O que precisa ser feito" />
+                </Field>
+                <Field>
+                  <Label>Quando</Label>
+                  <DateTimePicker label="Data e hora da atividade" mode="datetime" value={scheduledAt} onValueChange={setScheduledAt} placeholder="Selecionar data e hora" />
+                </Field>
+                <div className={layout.formActions}><Button type="submit" size="sm" loading={activityPending} disabled={!activityTitle.trim() || !scheduledAt}>Adicionar atividade</Button></div>
+              </form>}
+            </div>
+          </Card>}
         </div>
         <div className={layout.identityColumn}>
-      <section className={styles.atividades}>
-        <h2 className={styles.subtitulo}>Canais e identidades</h2>
-        <div className={styles.campos}>
-          {identities.length === 0 ? <span className={styles.valor}>Nenhum canal adicional.</span> : identities.map((identity) => (
-            <div key={identity.id} className={styles.campo}>
-              <span className={styles.rotulo}>{IDENTITY_CHANNEL_OPTIONS.find((option) => option.value === identity.channel)?.label ?? identity.channel}</span>
-              <span className={styles.valor}>{identity.channel === "instagram" ? `@${identity.externalValue}` : identity.externalValue}</span>
+          <Card title="Canais e identidades">
+            <div className={layout.stack}>
+              {identities.length === 0 ? <Text size="pequeno" tone="muted">Nenhum canal adicional.</Text> : <div className={layout.fields}>{identities.map((identity) => <InlineField key={identity.id} label={IDENTITY_CHANNEL_OPTIONS.find((option) => option.value === identity.channel)?.label ?? identity.channel} value={identity.channel === "instagram" ? `@${identity.externalValue}` : identity.externalValue} numeric={identity.channel === "phone" || identity.channel === "whatsapp"} />)}</div>}
+              {canWrite && <form className={layout.form} onSubmit={addIdentity}>
+                <Field><Label>Tipo de canal</Label><Select label="Tipo de canal" value={identityChannel} options={IDENTITY_CHANNEL_OPTIONS} onValueChange={(value) => { if (value) setIdentityChannel(value as IdentityChannel); }} /></Field>
+                <Field>
+                  <Label>Identificador</Label>
+                  <Input value={identityValue} onChange={(event) => setIdentityValue(event.target.value)} placeholder={identityChannel === "email" ? "nome@empresa.com" : identityChannel === "instagram" ? "@usuario" : "DDD + número"} />
+                </Field>
+                <div className={layout.formActions}><Button type="submit" size="sm" variant="secondary" loading={identityPending} disabled={!identityValue.trim()}>Adicionar canal</Button></div>
+              </form>}
             </div>
-          ))}
-          {canWrite && <form className={styles.formAtividade} onSubmit={addIdentity}>
-            <Select label="Tipo de canal" value={identityChannel} options={IDENTITY_CHANNEL_OPTIONS} onValueChange={(value) => { if (value) setIdentityChannel(value as IdentityChannel); }} />
-            <Field>
-              <Label>Identificador</Label>
-              <Input value={identityValue} onChange={(event) => setIdentityValue(event.target.value)} placeholder={identityChannel === "email" ? "nome@empresa.com" : identityChannel === "instagram" ? "@usuario" : "DDD + número"} />
-            </Field>
-            <Button type="submit" size="sm" loading={identityPending} disabled={!identityValue.trim()}>Adicionar canal</Button>
-          </form>}
-        </div>
-      </section>
-
+          </Card>
         </div>
       </div>
     </div>

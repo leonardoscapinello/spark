@@ -1,44 +1,22 @@
+/* Ficha de empresa: só layout (ADR-0045). */
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
-.loading > :first-child { width: var(--ui-menuWidth); }
-
-.details span { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
+.loadingLine { height: var(--space-3); }
+.loadingLine:first-child { width: var(--ui-menuWidth); }
 
 .contentGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr) minmax(0, 1fr); grid-template-areas: "profile relations history"; align-items: start; gap: var(--space-5); min-width: 0; }
 .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); grid-template-areas: "profile history"; }
-.profileColumn { grid-area: profile; min-width: 0; }
+.profileColumn { grid-area: profile; display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.relations { grid-area: relations; display: grid; align-content: start; gap: var(--space-4); min-width: 0; }
 .history { grid-area: history; min-width: 0; }
-.relations { grid-area: relations; min-width: 0; }
-.details, .editForm, .relationCard { min-width: 0; }
-.details { display: grid; }
-.details > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-2); padding-block: var(--space-3); border-bottom: var(--ui-hairline) solid var(--color-line); }
-.details > div:first-child { padding-top: 0; }
-.details > div:last-child { border-bottom: 0; }
-.details strong, .details a { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); overflow-wrap: anywhere; }
-.wide { grid-column: 1 / -1; }
-.editForm { display: grid; gap: var(--space-4); }
-.formActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.relations { display: grid; align-content: start; gap: var(--space-3); }
-.relationCard ul { list-style: none; padding: 0; margin: 0; }
-.relationCard li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-top: var(--ui-hairline) solid var(--color-line); }
-.relationCard li > div { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.relationCard li > .personIdentity { flex-direction: row; align-items: center; gap: var(--space-3); }
-.personIdentity > div { display: flex; flex-direction: column; gap: 0; min-width: 0; }
-.personIdentity a, .personIdentity span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.relationCard li > .dealActions { flex-direction: row; align-items: center; flex-shrink: 0; gap: var(--space-2); }
-.relationCard li a { color: var(--color-ink); font-size: var(--typography-size-sm); font-weight: var(--typography-weight-medium); }
-.relationCard li span, .empty { color: var(--color-inkMuted); font-size: var(--typography-size-xs); }
-.empty { margin: 0; padding: var(--space-4) 0; }
+.fields { display: grid; min-width: 0; }
 
 @media (max-width: 1200px) {
   .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile relations" "history history"; }
-  .relations { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 760px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "relations" "history"; }
-  .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history"; }
-  .profileColumn, .history, .relations { padding-inline: 0; }
-  .relations { grid-template-columns: minmax(0, 1fr); }
+  .contentGrid, .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "relations" "history"; }
+  .contentGrid[data-relations="hidden"] { grid-template-areas: "profile" "history"; }
 }
 
 .embedded .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "relations" "history"; }

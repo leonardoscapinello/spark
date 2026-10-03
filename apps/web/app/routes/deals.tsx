@@ -1,9 +1,9 @@
-import { type CSSProperties, type FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, Fragment, lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, type StagesCollection } from "@spark/data";
-import { ActionModal, CrmWorkspace, CrmSection, CrmLabel, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, Select, Skeleton, Checkbox, Textarea, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
+import { ActionModal, CrmWorkspace, CrmSection, CrmLabel, Chip, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -79,9 +79,12 @@ export default function Deals() {
   }, [activities]);
   const { data: companies = [] } = useLiveQuery({ query: (q) => canReadCompanies && (loadCardDetails || dealModalOpen) ? q.from({ companies: companiesCollection }).orderBy(({ companies: company }) => company.name, "asc") : undefined }, [canReadCompanies, loadCardDetails, dealModalOpen]);
 
-  const [dragging, setDragging] = useState<string | null>(null);
+  /* Arrasto do quadro (ui-web/Kanban): fantasma que segue o ponteiro, espaço
+   * tracejado no destino e pouso do cartão. Os alvos continuam nativos. */
+  const kanban = useKanbanDrag();
+  const dragging = kanban.drag?.phase === "drag" ? kanban.drag.id : null;
   const [dropTarget, setDropTarget] = useState<string | null>(null);
-  const [renamingStage, setRenamingStage] = useState<string | null>(null);
+  const [enteringId, setEnteringId] = useState<string | null>(null);
   const [pipelineModalOpen, setPipelineModalOpen] = useState(false);
   const [pipelineName, setPipelineName] = useState("");
   const [targetStageId, setTargetStageId] = useState<string | null>(null);
@@ -99,7 +102,6 @@ export default function Deals() {
   const [duplicateConfirmed, setDuplicateConfirmed] = useState(false);
   const [moveCandidate, setMoveCandidate] = useState<{ dealId: string; stageId: string | null } | null>(null);
   const [dropAction, setDropAction] = useState<"won" | "lost" | "archived" | "move" | null>(null);
-  const dragPreviewRef = useRef<HTMLDivElement | null>(null);
   const movingDeal = moveCandidate ? deals.find((deal) => deal.id === moveCandidate.dealId) ?? null : null;
   const movingPipelineId = movingDeal?.pipelineId ?? mainPipeline?.id ?? "";
   const [movePipelineId, setMovePipelineId] = useState<string>(movingPipelineId);
@@ -109,7 +111,6 @@ export default function Deals() {
   // existindo para os negócios antigos que ainda apontam para ela.
   const stages = mainPipeline ? allStages.filter((s) => s.pipelineId === mainPipeline.id && !s.archivedAt) : [];
   const contactNames = new Map(contacts.map((contact) => [contact.id, contact.name]));
-  const userNames = new Map(users.map((user) => [user.id, user.name]));
   const companyNames = new Map(companies.map((company) => [company.id, company.name]));
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
   const canMove = session?.capabilities.includes("deals:move") ?? false;
@@ -186,6 +187,9 @@ export default function Deals() {
     if (!dealsCollection) throw new Error("DEALS_NOT_READY");
     const transaction = dealsCollection.insert(forInsert(deal));
     await transaction.isPersisted.promise;
+    // O cartão novo sobe como toast na coluna (origem: Kanban, «Adicionar»).
+    setEnteringId(deal.id);
+    window.setTimeout(() => setEnteringId((current) => current === deal.id ? null : current), 700);
     notify({ title: "Negócio criado", description: deal.name, tone: "success" });
     resetDealForm();
   }
@@ -193,9 +197,10 @@ export default function Deals() {
   async function dropOn(stageId: string) {
     const dealId = dragging;
     const deal = dealId ? deals.find((item) => item.id === dealId) : null;
-    setDragging(null);
     setDropTarget(null);
     setDropAction(null);
+    // O fantasma espera o cartão aparecer na coluna e o pousa lá.
+    kanban.land(stageId);
     if (!deal || !dealsCollection || deal.stageId === stageId) return;
     try {
       const transaction = dealsCollection.update(deal.id, (draft) => { draft.stageId = stageId; });
@@ -231,8 +236,11 @@ export default function Deals() {
 
   function finishDragAction(action: "won" | "lost" | "archived") {
     const deal = dragging ? deals.find((item) => item.id === dragging) : null;
-    setDragging(null);
     setDropTarget(null);
+    // Ganho e perdido pousam na coluna do desfecho quando o filtro mostra o
+    // negócio fechado; arquivar tira o cartão do quadro.
+    const shownAfter = action !== "archived" && !showArchived && (statusFilter === "all" || statusFilter === action);
+    kanban.land(shownAfter ? action : null);
     if (!deal) return;
     if (action === "archived") void archiveDeal(deal);
     else void closeDeal(deal, action);
@@ -243,7 +251,8 @@ export default function Deals() {
     setMoveCandidate({ dealId: dragging, stageId: dropTarget });
     setMovePipelineId(mainPipeline?.id ?? "");
     setMoveStageId(dropTarget);
-    setDragging(null);
+    // Enquanto o painel decide o destino, o cartão volta para a coluna dele.
+    kanban.land(kanban.drag?.from ?? null);
     setDropTarget(null);
     setDropAction(null);
   }
@@ -267,14 +276,11 @@ export default function Deals() {
     catch { notify({ title: "Não foi possível mover o negócio", tone: "error" }); }
   }
 
-  function saveStageName(id: string, newName: string) {
+  async function saveStageName(id: string, newName: string) {
     const trimmed = newName.trim();
-    if (trimmed) {
-      stagesCollection.update(id, (draft) => {
-        draft.name = trimmed;
-      });
-    }
-    setRenamingStage(null);
+    if (!trimmed) return;
+    const transaction = stagesCollection.update(id, (draft) => { draft.name = trimmed; });
+    await transaction.isPersisted.promise;
   }
 
   if (!mainPipeline) {
@@ -282,7 +288,7 @@ export default function Deals() {
       <PageFrame className={styles.pagina}>
         <PageHeader icon="briefcase" title="Funil de vendas" />
         {isLoadingPipelines
-          ? <div className={styles.board} role="status" aria-label="Carregando funis">{[0, 1, 2].map((column) => <div key={column} className={styles.coluna}><Skeleton className={styles.loadingTitle} /><Skeleton className={styles.loadingValue} /><Skeleton className={styles.loadingCard} /><Skeleton className={styles.loadingCard} /></div>)}</div>
+          ? <KanbanSkeleton label="Carregando funis" />
           : <EmptyState variant="featured" icon="briefcase" title="Organize seu primeiro funil" description="Defina as etapas da venda para acompanhar cada oportunidade e o valor da negociação." action={canManagePipeline ? <Button onClick={() => { setPipelineName("Funil de Vendas"); setPipelineModalOpen(true); }}>Criar funil</Button> : undefined} />}
         <ActionModal open={pipelineModalOpen} onOpenChange={setPipelineModalOpen} title="Novo funil" confirmLabel="Criar funil" errorText="Informe um nome para o funil." onConfirm={createPipeline}>
           <Field><Label>Nome do funil</Label><Input value={pipelineName} onChange={(event) => setPipelineName(event.target.value)} placeholder="Ex.: Vendas consultivas" /></Field>
@@ -291,31 +297,76 @@ export default function Deals() {
     );
   }
 
+  /* Ordem em que o quadro mostra os negócios: a coluna de destino repete esta
+   * ordem, então o espaço tracejado aparece exatamente onde o cartão vai cair. */
+  const boardOrder = new Map<string, number>(deals.map((deal, index) => [deal.id, index]));
+  const nowIso = new Date().toISOString();
+  const draggedDeal = kanban.drag ? deals.find((deal) => deal.id === kanban.drag?.id) : undefined;
+
+  /** O miolo do cartão: o mesmo no quadro e no fantasma que segue o ponteiro. */
+  function dealCard(deal: Deal, interactive: boolean) {
+    const isOpen = deal.status === "open" && !deal.isArchived;
+    const next = nextActivity.get(deal.id);
+    const overdue = next ? next.scheduledAt < nowIso : false;
+    const owner = deal.ownerId ? users.find((user) => user.id === deal.ownerId) : undefined;
+    const statusLabel = deal.isArchived ? `Arquivado · ${deal.status === "won" ? "Ganho" : deal.status === "lost" ? "Perdido" : "Em aberto"}` : deal.status === "won" ? "Ganho" : "Perdido";
+    const chips = [
+      ...(isOpen ? [] : [<Chip key="status" size="sm" dot tone={deal.isArchived ? "neutral" : deal.status === "won" ? "success" : "danger"}>{statusLabel}</Chip>]),
+      ...(tagsByDeal.get(deal.id) ?? []).map((tag) => <CrmLabel key={tag.id} size="sm" color={tag.color}>{tag.name}</CrmLabel>),
+    ];
+    const subtitle = [deal.contactId ? contactNames.get(deal.contactId) ?? "Contato indisponível" : null, deal.companyId ? companyNames.get(deal.companyId) ?? "Empresa indisponível" : null].filter(Boolean).join(" · ");
+    return <KanbanCardContent
+      title={interactive ? <Link to={`/deals/${deal.id}`} onClick={(event) => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); setOpenedDealId(deal.id); } }}>{deal.name}</Link> : deal.name}
+      subtitle={subtitle || undefined}
+      actions={interactive ? <MenuButton size="sm" variant="ghost" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} disabled={busyDealId === deal.id} menu={<>
+        <MenuItem icon={<Icon name="eye" />} onClick={() => setOpenedDealId(deal.id)}>Abrir visão rápida</MenuItem>
+        <MenuItem icon={<Icon name="page" />} render={<Link to={`/deals/${deal.id}`} />}>Abrir página completa</MenuItem>
+        {!deal.isArchived && canMove && <><MenuSeparator /><MenuItem icon={<Icon name="right" />} onClick={() => { setMoveCandidate({ dealId: deal.id, stageId: deal.stageId }); setMovePipelineId(deal.pipelineId); setMoveStageId(deal.stageId); }}>Mover negócio</MenuItem>{isOpen && <><MenuItem icon={<Icon name="check" />} onClick={() => void closeDeal(deal, "won")}>Marcar como ganho</MenuItem><MenuItem icon={<Icon name="close" />} onClick={() => { setLossReason(""); setClosingDeal(deal); }}>Marcar como perdido</MenuItem></>}<MenuSeparator /><MenuItem icon={<Icon name="folder" />} onClick={() => void archiveDeal(deal)}>Arquivar negócio</MenuItem></>}
+      </>} /> : undefined}
+      chips={chips}
+      value={formatBRL(syncedAmount(deal.amount))}
+      /* Próximo passo como sinal (ponto + texto curto): vermelho é atraso,
+       * azul é agendado, âmbar é ninguém marcou o que vem depois. */
+      signal={canReadActivities && isOpen ? <Signal tone={!next ? "warning" : overdue ? "danger" : "info"}>{next ? `${overdue ? "Atrasada" : "Próxima"}: ${next.title}` : "Sem próximo passo"}</Signal> : undefined}
+      owner={owner ? { name: owner.name, avatarUrl: owner.avatarUrl } : deal.ownerId ? { name: "Usuário indisponível" } : null}
+      date={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : undefined}
+    />;
+  }
+
   return (
     <PageFrame className={styles.pagina}>
       <PageHeader icon="briefcase" title={mainPipeline.name} actions={<>{canManagePipeline && <Button variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${mainPipeline.name}`} onClick={() => setPipelineEditorOpen(true)} />}{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
-      <div className={styles.toolbar}><CollectionToolbar filters={<>
+      <CollectionToolbar filters={<>
         <Select appearance="filter" label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
         <Select appearance="filter" label="Situação dos negócios" value={showArchived ? "archived" : statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "archived", label: "Arquivados" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value ? { status: value } : {})} />
-      </>} count={isLoadingDeals ? "Carregando negócios…" : `${deals.length} ${deals.length === 1 ? "negócio" : "negócios"} · ${formatBRL(sum(deals.map((deal) => syncedAmount(deal.amount))))}`} /></div>
+      </>} count={isLoadingDeals ? "Carregando negócios…" : `${deals.length} ${deals.length === 1 ? "negócio" : "negócios"} · ${formatBRL(sum(deals.map((deal) => syncedAmount(deal.amount))))}`} />
 
-      <div className={styles.board}>
+      <KanbanBoard label={`Quadro do funil ${mainPipeline.name}`}>
         {pipelineBoardColumns(stages).map((stage) => {
           const allStageDeals = dealsByStage.get(stage.id) ?? [];
           const visibleCount = visibleByStage[stage.id] ?? 50;
           const stageDeals = allStageDeals.slice(0, visibleCount);
           const total = sum(allStageDeals.map((d) => syncedAmount(d.amount)));
+          const present = stageDeals.filter((deal) => !kanban.isAway(deal.id, stage.id));
+          const draggedOrder = kanban.drag ? boardOrder.get(kanban.drag.id) : undefined;
+          const placeholderAt = kanban.drag?.phase === "drag" && dropTarget === stage.id
+            ? (draggedOrder === undefined ? present.length : present.filter((deal) => (boardOrder.get(deal.id) ?? 0) < draggedOrder).length)
+            : -1;
 
           return (
-            <section
+            <KanbanColumn
               key={stage.id}
-              data-outcome={stage.kind === "outcome" ? stage.id : undefined}
+              columnId={stage.id}
               aria-label={stage.name}
-              data-color={stage.kind === "stage" ? stage.color : undefined}
-              style={stage.kind === "stage" && stage.color?.startsWith("#") ? { "--stage-color": stage.color } as CSSProperties : undefined}
-              className={[styles.coluna, dropTarget === stage.id ? styles.colunaSobreArraste : ""]
-                .filter(Boolean)
-                .join(" ")}
+              /* A cor da etapa vive num ponto de 8px; ganho e perdido usam a tinta do estado. */
+              dot={stage.kind === "outcome" ? (stage.id === "won" ? "var(--ok)" : "var(--er)") : crmColor(stage.color)}
+              title={stage.kind === "stage" && canManagePipeline
+                ? <InlineEdit label={`nome da etapa ${stage.name}`} value={stage.name} appearance="compact" saveOnBlur onSave={(name) => saveStageName(stage.id, name)} />
+                : stage.name}
+              count={isLoadingDeals ? "…" : allStageDeals.length - (stageDeals.length === present.length ? 0 : 1)}
+              total={isLoadingDeals ? undefined : formatBRL(total)}
+              actions={stage.kind === "stage" && canManagePipeline ? <StageSettingsButton stage={stage} stages={stages} /> : undefined}
+              over={kanban.drag?.phase === "drag" && dropTarget === stage.id}
               onDragOver={(event) => {
                 event.preventDefault();
                 setDropTarget(stage.id);
@@ -325,146 +376,55 @@ export default function Deals() {
                 if (stage.kind === "outcome") finishDragAction(stage.id);
                 else void dropOn(stage.id);
               }}
+              footer={<>
+                {stageDeals.length < allStageDeals.length && <Button variant="ghost" size="sm" onClick={() => setVisibleByStage((current) => ({ ...current, [stage.id]: visibleCount + 50 }))}>Mostrar mais {Math.min(50, allStageDeals.length - stageDeals.length)}</Button>}
+                {stage.kind === "stage" && canWrite && <KanbanAddButton onClick={() => openDealModal(stage.id)}>Adicionar negócio</KanbanAddButton>}
+              </>}
             >
-              <div className={styles.colunaCabecalho}>
-                {stage.kind === "stage" && canManagePipeline && <span className={styles.stageSettings}><StageSettingsButton stage={stage} stages={stages} /></span>}
-                {stage.kind === "stage" && renamingStage === stage.id ? (
-                  <form
-                    className={styles.formRenomear}
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      const formData = new FormData(event.currentTarget);
-                      saveStageName(stage.id, String(formData.get("name") ?? ""));
+              {isLoadingDeals && <Skeleton className={styles.loadingCard} />}
+              {stageDeals.map((deal, index) => {
+                const isOpen = deal.status === "open" && !deal.isArchived;
+                const before = placeholderAt >= 0 && present.indexOf(deal) === placeholderAt;
+                return <Fragment key={deal.id}>
+                  {before && <KanbanPlaceholder height={kanban.drag?.height ?? 0} />}
+                  <KanbanCard
+                    cardId={deal.id}
+                    index={index}
+                    entering={enteringId === deal.id}
+                    away={kanban.isAway(deal.id, stage.id)}
+                    draggable={isOpen && canMove}
+                    onDragStart={(event) => kanban.start(event, deal.id, stage.id)}
+                    onDragEnd={() => {
+                      kanban.end();
+                      setDropTarget(null);
+                      setDropAction(null);
                     }}
-                  >
-                    <Input
-                      name="name"
-                      size="sm"
-                      defaultValue={stage.name}
-                      autoFocus
-                      onBlur={(event) => saveStageName(stage.id, event.currentTarget.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Escape") setRenamingStage(null);
-                      }}
-                    />
-                  </form>
-                ) : stage.kind === "stage" && canManagePipeline ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={styles.colunaNome}
-                    onClick={() => setRenamingStage(stage.id)}
-                  >
-                    {stage.name}
-                  </Button>
-                ) : <span className={styles.colunaNome}>{stage.name}</span>}
-                <span className={styles.colunaTotal}>
-                  {isLoadingDeals ? "Carregando…" : `${allStageDeals.length} · ${formatBRL(total)}`}
-                </span>
-              </div>
-
-              <div className={styles.listaCartoes}>
-                {isLoadingDeals && <Skeleton className={styles.loadingCard} />}
-                {stageDeals.map((deal) => {
-                  const isOpen = deal.status === "open" && !deal.isArchived;
-                  return (
-                    <article
-                      key={deal.id}
-                      className={[styles.cartao, dragging === deal.id ? styles.cartaoArrastando : ""]
-                        .filter(Boolean)
-                        .join(" ")}
-                      draggable={isOpen && canMove}
-                      data-draggable={isOpen && canMove ? "true" : undefined}
-                      onDragStart={(event) => {
-                        event.dataTransfer.effectAllowed = "move";
-                        const preview = document.createElement("div");
-                        preview.className = styles.dragPreview!;
-                        preview.textContent = deal.name;
-                        document.body.appendChild(preview);
-                        dragPreviewRef.current = preview;
-                        event.dataTransfer.setDragImage(preview, 24, 18);
-                        setDragging(deal.id);
-                      }}
-                      onDragEnd={() => {
-                        dragPreviewRef.current?.remove();
-                        dragPreviewRef.current = null;
-                        setDragging(null);
-                        setDropTarget(null);
-                        setDropAction(null);
-                      }}
-                      /* O cartão inteiro abre o negócio. Só o título era
-                       * clicável, e num quadro cheio isso é mirar em duas
-                       * palavras entre valor, pessoa, próximo passo e data —
-                       * clicar no cartão parecia não fazer nada.
-                       *
-                       * O título continua sendo um link de verdade: é ele que
-                       * o teclado alcança, que abre em nova aba e que o leitor
-                       * de tela anuncia. Aqui só se acrescenta o alvo do
-                       * mouse. Quem já tem comportamento próprio — o menu de
-                       * ações — fica de fora, e texto selecionado também: quem
-                       * acabou de marcar um valor para copiar não quer navegar
-                       * ao soltar. */
-                      onClick={(event) => {
-                        const alvo = event.target;
-                        if (alvo instanceof Element && alvo.closest("a, button, input, [role='menu']")) return;
-                        if (window.getSelection()?.toString()) return;
-                        setOpenedDealId(deal.id);
-                      }}
-                    >
-                      <div className={styles.cartaoCabecalho}>
-                        <Link className={styles.cartaoNome} to={`/deals/${deal.id}`} onClick={(event) => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); setOpenedDealId(deal.id); } }}>{deal.name}</Link>
-                        <MenuButton className={styles.cardMenu} size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações do negócio ${deal.name}`} disabled={busyDealId === deal.id} menu={<>
-                          <MenuItem icon={<Icon name="eye" />} onClick={() => setOpenedDealId(deal.id)}>Abrir visão rápida</MenuItem>
-                          <MenuItem icon={<Icon name="page" />} render={<Link to={`/deals/${deal.id}`} />}>Abrir página completa</MenuItem>
-                          {!deal.isArchived && canMove && <><MenuSeparator /><MenuItem icon={<Icon name="right" />} onClick={() => { setMoveCandidate({ dealId: deal.id, stageId: deal.stageId }); setMovePipelineId(deal.pipelineId); setMoveStageId(deal.stageId); }}>Mover negócio</MenuItem>{isOpen && <><MenuItem icon={<Icon name="check" />} onClick={() => void closeDeal(deal, "won")}>Marcar como ganho</MenuItem><MenuItem icon={<Icon name="close" />} onClick={() => { setLossReason(""); setClosingDeal(deal); }}>Marcar como perdido</MenuItem></>}<MenuSeparator /><MenuItem icon={<Icon name="folder" />} onClick={() => void archiveDeal(deal)}>Arquivar negócio</MenuItem></>}
-                        </>} />
-                      </div>
-                      <div className={styles.cardTags}>{(tagsByDeal.get(deal.id) ?? []).map((tag) => <CrmLabel key={tag.id} color={tag.color}>{tag.name}</CrmLabel>)}</div>
-                      <span className={styles.cartaoValor}>{formatBRL(syncedAmount(deal.amount))}</span>
-                      {(deal.contactId || deal.companyId) && <span className={styles.cartaoMeta}>{[deal.contactId ? contactNames.get(deal.contactId) ?? "Contato indisponível" : null, deal.companyId ? companyNames.get(deal.companyId) ?? "Empresa indisponível" : null].filter(Boolean).join(" · ")}</span>}
-                      {canReadActivities && (() => {
-                        const next = nextActivity.get(deal.id);
-                        if (!isOpen) return null;
-                        const overdue = next ? next.scheduledAt < new Date().toISOString() : false;
-                        return <span className={styles.cartaoPasso} data-state={!next ? "none" : overdue ? "overdue" : "scheduled"}>
-                          <span className={styles.cartaoPassoPonto} aria-hidden="true" />
-                          <span className={styles.cartaoPassoTexto}>{next ? `${overdue ? "Atrasada" : "Próxima"}: ${next.title}` : "Sem próximo passo"}</span>
-                        </span>;
-                      })()}
-                      {(deal.ownerId || deal.expectedCloseDate) && <span className={styles.cartaoRodape}>{deal.ownerId && <span className={styles.cartaoMeta}>{userNames.get(deal.ownerId) ?? "Usuário indisponível"}</span>}{deal.expectedCloseDate && <span className={styles.cartaoMeta}>{formatDate(deal.expectedCloseDate)}</span>}</span>}
-                      {!isOpen && (
-                        <span
-                          className={[
-                            styles.cartaoBadge,
-                            deal.status === "won" ? styles.cartaoBadgeGanho : styles.cartaoBadgePerdido,
-                          ].join(" ")}
-                        >
-                          {deal.isArchived ? `Arquivado · ${deal.status === "won" ? "Ganho" : deal.status === "lost" ? "Perdido" : "Em aberto"}` : deal.status === "won" ? "Ganho" : "Perdido"}
-                        </span>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
-
-              {stageDeals.length < allStageDeals.length && <Button variant="ghost" size="sm" onClick={() => setVisibleByStage((current) => ({ ...current, [stage.id]: visibleCount + 50 }))}>Mostrar mais {Math.min(50, allStageDeals.length - stageDeals.length)}</Button>}
-
-              {stage.kind === "stage" && canWrite && <Button className={styles.addDeal} variant="ghost" size="lg" icon={<Icon name="plus" />} onClick={() => openDealModal(stage.id)}>Adicionar negócio</Button>}
-            </section>
+                    /* O cartão inteiro abre o negócio. O título continua sendo
+                     * um link de verdade (teclado, nova aba, leitor de tela);
+                     * aqui só se acrescenta o alvo do mouse. Menu e texto
+                     * selecionado ficam de fora. */
+                    onClick={(event) => {
+                      const alvo = event.target;
+                      if (alvo instanceof Element && alvo.closest("a, button, input, [role='menu']")) return;
+                      if (window.getSelection()?.toString()) return;
+                      setOpenedDealId(deal.id);
+                    }}
+                  >{dealCard(deal, true)}</KanbanCard>
+                </Fragment>;
+              })}
+              {placeholderAt >= 0 && placeholderAt >= present.length && <KanbanPlaceholder height={kanban.drag?.height ?? 0} />}
+            </KanbanColumn>
           );
         })}
-
-      </div>
-      {canMove && dragging && <div className={styles.moveBar}>
-        <div className={styles.moveBarActions}>
-          {(["won", "lost", "archived", "move"] as const).map((action) => {
-            const labels = { won: "Ganho", lost: "Perdido", archived: "Arquivar", move: "Mover negócio" };
-            const descriptions = { won: "Soltar para marcar como ganho", lost: "Soltar para marcar como perdido", archived: "Soltar para arquivar mantendo o status", move: "Soltar para escolher funil e etapa" };
-            return <Button key={action} size="lg" className={styles.moveDropZone} tone={action === "won" ? "success" : action === "lost" ? "danger" : "neutral"} data-action={action} data-drag-over={dropAction === action ? "true" : undefined} variant="secondary" icon={action === "won" ? <Icon name="check" /> : action === "lost" ? <Icon name="close" /> : undefined} onDragEnter={(event) => { event.preventDefault(); setDropAction(action); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDropAction(action); }} onDragLeave={() => setDropAction((current) => current === action ? null : current)} onDrop={(event) => { event.preventDefault(); setDropAction(null); handleActionDrop(action); }} onClick={() => handleActionDrop(action)} aria-label={descriptions[action]}>{dropAction === action ? "Soltar aqui" : labels[action]}</Button>;
-          })}
-        </div>
-      </div>}
+      </KanbanBoard>
+      <KanbanGhost drag={kanban.drag} ghostRef={kanban.ghostRef} origin={kanban.origin}>{draggedDeal && dealCard(draggedDeal, false)}</KanbanGhost>
+      {canMove && dragging && <KanbanDropBar label="Soltar o negócio numa ação">
+        {(["won", "lost", "archived", "move"] as const).map((action) => {
+          const labels = { won: "Ganho", lost: "Perdido", archived: "Arquivar", move: "Mover negócio" };
+          const descriptions = { won: "Soltar para marcar como ganho", lost: "Soltar para marcar como perdido", archived: "Soltar para arquivar mantendo o status", move: "Soltar para escolher funil e etapa" };
+          return <KanbanDropZone key={action} over={dropAction === action} tone={action === "won" ? "success" : action === "lost" ? "danger" : "neutral"} icon={action === "won" ? <Icon name="check" /> : action === "lost" ? <Icon name="close" /> : action === "archived" ? <Icon name="folder" /> : <Icon name="right" />} onDragEnter={(event) => { event.preventDefault(); setDropTarget(null); setDropAction(action); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDropAction(action); }} onDragLeave={() => setDropAction((current) => current === action ? null : current)} onDrop={(event) => { event.preventDefault(); setDropAction(null); handleActionDrop(action); }} onClick={() => handleActionDrop(action)} aria-label={descriptions[action]}>{dropAction === action ? "Soltar aqui" : labels[action]}</KanbanDropZone>;
+        })}
+      </KanbanDropBar>}
       <Modal open={moveCandidate !== null} onOpenChange={(open) => { if (!open) setMoveCandidate(null); }}>
         <ModalContent title="Mover negócio" description={movingDeal ? movingDeal.name : "Escolha o destino antes de confirmar."} placement="bottom" footer={<><Button variant="ghost" onClick={() => setMoveCandidate(null)}>Cancelar</Button><Button onClick={() => void confirmMove()} disabled={!moveStageId}>Confirmar movimento</Button></>}>
           {movingDeal && <div className={styles.movePanelFields}>
@@ -496,11 +456,11 @@ export default function Deals() {
           <Field><Label>Etapa inicial</Label><Select label="Etapa inicial" value={targetStageId} options={stages.map((stage) => ({ value: stage.id, label: stage.name }))} onValueChange={setTargetStageId} /></Field>
           <Field><Label>Previsão de fechamento</Label><DatePicker label="Previsão de fechamento" value={expectedCloseDate} onValueChange={setExpectedCloseDate} /></Field>
           <DealTags value={dealTags} onChange={setDealTags} />
-          {existingOpenDeals.length > 0 && <Field><Label>{dealContact?.label} já tem oportunidade aberta</Label><ul className={styles.duplicateDealsList}>{existingOpenDeals.map((item) => <li key={item.id}>{item.name}</li>)}</ul><Checkbox checked={duplicateConfirmed} onCheckedChange={(checked) => setDuplicateConfirmed(checked === true)}>Criar outra oportunidade</Checkbox></Field>}
+          {existingOpenDeals.length > 0 && <Field><Label>{dealContact?.label} já tem oportunidade aberta</Label><RowList label="Oportunidades abertas desta pessoa">{existingOpenDeals.map((item, index) => <ListRow key={item.id} index={index} icon="briefcase" title={item.name} meta={formatBRL(syncedAmount(item.amount))} />)}</RowList><Checkbox checked={duplicateConfirmed} onCheckedChange={(checked) => setDuplicateConfirmed(checked === true)}>Criar outra oportunidade</Checkbox></Field>}
         </CrmSection>} actions={stages.filter((stage) => stage.id === targetStageId).map((stage) => <PhaseFields key={stage.id} stage={stage} stages={stages} values={dealCustom} onSave={async (key, value) => setDealCustom((current) => ({ ...current, [key]: value }))} />)} />
       </ActionModal>}
       <Modal open={openedDealId !== null} onOpenChange={(open) => { if (!open) setOpenedDealId(null); }}>
-        <ModalContent title="Visão rápida" size="workspace" bodyDensity="flush" closeLabel="Voltar ao pipeline" headerAction={openedDealId ? <Button variant="ghost" shape="rounded" icon={<Icon name="page" />} render={<Link to={`/deals/${openedDealId}`} />}>Abrir página completa</Button> : undefined}>
+        <ModalContent title="Visão rápida" size="workspace" bodyDensity="flush" closeLabel="Voltar ao pipeline" headerAction={openedDealId ? <Button variant="ghost" icon={<Icon name="page" />} render={<Link to={`/deals/${openedDealId}`} />}>Abrir página completa</Button> : undefined}>
           {openedDealId && <Suspense fallback={<Skeleton className={styles.loadingCard} />}><DealWorkspace dealId={openedDealId} embedded /></Suspense>}
         </ModalContent>
       </Modal>
@@ -589,43 +549,35 @@ function PipelineEditorModal({ open, onOpenChange, pipeline, stages, stagesColle
 
   return <Modal open={open} onOpenChange={onOpenChange}>
     <ModalContent title={`Editar ${pipeline.name}`} description="A entrada é obrigatória e pode mudar de nome e posição. Ganhos e Perdidos ficam sempre no final.">
-      <ul className={styles.editorLista}>
-        {pipelineBoardColumns(orderedStages.map((stage, sortOrder) => ({ ...stage, sortOrder }))).map((stage) => (
-          <li
-            key={stage.id}
-            className={[styles.editorLinha, dragging === stage.id ? styles.editorLinhaArrastando : ""].filter(Boolean).join(" ")}
-            draggable={stage.kind === "stage"}
-            onDragStart={() => { if (stage.kind === "stage") setDragging(stage.id); }}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              if (stage.kind === "outcome" || !dragging || dragging === stage.id) return;
-              const from = order.indexOf(dragging);
-              const to = order.indexOf(stage.id);
-              if (from === -1 || to === -1) return;
-              const next = [...order];
-              next.splice(from, 1);
-              next.splice(to, 0, dragging);
-              void commitReorder(next);
-            }}
-            onDragEnd={() => setDragging(null)}
-          >
-            <span className={styles.editorAlca} aria-hidden="true"><Icon name={stage.kind === "outcome" ? "lock" : "menu"} /></span>
-            <span className={styles.editorNome}>{stage.kind === "stage" ? <InlineEdit label="nome da etapa" value={stage.name} onSave={async (name) => { const transaction = stagesCollection.update(stage.id, (draft) => { draft.name = name.trim(); }); await transaction.isPersisted.promise; }} /> : stage.name}</span>
-            {stage.kind === "stage" && <StageSettingsButton stage={stage} stages={orderedStages} />}
-            {stage.kind === "stage" && !stage.isEntry && <Button
-              variant="ghost"
-              size="sm"
-              iconOnly
-              icon={<Icon name="trash" />}
-              aria-label={`Arquivar etapa ${stage.name}`}
-              loading={busyStageId === stage.id}
-              onClick={() => void archiveStage(stage)}
-            />}
-          </li>
-        ))}
-        {orderedStages.length === 0 && <li className={styles.editorVazio}>Este funil ainda não tem etapa.</li>}
-      </ul>
+      <RowList label={`Etapas de ${pipeline.name}`}>
+        {pipelineBoardColumns(orderedStages.map((stage, sortOrder) => ({ ...stage, sortOrder }))).map((stage, index) => <ListRow
+          key={stage.id}
+          index={index}
+          icon={stage.kind === "outcome" ? "lock" : "grip"}
+          title={stage.kind === "stage" ? <InlineEdit label="nome da etapa" value={stage.name} onSave={async (name) => { const transaction = stagesCollection.update(stage.id, (draft) => { draft.name = name.trim(); }); await transaction.isPersisted.promise; }} /> : stage.name}
+          trailing={stage.kind === "stage" ? <>
+            <StageSettingsButton stage={stage} stages={orderedStages} />
+            {!stage.isEntry && <Button variant="ghost" size="sm" iconOnly icon={<Icon name="trash" />} aria-label={`Arquivar etapa ${stage.name}`} loading={busyStageId === stage.id} onClick={() => void archiveStage(stage)} />}
+          </> : undefined}
+          dragging={dragging === stage.id}
+          draggable={stage.kind === "stage"}
+          onDragStart={() => { if (stage.kind === "stage") setDragging(stage.id); }}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault();
+            if (stage.kind === "outcome" || !dragging || dragging === stage.id) return;
+            const from = order.indexOf(dragging);
+            const to = order.indexOf(stage.id);
+            if (from === -1 || to === -1) return;
+            const next = [...order];
+            next.splice(from, 1);
+            next.splice(to, 0, dragging);
+            void commitReorder(next);
+          }}
+          onDragEnd={() => setDragging(null)}
+        />)}
+      </RowList>
+      {orderedStages.length === 0 && <Text tone="muted">Este funil ainda não tem etapa.</Text>}
       <form className={styles.editorNovo} onSubmit={(event) => void addStage(event)}>
         <Field><Label>Nova etapa</Label><Input value={newStageName} onChange={(event) => setNewStageName(event.target.value)} placeholder="Ex.: Proposta enviada" /></Field>
         <Button type="submit" variant="secondary" loading={creating}>+ Etapa</Button>

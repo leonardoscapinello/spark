@@ -1,6 +1,6 @@
 import { contactsControllerLinkCompany } from "@spark/api-client";
 import { getContactCompaniesCollection } from "../lib/contact-companies.client";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
@@ -45,7 +45,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, CrmLabel, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Badge, Button, Composer, ComposerPrompt, DatePicker, TimePicker, Field, Icon, InlineEdit, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MoneyInput, PageFrame, PageHeader, SearchSelect, SegmentedControl, Select, Skeleton, StagePassageHistory, StageProgress, Tabs, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, Alert, AvatarStack, Chip, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, Composer, ComposerPrompt, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, KpiCard, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -87,6 +87,8 @@ const ACTIVITY_COMPOSER_TABS: readonly { id: ActivityType | "note"; label: strin
   { id: "email", label: "E-mail", icon: "mail" },
   { id: "lunch", label: "Almoço", icon: "calendar" },
 ];
+/** O disco de cada tipo de atividade: o mesmo ícone do compositor. */
+const ACTIVITY_ICONS = Object.fromEntries(ACTIVITY_COMPOSER_TABS.flatMap((tab) => tab.id === "note" ? [] : [[tab.id, tab.icon]])) as Record<ActivityType, IconName>;
 const PRIORITIES = [{ value: "none", label: "Sem prioridade" }, { value: "high", label: "Alta" }, { value: "medium", label: "Média" }, { value: "low", label: "Baixa" }];
 const AVAILABILITIES = [{ value: "free", label: "Livre — permite sobreposição" }, { value: "busy", label: "Ocupado — reserva o horário" }];
 
@@ -124,14 +126,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 function activityOwnerOption(users: User[], ownerId: string) {
   const owner = users.find((user) => user.id === ownerId);
   return owner ? userSelectOption(owner) : null;
-}
-
-function ExternalScheduleItem({ event, conflict }: { event: CalendarEvent; conflict: boolean }) {
-  const provider = { google_calendar: "Google", outlook_calendar: "Outlook", apple_calendar: "Apple" }[event.provider];
-  return <div className={styles.scheduleItem} data-conflict={conflict || undefined}>
-    <time>{formatExternalTimeRange(event.startsAt, event.endsAt, event.allDay)}</time>
-    <div><strong>{event.title}</strong><span>{event.calendarName} · {provider}</span></div>
-  </div>;
 }
 
 function formatExternalTimeRange(startsAt: string, endsAt: string, allDay: boolean): string {
@@ -673,74 +667,79 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   }
 
   if (!deal) {
-    return <PageFrame className={styles.page}><BackLink render={<Link to="/deals" />}>Negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton /><Skeleton /><Skeleton /></div> : <p>Negócio não encontrado.</p>}</PageFrame>;
+    return <PageFrame className={styles.page}><BackLink render={<Link to="/deals" />}>Negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton className={styles.loadingLine} /><Skeleton className={styles.loadingLine} /><Skeleton className={styles.loadingLine} /></div> : <Text tone="secondary">Negócio não encontrado.</Text>}</PageFrame>;
   }
 
-  const composerContent = <div className={styles.workspaceComposer}>
-        <Composer
-          label="Registrar no negócio"
-          value={composerTab}
-          onValueChange={setComposerTab}
-          tabs={ACTIVITY_COMPOSER_TABS.map((tab) => ({ ...tab, disabled: tab.id !== "note" && !canWriteActivities }))}
-        >
-          {composerTab !== "note"
-            ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal(undefined, composerTab)}>
-                {canWriteActivities ? `Agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}…` : "Você não pode agendar atividades."}
-              </ComposerPrompt>
-            : <div className={styles.compositorNota} data-filled={Boolean(noteDraft.trim())}>
-                <Textarea aria-label="Nova nota" disabled={!canWrite || savingNote} rows={2} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={(event) => setNoteDraft(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
-                <div className={styles.compositorAcoes} data-open={Boolean(noteDraft.trim())} inert={!noteDraft.trim()}>
-                  <Button size="sm" loading={savingNote} onClick={() => void saveNote()}>Salvar nota</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setNoteDraft("")}>Cancelar</Button>
-                </div>
-              </div>}
-        </Composer>
-  </div>;
+  const nowIso = new Date().toISOString();
+  const providerLabel = (provider: CalendarEvent["provider"]) => ({ google_calendar: "Google", outlook_calendar: "Outlook", apple_calendar: "Apple" }[provider]);
+
+  /* Registrar no negócio: nota digitada no lugar; as ações abrem espaço
+   * (data-collapse) só quando há texto — nunca aparecem secas. */
+  const composerContent = <Composer
+    label="Registrar no negócio"
+    value={composerTab}
+    onValueChange={setComposerTab}
+    tabs={ACTIVITY_COMPOSER_TABS.map((tab) => ({ ...tab, disabled: tab.id !== "note" && !canWriteActivities }))}
+  >
+    {composerTab !== "note"
+      ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal(undefined, composerTab)}>
+          {canWriteActivities ? `Agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}…` : "Você não pode agendar atividades."}
+        </ComposerPrompt>
+      : <div className={styles.noteComposer}>
+          <Textarea aria-label="Nova nota" disabled={!canWrite || savingNote} rows={noteDraft.trim() ? 4 : 2} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={(event) => setNoteDraft(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
+          <div data-collapse="" data-open={noteDraft.trim() ? "true" : "false"} style={{ "--g": "var(--space-2)" } as CSSProperties}>
+            <div><div className={styles.noteActions} inert={!noteDraft.trim()}>
+              <Button size="sm" variant="ghost" onClick={() => setNoteDraft("")}>Cancelar</Button>
+              <Button size="sm" loading={savingNote} onClick={() => void saveNote()}>Salvar nota</Button>
+            </div></div>
+          </div>
+        </div>}
+  </Composer>;
+
+  /** Atividade numa linha de lista: tipo no disco, data em mono, atraso como sinal. */
+  const activityRow = (activity: Activity, index: number) => {
+    const overdue = !activity.completed && activity.scheduledAt < nowIso;
+    const kind = activityTypeLabel(activity.type);
+    return <ListRow
+      key={activity.id}
+      index={index}
+      icon={ACTIVITY_ICONS[activity.type]}
+      done={activity.completed}
+      title={activity.title}
+      description={overdue ? <Signal tone="danger">Atrasada · {kind}</Signal> : activity.description ? `${kind} · ${activity.description}` : kind}
+      meta={formatDateTime(activity.scheduledAt)}
+      trailing={canWriteActivities ? (activity.completed
+        ? <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Reabrir</Button>
+        : <><Button size="sm" variant="ghost" onClick={() => openActivityModal(activity)}>Editar</Button><Button size="sm" variant="secondary" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Concluir</Button></>) : undefined}
+    />;
+  };
 
   const historyContent = <>
-        {canReadActivities && focusActivities.length === 0 && <div className={styles.focusEmpty}><Icon name="calendar" /><span>Nenhuma atividade agendada</span>{canWriteActivities && <Button size="sm" variant="ghost" shape="rounded" icon={<Icon name="plus" />} onClick={() => openActivityModal()}>Agendar</Button>}</div>}
-        {canReadActivities && focusActivities.length > 0 && <section className={`${styles.bloco} ${styles.focusBloco}`} aria-labelledby="deal-foco">
-          <header className={styles.blocoCabecalho}>
-            <h2 id="deal-foco" className={styles.blocoTitulo}>Próximas atividades</h2>
-            <span className={styles.blocoContagem}>{focusActivities.length === 0 ? "nada pendente" : `${focusActivities.length} ${focusActivities.length === 1 ? "pendente" : "pendentes"}`}</span>
-          </header>
-          <div className={styles.blocoCorpo}>{focusActivities.length === 0
-            ? <p className={styles.empty}>Nenhum próximo passo agendado.</p>
-            : <ul className={styles.activityList}>{focusActivities.map((activity) => <li key={activity.id} data-completed="false" data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>
-                <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong>{activity.description && <p>{activity.description}</p>}<time data-overdue={activity.scheduledAt < new Date().toISOString() ? "true" : undefined}>{activity.scheduledAt < new Date().toISOString() ? "Atrasada · " : ""}{formatDateTime(activity.scheduledAt)}</time></div>
-                {canWriteActivities && <span className={styles.activityActions}>
-                  <Button size="sm" variant="ghost" onClick={() => openActivityModal(activity)}>Editar</Button>
-                  <Button size="sm" variant="secondary" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Concluir</Button>
-                </span>}
-              </li>)}</ul>}</div>
-        </section>}
-
-        <section className={`${styles.bloco} ${styles.historyBloco}`} aria-labelledby="deal-historico">
-          <header className={styles.blocoCabecalho}>
-            <h2 id="deal-historico" className={styles.blocoTitulo}>Histórico</h2>
-            <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(true)}>Expandir histórico <Icon name="right" /></Button>
-          </header>
-          <div className={`${styles.blocoCorpo} ${styles.historyBody}`}><div className={styles.historyTabs}><Tabs variant="segmented" label="Filtrar o histórico" defaultValue="tudo" items={[
-            { value: "tudo", label: "Tudo", content: <Timeline items={timelineItems} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
-            { value: "notas", label: `Notas (${dealNotes.length})`, content: dealNotes.length === 0
-              ? <p className={styles.empty}>Nenhuma nota ainda. Use o campo acima para registrar o que foi conversado.</p>
-              : <ul className={styles.notaList}>{dealNotes.map((note) => <li key={note.id}><NoteCard note={note} authorName={users.find((user) => user.id === note.authorId)?.name} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} /></li>)}</ul> },
-            ...(canReadActivities ? [{ value: "atividades", label: `Atividades (${doneActivities.length})`, content: doneActivities.length === 0
-              ? <p className={styles.empty}>Nenhuma atividade concluída ainda.</p>
-              : <ul className={styles.activityList}>{doneActivities.map((activity) => <li key={activity.id} data-completed="true">
-                  <div><span className={styles.activityType}>{activityTypeLabel(activity.type)}</span><strong>{activity.title}</strong><time>{formatDateTime(activity.scheduledAt)}</time></div>
-                  {canWriteActivities && <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Reabrir</Button>}
-                </li>)}</ul> }] : []),
-            { value: "mudancas", label: "Mudanças", content: <Timeline items={groupTimelineEvents(events.filter((item) => item.type !== "activity.created"), { users, stages, contacts, companies, customFields })} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
-          ]} /></div></div>
-        </section>
+    {canReadActivities && focusActivities.length === 0 && <EmptyState variant="onboarding" icon="calendar" title="Nenhuma atividade agendada" description="Agende o próximo passo para o negócio não esfriar." action={canWriteActivities ? <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openActivityModal()}>Agendar</Button> : undefined} />}
+    {canReadActivities && focusActivities.length > 0 && <Surface as="section" className={styles.block} aria-label="Próximas atividades">
+      <SectionTitle level="card" meta={`${focusActivities.length} ${focusActivities.length === 1 ? "pendente" : "pendentes"}`}>Próximas atividades</SectionTitle>
+      <div className={styles.focusList}><RowList label="Atividades pendentes">{focusActivities.map(activityRow)}</RowList></div>
+    </Surface>}
+    <Surface as="section" className={`${styles.block} ${styles.historyBlock}`} aria-label="Histórico">
+      <SectionTitle level="card" actions={<Button size="sm" variant="ghost" trailingIcon={<Icon name="right" />} onClick={() => setHistoryOpen(true)}>Expandir histórico</Button>}>Histórico</SectionTitle>
+      <div className={styles.historyTabs}><Tabs variant="segmented" label="Filtrar o histórico" defaultValue="tudo" items={[
+        { value: "tudo", label: "Tudo", content: <Timeline items={timelineItems} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
+        { value: "notas", label: `Notas (${dealNotes.length})`, content: dealNotes.length === 0
+          ? <Text size="pequeno" tone="muted">Nenhuma nota ainda. Use o campo acima para registrar o que foi conversado.</Text>
+          : <div className={styles.notes}>{dealNotes.map((note) => { const author = users.find((user) => user.id === note.authorId); return <NoteCard key={note.id} author={author?.name ?? "Alguém"} authorAvatarUrl={author?.avatarUrl ?? null} createdAt={note.createdAt} body={note.body} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} />; })}</div> },
+        ...(canReadActivities ? [{ value: "atividades", label: `Atividades (${doneActivities.length})`, content: doneActivities.length === 0
+          ? <Text size="pequeno" tone="muted">Nenhuma atividade concluída ainda.</Text>
+          : <RowList label="Atividades concluídas">{doneActivities.map(activityRow)}</RowList> }] : []),
+        { value: "mudancas", label: "Mudanças", content: <Timeline items={groupTimelineEvents(events.filter((item) => item.type !== "activity.created"), { users, stages, contacts, companies, customFields })} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
+      ]} /></div>
+    </Surface>
   </>;
 
   const itemEditorContent = <div className={styles.modalFields}>
     {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="dropdown" placeholder={catalogLoading ? "Carregando catálogo…" : "Escolher um produto cadastrado (opcional)"} options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(item.price)}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
     <Field><Label>Nome do item</Label><Input value={itemName} onChange={(event) => setItemName(event.target.value)} placeholder="Escreva um item avulso ou escolha do catálogo" /></Field>
     <div className={styles.modalLinha}>
-      <Field><Label>Quantidade</Label><Input inputMode="decimal" value={itemQuantity} onChange={(event) => setItemQuantity(event.target.value)} placeholder="1" /></Field>
+      <Field><Label>Quantidade</Label><Input inputMode="decimal" numeric value={itemQuantity} onChange={(event) => setItemQuantity(event.target.value)} placeholder="1" /></Field>
       <Field><Label>Preço unitário</Label><MoneyInput label="Preço unitário" value={itemUnitAmount} onValueChange={setItemUnitAmount} /></Field>
     </div>
     <div className={styles.modalLinha}>
@@ -749,54 +748,57 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     </div>
   </div>;
 
-  const productsContent = <div className={styles.itens}>
-            {dealItems.length === 0
-              ? <p className={styles.empty}>O valor do negócio é a soma dos produtos. Adicione o que está sendo vendido.</p>
-              : <>
-                  <ul className={styles.itemList}>{dealItems.map((item) => {
-                    const totals = dealProductTotals({ ...item, unitAmount: syncedAmount(item.unitAmount) });
-                    return <li key={item.id}>
-                      <div className={styles.itemCorpo}>
-                        <strong>{item.name}</strong>
-                        <span>{formatQuantity(item.quantityMilli)} × {formatBRL(syncedAmount(item.unitAmount))}{item.discountBasisPoints > 0 ? ` · −${formatBasisPoints(item.discountBasisPoints)}%` : ""}{item.taxBasisPoints > 0 ? ` · +${formatBasisPoints(item.taxBasisPoints)}% imp.` : ""}</span>
-                      </div>
-                      <div className={styles.itemValor}>
-                        <strong>{formatBRL(totals.net)}</strong>
-                        {canWrite && <span className={styles.activityActions}>
-                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="file" />} aria-label={`Editar ${item.name}`} onClick={() => openItemEditor(item)} />
-                          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} onClick={() => void removeItem(item)} />
-                        </span>}
-                      </div>
-                    </li>;
-                  })}</ul>
-                  <dl className={styles.itemResumo}>
-                    <div><dt>Subtotal</dt><dd>{formatBRL(itemsSummary.gross)}</dd></div>
-                    {toCents(itemsSummary.discount) > 0 && <div><dt>Descontos</dt><dd>−{formatBRL(itemsSummary.discount)}</dd></div>}
-                    {toCents(itemsSummary.tax) > 0 && <div><dt>Impostos</dt><dd>+{formatBRL(itemsSummary.tax)}</dd></div>}
-                    <div data-total="true"><dt>Valor do negócio</dt><dd>{formatBRL(itemsSummary.net)}</dd></div>
-                  </dl>
-                </>}
-            {canWrite && <Button variant="secondary" shape="rounded" icon={<Icon name="plus" />} onClick={() => openItemEditor()}>Adicionar produto</Button>}
-          </div>;
+  /* Itens: o valor do negócio nasce aqui (packages/core/rules/dealProducts). */
+  const productsContent = <div className={styles.items}>
+    {dealItems.length === 0
+      ? <Text size="pequeno" tone="muted">O valor do negócio é a soma dos produtos. Adicione o que está sendo vendido.</Text>
+      : <>
+          <RowList label="Itens do negócio">{dealItems.map((item, index) => {
+            const totals = dealProductTotals({ ...item, unitAmount: syncedAmount(item.unitAmount) });
+            return <ListRow
+              key={item.id}
+              index={index}
+              icon="cart"
+              title={item.name}
+              description={`${formatQuantity(item.quantityMilli)} × ${formatBRL(syncedAmount(item.unitAmount))}${item.discountBasisPoints > 0 ? ` · −${formatBasisPoints(item.discountBasisPoints)}%` : ""}${item.taxBasisPoints > 0 ? ` · +${formatBasisPoints(item.taxBasisPoints)}% imp.` : ""}`}
+              meta={formatBRL(totals.net)}
+              trailing={canWrite ? <>
+                <Button size="sm" variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${item.name}`} onClick={() => openItemEditor(item)} />
+                <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} onClick={() => void removeItem(item)} />
+              </> : undefined}
+            />;
+          })}</RowList>
+          <div className={styles.fields}>
+            <InlineField label="Subtotal" numeric value={formatBRL(itemsSummary.gross)} />
+            {toCents(itemsSummary.discount) > 0 && <InlineField label="Descontos" numeric value={`−${formatBRL(itemsSummary.discount)}`} />}
+            {toCents(itemsSummary.tax) > 0 && <InlineField label="Impostos" numeric value={`+${formatBRL(itemsSummary.tax)}`} />}
+            <InlineField label="Valor do negócio" numeric value={formatBRL(itemsSummary.net)} />
+          </div>
+        </>}
+    {canWrite && <div className={styles.inlineAction}><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemEditor()}>Adicionar produto</Button></div>}
+  </div>;
 
-  const summaryFields = <div className={styles.details}>
-            {!embedded && fieldWarnings.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))}</p>}
-            <InlineField label="Previsão" value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
-              {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
-            </InlineField>
-            <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>
-              {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
-            </InlineField>
-            <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} empty={!linkedContact} disabled={!canWrite || !canReadContacts} {...(linkedContact ? { action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})}>
-              {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : selectParties(next?.value ?? null, deal.companyId))} />}
-            </InlineField>
-            <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} leading={linkedCompany && <Avatar name={linkedCompany.name} size="small" />} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies} {...(linkedCompany ? { action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})}>
-              {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading || linksLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : selectParties(deal.contactId, next?.value ?? null))} />}
-            </InlineField>
-            {deal.status === "lost" && <div className={styles.linha}><span>Motivo da perda</span><strong>{deal.lossReason ?? "Não informado"}</strong></div>}
-          </div>;
-  const detailsContent = <div className={styles.details}>
-    {customFields.filter((field) => !field.archivedAt).map((field) => <EnrichedCustomFieldValue
+  /* Resumo: todo valor editável passa pelo InlineField — a mesma caixa
+   * parada, vazia e editando. */
+  const summaryFields = <div className={styles.fields}>
+    {!embedded && fieldWarnings.length > 0 && <Alert tone="warning" title={stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))} />}
+    <InlineField label="Previsão" numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
+      {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
+    </InlineField>
+    <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>
+      {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
+    </InlineField>
+    <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" />, action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})} empty={!linkedContact} disabled={!canWrite || !canReadContacts}>
+      {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : selectParties(next?.value ?? null, deal.companyId))} />}
+    </InlineField>
+    <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" />, action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies}>
+      {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading || linksLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : selectParties(deal.contactId, next?.value ?? null))} />}
+    </InlineField>
+    {deal.status === "lost" && <InlineField label="Motivo da perda" value={deal.lossReason ?? "Não informado"} empty={!deal.lossReason} disabled />}
+  </div>;
+  const activeCustomFields = customFields.filter((field) => !field.archivedAt);
+  const detailsContent = <div className={styles.fields}>
+    {activeCustomFields.map((field) => <EnrichedCustomFieldValue
       options={fieldOptions.get(field.id) ?? []}
       key={field.id}
       field={field}
@@ -805,128 +807,134 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
       onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
     />)}
-    {customFields.filter((field) => !field.archivedAt).length === 0 && <p className={styles.empty}>Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</p>}
+    {activeCustomFields.length === 0 && <Text size="pequeno" tone="muted">Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</Text>}
   </div>;
-  const phaseContent = stage && <div className={styles.phaseFields}><PhaseFields stage={stage} stages={pipelineStages} values={customValues} disabled={!canWrite} onOpenCommercial={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }} renderBuiltIn={(key, hint) => {
-          if (key === "contactId") return <InlineField label="Pessoa" hint={hint} value={linkedContact?.name ?? "Clique para adicionar"} empty={!linkedContact} leading={linkedContact && <Avatar name={linkedContact.name} size="small" />} disabled={!canWrite || !canReadContacts}>{(close) => <RecordSelect label="Pessoa nesta etapa" options={contactOptions} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} onValueChange={(next) => close(selectParties(next?.value ?? null, deal.companyId))} />}</InlineField>;
-          if (key === "companyId") return <InlineField label="Empresa" hint={hint} value={linkedCompany?.name ?? "Clique para adicionar"} empty={!linkedCompany} leading={linkedCompany && <Avatar name={linkedCompany.name} size="small" />} disabled={!canWrite || !canReadCompanies}>{(close) => <RecordSelect label="Empresa nesta etapa" kind="company" options={companyOptions} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} onValueChange={(next) => close(selectParties(deal.contactId, next?.value ?? null))} />}</InlineField>;
-          if (key === "ownerId") return <InlineField label="Responsável" hint={hint} value={owner?.name ?? "Não atribuído"} empty={!owner} disabled={!canWrite}>{(close) => <Select label="Responsável nesta etapa" options={users.filter((u) => !u.deactivatedAt).map(userSelectOption)} value={deal.ownerId} onValueChange={(value) => close(saveField({ ownerId: value ? userIdFactory.from(value) : null }, "Responsável"))} />}</InlineField>;
-          if (key === "expectedCloseDate") return <InlineField label="Previsão" hint={hint} value={deal.expectedCloseDate ? formatDateTime(deal.expectedCloseDate) : "Clique para adicionar"} empty={!deal.expectedCloseDate} disabled={!canWrite}>{(close) => <DatePicker label="Previsão nesta etapa" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(value) => close(saveField({ expectedCloseDate: value ? new Date(`${value}T12:00:00`).toISOString() : null }, "Previsão"))} />}</InlineField>;
-          return null;
-        }} onSave={(key, value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...customValues, [key]: value }; }))} /></div>;
+  const phaseContent = stage && <PhaseFields stage={stage} stages={pipelineStages} values={customValues} disabled={!canWrite} onOpenCommercial={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }} renderBuiltIn={(key, hint) => {
+    if (key === "contactId") return <InlineField label="Pessoa" hint={hint} value={linkedContact?.name ?? "Sem pessoa"} empty={!linkedContact} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" /> } : {})} disabled={!canWrite || !canReadContacts}>{(close) => <RecordSelect label="Pessoa nesta etapa" options={contactOptions} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} onValueChange={(next) => close(selectParties(next?.value ?? null, deal.companyId))} />}</InlineField>;
+    if (key === "companyId") return <InlineField label="Empresa" hint={hint} value={linkedCompany?.name ?? "Sem empresa"} empty={!linkedCompany} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" /> } : {})} disabled={!canWrite || !canReadCompanies}>{(close) => <RecordSelect label="Empresa nesta etapa" kind="company" options={companyOptions} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} onValueChange={(next) => close(selectParties(deal.contactId, next?.value ?? null))} />}</InlineField>;
+    if (key === "ownerId") return <InlineField label="Responsável" hint={hint} value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>{(close) => <Select label="Responsável nesta etapa" options={users.filter((u) => !u.deactivatedAt).map(userSelectOption)} value={deal.ownerId} onValueChange={(value) => close(saveField({ ownerId: value ? userIdFactory.from(value) : null }, "Responsável"))} />}</InlineField>;
+    if (key === "expectedCloseDate") return <InlineField label="Previsão" hint={hint} numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>{(close) => <DatePicker label="Previsão nesta etapa" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(value) => close(saveField({ expectedCloseDate: value ? new Date(`${value}T12:00:00`).toISOString() : null }, "Previsão"))} />}</InlineField>;
+    return null;
+  }} onSave={(key, value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...customValues, [key]: value }; }))} />;
   const summaryContent = <Accordion value={openSections} onValueChange={setOpenSections} items={[
-          { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: summaryFields },
-          { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: detailsContent },
-          /* Pessoa e Empresa não têm seção própria: o resumo já mostra as duas,
-           * e o botão ao lado abre a ficha inteira por cima. Repetir o nome
-           * numa seção logo abaixo era ocupar o painel com o que já estava à
-           * vista três linhas acima. */
-          ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId
-            ? <p className={styles.empty}>Vincule uma pessoa para ver o atendimento.</p>
-            : conversationsLoading ? <Skeleton />
-            : conversations.length === 0
-              ? <p className={styles.empty}>Nenhuma conversa desta pessoa ainda.</p>
-              : <ul className={styles.conversationList}>{conversations.map((conversation) => <li key={conversation.id}><Link to={`/inbox?conversation=${conversation.id}`}><div className={styles.conversationBody}><strong>{conversation.subject}</strong><span>{conversationChannelLabel(conversation.channel)} · {formatDateTime(conversation.lastMessageAt)}</span></div><Icon name="chevron" /></Link></li>)}</ul> }] : []),
-        ]} />;
-  const relatedContent = <div className={styles.relatedRecords}><RelatedRecords contactId={deal.contactId} companyId={deal.companyId} disabled={!canWrite} onContact={(person) => { void selectParties(person?.id ?? null, deal.companyId); }} onCompany={(company) => { void selectParties(deal.contactId, company?.id ?? null); }} /></div>;
+    { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: summaryFields },
+    { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: detailsContent },
+    /* Pessoa e Empresa não têm seção própria: o resumo já mostra as duas, e
+     * o olho ao lado do valor abre a ficha inteira por cima. */
+    ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId
+      ? <Text size="pequeno" tone="muted">Vincule uma pessoa para ver o atendimento.</Text>
+      : conversationsLoading ? <Skeleton className={styles.loadingLine} />
+      : conversations.length === 0
+        ? <Text size="pequeno" tone="muted">Nenhuma conversa desta pessoa ainda.</Text>
+        : <RowList label="Conversas desta pessoa">{conversations.map((conversation, index) => <ListRow key={conversation.id} index={index} icon="message" title={conversation.subject} description={conversationChannelLabel(conversation.channel)} meta={formatDateTime(conversation.lastMessageAt)} render={<Link to={`/inbox?conversation=${conversation.id}`} />} />)}</RowList> }] : []),
+  ]} />;
+  const relatedContent = <RelatedRecords contactId={deal.contactId} companyId={deal.companyId} disabled={!canWrite} onContact={(person) => { void selectParties(person?.id ?? null, deal.companyId); }} onCompany={(company) => { void selectParties(deal.contactId, company?.id ?? null); }} />;
 
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
-  const valueContent = <div className={styles.dealValue}><span>Valor do negócio</span><strong>{formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))}</strong><div><CrmLabel color={deal.status === "won" ? "green" : deal.status === "lost" ? "red" : "blue"}>{statusLabel(deal.status)}</CrmLabel><Button variant="ghost" size="sm" shape="rounded" onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores <Icon name="right" /></Button></div></div>;
-  const moveActions = <DealStageActions closed={!isOpen} destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && canMoveBetweenStages(stage, target, transitions)).map((target) => ({ id: target.id, label: target.name, color: target.color, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []} onMove={(id) => void moveDeal(id).catch((cause: unknown) => notify({ title: "Movimento não concluído", description: cause instanceof Error ? cause.message : "Revise os campos da etapa.", tone: "error" }))} onWon={stage && isOpen && canMove && canCloseAtStage(stage, "won") ? () => void closeDeal("won").catch(() => notify({ title: "Não foi possível registrar o ganho", tone: "error" })) : undefined} onLost={stage && isOpen && canMove && canCloseAtStage(stage, "lost") ? () => { setLossReason(""); setLossModalOpen(true); } : undefined} />;
+  const statusChip = deal.status === "open" ? <Chip>{statusLabel(deal.status)}</Chip> : <Chip dot tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Chip>;
+  /* Valor do negócio como KPI: o número rola (odômetro) quando os itens mudam. */
+  const valueContent = <KpiCard label="Valor do negócio" value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={<span className={styles.valueHint}>{statusChip}<Button variant="ghost" size="sm" trailingIcon={<Icon name="right" />} onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores</Button></span>} />;
+  const moveActions = <DealStageActions
+    closed={!isOpen}
+    destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && (target.id === stage.id || canMoveBetweenStages(stage, target, transitions))).map((target) => ({ id: target.id, label: target.name, color: target.color, current: target.id === stage.id, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []}
+    onMove={(id) => void moveDeal(id).catch((cause: unknown) => notify({ title: "Movimento não concluído", description: cause instanceof Error ? cause.message : "Revise os campos da etapa.", tone: "error" }))}
+    onWon={stage && isOpen && canMove && canCloseAtStage(stage, "won") ? () => void closeDeal("won").catch(() => notify({ title: "Não foi possível registrar o ganho", tone: "error" })) : undefined}
+    onLost={stage && isOpen && canMove && canCloseAtStage(stage, "lost") ? () => { setLossReason(""); setLossModalOpen(true); } : undefined}
+  />;
   const commercialPanel = <div className={styles.quickPanel}>
-    <header className={styles.quickPanelHeader}>
+    <div className={styles.quickPanelHeader}>
       {embedded && <Button variant="ghost" size="sm" icon={<Icon name="left" />} iconOnly aria-label={embeddedItemEditorOpen ? "Voltar aos itens" : "Voltar aos campos"} onClick={() => { if (embeddedItemEditorOpen) setEmbeddedItemEditorOpen(false); else setQuickPanel("stage"); }} />}
-      <div><h2>{embeddedItemEditorOpen ? (editingItemId ? "Editar produto" : "Adicionar produto") : "Itens e valores"}</h2><p>{embeddedItemEditorOpen ? "Informe os dados do item comercial." : "Produtos, serviços e composição do valor negociado."}</p></div>
-    </header>
+      <SectionTitle level="card" description={embeddedItemEditorOpen ? "Informe os dados do item comercial." : "Produtos, serviços e composição do valor negociado."}>{embeddedItemEditorOpen ? (editingItemId ? "Editar produto" : "Adicionar produto") : "Itens e valores"}</SectionTitle>
+    </div>
     {embeddedItemEditorOpen ? <>
       <div className={styles.quickPanelBody}>{itemEditorContent}</div>
-      <footer className={styles.quickPanelFooter}><Button variant="ghost" onClick={() => setEmbeddedItemEditorOpen(false)}>Cancelar</Button><Button onClick={() => void saveItem().catch((cause: unknown) => notify({ title: "Não foi possível salvar o item", description: cause instanceof Error ? cause.message : "Revise os campos.", tone: "error" }))}>{editingItemId ? "Salvar" : "Adicionar"}</Button></footer>
+      <div className={styles.quickPanelFooter}><Button variant="ghost" onClick={() => setEmbeddedItemEditorOpen(false)}>Cancelar</Button><Button onClick={() => void saveItem().catch((cause: unknown) => notify({ title: "Não foi possível salvar o item", description: cause instanceof Error ? cause.message : "Revise os campos.", tone: "error" }))}>{editingItemId ? "Salvar" : "Adicionar"}</Button></div>
     </> : <div className={styles.quickPanelBody}>{productsContent}</div>}
   </div>;
 
-  return <PageFrame className={[styles.page, embedded ? styles.embedded : ""].join(" ")}>
-    {embedded ? <header className={styles.quickHeader}><span className={styles.quickIcon}><Icon name="briefcase" /></span><div><small>{pipeline?.name ?? "Negócio"}</small><InlineEdit label="Título do negócio" value={deal.name} disabled={!canWrite} appearance="title" saveOnBlur onSave={async (draft) => { const next = draft.trim(); if (!next || next.length > 200) throw new Error("Informe um título de até 200 caracteres."); if (next !== deal.name) await saveField({ name: next }, "Título"); }} /></div>{owner && <div className={styles.quickOwner}><UserAvatar user={owner} size="small" /><span><small>Responsável</small><strong>{owner.name}</strong></span></div>}</header> : <PageHeader
-      back={embedded ? undefined : <BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
-      icon="briefcase"
-      title={<InlineEdit
-        label="Título do negócio"
-        value={deal.name}
-        disabled={!canWrite}
-        appearance="title"
-        saveOnBlur
-        errorText="O título não pode ficar vazio e precisa ter até 200 caracteres."
-        onSave={async (draft) => {
-          const next = draft.trim();
-          if (!next || next.length > 200) throw new Error("INVALID_DEAL_TITLE");
-          if (next !== deal.name) await saveField({ name: next }, "Título");
-        }}
+  /* Responsável e seguidores: o avatar (ou a pilha) mora no encaixe de ícone
+   * do botão — os dois rótulos começam no mesmo x. */
+  const ownerPicker = <OwnerPicker label="Responsável pelo negócio" people={users} value={deal.ownerId} disabled={!canWrite} onChange={(id) => void changeOwner(id)} />;
+  const followersMenu = <MenuButton variant="secondary" disabled={!canWrite} aria-label={`${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}. Gerenciar`} icon={followerUsers.length ? <AvatarStack overflow={Math.max(0, followerUsers.length - 3)}>{followerUsers.slice(0, 3).map((user) => <UserAvatar key={user.id} user={user} size="small" />)}</AvatarStack> : <Icon name="team" />} menu={<>
+    <MenuGroup label="Seguidores">
+      {followerUsers.length === 0 && <MenuNote>Ninguém segue este negócio</MenuNote>}
+      {followerUsers.map((user) => <MenuItem key={user.id} icon={<UserAvatar user={user} size="small" />} shortcut="Remover" disabled={busyFollowerId === user.id} onClick={() => void removeFollower(user.id)}>{user.name}</MenuItem>)}
+    </MenuGroup>
+    <MenuGroup label="Ações">
+      {session && !followers.some((follower) => follower.userId === session.userId) && <MenuItem icon={<Icon name="eye" />} disabled={busyFollowerId !== null} onClick={() => void addFollower(session.userId)}>Seguir este negócio</MenuItem>}
+      <MenuItem icon={<Icon name="plus" />} disabled={followerOptions.length === 0} onClick={() => setFollowerModalOpen(true)}>Adicionar seguidor</MenuItem>
+    </MenuGroup>
+  </>}>{followers.length === 0 ? "Seguidores" : `${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}`}</MenuButton>;
+  const scheduleDateLabel = scheduledDate && !Number.isNaN(scheduledDate.getTime()) ? capitalize(new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).format(scheduledDate)) : "Escolha uma data";
+
+  return <PageFrame className={embedded ? styles.embedded : styles.page}>
+    {embedded
+      ? <div className={styles.quickHeader}><SectionTitle level="section" as="h2" meta={pipeline?.name ?? "Negócio"} actions={ownerPicker}><InlineEdit label="Título do negócio" value={deal.name} disabled={!canWrite} appearance="title" saveOnBlur onSave={async (draft) => { const next = draft.trim(); if (!next || next.length > 200) throw new Error("Informe um título de até 200 caracteres."); if (next !== deal.name) await saveField({ name: next }, "Título"); }} /></SectionTitle></div>
+      : <PageHeader
+        back={<BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
+        eyebrow={[pipeline?.name ?? "Funil", stage?.name].filter(Boolean).join(" · ")}
+        title={<InlineEdit
+          label="Título do negócio"
+          value={deal.name}
+          disabled={!canWrite}
+          appearance="title"
+          saveOnBlur
+          errorText="O título não pode ficar vazio e precisa ter até 200 caracteres."
+          onSave={async (draft) => {
+            const next = draft.trim();
+            if (!next || next.length > 200) throw new Error("INVALID_DEAL_TITLE");
+            if (next !== deal.name) await saveField({ name: next }, "Título");
+          }}
+        />}
+        actions={<div className={styles.headerActions}>
+          <div className={styles.headerGroup} aria-label="Equipe do negócio">
+            {ownerPicker}
+            {followersMenu}
+            <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
+          </div>
+          <div className={styles.headerGroup}>
+            {isOpen && canMove && <>
+              <Button variant="secondary" tone="success" icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
+              <Button variant="secondary" tone="danger" icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
+            </>}
+            {!isOpen && statusChip}
+            {!isOpen && canMove && <Button variant="secondary" icon={<Icon name="undo" />} loading={reopening} onClick={() => void reopenDeal()}>Reabrir</Button>}
+          </div>
+        </div>}
       />}
-      actions={<div className={styles.headerActions}>
-        <div className={styles.headerPeople} aria-label="Equipe do negócio">
-          {/* Uma identidade única para o responsável. A presença mostra apenas outras pessoas. */}
-          <MenuButton variant="secondary" size="lg" disabled={!canWrite} className={styles.owner} aria-label={`Responsável: ${owner?.name ?? "não atribuído"}. Trocar`} menu={<MenuGroup label="Responsável pelo negócio">
-            {users.filter((item) => !item.deactivatedAt).map((item) => <MenuItem key={item.id} icon={<UserAvatar user={item} size="small" />} aria-current={item.id === deal.ownerId ? "true" : undefined} onClick={() => void changeOwner(item.id)}>{item.name}</MenuItem>)}
-            {deal.ownerId && <MenuItem icon={<Icon name="close" />} onClick={() => void changeOwner(null)}>Sem responsável</MenuItem>}
-          </MenuGroup>}>
-            {owner ? <UserAvatar user={owner} size="small" /> : <Icon name="account" />}
-            <span>{owner?.name ?? "Sem responsável"}</span>
-          </MenuButton>
-          <MenuButton variant="secondary" size="lg" className={styles.followers} disabled={!canWrite} aria-label={`${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}. Gerenciar`} menu={<>
-            <MenuGroup label="Seguidores">
-              {followerUsers.length === 0 && <MenuItem disabled>Ninguém segue este negócio</MenuItem>}
-              {followerUsers.map((user) => <MenuItem key={user.id} icon={<UserAvatar user={user} size="small" />} shortcut="Remover" disabled={busyFollowerId === user.id} onClick={() => void removeFollower(user.id)}>{user.name}</MenuItem>)}
-            </MenuGroup>
-            <MenuGroup label="Ações">
-              {session && !followers.some((follower) => follower.userId === session.userId) && <MenuItem icon={<Icon name="eye" />} disabled={busyFollowerId !== null} onClick={() => void addFollower(session.userId)}>Seguir este negócio</MenuItem>}
-              <MenuItem icon={<Icon name="plus" />} disabled={followerOptions.length === 0} onClick={() => setFollowerModalOpen(true)}>Adicionar seguidor</MenuItem>
-            </MenuGroup>
-          </>}>
-            <span className={styles.followerFaces} aria-hidden="true">{followerUsers.slice(0, 3).map((user) => <UserAvatar key={user.id} user={user} size="small" />)}{followerUsers.length === 0 && <Icon name="team" />}</span>
-            <span>{followers.length === 0 ? "Seguidores" : `${followers.length} ${followers.length === 1 ? "seguidor" : "seguidores"}`}</span>
-          </MenuButton>
-          <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
-        </div>
-        <div className={styles.headerOutcome}>
-          {isOpen && canMove && <>
-            <Button variant="secondary" size="lg" tone="success" icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
-            <Button variant="secondary" size="lg" tone="danger" icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
-          </>}
-          {!isOpen && <Badge tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Badge>}
-          {!isOpen && canMove && <Button variant="secondary" icon={<Icon name="undo" />} loading={reopening} onClick={() => void reopenDeal()}>Reabrir</Button>}
-        </div>
-      </div>}
+
+    {!embedded && pipelineStages.length > 0 && <StageProgress
+      stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
+      currentId={deal.stageId}
+      durations={stageTiming.durations}
+      details={stageTiming.details}
+      outcome={deal.status === "open" ? undefined : deal.status}
+      interaction={compactStageUi ? "modal" : "popover"}
+      {...(canMove && isOpen && compactStageUi ? { onSelect: (id: string) => setSelectedStageId(id) } : {})}
+      {...(canMove && isOpen && !compactStageUi ? { onMove: (id: string) => moveDeal(id) } : {})}
     />}
 
-    {!embedded && <div className={styles.topo}>
-      {pipelineStages.length > 0 && <StageProgress
-        stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
-        currentId={deal.stageId}
-        durations={stageTiming.durations}
-        details={stageTiming.details}
-        outcome={deal.status === "open" ? undefined : deal.status}
-        interaction={compactStageUi ? "modal" : "popover"}
-        {...(canMove && isOpen && compactStageUi ? { onSelect: (id: string) => setSelectedStageId(id) } : {})}
-        {...(canMove && isOpen && !compactStageUi ? { onMove: (id: string) => moveDeal(id) } : {})}
-      />}
-      <p className={styles.trilha}><Link to="/deals">{pipeline?.name ?? "Funil"}</Link> <Icon name="chevron" /> {stage?.name ?? "Etapa"}</p>
-    </div>}
-
     {embedded ? <div className={styles.quickGrid}>
-      <aside className={styles.quickContext}>
+      <div className={styles.quickContext}>
         {valueContent}
-        <Tabs label="Contexto do negócio" defaultValue="resumo" items={[
-          { value: "resumo", label: "Resumo", content: <>{phaseContent}<div className={styles.quickSummary}>{summaryFields}</div><div className={styles.tagSection}>{tagsContent}</div></> },
-          { value: "detalhes", label: "Detalhes", content: <div className={styles.quickDetails}>{detailsContent}</div> },
+        <Surface className={styles.quickTabs}><Tabs label="Contexto do negócio" defaultValue="resumo" items={[
+          { value: "resumo", label: "Resumo", content: <div className={styles.stack}>{phaseContent}{summaryFields}{tagsContent}</div> },
+          { value: "detalhes", label: "Detalhes", content: detailsContent },
           { value: "pessoas", label: "Vínculos", content: relatedContent },
-        ]} />
-      </aside>
-      <section className={styles.quickPhase}>{composerContent}{quickPanel === "commercial" ? commercialPanel : <><div className={`${styles.pageActivity} ${styles.quickActivity}`}>{historyContent}</div></>}</section>
-      <aside className={styles.quickActions}>{moveActions}</aside>
+        ]} /></Surface>
+      </div>
+      <div className={styles.quickPhase}>{composerContent}{quickPanel === "commercial" ? <Surface className={styles.block}>{commercialPanel}</Surface> : <div className={styles.pageActivity}>{historyContent}</div>}</div>
+      <Surface as="aside" className={styles.quickActions}>{moveActions}</Surface>
     </div> : <div className={styles.contentGrid}>
-      <aside className={styles.painel}>{valueContent}{phaseContent}{summaryContent}<div className={styles.tagSection}>{tagsContent}</div></aside>
-      <section className={styles.fluxo}>{composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
+      <aside className={styles.side}>
+        {valueContent}
+        {phaseContent && <Surface className={styles.sideBlock}>{phaseContent}</Surface>}
+        {summaryContent}
+        <Surface className={styles.sideBlock}>{tagsContent}</Surface>
+      </aside>
+      <section className={styles.flow}>{composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
         { value: "atividade", label: "Atividades e histórico", content: <div className={styles.pageActivity}>{historyContent}</div> },
-        { value: "comercial", label: "Itens e valores", content: <div className={styles.commercialPage}><h2>Itens do negócio</h2><p>Produtos, serviços e composição do valor negociado.</p>{productsContent}</div> },
+        { value: "comercial", label: "Itens e valores", content: <Surface className={styles.block}><SectionTitle level="card" description="Produtos, serviços e composição do valor negociado.">Itens do negócio</SectionTitle>{productsContent}</Surface> },
         { value: "pessoas", label: "Pessoas e empresa", content: relatedContent },
       ]} /></div></section>
     </div>}
@@ -938,7 +946,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       await saveField({ contactId: contactIdFactory.from(pendingLink.contactId), companyId: companyIdFactory.from(pendingLink.companyId) }, "Pessoa e empresa");
       setPendingLink(null);
     }}>
-      <LinkPreview
+      <LinkRecordsPreview
         person={contacts.find((item) => item.id === pendingLink?.contactId)?.name ?? "Pessoa"}
         company={companies.find((item) => item.id === pendingLink?.companyId)?.name ?? "Empresa"}
       />
@@ -958,14 +966,18 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       }}
     >
       <div className={styles.stageReview}>
-        <div className={styles.stageReviewSummary}>
-          <Icon name={selectedStageId === deal.stageId ? "calendar" : "right"} />
-          <div><strong>{selectedStageId === deal.stageId ? "Tempo nesta passagem" : `Mover de ${stage?.name ?? "etapa atual"}`}</strong><span>{selectedStageDetails?.duration ?? "Ainda sem tempo registrado"}</span>{selectedStageDetails?.totalDuration && selectedStageDetails.totalDuration !== selectedStageDetails.duration && <small>Acumulado nesta etapa: {selectedStageDetails.totalDuration}</small>}</div>
-        </div>
-        {selectedStageDetails?.period && <p>{selectedStageDetails.period}</p>}
+        <Surface elevation="cavada" radius="lista" className={styles.stageReviewSummary}>
+          <IconTile icon={selectedStageId === deal.stageId ? "calendar" : "right"} size="sm" surface="folha" />
+          <div className={styles.stageReviewCopy}>
+            <Text weight="medium">{selectedStageId === deal.stageId ? "Tempo nesta passagem" : `Mover de ${stage?.name ?? "etapa atual"}`}</Text>
+            <Text size="pequeno" mono>{selectedStageDetails?.duration ?? "Ainda sem tempo registrado"}</Text>
+            {selectedStageDetails?.totalDuration && selectedStageDetails.totalDuration !== selectedStageDetails.duration && <Text size="legenda" tone="muted" mono>Acumulado nesta etapa: {selectedStageDetails.totalDuration}</Text>}
+          </div>
+        </Surface>
+        {selectedStageDetails?.period && <Text size="pequeno" tone="secondary">{selectedStageDetails.period}</Text>}
         {selectedStageDetails?.passages?.length ? <StagePassageHistory passages={selectedStageDetails.passages} /> : null}
-        {selectedStageId !== deal.stageId && selectedStageCheck && selectedStageCheck.blocking.length > 0 && <p className={styles.aviso}><Icon name="bolt" />{stageFieldMessage("required", selectedStageCheck.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)), selectedStage?.name)}</p>}
-        {selectedStageId !== deal.stageId && (!selectedStageCheck || selectedStageCheck.blocking.length === 0) && <p>A alteração será salva imediatamente e registrada no histórico do negócio.</p>}
+        {selectedStageId !== deal.stageId && selectedStageCheck && selectedStageCheck.blocking.length > 0 && <Alert tone="warning" title={stageFieldMessage("required", selectedStageCheck.blocking.map((issue) => stageFieldLabel(issue.fieldKey, customFields)), selectedStage?.name)} />}
+        {selectedStageId !== deal.stageId && (!selectedStageCheck || selectedStageCheck.blocking.length === 0) && <Text size="pequeno" tone="secondary">A alteração será salva imediatamente e registrada no histórico do negócio.</Text>}
       </div>
     </ActionModal>
 
@@ -977,16 +989,16 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       <div className={styles.activityModalLayout}>
       <div className={styles.modalFields}>
         <SegmentedControl label="Tipo de atividade" value={activityType} options={ACTIVITY_TYPE_OPTIONS} onValueChange={changeActivityType} />
-        <p className={styles.activityHint}>{ACTIVITY_FORM_HINTS[activityType]}</p>
+        <Text size="pequeno" tone="secondary">{ACTIVITY_FORM_HINTS[activityType]}</Text>
         <Field><Label>Título</Label><Input autoFocus value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Qual é o próximo passo?" /></Field>
         <section className={styles.activityTiming} aria-label="Data, hora e duração">
-          <header><strong>Data e hora</strong><Badge tone="neutral">{formatDuration(activityDuration)}</Badge></header>
+          <SectionTitle level="block" actions={<Chip>{formatDuration(activityDuration)}</Chip>}>Data e hora</SectionTitle>
           <div className={styles.activityInterval}>
-          <Field><Label>Data de início</Label><DatePicker label="Data de início" value={activityStartDate} onValueChange={(value) => changeActivityStart(value, activityStartTime)} /></Field>
-          <Field><Label>Hora de início</Label><TimePicker label="Hora de início" value={activityStartTime} onValueChange={(value) => changeActivityStart(activityStartDate, value)} /></Field>
-          <span className={styles.activityIntervalArrow} aria-hidden="true">→</span>
-          <Field><Label>Data de fim</Label><DatePicker label="Data de fim" value={activityEndDate} onValueChange={setActivityEndDate} /></Field>
-          <Field><Label>Hora de fim</Label><TimePicker label="Hora de fim" value={activityEndTime} onValueChange={setActivityEndTime} /></Field>
+            <Field><Label>Data de início</Label><DatePicker label="Data de início" value={activityStartDate} onValueChange={(value) => changeActivityStart(value, activityStartTime)} /></Field>
+            <Field><Label>Hora de início</Label><TimePicker label="Hora de início" value={activityStartTime} onValueChange={(value) => changeActivityStart(activityStartDate, value)} /></Field>
+            <Text tone="muted" className={styles.activityIntervalArrow}>→</Text>
+            <Field><Label>Data de fim</Label><DatePicker label="Data de fim" value={activityEndDate} onValueChange={setActivityEndDate} /></Field>
+            <Field><Label>Hora de fim</Label><TimePicker label="Hora de fim" value={activityEndTime} onValueChange={setActivityEndTime} /></Field>
           </div>
         </section>
         <div className={styles.modalLinha}>
@@ -1000,30 +1012,27 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         {activityType === "meeting" && <Field><Label>Link da videochamada</Label><Input type="url" value={activityVideoCallUrl} onChange={(event) => setActivityVideoCallUrl(event.target.value)} placeholder="https://meet.google.com/…" /></Field>}
         <Field><Label>{activityType === "email" ? "Assunto e contexto" : "Descrição para participantes"}</Label><Textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder={activityType === "email" ? "O que deve ser tratado no acompanhamento" : "Pauta e informações que podem aparecer no convite do calendário"} /></Field>
         <Field><Label>Nota interna</Label><Textarea value={activityNotes} onChange={(event) => setActivityNotes(event.target.value)} placeholder="Contexto privado, visível apenas para a equipe" /></Field>
-        <section className={styles.activityContext} aria-label="Vínculos da atividade">
-          <strong>Vínculos</strong>
-          <div className={styles.activityContextItems}>
-            <span><Icon name="briefcase" />{deal.name}</span>
-            {linkedContact && <span><Avatar name={linkedContact.name} size="small" />{linkedContact.name}</span>}
-            {linkedCompany && <span><Icon name="building" />{linkedCompany.name}</span>}
+        <Surface as="section" elevation="cavada" radius="lista" className={styles.activityContext} aria-label="Vínculos da atividade">
+          <SectionTitle level="block">Vínculos</SectionTitle>
+          <div className={styles.chips}>
+            <Chip icon="briefcase">{deal.name}</Chip>
+            {linkedContact && <Chip icon="user">{linkedContact.name}</Chip>}
+            {linkedCompany && <Chip icon="building">{linkedCompany.name}</Chip>}
           </div>
-        </section>
+        </Surface>
       </div>
-      <aside className={styles.daySchedule} aria-label="Agenda do dia selecionado">
-        <header>
-          <div><strong>{scheduledDate && !Number.isNaN(scheduledDate.getTime()) ? new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).format(scheduledDate) : "Escolha uma data"}</strong><span>Agenda de {users.find((item) => item.id === activityOwnerId)?.name ?? "ninguém"}</span></div>
-          <Badge tone={scheduleConflicts.size > 0 ? "danger" : "success"}>{scheduleConflicts.size > 0 ? `${scheduleConflicts.size} conflito${scheduleConflicts.size > 1 ? "s" : ""}` : "Horário livre"}</Badge>
-        </header>
+      <Surface as="aside" className={styles.daySchedule} aria-label="Agenda do dia selecionado">
+        <SectionTitle level="block" description={`Agenda de ${users.find((item) => item.id === activityOwnerId)?.name ?? "ninguém"}`} actions={<Chip dot tone={scheduleConflicts.size > 0 ? "danger" : "success"}>{scheduleConflicts.size > 0 ? `${scheduleConflicts.size} conflito${scheduleConflicts.size > 1 ? "s" : ""}` : "Horário livre"}</Chip>}>{scheduleDateLabel}</SectionTitle>
         <div className={styles.dayScheduleBody}>
           {scheduledDayActivities.length === 0 && scheduledDayExternal.length === 0
-            ? <p className={styles.empty}>Nenhum compromisso neste dia.</p>
-            : <>{scheduledDayActivities.map((activity) => <div key={activity.id} className={styles.scheduleItem} data-conflict={scheduleConflicts.has(activity.id) || undefined}>
-                <time>{formatTimeRange(activity.scheduledAt, activity.durationMinutes)}</time>
-                <div><strong>{activity.title}</strong><span>{activityTypeLabel(activity.type)} · Spark</span></div>
-              </div>)}{scheduledDayExternal.map((event) => <ExternalScheduleItem key={event.id} event={event} conflict={scheduleConflicts.has(event.id)} />)}</>}
+            ? <Text size="pequeno" tone="muted">Nenhum compromisso neste dia.</Text>
+            : <RowList label="Compromissos do dia">
+                {scheduledDayActivities.map((activity, index) => <ListRow key={activity.id} index={index} icon={ACTIVITY_ICONS[activity.type]} title={activity.title} description={scheduleConflicts.has(activity.id) ? <Signal tone="danger">Conflito · {activityTypeLabel(activity.type)} · Spark</Signal> : `${activityTypeLabel(activity.type)} · Spark`} meta={formatTimeRange(activity.scheduledAt, activity.durationMinutes)} />)}
+                {scheduledDayExternal.map((event, index) => <ListRow key={event.id} index={scheduledDayActivities.length + index} icon="calendar" title={event.title} description={scheduleConflicts.has(event.id) ? <Signal tone="danger">Conflito · {event.calendarName} · {providerLabel(event.provider)}</Signal> : `${event.calendarName} · ${providerLabel(event.provider)}`} meta={formatExternalTimeRange(event.startsAt, event.endsAt, event.allDay)} />)}
+              </RowList>}
         </div>
-        <footer><Icon name="calendar" /><span>{externalCalendarEvents.length} compromisso{externalCalendarEvents.length === 1 ? "" : "s"} externo{externalCalendarEvents.length === 1 ? "" : "s"} sincronizado{externalCalendarEvents.length === 1 ? "" : "s"} de Google, Outlook ou Apple.</span></footer>
-      </aside>
+        <Text size="pequeno" tone="muted">{externalCalendarEvents.length} compromisso{externalCalendarEvents.length === 1 ? "" : "s"} externo{externalCalendarEvents.length === 1 ? "" : "s"} sincronizado{externalCalendarEvents.length === 1 ? "" : "s"} de Google, Outlook ou Apple.</Text>
+      </Surface>
       </div>
     </ActionModal>
     {!embedded && <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>{itemEditorContent}</ActionModal>}
@@ -1037,8 +1046,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       </PanelContent>
     </Panel>
 
-    {/* A ficha entra por cima, ocupando 85% da largura: o negócio continua
-      * visível atrás, e fechar devolve exatamente onde se estava. */}
+    {/* A ficha entra por cima: o negócio continua visível atrás, e fechar
+      * devolve exatamente onde se estava. */}
     <Panel open={ficha !== null} onOpenChange={(aberta) => { if (!aberta) setFicha(null); }}>
       <PanelContent side="right" title={ficha?.tipo === "empresa" ? "Empresa" : "Pessoa"} closeLabel="Fechar e voltar ao negócio">
         {ficha?.tipo === "contato" && <ContactProfile contactId={ficha.id} embedded />}
@@ -1048,6 +1057,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   </PageFrame>;
 }
 
+function capitalize(text: string): string { return text.charAt(0).toLocaleUpperCase("pt-BR") + text.slice(1); }
 function statusLabel(status: DealStatus): string { return status === "open" ? "Em aberto" : status === "won" ? "Ganho" : "Perdido"; }
 function activityTypeLabel(type: ActivityType): string { return ACTIVITY_TYPE_LABELS[type]; }
 function conversationChannelLabel(channel: string): string { return ({ manual: "Interno", email: "E-mail", instagram: "Instagram", whatsapp: "WhatsApp", messenger: "Messenger" } as Record<string, string>)[channel] ?? channel; }
@@ -1111,29 +1121,4 @@ function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60); const rest = minutes % 60;
   if (hours === 0) return `${rest} min`;
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
-}
-
-/** Nota no histórico: papel amarelo, como o do Pipedrive — fala de gente, não registro do sistema. */
-function NoteCard({ note, authorName, onRemove }: { note: Note; authorName?: string | undefined; onRemove?: (() => void) | undefined }) {
-  return <article className={styles.nota}>
-    <header><strong>{authorName ?? "Alguém"}</strong><time>{formatDateTime(note.createdAt)}</time>{onRemove && <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label="Remover nota" onClick={onRemove} />}</header>
-    <p>{note.body}</p>
-  </article>;
-}
-
-/** Mostra o vínculo antes de pedir a confirmação: pessoa → empresa, e o que muda. */
-function LinkPreview({ person, company }: { person: string; company: string }) {
-  return <div className={styles.linkPreview}>
-    <div className={styles.linkDiagram} aria-hidden="true">
-      <div className={styles.linkNode}><Avatar name={person} size="large" /><span>{person}</span></div>
-      <div className={styles.linkBridge}><span className={styles.linkBadge}><Icon name="link" /></span></div>
-      <div className={styles.linkNode}><span className={styles.linkCompany}><Icon name="building" /></span><span>{company}</span></div>
-    </div>
-    <p className={styles.linkLead}><strong>{person}</strong> ainda não faz parte de <strong>{company}</strong>.</p>
-    <ul className={styles.linkEffects}>
-      <li><Icon name="check" /><span>Empresa entra no <strong>cadastro de {person}</strong></span></li>
-      <li><Icon name="check" /><span>Empresa entra <strong>neste negócio</strong></span></li>
-    </ul>
-    <p className={styles.linkNote}>Os vínculos atuais continuam. Sem vincular, a empresa não entra no negócio.</p>
-  </div>;
 }
