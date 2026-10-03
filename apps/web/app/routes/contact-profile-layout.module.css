@@ -33,7 +33,7 @@
  * possui uma única rolagem; o histórico não empurra as outras seções. */
 .personPage { height: 100%; min-height: 0; overflow: hidden; }
 .personPage > :first-child { flex: none; }
-.personGrid { display: grid; flex: 1; min-height: 0; min-width: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); grid-template-areas: "profile work"; gap: var(--space-5); }
+.personGrid { display: grid; flex: 1; min-height: 0; min-width: 0; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-areas: "profile work"; gap: var(--space-5); }
 .personGrid > .profileColumn { overflow: auto; min-height: 0; padding: var(--space-1); }
 .personWork { grid-area: work; min-width: 0; min-height: 0; overflow: hidden; }
 .backContext { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }

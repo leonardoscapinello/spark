@@ -13,7 +13,7 @@ import {
   type IdentityChannel,
 } from "@spark/core";
 import { optimisticActivity, optimisticIdentity, writeAccepted } from "@spark/data";
-import { Avatar, BackLink, Button, Card, DateTimePicker, EmptyState, Field, Form, Icon, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, Tabs, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
+import { Accordion, Avatar, BackLink, Button, Card, DateTimePicker, EmptyState, Field, Form, Icon, InlineField, Input, Label, ListRow, RecordPageHeader, RowList, SegmentedControl, Select, Signal, Skeleton, Tabs, Text, Timeline, UserAvatar, userSelectOption, notify } from "@spark/ui-web";
 import type { Route } from "./+types/contact-detail";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
@@ -317,23 +317,23 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
         <div className={layout.profileColumn}>
           {/* Todo valor da ficha passa pelo InlineField: a mesma caixa parada,
             * vazia e editando, como na ficha do negócio. */}
-          <Card title="Detalhes">
+          <Accordion defaultValue={["general", "relationship"]} items={[{ value: "general", title: "Dados de contato", content:
             <div className={layout.fields}>
-              <InlineField block label="Nome" value={data.name} disabled={!canWrite}>{(close) => <Input aria-label="Nome" defaultValue={data.name} onBlur={(event) => close(saveContact("name", event.currentTarget.value))} />}</InlineField>
-              <InlineField block label="E-mail" value={data.email ?? "Sem e-mail"} empty={!data.email} disabled={!canWrite}>{(close) => <Input aria-label="E-mail" type="email" defaultValue={data.email ?? ""} placeholder="nome@empresa.com.br" onBlur={(event) => close(saveContact("email", event.currentTarget.value))} />}</InlineField>
-              <InlineField block label="Telefone" numeric value={data.phone ? formatPhone(data.phone) : "Sem telefone"} empty={!data.phone} disabled={!canWrite}>{(close) => <Input aria-label="Telefone" type="tel" numeric defaultValue={data.phone ? formatPhone(data.phone) : ""} placeholder="DDD + número" onBlur={(event) => close(saveContact("phone", event.currentTarget.value))} />}</InlineField>
-              <InlineField block label="Pontuação" numeric value={String(data.score)} />
-              <InlineField block label="Etapa do relacionamento" value={LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus} disabled={!canWrite || busy}>{(close) => <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) close(updateLifecycle("leadStatus", value)); }} />}</InlineField>
-              <InlineField block label="Origem" value={LEAD_SOURCE_OPTIONS.find((option) => option.value === data.source)?.label ?? data.source ?? "Sem origem"} empty={!data.source} disabled={!canWrite || busy}>{(close) => <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => close(updateLifecycle("source", value))} />}</InlineField>
-              <InlineField block label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite || busy}>{(close) => <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => close(updateLifecycle("ownerId", value))} />}</InlineField>
-              <InlineField block label="Empresa" value={company?.name ?? "Não vinculada"} empty={!company} {...(company ? { leading: <Avatar name={company.name} size="small" />, action: { label: `Abrir ${company.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${company.id}`) } } : {})} disabled={!canWrite || !canReadCompanies || busy}>{(close) => <Select label="Empresa da pessoa" value={data.companyId} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(updateLifecycle("companyId", value))} />}</InlineField>
+              <InlineField label="Nome" value={data.name} disabled={!canWrite}>{(close) => <Input aria-label="Nome" defaultValue={data.name} onBlur={(event) => close(saveContact("name", event.currentTarget.value))} />}</InlineField>
+              <InlineField label="E-mail" value={data.email ?? "Sem e-mail"} empty={!data.email} disabled={!canWrite}>{(close) => <Input aria-label="E-mail" type="email" defaultValue={data.email ?? ""} placeholder="nome@empresa.com.br" onBlur={(event) => close(saveContact("email", event.currentTarget.value))} />}</InlineField>
+              <InlineField label="Telefone" numeric value={data.phone ? formatPhone(data.phone) : "Sem telefone"} empty={!data.phone} disabled={!canWrite}>{(close) => <Input aria-label="Telefone" type="tel" numeric defaultValue={data.phone ? formatPhone(data.phone) : ""} placeholder="DDD + número" onBlur={(event) => close(saveContact("phone", event.currentTarget.value))} />}</InlineField>
+            </div> }, { value: "relationship", title: "Relacionamento", content: <div className={layout.fields}>
+              <InlineField label="Pontuação" numeric value={String(data.score)} />
+              <InlineField label="Etapa do relacionamento" value={LEAD_STATUS_OPTIONS.find((option) => option.value === data.leadStatus)?.label ?? data.leadStatus} disabled={!canWrite || busy}>{(close) => <Select label="Etapa do relacionamento" value={data.leadStatus} options={LEAD_STATUS_OPTIONS} onValueChange={(value) => { if (value) close(updateLifecycle("leadStatus", value)); }} />}</InlineField>
+              <InlineField label="Origem" value={LEAD_SOURCE_OPTIONS.find((option) => option.value === data.source)?.label ?? data.source ?? "Sem origem"} empty={!data.source} disabled={!canWrite || busy}>{(close) => <Select label="Origem do lead" value={data.source} placeholder="Selecionar origem" options={LEAD_SOURCE_OPTIONS} onValueChange={(value) => close(updateLifecycle("source", value))} />}</InlineField>
+              <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite || busy}>{(close) => <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => close(updateLifecycle("ownerId", value))} />}</InlineField>
+              <InlineField label="Empresa" value={company?.name ?? "Não vinculada"} empty={!company} {...(company ? { leading: <Avatar name={company.name} size="small" />, action: { label: `Abrir ${company.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${company.id}`) } } : {})} disabled={!canWrite || !canReadCompanies || busy}>{(close) => <Select label="Empresa da pessoa" value={data.companyId} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(updateLifecycle("companyId", value))} />}</InlineField>
             </div>
-          </Card>
-          {activeCustomFields.length > 0 && <Card title="Campos personalizados">
+          }, ...(activeCustomFields.length > 0 ? [{ value: "custom", title: "Campos personalizados", content:
             <div className={layout.fields}>
-              {activeCustomFields.map((field) => <EnrichedCustomFieldValue layout="stacked" key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
+              {activeCustomFields.map((field) => <EnrichedCustomFieldValue layout="inline" key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
             </div>
-          </Card>}
+          }] : [])]} />
         </div>
         <div className={layout.personWork}>
           <Tabs fill={!embedded} label="Área de trabalho da pessoa" items={[

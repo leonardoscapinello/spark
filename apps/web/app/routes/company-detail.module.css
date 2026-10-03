@@ -4,7 +4,7 @@
 
 .page { height: 100%; min-height: 0; overflow: hidden; }
 .page > :first-child { flex: none; }
-.contentGrid { display: grid; flex: 1; min-height: 0; min-width: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-5); }
+.contentGrid { display: grid; flex: 1; min-height: 0; min-width: 0; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-5); }
 .profileColumn { min-width: 0; min-height: 0; overflow: auto; padding: var(--space-1); }
 .work { min-width: 0; min-height: 0; overflow: hidden; }
 .fields { display: grid; min-width: 0; }

@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount, writeAccepted } from "@spark/data";
-import { ActionModal, Avatar, BackLink, Button, Card, Field, InlineField, Icon, Input, Label, ListRow, PageFrame, RecordPageHeader, RowList, SearchSelect, Select, Signal, Skeleton, Tabs, Text, Textarea, Timeline, UserAvatar, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, BackLink, Button, Card, Field, InlineField, Icon, Input, Label, ListRow, PageFrame, RecordPageHeader, RowList, SearchSelect, Select, Signal, Skeleton, Tabs, Text, Textarea, Timeline, UserAvatar, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -144,20 +144,22 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
       <div className={styles.profileColumn}>
         {/* Todo valor da empresa passa pelo InlineField: a mesma caixa
           * parada, vazia e editando. */}
-        <Card title="Detalhes da empresa">
+        <Accordion defaultValue={["general", "contact"]} items={[{ value: "general", title: "Dados da empresa", content:
           <div className={styles.fields}>
-            <InlineField block label="Nome" value={company.name} disabled={!canWrite}>{textEditor("name", "Nome", company.name)}</InlineField>
-            <InlineField block label="Razão social" value={company.legalName ?? "Não informada"} empty={!company.legalName} disabled={!canWrite}>{textEditor("legalName", "Razão social", company.legalName)}</InlineField>
-            <InlineField block label="Segmento" value={company.industry ?? "Não informado"} empty={!company.industry} disabled={!canWrite}>{textEditor("industry", "Segmento", company.industry)}</InlineField>
-            <InlineField block label="Documento fiscal" numeric value={company.taxId ?? "Não informado"} empty={!company.taxId} disabled={!canWrite}>{textEditor("taxId", "Documento fiscal", company.taxId, { numeric: true })}</InlineField>
-            <InlineField block label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>{(close) => <Select label="Responsável" value={company.ownerId ?? null} placeholder="Não atribuído" options={activeUsers} onValueChange={(value) => close(saveCompany("ownerId", value))} />}</InlineField>
-            <InlineField block label="Empresa controladora" value={parent?.name ?? "Nenhuma"} empty={!parent} {...(parent ? { leading: <Avatar name={parent.name} size="small" /> } : {})} disabled={!canWrite}>{(close) => <Select label="Empresa controladora" value={company.parentCompanyId ?? null} placeholder="Nenhuma" options={companies.filter((item) => item.id !== company.id && !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(saveCompany("parentCompanyId", value))} />}</InlineField>
-            <InlineField block label="Telefone" numeric value={company.phone ? formatPhone(company.phone) : "Não informado"} empty={!company.phone} disabled={!canWrite}>{textEditor("phone", "Telefone", company.phone ? formatPhone(company.phone) : null, { type: "tel", placeholder: "DDD + número", numeric: true })}</InlineField>
-            <InlineField block label="E-mail" value={company.email ?? "Não informado"} empty={!company.email} disabled={!canWrite}>{textEditor("email", "E-mail", company.email, { type: "email", placeholder: "contato@empresa.com.br" })}</InlineField>
-            <InlineField block label="Site" value={company.website ?? "Não informado"} empty={!company.website} disabled={!canWrite} {...(company.website ? { href: company.website } : {})}>{textEditor("website", "Site", company.website, { placeholder: "empresa.com.br" })}</InlineField>
-            <InlineField block label="Endereço" value={company.address ?? "Não informado"} empty={!company.address} disabled={!canWrite}>{(close) => <Textarea aria-label="Endereço" rows={3} defaultValue={company.address ?? ""} onBlur={(event) => close(saveCompany("address", event.currentTarget.value))} />}</InlineField>
+            <InlineField label="Nome" value={company.name} disabled={!canWrite}>{textEditor("name", "Nome", company.name)}</InlineField>
+            <InlineField label="Razão social" value={company.legalName ?? "Não informada"} empty={!company.legalName} disabled={!canWrite}>{textEditor("legalName", "Razão social", company.legalName)}</InlineField>
+            <InlineField label="Segmento" value={company.industry ?? "Não informado"} empty={!company.industry} disabled={!canWrite}>{textEditor("industry", "Segmento", company.industry)}</InlineField>
+            <InlineField label="Documento fiscal" numeric value={company.taxId ?? "Não informado"} empty={!company.taxId} disabled={!canWrite}>{textEditor("taxId", "Documento fiscal", company.taxId, { numeric: true })}</InlineField>
+          </div> }, { value: "relationship", title: "Relacionamento", content: <div className={styles.fields}>
+            <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>{(close) => <Select label="Responsável" value={company.ownerId ?? null} placeholder="Não atribuído" options={activeUsers} onValueChange={(value) => close(saveCompany("ownerId", value))} />}</InlineField>
+            <InlineField label="Empresa controladora" value={parent?.name ?? "Nenhuma"} empty={!parent} {...(parent ? { leading: <Avatar name={parent.name} size="small" /> } : {})} disabled={!canWrite}>{(close) => <Select label="Empresa controladora" value={company.parentCompanyId ?? null} placeholder="Nenhuma" options={companies.filter((item) => item.id !== company.id && !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(saveCompany("parentCompanyId", value))} />}</InlineField>
+          </div> }, { value: "contact", title: "Contato e endereço", content: <div className={styles.fields}>
+            <InlineField label="Telefone" numeric value={company.phone ? formatPhone(company.phone) : "Não informado"} empty={!company.phone} disabled={!canWrite}>{textEditor("phone", "Telefone", company.phone ? formatPhone(company.phone) : null, { type: "tel", placeholder: "DDD + número", numeric: true })}</InlineField>
+            <InlineField label="E-mail" value={company.email ?? "Não informado"} empty={!company.email} disabled={!canWrite}>{textEditor("email", "E-mail", company.email, { type: "email", placeholder: "contato@empresa.com.br" })}</InlineField>
+            <InlineField label="Site" value={company.website ?? "Não informado"} empty={!company.website} disabled={!canWrite} {...(company.website ? { href: company.website } : {})}>{textEditor("website", "Site", company.website, { placeholder: "empresa.com.br" })}</InlineField>
+            <InlineField label="Endereço" value={company.address ?? "Não informado"} empty={!company.address} disabled={!canWrite}>{(close) => <Textarea aria-label="Endereço" rows={3} defaultValue={company.address ?? ""} onBlur={(event) => close(saveCompany("address", event.currentTarget.value))} />}</InlineField>
           </div>
-        </Card>
+        }]} />
       </div>
 
       <div className={styles.work}>
