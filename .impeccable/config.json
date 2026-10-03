@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-09-22T20:00:00.239Z",
         "reason": "rail expandido empurra a coluna do grid de verdade (comentário no CSS linha ~19-23); largura real de layout, transform não substitui"
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "packages/ui-web/src/Chart/Chart.module.css"
+        ],
+        "createdAt": "2026-10-03T01:08:15.695Z",
+        "reason": "Claude (lead agent) decided: Chart.module.css L38 transitions SVG stroke-width on donut segments (origin spec: ring 10 to 14 on hover), a paint property that does not trigger layout; the rule matched 'width' inside 'stroke-width'."
       }
     ]
   }
