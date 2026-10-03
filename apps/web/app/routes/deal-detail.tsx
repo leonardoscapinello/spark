@@ -725,26 +725,32 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     />;
   };
 
-  const historyContent = <>
+  const activitiesContent = <div className={styles.pageActivity}>
     {canReadActivities && focusActivities.length === 0 && <EmptyState variant="onboarding" icon="calendar" title="Nenhuma atividade agendada" description="Agende o próximo passo para o negócio não esfriar." action={canWriteActivities ? <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openActivityModal()}>Agendar</Button> : undefined} />}
     {canReadActivities && focusActivities.length > 0 && <Surface as="section" className={styles.block} aria-label="Próximas atividades">
       <SectionTitle level="card" meta={`${focusActivities.length} ${focusActivities.length === 1 ? "pendente" : "pendentes"}`}>Próximas atividades</SectionTitle>
       <div className={styles.focusList}><RowList label="Atividades pendentes">{focusActivities.map(activityRow)}</RowList></div>
     </Surface>}
-    <Surface as="section" className={styles.block} aria-label="Histórico">
+    {canReadActivities && doneActivities.length > 0 && <Surface as="section" className={styles.block} aria-label="Atividades concluídas">
+      <SectionTitle level="card" meta={String(doneActivities.length)}>Concluídas</SectionTitle>
+      <RowList label="Atividades concluídas">{doneActivities.map(activityRow)}</RowList>
+    </Surface>}
+  </div>;
+
+  const historyContent = <Surface as="section" className={styles.block} aria-label="Histórico">
       <SectionTitle level="card" actions={<Button size="sm" variant="ghost" trailingIcon={<Icon name="right" />} onClick={() => setHistoryOpen(true)}>Expandir histórico</Button>}>Histórico</SectionTitle>
       <div className={styles.historyTabs}><Tabs variant="segmented" label="Filtrar o histórico" defaultValue="tudo" items={[
         { value: "tudo", label: "Tudo", content: <Timeline items={timelineItems} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
         { value: "notas", label: `Notas (${dealNotes.length})`, content: dealNotes.length === 0
           ? <Text size="pequeno" tone="muted">Nenhuma nota ainda. Use o campo acima para registrar o que foi conversado.</Text>
           : <div className={styles.notes}>{dealNotes.map((note) => { const author = users.find((user) => user.id === note.authorId); return <NoteCard key={note.id} author={author?.name ?? "Alguém"} authorAvatarUrl={author?.avatarUrl ?? null} createdAt={note.createdAt} body={note.body} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} />; })}</div> },
-        ...(canReadActivities ? [{ value: "atividades", label: `Atividades (${doneActivities.length})`, content: doneActivities.length === 0
-          ? <Text size="pequeno" tone="muted">Nenhuma atividade concluída ainda.</Text>
-          : <RowList label="Atividades concluídas">{doneActivities.map(activityRow)}</RowList> }] : []),
         { value: "mudancas", label: "Mudanças", content: <Timeline items={groupTimelineEvents(events.filter((item) => item.type !== "activity.created"), { users, stages, contacts, companies, customFields })} initialCount={25} pageSize={25} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
       ]} /></div>
-    </Surface>
-  </>;
+    </Surface>;
+  const activityHistoryTabs = [
+    ...(canReadActivities ? [{ value: "atividade", label: "Atividades", content: activitiesContent }] : []),
+    { value: "historico", label: "Histórico", content: historyContent },
+  ];
 
   const itemEditorContent = <div className={styles.modalFields}>
     {canReadCatalog && <Field><Label>Do catálogo</Label><SearchSelect label="Produto do catálogo" searchPlacement="field" placeholder={catalogLoading ? "Carregando catálogo…" : "Buscar produto no catálogo (opcional)"} options={catalog.filter((item) => item.active).map((item) => ({ value: item.id, label: item.name, description: `${item.sku} · ${formatBRL(syncedAmount(item.price))}` }))} value={itemProductId ? { value: itemProductId, label: catalog.find((item) => item.id === itemProductId)?.name ?? itemName } : null} onValueChange={(option) => pickCatalogProduct(option?.value ?? null)} /></Field>}
@@ -939,7 +945,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
           { value: "pessoas", label: "Vínculos", content: relatedContent },
         ]} /></Surface>
       </div>
-      <div className={styles.quickPhase}>{composerContent}{quickPanel === "commercial" ? <Surface className={styles.block}>{commercialPanel}</Surface> : <div className={styles.pageActivity}>{historyContent}</div>}</div>
+      <div className={styles.quickPhase}>{composerContent}{quickPanel === "commercial" ? <Surface className={styles.block}>{commercialPanel}</Surface> : <Tabs label="Atividades e histórico do negócio" defaultValue={canReadActivities ? "atividade" : "historico"} items={activityHistoryTabs} />}</div>
       <Surface as="aside" className={styles.quickActions}>{moveActions}</Surface>
     </div> : <div className={styles.contentGrid}>
       <aside className={styles.side}>
@@ -948,8 +954,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         {summaryContent}
         <Surface className={styles.sideBlock}>{tagsContent}</Surface>
       </aside>
-      <section className={styles.flow}>{composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
-        { value: "atividade", label: "Atividades e histórico", content: <div className={styles.pageActivity}>{historyContent}</div> },
+      <section className={styles.flow}>{composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={!canReadActivities && pageTab === "atividade" ? "historico" : pageTab} onValueChange={setPageTab} items={[
+        ...activityHistoryTabs,
         { value: "comercial", label: "Itens e valores", content: <Surface className={styles.block}><SectionTitle level="card" description="Produtos, serviços e composição do valor negociado.">Itens do negócio</SectionTitle>{productsContent}</Surface> },
         { value: "pessoas", label: "Pessoas e empresa", content: relatedContent },
       ]} /></div></section>
