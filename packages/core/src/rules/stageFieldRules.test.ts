@@ -29,10 +29,10 @@ describe("campos exigidos por etapa", () => {
     expect(result.blocking.map((issue) => issue.fieldKey)).toEqual(["expectedCloseDate"]);
   });
 
-  it("voltar atrás nunca é bloqueado — corrigir engano não pode depender de campo", () => {
+  it("voltar também exige os campos do destino", () => {
     const atThird = deal({ stageId: "s3" as Deal["stageId"] });
     const result = evaluateStageFields({ deal: atThird, productCount: 0, rules: [rule("s1", "contactId", "required")], stages, targetStageId: "s1" });
-    expect(result.blocking).toEqual([]);
+    expect(result.blocking.map((issue) => issue.fieldKey)).toEqual(["contactId"]);
   });
 
   it("regra de outro funil não vale neste", () => {
@@ -56,6 +56,26 @@ describe("campos exigidos por etapa", () => {
     const rules = [rule("s1", "custom:plano", "required")];
     expect(evaluateStageFields({ deal: deal(), productCount: 0, rules, stages, targetStageId: "s2" }).blocking).toHaveLength(1);
     expect(evaluateStageFields({ deal: deal({ customFields: { plano: "Pro" } }), productCount: 0, rules, stages, targetStageId: "s2" }).blocking).toHaveLength(0);
+  });
+
+  it("exige campos do destino mesmo ao avançar uma etapa", () => {
+    expect(evaluateStageFields({ deal: deal(), productCount: 0, rules: [rule("s2", "ownerId", "required")], stages, targetStageId: "s2" }).blocking).toHaveLength(1);
+  });
+
+  it("trocar de funil valida origem, destino e caminho do destino", () => {
+    const rules = [rule("s1", "contactId", "required"), rule("x1", "ownerId", "required", "p2"), rule("x2", "companyId", "required", "p2")];
+    const result = evaluateStageFields({ deal: deal(), productCount: 0, rules, stages: [...stages, { id: "x1", sortOrder: 0 }, { id: "x2", sortOrder: 1 }], targetStageId: "x2", targetPipelineId: "p2" });
+    expect(result.blocking.map((issue) => issue.fieldKey)).toEqual(["contactId", "ownerId", "companyId"]);
+  });
+
+  it("texto em branco não preenche; zero e falso são respostas válidas de campos personalizados", () => {
+    const rules = [rule("s1", "custom:score", "required")];
+    for (const value of [null, undefined, "  ", NaN]) {
+      expect(evaluateStageFields({ deal: deal({ customFields: { score: value } }), productCount: 0, rules, stages, targetStageId: "s2" }).blocking).toHaveLength(1);
+    }
+    for (const value of [0, false]) {
+      expect(evaluateStageFields({ deal: deal({ customFields: { score: value } }), productCount: 0, rules, stages, targetStageId: "s2" }).blocking).toHaveLength(0);
+    }
   });
 
   it("escreve o rótulo do campo pelo catálogo da organização", () => {

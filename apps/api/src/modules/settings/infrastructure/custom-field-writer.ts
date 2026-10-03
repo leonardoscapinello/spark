@@ -17,6 +17,19 @@ import { fromCustomFieldRows, toCustomFieldRows, type AuditChange, type CustomFi
  */
 @Injectable()
 export class CustomFieldWriter {
+  async read(tx: SparkDb, orgId: OrgId, entityType: CustomFieldEntity, entityId: string): Promise<Record<string, unknown>> {
+    const definitions = await tx.select().from(customFieldDefinitions)
+      .where(and(eq(customFieldDefinitions.orgId, orgId), eq(customFieldDefinitions.entityType, entityType)));
+    const rows = await tx.select().from(customFieldValues)
+      .where(and(eq(customFieldValues.orgId, orgId), eq(customFieldValues.entityType, entityType), eq(customFieldValues.entityId, entityId)));
+    const optionIds = rows.flatMap((row) => row.optionId ? [row.optionId] : []);
+    const options = optionIds.length ? await tx.select().from(customFieldOptions).where(inArray(customFieldOptions.id, optionIds)) : [];
+    const optionValues = new Map(options.map((option) => [option.id, option.value]));
+    return Object.fromEntries(definitions.map((definition) => [definition.key,
+      fromCustomFieldRows(definition, rows.filter((row) => row.fieldId === definition.id).map(normalizeRow), (id) => optionValues.get(id)),
+    ]));
+  }
+
   async write(tx: SparkDb, orgId: OrgId, entityType: CustomFieldEntity, entityId: string, values: Record<string, unknown>): Promise<AuditChange[]> {
     const keys = Object.keys(values);
     if (keys.length === 0) return [];

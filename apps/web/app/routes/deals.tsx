@@ -206,7 +206,7 @@ export default function Deals() {
       const transaction = dealsCollection.update(deal.id, (draft) => { draft.stageId = stageId; });
       await transaction.isPersisted.promise;
       notify({ title: "Negócio movido", description: deal.name, tone: "success" });
-    } catch { notify({ title: "Não foi possível mover o negócio", tone: "error" }); }
+    } catch (error) { notify({ title: "Não foi possível mover o negócio", description: error instanceof Error ? error.message : "Revise os campos obrigatórios na ficha do negócio.", tone: "error" }); }
   }
 
   async function closeDeal(deal: Deal, status: Extract<DealStatus, "won" | "lost">, reason?: string) {
@@ -273,7 +273,7 @@ export default function Deals() {
       draft.stageId = moveStageId;
     });
     try { await transaction.isPersisted.promise; notify({ title: "Negócio movido", description: movingDeal.name, tone: "success" }); setMoveCandidate(null); }
-    catch { notify({ title: "Não foi possível mover o negócio", tone: "error" }); }
+    catch (error) { notify({ title: "Não foi possível mover o negócio", description: error instanceof Error ? error.message : "Revise os campos obrigatórios na ficha do negócio.", tone: "error" }); }
   }
 
   async function saveStageName(id: string, newName: string) {

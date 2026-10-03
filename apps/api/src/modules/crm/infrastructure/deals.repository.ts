@@ -1,10 +1,14 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { TagWriter } from "../../settings/infrastructure/tag-writer.js";
 import { CustomFieldWriter } from "../../settings/infrastructure/custom-field-writer.js";
-import { and, eq, gte, isNull, sql } from "drizzle-orm";
-import { createAppDbClient, withOrgContext, deals, contacts, companies, contactCompanies, stages, stageTransitions, dealStageMoves, type SparkDb } from "@spark/db";
+import { and, eq, gte, inArray, isNull, sql } from "drizzle-orm";
+import { createAppDbClient, withOrgContext, deals, contacts, companies, contactCompanies, stages, stageFieldRules, customFieldDefinitions, dealProducts, stageTransitions, dealStageMoves, type SparkDb } from "@spark/db";
 import {
   money,
+  evaluateStageFields,
+  StageFieldRuleSchema,
+  stageFieldMessage,
+  stageFieldLabel,
   dealCompanyIssue,
   toCents,
   type Deal,
@@ -82,7 +86,7 @@ export class DealsRepository {
   async move(orgId: OrgId, actorUserId: UserId, dealId: DealId, stageId: StageId, pipelineId?: PipelineId): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
-      const [current] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
+      const [current] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1).for("update");
       if (!current) throw new NotFoundException(`Deal ${dealId} not found.`);
       const [source] = await tx.select().from(stages).where(and(eq(stages.orgId, orgId), eq(stages.id, current.stageId))).limit(1);
       const targetPipelineId = pipelineId ?? current.pipelineId;
@@ -94,6 +98,24 @@ export class DealsRepository {
       if (cooldown > 0) throw new ConflictException(`Aguarde ${Math.ceil(cooldown / 1_000)} s antes de mover novamente.`);
       const transitionRows = source.restrictTransitions ? await tx.select().from(stageTransitions).where(and(eq(stageTransitions.orgId, orgId), eq(stageTransitions.fromStageId, source.id))) : [];
       if (!canMoveBetweenStages(source, target, transitionRows)) throw new BadRequestException("Esta transição não está disponível a partir da etapa atual.");
+
+      const pipelineIds = [...new Set([current.pipelineId, targetPipelineId])];
+      const [ruleRows, pipelineStages, products, customValues, definitions] = await Promise.all([
+        tx.select().from(stageFieldRules).where(and(eq(stageFieldRules.orgId, orgId), inArray(stageFieldRules.pipelineId, pipelineIds))),
+        tx.select().from(stages).where(and(eq(stages.orgId, orgId), inArray(stages.pipelineId, pipelineIds))),
+        tx.select({ id: dealProducts.id }).from(dealProducts).where(and(eq(dealProducts.orgId, orgId), eq(dealProducts.dealId, dealId))),
+        this.customFields.read(tx, orgId, "deal", dealId),
+        tx.select({ key: customFieldDefinitions.key, label: customFieldDefinitions.label }).from(customFieldDefinitions)
+          .where(and(eq(customFieldDefinitions.orgId, orgId), eq(customFieldDefinitions.entityType, "deal"))),
+      ]);
+      const check = evaluateStageFields({ deal: { ...toDeal(current), customFields: customValues }, productCount: products.length,
+        rules: ruleRows.map((rule) => StageFieldRuleSchema.parse(rule)), stages: pipelineStages, targetStageId: stageId, targetPipelineId });
+      if (check.blocking.length) {
+        const labels = [...new Set(check.blocking.map((issue) => issue.fieldKey.startsWith("custom:")
+          ? definitions.find((field) => field.key === issue.fieldKey.slice(7))?.label ?? stageFieldLabel(issue.fieldKey, [])
+          : stageFieldLabel(issue.fieldKey, [])))];
+        throw new BadRequestException({ message: stageFieldMessage("required", labels, target.name), code: "REQUIRED_STAGE_FIELDS", fields: check.blocking });
+      }
 
       const [row] = await tx
         .update(deals)

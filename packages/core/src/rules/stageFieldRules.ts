@@ -1,3 +1,4 @@
+import { normalizeMoney, toCents } from "../money/index.js";
 import type { CustomFieldDefinition } from "../schema/customField.js";
 import type { Deal } from "../schema/deal.js";
 import type { StageFieldLevel, StageFieldRule } from "../schema/stageFieldRule.js";
@@ -71,15 +72,17 @@ export function stageFieldMessage(
 }
 
 function isFilled(value: unknown): boolean {
-  if (value === null || value === undefined || value === "") return false;
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim().length > 0;
   if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "number") return value !== 0;
+  if (typeof value === "number") return Number.isFinite(value);
   return true;
 }
 
 /** O valor do campo no negócio — `productCount` entra porque produtos não são coluna. */
 export function dealFieldValue(deal: Deal, fieldKey: string, productCount: number): unknown {
-  if (fieldKey === "products") return productCount;
+  if (fieldKey === "products") return productCount > 0 ? productCount : null;
+  if (fieldKey === "amount") return toCents(normalizeMoney(deal.amount)) > 0 ? deal.amount : null;
   if (fieldKey.startsWith("custom:")) return deal.customFields?.[fieldKey.slice("custom:".length)];
   return (deal as unknown as Record<string, unknown>)[fieldKey];
 }
@@ -101,16 +104,11 @@ export interface EvaluateStageFieldsInput {
   stages: readonly { id: string; sortOrder: number }[];
   /** Para onde o negócio está indo; sem isto, avalia só a etapa atual. */
   targetStageId?: string | undefined;
+  targetPipelineId?: string | undefined;
 }
 
-/**
- * Obrigatório vale para **sair** da etapa: mover para uma etapa posterior exige
- * os campos de todas as etapas que ficam para trás, inclusive a de origem —
- * senão pular direto da primeira para a última driblaria as regras do caminho.
- * Mover para trás nunca é bloqueado: corrigir um engano não pode depender de
- * preencher campo.
- */
-export function evaluateStageFields({ deal, productCount, rules, stages, targetStageId }: EvaluateStageFieldsInput): StageFieldEvaluation {
+/** Origem e destino são obrigatórios em qualquer mudança; avançar também valida o caminho. */
+export function evaluateStageFields({ deal, productCount, rules, stages, targetStageId, targetPipelineId = deal.pipelineId }: EvaluateStageFieldsInput): StageFieldEvaluation {
   const order = new Map(stages.map((stage) => [stage.id, stage.sortOrder]));
   const currentOrder = order.get(deal.stageId);
   const targetOrder = targetStageId === undefined ? undefined : order.get(targetStageId);
@@ -121,15 +119,19 @@ export function evaluateStageFields({ deal, productCount, rules, stages, targetS
     .filter((rule) => !isFilled(dealFieldValue(deal, rule.fieldKey, productCount)))
     .map((rule) => ({ fieldKey: rule.fieldKey, stageId: rule.stageId, level: rule.level }));
 
-  if (targetOrder === undefined || currentOrder === undefined || targetOrder <= currentOrder) {
+  if (targetStageId === undefined || (targetStageId === deal.stageId && targetPipelineId === deal.pipelineId)) {
     return { blocking: [], warnings };
   }
 
-  const blocking = pipelineRules
+  const blocking = rules
     .filter((rule) => rule.level === "required")
     .filter((rule) => {
+      if (rule.pipelineId === deal.pipelineId && rule.stageId === deal.stageId) return true;
+      if (rule.pipelineId === targetPipelineId && rule.stageId === targetStageId) return true;
+      if (rule.pipelineId !== targetPipelineId) return false;
       const ruleOrder = order.get(rule.stageId);
-      return ruleOrder !== undefined && ruleOrder < targetOrder;
+      return targetOrder !== undefined && ruleOrder !== undefined && ruleOrder < targetOrder
+        && (targetPipelineId !== deal.pipelineId || (currentOrder !== undefined && targetOrder > currentOrder));
     })
     .filter((rule) => !isFilled(dealFieldValue(deal, rule.fieldKey, productCount)))
     .map((rule) => ({ fieldKey: rule.fieldKey, stageId: rule.stageId, level: rule.level }));
