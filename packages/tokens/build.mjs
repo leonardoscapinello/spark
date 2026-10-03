@@ -1,31 +1,25 @@
 // packages/tokens/build.mjs
-// Constrói as variáveis CSS na cascata de três estados que packages/ui-web
-// exige (docs/adr/0025-identidade-visual-liquid-glass.md): :root (claro),
+// Emite as variáveis CSS com o vocabulário da identidade visual (origem: docs/referencias/identidade/origem/base.css)
+// na cascata de três estados que packages/ui-web exige (ADR-0025): :root (claro),
 // @media prefers-color-scheme guardado por :not([data-theme=light]), e
-// [data-theme=dark] para a troca explícita vencer nos dois sentidos.
+// [data-theme=dark] (Carvão) para a troca explícita vencer nos dois sentidos.
 //
-// Style Dictionary por si só não monta essa cascata (ele resolve UM conjunto
-// de tokens por vez) — por isso dois builds (claro/escuro) e depois a
-// montagem final é feita aqui.
+// Style Dictionary resolve UM conjunto de tokens por vez — por isso dois builds
+// (claro/escuro) e a montagem final aqui. ADR-0044.
 import StyleDictionary from "style-dictionary";
 import { promises as fs } from "node:fs";
-// Node ≥ 23.6 importa TypeScript direto (type stripping). A matemática da mola
-// mora em src/spring.ts para o runtime (packages/ui-web) usar a mesma.
 import { springLinear } from "./src/spring.ts";
 
 const BASE_SOURCES = [
-  "tokens/color.primitive.json",
   "tokens/space.json",
-  "tokens/radius.json",
-  "tokens/effect.json",
-  "tokens/typography.json",
+  "tokens/identidade.escalas.json",
   "tokens/motion.json",
   "tokens/ui.json",
 ];
 
-async function buildTheme(nome, semanticFile) {
+async function buildTheme(nome, temaFile) {
   const sd = new StyleDictionary({
-    source: [...BASE_SOURCES, semanticFile],
+    source: [...BASE_SOURCES, temaFile],
     platforms: {
       json: {
         transformGroup: "css",
@@ -35,13 +29,10 @@ async function buildTheme(nome, semanticFile) {
     },
   });
   await sd.buildAllPlatforms();
-  const flat = JSON.parse(await fs.readFile(`.tmp/${nome}/vars.json`, "utf-8"));
-  return flat;
+  return JSON.parse(await fs.readFile(`.tmp/${nome}/vars.json`, "utf-8"));
 }
 
 function flatten(obj, prefix = []) {
-  // saída do format json/nested resolve o valor direto na folha — string,
-  // number, ou (para shadow) um objeto com color/offsetX/offsetY/blur/spread.
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
     const path = [...prefix, k];
@@ -82,96 +73,22 @@ function toCssVars(flat, indent = "  ") {
 
 function cssValue(v) {
   if (v && typeof v === "object" && "color" in v) {
-    // shadow token do Style Dictionary vem como objeto {color, offsetX, offsetY, blur, spread}
     return `${v.offsetX} ${v.offsetY} ${v.blur} ${v.spread} ${v.color}`;
   }
-  if (Array.isArray(v)) return v.map((f) => (f.includes(" ") ? `"${f}"` : f)).join(", ");
+  if (Array.isArray(v)) {
+    // cubicBezier vira cubic-bezier(); fontFamily vira a pilha com aspas onde há espaço.
+    if (v.length === 4 && v.every((n) => typeof n === "number")) return `cubic-bezier(${v.join(", ")})`;
+    return v.map((f) => (f.includes(" ") ? `"${f}"` : f)).join(", ");
+  }
   return v;
 }
 
-// Mapa peso/estilo -> arquivo. FH Duo e FH Duo Display têm o mesmo conjunto
-// de pesos (docs em packages/tokens/README.md). Ativo proprietário — ver
-// packages/tokens/fonts/LICENSE-NOTICE.md antes de reusar fora deste monorepo.
-const PESOS = [
-  ["Light", 300], ["Regular", 400], ["Medium", 500],
-  ["SemiBold", 600], ["Bold", 700], ["Black", 900],
-];
-
-function buildFontFaceCss() {
-  const familias = [
-    { nome: "FH Duo", pasta: "fh-duo", prefixo: "FHDuo" },
-    { nome: "FH Duo Display", pasta: "fh-duo-display", prefixo: "FHDuoDisplay" },
-  ];
-
-  const blocos = [];
-  for (const { nome, pasta, prefixo } of familias) {
-    for (const [sufixo, peso] of PESOS) {
-      for (const [styleSufixo, styleValor] of [["", "normal"], ["Italic", "italic"]]) {
-        const arquivo = `${prefixo}-${sufixo}${styleSufixo}.woff2`;
-        blocos.push(`@font-face {
-  font-family: "${nome}";
-  src: url("../fonts/${pasta}/${arquivo}") format("woff2");
-  font-weight: ${peso};
-  font-style: ${styleValor};
-  font-display: swap;
-}`);
-      }
-    }
-  }
-  return blocos.join("\n") + "\n\n";
-}
-
-async function main() {
-  const light = flatten(await buildTheme("light", "tokens/color.semantic.light.json"));
-  const dark = flatten(await buildTheme("dark", "tokens/color.semantic.dark.json"));
-
-  // Só emitimos no bloco escuro o que REALMENTE diverge do claro — primitivas
-  // (sage, slate, teal...) são compartilhadas e não precisam ser redeclaradas.
-  // Reemitir valor idêntico não está errado, mas é peso sem propósito.
-  const darkOnly = Object.fromEntries(
-    Object.entries(dark).filter(([k, v]) => light[k] !== v),
-  );
-
-  const css = `/* Gerado por packages/tokens/build.mjs — NÃO editar à mão.
- * Fonte: packages/tokens/tokens/*.json (DTCG). Rodar \`pnpm build\` para atualizar.
- * Cascata de tema em três estados — ver docs/adr/0025-identidade-visual-liquid-glass.md
- * e a skill artifact-design: bare :root é sempre o tema claro completo.
- */
-
-:root {
-${toCssVars(light)}
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-${toCssVars(darkOnly, "    ")}
-  }
-}
-
-:root[data-theme="dark"] {
-${toCssVars(darkOnly)}
-}
-`;
-
-  await fs.mkdir("dist/css", { recursive: true });
-  await fs.mkdir("dist/fonts/fh-duo", { recursive: true });
-  await fs.mkdir("dist/fonts/fh-duo-display", { recursive: true });
-  for (const familia of ["fh-duo", "fh-duo-display"]) {
-    for (const arquivo of await fs.readdir(`fonts/${familia}`)) {
-      await fs.copyFile(`fonts/${familia}/${arquivo}`, `dist/fonts/${familia}/${arquivo}`);
-    }
-  }
-
-  await fs.mkdir("dist/fonts/inter", { recursive: true });
-  await fs.copyFile("node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2", "dist/fonts/inter/inter-latin-wght-normal.woff2");
-  let fontFace = buildFontFaceCss() + `@font-face {
-  font-family: "Inter";
-  src: url("../fonts/inter/inter-latin-wght-normal.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}\n`;
-  for (const [directory, family] of [["geist", "Geist"], ["geist-mono", "Geist Mono"]]) {
+/* Geist e Geist Mono são a tipografia da identidade (variáveis, Fontsource). Inter e
+ * Brockmann continuam disponíveis como escolha da organização (ADR-0041 segue
+ * valendo como opção, não como padrão). */
+async function buildFontFaceCss() {
+  let fontFace = "";
+  for (const [directory, family] of [["geist", "Geist"], ["geist-mono", "Geist Mono"], ["inter", "Inter"]]) {
     const filename = `${directory}-latin-wght-normal.woff2`;
     await fs.mkdir(`dist/fonts/${directory}`, { recursive: true });
     await fs.copyFile(`node_modules/@fontsource-variable/${directory}/files/${filename}`, `dist/fonts/${directory}/${filename}`);
@@ -187,10 +104,10 @@ ${toCssVars(darkOnly)}
   await fs.mkdir("dist/fonts/brockmann", { recursive: true });
   const brandFonts = JSON.parse(await fs.readFile("fonts/brockmann/manifest.json", "utf8"));
   for (const { file: filename, weight, style } of brandFonts) {
-      for (const format of ["woff2", "woff"]) {
-        await fs.copyFile(`fonts/brockmann/${filename}.${format}`, `dist/fonts/brockmann/${filename}.${format}`);
-      }
-      fontFace += `@font-face {
+    for (const format of ["woff2", "woff"]) {
+      await fs.copyFile(`fonts/brockmann/${filename}.${format}`, `dist/fonts/brockmann/${filename}.${format}`);
+    }
+    fontFace += `@font-face {
   font-family: "Brockmann";
   src: url("../fonts/brockmann/${filename}.woff2") format("woff2"), url("../fonts/brockmann/${filename}.woff") format("woff");
   font-weight: ${weight};
@@ -198,11 +115,46 @@ ${toCssVars(darkOnly)}
   font-display: swap;
 }\n`;
   }
+  return fontFace;
+}
+
+async function main() {
+  const claro = flatten(await buildTheme("claro", "tokens/identidade.claro.json"));
+  const escuro = flatten(await buildTheme("escuro", "tokens/identidade.escuro.json"));
+
+  // Só o que diverge entra no bloco escuro: escalas e medidas são iguais nos dois temas.
+  const escuroOnly = Object.fromEntries(
+    Object.entries(escuro).filter(([k, v]) => claro[k] !== v),
+  );
+
+  const css = `/* Gerado por packages/tokens/build.mjs — NÃO editar à mão.
+ * Fonte: packages/tokens/tokens/*.json (DTCG). Rodar \`pnpm gen:tokens\` para atualizar.
+ * Vocabulário da identidade (docs/referencias/identidade) na cascata de
+ * três estados do ADR-0025: bare :root é sempre o tema claro completo.
+ */
+
+:root {
+${toCssVars(claro)}
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+${toCssVars(escuroOnly, "    ")}
+  }
+}
+
+:root[data-theme="dark"] {
+${toCssVars(escuroOnly)}
+}
+`;
+
+  await fs.mkdir("dist/css", { recursive: true });
+  const fontFace = await buildFontFaceCss();
   await fs.writeFile("dist/css/tokens.css", fontFace + css);
 
   const nativeTheme = `// Gerado por packages/tokens/build.mjs — NÃO editar à mão.
-export const lightTheme = ${JSON.stringify(light, null, 2)} as const;
-export const darkTheme = { ...lightTheme, ...${JSON.stringify(darkOnly, null, 2)} } as const;
+export const lightTheme = ${JSON.stringify(claro, null, 2)} as const;
+export const darkTheme = { ...lightTheme, ...${JSON.stringify(escuroOnly, null, 2)} } as const;
 export type Theme = typeof lightTheme;
 `;
   await fs.mkdir("dist/native", { recursive: true });
@@ -210,7 +162,7 @@ export type Theme = typeof lightTheme;
 
   await fs.rm(".tmp", { recursive: true, force: true });
 
-  console.log(`tokens.css: ${Object.keys(light).length} variáveis (claro) + ${Object.keys(darkOnly).length} (escuro, override)`);
+  console.log(`tokens.css: ${Object.keys(claro).length} variáveis (claro) + ${Object.keys(escuroOnly).length} (escuro, override)`);
   console.log(`theme.ts: gerado para packages/ui-native`);
 }
 

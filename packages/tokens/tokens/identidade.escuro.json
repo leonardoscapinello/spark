@@ -1,0 +1,223 @@
+{
+  "$description": "Tema escuro da identidade visual do Spark. Nomes idênticos ao CSS de origem (docs/referencias/identidade/origem/base.css) para o contrato ser verificável por teste. ADR-0044.",
+  "bg": {
+    "$type": "color",
+    "$value": "#161411",
+    "$description": "Mesa: fundo da página."
+  },
+  "sf": {
+    "$type": "color",
+    "$value": "#1f1c18",
+    "$description": "Folha pousada: cards, tabelas, seções."
+  },
+  "sf2": {
+    "$type": "color",
+    "$value": "#14120f",
+    "$description": "Pedra: campo cavado, trilho, fundo de segmentado."
+  },
+  "sf3": {
+    "$type": "color",
+    "$value": "#27231e",
+    "$description": "Folha erguida: botão folha, item ativo, modal."
+  },
+  "bd": {
+    "$type": "color",
+    "$value": "#2d2923",
+    "$description": "Tinta 5: bordas."
+  },
+  "bd2": {
+    "$type": "color",
+    "$value": "#3f3930",
+    "$description": "Borda forte: contorno do thumb do switch, divisores marcados."
+  },
+  "tx": {
+    "$type": "color",
+    "$value": "#f6f1e4",
+    "$description": "Tinta 1: títulos e ação."
+  },
+  "tx2": {
+    "$type": "color",
+    "$value": "#b3a98f",
+    "$description": "Tinta 2: texto corrido."
+  },
+  "tx3": {
+    "$type": "color",
+    "$value": "#80786a",
+    "$description": "Tinta 3: secundário, placeholder, desabilitado."
+  },
+  "tx4": {
+    "$type": "color",
+    "$value": "#544d40",
+    "$description": "Tinta 4: terciário, ícone inativo, divisor fraco."
+  },
+  "ac": {
+    "$type": "color",
+    "$value": "#f3efe6",
+    "$description": "Carvão: a única ação principal por área."
+  },
+  "ach": {
+    "$type": "color",
+    "$value": "#ffffff",
+    "$description": "Carvão no hover."
+  },
+  "acf": {
+    "$type": "color",
+    "$value": "#161411",
+    "$description": "Texto sobre o carvão."
+  },
+  "acs": {
+    "$type": "color",
+    "$value": "rgba(243,239,230,.07)",
+    "$description": "Lavagem do carvão: seleção, hover de item."
+  },
+  "ring": {
+    "$type": "color",
+    "$value": "rgba(243,239,230,.18)",
+    "$description": "Halo de foco, 3px."
+  },
+  "ok": {
+    "$type": "color",
+    "$value": "#6fb690",
+    "$description": "Estado positivo."
+  },
+  "oks": {
+    "$type": "color",
+    "$value": "rgba(111,182,144,.15)",
+    "$description": "Fundo suave do positivo."
+  },
+  "er": {
+    "$type": "color",
+    "$value": "#f0644c",
+    "$description": "Erro e destrutivo."
+  },
+  "ers": {
+    "$type": "color",
+    "$value": "rgba(240,100,76,.15)",
+    "$description": "Fundo suave do erro."
+  },
+  "wa": {
+    "$type": "color",
+    "$value": "#e0ac6a",
+    "$description": "Atenção."
+  },
+  "was": {
+    "$type": "color",
+    "$value": "rgba(224,172,106,.16)",
+    "$description": "Fundo suave da atenção."
+  },
+  "in": {
+    "$type": "color",
+    "$value": "#8fabdc",
+    "$description": "Informativo."
+  },
+  "ins": {
+    "$type": "color",
+    "$value": "rgba(143,171,220,.16)",
+    "$description": "Fundo suave do informativo."
+  },
+  "glass": {
+    "$type": "color",
+    "$value": "rgba(31,28,24,.62)",
+    "$description": "Fundo da camada de vidro (sempre com --vidro-*)."
+  },
+  "gbd": {
+    "$type": "color",
+    "$value": "rgba(255,255,255,.035)",
+    "$description": "Borda da camada translúcida."
+  },
+  "grid": {
+    "$type": "color",
+    "$value": "#29251f",
+    "$description": "Grade de gráfico."
+  },
+  "sh1": {
+    "$type": "string",
+    "$value": "0 0 0 .5px rgba(0,0,0,.5),0 1px 1px rgba(0,0,0,.4),0 2px 3px -2px rgba(0,0,0,.5),0 0 0 0 rgba(0,0,0,0),inset 0 .5px 0 rgba(255,255,255,.018)",
+    "$description": "Pousada: sombra de contato (cards, tabelas)."
+  },
+  "e2": {
+    "$type": "string",
+    "$value": "0 0 0 .5px rgba(0,0,0,.5),0 1px 1px rgba(0,0,0,.45),0 5px 6px -4px rgba(0,0,0,.55),0 14px 18px -14px rgba(0,0,0,.7),inset 0 .5px 0 rgba(255,255,255,.022)",
+    "$description": "Erguida: sidebar, menus, popovers, hover de card."
+  },
+  "e3": {
+    "$type": "string",
+    "$value": "0 0 0 .5px rgba(0,0,0,.5),0 2px 2px rgba(0,0,0,.45),0 12px 14px -10px rgba(0,0,0,.6),0 32px 40px -28px rgba(0,0,0,.8),inset 0 .5px 0 rgba(255,255,255,.026)",
+    "$description": "Segurada: modais, toasts, drawers."
+  },
+  "deb": {
+    "$type": "string",
+    "$value": "inset 0 1px 2px rgba(0,0,0,.5),inset 0 0 0 .5px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.04)",
+    "$description": "Cavada: campos, trilhos, áreas de upload."
+  },
+  "ink": {
+    "$type": "string",
+    "$value": "inset 0 .5px 0 rgba(255,255,255,.18),0 1px 1px rgba(0,0,0,.4),0 2px 3px -2px rgba(0,0,0,.4)",
+    "$description": "Relevo do carvão (botão primário)."
+  },
+  "inkp": {
+    "$type": "string",
+    "$value": "inset 0 1px 2px rgba(0,0,0,.3),0 0 0 rgba(0,0,0,0)",
+    "$description": "Carvão afundado (press)."
+  },
+  "veil": {
+    "$type": "color",
+    "$value": "rgba(12,11,9,.42)",
+    "$description": "Véu dos overlays."
+  },
+  "vig": {
+    "$type": "color",
+    "$value": "rgba(0,0,0,.35)",
+    "$description": "Vinheta/scrim leve."
+  },
+  "v0": {
+    "$type": "color",
+    "$value": "#f3efe6",
+    "$description": "Pigmento tinta: série principal."
+  },
+  "v1": {
+    "$type": "color",
+    "$value": "#7d9ef2",
+    "$description": "Pigmento Ai."
+  },
+  "v2": {
+    "$type": "color",
+    "$value": "#5cc4bf",
+    "$description": "Pigmento Asagi."
+  },
+  "v3": {
+    "$type": "color",
+    "$value": "#f0a464",
+    "$description": "Pigmento Kaki."
+  },
+  "v4": {
+    "$type": "color",
+    "$value": "#a993ec",
+    "$description": "Pigmento Fuji."
+  },
+  "v5": {
+    "$type": "color",
+    "$value": "#6e675c",
+    "$description": "Pigmento Hai: comparação, outros."
+  },
+  "shu": {
+    "$type": "color",
+    "$value": "#f0644c",
+    "$description": "Selo vermelho: no máximo um por tela."
+  },
+  "v6": {
+    "$type": "color",
+    "$value": "#6e675c",
+    "$description": "Pigmento Hai (alias)."
+  },
+  "glass-lista": {
+    "$type": "color",
+    "$value": "rgba(31,28,24,.9)",
+    "$description": "Vidro de lista no tema escuro."
+  },
+  "grain": {
+    "$type": "string",
+    "$value": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .96 0 0 0 0 .88 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23n%29'/%3E%3C/svg%3E\")",
+    "$description": "Granulação de papel: imagem de fundo das folhas, usada junto com a cor (background: var(--sf) var(--grain))."
+  }
+}

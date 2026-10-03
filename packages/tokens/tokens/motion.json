@@ -1,129 +1,18 @@
 {
   "motion": {
-    "ease": {
-      "out": {
-        "$type": "cubicBezier",
-        "$value": [
-          0.22,
-          1,
-          0.36,
-          1
-        ]
-      },
-      "inOut": {
-        "$type": "cubicBezier",
-        "$value": [
-          0.65,
-          0,
-          0.35,
-          1
-        ]
-      },
-      "spring": {
-        "$type": "cubicBezier",
-        "$value": [
-          0.34,
-          1.22,
-          0.64,
-          1
-        ]
-      },
-      "exit": {
-        "$type": "cubicBezier",
-        "$value": [
-          0.4,
-          0,
-          0.6,
-          1
-        ]
-      }
-    },
-    "duration": {
-      "instant": {
-        "$type": "duration",
-        "$value": "100ms"
-      },
-      "fast": {
-        "$type": "duration",
-        "$value": "300ms"
-      },
-      "moderate": {
-        "$type": "duration",
-        "$value": "450ms"
-      },
-      "popup": {
-        "$type": "duration",
-        "$value": "200ms"
-      },
-      "settle": {
-        "$type": "duration",
-        "$value": "550ms"
-      },
-      "slow": {
-        "$type": "duration",
-        "$value": "600ms"
-      },
-      "deliberate": {
-        "$type": "duration",
-        "$value": "700ms"
-      },
-      "exit": {
-        "$type": "duration",
-        "$value": "280ms"
-      },
-      "control": {
-        "$type": "duration",
-        "$value": "180ms"
-      },
-      "selection": {
-        "$type": "duration",
-        "$value": "240ms"
-      }
-    },
-    "scale": {
-      "popup": {
-        "$type": "number",
-        "$value": 0.97
-      },
-      "drag": {
-        "$type": "number",
-        "$value": 1.03
-      }
-    },
     "spring": {
-      "$description": "Molas perceptuais da Apple (WWDC23 Animate with springs): duration é o tempo que PARECE levar, bounce 0 não passa do alvo. O build emite cada uma como linear() em --motion-spring-<nome> e a duração total em --motion-spring-<nome>-duration.",
+      "$description": "Molas perceptuais (WWDC23) para gesto com momento: soltar um arrasto, flick. A física de estado é a da identidade (--ease, --t-*); isto é só o que ela delega ao gesto. O build emite cada uma como linear() em --motion-spring-<nome> e a duração total em --motion-spring-<nome>-duration.",
       "smooth": {
-        "duration": {
-          "$type": "number",
-          "$value": 0.45,
-          "$description": "Padrão para mover, reordenar, zoom de modal: chega e para."
-        },
-        "bounce": {
-          "$type": "number",
-          "$value": 0
-        }
+        "duration": { "$type": "number", "$value": 0.45 },
+        "bounce": { "$type": "number", "$value": 0 }
       },
       "snappy": {
-        "duration": {
-          "$type": "number",
-          "$value": 0.3,
-          "$description": "Levantar e soltar um card, trocar estado pequeno: rápido, um resto de vida."
-        },
-        "bounce": {
-          "$type": "number",
-          "$value": 0.15
-        }
+        "duration": { "$type": "number", "$value": 0.3 },
+        "bounce": { "$type": "number", "$value": 0.15 }
       },
       "bouncy": {
-        "duration": {
-          "$type": "number",
-          "$value": 0.5,
-          "$description": "Só depois de um gesto com momento (flick, soltar com velocidade). Nunca em menu ou fade."
-        },
-        "bounce": {
-          "$type": "number",
-          "$value": 0.3
-        }
+        "duration": { "$type": "number", "$value": 0.5 },
+        "bounce": { "$type": "number", "$value": 0.3 }
       }
     }
   }

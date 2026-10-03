@@ -28,8 +28,8 @@ export const DEFAULT_THEME_VALUES = {
   statusSuccessColor: "#347653",
   statusWarningColor: "#8B5B23",
   statusDangerColor: "#CF3F28",
-  fontBody: "brockmann",
-  fontDisplay: "brockmann",
+  fontBody: "geist",
+  fontDisplay: "geist",
 } as const;
 
 export type ThemeFontFamily = "brockmann" | "geist" | "inter" | "system" | "rounded" | "serif";
@@ -38,7 +38,7 @@ type ThemeValues = { [Key in keyof typeof DEFAULT_THEME_VALUES]: string };
 
 /** O cache anterior pode não conter surface2Color. Customizações permanecem. */
 export function isDefaultTheme(theme: Omit<ThemeValues, "surface2Color"> & Partial<Pick<ThemeValues, "surface2Color">>): boolean {
-  return [DEFAULT_THEME_VALUES, { ...DEFAULT_THEME_VALUES, fontBody: "geist", fontDisplay: "geist" }, LEGACY_THEME_VALUES].some(preset =>
+  return [DEFAULT_THEME_VALUES, { ...DEFAULT_THEME_VALUES, fontBody: "brockmann", fontDisplay: "brockmann" }, LEGACY_THEME_VALUES].some(preset =>
     Object.entries(preset).every(([key, value]) => {
       const actual = theme[key as keyof ThemeValues];
       return (key === "surface2Color" && actual == null) || actual?.toLowerCase() === value.toLowerCase();

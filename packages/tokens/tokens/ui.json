@@ -1,37 +1,42 @@
 {
-  "$description": "ADR-0033: medidas Intercom e extensões explícitas em docs/especificacao/componentes-intercom.md",
+  "$description": "Medidas de layout do Spark que a identidade não define (larguras de coluna, camadas, alvos). Identidade (cor, sombra, raio, curva, duração, fonte) NÃO entra aqui: vem de identidade.*.json. Lint spark/identidade reprova token de identidade com outro nome.",
   "ui": {
-    "controlSmall": {
-      "$type": "dimension",
-      "$value": "28px"
-    },
-    "controlMedium": {
-      "$type": "dimension",
-      "$value": "36px"
-    },
-    "controlLarge": {
-      "$type": "dimension",
-      "$value": "44px"
-    },
-    "fieldHeight": {
-      "$type": "dimension",
-      "$value": "40px"
-    },
-    "fieldRadius": {
-      "$type": "dimension",
-      "$value": "12px"
-    },
     "icon": {
       "$type": "dimension",
-      "$value": "16px"
+      "$value": "16px",
+      "$description": "Ícone do controle md."
     },
     "iconSm": {
       "$type": "dimension",
-      "$value": "14px"
+      "$value": "14px",
+      "$description": "Ícone do controle sm."
+    },
+    "iconLg": {
+      "$type": "dimension",
+      "$value": "18px",
+      "$description": "Ícone do controle lg."
+    },
+    "hairline": {
+      "$type": "dimension",
+      "$value": "1px"
+    },
+    "focusWidth": {
+      "$type": "dimension",
+      "$value": "3px",
+      "$description": "Halo de foco: 3px de --ring."
+    },
+    "focusOffset": {
+      "$type": "dimension",
+      "$value": "0px"
+    },
+    "touchTarget": {
+      "$type": "dimension",
+      "$value": "44px"
     },
     "railWidth": {
       "$type": "dimension",
-      "$value": "36px"
+      "$value": "68px",
+      "$description": "Sidebar compacta: só ícones."
     },
     "railFlyoutWidth": {
       "$type": "dimension",
@@ -41,37 +46,22 @@
       "$type": "dimension",
       "$value": "236px"
     },
+    "sidebarInset": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$description": "Margem da sidebar erguida (sticky top 16, margin 16)."
+    },
     "tabHeight": {
       "$type": "dimension",
       "$value": "42px"
     },
-    "tabLine": {
+    "tabPadding": {
       "$type": "dimension",
-      "$value": "20px"
+      "$value": "10px"
     },
     "bodyLine": {
       "$type": "dimension",
       "$value": "21px"
-    },
-    "buttonLine": {
-      "$type": "dimension",
-      "$value": "16px"
-    },
-    "hairline": {
-      "$type": "dimension",
-      "$value": "1px"
-    },
-    "focusWidth": {
-      "$type": "dimension",
-      "$value": "2px"
-    },
-    "focusOffset": {
-      "$type": "dimension",
-      "$value": "2px"
-    },
-    "tabPadding": {
-      "$type": "dimension",
-      "$value": "10px"
     },
     "previewHeight": {
       "$type": "dimension",
@@ -105,10 +95,6 @@
       "$type": "dimension",
       "$value": "1048px"
     },
-    "automationCanvas": {
-      "$type": "color",
-      "$value": "#f5f5f5"
-    },
     "automationNodeWidth": {
       "$type": "dimension",
       "$value": "256px"
@@ -117,37 +103,14 @@
       "$type": "dimension",
       "$value": "144px"
     },
-    "automationTrigger": {
-      "$type": "color",
-      "$value": "#ddf8e8"
-    },
-    "automationCondition": {
-      "$type": "color",
-      "$value": "#9defe1"
-    },
-    "automationAction": {
-      "$type": "color",
-      "$value": "#fff0ad"
-    },
-    "automationWait": {
-      "$type": "color",
-      "$value": "#fbd9d5"
-    },
-    "touchTarget": {
-      "$type": "dimension",
-      "$value": "44px"
-    },
-    "spinDuration": {
-      "$type": "duration",
-      "$value": "600ms"
-    },
-    "spinReducedDuration": {
-      "$type": "duration",
-      "$value": "1200ms"
-    },
     "menuWidth": {
       "$type": "dimension",
       "$value": "220px"
+    },
+    "menuMinWidth": {
+      "$type": "dimension",
+      "$value": "210px",
+      "$description": "min-width: max(100%, 210px) do dropdown."
     },
     "recordPickerWidth": {
       "$type": "dimension",
@@ -161,14 +124,6 @@
       "$type": "dimension",
       "$value": "480px"
     },
-    "popupRadius": {
-      "$type": "dimension",
-      "$value": "18px"
-    },
-    "menuItemPadding": {
-      "$type": "dimension",
-      "$value": "6px"
-    },
     "kanbanColumnWidth": {
       "$type": "dimension",
       "$value": "280px"
@@ -177,9 +132,19 @@
       "$type": "dimension",
       "$value": "640px"
     },
+    "modalNarrow": {
+      "$type": "dimension",
+      "$value": "440px",
+      "$description": "Confirmação."
+    },
     "drawerWidth": {
       "$type": "dimension",
       "$value": "440px"
+    },
+    "drawerInset": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$description": "Drawer flutua a 12px das bordas."
     },
     "overlayLayer": {
       "$type": "number",
@@ -205,13 +170,21 @@
       "$type": "dimension",
       "$value": "18px"
     },
+    "switchInset": {
+      "$type": "dimension",
+      "$value": "3px"
+    },
+    "checkbox": {
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    "checkboxMark": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
     "textareaHeight": {
       "$type": "dimension",
       "$value": "96px"
-    },
-    "disabledOpacity": {
-      "$type": "number",
-      "$value": 0.5
     },
     "popoverWidth": {
       "$type": "dimension",
@@ -219,23 +192,24 @@
     },
     "linkPreviewAspectRatio": {
       "$type": "number",
-      "$value": 1.7777777778,
-      "$description": "Proporção 16:9 da miniatura da prévia de link; evita imagem alta ou estreita quando o cartão aparece em superfícies diferentes."
+      "$value": 1.7777777778
     },
     "detailPanelWidth": {
       "$type": "dimension",
-      "$value": "400px",
-      "$description": "Painel de detalhes da tela de registro. Cabe rótulo e campo na mesma linha sem o rótulo quebrar."
+      "$value": "400px"
     },
     "pageGutter": {
       "$type": "dimension",
-      "$value": "24px",
-      "$description": "Recuo lateral do quadro de página. É UM token e não um espaçamento solto porque quem avança até a borda — cabeçalho da rota, faixa de etapas — precisa reaplicar exatamente esta medida para o conteúdo continuar alinhado."
+      "$value": "24px"
     },
     "fieldLabelColumn": {
       "$type": "dimension",
-      "$value": "140px",
-      "$description": "Coluna do rótulo no painel de detalhes. Largura FIXA, não porcentagem: é o que faz o valor de toda linha começar no mesmo lugar, com campo ou sem campo."
+      "$value": "140px"
+    },
+    "fieldGap": {
+      "$type": "dimension",
+      "$value": "6px",
+      "$description": "Rótulo a 6px acima do campo."
     },
     "splitDividerOpacity": {
       "$type": "number",
@@ -263,15 +237,20 @@
     },
     "chartTickSize": {
       "$type": "number",
-      "$value": 12
+      "$value": 11
     },
     "chartAxisWidth": {
       "$type": "number",
       "$value": 48
     },
-    "checkboxMark": {
-      "$type": "dimension",
-      "$value": "12px"
+    "chartBarRadius": {
+      "$type": "number",
+      "$value": 10,
+      "$description": "Raio da barra de gráfico (origem: 10, squircle)."
+    },
+    "chartGridOpacity": {
+      "$type": "number",
+      "$value": 0.6
     },
     "modalWide": {
       "$type": "dimension",
@@ -295,8 +274,7 @@
     },
     "timeFieldWidth": {
       "$type": "dimension",
-      "$value": "96px",
-      "$description": "Largura do seletor de hora e de minuto: cabem os dois dígitos e a seta sem truncar."
+      "$value": "96px"
     },
     "cashIllustrationWidth": {
       "$type": "dimension",
@@ -308,85 +286,11 @@
     },
     "registrationCardHeight": {
       "$type": "dimension",
-      "$value": "208px",
-      "$description": "Altura mínima do cartão de cadastro da Receita — consultando, indisponível e pronto ocupam a mesma caixa."
+      "$value": "208px"
     },
     "cnaeColumn": {
       "$type": "dimension",
-      "$value": "72px",
-      "$description": "Coluna do código de CNAE e do ano de regime no cadastro da Receita — largura de sete dígitos em fonte monoespaçada."
-    },
-    "panelRadius": {
-      "$type": "dimension",
-      "$value": "20px"
-    },
-    "cardRadius": {
-      "$type": "dimension",
-      "$value": "20px"
-    },
-    "textareaRadius": {
-      "$type": "dimension",
-      "$value": "12px"
-    },
-    "checkboxRadius": {
-      "$type": "dimension",
-      "$value": "7px"
-    },
-    "switchInset": {
-      "$type": "dimension",
-      "$value": "3px"
-    },
-    "fieldGap": {
-      "$type": "dimension",
-      "$value": "6px"
-    },
-    "labelSize": {
-      "$type": "dimension",
-      "$value": "12px"
-    },
-    "helpSize": {
-      "$type": "dimension",
-      "$value": "11px"
-    },
-    "chartBarRadius": {
-      "$type": "dimension",
-      "$value": "4px"
-    },
-    "chartComparisonDash": {
-      "$type": "string",
-      "$value": "2 4"
-    },
-    "chartGridDash": {
-      "$type": "string",
-      "$value": "2 4"
-    },
-    "controlPressScale": {
-      "$type": "number",
-      "$value": 0.97
-    },
-    "controlSheetScale": {
-      "$type": "number",
-      "$value": 0.98
-    },
-    "pressOffset": {
-      "$type": "dimension",
-      "$value": "1px"
-    },
-    "chartGridOpacity": {
-      "$type": "number",
-      "$value": 0.6
-    },
-    "modalRadius": {
-      "$type": "dimension",
-      "$value": "28px"
-    },
-    "navigationRadius": {
-      "$type": "dimension",
-      "$value": "10px"
-    },
-    "toastRadius": {
-      "$type": "dimension",
-      "$value": "20px"
+      "$value": "72px"
     },
     "relatedCardMinWidth": {
       "$type": "dimension",
@@ -396,21 +300,10 @@
       "$type": "dimension",
       "$value": "112px"
     },
-    "dropdownPadding": {
+    "panelWidth": {
       "$type": "dimension",
-      "$value": "6px"
-    },
-    "dropdownRadius": {
-      "$type": "dimension",
-      "$value": "14px"
-    },
-    "controlRadius": {
-      "$type": "dimension",
-      "$value": "12px"
-    },
-    "optionHover": {
-      "$type": "string",
-      "$value": "linear-gradient(180deg, color-mix(in srgb, var(--color-ink) 5%, transparent), color-mix(in srgb, var(--color-ink) 2%, transparent))"
+      "$value": "640px",
+      "$description": "Largura máxima do editor de título em linha (era usada sem existir; o título editado ocupava a linha inteira)."
     }
   }
 }

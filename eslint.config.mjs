@@ -4,6 +4,7 @@ import boundaries from "eslint-plugin-boundaries";
 import tseslint from "typescript-eslint";
 import { cssModuleClasses } from "./eslint-rules/css-module-classes.mjs";
 import { oneConnectionPool } from "./eslint-rules/one-connection-pool.mjs";
+import { identidade, identidadeLegado, telaSoLayout } from "./eslint-rules/identidade.mjs";
 
 const ELEMENTS = [
   { type: "app-api", pattern: "apps/api/**" },
@@ -96,7 +97,7 @@ export default tseslint.config(
     // .tsx (css-module-classes) convivem aqui com regras gerais de .ts/.tsx
     // (one-connection-pool).
     files: ["**/*.ts", "**/*.tsx"],
-    plugins: { spark: { rules: { "css-module-classes": cssModuleClasses, "one-connection-pool": oneConnectionPool } } },
+    plugins: { spark: { rules: { "css-module-classes": cssModuleClasses, "one-connection-pool": oneConnectionPool, identidade, "identidade-legado": identidadeLegado, "tela-so-layout": telaSoLayout } } },
     rules: { "spark/one-connection-pool": "error" },
   },
   {
@@ -104,6 +105,20 @@ export default tseslint.config(
     // passar; o bundler entrega undefined e a tela renderiza sem estilo.
     files: ["**/*.tsx"],
     rules: { "spark/css-module-classes": "error" },
+  },
+  {
+    // ADR-0044 — identidade visual: o CSS que um componente importa só fala a
+    // língua dos tokens. Literal de cor, curva, duração, raio, família ou
+    // tamanho de fonte é erro, e --legado-* também (a dívida zerou em 02/10/2026).
+    files: ["**/*.{ts,tsx}"],
+    rules: { "spark/identidade": "error", "spark/identidade-legado": "error" },
+  },
+  {
+    // ADR-0045 — tela só faz layout. Aparência escrita no CSS de uma tela é um
+    // componente redesenhado à mão: a próxima mudança no componente não chega
+    // nela. Erro desde que a auditoria zerou (02/10/2026: de 1.301 avisos a 0).
+    files: ["apps/web/**/*.{ts,tsx}"],
+    rules: { "spark/tela-so-layout": "error" },
   },
   {
     // ADR-0020 (elemento nativo) e ADR-0025 (backdrop-filter) — UM bloco só.
