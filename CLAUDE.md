@@ -113,6 +113,7 @@ Não está na lista: revisão visual manual, teste exploratório, cobertura mín
 5. **Leitura não vai à rede.** Tela de trabalho lê de coleção local. Chamada de rede na renderização de tela sincronizada é bug de arquitetura.
    **Existem dois caminhos de leitura** — o sync (nosso app) e a API (terceiros e relatórios). Os dois consomem a **mesma** política de `packages/core/policy`. Escrever regra de acesso em só um deles é vazamento de dado ([ADR-0026](docs/adr/0026-superficie-da-api.md)).
 6. **Nada de valor literal de design.** Cor, espaço, raio e tipografia vêm de `packages/tokens`.
+6a. **Tela só faz layout; aparência é do componente** ([ADR-0045](docs/adr/0045-tela-so-faz-layout.md)). Cor, fundo, borda, raio, sombra, fonte e movimento vivem em `packages/ui-web`; `className` passado a componente é só layout. Ajustar um componente ajusta o sistema inteiro — é o modelo do Figma. Lint: `spark/tela-so-layout`.
 7. **`backdrop-filter` só dentro do primitivo `<Glass>`.** Vidro vive na camada de navegação flutuante; conteúdo é sólido. Nunca dentro de container que rola ([ADR-0025](docs/adr/0025-identidade-visual-liquid-glass.md)).
 8. **Rota e mutação declaram a capacidade exigida — quem não declara, nega por padrão.** Checagem sempre via `packages/core/policy`, nunca `if (role === '...')` espalhado ([ADR-0029](docs/adr/0029-paineis-e-grupos-de-permissao.md)).
 9. **Arquivo sempre por `packages/storage`.** Nenhum módulo fala com o bucket direto ([ADR-0028](docs/adr/0028-armazenamento-s3.md)).

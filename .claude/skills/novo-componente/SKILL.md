@@ -26,7 +26,7 @@ packages/ui-web/src/<Componente>/
 
 **Comportamento vem do primitivo.** Base UI para tudo; React Aria só para data/hora com locale e casos de leitor de tela complexos. Nunca implemente foco, navegação por teclado ou ARIA na mão.
 
-**Estilo vem de token.** Sem valor literal — nem cor, nem espaçamento, nem raio, nem duração. Tudo de `packages/tokens`, pela camada semântica (`color.action.primary`), nunca pelo primitivo (`teal.600`).
+**Estilo vem de token, na identidade do produto.** Sem valor literal de cor, raio, curva, duração ou fonte (o lint `spark/identidade` reprova). Use o vocabulário da identidade (`--sf --tx --sh1 --e2 --deb --r-* --h-* --ease --t-*`) e siga a receita do componente mais próximo em [`docs/referencias/identidade/README.md`](../../../docs/referencias/identidade/README.md) e `docs/referencias/identidade/spec/*.md`. Controle é pílula; superfície é squircle; o movimento é a física global de 550 ms (não declare transição de cor/sombra/transform sem motivo). Componente que a origem não tem é construído com as mesmas regras — não é ocasião para estilo novo.
 
 **Tipo vem de `core`.** Campo que lida com valor de domínio devolve o tipo marcado, não `string`:
 
@@ -46,6 +46,8 @@ packages/ui-web/src/<Componente>/
 - [ ] Foco visível — e **não removível por prop**
 - [ ] Tamanhos `sm` / `md` / `lg`, de token
 - [ ] `prefers-reduced-motion` respeitado
+- [ ] Receita da identidade aplicada: forma, sombra, tinta, física (sem `--legado-*`, sem literal)
+- [ ] Texto legível (informativo nunca em `--tx4`), nada vazando do contêiner, ícone/avatar alinhados no mesmo encaixe
 - [ ] Área de toque ≥ 44×44 px no mobile
 - [ ] Uma história por estado no Storybook
 - [ ] Teste de interação e de acessibilidade

@@ -50,6 +50,15 @@ A identidade visual vigente é definida pelo [ADR-0039](0039-identidade-papel-e-
 | [0034](0034-acentos-azuis-da-marca.md) | Acentos azuis da marca | Aceito |
 | [0035](0035-dado-de-negocio-em-coluna.md) | Dado de negócio em coluna, JSON só para documento | Aceito |
 | [0036](0036-integridade-relacional-e-particoes.md) | Integridade de tenant no banco e mensagens particionadas | Aceito |
+| [0037](0037-previas-de-link-revalidaveis.md) | Prévias de link revalidáveis no Postgres | Aceito |
+| [0038](0038-presenca-efemera-nos-negocios.md) | Presença efêmera nos negócios | Aceito |
+| [0039](0039-identidade-papel-e-curvas-continuas.md) | Identidade de papel e curvas contínuas | Parcialmente substituído por 0044 |
+| [0040](0040-refino-contextual-da-identidade.md) | ~~Adaptação da identidade à densidade do Spark~~ | Substituído por 0044 |
+| [0041](0041-brockmann-e-menus-flutuantes.md) | Brockmann e menus flutuantes | Parcialmente substituído por 0044 |
+| [0042](0042-contrato-visual-de-acoes-e-etapas.md) | Contrato visual de ações e etapas | Parcialmente substituído por 0044 |
+| [0043](0043-composicao-unica-de-superficies.md) | Composição única de superfícies | Parcialmente substituído por 0044 |
+| [0044](0044-identidade-fiel-e-fisica-unica.md) | Identidade fiel à origem e física única | Aceito |
+| [0045](0045-tela-so-faz-layout.md) | Tela só faz layout; aparência é do componente | Aceito |
 
 ## Leitura obrigatória antes do primeiro código
 
