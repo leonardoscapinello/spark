@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLoaderData } from "react-router";
 import { publicWidgetControllerConfig, publicWidgetControllerPoll, publicWidgetControllerSend, publicWidgetControllerStart } from "@spark/api-client";
 import { messageId, type WidgetConfig } from "@spark/core";
 import type { WidgetConversationStateDtoMessagesItem } from "@spark/api-client";
-import { Button, Icon, Input } from "@spark/ui-web";
+import { ChatInput, ChatLauncher, ChatThread, ChatWindow, MessageBubble } from "@spark/ui-web";
 import styles from "./widget.module.css";
 
 const BUBBLE_SIZE = 64;
@@ -31,15 +31,11 @@ export default function Widget() {
       : { type: "size", open: false, width: BUBBLE_SIZE, height: BUBBLE_SIZE });
   }, [open]);
 
-  return <div className={styles.root} data-open={open || undefined} style={{ "--widget-brand": config.color } as React.CSSProperties}>
+  return <div className={styles.root}>
     {open
       ? <Panel config={config} onClose={() => setOpen(false)} />
-      : <Launcher onOpen={() => setOpen(true)} />}
+      : <ChatLauncher brand={config.color} onOpen={() => setOpen(true)} />}
   </div>;
-}
-
-function Launcher({ onOpen }: { onOpen: () => void }) {
-  return <Button type="button" iconOnly shape="rounded" className={styles.launcher} aria-label="Abrir chat" onClick={onOpen}><Icon name="message" /></Button>;
 }
 
 function Panel({ config, onClose }: { config: WidgetConfig; onClose: () => void }) {
@@ -48,8 +44,6 @@ function Panel({ config, onClose }: { config: WidgetConfig; onClose: () => void 
   const [messages, setMessages] = useState<WidgetConversationStateDtoMessagesItem[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const listRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     let cancelled = false;
     const stored = readConversation(config.publicKey);
@@ -70,10 +64,7 @@ function Panel({ config, onClose }: { config: WidgetConfig; onClose: () => void 
     return () => window.clearInterval(timer);
   }, [conversationId, config.publicKey, visitorId]);
 
-  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight }); }, [messages.length]);
-
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
+  async function submit() {
     const body = text.trim();
     if (!body || sending) return;
     setSending(true);
@@ -85,23 +76,22 @@ function Panel({ config, onClose }: { config: WidgetConfig; onClose: () => void 
       setConversationId(state.conversationId);
       setMessages(state.messages);
       writeConversation(config.publicKey);
+    } catch {
+      setText(body); // não perde o que o visitante escreveu
     } finally { setSending(false); }
   }
 
-  return <div className={styles.panel}>
-    <header className={styles.header}>
-      <div><strong>{config.name}</strong><span>Normalmente respondemos em poucos minutos.</span></div>
-      <Button type="button" iconOnly size="sm" variant="ghost" className={styles.close} aria-label="Fechar chat" onClick={onClose}><Icon name="close" /></Button>
-    </header>
-    <div className={styles.messages} ref={listRef}>
-      <article className={styles.bubble} data-from="team"><p>{config.welcomeMessage}</p></article>
-      {messages.map((message) => <article key={message.id} className={styles.bubble} data-from={message.direction === "inbound" ? "visitor" : "team"}><p>{message.body}</p></article>)}
-    </div>
-    <form className={styles.composer} onSubmit={submit}>
-      <Input className={styles.composerInput} aria-label="Escrever mensagem" placeholder="Escreva uma mensagem…" value={text} onChange={(event) => setText(event.target.value)} disabled={sending} />
-      <Button type="submit" iconOnly shape="rounded" className={styles.send} aria-label="Enviar" disabled={sending || !text.trim()}><Icon name="right" /></Button>
-    </form>
-  </div>;
+  // No site do cliente, «eu» é o visitante: as mensagens dele ficam à direita, na cor da marca.
+  return <ChatWindow title={config.name} subtitle="Normalmente respondemos em poucos minutos." brand={config.color} onClose={onClose} footer={<ChatInput value={text} onValueChange={setText} onSubmit={() => void submit()} sending={sending} />}>
+    <ChatThread label={`Conversa com ${config.name}`} threadKey={conversationId ?? "nova"}>
+      <MessageBubble direction="inbound" author={config.name}>{config.welcomeMessage}</MessageBubble>
+      {messages.map((message) => <MessageBubble key={message.id} direction={message.direction === "inbound" ? "outbound" : "inbound"} author={message.direction === "inbound" ? "Você" : config.name} time={timeLabel(message.createdAt)} dateTime={message.createdAt}>{message.body}</MessageBubble>)}
+    </ChatThread>
+  </ChatWindow>;
+}
+
+function timeLabel(value: string): string {
+  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
 function postToParent(message: Record<string, unknown>): void {

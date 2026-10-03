@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { inboxControllerArchiveCannedReply, inboxControllerCreateCannedReply, inboxControllerUpdateCannedReply } from "@spark/api-client";
 import { cannedReplyId, type CannedReply } from "@spark/core";
-import { ActionModal, BackLink, Badge, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, RecordIdentity, Select, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { ActionModal, BackLink, Button, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, RecordIdentity, SearchField, Select, Signal, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getCannedRepliesCollection } from "../lib/canned-replies-collection.client";
 import { requireCapability } from "../lib/route-access.client";
@@ -37,7 +37,7 @@ export default function InboxReplies() {
     { id: "title", label: "Resposta", cell: (reply) => <RecordIdentity icon="message" title={reply.title} subtitle={`/${reply.shortcut}`} subtitleVariant="code" />, sortValue: (reply) => reply.title },
     { id: "body", label: "Texto", cell: (reply) => <span className={styles.excerpt}>{reply.body}</span> },
     { id: "team", label: "Disponível para", cell: (reply) => reply.teamId ? teamNames.get(reply.teamId) ?? "Equipe" : "Todas as equipes", sortValue: (reply) => reply.teamId ? teamNames.get(reply.teamId) ?? "" : "" },
-    { id: "status", label: "Situação", cell: (reply) => <Badge tone={reply.archivedAt ? "neutral" : "success"}>{reply.archivedAt ? "Arquivada" : "Ativa"}</Badge> },
+    { id: "status", label: "Situação", cell: (reply) => <Signal tone={reply.archivedAt ? "neutral" : "success"}>{reply.archivedAt ? "Arquivada" : "Ativa"}</Signal> },
   ];
 
   function openCreate() {
@@ -70,11 +70,11 @@ export default function InboxReplies() {
     <PageHeader back={<BackLink render={<Link to="/inbox" />}>Atendimento</BackLink>} icon="message" title={showArchived ? "Respostas arquivadas" : "Respostas prontas"} actions={canWrite && !firstRun ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />
     {firstRun && <EmptyState variant="featured" icon="message" title="Crie sua primeira resposta pronta" description="Salve mensagens recorrentes para que a equipe responda com rapidez e consistência." action={canWrite ? <Button onClick={openCreate}>Nova resposta</Button> : undefined} />}
     {!firstRun && <CollectionToolbar
-      search={<Input aria-label="Buscar respostas" value={query} startAdornment={<Icon name="search" />} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar resposta ou atalho" />}
+      search={<SearchField label="Buscar respostas" value={query} onValueChange={setQuery} placeholder="Buscar resposta ou atalho" />}
       filters={<Select appearance="filter" label="Situação das respostas" value={showArchived ? "archived" : "active"} options={[{ value: "active", label: "Ativas" }, { value: "archived", label: "Arquivadas" }]} onValueChange={(value) => setShowArchived(value === "archived")} />}
       count={`${visible.length} ${visible.length === 1 ? "resposta" : "respostas"}`}
     />}
-    {!firstRun && <DataTable label="Respostas prontas" rows={visible} columns={columns} rowKey={(reply) => reply.id} rowLabel={(reply) => reply.title} state={isLoading && !replies.length ? "loading" : "ready"} emptyText={showArchived ? "Nenhuma resposta arquivada." : "Nenhuma resposta pronta."} {...(canWrite ? { actions: (reply: CannedReply) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${reply.title}`} loading={busyId === reply.id} menu={<><MenuItem onClick={() => openEdit(reply)}>Editar resposta</MenuItem><MenuItem onClick={() => void toggleArchive(reply)}>{reply.archivedAt ? "Restaurar resposta" : "Arquivar resposta"}</MenuItem></>} /> } : {})} />}
+    {!firstRun && <DataTable label="Respostas prontas" rows={visible} columns={columns} rowKey={(reply) => reply.id} rowLabel={(reply) => reply.title} state={isLoading && !replies.length ? "loading" : "ready"} emptyText={showArchived ? "Nenhuma resposta arquivada." : "Nenhuma resposta pronta."} {...(canWrite ? { onRowOpen: (reply: CannedReply) => openEdit(reply), actions: (reply: CannedReply) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${reply.title}`} loading={busyId === reply.id} menu={<><MenuItem onClick={() => openEdit(reply)}>Editar resposta</MenuItem><MenuItem onClick={() => void toggleArchive(reply)}>{reply.archivedAt ? "Restaurar resposta" : "Arquivar resposta"}</MenuItem></>} /> } : {})} />}
     <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar resposta pronta" : "Nova resposta pronta"} confirmLabel={editingId ? "Salvar alterações" : "Criar resposta"} errorText="Revise o título, o atalho e o conteúdo. O atalho deve ser único." onConfirm={save}>
       <div className={styles.form}><Field><Label>Título</Label><Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Boas-vindas" maxLength={120} /></Field><Field><Label>Atalho</Label><Input value={shortcut} onChange={(event) => setShortcut(event.target.value)} placeholder="boas-vindas" maxLength={50} /></Field><Field><Label>Equipe</Label><Select label="Equipe que pode usar a resposta" value={teamId} options={[{ value: "", label: "Todas as equipes" }, ...teams.filter((team) => !team.archivedAt).map((team) => ({ value: team.id, label: team.name }))]} onValueChange={(value) => setTeamId(value || null)} /></Field><Field><Label>Mensagem</Label><Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={8} maxLength={20_000} placeholder="Olá! Como posso ajudar?" /></Field></div>
     </ActionModal>

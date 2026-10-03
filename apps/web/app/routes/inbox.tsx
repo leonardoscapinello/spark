@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { availableCannedReplies, personThreads, contactId, conversationId, conversationSlaState, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus } from "@spark/core";
+import { availableCannedReplies, personThreads, contactId, conversationId, conversationSlaState, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus, type Identity, type IdentityChannel, type Message } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { Accordion, ActionModal, Avatar, Badge, Button, DataTable, Field, FilePicker, Icon, Input, Label, MenuButton, MenuGroup, MenuItem, Modal, ModalContent, SearchSelect, Select, Sidebar, SidebarItem, SidebarSection, TableIconAction, Tabs, Textarea, userSelectOption, notify, type IconName, type SelectOption, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, PersonIdentity, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
+import { getIdentitiesCollection } from "../lib/identities-collection.client";
 import { getConversationsCollection, getMessagesCollection } from "../lib/inbox-collections.client";
 import { getIntegrationConnectionsCollection } from "../lib/integration-connections.client";
 import { getWhatsAppTemplatesCollection } from "../lib/whatsapp-templates.client";
@@ -21,7 +22,8 @@ import styles from "./inbox.module.css";
 // Espelha os canais que o ChannelSender do backend sabe enviar (channel-sender.service.ts).
 const REPLYABLE_CHANNELS: ReadonlySet<ConversationChannel> = new Set(["email", "instagram", "whatsapp", "messenger", "telegram", "widget"]);
 // Canais em que uma org pode ter mais de uma conexão — cada uma vira a própria caixa de entrada (pedido do usuário, 22/09).
-const MULTI_CONNECTION_CHANNELS: ReadonlySet<ConversationChannel> = new Set(["whatsapp", "widget"]);
+const MULTI_CONNECTION_CHANNELS: ReadonlySet<ConversationChannel> = new Set(["whatsapp", "widget", "instagram", "messenger", "telegram", "email"]);
+const MESSAGE_LIMIT = 20_000;
 
 const CHANNELS: ReadonlyArray<{ value: ConversationChannel; label: string }> = [
   { value: "manual", label: "Manual" },
@@ -33,6 +35,11 @@ const CHANNELS: ReadonlyArray<{ value: ConversationChannel; label: string }> = [
   { value: "widget", label: "Chat do site" },
 ];
 
+type InboxLayout = "chat" | "list";
+
+/** Uma caixa por onde a pessoa fala: a conexão (ou o canal, sem conexão) e a conversa mais recente nela. */
+interface PersonInbox { key: string; channel: ConversationChannel; title: string; handle: string | null; conversation: Conversation }
+
 export async function clientLoader() {
   const session = await requireCapability("inbox:read");
   void Promise.allSettled([
@@ -42,7 +49,7 @@ export async function clientLoader() {
     getCannedRepliesCollection().preload(),
     getTeamsCollection().preload(),
     getWhatsAppTemplatesCollection().preload(),
-    ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload()] : []),
+    ...(session.capabilities.includes("contacts:read") ? [getContactsCollection().preload(), getIdentitiesCollection().preload()] : []),
     ...(session.capabilities.includes("integrations:read") ? [getIntegrationConnectionsCollection().preload()] : []),
   ]);
   return null;
@@ -59,17 +66,17 @@ export default function Inbox() {
   const messagesCollection = getMessagesCollection();
   const { data: conversations, isLoading } = useLiveQuery({ query: (q) => q.from({ conversations: conversationsCollection }).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") });
   const { data: contacts = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ contacts: getContactsCollection() }).orderBy(({ contacts: item }) => item.name, "asc") : undefined });
+  const { data: identities = [] } = useLiveQuery({ query: (q) => canReadContacts ? q.from({ identities: getIdentitiesCollection() }).orderBy(({ identities: item }) => item.createdAt, "asc") : undefined });
   const { data: users } = useLiveQuery({ query: (q) => q.from({ users: getUsersCollection() }).orderBy(({ users: item }) => item.name, "asc") });
   const { data: cannedReplies = [] } = useLiveQuery({ query: (q) => q.from({ replies: getCannedRepliesCollection() }).orderBy(({ replies: item }) => item.shortcut, "asc") });
   const { data: teams = [] } = useLiveQuery({ query: (q) => q.from({ teams: getTeamsCollection() }).orderBy(({ teams: item }) => item.name, "asc") });
   const { data: connections = [] } = useLiveQuery({ query: (q) => canReadIntegrations ? q.from({ connections: getIntegrationConnectionsCollection() }) : undefined });
+  const { data: whatsappTemplates = [] } = useLiveQuery({ query: (q) => q.from({ templates: getWhatsAppTemplatesCollection() }).where(({ templates: item }) => eq(item.status, "APPROVED")) });
   const filter = parseInboxFilter(searchParams.get("box"));
+  const [layout, setLayout] = useState<InboxLayout>("chat");
   const [mobileView, setMobileView] = useState<"list" | "thread">("list");
-  const [layout, setLayout] = useState<"chat" | "table">("chat");
-  const activeQueueLink = useRef<HTMLAnchorElement>(null);
   const [now, setNow] = useState(() => new Date());
   const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get("conversation"));
-  const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">("recent");
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -77,40 +84,85 @@ export default function Inbox() {
   const [newContact, setNewContact] = useState<SelectOption | null>(null);
   const [newSubject, setNewSubject] = useState("");
   const [newChannel, setNewChannel] = useState<ConversationChannel>("manual");
-  const [note, setNote] = useState("");
-  const [composerMode, setComposerMode] = useState<"reply" | "note">("note");
-  const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [composerMode, setComposerMode] = useState<ReplyComposerMode>("reply");
   const [attachment, setAttachment] = useState<{ id: string; name: string } | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState<string | null>(null);
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [templateParams, setTemplateParams] = useState<string[]>([]);
-  const { data: whatsappTemplates = [] } = useLiveQuery({ query: (q) => q.from({ templates: getWhatsAppTemplatesCollection() }).where(({ templates: item }) => eq(item.status, "APPROVED")) });
-  const [uploadingAttachment, setUploadingAttachment] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const contactNames = useMemo(() => new Map(contacts.map((item) => [item.id, item.name])), [contacts]);
+  const { seen, markSeen } = useSeenPeople(session?.userId ?? null);
+
+  const contactsById = useMemo(() => new Map(contacts.map((item) => [item.id, item])), [contacts]);
   const userNames = useMemo(() => new Map(users.map((item) => [item.id, item.name])), [users]);
   const teamNames = useMemo(() => new Map(teams.map((item) => [item.id, item.name])), [teams]);
   const connectionNames = useMemo(() => new Map(connections.map((item) => [item.id, item.name])), [connections]);
+  const identitiesByPerson = useMemo(() => {
+    const byPerson = new Map<string, Identity[]>();
+    for (const identity of identities) byPerson.set(identity.contactId, [...(byPerson.get(identity.contactId) ?? []), identity]);
+    return byPerson;
+  }, [identities]);
+  const personName = (id: Conversation["contactId"]) => contactsById.get(id)?.name ?? "Pessoa";
+  const inboxTitle = (conversation: Conversation) => (conversation.connectionId ? connectionNames.get(conversation.connectionId) : null) ?? channelLabel(conversation.channel);
+  const ownerLabel = (conversation: Conversation) => conversation.assigneeId ? userNames.get(conversation.assigneeId) ?? "Responsável" : conversation.teamId ? teamNames.get(conversation.teamId) ?? "Equipe" : "Não atribuída";
   const currentQueueTitle = filter.startsWith("team:") ? teamNames.get(teamId.from(filter.slice(5))) ?? "Equipe" : filter.startsWith("connection:") ? connectionNames.get(integrationConnectionId.from(filter.slice(11))) ?? "Caixa" : filterLabel(filter);
   const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
   const firstRun = !isLoading && conversations.length === 0 && !searchTerm && (filter === "open" || filter === "all");
-  const filtered = personThreads(conversations.filter((item) => matchesFilter(item, filter, session?.userId ?? null)
-    && (!searchTerm || [item.subject, contactNames.get(item.contactId), channelLabel(item.channel), item.teamId ? teamNames.get(item.teamId) : null]
-      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm)))))
-    .sort((a, b) => sortOrder === "recent" ? b.lastMessageAt.localeCompare(a.lastMessageAt) : a.lastMessageAt.localeCompare(b.lastMessageAt));
-  const requested = conversations.find((item) => item.id === selectedId);
-  const selected = requested && filtered.some((item) => item.contactId === requested.contactId) ? requested : filtered[0] ?? null;
-  const personRoutes = conversations.filter((item) => item.contactId === selected?.contactId);
+
+  // A conversa é da pessoa: a fila guarda as conversas (rotas por canal) e a lista mostra uma linha por pessoa.
+  const inQueue = conversations.filter((item) => matchesFilter(item, filter, session?.userId ?? null)
+    && (!searchTerm || [item.subject, contactsById.get(item.contactId)?.name, channelLabel(item.channel), inboxTitle(item), item.teamId ? teamNames.get(item.teamId) : null]
+      .some((value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm))));
+  const queueByPerson = new Map<string, Conversation[]>();
+  for (const item of inQueue) queueByPerson.set(item.contactId, [...(queueByPerson.get(item.contactId) ?? []), item]);
+  const rows = personThreads(inQueue).sort((a, b) => sortOrder === "recent" ? b.lastMessageAt.localeCompare(a.lastMessageAt) : a.lastMessageAt.localeCompare(b.lastMessageAt));
+
+  const requested = selectedId ? conversations.find((item) => item.id === selectedId) ?? null : null;
+  const personId = requested && rows.some((item) => item.contactId === requested.contactId) ? requested.contactId : layout === "chat" ? rows[0]?.contactId ?? null : null;
+  const personRoutes = personId ? conversations.filter((item) => item.contactId === personId) : [];
+  const selected = requested && requested.contactId === personId ? requested : defaultRoute(personRoutes, personId ? queueByPerson.get(personId) : undefined);
+  const person = personId ? contactsById.get(personId) : undefined;
+  const personIdentities = personId ? identitiesByPerson.get(personId) ?? [] : [];
   const routesById = new Map(personRoutes.map((item) => [item.id, item]));
+  const lastInbound = Math.max(0, ...personRoutes.map((item) => instant(item.lastInboundMessageAt)));
+
+  function handleOf(channel: ConversationChannel | IdentityChannel): string | null {
+    const identity = personIdentities.find((item) => item.channel === channel);
+    if (identity) return identityHandle(identity.channel, identity.externalValue);
+    if (channel === "email") return person?.email ?? null;
+    if (channel === "phone" && person?.phone) return formatPhone(person.phone);
+    return null;
+  }
+  // Uma caixa por conexão: três Instagrams são três canais, cada um com o nome da caixa e o @ da pessoa.
+  const inboxes: PersonInbox[] = [];
+  for (const route of personRoutes) {
+    const key = route.connectionId ?? `channel:${route.channel}`;
+    if (!inboxes.some((item) => item.key === key)) inboxes.push({ key, channel: route.channel, title: inboxTitle(route), handle: handleOf(route.channel), conversation: route });
+  }
+  const selectedInboxKey = selected ? selected.connectionId ?? `channel:${selected.channel}` : null;
+  const replyInboxes = inboxes.filter((item) => REPLYABLE_CHANNELS.has(item.channel));
+  // Canais que a pessoa tem e por onde ainda não conversou também aparecem — só o contorno.
+  const idleChannels: { key: string; channel: IdentityChannel; title: string; handle: string | null }[] = [];
+  for (const identity of personIdentities) {
+    if (inboxes.some((item) => item.channel === identity.channel) || idleChannels.some((item) => item.channel === identity.channel)) continue;
+    idleChannels.push({ key: identity.id, channel: identity.channel, title: identityChannelLabel(identity.channel), handle: identityHandle(identity.channel, identity.externalValue) });
+  }
+  if (person?.email && !inboxes.some((item) => item.channel === "email") && !idleChannels.some((item) => item.channel === "email")) idleChannels.push({ key: "contact-email", channel: "email", title: "E-mail", handle: person.email });
+  if (person?.phone && !inboxes.some((item) => item.channel === "whatsapp") && !idleChannels.some((item) => item.channel === "whatsapp" || item.channel === "phone")) idleChannels.push({ key: "contact-phone", channel: "phone", title: "Telefone", handle: formatPhone(person.phone) });
+
   const self = useMemo(() => session ? { id: session.userId, name: userNames.get(userId.from(session.userId)) ?? "Você" } : null, [session, userNames]);
   const { viewers, typingUsers, notifyTyping } = useConversationPresence(selected ? `conversation:${selected.id}` : null, self);
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
+  const replyable = selected ? REPLYABLE_CHANNELS.has(selected.channel) : false;
   const windowClosed = Boolean(selected) && selected!.channel === "whatsapp" && !isWithinWhatsAppSessionWindow(selected!.lastInboundMessageAt, now);
   const connectionTemplates = whatsappTemplates.filter((item) => item.connectionId === selected?.connectionId);
   const selectedTemplate = connectionTemplates.find((item) => item.id === templateId) ?? null;
   const templatePreview = selectedTemplate ? fillTemplate(selectedTemplate.bodyText, templateParams) : "";
+  const useTemplate = composerMode === "reply" && windowClosed;
+
   const queueCounts = useMemo(() => {
     const people = new Map<InboxFilter, Set<string>>();
-    const increment = (box: InboxFilter, person: string) => { const ids = people.get(box) ?? new Set<string>(); ids.add(person); people.set(box, ids); };
+    const increment = (box: InboxFilter, contact: string) => { const ids = people.get(box) ?? new Set<string>(); ids.add(contact); people.set(box, ids); };
     for (const conversation of conversations) {
       increment("all", conversation.contactId);
       increment(conversation.status, conversation.contactId);
@@ -124,62 +176,73 @@ export default function Inbox() {
     return new Map([...people].map(([box, ids]) => [box, ids.size]));
   }, [conversations, session?.userId]);
   const queueCount = (box: InboxFilter) => queueCounts.get(box) ?? 0;
-  // Canal com mais de uma conexão (mais de um número de WhatsApp, mais de um
-  // widget de chat): cada uma vira a própria caixa (pedido do usuário,
-  // 22/09) — a caixa genérica do canal só existe com zero ou uma conexão,
-  // senão a conversa já sabe qual delas é. Só lista canal com conversa
-  // aberta de verdade — "Manual" não é canal externo, não vira caixa dedicada.
-  const sidebarChannelItems: { key: string; label: string; box: InboxFilter }[] = CHANNELS.filter((item) => item.value !== "manual").flatMap((item) => {
+  // Canal com mais de uma conexão vira uma caixa por conexão (pedido do usuário, 22/09); com zero ou
+  // uma, a caixa é o canal. Só canal com conversa aberta — «Manual» não é canal externo.
+  const sidebarChannelItems: { key: string; label: string; box: InboxFilter; channel: ConversationChannel }[] = CHANNELS.filter((item) => item.value !== "manual").flatMap((item) => {
     const perConnection = MULTI_CONNECTION_CHANNELS.has(item.value) ? connections.filter((connection) => connection.provider === item.value && connection.status === "connected") : [];
-    if (perConnection.length > 1) return perConnection.filter((connection) => queueCounts.has(`connection:${connection.id}`)).map((connection) => ({ key: `connection:${connection.id}`, label: connection.name, box: `connection:${connection.id}` as InboxFilter }));
-    return queueCounts.has(`channel:${item.value}`) ? [{ key: `channel:${item.value}`, label: item.label, box: `channel:${item.value}` as InboxFilter }] : [];
+    if (perConnection.length > 1) return perConnection.filter((connection) => queueCounts.has(`connection:${connection.id}`)).map((connection) => ({ key: `connection:${connection.id}`, label: connection.name, box: `connection:${connection.id}` as InboxFilter, channel: item.value }));
+    return queueCounts.has(`channel:${item.value}`) ? [{ key: `channel:${item.value}`, label: item.label, box: `channel:${item.value}` as InboxFilter, channel: item.value }] : [];
   });
-  const tableColumns: TableColumn<Conversation>[] = [
-    { id: "subject", label: "Conversa", cell: (item) => <Button size="sm" variant="ghost" className={styles.tableSubject} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>{item.subject}</Button>, sortValue: (item) => item.subject },
-    { id: "contact", label: "Pessoa", cell: (item) => contactNames.get(item.contactId) ?? "Pessoa", sortValue: (item) => contactNames.get(item.contactId) ?? "" },
-    { id: "channel", label: "Canal", cell: (item) => channelLabel(item.channel), sortValue: (item) => channelLabel(item.channel) },
-    { id: "assignee", label: "Responsável", cell: (item) => item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída", sortValue: (item) => item.assigneeId ? userNames.get(item.assigneeId) ?? "" : "" },
-    { id: "status", label: "Situação", cell: (item) => statusLabel(item.status), sortValue: (item) => statusLabel(item.status) },
-    { id: "updated", label: "Última atividade", cell: (item) => relativeTime(item.lastMessageAt), sortValue: (item) => item.lastMessageAt },
-  ];
   const queues = [
     { label: "Abertas", box: "open" as const, to: "/inbox", icon: "inbox" as const },
     { label: "Minhas conversas", box: "mine" as const, to: "/inbox?box=mine", icon: "user" as const },
-    { label: "Não atribuídas", box: "unassigned" as const, to: "/inbox?box=unassigned", icon: "team" as const },
-    { label: "Adiadas", box: "snoozed" as const, to: "/inbox?box=snoozed", icon: "calendar" as const },
+    { label: "Não atribuídas", box: "unassigned" as const, to: "/inbox?box=unassigned", icon: "users" as const },
+    { label: "Adiadas", box: "snoozed" as const, to: "/inbox?box=snoozed", icon: "clock" as const },
     { label: "Fechadas", box: "closed" as const, to: "/inbox?box=closed", icon: "check" as const },
     { label: "Todas", box: "all" as const, to: "/inbox?box=all", icon: "grid" as const },
   ];
-  const { data: messages = [] } = useLiveQuery({ query: (q) => selected ? q.from({ messages: messagesCollection }).where(({ messages: item }) => eq(item.contactId, selected.contactId)).orderBy(({ messages: item }) => item.createdAt, "asc") : undefined });
 
-  useEffect(() => {
-    if (selected && selected.id !== selectedId) setSelectedId(selected.id);
-  }, [selected, selectedId]);
+  // O histórico junta as mensagens de todas as conversas da pessoa, em ordem.
+  const { data: personMessages = [] } = useLiveQuery({ query: (q) => personId ? q.from({ messages: messagesCollection }).where(({ messages: item }) => eq(item.contactId, contactId.from(personId))).orderBy(({ messages: item }) => item.createdAt, "asc") : undefined });
+  // Enquanto a consulta da nova pessoa não chega, o resultado anterior não conta como dela.
+  const messages = personMessages.filter((item) => item.contactId === personId);
+  // A lista larga mostra o começo da última mensagem de cada pessoa (só nela: lê o histórico inteiro).
+  const { data: recentMessages = [] } = useLiveQuery({ query: (q) => layout === "list" ? q.from({ messages: messagesCollection }).orderBy(({ messages: item }) => item.createdAt, "desc") : undefined });
+  const snippets = useMemo(() => {
+    const byPerson = new Map<string, string>();
+    for (const message of recentMessages) if (message.direction !== "internal" && !byPerson.has(message.contactId)) byPerson.set(message.contactId, message.body);
+    return byPerson;
+  }, [recentMessages]);
+
+  // Só a mensagem que chega com a conversa aberta entra com movimento; o histórico já aparece pousado.
+  const known = useRef<{ person: string | null; ids: Set<string>; fresh: Set<string> }>({ person: null, ids: new Set(), fresh: new Set() });
+  if (known.current.person !== personId || (known.current.ids.size === 0 && messages.length > 0)) known.current = { person: personId, ids: new Set(messages.map((item) => item.id)), fresh: new Set() };
+  for (const message of messages) if (!known.current.ids.has(message.id)) { known.current.ids.add(message.id); known.current.fresh.add(message.id); }
+
+  useEffect(() => { if (selected && selected.id !== selectedId) setSelectedId(selected.id); }, [selected, selectedId]);
   useEffect(() => {
     const linkedConversation = searchParams.get("conversation");
     if (linkedConversation) { setSelectedId(linkedConversation); setMobileView("thread"); }
   }, [searchParams]);
   useEffect(() => {
-    const personId = searchParams.get("createFor");
-    if (!personId || !canWrite || !canReadContacts) return;
-    const person = contacts.find((item) => item.id === personId && !item.deletedAt);
-    if (!person) return;
-    setNewContact({ value: person.id, label: person.name, ...(person.email ? { description: person.email } : {}) });
+    const createFor = searchParams.get("createFor");
+    if (!createFor || !canWrite || !canReadContacts) return;
+    const target = contacts.find((item) => item.id === createFor && !item.deletedAt);
+    if (!target) return;
+    setNewContact({ value: target.id, label: target.name, ...(target.email ? { description: target.email } : {}) });
     setNewConversationOpen(true);
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete("createFor");
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, setSearchParams, contacts, canWrite, canReadContacts]);
   useEffect(() => { if (selected && !REPLYABLE_CHANNELS.has(selected.channel) && composerMode === "reply") setComposerMode("note"); }, [composerMode, selected]);
-  useEffect(() => { setAttachment(null); }, [selected?.id, composerMode]);
-  useEffect(() => { setTemplateId(null); setTemplateParams([]); }, [selected?.id, composerMode]);
+  useEffect(() => { setAttachment(null); setTemplateId(null); setTemplateParams([]); }, [selected?.id, composerMode]);
   useEffect(() => { setTemplateParams(selectedTemplate ? Array.from({ length: selectedTemplate.variableCount }, () => "") : []); }, [selectedTemplate?.id]);
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 60_000); return () => window.clearInterval(timer); }, []);
-  useEffect(() => {
-    const active = activeQueueLink.current;
-    const strip = active?.parentElement?.parentElement;
-    if (active && strip && strip.scrollWidth > strip.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
-  }, [filter, teams.length, sidebarChannelItems.length]);
+  useEffect(() => { if (personId && lastInbound) markSeen(personId, lastInbound); }, [personId, lastInbound, markSeen]);
+
+  function openPerson(contact: string) {
+    const route = defaultRoute(conversations.filter((item) => item.contactId === contact), queueByPerson.get(contact));
+    if (!route) return;
+    setSelectedId(route.id);
+    setMobileView("thread");
+  }
+
+  function changeLayout(next: InboxLayout) {
+    setLayout(next);
+    // A lista larga começa inteira; a conversa abre ao lado quando uma linha é escolhida.
+    if (next === "list") setSelectedId(null);
+  }
 
   async function createConversation() {
     if (!session || !newContact || !newSubject.trim()) throw new Error("MISSING_FIELDS");
@@ -205,11 +268,11 @@ export default function Inbox() {
     if (!selected || saving) return;
     setSaving(true);
     try {
-      const transaction = conversationsCollection.update(selected.id, (draft) => {
-        if (changes.status !== undefined) draft.status = changes.status;
-        if (changes.priority !== undefined) draft.priority = changes.priority;
-        if (changes.assigneeId !== undefined) draft.assigneeId = changes.assigneeId;
-        if (changes.teamId !== undefined) draft.teamId = changes.teamId;
+      const transaction = conversationsCollection.update(selected.id, (record) => {
+        if (changes.status !== undefined) record.status = changes.status;
+        if (changes.priority !== undefined) record.priority = changes.priority;
+        if (changes.assigneeId !== undefined) record.assigneeId = changes.assigneeId;
+        if (changes.teamId !== undefined) record.teamId = changes.teamId;
       });
       await transaction.isPersisted.promise;
     } catch {
@@ -217,8 +280,8 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
-  async function attachFile(selectedFiles: File[]) {
-    const file = selectedFiles[0];
+  async function attachFile(files: File[]) {
+    const file = files[0];
     if (!file) return;
     setUploadingAttachment(file.name);
     try {
@@ -233,29 +296,27 @@ export default function Inbox() {
     } finally { setUploadingAttachment(null); }
   }
 
-  async function submitMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const body = note.trim();
+  async function submitMessage() {
+    const body = draft.trim();
     if (!session || !selected || saving) return;
-    if (composerMode === "reply" && windowClosed) { if (!selectedTemplate) return; } else if (!body && !attachment) return;
+    if (useTemplate) { if (!selectedTemplate) return; } else if (!body && !attachment) return;
     setSaving(true);
     try {
       if (composerMode === "reply") {
-        if (windowClosed && selectedTemplate) await inboxControllerSend(selected.id, { id: messageId.create(), body: templatePreview, template: { name: selectedTemplate.name, language: selectedTemplate.language, parameters: templateParams } });
+        if (useTemplate && selectedTemplate) await inboxControllerSend(selected.id, { id: messageId.create(), body: templatePreview, template: { name: selectedTemplate.name, language: selectedTemplate.language, parameters: templateParams } });
         else await inboxControllerSend(selected.id, { id: messageId.create(), ...(body ? { body } : {}), ...(attachment ? { attachmentFileId: attachment.id } : {}) });
-      } else { const message = optimisticInternalNote({ conversationId: conversationId.from(selected.id), contactId: selected.contactId, authorUserId: userId.from(session.userId), body }, session.orgId); const transaction = messagesCollection.insert(message); await transaction.isPersisted.promise; }
-      setNote("");
+      } else {
+        const message = optimisticInternalNote({ conversationId: conversationId.from(selected.id), contactId: selected.contactId, authorUserId: userId.from(session.userId), body }, session.orgId);
+        const transaction = messagesCollection.insert(message);
+        await transaction.isPersisted.promise;
+      }
+      setDraft("");
       setAttachment(null);
       setTemplateId(null);
-      notify({ title: composerMode === "reply" ? "Mensagem enviada" : "Nota adicionada", tone: "success" });
     } catch {
       notify({ title: composerMode === "reply" ? "Não foi possível enviar a mensagem" : "Não foi possível adicionar a nota", tone: "error" });
     } finally { setSaving(false); }
   }
-  function fillTemplate(bodyText: string, values: string[]): string {
-    return bodyText.replace(/\{\{\s*(\d+)\s*\}\}/g, (_, index: string) => values[Number(index) - 1]?.trim() || `{{${index}}}`);
-  }
-
 
   function startConversationAction() {
     if (!canWrite || !canReadContacts) return null;
@@ -269,144 +330,237 @@ export default function Inbox() {
     else void navigate("/");
   }
 
-  function renderDetails() {
-    if (!selected) return null;
-    const contact = contacts.find((item) => item.id === selected.contactId);
-    const recentConversations = conversations.filter((item) => item.contactId === selected.contactId && item.id !== selected.id).slice(0, 5);
-    return <div className={styles.detailTabs}><Tabs label="Informações do atendimento" items={[
-      { value: "conversation", label: "Detalhes", content: <>
-        <div className={styles.assignment}>
-          <div className={styles.assignmentRow}><span>Responsável</span><Select appearance="filter" label="Responsável pela conversa" value={selected.assigneeId} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map(userSelectOption)]} onValueChange={(value) => void updateConversation({ assigneeId: value ? userId.from(value) : null })} disabled={!canWrite || saving} /></div>
-          <div className={styles.assignmentRow}><span>Equipe</span><Select appearance="filter" label="Equipe responsável" value={selected.teamId} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => void updateConversation({ teamId: value ? teamId.from(value) : null })} disabled={!canWrite || saving} /></div>
-        </div>
-        <Accordion defaultValue={["attributes"]} items={[
-          { value: "attributes", title: "Atributos da conversa", icon: <Icon name="message" />, content: <dl className={styles.metadata}><div><dt>Situação</dt><dd>{statusLabel(selected.status)}</dd></div><div><dt>Prioridade</dt><dd>{selected.priority === "priority" ? "Prioritária" : "Normal"}</dd></div><div><dt>Canal</dt><dd>{channelLabel(selected.channel)}</dd></div><div><dt>Primeira resposta</dt><dd><SlaBadge conversation={selected} now={now} /></dd></div><div><dt>Criada em</dt><dd>{formatDateTime(selected.createdAt)}</dd></div></dl> },
-          { value: "recent", title: "Histórico por canal", icon: <Icon name="message" />, content: recentConversations.length ? <div className={styles.recentConversations}>{recentConversations.map((conversation) => <Button key={conversation.id} variant="ghost" shape="rounded" className={styles.recentConversation} onClick={() => { setDetailsOpen(false); void navigate(`/inbox?box=all&conversation=${conversation.id}`); }}><strong>{conversation.subject}</strong><span>{channelLabel(conversation.channel)} · {statusLabel(conversation.status)}</span></Button>)}</div> : <p className={styles.recentEmpty}>Nenhum outro canal com histórico desta pessoa.</p> },
-        ]} />
-      </> },
-      { value: "person", label: "Pessoa", content: <div className={styles.contactDetails}><div className={styles.contactCard}><Avatar name={contactNames.get(selected.contactId) ?? "Pessoa"} size="large" /><div><strong>{contactNames.get(selected.contactId) ?? "Pessoa"}</strong><span>{contact?.email ?? "Sem e-mail"}</span></div></div><dl className={styles.metadata}><div><dt>Telefone</dt><dd>{contact?.phone ? formatPhone(contact.phone) : "Não informado"}</dd></div></dl>{canReadContacts && <Button variant="secondary" size="sm" onClick={() => navigate(`/contacts/${selected.contactId}`)}>Abrir perfil</Button>}</div> },
-    ]} /></div>;
+  function authorOf(message: Message): string {
+    if (message.direction === "inbound") return personName(message.contactId);
+    return (message.authorUserId ? userNames.get(message.authorUserId) : null) ?? "Equipe";
   }
 
+  function rowFor(item: Conversation, index: number) {
+    const routes = queueByPerson.get(item.contactId) ?? [item];
+    const channels: NonNullable<ConversationRowProps["channels"]>[number][] = [];
+    for (const route of routes) {
+      const label = inboxTitle(route);
+      if (!channels.some((channel) => channel.label === label)) channels.push({ icon: channelGlyph(route.channel), label });
+    }
+    const inbound = Math.max(0, ...routes.map((route) => instant(route.lastInboundMessageAt)));
+    // Aguardando resposta: a última mensagem da conversa é da pessoa.
+    const awaiting = routes.some((route) => route.lastInboundMessageAt !== null && instant(route.lastInboundMessageAt) >= instant(route.lastMessageAt));
+    return <ConversationRow
+      key={item.contactId}
+      index={index}
+      name={personName(item.contactId)}
+      title={item.subject}
+      snippet={snippets.get(item.contactId) ?? null}
+      time={relativeTime(item.lastMessageAt)}
+      dateTime={item.lastMessageAt}
+      channels={channels}
+      owner={ownerLabel(item)}
+      sla={slaSignal(item, now)}
+      unread={awaiting && inbound > (seen[item.contactId] ?? 0) && item.contactId !== personId}
+      priority={routes.some((route) => route.priority === "priority")}
+      selected={item.contactId === personId}
+      onSelect={() => openPerson(item.contactId)}
+    />;
+  }
+
+  function renderThread() {
+    if (!selected || !personId) return null;
+    const items: ReactNode[] = [];
+    let day = "";
+    for (const message of messages) {
+      const key = dayKey(message.createdAt);
+      if (key !== day) { day = key; items.push(<ChatDay key={`dia-${key}`}>{dayLabel(message.createdAt, now)}</ChatDay>); }
+      const route = routesById.get(message.conversationId);
+      items.push(<MessageBubble
+        key={message.id}
+        direction={message.direction}
+        author={authorOf(message)}
+        time={timeLabel(message.createdAt)}
+        dateTime={message.createdAt}
+        channel={route ? { icon: channelGlyph(route.channel), label: inboxTitle(route) } : null}
+        status={message.status}
+        fresh={known.current.fresh.has(message.id)}
+        attachment={message.attachmentFileId ? <MessageAttachment fileId={message.attachmentFileId} /> : undefined}
+      ><LinkifiedText text={message.body} /></MessageBubble>);
+    }
+    const priority = selected.priority === "priority";
+    const replyRoute = <MenuButton variant="ghost" size="sm" icon={<Icon name={channelGlyph(selected.channel)} />} aria-label={`Responder por ${inboxTitle(selected)}. Trocar`} menu={<MenuGroup label="Responder por">
+      {replyInboxes.length ? replyInboxes.map((inbox) => <MenuItem key={inbox.key} icon={<Icon name={channelGlyph(inbox.channel)} />} {...(inbox.handle ? { shortcut: inbox.handle } : {})} aria-current={inbox.key === selectedInboxKey ? "true" : undefined} onClick={() => setSelectedId(inbox.conversation.id)}>{inbox.title}</MenuItem>) : <MenuNote>Esta pessoa ainda não tem um canal que responda.</MenuNote>}
+    </MenuGroup>}>{inboxTitle(selected)}</MenuButton>;
+    return <>
+      <ConversationHeader
+        name={personName(personId)}
+        subtitle={`${selected.subject} · ${statusLabel(selected.status)}`}
+        leading={<Button size="sm" variant="ghost" iconOnly icon={<Icon name="left" />} aria-label="Voltar para as conversas" className={styles.mobileOnly} onClick={() => setMobileView("list")} />}
+        channels={inboxes.length + idleChannels.length > 0 ? <>
+          {inboxes.map((inbox) => <ChannelChip key={inbox.key} channel={inbox.channel} title={inbox.title} handle={inbox.handle} selected={inbox.key === selectedInboxKey} onSelect={() => setSelectedId(inbox.conversation.id)} />)}
+          {idleChannels.map((item) => <ChannelChip key={item.key} channel={item.channel} title={item.title} handle={item.handle} idle />)}
+        </> : undefined}
+        presence={viewers.length > 0 ? <ViewerStack label="Pessoas vendo esta conversa" viewers={viewers.map((viewer) => ({ userId: userId.from(viewer.id), name: viewer.name, avatarUrl: null }))} status="connected" /> : undefined}
+        actions={<>
+          <Button size="sm" variant="ghost" iconOnly icon={<Icon name="panel" />} aria-label="Abrir detalhes da conversa" className={styles.detailsTrigger} onClick={() => setDetailsOpen(true)} />
+          <Button size="sm" variant={priority ? "raised" : "ghost"} iconOnly icon={<Icon name="star" />} aria-label={priority ? "Remover prioridade" : "Marcar como prioridade"} aria-pressed={priority} disabled={!canWrite || saving} onClick={() => void updateConversation({ priority: priority ? "normal" : "priority" })} />
+          <Button size="sm" variant="secondary" icon={<Icon name={selected.status === "closed" ? "undo" : "check"} />} disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
+          {layout === "list" && <Button size="sm" variant="ghost" iconOnly icon={<Icon name="close" />} aria-label="Fechar a conversa e voltar para a lista" onClick={() => { setSelectedId(null); setMobileView("list"); }} />}
+        </>}
+      />
+      <ChatThread label={`Conversa com ${personName(personId)}`} threadKey={personId} empty="Conversa iniciada. Registre o contexto do atendimento numa nota para a equipe.">
+        {items}
+      </ChatThread>
+      {typingUsers.length > 0 && <ChatTyping>{typingUsers.length === 1 ? `${typingUsers[0]!.name} está digitando…` : `${typingUsers.map((item) => item.name).join(", ")} estão digitando…`}</ChatTyping>}
+      {canWrite && <div className={styles.composer}>
+        <ReplyComposer
+          mode={composerMode}
+          onModeChange={setComposerMode}
+          replyDisabled={!replyable}
+          value={draft}
+          onValueChange={(value) => { setDraft(value); notifyTyping(); }}
+          onSubmit={() => void submitMessage()}
+          placeholder={composerMode === "reply" ? `Responder pelo ${inboxTitle(selected)}…` : "Adicione contexto, orientação ou acompanhamento para a equipe…"}
+          maxLength={MESSAGE_LIMIT}
+          submitting={saving}
+          canSubmit={useTemplate ? Boolean(selectedTemplate) : Boolean(draft.trim()) || Boolean(attachment)}
+          route={replyRoute}
+          notice={useTemplate ? <Signal tone="warning">Fora da janela de 24 h do WhatsApp: só modelo aprovado passa.</Signal> : undefined}
+          body={useTemplate ? <div className={styles.template}>
+            <Select label="Modelo aprovado" placeholder={connectionTemplates.length ? "Escolher modelo" : "Nenhum modelo sincronizado — configure em Integrações"} value={templateId} options={connectionTemplates.map((item) => ({ value: item.id, label: `${item.name} (${item.language})` }))} onValueChange={setTemplateId} />
+            {selectedTemplate && Array.from({ length: selectedTemplate.variableCount }, (_, index) => <Input key={index} aria-label={`Variável {{${index + 1}}}`} placeholder={`{{${index + 1}}}`} value={templateParams[index] ?? ""} onChange={(event) => setTemplateParams((current) => current.map((value, position) => position === index ? event.target.value : value))} />)}
+            {selectedTemplate && <ReplyComposerPreview>{templatePreview}</ReplyComposerPreview>}
+          </div> : undefined}
+          tools={useTemplate ? undefined : <MenuButton variant="ghost" size="sm" iconOnly indicator={false} icon={<Icon name="text" />} aria-label="Inserir resposta pronta" menu={<>
+            <MenuGroup label="Respostas prontas">
+              {usableReplies.length ? usableReplies.map((reply) => <MenuItem key={reply.id} shortcut={`/${reply.shortcut}`} onClick={() => setDraft((current) => current ? `${current}\n${reply.body}` : reply.body)}>{reply.title}</MenuItem>) : <MenuNote>Nenhuma resposta pronta para esta equipe.</MenuNote>}
+            </MenuGroup>
+            <MenuSeparator />
+            <MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/inbox/replies")}>Gerenciar respostas</MenuItem>
+          </>} />}
+          {...(composerMode === "reply" && !useTemplate ? { onAttach: (files: File[]) => void attachFile(files) } : {})}
+          attachment={uploadingAttachment ? { name: uploadingAttachment, uploading: true } : attachment}
+          onRemoveAttachment={() => setAttachment(null)}
+        />
+      </div>}
+    </>;
+  }
+
+  function renderDetails() {
+    if (!selected || !personId) return null;
+    const sla = slaSignal(selected, now) ?? { tone: "neutral" as const, label: "Sem prazo" };
+    return <Tabs label="Informações do atendimento" items={[
+      { value: "conversation", label: "Atendimento", content: <div className={styles.fields}>
+        <InlineField label="Responsável" value={selected.assigneeId ? userNames.get(selected.assigneeId) ?? "Responsável" : "Não atribuído"} empty={!selected.assigneeId} disabled={!canWrite || saving}>
+          {(close) => <Select label="Responsável pela conversa" value={selected.assigneeId ?? ""} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ assigneeId: value ? userId.from(value) : null }))} />}
+        </InlineField>
+        <InlineField label="Equipe" value={selected.teamId ? teamNames.get(selected.teamId) ?? "Equipe" : "Sem equipe"} empty={!selected.teamId} disabled={!canWrite || saving}>
+          {(close) => <Select label="Equipe responsável" value={selected.teamId ?? ""} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ teamId: value ? teamId.from(value) : null }))} />}
+        </InlineField>
+        <InlineField label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
+        <InlineField label="Situação" value={statusLabel(selected.status)} />
+        <InlineField label="Prioridade" value={selected.priority === "priority" ? "Prioritária" : "Normal"} />
+        <InlineField label="Primeira resposta" value={<Signal tone={sla.tone}>{sla.label}</Signal>} />
+        <InlineField label="Aberta em" value={formatDateTime(selected.createdAt)} />
+      </div> },
+      { value: "person", label: "Pessoa", content: <div className={styles.fields}>
+        <PersonIdentity name={personName(personId)} detail={person?.email ?? (person?.phone ? formatPhone(person.phone) : "Sem e-mail")} />
+        <InlineField label="E-mail" value={person?.email ?? "Não informado"} empty={!person?.email} />
+        <InlineField label="Telefone" value={person?.phone ? formatPhone(person.phone) : "Não informado"} empty={!person?.phone} />
+        <InlineField label="Conversas" value={`${personRoutes.length} ${personRoutes.length === 1 ? "caixa" : "caixas"} · ${personRoutes.filter((item) => item.status === "open").length} abertas`} />
+        {canReadContacts && <Button variant="secondary" size="sm" icon={<Icon name="user" />} onClick={() => navigate(`/contacts/${personId}`)}>Abrir perfil</Button>}
+      </div> },
+    ]} />;
+  }
+
+  const open = Boolean(selected && personId);
+  const listLabel = `${currentQueueTitle}: conversas`;
   return <div className={styles.page}>
-    <Sidebar title="Atendimento" className={styles.queueSidebar} actions={canWrite && canReadContacts ? <Button iconOnly size="sm" variant="ghost" aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar pessoa"} onClick={openConversationOrContact}><Icon name="plus" /></Button> : undefined} footer={firstRun && canReadIntegrations ? <div className={styles.setupCard}><span className={styles.setupCardIcon}><Icon name="bolt" /></span><strong>Prepare seus canais</strong><span>Conecte e-mail ou redes sociais para receber conversas aqui.</span><Button size="sm" variant="secondary" onClick={() => void navigate("/integrations")}>Configurar canais</Button></div> : undefined}>
-      <SidebarItem className={styles.queueSearch} icon={<Icon name="search" />} onClick={() => setSearchOpen(true)}>Buscar conversas</SidebarItem>
-      {queues.map((queue) => <SidebarItem key={queue.box} render={<Link ref={filter === queue.box ? activeQueueLink : undefined} to={queue.to} onClick={() => setMobileView("list")} />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
+    <Sidebar title="Atendimento" className={styles.queueSidebar} actions={canWrite && canReadContacts ? <Button iconOnly size="sm" variant="ghost" icon={<Icon name="plus" />} aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar pessoa"} onClick={openConversationOrContact} /> : undefined}>
+      <SidebarSearch label="Buscar conversas" placeholder="Buscar conversas" value={search} onValueChange={setSearch} shortcut="/" />
+      {queues.map((queue) => <SidebarItem key={queue.box} render={<Link to={queue.to} onClick={() => setMobileView("list")} />} active={filter === queue.box} icon={<Icon name={queue.icon} />} count={queueCount(queue.box)}>{queue.label}</SidebarItem>)}
       {teams.some((team) => !team.archivedAt) && <SidebarSection title="Equipes">
-        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link ref={filter === `team:${team.id}` ? activeQueueLink : undefined} to={`/inbox?box=team:${team.id}`} onClick={() => setMobileView("list")} />} active={filter === `team:${team.id}`} icon={<Icon name="team" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
+        {teams.filter((team) => !team.archivedAt).map((team) => <SidebarItem key={team.id} render={<Link to={`/inbox?box=team:${team.id}`} onClick={() => setMobileView("list")} />} active={filter === `team:${team.id}`} icon={<Icon name="users" />} count={queueCount(`team:${team.id}`)}>{team.name}</SidebarItem>)}
       </SidebarSection>}
       {sidebarChannelItems.length > 0 && <SidebarSection title="Canais">
-        {sidebarChannelItems.map((item) => <SidebarItem key={item.key} render={<Link ref={filter === item.box ? activeQueueLink : undefined} to={`/inbox?box=${item.box}`} onClick={() => setMobileView("list")} />} active={filter === item.box} icon={<Icon name="message" />} count={queueCount(item.box)}>{item.label}</SidebarItem>)}
+        {sidebarChannelItems.map((item) => <SidebarItem key={item.key} render={<Link to={`/inbox?box=${item.box}`} onClick={() => setMobileView("list")} />} active={filter === item.box} icon={<Icon name={channelGlyph(item.channel)} />} count={queueCount(item.box)}>{item.label}</SidebarItem>)}
       </SidebarSection>}
-      <SidebarSection title="Ferramentas" icon={<Icon name="settings" />}><SidebarItem render={<Link to="/inbox/replies" />} icon={<Icon name="file" />}>Respostas prontas</SidebarItem></SidebarSection>
+      <SidebarSection title="Ferramentas"><SidebarItem render={<Link to="/inbox/replies" />} icon={<Icon name="text" />}>Respostas prontas</SidebarItem></SidebarSection>
     </Sidebar>
-    <div className={styles.mobileQueueMenu}>
-      <MenuButton variant="ghost" shape="rounded" className={styles.mobileQueueTrigger} icon={<Icon name="inbox" />} aria-label="Selecionar caixa de atendimento" menu={<>
+
+    <Surface radius="lista" className={styles.mobileBar}>
+      <MenuButton variant="ghost" icon={<Icon name="inbox" />} aria-label={`Caixa de atendimento: ${currentQueueTitle}. Trocar`} menu={<>
         <MenuGroup label="Caixas">{queues.map((queue) => <MenuItem key={queue.box} icon={<Icon name={queue.icon} />} shortcut={String(queueCount(queue.box))} aria-current={filter === queue.box ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(queue.to); }}>{queue.label}</MenuItem>)}</MenuGroup>
-        {teams.some((team) => !team.archivedAt) && <MenuGroup label="Equipes">{teams.filter((team) => !team.archivedAt).map((team) => <MenuItem key={team.id} icon={<Icon name="team" />} shortcut={String(queueCount(`team:${team.id}`))} aria-current={filter === `team:${team.id}` ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=team:${team.id}`); }}>{team.name}</MenuItem>)}</MenuGroup>}
-        {sidebarChannelItems.length > 0 && <MenuGroup label="Canais">{sidebarChannelItems.map((item) => <MenuItem key={item.key} icon={<Icon name="message" />} shortcut={String(queueCount(item.box))} aria-current={filter === item.box ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=${item.box}`); }}>{item.label}</MenuItem>)}</MenuGroup>}
-        <MenuGroup label="Ferramentas"><MenuItem icon={<Icon name="file" />} onClick={() => void navigate("/inbox/replies")}>Respostas prontas</MenuItem></MenuGroup>
+        {teams.some((team) => !team.archivedAt) && <MenuGroup label="Equipes">{teams.filter((team) => !team.archivedAt).map((team) => <MenuItem key={team.id} icon={<Icon name="users" />} shortcut={String(queueCount(`team:${team.id}`))} aria-current={filter === `team:${team.id}` ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=team:${team.id}`); }}>{team.name}</MenuItem>)}</MenuGroup>}
+        {sidebarChannelItems.length > 0 && <MenuGroup label="Canais">{sidebarChannelItems.map((item) => <MenuItem key={item.key} icon={<Icon name={channelGlyph(item.channel)} />} shortcut={String(queueCount(item.box))} aria-current={filter === item.box ? "page" : undefined} onClick={() => { setMobileView("list"); void navigate(`/inbox?box=${item.box}`); }}>{item.label}</MenuItem>)}</MenuGroup>}
+        <MenuGroup label="Ferramentas"><MenuItem icon={<Icon name="text" />} onClick={() => void navigate("/inbox/replies")}>Respostas prontas</MenuItem></MenuGroup>
       </>}>{currentQueueTitle}</MenuButton>
-    </div>
-    <div className={styles.workspace} data-layout={layout} data-preview-open={layout === "table" && selectedId && selected ? "true" : "false"} data-mobile-view={mobileView} data-has-selection={selected ? "true" : "false"} data-first-run={firstRun ? "true" : undefined}>
-      <section className={styles.conversationList} aria-label="Lista de conversas">
-        <header><strong>{currentQueueTitle}</strong><span>{filtered.length}</span><div className={styles.listActions}><Button iconOnly size="sm" variant={searchOpen ? "raised" : "ghost"} aria-label={searchOpen ? "Fechar busca" : "Buscar conversas"} aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setSearch(""); }}><Icon name="search" /></Button>{canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" className={styles.mobileCreate} aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar pessoa"} onClick={openConversationOrContact}><Icon name="plus" /></Button>}</div></header>
-        {searchOpen && <div className={styles.search}><Input aria-label="Buscar conversas" autoFocus startAdornment={<Icon name="search" />} placeholder="Buscar por pessoa, assunto ou canal" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setSearchOpen(false); } }} /></div>}
-        {(!firstRun || layout === "table") && <div className={styles.listControls}><span>{filtered.length} {filtered.length === 1 ? "conversa" : "conversas"}</span><div className={styles.listControlActions}><div className={styles.layoutSwitch} role="group" aria-label="Formato das conversas"><Button iconOnly size="sm" variant={layout === "chat" ? "raised" : "ghost"} aria-label="Visualização de conversa" aria-pressed={layout === "chat"} onClick={() => setLayout("chat")}><Icon name="message" /></Button><Button iconOnly size="sm" variant={layout === "table" ? "raised" : "ghost"} aria-label="Visualização em tabela" aria-pressed={layout === "table"} onClick={() => setLayout("table")}><Icon name="menu" /></Button></div>{layout === "chat" && <MenuButton size="sm" variant="ghost" shape="rounded" menu={<><MenuItem onClick={() => setSortOrder("recent")}>Mais recentes</MenuItem><MenuItem onClick={() => setSortOrder("oldest")}>Mais antigas</MenuItem></>}>{sortOrder === "recent" ? "Mais recentes" : "Mais antigas"}</MenuButton>}</div></div>}
-        <div className={styles.listBody}>
-          {firstRun && layout === "chat" ? <div className={styles.listFirstRun} role="status"><span className={styles.listFirstRunIcon}><Icon name="message" /></span><strong>Nenhuma conversa ainda</strong><span>As conversas recebidas aparecem nesta lista.</span><div className={styles.listFirstRunAction}>{startConversationAction()}</div></div> : layout === "table" ? <><DataTable label="Conversas" rows={filtered} columns={tableColumns} rowKey={(item) => item.id} rowLabel={(item) => item.subject} state={isLoading && conversations.length === 0 ? "loading" : "ready"} emptyText={searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."} actions={(item) => <TableIconAction label={`Abrir conversa ${item.subject}`} icon={<Icon name="right" />} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }} />} />{firstRun && <div className={styles.listFirstRunAction}>{startConversationAction()}</div>}</> : <>
-          {isLoading && conversations.length === 0 && <p className={styles.empty}>Carregando conversas…</p>}
-          {!isLoading && filtered.length === 0 && <p className={styles.empty}>{searchTerm ? "Nenhuma conversa encontrada." : "Nenhuma conversa nesta caixa."}</p>}
-          {filtered.map((item) => <Button key={item.id} variant="row" shape="rounded" className={styles.conversationButton} data-selected={selected?.contactId === item.contactId || undefined} onClick={() => { setSelectedId(item.id); setMobileView("thread"); }}>
-            <Avatar name={contactNames.get(item.contactId) ?? "Pessoa"} />
-            <span className={styles.preview}><span><strong>{contactNames.get(item.contactId) ?? "Pessoa"}</strong><time>{relativeTime(item.lastMessageAt)}</time></span><b>{item.subject}</b><small>{channelLabel(item.channel)} · {item.teamId ? teamNames.get(item.teamId) ?? "Equipe" : item.assigneeId ? userNames.get(item.assigneeId) ?? "Responsável" : "Não atribuída"}</small><SlaBadge conversation={item} now={now} /></span>
-            {item.priority === "priority" && <Icon name="star" />}
-          </Button>)}
-          </>}
-        </div>
-      </section>
+      {canWrite && canReadContacts && <Button iconOnly size="sm" variant="ghost" icon={<Icon name="plus" />} aria-label={contacts.length > 0 ? "Nova conversa" : "Adicionar pessoa"} onClick={openConversationOrContact} />}
+    </Surface>
 
-      <section className={styles.thread} aria-label="Conversa selecionada">
-        {selected ? <>
-          <header className={styles.threadHeader}>
-            <Button type="button" size="sm" variant="ghost" className={styles.mobileBack} onClick={() => setMobileView("list")}>Conversas</Button>
-            <div className={styles.threadIdentity}><strong>{contactNames.get(selected.contactId) ?? "Pessoa"}</strong><span>{selected.subject}</span></div>
-            {viewers.length > 0 && <div className={styles.presenceViewers} aria-label={`${viewers.map((viewer) => viewer.name).join(", ")} também ${viewers.length === 1 ? "está vendo" : "estão vendo"} esta conversa`}>
-              {viewers.slice(0, 4).map((viewer) => <span key={viewer.id} className={styles.presenceViewer} title={viewer.name}><Avatar name={viewer.name} size="small" /></span>)}
-              {viewers.length > 4 && <span className={styles.presenceViewerMore}>+{viewers.length - 4}</span>}
-            </div>}
-            <div className={styles.threadActions} role="group" aria-label="Ferramentas da conversa">
-              <Button iconOnly size="sm" variant="ghost" className={styles.tablePreviewClose} aria-label="Fechar prévia da conversa" onClick={() => { setSelectedId(null); setMobileView("list"); }}><Icon name="close" /></Button>
-              <Button iconOnly size="sm" variant="ghost" className={styles.detailsTrigger} aria-label="Abrir detalhes da conversa" onClick={() => setDetailsOpen(true)}><Icon name="user" /></Button>
-              <Button iconOnly size="sm" variant={selected.priority === "priority" ? "raised" : "ghost"} aria-label={selected.priority === "priority" ? "Remover prioridade" : "Marcar como prioridade"} disabled={!canWrite || saving} onClick={() => void updateConversation({ priority: selected.priority === "priority" ? "normal" : "priority" })}><Icon name="star" /></Button>
-              <Button size="sm" variant="secondary" disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })} icon={<Icon name={selected.status === "closed" ? "message" : "check"} />}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
-            </div>
-          </header>
-          <div className={styles.channelBar} role="group" aria-label="Canais desta pessoa">
-            <MenuButton size="sm" variant="secondary" icon={<Icon name={channelIcon(selected.channel)} />} menu={<MenuGroup label="Responder por um canal">{CHANNELS.filter((channel) => channel.value !== "manual").map((channel) => {
-              const routes = personRoutes.filter((route) => route.channel === channel.value);
-              return routes.length ? routes.map((route) => <MenuItem key={route.id} icon={<Icon name={channelIcon(channel.value)} />} onClick={() => { setSelectedId(route.id); setComposerMode("reply"); }}>{channel.label}{route.connectionId ? ` · ${connectionNames.get(route.connectionId) ?? "Conexão"}` : ""}{selected.id === route.id ? " · Em uso" : ""}</MenuItem>) : <MenuItem key={channel.value} icon={<Icon name={channelIcon(channel.value)} />} disabled>{channel.label} · Sem histórico</MenuItem>;
-            })}</MenuGroup>}>{channelLabel(selected.channel)}</MenuButton>
-            <span>Histórico unificado · Todos os canais</span>
-          </div>
-          <div className={styles.messages}>
-            {messages.length === 0 && <div className={styles.threadEmpty}><Icon name="message" /><strong>Conversa iniciada</strong><span>Adicione uma nota interna para registrar o contexto do atendimento.</span></div>}
-            {messages.map((message) => <article key={message.id} className={styles.message} data-direction={message.direction}>
-              <header><strong>{message.direction === "internal" ? (message.authorUserId ? userNames.get(message.authorUserId) : null) ?? "Equipe" : message.direction === "inbound" ? contactNames.get(message.contactId) ?? "Pessoa" : "Equipe"}</strong><time>{formatDateTime(message.createdAt)}</time></header>
-              <p><LinkifiedText text={message.body} /></p>
-              {message.attachmentFileId && <MessageAttachment fileId={message.attachmentFileId} />}
-              <small>{message.direction === "internal" ? "Nota interna" : `${channelLabel(routesById.get(message.conversationId)?.channel ?? "manual")} · ${message.status}`}</small>
-            </article>)}
-          </div>
-          {typingUsers.length > 0 && <p className={styles.typingIndicator} role="status"><Icon name="message" />{typingUsers.length === 1 ? `${typingUsers[0]!.name} está digitando…` : `${typingUsers.map((item) => item.name).join(", ")} estão digitando…`}</p>}
-          {canWrite && <form className={styles.composer} data-mode={composerMode} onSubmit={submitMessage}>
-            <div className={styles.composerMode}><div className={styles.modeButtons}>{REPLYABLE_CHANNELS.has(selected.channel) && <Button type="button" size="sm" variant={composerMode === "reply" ? "raised" : "ghost"} onClick={() => setComposerMode("reply")}>Responder</Button>}<Button type="button" size="sm" variant={composerMode === "note" ? "raised" : "ghost"} onClick={() => setComposerMode("note")}>Nota</Button></div><Badge tone={composerMode === "note" ? "warning" : "success"}>{composerMode === "note" ? "Somente equipe" : channelLabel(selected.channel)}</Badge></div>
-            {composerMode === "reply" && windowClosed && <p className={styles.windowWarning}><Icon name="bolt" />Fora da janela de 24h — só modelo pré-aprovado passa. Escolha um abaixo.</p>}
-            {composerMode === "reply" && windowClosed ? <div className={styles.templatePicker}>
-              <Select label="Modelo aprovado" placeholder={connectionTemplates.length ? "Escolher modelo" : "Nenhum modelo sincronizado — configure em Integrações"} value={templateId} options={connectionTemplates.map((item) => ({ value: item.id, label: `${item.name} (${item.language})` }))} onValueChange={setTemplateId} />
-              {selectedTemplate && Array.from({ length: selectedTemplate.variableCount }, (_, index) => <Input key={index} aria-label={`Variável {{${index + 1}}}`} placeholder={`{{${index + 1}}}`} value={templateParams[index] ?? ""} onChange={(event) => setTemplateParams((current) => current.map((value, position) => position === index ? event.target.value : value))} />)}
-              {selectedTemplate && <p className={styles.templatePreview}>{templatePreview}</p>}
-            </div> : <Textarea className={styles.composerInput} value={note} onChange={(event) => { setNote(event.target.value); notifyTyping(); }} placeholder={composerMode === "reply" ? `Responder pelo ${channelLabel(selected.channel)}…` : "Adicione contexto, orientação ou acompanhamento…"} rows={3} />}
-            {quickRepliesOpen && <div className={styles.replyTools}><SearchSelect label="Inserir resposta pronta" searchPlacement="dropdown" placeholder="Buscar resposta pronta" options={usableReplies.map((reply) => ({ value: reply.id, label: `/${reply.shortcut} · ${reply.title}`, description: reply.body }))} value={null} onValueChange={(option) => { const reply = usableReplies.find((item) => item.id === option?.value); if (reply) { setNote((current) => current ? `${current}\n${reply.body}` : reply.body); setQuickRepliesOpen(false); } }} /><Button type="button" size="sm" variant="ghost" onClick={() => navigate("/inbox/replies")}>Gerenciar</Button></div>}
-            {composerMode === "reply" && (attachment || uploadingAttachment) && <div className={styles.attachmentChip}>
-              <Icon name={uploadingAttachment ? "upload" : "file"} />
-              <span>{uploadingAttachment ? `Enviando ${uploadingAttachment}…` : attachment?.name}</span>
-              {attachment && <Button type="button" size="sm" variant="ghost" iconOnly icon={<Icon name="close" />} aria-label="Remover anexo" onClick={() => setAttachment(null)} />}
-            </div>}
-            <div className={styles.composerFooter}>
-              {!(composerMode === "reply" && windowClosed) && <Button type="button" size="sm" variant="ghost" icon={<Icon name="file" />} aria-expanded={quickRepliesOpen} onClick={() => setQuickRepliesOpen((open) => !open)}>Respostas prontas</Button>}
-              {composerMode === "reply" && !windowClosed && <FilePicker appearance="button" iconOnly size="sm" multiple={false} disabled={Boolean(uploadingAttachment) || Boolean(attachment)} label="Anexar arquivo" onFiles={(selected) => void attachFile(selected)} />}
-              {!(composerMode === "reply" && windowClosed) && <span>{note.length}/20.000</span>}
-              <Button type="submit" loading={saving} disabled={composerMode === "reply" && windowClosed ? !selectedTemplate : !note.trim() && !attachment}>{composerMode === "reply" ? "Enviar mensagem" : "Adicionar nota"}</Button>
-            </div>
-          </form>}
-        </> : <div className={styles.threadEmpty}>
-          {!isLoading && conversations.length === 0 ? <span className={styles.threadEmptyArt} aria-hidden="true">
-            <span className={styles.threadEmptyArtMail}><Icon name="mail" /></span>
-            <span className={styles.threadEmptyArtMessage}><Icon name="message" /></span>
-            <span className={styles.threadEmptyArtInbox}><Icon name="inbox" /></span>
-          </span> : <Icon name="message" />}
-          <strong>{isLoading ? "Preparando atendimento" : searchTerm ? "Nenhuma conversa encontrada" : conversations.length === 0 ? "Sua caixa de atendimento está pronta" : "Nenhuma conversa nesta caixa"}</strong>
-          <span>{isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou canal." : conversations.length === 0 ? "Comece uma conversa ou conecte um canal para receber mensagens da sua equipe e das pessoas da sua base." : "Escolha outra caixa para continuar o atendimento."}</span>
-          {!isLoading && conversations.length === 0 && <div className={styles.threadEmptyActions}>{startConversationAction()}{canReadIntegrations && <Button variant="secondary" onClick={() => navigate("/integrations")}>Conectar canal</Button>}</div>}
+    <div className={styles.workspace} data-layout={layout} data-open={open ? "true" : "false"} data-mobile-view={mobileView} data-first-run={firstRun ? "true" : undefined}>
+      <Surface as="section" className={styles.list} aria-label="Lista de conversas">
+        <ConversationListHeader title={currentQueueTitle} count={rows.length} actions={<>
+          <Select appearance="filter" label="Ordenar conversas" value={sortOrder} options={[{ value: "recent", label: "Recentes" }, { value: "oldest", label: "Antigas" }]} onValueChange={(value) => { if (value === "recent" || value === "oldest") setSortOrder(value); }} />
+          <ViewSwitcher label="Formato da lista de conversas" value={layout} onValueChange={changeLayout} views={[{ value: "chat", label: "Conversa", icon: "message" }, { value: "list", label: "Lista", icon: "list" }]} />
+        </>} />
+        <div className={styles.mobileSearch}><SidebarSearch label="Buscar conversas" placeholder="Buscar conversas" value={search} onValueChange={setSearch} /></div>
+        <ConversationList label={listLabel} layout={layout === "list" ? "wide" : "compact"} empty={isLoading && conversations.length === 0 ? "Carregando conversas…" : searchTerm ? "Nenhuma conversa encontrada. Tente outro nome, assunto ou caixa." : "Nenhuma conversa nesta caixa."}>
+          {rows.map(rowFor)}
+        </ConversationList>
+      </Surface>
+
+      {open ? <Surface as="section" className={styles.thread} aria-label={`Conversa com ${personName(personId!)}`}>{renderThread()}</Surface>
+        : layout === "chat" && <div className={styles.threadEmpty}>
+          {firstRun || (!isLoading && conversations.length === 0)
+            ? <EmptyState variant="featured" icon="message" title="Sua caixa de atendimento está pronta" description="Comece uma conversa ou conecte um canal para receber as mensagens das pessoas da sua base." action={startConversationAction()} secondaryAction={canReadIntegrations ? <Button variant="secondary" onClick={() => navigate("/integrations")}>Conectar canal</Button> : undefined} />
+            : <EmptyState icon="message" title={isLoading ? "Preparando o atendimento" : searchTerm ? "Nenhuma conversa encontrada" : "Nenhuma conversa nesta caixa"} description={isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou caixa." : "Escolha outra caixa para continuar o atendimento."} />}
         </div>}
-      </section>
 
-      <aside className={styles.details}>
-        <div className={styles.detailContent}>{renderDetails()}</div>
-      </aside>
+      {open && layout === "chat" && <Surface as="aside" className={styles.details} aria-label="Detalhes do atendimento">{renderDetails()}</Surface>}
     </div>
 
-    <Modal open={detailsOpen && selected !== null} onOpenChange={setDetailsOpen}><ModalContent title="Detalhes da conversa" placement="right"><div className={styles.detailContent}>{renderDetails()}</div></ModalContent></Modal>
+    <Modal open={detailsOpen && open} onOpenChange={setDetailsOpen}><ModalContent title="Detalhes do atendimento" placement="right">{renderDetails()}</ModalContent></Modal>
 
     <ActionModal open={newConversationOpen} onOpenChange={closeNewConversation} title="Nova conversa" confirmLabel="Criar conversa" errorText="Selecione uma pessoa e informe o assunto." onConfirm={createConversation}>
-      <div className={styles.modalFields}>
+      <div className={styles.fields}>
         <Field><Label>Pessoa</Label><SearchSelect label="Buscar pessoa" searchPlacement="dropdown" placeholder="Selecionar pessoa" options={contacts.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name, ...(item.email ? { description: item.email } : {}) }))} value={newContact} onValueChange={setNewContact} /></Field>
         <Field><Label>Canal de origem</Label><Select label="Canal de origem" value={newChannel} options={CHANNELS} onValueChange={(value) => { if (value) setNewChannel(value as ConversationChannel); }} /></Field>
         <Field><Label>Assunto</Label><Textarea value={newSubject} onChange={(event) => setNewSubject(event.target.value)} placeholder="Descreva o motivo do contato" rows={2} maxLength={300} /></Field>
       </div>
     </ActionModal>
   </div>;
+}
+
+/** Pessoas já vistas por quem atende: guarda a última mensagem recebida que a pessoa viu, só neste navegador. */
+function useSeenPeople(viewer: string | null) {
+  const storageKey = viewer ? `spark:atendimento:vistas:${viewer}` : null;
+  const [seen, setSeen] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!storageKey) return;
+    try { setSeen(JSON.parse(localStorage.getItem(storageKey) ?? "{}") as Record<string, number>); } catch { setSeen({}); }
+  }, [storageKey]);
+  const markSeen = useCallback((person: string, at: number) => {
+    setSeen((current) => {
+      if ((current[person] ?? 0) >= at) return current;
+      const next = { ...current, [person]: at };
+      try { if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* sem armazenamento: a marca vale até recarregar */ }
+      return next;
+    });
+  }, [storageKey]);
+  return { seen, markSeen };
+}
+
+/** Por onde responder ao abrir a pessoa: a caixa da última mensagem dela, entre as conversas da fila. */
+function defaultRoute(routes: readonly Conversation[], preferred: readonly Conversation[] = []): Conversation | null {
+  const pool = preferred.length ? preferred : routes;
+  const replyable = pool.filter((item) => REPLYABLE_CHANNELS.has(item.channel));
+  const candidates = replyable.length ? replyable : pool;
+  return [...candidates].sort((a, b) => instant(b.lastInboundMessageAt) - instant(a.lastInboundMessageAt) || instant(b.lastMessageAt) - instant(a.lastMessageAt))[0] ?? null;
+}
+
+/** Instante em milissegundos: o sync entrega o texto do Postgres («2026-10-02 12:00:00+00»), a API entrega ISO. */
+function instant(value: string | null): number {
+  if (!value) return 0;
+  const parsed = Date.parse(value);
+  if (!Number.isNaN(parsed)) return parsed;
+  return Date.parse(value.replace(" ", "T").replace(/([+-]\d\d)$/, "$1:00")) || 0;
 }
 
 type InboxFilter = ConversationStatus | "all" | "mine" | "unassigned" | `team:${string}` | `channel:${string}` | `connection:${string}`;
@@ -428,31 +582,49 @@ function matchesFilter(item: Conversation, filter: InboxFilter, currentUserId: s
 }
 function filterLabel(value: InboxFilter): string { if (value.startsWith("team:")) return "Fila da equipe"; if (value.startsWith("channel:")) return channelLabel(value.slice(8) as ConversationChannel); if (value.startsWith("connection:")) return "Caixa"; if (value === "open") return "Abertas"; if (value === "mine") return "Minhas conversas"; if (value === "unassigned") return "Não atribuídas"; if (value === "snoozed") return "Adiadas"; if (value === "closed") return "Fechadas"; return "Todas"; }
 function channelLabel(value: ConversationChannel): string { return CHANNELS.find((item) => item.value === value)?.label ?? value; }
+function identityChannelLabel(value: IdentityChannel): string { return value === "phone" ? "Telefone" : channelLabel(value); }
+/** Endereço legível da pessoa no canal; ID interno da Meta (número puro) não vira @. */
+function identityHandle(channel: IdentityChannel, value: string): string | null {
+  if (channel === "email") return value;
+  if (channel === "whatsapp" || channel === "phone") return formatPhone(value as Parameters<typeof formatPhone>[0]);
+  if ((channel === "instagram" || channel === "telegram") && !/^\d+$/.test(value)) return `@${value}`;
+  return null;
+}
 function statusLabel(value: ConversationStatus): string { return ({ open: "Aberta", snoozed: "Adiada", closed: "Fechada" })[value]; }
 function formatDateTime(value: string): string { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function timeLabel(value: string): string { return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(value)); }
+function dayKey(value: string): string { const date = new Date(value); return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`; }
+function dayLabel(value: string, now: Date): string {
+  const date = new Date(value);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.round((today.getTime() - new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()) / 86_400_000);
+  if (days === 0) return "Hoje";
+  if (days === 1) return "Ontem";
+  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }) }).format(date);
+}
 function relativeTime(value: string): string { const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60_000)); return minutes < 1 ? "agora" : minutes < 60 ? `${minutes} min` : minutes < 1_440 ? `${Math.floor(minutes / 60)} h` : `${Math.floor(minutes / 1_440)} d`; }
-function SlaBadge({ conversation, now }: { conversation: Conversation; now: Date }) { const state = conversationSlaState(conversation.firstResponseDueAt, conversation.firstRespondedAt, now); const labels = { met: "Respondida no prazo", on_track: `SLA ${timeUntil(conversation.firstResponseDueAt, now)}`, due_soon: `SLA ${timeUntil(conversation.firstResponseDueAt, now)}`, breached: "SLA vencido" }; return <Badge tone={state === "met" ? "success" : state === "breached" ? "danger" : state === "due_soon" ? "warning" : "neutral"}>{labels[state]}</Badge>; }
-function timeUntil(value: string, now: Date): string { const minutes = Math.ceil((new Date(value).getTime() - now.getTime()) / 60_000); if (minutes <= 0) return "vencido"; if (minutes < 60) return `${minutes} min`; return `${Math.ceil(minutes / 60)} h`; }
+/** Prazo da primeira resposta como sinal pequeno (ponto + texto curto); conversa fora da fila aberta não tem prazo. */
+function slaSignal(conversation: Conversation, now: Date): NonNullable<ConversationRowProps["sla"]> | null {
+  if (conversation.status !== "open") return null;
+  const state = conversationSlaState(conversation.firstResponseDueAt, conversation.firstRespondedAt, now);
+  if (state === "met") return { tone: "success", label: "No prazo" };
+  if (state === "breached") return { tone: "danger", label: "Vencido" };
+  if (state === "due_soon") return { tone: "warning", label: `Vence em ${timeUntil(conversation.firstResponseDueAt, now)}` };
+  return { tone: "neutral", label: `SLA ${timeUntil(conversation.firstResponseDueAt, now)}` };
+}
+function timeUntil(value: string, now: Date): string { const minutes = Math.ceil((new Date(value).getTime() - now.getTime()) / 60_000); if (minutes <= 0) return "agora"; if (minutes < 60) return `${minutes} min`; return `${Math.ceil(minutes / 60)} h`; }
+function fillTemplate(bodyText: string, values: string[]): string { return bodyText.replace(/\{\{\s*(\d+)\s*\}\}/g, (_, index: string) => values[Number(index) - 1]?.trim() || `{{${index}}}`); }
 
-/** Busca a URL assinada uma vez, ao montar, e decide entre preview inline e link de download pelo mimeType. */
-function MessageAttachment({ fileId }: { fileId: string }) {
-  const [state, setState] = useState<{ status: "loading" } | { status: "error" } | { status: "ready"; downloadUrl: string; mimeType: string; name: string }>({ status: "loading" });
-
+/** Busca a URL assinada uma vez, ao montar; a bolha decide entre tocar ali mesmo ou oferecer o arquivo. */
+function MessageAttachment({ fileId: id }: { fileId: string }) {
+  const [state, setState] = useState<ChatAttachmentState>({ status: "loading" });
   useEffect(() => {
     let cancelled = false;
     setState({ status: "loading" });
-    filesControllerDownload(fileId)
-      .then((response) => { if (!cancelled) setState({ status: "ready", downloadUrl: response.downloadUrl, mimeType: response.mimeType, name: response.name }); })
+    filesControllerDownload(id)
+      .then((response) => { if (!cancelled) setState({ status: "ready", url: response.downloadUrl, mimeType: response.mimeType, name: response.name }); })
       .catch(() => { if (!cancelled) setState({ status: "error" }); });
     return () => { cancelled = true; };
-  }, [fileId]);
-
-  if (state.status === "loading") return <div className={styles.attachment} aria-busy="true">Carregando anexo…</div>;
-  if (state.status === "error") return <div className={styles.attachment}>Não foi possível abrir o anexo.</div>;
-  if (state.mimeType.startsWith("image/")) return <img className={styles.attachmentImage} src={state.downloadUrl} alt={state.name} loading="lazy" />;
-  if (state.mimeType.startsWith("video/")) return <video className={styles.attachmentVideo} src={state.downloadUrl} controls preload="metadata" />;
-  if (state.mimeType.startsWith("audio/")) return <audio className={styles.attachmentAudio} src={state.downloadUrl} controls preload="metadata" />;
-  return <a className={styles.attachmentFile} href={state.downloadUrl} target="_blank" rel="noopener noreferrer"><Icon name="file" />{state.name}</a>;
+  }, [id]);
+  return <ChatAttachment state={state} />;
 }
-
-function channelIcon(channel: ConversationChannel): IconName { return ({ manual: "file", email: "mail", instagram: "image", whatsapp: "phone", messenger: "message", telegram: "send", widget: "message" } satisfies Record<ConversationChannel, IconName>)[channel]; }
