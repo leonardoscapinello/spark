@@ -1,8 +1,8 @@
-import { type MouseEvent, type PointerEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type MouseEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import type { Capability } from "@spark/core";
-import { Alert, Avatar, Button, Icon, MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem } from "@spark/ui-web";
+import { Alert, AppContent, AppShell, Toolbar, Skeleton, Spinner, Text, Avatar, Button, Icon, LinkTabs, MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem, RailBrand, RailGroup, RailItem, Menu, MenuTrigger, MenuContent } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
 import { usePreference } from "../lib/preferences.client";
@@ -174,15 +174,15 @@ export async function clientLoader() {
 }
 
 export function HydrateFallback() {
-  return <div className={styles.shell} data-sidebar="hidden" aria-busy="true">
+  return <AppShell sidebar="hidden" aria-busy="true">
     <NavigationRail className={styles.rail} data-collapsed>
-      <div className={styles.railHeader}><div className={styles.railBrand}><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="Leonardo Scapinello" /></div></div>
-      <div className={styles.railModules} aria-hidden="true">{modules.filter((module) => module.id !== "admin").map((module) => <div key={module.id} className={styles.railPlaceholder} />)}</div>
+      <div className={styles.railHeader}><RailBrand symbol="/brand/leonardo-scapinello-symbol-ink.svg" label="Leonardo Scapinello" /></div>
+      <div className={styles.railModules} aria-hidden="true">{modules.filter((module) => module.id !== "admin").map((module) => <Skeleton key={module.id} round className={styles.railPlaceholder} />)}</div>
     </NavigationRail>
-    <main className={styles.conteudo}>
-      <div className={styles.loadingContent} role="status">Preparando a área de trabalho…</div>
-    </main>
-  </div>;
+    <AppContent>
+      <div className={styles.loadingContent} role="status"><Spinner size="sm" /><Text tone="secondary">Preparando a área de trabalho…</Text></div>
+    </AppContent>
+  </AppShell>;
 }
 
 export default function AppLayout({ loaderData: session }: Route.ComponentProps) {
@@ -204,8 +204,6 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   const navigation = useNavigation();
   const activeRailLink = useRef<HTMLAnchorElement>(null);
   const railModulesRef = useRef<HTMLDivElement>(null);
-  const moduleTabsRef = useRef<HTMLElement>(null);
-  const activeTopTab = useRef<HTMLAnchorElement>(null);
   const activeSidebarLink = useRef<HTMLAnchorElement>(null);
   const pointerNavigation = useRef<string | null>(null);
   const [navigationIntent, setNavigationIntent] = useState<{ to: string; fromKey: string } | null>(null);
@@ -219,7 +217,6 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   function toggleRailPinned() {
     setRailPinned(!railPinned);
   }
-  const [tabIndicator, setTabIndicator] = useState<{ left: number; width: number } | null>(null);
   const pendingLocation = navigation.state === "loading" ? navigation.location : null;
   const requestedPath = pendingLocation?.pathname ?? (navigationIntent?.fromKey === location.key ? navigationIntent.to.split("?")[0] : null);
   const requestedSearch = pendingLocation?.search ?? (navigationIntent?.fromKey === location.key ? `?${navigationIntent.to.split("?")[1] ?? ""}` : "");
@@ -238,9 +235,6 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     (item.to === "/" && location.pathname === "/") ||
     (item.to === "/deals" && location.pathname === "/deals") ||
     pathMatches(location.pathname, item.to, location.search);
-  const displayedTopTabActive = (item: NavItem) => requestedPath
-    ? pathMatches(requestedPath, item.to, requestedSearch)
-    : topTabActive(item);
   const showSidebar = current.id === "admin" || current.id === "leads" || current.id === "overview" || (current.id === "automations" && location.pathname === "/automations");
   const visibleSections = current.sections.map((section) => ({
     title: section.title,
@@ -296,24 +290,6 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
   }, [current.id]);
 
   useEffect(() => {
-    const active = activeTopTab.current;
-    const tabs = active?.closest("nav");
-    if (active && tabs && tabs.scrollWidth > tabs.clientWidth) active.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [location.pathname, location.search, requestedPath, requestedSearch]);
-
-  useLayoutEffect(() => {
-    const tabs = moduleTabsRef.current;
-    const active = activeTopTab.current;
-    if (!tabs || !active) { setTabIndicator(null); return; }
-    const measure = () => setTabIndicator({ left: active.offsetLeft, width: active.offsetWidth });
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(tabs);
-    observer.observe(active);
-    return () => observer.disconnect();
-  }, [location.pathname, location.search, requestedPath, requestedSearch, current.id]);
-
-  useEffect(() => {
     const active = activeSidebarLink.current;
     const strip = active?.parentElement?.parentElement;
     if (active && strip && strip.scrollWidth > strip.clientWidth) active.scrollIntoView({ block: "nearest", inline: "center" });
@@ -324,36 +300,34 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
     void navigate("/login", { replace: true });
   }
 
-  function railLink(module: NavModule) {
+  function railLink(module: NavModule, standalone = false) {
     const active = current.id === module.id;
     const pending = requestedPath && moduleForPath(requestedPath).id === module.id;
     const first = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability));
     const target = first?.to ?? module.to;
-    return <Link key={module.id} ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, target)} onClick={(event) => finishLinkNavigation(event, target)} className={styles.railLink} aria-label={module.title} aria-current={active && !requestedPath ? "page" : undefined} data-pending={pending || undefined}><Icon name={module.icon} /><span className={styles.railLabel}>{module.title}</span></Link>;
+    return <RailItem key={module.id} icon={<Icon name={module.icon} />} label={module.title} active={active && !requestedPath} pending={Boolean(pending)} data-standalone={standalone ? "" : undefined} render={<Link ref={active ? activeRailLink : undefined} to={target} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, target)} onClick={(event) => finishLinkNavigation(event, target)} />} />;
   }
 
   return (
-    <div className={styles.shell} data-sidebar={showSidebar ? "visible" : "hidden"} data-navigating={requestedPath ? "true" : undefined}>
-      <NavigationRail className={styles.rail} data-expanded={railExpanded || undefined} data-pinned={railPinned || undefined} onPointerEnter={(event) => { if (event.pointerType === "mouse") setRailHovered(true); }} onPointerLeave={(event) => { if (event.pointerType === "mouse") setRailHovered(false); }} onFocusCapture={() => setRailHovered(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setRailHovered(false); }}>
+    <AppShell sidebar={showSidebar ? "visible" : "hidden"}>
+      <NavigationRail className={styles.rail} expanded={railExpanded} data-pinned={railPinned || undefined} onPointerEnter={(event) => { if (event.pointerType === "mouse") setRailHovered(true); }} onPointerLeave={(event) => { if (event.pointerType === "mouse") setRailHovered(false); }} onFocusCapture={() => setRailHovered(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setRailHovered(false); }}>
         <div className={styles.railHeader}>
-          <Link to="/dashboard" prefetch="intent" className={styles.railBrand} aria-label="Leonardo Scapinello — início"><img className={styles.brandSymbol} src="/brand/leonardo-scapinello-symbol-ink.svg" alt="" /><img className={styles.brandWordmark} src="/brand/leonardo-scapinello-ink.svg" alt="" /></Link>
+          <RailBrand symbol="/brand/leonardo-scapinello-symbol-ink.svg" wordmark="/brand/leonardo-scapinello-ink.svg" label="Leonardo Scapinello — início" render={<Link to="/dashboard" prefetch="intent" />} />
           <Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railPin} aria-label={railPinned ? "Recolher módulos automaticamente" : "Fixar módulos sempre abertos"} aria-pressed={railPinned} onClick={toggleRailPinned} icon={<Icon name="pushpin" />} />
         </div>
-        <div ref={railModulesRef} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map(railLink)}</div>
+        <RailGroup ref={railModulesRef} selection={`${current.id}:${requestedPath ?? ""}:${railExpanded}`} className={styles.railModules}>{visibleModules.filter((module) => module.id !== "admin").map((module) => railLink(module))}</RailGroup>
         <div className={styles.mobileModuleMenu}>
           <MenuButton variant="ghost" shape="rounded" className={styles.mobileModuleTrigger} icon={<Icon name={current.icon} />} aria-label={`Módulo atual: ${current.title}. Mudar módulo`} menu={<MenuGroup label="Módulos">{visibleModules.filter((module) => module.id !== "admin").map((module) => {
             const target = module.sections.flatMap((section) => section.items).find((item) => allowed(item.capability))?.to ?? module.to;
             return <MenuItem key={module.id} icon={<Icon name={module.icon} />} aria-current={current.id === module.id ? "page" : undefined} onClick={() => { markNavigation(target); void navigate(target); }}>{module.title}</MenuItem>;
           })}</MenuGroup>}><span className={styles.mobileModuleTitle}>{current.title}</span></MenuButton>
         </div>
-        <div className={styles.railBottom}>
-          <Button iconOnly size="sm" variant="ghost" shape="rounded" className={styles.railLink} aria-label="Pesquisar áreas" onClick={() => setQuickNavigationOpen(true)} icon={<Icon name="search" />}><span className={styles.railLabel}>Pesquisar</span></Button>
-          {session.capabilities.includes("users:manage") && <Link to="/admin/users?invite=1" prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, "/admin/users?invite=1")} onClick={(event) => finishLinkNavigation(event, "/admin/users?invite=1")} className={styles.railLink} aria-label="Convidar colegas"><Icon name="team" /><span className={styles.railLabel}>Convidar colegas</span></Link>}
-          {visibleModules.filter((module) => module.id === "admin").map(railLink)}
-          <div className={styles.accountMenu}><MenuButton iconOnly indicator={false} variant="ghost" shape="rounded" className={`${styles.railLink} ${styles.accountLink}`} aria-label="Perfil" aria-current={current.id === "account" ? "page" : undefined} menu={<><MenuIdentity name={accountProfile.name ?? "Minha conta"} detail="Conta pessoal" avatarUrl={accountProfile.avatarUrl ?? null} /><MenuSeparator /><MenuGroup label="Conta"><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup>{ADMIN_CAPABILITIES.some(allowed) && <MenuGroup label="Administração"><MenuItem icon={<Icon name="grid" />} onClick={() => void navigate("/admin")}>Configurações</MenuItem>{session.capabilities.includes("users:manage") && <MenuItem icon={<Icon name="team" />} onClick={() => void navigate("/admin/users?invite=1")}>Convidar colegas</MenuItem>}</MenuGroup>}<MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></>}> 
-            {accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />}<span className={styles.railLabel}>Perfil</span>
-          </MenuButton></div>
-        </div>
+        <RailGroup selection="" divided className={styles.railBottom}>
+          <RailItem icon={<Icon name="search" />} label="Pesquisar" aria-label="Pesquisar áreas" data-standalone="" onClick={() => setQuickNavigationOpen(true)} />
+          {session.capabilities.includes("users:manage") && <RailItem icon={<Icon name="team" />} label="Convidar colegas" data-standalone="" render={<Link to="/admin/users?invite=1" prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, "/admin/users?invite=1")} onClick={(event) => finishLinkNavigation(event, "/admin/users?invite=1")} />} />}
+          {visibleModules.filter((module) => module.id === "admin").map((module) => railLink(module, true))}
+          <div className={styles.accountMenu}><Menu><MenuTrigger render={<RailItem icon={accountProfile.name ? <Avatar name={accountProfile.name} src={accountProfile.avatarUrl ?? null} size="small" /> : <Icon name="account" />} label="Perfil" active={current.id === "account"} data-standalone="" />} /><MenuContent><><MenuIdentity name={accountProfile.name ?? "Minha conta"} detail="Conta pessoal" avatarUrl={accountProfile.avatarUrl ?? null} /><MenuSeparator /><MenuGroup label="Conta"><MenuItem icon={<Icon name="settings" />} onClick={() => void navigate("/security")}>Segurança da conta</MenuItem></MenuGroup>{ADMIN_CAPABILITIES.some(allowed) && <MenuGroup label="Administração"><MenuItem icon={<Icon name="grid" />} onClick={() => void navigate("/admin")}>Configurações</MenuItem>{session.capabilities.includes("users:manage") && <MenuItem icon={<Icon name="team" />} onClick={() => void navigate("/admin/users?invite=1")}>Convidar colegas</MenuItem>}</MenuGroup>}<MenuSeparator /><MenuItem icon={<Icon name="exit" />} onClick={() => void leaveAccount()}>Sair da conta</MenuItem></></MenuContent></Menu></div>
+        </RailGroup>
       </NavigationRail>
       {showSidebar && <Sidebar title={current.title} className={styles.sidebar}>
         {visibleSections.map((section) => {
@@ -363,27 +337,31 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
             : <SidebarSection key={`${current.id}:${section.title}`} title={section.title} icon={section.icon ? <Icon name={section.icon} /> : undefined} collapsible={current.id === "admin"} defaultOpen={section.items.some((item) => pathMatches(location.pathname, item.to, location.search))}>{links}</SidebarSection>;
         })}
       </Sidebar>}
-      {showSidebar && activeSecondaryItem && <nav className={styles.mobileSecondaryNav} aria-label={`Seções de ${current.title}`}>
+      {showSidebar && activeSecondaryItem && <nav className={styles.mobileSecondaryNav} aria-label={`Seções de ${current.title}`}><Toolbar label={`Seções de ${current.title}`}>
         <MenuButton variant="ghost" shape="rounded" className={styles.mobileSecondaryTrigger} icon={<Icon name={activeSecondaryItem.icon} />} aria-label={`Seção atual: ${activeSecondaryItem.label}. Mudar seção`} menu={<>
           {visibleSections.map((section) => <MenuGroup key={section.title} label={section.title}>
             {section.items.map((item) => <MenuItem key={item.to} icon={<Icon name={item.icon} />} aria-current={pathMatches(location.pathname, item.to, location.search) ? "page" : undefined} onClick={() => { markNavigation(item.to); void navigate(item.to); }}>{item.label}</MenuItem>)}
           </MenuGroup>)}
         </>}>{activeSecondaryItem.label}</MenuButton>
-      </nav>}
-      <main className={styles.conteudo} data-surface={location.pathname === "/inbox" ? "workspace" : /^\/deals\/[^/]+$/.test(location.pathname) ? "record" : "panel"} aria-busy={Boolean(requestedPath)}>
-        {topNavigation.length > 0 && <nav ref={moduleTabsRef} className={styles.moduleTabs} aria-label={`Áreas de ${current.title}`}>
-          {topNavigation.map((item) =>
-            <Link key={item.to} ref={displayedTopTabActive(item) ? activeTopTab : undefined} to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} className={styles.moduleTab} aria-current={!requestedPath && topTabActive(item) ? "page" : undefined} data-pending={requestedPath && pathMatches(requestedPath, item.to, requestedSearch) || undefined}>{item.label}</Link>
-          )}
-          {tabIndicator && <span className={styles.moduleIndicator} style={{ transform: `translateX(${tabIndicator.left}px) scaleX(${tabIndicator.width})` }} aria-hidden="true" />}
-        </nav>}
-        {queueNotice && <div className={styles.sendQueueNotice}><Alert tone="warning" title={queueNotice.title}>{queueNotice.description}</Alert></div>}
+      </Toolbar></nav>}
+      <AppContent
+        surface={location.pathname === "/inbox" ? "workspace" : /^\/deals\/[^/]+$/.test(location.pathname) ? "record" : "panel"}
+        busy={Boolean(requestedPath)}
+        tabs={topNavigation.length > 0 ? <LinkTabs placement="sheet" label={`Áreas de ${current.title}`} items={topNavigation.map((item) => ({
+          key: item.to,
+          label: item.label,
+          active: !requestedPath && topTabActive(item),
+          pending: Boolean(requestedPath && pathMatches(requestedPath, item.to, requestedSearch)),
+          render: <Link to={item.to} prefetch="intent" onPointerDown={(event) => startLinkNavigation(event, item.to)} onClick={(event) => finishLinkNavigation(event, item.to)} />,
+        }))} /> : undefined}
+        notice={queueNotice ? <Alert tone="warning" title={queueNotice.title}>{queueNotice.description}</Alert> : undefined}
+      >
         {/* O provedor do cadastro da Receita não sincroniza nada até alguém
             olhar um CNPJ: montá-lo aqui custa zero e evita repeti-lo em cada
             tela que mostra campo personalizado. */}
           <OrganizationThemeProvider orgId={session.orgId}><LinkPreviewDataProvider><CompanyRegistrationDataProvider><Outlet /></CompanyRegistrationDataProvider></LinkPreviewDataProvider></OrganizationThemeProvider>
-      </main>
+      </AppContent>
       <QuickNavigation open={quickNavigationOpen} onOpenChange={setQuickNavigationOpen} items={quickNavigationItems} onSelect={(to) => { markNavigation(to); void navigate(to); }} />
-    </div>
+    </AppShell>
   );
 }

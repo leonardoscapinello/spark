@@ -43,7 +43,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       : "Erro inesperado.";
 
   return (
-    <main style={{ padding: "var(--space-8)", fontFamily: "var(--typography-fontFamily-body)" }}>
+    <main style={{ padding: "var(--space-8)", fontFamily: "var(--font)" }}>
       <h1>Algo deu errado</h1>
       <p>{mensagem}</p>
     </main>

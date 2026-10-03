@@ -31,19 +31,19 @@ export function fontStackFor(font: ThemeDraft["fontBody"]): string {
 }
 
 const COLOR_VARIABLES = {
-  accentColor: "--color-accent",
-  accentStrongColor: "--color-accentStrong",
-  groundColor: "--color-ground",
-  surfaceColor: "--color-surface",
-  surface2Color: "--color-surface2",
-  inkColor: "--color-ink",
-  inkMutedColor: "--color-inkMuted",
-  lineColor: "--color-line",
-  statusSuccessColor: "--color-statusSuccess",
-  statusWarningColor: "--color-statusWarning",
-  statusDangerColor: "--color-statusDanger",
+  accentColor: "--ac",
+  accentStrongColor: "--ach",
+  groundColor: "--bg",
+  surfaceColor: "--sf",
+  surface2Color: "--sf2",
+  inkColor: "--tx",
+  inkMutedColor: "--tx2",
+  lineColor: "--bd",
+  statusSuccessColor: "--ok",
+  statusWarningColor: "--wa",
+  statusDangerColor: "--er",
 } as const;
-const DERIVED_VARIABLES = ["--color-accentWash", "--color-focusRing", "--color-statusSuccessSoft", "--color-statusWarningSoft", "--color-statusDangerSoft"] as const;
+const DERIVED_VARIABLES = ["--acs", "--ring", "--oks", "--was", "--ers"] as const;
 
 const THEME_CACHE_PREFIX = "spark:organization-theme:";
 
@@ -65,20 +65,20 @@ export function applyOrganizationTheme(theme: OrganizationTheme | ThemeDraft | n
   const root = document.documentElement;
   for (const variable of Object.values(COLOR_VARIABLES)) root.style.removeProperty(variable);
   for (const variable of DERIVED_VARIABLES) root.style.removeProperty(variable);
-  root.style.removeProperty("--typography-fontFamily-body");
-  root.style.removeProperty("--typography-fontFamily-display");
+  root.style.removeProperty("--font");
+  root.style.removeProperty("--font-display");
   if (!theme || isDefaultTheme(theme)) return;
   for (const [key, variable] of Object.entries(COLOR_VARIABLES)) {
     const value = theme[key as keyof typeof COLOR_VARIABLES] ?? DEFAULT_THEME[key as keyof typeof COLOR_VARIABLES];
     root.style.setProperty(variable, value);
   }
-  root.style.setProperty("--color-accentWash", `color-mix(in srgb, ${theme.accentColor} 12%, transparent)`);
-  root.style.setProperty("--color-focusRing", theme.accentColor);
-  root.style.setProperty("--color-statusSuccessSoft", `color-mix(in srgb, ${theme.statusSuccessColor} 12%, transparent)`);
-  root.style.setProperty("--color-statusWarningSoft", `color-mix(in srgb, ${theme.statusWarningColor} 12%, transparent)`);
-  root.style.setProperty("--color-statusDangerSoft", `color-mix(in srgb, ${theme.statusDangerColor} 12%, transparent)`);
-  root.style.setProperty("--typography-fontFamily-body", FONT_STACKS[theme.fontBody]);
-  root.style.setProperty("--typography-fontFamily-display", FONT_STACKS[theme.fontDisplay]);
+  root.style.setProperty("--acs", `color-mix(in srgb, ${theme.accentColor} 12%, transparent)`);
+  root.style.setProperty("--ring", theme.accentColor);
+  root.style.setProperty("--oks", `color-mix(in srgb, ${theme.statusSuccessColor} 12%, transparent)`);
+  root.style.setProperty("--was", `color-mix(in srgb, ${theme.statusWarningColor} 12%, transparent)`);
+  root.style.setProperty("--ers", `color-mix(in srgb, ${theme.statusDangerColor} 12%, transparent)`);
+  root.style.setProperty("--font", FONT_STACKS[theme.fontBody]);
+  root.style.setProperty("--font-display", FONT_STACKS[theme.fontDisplay]);
 }
 
 /** Aplica a identidade assim que o registro chega do cache local ou do shape. */

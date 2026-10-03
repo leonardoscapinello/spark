@@ -1,230 +1,61 @@
-.shell {
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: var(--ui-railWidth) var(--ui-sidebarWidth) minmax(0, 1fr);
-  gap: var(--space-2);
-  height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-  padding: var(--space-2);
-  background: var(--color-ground);
-  color: var(--color-ink);
-}
+/* Casco do app (ADR-0044/0045): só layout. Papel, folha, raio, sombra e a
+ * física de abrir o trilho são do AppShell, do NavigationRail e do LinkTabs
+ * em packages/ui-web; aqui fica onde cada peça mora. */
 
-.shell[data-sidebar="hidden"] {
-  grid-template-columns: var(--ui-railWidth) minmax(0, 1fr);
-}
-
-@media (min-width: 761px) {
-  /* O trilho expandido (hover ou fixado) precisa mesmo empurrar a coluna,
-     não flutuar por cima: a largura das colunas internas do trilho já
-     crescia para --ui-railFlyoutWidth, mas a própria célula do grid
-     continuava em --ui-railWidth — o conteúdo do trilho vazava por cima do
-     início da barra lateral secundária. Corrigido fazendo a trilha do grid
-     crescer junto, não escondendo o sintoma com z-index. */
-  .shell { transition: grid-template-columns var(--motion-duration-fast) var(--motion-ease-out); }
-  .shell:has(.rail[data-expanded]) { grid-template-columns: var(--ui-railFlyoutWidth) var(--ui-sidebarWidth) minmax(0, 1fr); }
-  .shell[data-sidebar="hidden"]:has(.rail[data-expanded]) { grid-template-columns: var(--ui-railFlyoutWidth) minmax(0, 1fr); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .shell { transition: none; }
-}
-
+/* Trilho de módulos. */
 .rail {
   position: relative;
   z-index: var(--ui-navigationLayer);
   height: 100%;
-  padding-top: var(--space-2);
 }
-
-.rail::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: var(--ui-railWidth);
-  pointer-events: none;
-  transition: width var(--motion-duration-fast) var(--motion-ease-out), background-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out);
-}
-
-.railBrand,
-.railLink {
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: var(--ui-controlMedium);
-  height: var(--ui-controlMedium);
-  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
-  color: var(--color-inkMuted);
-  text-decoration: none;
-}
-
-.railLink { position: relative; isolation: isolate; }
-.railLink::before { content: ""; position: absolute; z-index: -1; inset: 0; border-radius: inherit; background: var(--ui-optionHover); opacity: 0; pointer-events: none; transition: opacity var(--motion-duration-control) var(--motion-ease-out); }
-.railLink:hover::before { opacity: 1; }
 
 .railHeader {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-  width: var(--ui-controlMedium);
-  height: var(--ui-controlMedium);
-  margin-bottom: var(--space-6);
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--h-lg);
+  height: var(--h-lg);
+  margin-bottom: 10px;
 }
 
-.railBrand {
-  position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
-/* Percevejo, como no flyout da referência (captura 050): mesma linha do
-   logotipo, à direita, irmão de flex — nunca por cima do wordmark. Só
-   existe com o trilho expandido; recolhido, a coluna é só o símbolo.
-   Inclinado = solto (recolhe ao sair); em pé = fixado. Cor de tinta, não
-   de ação: é um estado que fica, não um botão que pede clique. */
-.railPin {
-  display: none;
-  flex: 0 0 auto;
-  color: var(--color-inkMuted);
-}
-.railPin svg { transform: rotate(-45deg); transition: transform var(--motion-duration-fast) var(--motion-ease-out); }
-.railPin:hover, .railPin:focus-visible { color: var(--color-ink); }
-
-.railBrand .brandSymbol {
-  width: var(--space-6);
-  height: var(--space-6);
-  object-fit: contain;
-  flex: 0 0 auto;
-  transition: opacity var(--motion-duration-fast) var(--motion-ease-out);
-}
-
-.brandWordmark {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: var(--space-2);
-  width: calc(var(--ui-railFlyoutWidth) - var(--space-8));
-  max-height: var(--ui-controlMedium);
-  object-fit: contain;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-50%);
-  pointer-events: none;
-  transition: opacity var(--motion-duration-fast) var(--motion-ease-out), visibility var(--motion-duration-fast);
-}
-.railLabel {
-  position: absolute;
-  inset-inline-start: var(--space-8);
-  max-width: calc(var(--ui-railFlyoutWidth) - var(--space-10));
-  overflow: hidden;
-  color: inherit;
-  font-size: var(--typography-size-sm);
-  font-weight: var(--typography-weight-medium);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(calc(var(--space-1) * -1));
-  pointer-events: none;
-  transition: opacity var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out), visibility var(--motion-duration-fast);
-}
-
-/* Hover é sutil (cinza); só o selecionado ganha o cartão branco com anel —
- * senão dois itens parecem selecionados ao mesmo tempo. Mesma regra do Sidebar. */
-.railLink:hover { color: var(--color-ink); }
-.railLink[aria-current="page"] {
-  color: var(--color-ink);
-  background: var(--ui-selected);
-  box-shadow: var(--ui-selectionShadow);
-}
-
-.railLink {
-  transition: color var(--motion-duration-fast) var(--motion-ease-out), background-color var(--motion-duration-fast) var(--motion-ease-out), box-shadow var(--motion-duration-fast) var(--motion-ease-out);
-}
-
-.railLink[data-pending],
-.sidebar a[data-pending],
-.railLink:active,
-.sidebar a:active {
-  color: var(--color-accent);
-  background: var(--color-accentWash);
-}
-
-.railLink:focus-visible,
-.railBrand:focus-visible {
-  outline: var(--ui-focusWidth) solid var(--color-focusRing);
-  outline-offset: var(--ui-focusOffset);
-}
+/* Percevejo: mesma linha da marca, à direita. Só existe com o trilho aberto.
+ * Inclinado = solto (recolhe ao sair); em pé = fixado. */
+.railPin { display: none; flex: 0 0 auto; }
+.railPin svg { transform: rotate(-45deg); }
 
 .railModules,
 .railBottom {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-1-5);
 }
 
-/* O contêiner rola, e contêiner que rola corta o que passa da borda — o anel e a
- * sombra do item selecionado vazam 1–5px e ficavam decepados no topo do primeiro
- * item e nas laterais de todos. O padding dá esse espaço; a margem negativa
- * devolve o layout exatamente onde estava. */
-.railModules { box-sizing: border-box; flex: 1; min-height: 0; width: calc(100% + var(--space-4)); margin-inline: calc(var(--space-2) * -1); padding: var(--space-2); overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+/* A lista rola, e quem rola corta o que passa da borda: 4px de folga para a
+ * sombra da folha e o halo de foco, devolvidos pela margem negativa. */
+.railModules { box-sizing: border-box; flex: 1; min-height: 0; width: calc(100% + var(--space-2)); margin-inline: calc(var(--space-1) * -1); padding: var(--space-1); overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
 .railModules::-webkit-scrollbar { display: none; }
 
-.railBottom {
-  flex-shrink: 0;
-  width: 100%;
-}
-
-.accountLink {
-  border-radius: var(--radius-full);
-}
+.railBottom { flex-shrink: 0; width: 100%; }
+.railPlaceholder { flex: none; width: var(--h-lg); height: var(--h-lg); }
 
 .accountMenu { display: flex; flex: 0 0 auto; justify-content: center; }
-.accountMenu .accountLink[aria-current="page"] { background: var(--ui-selected); box-shadow: var(--ui-selectionShadow); }
 .mobileModuleMenu { display: none; }
 .mobileSecondaryNav { display: none; }
 
 @media (min-width: 761px) {
-  .railHeader, .railModules, .railBottom { transition: width var(--motion-duration-fast) var(--motion-ease-out); }
-  /* packages/ui-web fixa a largura do <nav> em --ui-railWidth (o rail
-     compartilhado); a tela precisa da própria largura para o botão de
-     fixar se posicionar contra a borda certa — sem isto ele calculava a
-     posição contra a caixa estreita de 36px, não contra o flyout de 196px
-     que os filhos já desenhavam por cima dela. */
-  .rail[data-expanded] { width: var(--ui-railFlyoutWidth); align-items: flex-start; }
-  .rail[data-expanded]::before { width: var(--ui-railFlyoutWidth); background: var(--color-surface); border-radius: var(--radius-lg); corner-shape: var(--radius-shape); box-shadow: var(--ui-panelShadow); }
+  /* Aberto, tudo cabe dentro da folha do trilho: itens de 36 a 2px um do outro. */
   .rail[data-expanded] .railHeader,
+  .rail[data-expanded] .railBottom { width: 100%; }
   .rail[data-expanded] .railModules,
-  .rail[data-expanded] .railBottom { box-sizing: border-box; width: var(--ui-railFlyoutWidth); padding-inline: var(--space-2); }
-  /* Expandido, a lista tem largura fixa e o padding já dá a folga do anel — a
-   * margem negativa da regra base deslocaria o bloco 8px para a esquerda. */
-  .rail[data-expanded] .railModules { margin-inline: 0; }
+  .rail[data-expanded] .railBottom { align-items: stretch; gap: 2px; }
   .rail[data-expanded] .railHeader { justify-content: flex-start; gap: var(--space-2); }
-  .rail[data-expanded] .railBrand { width: auto; justify-content: flex-start; gap: var(--space-2); }
-  .rail[data-expanded] .brandSymbol { opacity: 1; }
-  /* O wordmark cede espaço ao percevejo: flyout − padding − símbolo − gaps − controle do pin. */
-  .rail[data-expanded] .brandWordmark { position: static; flex: 1 1 auto; min-width: 0; width: auto; max-width: calc(var(--ui-railFlyoutWidth) - var(--space-4) - var(--space-6) - var(--space-2) - var(--ui-controlSmall) - var(--space-2)); opacity: 1; visibility: visible; transform: none; }
-  .rail[data-expanded] .railModules,
-  .rail[data-expanded] .railBottom { align-items: stretch; }
-  .rail[data-expanded] .railBottom { overflow: hidden; }
-  .rail[data-expanded] .railLink { justify-content: flex-start; gap: var(--space-2); width: 100%; padding-inline: var(--space-2); }
-  .rail[data-expanded] .railLink svg { flex: 0 0 var(--ui-icon); }
-  .rail[data-expanded] .railLabel { opacity: 1; visibility: visible; transform: none; }
   .rail[data-expanded] .accountMenu { justify-content: flex-start; width: 100%; }
-  .rail[data-expanded] .accountLink { border-radius: var(--radius-md); corner-shape: var(--radius-shape); }
   .rail[data-expanded] .railPin { display: inline-flex; }
   .rail[data-pinned] .railPin svg { transform: none; }
 }
-
-@media (prefers-reduced-motion: reduce) { .railLink, .railLabel, .brandSymbol, .brandWordmark, .rail::before, .railHeader, .railModules, .railBottom, .railPin svg { transition: none; } }
 
 .sidebar {
   height: 100%;
@@ -235,133 +66,23 @@
   padding-top: var(--space-2);
 }
 
-.conteudo {
-  box-sizing: border-box;
-  position: relative;
-  min-width: 0;
-  min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
-  background: var(--color-surface);
-  border: var(--ui-hairline) solid var(--color-line);
-  border-radius: var(--radius-lg); corner-shape: var(--radius-shape);
-  box-shadow: var(--ui-panelShadow);
-}
-
-.conteudo[data-surface="workspace"] {
-  overflow: hidden;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.conteudo[data-surface="record"] { overflow: hidden; }
-
-.shell[data-navigating] .conteudo::before {
-  content: "";
-  position: sticky;
-  z-index: 10;
-  display: block;
-  inset-block-start: 0;
-  width: 100%;
-  height: var(--ui-focusWidth);
-  margin-bottom: calc(var(--ui-focusWidth) * -1);
-  background: var(--color-accent);
-}
-
-.moduleTabs {
-  position: sticky;
-  z-index: 2;
-  inset-block-start: 0;
-  display: flex;
-  gap: var(--space-5);
-  padding-inline: var(--space-8);
-  min-height: var(--ui-touchTarget);
-  overflow-x: auto;
-  background: var(--color-surface);
-  border-bottom: var(--ui-hairline) solid var(--color-line);
-}
-
-.moduleTab {
-  box-sizing: border-box;
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  padding: var(--space-1) var(--space-1) 0;
-  border-bottom: var(--ui-focusWidth) solid transparent;
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
-  font-weight: var(--typography-weight-medium);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color var(--motion-duration-instant) var(--motion-ease-out);
-}
-
-.moduleIndicator {
-  position: absolute;
-  inset-block-end: 0;
-  inset-inline-start: 0;
-  width: 1px;
-  height: var(--ui-focusWidth);
-  background: var(--color-accent);
-  pointer-events: none;
-  transform-origin: left;
-  transition: transform var(--motion-duration-fast) var(--motion-ease-out);
-}
-
-.moduleTab:hover,
-.moduleTab[data-pending] {
-  color: var(--color-ink);
-}
-
-.moduleTab[aria-current="page"],
-.moduleTab[data-pending],
-.moduleTab:active {
-  color: var(--color-ink);
-}
-
-@media (prefers-reduced-motion: reduce) { .moduleIndicator { transition: none; } }
-
-.moduleTab:focus-visible {
-  outline: var(--ui-focusWidth) solid var(--color-focusRing);
-  outline-offset: calc(var(--ui-focusWidth) * -1);
-}
-
-.railPlaceholder {
-  width: var(--ui-controlMedium);
-  height: var(--ui-controlMedium);
-  border-radius: var(--radius-md); corner-shape: var(--radius-shape);
-  background: var(--color-line);
-}
-
 .loadingContent {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
   min-height: 100%;
-  color: var(--color-inkMuted);
-  font-size: var(--typography-size-sm);
 }
 
 @media (max-width: 760px) {
-  .shell {
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-  }
-
   .rail {
     box-sizing: border-box;
-    flex-direction: row;
     width: 100%;
-    height: var(--ui-touchTarget);
+    height: calc(var(--h-lg) + var(--space-2));
     flex-shrink: 0;
-    padding: 0;
+    padding: var(--space-1);
     overflow: hidden;
   }
-
-  .rail::before { display: none; }
 
   .railHeader { margin: 0 var(--space-2) 0 0; flex-shrink: 0; }
   .railPin { display: none; }
@@ -369,25 +90,9 @@
   .mobileModuleMenu { display: flex; flex: 1 1 auto; min-width: 0; }
   .mobileModuleTrigger { width: 100%; min-width: 0; justify-content: flex-start; overflow: hidden; white-space: nowrap; }
   .mobileModuleTitle { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .railBottom { flex-direction: row; width: auto; margin-left: 0; padding-top: 0; padding-left: var(--space-2); border-top: 0; border-left: var(--ui-hairline) solid var(--color-line); }
-  .railLink { flex-shrink: 0; }
+  .railBottom { flex-direction: row; width: auto; margin-left: 0; padding-top: 0; padding-left: var(--space-2); }
 
   .sidebar { display: none; }
-  .mobileSecondaryNav { display: flex; align-items: center; min-width: 0; min-height: var(--ui-touchTarget); flex-shrink: 0; padding-inline: var(--space-2); border-radius: var(--radius-lg); corner-shape: var(--radius-shape); background: var(--color-surface2); box-shadow: var(--ui-panelShadow); }
+  .mobileSecondaryNav { display: flex; align-self: stretch; flex-shrink: 0; }
   .mobileSecondaryTrigger { min-width: 0; max-width: 100%; }
-
-  .conteudo { flex: 1; }
-  .moduleTabs { padding-inline: var(--space-4); scrollbar-width: none; }
-  .moduleTabs::-webkit-scrollbar { display: none; }
 }
-
-/* Aviso da fila de envio (docs/adr/0017): acima do conteúdo, no mesmo recuo do título. Âmbar é semântico aqui — pendência —, não marca (ADR-0034). */
-.sendQueueNotice { flex-shrink: 0; padding: var(--space-4) var(--space-8) 0; }
-
-/* No celular, os rótulos do rail expandido não podem invadir outros controles. */
-@media (max-width: 760px) {
-  .rail .railLabel, .rail .brandWordmark { display: none; }
-  .rail .brandSymbol { opacity: 1; visibility: visible; }
-}
-
-@media (prefers-reduced-motion: reduce) { .railLink::before { transition: none; } }
