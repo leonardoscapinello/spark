@@ -1,23 +1,16 @@
-/* Ficha de empresa: só layout (ADR-0045). */
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loadingLine { height: var(--space-3); }
 .loadingLine:first-child { width: var(--ui-menuWidth); }
 
-.contentGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr) minmax(0, 1fr); grid-template-areas: "profile relations history"; align-items: start; gap: var(--space-5); min-width: 0; }
-.contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); grid-template-areas: "profile history"; }
-.profileColumn { grid-area: profile; display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
-.relations { grid-area: relations; display: grid; align-content: start; gap: var(--space-4); min-width: 0; }
-.history { grid-area: history; min-width: 0; }
+.page { height: 100%; min-height: 0; overflow: hidden; }
+.page > :first-child { flex: none; }
+.contentGrid { display: grid; flex: 1; min-height: 0; min-width: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-5); }
+.profileColumn { min-width: 0; min-height: 0; overflow: auto; padding: var(--space-1); }
+.work { min-width: 0; min-height: 0; overflow: hidden; }
 .fields { display: grid; min-width: 0; }
 
-@media (max-width: 1200px) {
-  .contentGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "profile relations" "history history"; }
-}
-
 @media (max-width: 760px) {
-  .contentGrid, .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "relations" "history"; }
-  .contentGrid[data-relations="hidden"] { grid-template-areas: "profile" "history"; }
+  .page { height: auto; overflow: visible; }
+  .contentGrid { grid-template-columns: minmax(0, 1fr); }
+  .profileColumn, .work { overflow: visible; }
 }
-
-.embedded .contentGrid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "relations" "history"; }
-.embedded .contentGrid[data-relations="hidden"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "profile" "history"; }

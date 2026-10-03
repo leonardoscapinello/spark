@@ -1,7 +1,7 @@
 import { contactsControllerLinkCompany } from "@spark/api-client";
 import { getContactCompaniesCollection } from "../lib/contact-companies.client";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
   canMoveBetweenStages,
@@ -69,8 +69,6 @@ import { groupTimelineEvents } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
 import { useDealPresence } from "../lib/deal-presence.client";
-import { ContactProfile } from "./contact-detail";
-import { CompanyProfile } from "./company-detail";
 import { PhaseFields } from "../crm/PhaseFields";
 import { RelatedRecords } from "../crm/RelatedRecords";
 import { DealTags } from "../crm/DealTags";
@@ -138,6 +136,9 @@ function formatExternalTimeRange(startsAt: string, endsAt: string, allDay: boole
 export default function DealDetail({ params }: Route.ComponentProps) { return <DealWorkspace dealId={params.dealId} />; }
 export function DealWorkspace({ dealId, embedded = false }: { dealId: string; embedded?: boolean }) {
   const params = { dealId };
+  const location = useLocation();
+  const navigate = useNavigate();
+  const returnTo = encodeURIComponent(`${location.pathname}${location.search}`);
   const tagsByDeal = useDealTags();
   const { data: transitions = [] } = useLiveQuery({ query: (q) => q.from({ transitions: getStageTransitionsCollection() }) });
   const dealsCollection = getDetailDealsCollection(dealIdFactory.from(params.dealId));
@@ -531,7 +532,6 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   /* Abrir a pessoa ou a empresa NÃO troca de tela: entra por cima, num painel
    * que deixa ver o negócio por baixo. Sair de um negócio para consultar um
    * telefone e ter de voltar é o atrito que isso remove. */
-  const [ficha, setFicha] = useState<{ tipo: "contato" | "empresa"; id: string } | null>(null);
 
   type DealPatch = Partial<Pick<Deal, "name" | "ownerId" | "companyId" | "contactId" | "expectedCloseDate">>;
 
@@ -810,10 +810,10 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>
       {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
     </InlineField>
-    <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" />, action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "contato", id: linkedContact.id }) } } : {})} empty={!linkedContact} disabled={!canWrite || !canReadContacts}>
+    <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" />, action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => void navigate(`/contacts/${linkedContact.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedContact} disabled={!canWrite || !canReadContacts}>
       {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : selectParties(next?.value ?? null, deal.companyId))} />}
     </InlineField>
-    <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" />, action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => setFicha({ tipo: "empresa", id: linkedCompany.id }) } } : {})} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies}>
+    <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" />, action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${linkedCompany.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies}>
       {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading || linksLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : selectParties(deal.contactId, next?.value ?? null))} />}
     </InlineField>
     {deal.status === "lost" && <InlineField label="Motivo da perda" value={deal.lossReason ?? "Não informado"} empty={!deal.lossReason} disabled />}
@@ -842,7 +842,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: summaryFields },
     { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: detailsContent },
     /* Pessoa e Empresa não têm seção própria: o resumo já mostra as duas, e
-     * o olho ao lado do valor abre a ficha inteira por cima. */
+     * o olho leva à mesma ficha completa usada em Pessoas e empresa. */
     ...(canReadInbox ? [{ value: "conversas", title: "Conversas", icon: <Icon name="message" />, content: !deal.contactId
       ? <Text size="pequeno" tone="muted">Vincule uma pessoa para ver o atendimento.</Text>
       : conversationsLoading ? <Skeleton className={styles.loadingLine} />
@@ -1068,14 +1068,6 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       </PanelContent>
     </Panel>
 
-    {/* A ficha entra por cima: o negócio continua visível atrás, e fechar
-      * devolve exatamente onde se estava. */}
-    <Panel open={ficha !== null} onOpenChange={(aberta) => { if (!aberta) setFicha(null); }}>
-      <PanelContent side="right" title={ficha?.tipo === "empresa" ? "Empresa" : "Pessoa"} closeLabel="Fechar e voltar ao negócio">
-        {ficha?.tipo === "contato" && <ContactProfile contactId={ficha.id} embedded onBack={() => setFicha(null)} />}
-        {ficha?.tipo === "empresa" && <CompanyProfile companyId={ficha.id} embedded />}
-      </PanelContent>
-    </Panel>
   </PageFrame>;
 }
 
