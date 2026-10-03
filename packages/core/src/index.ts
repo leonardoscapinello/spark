@@ -21,3 +21,5 @@ export * from "./inbox/index.js";
 export { dealCompanyIssue } from "./rules/dealCompany.js";
 
 export * from "./scoring/index.js";
+
+export * from "./intelligence/opportunity.js";

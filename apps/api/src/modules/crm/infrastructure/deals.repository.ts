@@ -275,6 +275,10 @@ function toDeal(row: {
   updatedAt: Date;
   deletedAt: Date | null;
   isArchived: boolean;
+  probabilityBasisPoints: number | null;
+  probabilityCalculatedAt: Date | null;
+  probabilityVersion: string | null;
+  probabilitySampleSize: number | null;
 }): Deal {
   return {
     id: row.id,
@@ -294,6 +298,10 @@ function toDeal(row: {
     updatedAt: row.updatedAt.toISOString(),
     deletedAt: row.deletedAt?.toISOString() ?? null,
     isArchived: row.isArchived,
+    probabilityBasisPoints: row.probabilityBasisPoints,
+    probabilityCalculatedAt: row.probabilityCalculatedAt?.toISOString() ?? null,
+    probabilityVersion: row.probabilityVersion,
+    probabilitySampleSize: row.probabilitySampleSize,
   } as Deal;
 }
 

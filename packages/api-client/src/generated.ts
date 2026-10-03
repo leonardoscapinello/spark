@@ -2446,6 +2446,21 @@ export type EditDealResponseDtoDeal = {
   updatedAt: string;
   deletedAt: string | null;
   isArchived?: boolean;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     * @nullable
+     */
+  probabilityBasisPoints?: number | null;
+  probabilityCalculatedAt?: string | null;
+  /** @nullable */
+  probabilityVersion?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  probabilitySampleSize?: number | null;
 };
 
 export interface EditDealResponseDto {
@@ -2581,6 +2596,21 @@ export type CreateDealResponseDtoDeal = {
   updatedAt: string;
   deletedAt: string | null;
   isArchived?: boolean;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     * @nullable
+     */
+  probabilityBasisPoints?: number | null;
+  probabilityCalculatedAt?: string | null;
+  /** @nullable */
+  probabilityVersion?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  probabilitySampleSize?: number | null;
 };
 
 export interface CreateDealResponseDto {
@@ -2663,6 +2693,21 @@ export type MoveDealResponseDtoDeal = {
   updatedAt: string;
   deletedAt: string | null;
   isArchived?: boolean;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     * @nullable
+     */
+  probabilityBasisPoints?: number | null;
+  probabilityCalculatedAt?: string | null;
+  /** @nullable */
+  probabilityVersion?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  probabilitySampleSize?: number | null;
 };
 
 export interface MoveDealResponseDto {
@@ -2755,6 +2800,21 @@ export type CloseDealResponseDtoDeal = {
   updatedAt: string;
   deletedAt: string | null;
   isArchived?: boolean;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     * @nullable
+     */
+  probabilityBasisPoints?: number | null;
+  probabilityCalculatedAt?: string | null;
+  /** @nullable */
+  probabilityVersion?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  probabilitySampleSize?: number | null;
 };
 
 export interface CloseDealResponseDto {
@@ -2830,6 +2890,21 @@ export type ReopenDealResponseDtoDeal = {
   updatedAt: string;
   deletedAt: string | null;
   isArchived?: boolean;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     * @nullable
+     */
+  probabilityBasisPoints?: number | null;
+  probabilityCalculatedAt?: string | null;
+  /** @nullable */
+  probabilityVersion?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  probabilitySampleSize?: number | null;
 };
 
 export interface ReopenDealResponseDto {

@@ -925,6 +925,10 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         </div>}
       />}
 
+    {isOpen && <Signal tone="info">{deal.probabilityBasisPoints == null
+      ? "Probabilidade de fechamento aguardando análise."
+      : `Chance estimada de fechamento: ${Math.round(deal.probabilityBasisPoints / 100)}% · modelo inicial, não calibrado · ${deal.probabilitySampleSize ?? 0} negócios encerrados no funil.`}</Signal>}
+
     {!embedded && pipelineStages.length > 0 && <StageProgress
       stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
       currentId={deal.stageId}

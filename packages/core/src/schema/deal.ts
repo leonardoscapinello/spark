@@ -35,6 +35,10 @@ export const DealSchema = z.object({
   updatedAt: zServerTimestamp,
   deletedAt: zServerTimestamp.nullable(),
   isArchived: z.boolean().default(false),
+  probabilityBasisPoints: z.number().int().min(0).max(10000).nullable().optional(),
+  probabilityCalculatedAt: zServerTimestamp.nullable().optional(),
+  probabilityVersion: z.string().nullable().optional(),
+  probabilitySampleSize: z.number().int().nonnegative().nullable().optional(),
 });
 
 export type Deal = z.infer<typeof DealSchema>;
@@ -42,6 +46,10 @@ export type Deal = z.infer<typeof DealSchema>;
 // orgId never comes from the client (docs/adr/0026); id does — optimistic
 // writes need the final key before the server responds (docs/adr/0030).
 export const CreateDealInputSchema = DealSchema.omit({
+  probabilityBasisPoints: true,
+  probabilityCalculatedAt: true,
+  probabilityVersion: true,
+  probabilitySampleSize: true,
   orgId: true,
   createdAt: true,
   updatedAt: true,

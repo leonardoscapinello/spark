@@ -1,3 +1,4 @@
+import { startOpportunityWorker } from "./intelligence/opportunity-worker.js";
 import { createScoreWorker } from "./scoring/score-worker.js";
 import { Worker, type ConnectionOptions, type Job } from "bullmq";
 import { and, desc, eq } from "drizzle-orm";
@@ -112,3 +113,5 @@ function redisConnection(value: string): ConnectionOptions { const url = new URL
 if (process.env.NODE_ENV !== "test" && process.env.REDIS_URL && process.env.DATABASE_URL) createAutomationWorker();
 
 if (process.env.NODE_ENV !== "test" && process.env.SCORING_ENABLED === "true" && process.env.REDIS_URL && process.env.DATABASE_URL) createScoreWorker(process.env.DATABASE_URL, redisConnection(process.env.REDIS_URL));
+
+if (process.env.NODE_ENV !== "test" && process.env.OPPORTUNITY_INTELLIGENCE_ENABLED === "true" && process.env.DATABASE_URL) startOpportunityWorker(process.env.DATABASE_URL);

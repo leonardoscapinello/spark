@@ -9458,7 +9458,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:26:01.369Z",
+                "default": "2026-10-03T23:44:05.293Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9527,6 +9527,36 @@
               "isArchived": {
                 "default": false,
                 "type": "boolean"
+              },
+              "probabilityBasisPoints": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000,
+                "nullable": true
+              },
+              "probabilityCalculatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              },
+              "probabilityVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "probabilitySampleSize": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "nullable": true
               }
             },
             "required": [
@@ -9727,7 +9757,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:26:01.372Z",
+                "default": "2026-10-03T23:44:05.296Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9796,6 +9826,36 @@
               "isArchived": {
                 "default": false,
                 "type": "boolean"
+              },
+              "probabilityBasisPoints": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000,
+                "nullable": true
+              },
+              "probabilityCalculatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              },
+              "probabilityVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "probabilitySampleSize": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "nullable": true
               }
             },
             "required": [
@@ -9918,7 +9978,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:26:01.373Z",
+                "default": "2026-10-03T23:44:05.297Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9987,6 +10047,36 @@
               "isArchived": {
                 "default": false,
                 "type": "boolean"
+              },
+              "probabilityBasisPoints": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000,
+                "nullable": true
+              },
+              "probabilityCalculatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              },
+              "probabilityVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "probabilitySampleSize": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "nullable": true
               }
             },
             "required": [
@@ -10113,7 +10203,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:26:01.374Z",
+                "default": "2026-10-03T23:44:05.299Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10182,6 +10272,36 @@
               "isArchived": {
                 "default": false,
                 "type": "boolean"
+              },
+              "probabilityBasisPoints": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000,
+                "nullable": true
+              },
+              "probabilityCalculatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              },
+              "probabilityVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "probabilitySampleSize": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "nullable": true
               }
             },
             "required": [
@@ -10288,7 +10408,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:26:01.378Z",
+                "default": "2026-10-03T23:44:05.300Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10357,6 +10477,36 @@
               "isArchived": {
                 "default": false,
                 "type": "boolean"
+              },
+              "probabilityBasisPoints": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000,
+                "nullable": true
+              },
+              "probabilityCalculatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "nullable": true
+              },
+              "probabilityVersion": {
+                "type": "string",
+                "nullable": true
+              },
+              "probabilitySampleSize": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "nullable": true
               }
             },
             "required": [

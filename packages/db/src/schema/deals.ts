@@ -1,4 +1,4 @@
-import { bigint, boolean, check, index, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, integer, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -38,6 +38,10 @@ export const deals = pgTable(
     status: text("status").notNull().default("open"),
     expectedCloseDate: timestamp("expected_close_date", { withTimezone: true }),
     lossReason: text("loss_reason"),
+    probabilityBasisPoints: integer("probability_basis_points"),
+    probabilityCalculatedAt: timestamp("probability_calculated_at", { withTimezone: true }),
+    probabilityVersion: text("probability_version"),
+    probabilitySampleSize: integer("probability_sample_size"),
     stageEnteredAt: timestamp("stage_entered_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

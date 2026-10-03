@@ -311,6 +311,7 @@ export default function Deals() {
     const owner = deal.ownerId ? users.find((user) => user.id === deal.ownerId) : undefined;
     const statusLabel = deal.isArchived ? `Arquivado · ${deal.status === "won" ? "Ganho" : deal.status === "lost" ? "Perdido" : "Em aberto"}` : deal.status === "won" ? "Ganho" : "Perdido";
     const chips = [
+      ...(isOpen ? [<Chip key="probability" size="sm" title={`Estimativa inicial, não calibrada. ${deal.probabilitySampleSize ?? 0} negócios encerrados no funil. ${deal.probabilityCalculatedAt ? `Calculada em ${new Date(deal.probabilityCalculatedAt).toLocaleString("pt-BR")}.` : "Aguardando processamento."}`}>{deal.probabilityBasisPoints == null ? "Chance em análise" : `${Math.round(deal.probabilityBasisPoints / 100)}% · estimativa`}</Chip>] : []),
       ...(isOpen ? [] : [<Chip key="status" size="sm" dot tone={deal.isArchived ? "neutral" : deal.status === "won" ? "success" : "danger"}>{statusLabel}</Chip>]),
       ...(tagsByDeal.get(deal.id) ?? []).map((tag) => <CrmLabel key={tag.id} size="sm" color={tag.color}>{tag.name}</CrmLabel>),
     ];
