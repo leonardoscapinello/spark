@@ -15,7 +15,6 @@ export default function AdminService() {
   const config = useServiceConfiguration();
   const [draft, setDraft] = useState<SaveServiceConfiguration | null>(null);
   const [query, setQuery] = useState("");
-  const [parentId, setParentId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [simulationCategory, setSimulationCategory] = useState<string | null>(null);
   const [simulationPriority, setSimulationPriority] = useState<string | null>(null);
@@ -24,22 +23,27 @@ export default function AdminService() {
   const title = TITLES[section] ?? "Atendimento";
   const namedBase = { id: crypto.randomUUID(), name: "", sortOrder: 0, archived: false };
   function create() {
-    if (section === "catalog") { const categoryParent = path.length >= 3 ? path[1]?.id ?? null : parentId; setDraft({ ...namedBase, kind: "category", parentId: categoryParent, sortOrder: Math.max(-1, ...config.categories.filter(c => c.parentId === categoryParent).map(c => c.sortOrder)) + 1 }); }
+    if (section === "catalog") setDraft({ ...namedBase, kind: "category", parentId: null, sortOrder: Math.max(-1, ...config.categories.filter(c => c.parentId === null).map(c => c.sortOrder)) + 1 });
     if (section === "statuses") setDraft({ ...namedBase, kind: "status", color: "neutral", operationalType: "active", pauseFirstResponse: false, pauseTotal: false, resumeOnInbound: false, budgetMinutes: null });
     if (section === "priorities") setDraft({ ...namedBase, kind: "level", levelKind: "impact", description: "", color: "neutral" });
     if (section === "sla") setDraft({ ...namedBase, kind: "policy", categoryId: null, priorityId: null, firstResponseMinutes: 60, totalMinutes: 480, warningPercent: 80 });
   }
   const search = query.trim().toLocaleLowerCase("pt-BR");
   const visible = <T extends { name: string; archived: boolean }>(rows: readonly T[]) => rows.filter(row => (showArchived || !row.archived) && row.name.toLocaleLowerCase("pt-BR").includes(search));
-  const path = serviceCategoryPath(parentId, config.categories);
   const chosenPolicy = selectServiceSla(simulationCategory, simulationPriority, config);
   const nameFor = (id: string | null, rows: readonly { id: string; name: string }[], empty = "Todas") => rows.find(row => row.id === id)?.name ?? empty;
   const edit = (input: unknown) => setDraft(SaveServiceConfigurationSchema.parse(input));
-  const categoryRows = visible(config.categories.filter(row => search ? true : row.parentId === parentId));
+  const categoryPaths = new Map(config.categories.map(row => [row.id, serviceCategoryPath(row.id, config.categories)]));
+  const categoryRows = config.categories.filter(row => (showArchived || !row.archived) && (!search || categoryPaths.get(row.id)?.some(c => c.name.toLocaleLowerCase("pt-BR").includes(search)))).sort((a,b) => {
+    const left = categoryPaths.get(a.id) ?? []; const right = categoryPaths.get(b.id) ?? [];
+    for (let i = 0; i < Math.min(left.length, right.length); i++) {
+      const l = left[i]; const r = right[i];
+      if (l && r && l.id !== r.id) return l.sortOrder-r.sortOrder || l.name.localeCompare(r.name, "pt-BR") || l.id.localeCompare(r.id);
+    }
+    return left.length-right.length;
+  });
   const categoryColumns: TableColumn<(typeof config.categories)[number]>[] = [
-    { id: "name", label: "Categoria", cell: row => <Button variant="ghost" onClick={() => setParentId(row.id)}>{row.name}</Button> },
-    { id: "path", label: "Caminho", cell: row => serviceCategoryPath(row.id, config.categories).map(item => item.name).join(" → ") },
-    { id: "children", label: "Subcategorias", cell: row => config.categories.filter(c => c.parentId === row.id && !c.archived).length },
+    ...[0,1,2].map(depth => ({ id: `n${depth+1}`, label: `${depth+1}º nível`, cell: (row: (typeof config.categories)[number]) => categoryPaths.get(row.id)?.[depth]?.name ?? "—" })),
     { id: "state", label: "Estado", cell: row => row.archived ? "Desabilitada" : "Habilitada" },
   ];
   const statusColumns: TableColumn<(typeof config.statuses)[number]>[] = [
@@ -52,7 +56,7 @@ export default function AdminService() {
   const levelColumns: TableColumn<(typeof config.levels)[number]>[] = [{ id: "name", label: "Nome", cell: row => row.name },{ id: "kind", label: "Dimensão", cell: row => LEVEL_LABELS[row.kind] },{ id: "criteria", label: "Critérios de classificação", cell: row => row.description || "Critérios ainda não definidos" }];
   const policyColumns: TableColumn<(typeof config.policies)[number]>[] = [
     { id: "name", label: "Política", cell: row => row.name },
-    { id: "category", label: "Categoria", cell: row => row.categoryId ? serviceCategoryPath(row.categoryId, config.categories).map(c => c.name).join(" → ") : "Geral" },
+    ...[0,1,2].map(depth => ({ id: `n${depth+1}`, label: `${depth+1}º nível`, cell: (row: (typeof config.policies)[number]) => row.categoryId ? categoryPaths.get(row.categoryId)?.[depth]?.name ?? "Todas" : depth === 0 ? "Geral" : "Todas" })),
     { id: "priority", label: "Prioridade", cell: row => nameFor(row.priorityId, config.levels) },
     { id: "first", label: "Primeira resposta", cell: row => `${row.firstResponseMinutes} min úteis` },
     { id: "total", label: "Atendimento total", cell: row => `${row.totalMinutes} min úteis` },
@@ -69,7 +73,7 @@ export default function AdminService() {
   return <PageFrame className={styles.page}>
     <PageHeader eyebrow="Atendimento" title={title} description={section === "catalog" ? "Organize os serviços comerciais e de suporte em até três níveis." : section === "sla" ? "Prazos em tempo útil. A categoria mais específica vence; dentro dela, a prioridade específica tem preferência." : section === "matrix" ? "Cada combinação de impacto e urgência determina uma prioridade." : "Cadastros configuráveis para os processos da sua equipe."} actions={section !== "matrix" ? <Button onClick={create}>Criar {section === "catalog" ? "categoria" : section === "statuses" ? "status" : section === "sla" ? "política" : "nível"}</Button> : undefined} />
     {section !== "matrix" && <CollectionToolbar search={<SearchField label="Pesquisar configurações" value={query} onValueChange={setQuery} />} filters={<Checkbox checked={showArchived} onCheckedChange={setShowArchived}>Mostrar desabilitados</Checkbox>} />}
-    {section === "catalog" && <><div className={styles.breadcrumb}><Button variant="ghost" onClick={() => setParentId(null)}>Catálogo</Button>{path.map(c => <Button key={c.id} variant="ghost" onClick={() => setParentId(c.id)}>{c.name}</Button>)}</div><DataTable label="Catálogo de serviços" rows={categoryRows} columns={categoryColumns} rowKey={row => row.id} state={config.isLoading ? "loading" : "ready"} emptyText="Nenhuma categoria neste nível." actions={row => <Button size="sm" variant="ghost" onClick={() => edit({ ...row, kind: "category" })}>Editar</Button>} /></>}
+    {section === "catalog" && <DataTable label="Catálogo de serviços" rows={categoryRows} columns={categoryColumns} rowKey={row => row.id} state={config.isLoading ? "loading" : "ready"} emptyText="Nenhuma categoria encontrada." actions={row => <Button size="sm" variant="ghost" aria-label={`Editar ${row.name}`} onClick={() => edit({ ...row, kind: "category" })}>Editar</Button>} />}
     {section === "statuses" && <DataTable label="Status de atendimento" rows={visible(config.statuses)} columns={statusColumns} rowKey={row => row.id} emptyText="Crie os status usados pela sua equipe." actions={row => <Button size="sm" variant="ghost" onClick={() => edit({ ...row, kind: "status" })}>Editar</Button>} />}
     {section === "priorities" && <DataTable label="Impactos, urgências e prioridades" rows={visible(config.levels)} columns={levelColumns} rowKey={row => row.id} emptyText="Cadastre os níveis de impacto, urgência e prioridade para montar a matriz." actions={row => <Button size="sm" variant="ghost" onClick={() => edit({ ...row, kind: "level", levelKind: row.kind })}>Editar</Button>} />}
     {section === "matrix" && <>{matrixError && <Alert tone="danger" title="Falha ao salvar">{matrixError}</Alert>}<DataTable label="Matriz de prioridade" rows={impacts} columns={matrixColumns} rowKey={row => row.id} emptyText="Cadastre impactos, urgências e prioridades antes de preencher a matriz." /><Text tone="secondary">{!impacts.length || !urgencies.length || !priorities.length ? "Cadastros necessários ainda não preenchidos." : missingPairs.length ? `${missingPairs.length} combinações sem prioridade. Elas não recebem prioridade automaticamente.` : "Todas as combinações estão configuradas."}</Text><Alert tone="info" title="Como classificar">Impacto representa a consequência para o negócio. Urgência representa quanto tempo a demanda pode esperar com segurança. Selecione ambos no atendimento para calcular a prioridade. Os prazos são definidos nas políticas de SLA.</Alert><DataTable label="Critérios de classificação" rows={config.levels.filter(l => !l.archived)} columns={levelColumns} rowKey={row => row.id} emptyText="Cadastre os critérios dos níveis." actions={row => <Button size="sm" variant="ghost" onClick={() => edit({ ...row, kind: "level", levelKind: row.kind })}>Editar critérios</Button>} /></>}
