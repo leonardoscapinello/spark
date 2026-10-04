@@ -2,7 +2,7 @@
  * horizontal. Coluna: cavada (Surface), padding 12, 8 entre cartões. Cartão:
  * folha pousada (Surface) de raio 24. Fantasma: folha segurada que segue o
  * ponteiro. Destino: espaço tracejado de 1,5px em --bd2 com --acs. */
-.board { display: flex; flex: 1; gap: var(--space-3); min-height: 0; padding: var(--space-1) 2px var(--space-3); overflow-x: auto; user-select: none; }
+.board { display: flex; flex: 1; gap: var(--space-3); min-height: 0; padding: var(--space-1) 2px var(--space-3); overflow-x: auto; overflow-y: hidden; user-select: none; }
 
 .column {
   position: relative;
@@ -13,6 +13,7 @@
   gap: var(--space-2);
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
   padding: var(--space-3);
 }
 
@@ -20,15 +21,15 @@
 .column::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: transparent; pointer-events: none; transition: background-color var(--t-base) var(--ease); }
 .column[data-over]::before { background-color: var(--acs); }
 
-.head { position: relative; display: flex; align-items: center; gap: var(--space-2); min-height: var(--h-sm); padding: 6px var(--space-2) var(--space-1); }
+.head { flex-shrink: 0; position: relative; display: flex; align-items: center; gap: var(--space-2); min-height: var(--h-sm); padding: 6px var(--space-2) var(--space-1); }
 .dot { flex: none; width: 8px; height: 8px; border-radius: var(--r-pill); background: var(--kanban-dot, var(--tx3)); }
 .title { display: flex; flex: 1; align-items: center; min-width: 0; overflow: hidden; color: var(--tx); font-size: var(--fs-corpo); font-weight: var(--fw-500); text-overflow: ellipsis; white-space: nowrap; }
 .count { display: flex; flex: none; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: var(--r-pill); background: var(--sf3); box-shadow: var(--sh1); color: var(--tx2); font-family: var(--mono); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
-.total { position: relative; padding: 0 var(--space-2); margin-top: calc(-1 * var(--space-2)); color: var(--tx3); font-family: var(--mono); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
+.total { flex-shrink: 0; position: relative; padding: 0 var(--space-2); margin-top: calc(-1 * var(--space-2)); color: var(--tx3); font-family: var(--mono); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
 
 /* A lista rola por dentro; a folga de 2px (e 6px embaixo) deixa a sombra e o
  * cartão erguido no hover caberem sem serem cortados pela rolagem. */
-.cards { position: relative; display: flex; flex-direction: column; gap: var(--space-2); min-height: var(--h-lg); margin: -2px -2px -6px; padding: 2px 2px 6px; overflow-y: auto; }
+.cards { position: relative; display: flex; flex-direction: column; gap: var(--space-2); flex: 1; min-height: 0; overscroll-behavior-y: contain; margin: -2px -2px -6px; padding: 2px 2px 6px; overflow-y: auto; }
 
 .card {
   position: relative;

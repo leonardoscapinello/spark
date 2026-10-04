@@ -15,14 +15,15 @@ export function AppShell({ sidebar = "visible", children, className, ...props }:
  * alto e não animam; a tela (`children`) entra subindo a cada troca.
  * `busy` mostra o traço de navegação até a próxima tela chegar.
  */
-export function AppContent({ surface = "panel", busy = false, tabs, notice, children, className, ...props }: Omit<ComponentProps<"main">, "children"> & {
+export function AppContent({ surface = "panel", scroll = "page", busy = false, tabs, notice, children, className, ...props }: Omit<ComponentProps<"main">, "children"> & {
   surface?: "panel" | "workspace" | "record" | undefined;
+  scroll?: "page" | "contained" | undefined;
   busy?: boolean | undefined;
   tabs?: ReactNode;
   notice?: ReactNode;
   children: ReactNode;
 }) {
-  return <main {...props} data-surface={surface} aria-busy={busy || undefined} className={[styles.content, className].filter(Boolean).join(" ")}>
+  return <main {...props} data-surface={surface} data-scroll={scroll} aria-busy={busy || undefined} className={[styles.content, className].filter(Boolean).join(" ")}>
     {tabs}
     {notice && <div className={styles.notice}>{notice}</div>}
     <div className={styles.body}>{children}</div>

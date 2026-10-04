@@ -71,3 +71,8 @@
 @media (prefers-reduced-motion: reduce) {
   .root { transition: none; }
 }
+
+/* Quadros ocupam só o espaço restante abaixo das abas e avisos. */
+.content[data-scroll="contained"] { display: flex; flex-direction: column; overflow: hidden; }
+.content[data-scroll="contained"] > :not(.body) { flex-shrink: 0; }
+.content[data-scroll="contained"] > .body { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }

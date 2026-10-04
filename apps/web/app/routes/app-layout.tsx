@@ -346,6 +346,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         </>}>{activeSecondaryItem.label}</MenuButton>
       </Toolbar></nav>}
       <AppContent
+        scroll={location.pathname === "/deals" ? "contained" : "page"}
         surface={location.pathname === "/inbox" ? "workspace" : /^\/deals\/[^/]+$/.test(location.pathname) ? "record" : "panel"}
         busy={Boolean(requestedPath)}
         tabs={topNavigation.length > 0 ? <LinkTabs placement="sheet" label={`Áreas de ${current.title}`} items={topNavigation.map((item) => ({
