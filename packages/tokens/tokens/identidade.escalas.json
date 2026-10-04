@@ -791,19 +791,19 @@
     },
     "mask1": {
       "$type": "string",
-      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, #000 0%, transparent 35%)"
+      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 0%, #000 35%)"
     },
     "mask2": {
       "$type": "string",
-      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, #000 10%, transparent 55%)"
+      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 10%, #000 55%)"
     },
     "mask3": {
       "$type": "string",
-      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, #000 25%, transparent 75%)"
+      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 25%, #000 75%)"
     },
     "mask4": {
       "$type": "string",
-      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, #000 40%, transparent 100%)"
+      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 40%, #000 100%)"
     },
     "veilCenter": {
       "$type": "string",
