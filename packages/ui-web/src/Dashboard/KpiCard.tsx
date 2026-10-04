@@ -14,6 +14,7 @@ export interface KpiDelta {
 
 export interface KpiCardProps {
   label: string;
+  compact?: boolean;
   value: string | number;
   /** Mantém o valor visível até a superfície que o encobre terminar de fechar. */
   animationPaused?: boolean;
@@ -34,7 +35,7 @@ export interface KpiCardProps {
  * (300, 32, −0,04em) e rola como odômetro quando muda. Só ergue no hover
  * quando é clicável.
  */
-export function KpiCard({ label, value, animationPaused = false, delta, hint, trend, state = "ready", onRetry, render }: KpiCardProps) {
+export function KpiCard({ label, value, animationPaused = false, compact = false, delta, hint, trend, state = "ready", onRetry, render }: KpiCardProps) {
   const content = <>
     <span className={s.head}>
       <span className={s.label}>{label}</span>
@@ -52,7 +53,7 @@ export function KpiCard({ label, value, animationPaused = false, delta, hint, tr
     const element = render as ReactElement<{ className?: string; children?: ReactNode; "data-interactive"?: string }>;
     return cloneElement(element, { className: [s.root, element.props.className].filter(Boolean).join(" "), "data-interactive": "", children: content });
   }
-  return <article className={s.root} aria-label={label}>{content}</article>;
+  return <article data-compact={compact || undefined} className={s.root} aria-label={label}>{content}</article>;
 }
 
 /** Pontos com folga de 14% em cima e 6% embaixo, suavizados (Catmull-Rom → cúbica, fator 1/6). */

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { tagsControllerSave } from "@spark/api-client";
 import { SaveTagInputSchema } from "@spark/core";
-import { ActionModal, Button, CRM_COLORS, CrmLabel, Field, Input, Label, Select, CrmSection, Icon, TagPicker, notify } from "@spark/ui-web";
+import { ActionModal, Button, CRM_COLORS, CrmLabel, Field, Input, Label, Select, CrmSection, Icon, TagPicker, InlineField, notify } from "@spark/ui-web";
 import { useTagCatalog } from "../lib/tags.client";
 import { getSession } from "../lib/auth.client";
 export function DealTags({ value, onChange, disabled = false }: { value: string[]; onChange: (value: string[]) => void; disabled?: boolean }) {
@@ -19,8 +19,9 @@ export function DealTags({ value, onChange, disabled = false }: { value: string[
       notify({ title: "Não foi possível criar a etiqueta", tone: "error" });
     }
   }
-  return <CrmSection title="Etiquetas" action={!disabled && getSession()?.capabilities.includes("settings:manage") ? <Button size="sm" variant="ghost" icon={<Icon name="plus" />} onClick={() => setOpen(true)}>Gerenciar</Button> : undefined}>
-    <TagPicker label="Etiquetas do negócio" options={options} value={value} onValueChange={onChange} onCreate={!disabled && getSession()?.capabilities.includes("settings:manage") ? createFromQuery : undefined} disabled={disabled} />
+  const manageAction = !disabled && getSession()?.capabilities.includes("settings:manage") ? <Button size="sm" variant="ghost" icon={<Icon name="plus" />} onClick={() => setOpen(true)}>Gerenciar</Button> : undefined;
+  return <>
+    <InlineField label="Etiquetas" value={<TagPicker label="Etiquetas do negócio" options={options} value={value} onValueChange={onChange} onCreate={!disabled && getSession()?.capabilities.includes("settings:manage") ? createFromQuery : undefined} disabled={disabled} />} hint={manageAction} />
     <ActionModal open={open} onOpenChange={setOpen} title="Criar ou atualizar etiqueta" confirmLabel="Salvar etiqueta" onConfirm={async () => {
       const input = SaveTagInputSchema.parse({ name, color });
       await tagsControllerSave(input);
@@ -33,5 +34,5 @@ export function DealTags({ value, onChange, disabled = false }: { value: string[
         <CrmLabel color={color}>{name || "Prévia da etiqueta"}</CrmLabel>
       </CrmSection>
     </ActionModal>
-  </CrmSection>;
+  </>;
 }

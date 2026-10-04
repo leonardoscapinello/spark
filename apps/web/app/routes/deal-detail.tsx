@@ -851,9 +851,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
   const statusChip = deal.status === "open" ? <Chip>{statusLabel(deal.status)}</Chip> : <Chip dot tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Chip>;
   /* Valor do negócio como KPI: o número rola (odômetro) quando os itens mudam. */
-  const valueContent = <KpiCard animationPaused={itemModalOpen || itemModalClosing} label="Valor do negócio" value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={<><span className={styles.valueHint}>{statusChip}<Button variant="ghost" size="sm" trailingIcon={<Icon name="right" />} onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores</Button></span>{isOpen && <Signal tone="info">{deal.probabilityBasisPoints == null
-      ? "Probabilidade de fechamento aguardando análise."
-      : `Chance estimada de fechamento: ${Math.round(deal.probabilityBasisPoints / 100)}% · modelo inicial, não calibrado · ${deal.probabilitySampleSize ?? 0} negócios encerrados no funil.`}</Signal>}</>} />;
+  const valueContent = <KpiCard compact animationPaused={itemModalOpen || itemModalClosing} label="Valor do negócio" value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={isOpen && deal.probabilityBasisPoints != null ? <Text size="legenda" tone="secondary" title={`Estimativa inicial, não calibrada. Base: ${deal.probabilitySampleSize ?? 0} negócios encerrados.`}>{Math.round(deal.probabilityBasisPoints / 100)}% de chance estimada</Text> : undefined} />;
   const moveActions = <DealStageActions
     closed={!isOpen}
     destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && (target.id === stage.id || canMoveBetweenStages(stage, target, transitions))).map((target) => ({ id: target.id, label: target.name, color: target.color, current: target.id === stage.id, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []}
@@ -913,6 +911,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
             <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
           </div>
           <div className={styles.headerGroup}>
+            {valueContent}
             {isOpen && canMove && <>
               <Button variant="secondary" tone="success" icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
               <Button variant="secondary" tone="danger" icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>
@@ -947,7 +946,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       </div>
       <div className={styles.quickPhase}><div className={styles.headerGroup}>{quickActions}</div>{composerContent}{quickPanel === "commercial" ? <Surface className={styles.block}>{commercialPanel}</Surface> : <Tabs label="Atividades e histórico do negócio" defaultValue={canReadActivities ? "atividade" : "historico"} items={activityHistoryTabs} />}</div>
       <Surface as="aside" className={styles.quickActions}>{moveActions}</Surface>
-    </div> : <RecordWorkspace context={<>{valueContent}{summaryContent}<Surface className={styles.sideBlock}>{tagsContent}</Surface></>} actions={quickActions}>
+    </div> : <RecordWorkspace context={<>{tagsContent}{summaryContent}</>} actions={quickActions}>
       {composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={!canReadActivities && pageTab === "atividade" ? "historico" : pageTab} onValueChange={setPageTab} items={[
         ...activityHistoryTabs,
         { value: "comercial", label: "Itens e valores", content: <Surface className={styles.block}><SectionTitle level="card" description="Produtos, serviços e composição do valor negociado.">Itens do negócio</SectionTitle>{productsContent}</Surface> },
