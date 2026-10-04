@@ -25,3 +25,6 @@
 }
 
 .pagina > header, .pagina > header + div { flex-shrink: 0; }
+
+.listView { flex: 1; min-height: 0; min-width: 0; overflow: auto; }
+.listPagination { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); padding-block: var(--space-3); }

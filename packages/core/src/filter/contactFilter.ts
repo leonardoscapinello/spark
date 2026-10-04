@@ -95,7 +95,10 @@ function compare(value: unknown, target: string): number | null {
 }
 
 export function contactMatchesFilter(contact: Contact, filter: ContactFilter): boolean {
-  const value = fieldValue(contact, filter.field);
+  return valueMatchesFilter(fieldValue(contact, filter.field), filter);
+}
+
+export function valueMatchesFilter(value: unknown, filter: Pick<ContactFilter, "operator" | "value">): boolean {
   if (filter.operator === "is_empty") return isEmpty(value);
   if (filter.operator === "is_not_empty") return !isEmpty(value);
 

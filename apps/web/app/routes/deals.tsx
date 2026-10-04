@@ -1,9 +1,9 @@
 import { type FormEvent, Fragment, lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
+import { decodeDealFilters, dealMatchesFilterSet, type DealFilterField, type DealFilterSet, pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, type StagesCollection } from "@spark/data";
-import { ActionModal, CrmWorkspace, CrmSection, CrmLabel, Chip, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
+import { FilterBar, SearchField, SegmentedControl, DataTable, type FilterFieldDefinition, type TableColumn, ActionModal, CrmWorkspace, CrmSection, CrmLabel, Chip, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -38,7 +38,18 @@ export default function Deals() {
   const contactsCollection = getContactsCollection();
   const usersCollection = getUsersCollection();
   const companiesCollection = getCompaniesCollection();
-  const [selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
+  const selectedPipelineId = searchParams.get("pipeline");
+  function updateQuery(key: string, value: string | null) {
+    setSearchParams(previous => { const next = new URLSearchParams(previous); if (value) next.set(key,value); else next.delete(key); return next; }, { replace: true });
+  }
+  const setSelectedPipelineId = (id: string | null) => updateQuery("pipeline",id);
+  const filters = useMemo(() => decodeDealFilters(searchParams.get("filters")), [searchParams]);
+  const search = searchParams.get("q") ?? "";
+  const listView = searchParams.get("view") === "list";
+  const [listPage, setListPage] = useState(0);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  function changeFilters(next: DealFilterSet) { updateQuery("filters", next.groups.some(group => group.conditions.length) ? JSON.stringify(next) : null); }
+
   const requestedStatus = searchParams.get("status");
   const showArchived = requestedStatus === "archived";
   const statusFilter: DealStatus | "all" = requestedStatus === "open" || requestedStatus === "won" || requestedStatus === "lost" ? requestedStatus : "all";
@@ -115,16 +126,38 @@ export default function Deals() {
   const canWrite = session?.capabilities.includes("deals:write") ?? false;
   const canMove = session?.capabilities.includes("deals:move") ?? false;
   const canManagePipeline = session?.capabilities.includes("pipelines:manage") ?? false;
+  const filteredDeals = useMemo(() => deals.filter(deal => deal.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")) && dealMatchesFilterSet({ ...deal, tags: (tagsByDeal.get(deal.id) ?? []).map(tag => tag.name) }, filters)), [deals, search, filters, tagsByDeal]);
+  useEffect(() => { setListPage(0); }, [searchParams]);
+  const filterFields: FilterFieldDefinition<DealFilterField>[] = [
+    { id: "name", label: "Nome do negócio", type: "text" },
+    { id: "amount", label: "Valor (R$)", type: "number" },
+    { id: "probabilityBasisPoints", label: "Chance de fechamento (%)", type: "number" },
+    { id: "stageId", label: "Etapa", type: "select", options: stages.map(stage => ({ value: stage.id, label: stage.name })) },
+    { id: "ownerId", label: "Responsável", type: "select", options: users.map(user => ({ value: user.id, label: user.name })) },
+    ...(canReadContacts ? [{ id: "contactId" as const, label: "Pessoa", type: "select" as const, options: contacts.map(contact => ({ value: contact.id, label: contact.name })) }] : []),
+    ...(canReadCompanies ? [{ id: "companyId" as const, label: "Empresa", type: "select" as const, options: companies.map(company => ({ value: company.id, label: company.name })) }] : []),
+    { id: "expectedCloseDate", label: "Fechamento previsto", type: "date" },
+    { id: "createdAt", label: "Data de criação", type: "date" },
+    { id: "tags", label: "Etiqueta", type: "list", options: [...new Set([...tagsByDeal.values()].flatMap(tags => tags.map(tag => tag.name)))].map(name => ({ value: name, label: name })) },
+  ];
+  const listColumns: TableColumn<Deal>[] = [
+    { id: "name", label: "Negócio", alwaysVisible: true, cell: deal => deal.name, sortValue: deal => deal.name },
+    { id: "stage", label: "Etapa", cell: deal => allStages.find(stage => stage.id === deal.stageId)?.name ?? "—" },
+    { id: "amount", label: "Valor", cell: deal => formatBRL(syncedAmount(deal.amount)) },
+    { id: "owner", label: "Responsável", cell: deal => users.find(user => user.id === deal.ownerId)?.name ?? "Sem responsável" },
+    { id: "chance", label: "Chance estimada", cell: deal => deal.probabilityBasisPoints == null ? "Em análise" : `${Math.round(deal.probabilityBasisPoints / 100)}%` },
+    { id: "close", label: "Fechamento previsto", cell: deal => deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "—" },
+  ];
   const dealsByStage = useMemo(() => {
     const grouped = new Map<string, Deal[]>();
-    for (const deal of deals) {
+    for (const deal of filteredDeals) {
       const columnId = dealBoardColumn(deal);
       const stageDeals = grouped.get(columnId) ?? [];
       stageDeals.push(deal);
       grouped.set(columnId, stageDeals);
     }
     return grouped;
-  }, [deals]);
+  }, [filteredDeals]);
 
   useEffect(() => {
     const personId = searchParams.get("createFor");
@@ -336,12 +369,27 @@ export default function Deals() {
 
   return (
     <PageFrame className={styles.pagina}>
-      <PageHeader icon="briefcase" title={mainPipeline.name} actions={<>{canManagePipeline && <Button variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${mainPipeline.name}`} onClick={() => setPipelineEditorOpen(true)} />}{canManagePipeline && <Button variant="secondary" onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</Button>}{canWrite && <Button onClick={() => openDealModal()}>Novo negócio</Button>}</>} />
-      <CollectionToolbar filters={<>
-        <Select appearance="filter" label="Funil" value={mainPipeline?.id ?? null} options={pipelines.map((pipeline) => ({ value: pipeline.id, label: pipeline.name }))} onValueChange={(value) => setSelectedPipelineId(value)} />
-        <Select appearance="filter" label="Situação dos negócios" value={showArchived ? "archived" : statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "archived", label: "Arquivados" }, { value: "all", label: "Todos" }]} onValueChange={(value) => setSearchParams(value ? { status: value } : {})} />
-      </>} count={isLoadingDeals ? "Carregando negócios…" : `${deals.length} ${deals.length === 1 ? "negócio" : "negócios"} · ${formatBRL(sum(deals.map((deal) => syncedAmount(deal.amount))))}`} />
-
+      <PageHeader title={mainPipeline.name} actions={<>
+        <MenuButton variant="secondary" menu={<>
+          {pipelines.map(pipeline => <MenuItem key={pipeline.id} onClick={() => setSelectedPipelineId(pipeline.id)}>{pipeline.name}</MenuItem>)}
+          {canManagePipeline && <><MenuSeparator /><MenuItem icon={<Icon name="pencil" />} onClick={() => setPipelineEditorOpen(true)}>Configurar este funil</MenuItem><MenuItem icon={<Icon name="plus" />} onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</MenuItem></>}
+        </>}>Funis</MenuButton>
+        {canWrite && <Button icon={<Icon name="plus" />} onClick={() => openDealModal()}>Novo negócio</Button>}
+      </>} />
+      <CollectionToolbar
+        search={<SearchField label="Buscar negócios" placeholder="Buscar negócio por nome" value={search} onValueChange={value => updateQuery("q",value)} />}
+        filters={<>
+          <Select appearance="filter" label="Situação dos negócios" value={showArchived ? "archived" : statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "archived", label: "Arquivados" }, { value: "all", label: "Todas as situações" }]} onValueChange={value => updateQuery("status",value)} />
+          <FilterBar fields={filterFields} value={filters} onChange={changeFilters} label="Filtros avançados" />
+          {(filters.groups.length > 0 || search) && <Button variant="ghost" onClick={() => setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete("filters"); next.delete("q"); return next; }, { replace: true })}>Limpar</Button>}
+        </>}
+        count={isLoadingDeals ? "Carregando negócios…" : `${filteredDeals.length} de ${deals.length} negócios · ${formatBRL(sum(filteredDeals.map(deal => syncedAmount(deal.amount))))}`}
+        actions={<SegmentedControl label="Visualização dos negócios" value={listView ? "list" : "board"} options={[{value:"board",label:"Kanban"},{value:"list",label:"Lista"}]} onValueChange={value => updateQuery("view",value)} />}
+      />
+      {listView ? <div className={styles.listView}>
+        <DataTable label="Negócios do funil" rows={filteredDeals.slice(listPage * 50, (listPage + 1) * 50)} columns={listColumns} rowKey={deal => deal.id} rowLabel={deal => deal.name} state={isLoadingDeals ? "loading" : "ready"} hiddenColumnIds={hiddenColumns} onHiddenColumnsChange={setHiddenColumns} onRowOpen={(deal, options) => { if (options.newTab) window.open(`/deals/${deal.id}`, "_blank", "noopener,noreferrer"); else setOpenedDealId(deal.id); }} emptyText="Nenhum negócio corresponde aos filtros." />
+        {filteredDeals.length > 50 && <div className={styles.listPagination}><Button variant="ghost" disabled={listPage === 0} onClick={() => setListPage(page => page - 1)}>Anterior</Button><Text>Página {listPage + 1} de {Math.ceil(filteredDeals.length / 50)}</Text><Button variant="ghost" disabled={(listPage + 1) * 50 >= filteredDeals.length} onClick={() => setListPage(page => page + 1)}>Próxima</Button></div>}
+      </div> :
       <KanbanBoard label={`Quadro do funil ${mainPipeline.name}`}>
         {pipelineBoardColumns(stages).map((stage) => {
           const allStageDeals = dealsByStage.get(stage.id) ?? [];
@@ -417,7 +465,7 @@ export default function Deals() {
             </KanbanColumn>
           );
         })}
-      </KanbanBoard>
+      </KanbanBoard>}
       <KanbanGhost drag={kanban.drag} ghostRef={kanban.ghostRef} origin={kanban.origin}>{draggedDeal && dealCard(draggedDeal, false)}</KanbanGhost>
       {canMove && dragging && <KanbanDropBar label="Soltar o negócio numa ação">
         {(["won", "lost", "archived", "move"] as const).map((action) => {
