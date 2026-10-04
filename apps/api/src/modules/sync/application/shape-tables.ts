@@ -94,6 +94,7 @@ export const SHAPE_TABLES: Readonly<Record<SyncResource, ShapeTableConfig>> = {
   audience_tags: { column: "org_id" },
   campaigns: { column: "org_id" },
   campaign_recipients: { column: "org_id" },
+  custom_field_groups: { column: "org_id" },
   custom_field_definitions: { column: "org_id" },
   custom_field_options: { column: "org_id" },
   custom_field_values: { column: "org_id" },

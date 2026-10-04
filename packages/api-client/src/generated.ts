@@ -1078,6 +1078,185 @@ export interface UpdateContactArchiveDto {
   archived: boolean;
 }
 
+export type SaveGroupDtoEntityType = typeof SaveGroupDtoEntityType[keyof typeof SaveGroupDtoEntityType];
+
+
+export const SaveGroupDtoEntityType = {
+  contact: 'contact',
+  company: 'company',
+  deal: 'deal',
+  conversation: 'conversation',
+  activity: 'activity',
+  user: 'user',
+  campaign: 'campaign',
+  service_cycle: 'service_cycle',
+} as const;
+
+export interface SaveGroupDto {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  entityType: SaveGroupDtoEntityType;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  archived: boolean;
+}
+
+export type GroupResponseDtoGroupEntityType = typeof GroupResponseDtoGroupEntityType[keyof typeof GroupResponseDtoGroupEntityType];
+
+
+export const GroupResponseDtoGroupEntityType = {
+  contact: 'contact',
+  company: 'company',
+  deal: 'deal',
+  conversation: 'conversation',
+  activity: 'activity',
+  user: 'user',
+  campaign: 'campaign',
+  service_cycle: 'service_cycle',
+} as const;
+
+export type GroupResponseDtoGroup = {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  entityType: GroupResponseDtoGroupEntityType;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface GroupResponseDto {
+  group: GroupResponseDtoGroup;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface MetadataDto {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  /**
+     * @nullable
+     * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+     */
+  groupId: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+}
+
+export type FieldResponseDtoFieldEntityType = typeof FieldResponseDtoFieldEntityType[keyof typeof FieldResponseDtoFieldEntityType];
+
+
+export const FieldResponseDtoFieldEntityType = {
+  contact: 'contact',
+  company: 'company',
+  deal: 'deal',
+  conversation: 'conversation',
+  activity: 'activity',
+  user: 'user',
+  campaign: 'campaign',
+  service_cycle: 'service_cycle',
+} as const;
+
+export type FieldResponseDtoFieldType = typeof FieldResponseDtoFieldType[keyof typeof FieldResponseDtoFieldType];
+
+
+export const FieldResponseDtoFieldType = {
+  text: 'text',
+  paragraph: 'paragraph',
+  number: 'number',
+  currency: 'currency',
+  date: 'date',
+  datetime: 'datetime',
+  phone: 'phone',
+  email: 'email',
+  document: 'document',
+  url: 'url',
+  boolean: 'boolean',
+  single_select: 'single_select',
+  multi_select: 'multi_select',
+} as const;
+
+export type FieldResponseDtoField = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  entityType: FieldResponseDtoFieldEntityType;
+  /**
+     * @nullable
+     * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+     */
+  groupId?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  label: string;
+  type: FieldResponseDtoFieldType;
+  required: boolean;
+  options?: string[];
+  /** @minLength 1 */
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+};
+
+export interface FieldResponseDto {
+  field: FieldResponseDtoField;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface FieldValueDto {
+  /** @minLength 1 */
+  fieldId: string;
+  value: string | number | boolean | string[] | null;
+}
+
+export interface ValueResponseDto {
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type CreateCustomFieldDtoEntityType = typeof CreateCustomFieldDtoEntityType[keyof typeof CreateCustomFieldDtoEntityType];
 
 
@@ -1087,6 +1266,9 @@ export const CreateCustomFieldDtoEntityType = {
   deal: 'deal',
   conversation: 'conversation',
   activity: 'activity',
+  user: 'user',
+  campaign: 'campaign',
+  service_cycle: 'service_cycle',
 } as const;
 
 export type CreateCustomFieldDtoType = typeof CreateCustomFieldDtoType[keyof typeof CreateCustomFieldDtoType];
@@ -1113,6 +1295,16 @@ export interface CreateCustomFieldDto {
   id: string;
   entityType: CreateCustomFieldDtoEntityType;
   /**
+     * @nullable
+     * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+     */
+  groupId?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
+  /**
      * @minLength 1
      * @maxLength 120
      */
@@ -1136,6 +1328,9 @@ export const CustomFieldWriteResponseDtoFieldEntityType = {
   deal: 'deal',
   conversation: 'conversation',
   activity: 'activity',
+  user: 'user',
+  campaign: 'campaign',
+  service_cycle: 'service_cycle',
 } as const;
 
 export type CustomFieldWriteResponseDtoFieldType = typeof CustomFieldWriteResponseDtoFieldType[keyof typeof CustomFieldWriteResponseDtoFieldType];
@@ -1163,6 +1358,16 @@ export type CustomFieldWriteResponseDtoField = {
   /** @minLength 1 */
   orgId: string;
   entityType: CustomFieldWriteResponseDtoFieldEntityType;
+  /**
+     * @nullable
+     * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+     */
+  groupId?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
   /** @minLength 1 */
   key: string;
   /** @minLength 1 */
@@ -8579,6 +8784,635 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getContactsControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerSaveGroup = (
+    saveGroupDto: SaveGroupDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<GroupResponseDto>(
+      {url: `/v1/field-administration/groups`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveGroupDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerSaveGroupMutationKey = () => ['fieldAdministrationControllerSaveGroup'] as const;
+
+export const getFieldAdministrationControllerSaveGroupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerSaveGroup>>, TError,FieldAdministrationControllerSaveGroupMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerSaveGroup>>, TError,FieldAdministrationControllerSaveGroupMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerSaveGroupMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerSaveGroup>>, FieldAdministrationControllerSaveGroupMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  fieldAdministrationControllerSaveGroup(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerSaveGroupMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerSaveGroup>>>
+    export type FieldAdministrationControllerSaveGroupMutationBody = SaveGroupDto
+    export type FieldAdministrationControllerSaveGroupMutationError = unknown
+    export type FieldAdministrationControllerSaveGroupMutationVariables = {data: SaveGroupDto}
+
+    export const useFieldAdministrationControllerSaveGroup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerSaveGroup>>, TError,FieldAdministrationControllerSaveGroupMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerSaveGroup>>,
+        TError,
+        FieldAdministrationControllerSaveGroupMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerSaveGroupMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerMetadata = (
+    id: string,
+    metadataDto: MetadataDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<FieldResponseDto>(
+      {url: `/v1/field-administration/fields/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: metadataDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerMetadataMutationKey = () => ['fieldAdministrationControllerMetadata'] as const;
+
+export const getFieldAdministrationControllerMetadataMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerMetadata>>, TError,FieldAdministrationControllerMetadataMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerMetadata>>, TError,FieldAdministrationControllerMetadataMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerMetadataMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerMetadata>>, FieldAdministrationControllerMetadataMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerMetadata(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerMetadataMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerMetadata>>>
+    export type FieldAdministrationControllerMetadataMutationBody = MetadataDto
+    export type FieldAdministrationControllerMetadataMutationError = unknown
+    export type FieldAdministrationControllerMetadataMutationVariables = {id: string;data: MetadataDto}
+
+    export const useFieldAdministrationControllerMetadata = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerMetadata>>, TError,FieldAdministrationControllerMetadataMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerMetadata>>,
+        TError,
+        FieldAdministrationControllerMetadataMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerMetadataMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerWriteContact = (
+    id: string,
+    fieldValueDto: FieldValueDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ValueResponseDto>(
+      {url: `/v1/field-administration/values/contact/${id}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: fieldValueDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerWriteContactMutationKey = () => ['fieldAdministrationControllerWriteContact'] as const;
+
+export const getFieldAdministrationControllerWriteContactMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteContact>>, TError,FieldAdministrationControllerWriteContactMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteContact>>, TError,FieldAdministrationControllerWriteContactMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerWriteContactMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerWriteContact>>, FieldAdministrationControllerWriteContactMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerWriteContact(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerWriteContactMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerWriteContact>>>
+    export type FieldAdministrationControllerWriteContactMutationBody = FieldValueDto
+    export type FieldAdministrationControllerWriteContactMutationError = unknown
+    export type FieldAdministrationControllerWriteContactMutationVariables = {id: string;data: FieldValueDto}
+
+    export const useFieldAdministrationControllerWriteContact = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteContact>>, TError,FieldAdministrationControllerWriteContactMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerWriteContact>>,
+        TError,
+        FieldAdministrationControllerWriteContactMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerWriteContactMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerWriteCompany = (
+    id: string,
+    fieldValueDto: FieldValueDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ValueResponseDto>(
+      {url: `/v1/field-administration/values/company/${id}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: fieldValueDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerWriteCompanyMutationKey = () => ['fieldAdministrationControllerWriteCompany'] as const;
+
+export const getFieldAdministrationControllerWriteCompanyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCompany>>, TError,FieldAdministrationControllerWriteCompanyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCompany>>, TError,FieldAdministrationControllerWriteCompanyMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerWriteCompanyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCompany>>, FieldAdministrationControllerWriteCompanyMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerWriteCompany(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerWriteCompanyMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCompany>>>
+    export type FieldAdministrationControllerWriteCompanyMutationBody = FieldValueDto
+    export type FieldAdministrationControllerWriteCompanyMutationError = unknown
+    export type FieldAdministrationControllerWriteCompanyMutationVariables = {id: string;data: FieldValueDto}
+
+    export const useFieldAdministrationControllerWriteCompany = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCompany>>, TError,FieldAdministrationControllerWriteCompanyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerWriteCompany>>,
+        TError,
+        FieldAdministrationControllerWriteCompanyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerWriteCompanyMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerWriteDeal = (
+    id: string,
+    fieldValueDto: FieldValueDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ValueResponseDto>(
+      {url: `/v1/field-administration/values/deal/${id}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: fieldValueDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerWriteDealMutationKey = () => ['fieldAdministrationControllerWriteDeal'] as const;
+
+export const getFieldAdministrationControllerWriteDealMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteDeal>>, TError,FieldAdministrationControllerWriteDealMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteDeal>>, TError,FieldAdministrationControllerWriteDealMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerWriteDealMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerWriteDeal>>, FieldAdministrationControllerWriteDealMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerWriteDeal(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerWriteDealMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerWriteDeal>>>
+    export type FieldAdministrationControllerWriteDealMutationBody = FieldValueDto
+    export type FieldAdministrationControllerWriteDealMutationError = unknown
+    export type FieldAdministrationControllerWriteDealMutationVariables = {id: string;data: FieldValueDto}
+
+    export const useFieldAdministrationControllerWriteDeal = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteDeal>>, TError,FieldAdministrationControllerWriteDealMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerWriteDeal>>,
+        TError,
+        FieldAdministrationControllerWriteDealMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerWriteDealMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerWriteConversation = (
+    id: string,
+    fieldValueDto: FieldValueDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ValueResponseDto>(
+      {url: `/v1/field-administration/values/conversation/${id}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: fieldValueDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerWriteConversationMutationKey = () => ['fieldAdministrationControllerWriteConversation'] as const;
+
+export const getFieldAdministrationControllerWriteConversationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteConversation>>, TError,FieldAdministrationControllerWriteConversationMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteConversation>>, TError,FieldAdministrationControllerWriteConversationMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerWriteConversationMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerWriteConversation>>, FieldAdministrationControllerWriteConversationMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerWriteConversation(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerWriteConversationMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerWriteConversation>>>
+    export type FieldAdministrationControllerWriteConversationMutationBody = FieldValueDto
+    export type FieldAdministrationControllerWriteConversationMutationError = unknown
+    export type FieldAdministrationControllerWriteConversationMutationVariables = {id: string;data: FieldValueDto}
+
+    export const useFieldAdministrationControllerWriteConversation = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteConversation>>, TError,FieldAdministrationControllerWriteConversationMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerWriteConversation>>,
+        TError,
+        FieldAdministrationControllerWriteConversationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerWriteConversationMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerWriteActivity = (
+    id: string,
+    fieldValueDto: FieldValueDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ValueResponseDto>(
+      {url: `/v1/field-administration/values/activity/${id}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: fieldValueDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerWriteActivityMutationKey = () => ['fieldAdministrationControllerWriteActivity'] as const;
+
+export const getFieldAdministrationControllerWriteActivityMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteActivity>>, TError,FieldAdministrationControllerWriteActivityMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteActivity>>, TError,FieldAdministrationControllerWriteActivityMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerWriteActivityMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerWriteActivity>>, FieldAdministrationControllerWriteActivityMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerWriteActivity(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerWriteActivityMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerWriteActivity>>>
+    export type FieldAdministrationControllerWriteActivityMutationBody = FieldValueDto
+    export type FieldAdministrationControllerWriteActivityMutationError = unknown
+    export type FieldAdministrationControllerWriteActivityMutationVariables = {id: string;data: FieldValueDto}
+
+    export const useFieldAdministrationControllerWriteActivity = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteActivity>>, TError,FieldAdministrationControllerWriteActivityMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerWriteActivity>>,
+        TError,
+        FieldAdministrationControllerWriteActivityMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerWriteActivityMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerWriteUser = (
+    id: string,
+    fieldValueDto: FieldValueDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ValueResponseDto>(
+      {url: `/v1/field-administration/values/user/${id}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: fieldValueDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerWriteUserMutationKey = () => ['fieldAdministrationControllerWriteUser'] as const;
+
+export const getFieldAdministrationControllerWriteUserMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteUser>>, TError,FieldAdministrationControllerWriteUserMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteUser>>, TError,FieldAdministrationControllerWriteUserMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerWriteUserMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerWriteUser>>, FieldAdministrationControllerWriteUserMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerWriteUser(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerWriteUserMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerWriteUser>>>
+    export type FieldAdministrationControllerWriteUserMutationBody = FieldValueDto
+    export type FieldAdministrationControllerWriteUserMutationError = unknown
+    export type FieldAdministrationControllerWriteUserMutationVariables = {id: string;data: FieldValueDto}
+
+    export const useFieldAdministrationControllerWriteUser = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteUser>>, TError,FieldAdministrationControllerWriteUserMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerWriteUser>>,
+        TError,
+        FieldAdministrationControllerWriteUserMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerWriteUserMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerWriteCampaign = (
+    id: string,
+    fieldValueDto: FieldValueDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ValueResponseDto>(
+      {url: `/v1/field-administration/values/campaign/${id}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: fieldValueDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerWriteCampaignMutationKey = () => ['fieldAdministrationControllerWriteCampaign'] as const;
+
+export const getFieldAdministrationControllerWriteCampaignMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCampaign>>, TError,FieldAdministrationControllerWriteCampaignMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCampaign>>, TError,FieldAdministrationControllerWriteCampaignMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerWriteCampaignMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCampaign>>, FieldAdministrationControllerWriteCampaignMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerWriteCampaign(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerWriteCampaignMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCampaign>>>
+    export type FieldAdministrationControllerWriteCampaignMutationBody = FieldValueDto
+    export type FieldAdministrationControllerWriteCampaignMutationError = unknown
+    export type FieldAdministrationControllerWriteCampaignMutationVariables = {id: string;data: FieldValueDto}
+
+    export const useFieldAdministrationControllerWriteCampaign = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCampaign>>, TError,FieldAdministrationControllerWriteCampaignMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerWriteCampaign>>,
+        TError,
+        FieldAdministrationControllerWriteCampaignMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerWriteCampaignMutationOptions(options), queryClient);
+    }
+
+export const fieldAdministrationControllerWriteCycle = (
+    id: string,
+    fieldValueDto: FieldValueDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ValueResponseDto>(
+      {url: `/v1/field-administration/values/service_cycle/${id}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: fieldValueDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getFieldAdministrationControllerWriteCycleMutationKey = () => ['fieldAdministrationControllerWriteCycle'] as const;
+
+export const getFieldAdministrationControllerWriteCycleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCycle>>, TError,FieldAdministrationControllerWriteCycleMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCycle>>, TError,FieldAdministrationControllerWriteCycleMutationVariables, TContext> => {
+
+const mutationKey = getFieldAdministrationControllerWriteCycleMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCycle>>, FieldAdministrationControllerWriteCycleMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  fieldAdministrationControllerWriteCycle(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FieldAdministrationControllerWriteCycleMutationResult = NonNullable<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCycle>>>
+    export type FieldAdministrationControllerWriteCycleMutationBody = FieldValueDto
+    export type FieldAdministrationControllerWriteCycleMutationError = unknown
+    export type FieldAdministrationControllerWriteCycleMutationVariables = {id: string;data: FieldValueDto}
+
+    export const useFieldAdministrationControllerWriteCycle = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fieldAdministrationControllerWriteCycle>>, TError,FieldAdministrationControllerWriteCycleMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fieldAdministrationControllerWriteCycle>>,
+        TError,
+        FieldAdministrationControllerWriteCycleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFieldAdministrationControllerWriteCycleMutationOptions(options), queryClient);
     }
 
 export const settingsControllerCreate = (

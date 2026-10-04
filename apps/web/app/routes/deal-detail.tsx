@@ -52,7 +52,7 @@ import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
-import { useCustomFieldOptions, useCustomFieldValues } from "../lib/custom-fields.client";
+import { useCustomFieldValues } from "../lib/custom-fields.client";
 import { getDealProductsCollection } from "../lib/deal-products-collection.client";
 import { dealItemRemovalFailure } from "../lib/deal-item-removal";
 import { getDealFollowersCollection } from "../lib/deal-followers-collection.client";
@@ -69,7 +69,7 @@ import { getDealEventsCollection } from "../lib/events-collection.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { groupTimelineEvents } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
-import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
+import { RecordCustomFields } from "../service/RecordCustomFields";
 import { useDealPresence } from "../lib/deal-presence.client";
 import { RelatedRecords } from "../crm/RelatedRecords";
 import { DealTags } from "../crm/DealTags";
@@ -259,7 +259,6 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const orderedActivities = useMemo(() => [...activities].sort((left, right) => Number(left.completed) - Number(right.completed) || left.scheduledAt.localeCompare(right.scheduledAt)), [activities]);
   // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
   const customValues = useCustomFieldValues("deal", params.dealId, customFields);
-  const fieldOptions = useCustomFieldOptions();
   const isOpen = deal?.status === "open";
   useEffect(() => {
     if (!isOpen) return;
@@ -822,20 +821,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     </InlineField>
     {deal.status === "lost" && <InlineField label="Motivo da perda" value={deal.lossReason ?? "Não informado"} empty={!deal.lossReason} disabled />}
   </div>;
-  const activeCustomFields = customFields.filter((field) => !field.archivedAt);
-  const detailsContent = <div className={styles.fields}>
-    {activeCustomFields.map((field) => <EnrichedCustomFieldValue
-      options={fieldOptions.get(field.id) ?? []}
-      key={field.id}
-      field={field}
-      requirement={fieldRequirement(`custom:${field.key}`)}
-      value={customValues[field.key]}
-      disabled={!canWrite}
-      onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
-      onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })}
-    />)}
-    {activeCustomFields.length === 0 && <Text size="pequeno" tone="muted">Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</Text>}
-  </div>;
+  const detailsContent = <RecordCustomFields entityType="deal" entityId={deal.id} disabled={!canWrite} requirement={field => fieldRequirement(`custom:${field.key}`)} onSave={(field,value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, draft => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} />;
   const summaryContent = <Accordion density="compact" value={openSections} onValueChange={setOpenSections} items={[
     { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: summaryFields },
     { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: detailsContent },

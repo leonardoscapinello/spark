@@ -31,8 +31,7 @@ import { requireCapability } from "../lib/route-access.client";
 import layout from "./contact-profile-layout.module.css";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
-import { useCustomFieldOptions, useCustomFieldValues } from "../lib/custom-fields.client";
-import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
+import { RecordCustomFields } from "../service/RecordCustomFields";
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("contacts:read");
@@ -139,8 +138,6 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
   const { data: identities } = useLiveQuery({ query: (q) => q.from({ identities: getIdentitiesCollection() }).where(({ identities: item }) => eq(item.contactId, contactId)).orderBy(({ identities: item }) => item.createdAt, "asc") });
   const { data: customFields } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }).where(({ fields: item }) => eq(item.entityType, "contact")).orderBy(({ fields: item }) => item.label, "asc") });
   // Valores vindos das colunas tipadas, não do jsonb (ADR-0035).
-  const customValues = useCustomFieldValues("contact", contactId, customFields);
-  const fieldOptions = useCustomFieldOptions();
   const { data: deals = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ deals: getDealsCollection() }).where(({ deals: item }) => eq(item.contactId, contactId)).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined });
   const { data: stages = [] } = useLiveQuery({ query: (q) => canReadDeals ? q.from({ stages: getStagesCollection() }) : undefined });
   const { data: conversations = [] } = useLiveQuery({ query: (q) => canReadInbox ? q.from({ conversations: getConversationsCollection() }).where(({ conversations: item }) => eq(item.contactId, contactId)).orderBy(({ conversations: item }) => item.lastMessageAt, "desc") : undefined });
@@ -269,7 +266,6 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
 
   const owner = data.ownerId ? users.find((user) => user.id === data.ownerId) : undefined;
   const company = data.companyId ? companies.find((item) => item.id === data.companyId) : undefined;
-  const activeCustomFields = customFields.filter((field) => !field.archivedAt);
   const now = new Date().toISOString();
   const busy = contactFieldPending !== null;
 
@@ -334,11 +330,7 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
               <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite || busy}>{(close) => <Select label="Responsável pelo lead" value={data.ownerId} placeholder="Não atribuído" options={users.filter((user) => !user.deactivatedAt).map(userSelectOption)} onValueChange={(value) => close(updateLifecycle("ownerId", value))} />}</InlineField>
               <InlineField label="Empresa" value={company?.name ?? "Não vinculada"} empty={!company} {...(company ? { leading: <Avatar name={company.name} size="small" />, action: { label: `Abrir ${company.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${company.id}`) } } : {})} disabled={!canWrite || !canReadCompanies || busy}>{(close) => <Select label="Empresa da pessoa" value={data.companyId} placeholder="Não vinculada" options={companies.filter((item) => !item.deletedAt).map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => close(updateLifecycle("companyId", value))} />}</InlineField>
             </div>
-          }, ...(activeCustomFields.length > 0 ? [{ value: "custom", title: "Campos personalizados", content:
-            <div className={layout.fields}>
-              {activeCustomFields.map((field) => <EnrichedCustomFieldValue layout="inline" key={field.id} field={field} options={fieldOptions.get(field.id) ?? []} value={customValues[field.key]} disabled={!canWrite} onSave={(value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} onError={(message) => notify({ title: "Valor inválido", description: message, tone: "error" })} />)}
-            </div>
-          }] : [])]} />
+          }, { value: "custom", title: "Campos e grupos", content: <RecordCustomFields entityType="contact" entityId={data.id} disabled={!canWrite} onSave={(field,value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, draft => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} /> }]} />
         </div>
         <div className={layout.personWork}>
           <Tabs fill={!embedded} label="Área de trabalho da pessoa" items={[

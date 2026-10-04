@@ -1,9 +1,10 @@
+import { RecordCustomFields } from "../service/RecordCustomFields";
 import { useEffect, useState } from "react";
 import { redirect, useSearchParams } from "react-router";
 import type { Route } from "./+types/admin-users";
 import { emailVerificationsControllerVerify, permissionGroupsControllerList, usersControllerAccess, usersControllerInvite, usersControllerList, usersControllerPermissionGroup, type AdminUserDto, type PermissionGroupDto } from "@spark/api-client";
 import { userId as userIdFactory } from "@spark/core";
-import { ActionModal, Alert, Button, Chip, CollectionToolbar, DataTable, Field, Icon, InlineEdit, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonIdentity, SearchField, Select, Text, UserAvatar, type TableColumn } from "@spark/ui-web";
+import { Modal, ModalContent, ActionModal, Alert, Button, Chip, CollectionToolbar, DataTable, Field, Icon, InlineEdit, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PersonIdentity, SearchField, Select, Text, UserAvatar, type TableColumn } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-users.module.css";
 
@@ -64,7 +65,9 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
     (statusFilter === "all" || accessStatus(user) === statusFilter) &&
     (!searchTerm || `${user.name} ${user.email}`.toLocaleLowerCase("pt-BR").includes(searchTerm)),
   );
+  const [fieldRecord, setFieldRecord] = useState<AdminUserDto | null>(null);
   const columns: TableColumn<AdminUserDto>[] = [
+    { id: "fields", label: "Campos", cell: (user) => <Button size="sm" variant="ghost" onClick={() => setFieldRecord(user)}>Campos e grupos</Button> },
     { id: "name", label: "Pessoa", cell: (user) => <PersonIdentity name={user.name} detail={user.email} avatar={<UserAvatar user={user} />} />, sortValue: (user) => user.name },
     { id: "group", label: "Grupo", cell: (user) => (
       <InlineEdit
@@ -230,7 +233,8 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
           </Field>
         </div>
       </ActionModal>
-    </PageFrame>
+    <Modal open={Boolean(fieldRecord)} onOpenChange={open => { if (!open) setFieldRecord(null); }}>{fieldRecord && <ModalContent title={`Campos · ${fieldRecord.name}`}><RecordCustomFields entityType="user" entityId={fieldRecord.id} /></ModalContent>}</Modal>
+</PageFrame>
   );
 }
 

@@ -7,6 +7,7 @@ import { getSession } from "../lib/auth.client";
 import { useServiceConfiguration } from "../lib/service-configuration.client";
 import { getServiceCyclesCollection, getServiceSegmentsCollection, getServiceCycleHoursCollection, getServiceCycleHolidaysCollection } from "../lib/service-cycles.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
+import { RecordCustomFields } from "./RecordCustomFields";
 import { CategorySelectors } from "./CategorySelectors";
 import styles from "../routes/settings.module.css";
 export function ConversationService({ conversation, now, canWrite }: { conversation: Conversation; now: Date; canWrite: boolean }) {
@@ -30,6 +31,8 @@ export function ConversationService({ conversation, now, canWrite }: { conversat
     <InlineField label="Prioridade calculada" value={config.levels.find(l => l.id === conversation.servicePriorityId)?.name ?? "Sem combinação definida"} />
     {cycles.length > 1 && <Select label="Ciclo de atendimento" value={cycle?.id ?? null} options={cycles.map((c,i) => ({ value:c.id,label:`${c.closedAt ? "Encerrado" : "Atual"} · ciclo ${cycles.length-i} · ${new Date(c.openedAt).toLocaleDateString("pt-BR")}` }))} onValueChange={setHistoryId} />}
     {cycle ? <CycleProgress key={cycle.id} cycle={cycle} now={now} /> : <Alert tone="info" title="SLA ainda não iniciado">O acompanhamento começa na próxima ação do atendimento. O histórico anterior não é recalculado.</Alert>}
+    <RecordCustomFields entityType="conversation" entityId={conversation.id} disabled={!canWrite} />
+    {cycle && <RecordCustomFields key={cycle.id} entityType="service_cycle" entityId={cycle.id} disabled={!canWrite || Boolean(cycle.closedAt)} />}
     {getSession()?.capabilities.includes("settings:manage") && <><Button size="sm" variant="ghost" onClick={() => void navigate("/admin/service/sla")}>Configurar SLA e atendimento</Button><Button size="sm" variant="ghost" onClick={() => void navigate("/admin/data/custom-fields?entity=conversation")}>Gerenciar campos do atendimento</Button></>}
   </div>;
 }

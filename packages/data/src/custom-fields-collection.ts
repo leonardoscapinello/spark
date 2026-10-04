@@ -1,3 +1,5 @@
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
-import { createCollection } from "@tanstack/react-db"; import { electricCollectionOptions } from "@tanstack/electric-db-collection"; import { CustomFieldDefinitionSchema } from "@spark/core"; import { sparkShapeOptions } from "./shape-options.js";
+import { createCollection } from "@tanstack/react-db"; import { electricCollectionOptions } from "@tanstack/electric-db-collection"; import { CustomFieldDefinitionSchema, CustomFieldGroupSchema } from "@spark/core"; import { sparkShapeOptions } from "./shape-options.js";
 export function createCustomFieldsCollection() { return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS, id: "custom_field_definitions", schema: CustomFieldDefinitionSchema, getKey: (item) => item.id, shapeOptions: sparkShapeOptions("custom_field_definitions") })); } export type CustomFieldsCollection = ReturnType<typeof createCustomFieldsCollection>;
+
+export function createCustomFieldGroupsCollection() { return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS, id: "custom_field_groups", schema: CustomFieldGroupSchema, getKey: item => item.id, shapeOptions: sparkShapeOptions("custom_field_groups") })); }

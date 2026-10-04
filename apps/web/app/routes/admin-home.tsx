@@ -30,7 +30,7 @@ const sections: { title: string; areas: AdminArea[] }[] = [
     { title: "Integrações", to: "/integrations", icon: "bolt", description: "Conecte canais e serviços externos.", capability: "integrations:read" },
   ] },
   { title: "CRM e dados compartilhados", areas: [
-    { title: "Campos personalizados", to: "/admin/data/custom-fields", icon: "file", description: "Adapte os dados dos seus cadastros.", capability: "settings:manage" },
+    { title: "Campos e grupos", to: "/admin/data/custom-fields", icon: "file", description: "Adapte os dados dos seus cadastros.", capability: "settings:manage" },
     { title: "Funis e etapas", to: "/admin/data/stage-fields", icon: "briefcase", description: "Selecione a etapa para configurar campos, transições e prazos.", capability: "pipelines:manage" },
     { title: "Auditoria", to: "/admin/audit-log", icon: "chart", description: "Consulte alterações de acesso e equipe.", capability: "audit_logs:read" },
   ] },

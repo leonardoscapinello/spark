@@ -1,3 +1,4 @@
+import { RecordCustomFields } from "../service/RecordCustomFields";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
@@ -159,7 +160,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
             <InlineField label="Site" value={company.website ?? "Não informado"} empty={!company.website} disabled={!canWrite} {...(company.website ? { href: company.website } : {})}>{textEditor("website", "Site", company.website, { placeholder: "empresa.com.br" })}</InlineField>
             <InlineField label="Endereço" value={company.address ?? "Não informado"} empty={!company.address} disabled={!canWrite}>{(close) => <Textarea aria-label="Endereço" rows={3} defaultValue={company.address ?? ""} onBlur={(event) => close(saveCompany("address", event.currentTarget.value))} />}</InlineField>
           </div>
-        }]} />
+        }, { value: "custom", title: "Campos e grupos", content: <RecordCustomFields entityType="company" entityId={company.id} disabled={!canWrite} /> }]} />
       </div>
 
       <div className={styles.work}>

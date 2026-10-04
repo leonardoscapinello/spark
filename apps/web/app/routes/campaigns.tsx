@@ -1,10 +1,11 @@
+import { RecordCustomFields } from "../service/RecordCustomFields";
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import { useTagCatalog, useTagsByEntity } from "../lib/tags.client";
 import { campaignsControllerCreateAudience, campaignsControllerCreateCampaign, campaignsControllerSend } from "@spark/api-client";
 import { audienceId, campaignId, matchesAudience, type Audience, type AudienceFilter, type Campaign } from "@spark/core";
-import { ActionCard, ActionCardGroup, ActionModal, Alert, Button, Checkbox, Chip, CollectionToolbar, DashboardGrid, DataTable, EmptyState, Field, Input, KpiCard, Label, PageFrame, PageHeader, ProgressBar, RecordIdentity, SearchField, Select, Text, Textarea, notify, type TableColumn } from "@spark/ui-web";
+import { Modal, ModalContent, ActionCard, ActionCardGroup, ActionModal, Alert, Button, Checkbox, Chip, CollectionToolbar, DashboardGrid, DataTable, EmptyState, Field, Input, KpiCard, Label, PageFrame, PageHeader, ProgressBar, RecordIdentity, SearchField, Select, Text, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client"; import { requireCapability } from "../lib/route-access.client"; import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getAudienceLeadStatusesCollection, getAudiencesCollection, getAudienceTagsCollection, getCampaignRecipientsCollection, getCampaignsCollection } from "../lib/campaign-collections.client"; import styles from "./campaigns.module.css";
 
@@ -52,7 +53,9 @@ export default function Campaigns() {
   const sentCount = campaigns.reduce((total, item) => total + item.sentCount, 0);
   const failedCount = campaigns.reduce((total, item) => total + item.failedCount, 0);
   const draftCount = campaigns.filter((item) => item.status === "draft").length;
+  const [fieldRecord, setFieldRecord] = useState<Campaign | null>(null);
   const columns: TableColumn<Campaign>[] = [
+    { id: "fields", label: "Campos", cell: (item) => <Button size="sm" variant="ghost" onClick={() => setFieldRecord(item)}>Campos e grupos</Button> },
     { id: "name", label: "Campanha", cell: (item) => <RecordIdentity icon="mail" title={item.name} subtitle={item.subject} />, sortValue: (item) => item.name },
     { id: "audience", label: "Público", cell: (item) => audienceById.get(item.audienceId)?.name ?? "—", sortValue: (item) => audienceById.get(item.audienceId)?.name ?? "" },
     { id: "delivery", label: "Entrega", cell: (item) => <div className={styles.delivery}><Text size="pequeno" weight="medium" mono>{item.sentCount} de {item.recipientCount}</Text><ProgressBar label={`E-mails enviados em ${item.name}`} value={item.sentCount} max={item.recipientCount} /></div>, sortValue: (item) => item.sentCount },
@@ -93,7 +96,8 @@ export default function Campaigns() {
       : <DataTable label="Histórico de campanhas" rows={filteredCampaigns} columns={columns} rowKey={(item) => item.id} rowLabel={(item) => item.name} state={isLoading && !campaigns.length ? "loading" : "ready"} emptyText="Nenhuma campanha neste filtro." actions={(item) => canWrite && item.status === "draft" ? <Button size="sm" loading={sending === item.id} onClick={() => void send(item)}>Enviar agora</Button> : undefined} />}</>}
     <ActionModal open={audienceOpen} onOpenChange={setAudienceOpen} title="Novo público" confirmLabel="Salvar público" errorText="Informe um nome e filtros válidos." onConfirm={createAudience}><div className={styles.form}><Field><Label>Nome</Label><Input value={audienceName} placeholder="Leads qualificados" onChange={(event) => setAudienceName(event.target.value)} /></Field><Field><Label>Descrição</Label><Input value={description} placeholder="Quem faz parte deste público" onChange={(event) => setDescription(event.target.value)} /></Field><Field><Label>Combinação dos filtros</Label><Select label="Operador dos filtros" value={operator} options={[{ value: "all", label: "Todos os filtros" }, { value: "any", label: "Qualquer filtro" }]} onValueChange={(value) => setOperator((value ?? "all") as "all" | "any")} /></Field><Field><Label>Status do lead</Label><div className={styles.checks}>{LEAD_STATUSES.map((item) => <Checkbox key={item.value} checked={statuses.includes(item.value)} onCheckedChange={(checked) => toggleStatus(item.value, checked === true)}>{item.label}</Checkbox>)}</div></Field><Field><Label>Tags</Label><Input value={tags} placeholder="vip, evento, oportunidade" onChange={(event) => setTags(event.target.value)} /></Field><Field><Label>Score mínimo</Label><Input type="number" min="0" value={minimumScore} placeholder="Sem mínimo" onChange={(event) => setMinimumScore(event.target.value)} /></Field><Alert tone="info" title={`${formatCount(previewCount)} ${previewCount === 1 ? "pessoa com e-mail entra" : "pessoas com e-mail entram"} neste público agora`}>A lista é recalculada sempre que alguém passa a corresponder aos filtros.</Alert></div></ActionModal>
     <ActionModal open={campaignOpen} onOpenChange={setCampaignOpen} title="Nova campanha" confirmLabel="Criar rascunho" errorText="Preencha público, nome, assunto e mensagem." onConfirm={createCampaign}><div className={styles.form}><Field><Label>Público</Label><Select label="Público" value={audienceIdValue} options={audiences.map((item) => ({ value: item.id, label: item.name }))} onValueChange={(value) => setAudienceIdValue(value ?? "")} /></Field><Field><Label>Nome interno</Label><Input value={name} placeholder="Reativação de setembro" onChange={(event) => setName(event.target.value)} /></Field><Field><Label>Assunto</Label><Input value={subject} placeholder="Temos novidades para você" onChange={(event) => setSubject(event.target.value)} /></Field><Field><Label>Mensagem</Label><Textarea rows={10} value={body} placeholder="Olá {{nome}}…" onChange={(event) => setBody(event.target.value)} /></Field></div></ActionModal>
-  </PageFrame>;
+  <Modal open={Boolean(fieldRecord)} onOpenChange={open => { if (!open) setFieldRecord(null); }}>{fieldRecord && <ModalContent title={`Campos · ${fieldRecord.name}`}><RecordCustomFields entityType="campaign" entityId={fieldRecord.id} /></ModalContent>}</Modal>
+</PageFrame>;
 }
 /** Situação num ponto de cor; a etiqueta fica neutra. */
 const STATUS_DOT: Record<Campaign["status"], string> = { draft: "var(--tx3)", sending: "var(--in)", sent: "var(--ok)", partial: "var(--wa)", failed: "var(--er)" };

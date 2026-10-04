@@ -3,3 +3,5 @@ export * from "./permissionGroup.js";
 export * from "./check.js";
 export * from "./defaultGroups.js";
 export * from "./syncAccess.js";
+
+export * from "./customFields.js";

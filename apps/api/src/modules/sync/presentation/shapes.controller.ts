@@ -7,7 +7,7 @@ import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import { getTableColumns, getTableName, is } from "drizzle-orm";
 import { PgTable } from "drizzle-orm/pg-core";
 import * as dbSchema from "@spark/db";
-import { canReadSyncResource, effectiveCapabilities, readableEventPrefixes } from "@spark/core";
+import { canReadSyncResource, readableCustomFieldEntities, effectiveCapabilities, readableEventPrefixes } from "@spark/core";
 import { SupabaseJwtGuard, CurrentSupabaseUser, type SupabaseJwtClaims } from "../../../auth/index.js";
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { SHAPE_TABLES, isSyncableTable } from "../application/shape-tables.js";
@@ -119,6 +119,12 @@ export class ShapesController {
       const sharedParam = params.length;
       params.push(user.id);
       filters.push(`("${sharedUnless.flagColumn}" = $${sharedParam} OR "${sharedUnless.ownerColumn}" = $${params.length})`);
+    }
+    if (table === "custom_field_values") {
+      const entities = readableCustomFieldEntities(capabilities);
+      if (!entities.length) throw new ForbiddenException("Sem acesso aos valores de campos.");
+      const clauses = entities.map(entity => { params.push(entity); return `"entity_type" = $${params.length}`; });
+      filters.push(`(${clauses.join(" OR ")})`);
     }
     if (table === "deals") appendDealShapeScope(query, filters, params);
     if (table === "deal_followers") appendDealFollowerShapeScope(query, filters, params);

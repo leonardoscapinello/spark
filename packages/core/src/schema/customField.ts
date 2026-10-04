@@ -7,9 +7,9 @@ import { formatBRL, money, toCents } from "../money/index.js";
 /* Cada módulo do sistema pode ter os seus campos — pessoa, empresa, negócio,
  * conversa e atividade. Um campo pode alimentar outro numa automação desde que
  * os dois sejam do mesmo tipo (packages/core/rules/customFieldMapping). */
-export const CUSTOM_FIELD_ENTITIES = ["contact", "company", "deal", "conversation", "activity"] as const;
+export const CUSTOM_FIELD_ENTITIES = ["contact", "company", "deal", "conversation", "activity", "user", "campaign", "service_cycle"] as const;
 export const CUSTOM_FIELD_ENTITY_LABELS: Record<CustomFieldEntity, string> = {
-  contact: "Pessoa", company: "Empresa", deal: "Negócio", conversation: "Conversa", activity: "Atividade",
+  contact: "Pessoa / contato", company: "Empresa", deal: "CRM / negócio", conversation: "Atendimento / conversa", activity: "Atividade", user: "Usuário interno", campaign: "Marketing / campanha", service_cycle: "Atendimento / ciclo",
 };
 /* Tipos na ordem em que aparecem no seletor. Os cinco últimos foram trazidos do
  * Pipedrive (docs/inspiration/pipedrive): moeda, data e hora, telefone, endereço
@@ -21,9 +21,9 @@ export const CUSTOM_FIELD_TYPE_LABELS: Record<CustomFieldType, string> = {
   boolean: "Sim/Não", single_select: "Seleção única", multi_select: "Seleção múltipla",
 };
 export type CustomFieldEntity = (typeof CUSTOM_FIELD_ENTITIES)[number]; export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
-export const CustomFieldDefinitionSchema = z.object({ id: zCustomFieldDefinitionId, orgId: zOrgId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), key: z.string().min(1), label: z.string().min(1), type: z.enum(CUSTOM_FIELD_TYPES), required: z.boolean(), options: z.array(z.string()).optional(), createdBy: zUserId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp, archivedAt: zServerTimestamp.nullable() });
+export const CustomFieldDefinitionSchema = z.object({ id: zCustomFieldDefinitionId, orgId: zOrgId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), groupId: z.uuid().nullable().optional(), sortOrder: z.number().int().min(0).optional(), key: z.string().min(1), label: z.string().min(1), type: z.enum(CUSTOM_FIELD_TYPES), required: z.boolean(), options: z.array(z.string()).optional(), createdBy: zUserId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp, archivedAt: zServerTimestamp.nullable() });
 export type CustomFieldDefinition = z.infer<typeof CustomFieldDefinitionSchema>;
-export const CreateCustomFieldInputSchema = z.object({ id: zCustomFieldDefinitionId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), label: z.string().trim().min(1, { error: "Informe o nome do campo." }).max(120), type: z.enum(CUSTOM_FIELD_TYPES), required: z.boolean().default(false), options: z.array(z.string().trim().min(1).max(100)).max(100).default([]) }).superRefine((input, ctx) => { if ((input.type === "single_select" || input.type === "multi_select") && input.options.length === 0) ctx.addIssue({ code: "custom", path: ["options"], message: "Campos de seleção precisam de opções." }); });
+export const CreateCustomFieldInputSchema = z.object({ id: zCustomFieldDefinitionId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), groupId: z.uuid().nullable().default(null), sortOrder: z.number().int().min(0).default(0), label: z.string().trim().min(1, { error: "Informe o nome do campo." }).max(120), type: z.enum(CUSTOM_FIELD_TYPES), required: z.boolean().default(false), options: z.array(z.string().trim().min(1).max(100)).max(100).default([]) }).superRefine((input, ctx) => { if ((input.type === "single_select" || input.type === "multi_select") && input.options.length === 0) ctx.addIssue({ code: "custom", path: ["options"], message: "Campos de seleção precisam de opções." }); });
 export type CreateCustomFieldInput = z.infer<typeof CreateCustomFieldInputSchema>;
 export const ArchiveCustomFieldInputSchema = z.object({ archived: z.boolean() });
 export const CustomFieldWriteResponseSchema = z.object({ field: CustomFieldDefinitionSchema, txid: z.number().int() });
@@ -131,3 +131,14 @@ export const UpdateCustomFieldOptionsInputSchema = z.object({
   options: z.array(z.string().trim().min(1).max(100)).max(100),
 });
 export type UpdateCustomFieldOptionsInput = z.infer<typeof UpdateCustomFieldOptionsInputSchema>;
+
+export const CustomFieldGroupSchema = z.object({ id: z.uuid(), orgId: zOrgId, entityType: z.enum(CUSTOM_FIELD_ENTITIES), name: z.string().trim().min(1).max(120), sortOrder: z.number().int().min(0), archived: z.boolean(), createdAt: zServerTimestamp, updatedAt: zServerTimestamp });
+export type CustomFieldGroup = z.infer<typeof CustomFieldGroupSchema>;
+export const SaveCustomFieldGroupSchema = CustomFieldGroupSchema.omit({ orgId: true, createdAt: true, updatedAt: true });
+export type SaveCustomFieldGroup = z.infer<typeof SaveCustomFieldGroupSchema>;
+export const CustomFieldGroupWriteResponseSchema = z.object({ group: CustomFieldGroupSchema, txid: z.number().int() });
+export const UpdateCustomFieldMetadataSchema = z.object({ label: z.string().trim().min(1).max(120), groupId: z.uuid().nullable(), sortOrder: z.number().int().min(0) });
+export type UpdateCustomFieldMetadata = z.infer<typeof UpdateCustomFieldMetadataSchema>;
+export const WriteCustomFieldValueSchema = z.object({ fieldId: zCustomFieldDefinitionId, value: z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.null()]) });
+export type WriteCustomFieldValue = z.infer<typeof WriteCustomFieldValueSchema>;
+export const CustomFieldValueWriteResponseSchema = z.object({ txid: z.number().int() });

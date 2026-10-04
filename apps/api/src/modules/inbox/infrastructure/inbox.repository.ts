@@ -69,7 +69,7 @@ export class InboxRepository {
         updatedAt: new Date(),
       }).where(and(eq(conversations.id, id), eq(conversations.orgId, orgId))).returning();
       if (!row) throw new NotFoundException(`Conversation ${id} not found.`);
-      await advanceServiceCycle(tx, orgId, row, config, statusDefinition, "update", new Date(), input.categoryId !== undefined || input.impactId !== undefined || input.urgencyId !== undefined);
+      await advanceServiceCycle(tx, orgId, row, config, statusDefinition, "update", new Date(), input.categoryId !== undefined || input.impactId !== undefined || input.urgencyId !== undefined || row.servicePriorityId !== current.servicePriorityId);
       const conversation = toConversation(row);
       const eventType = input.status === "closed" ? "conversation.closed" : input.status === "open" ? "conversation.reopened" : "conversation.updated";
       await this.events.append(tx, { orgId, contactId: conversation.contactId, type: eventType, data: { conversationId: conversation.id, actorUserId, changes: input } });
