@@ -115,3 +115,9 @@ Revisar a calibração após as primeiras quatro semanas: distribuição entre p
 ## Local de manutenção
 
 Em Administração → Atendimento → Matriz de prioridade, cada célula pode ser alterada e os critérios aparecem abaixo da tabela. Em Impacto, urgência e prioridade, edite os nomes, critérios, cores e habilitação. No atendimento, os critérios dos níveis selecionados aparecem junto à classificação. Tudo é configuração da organização; os nomes e combinações não estão fixados no cálculo do sistema.
+
+## Padrões de classificação das categorias
+
+Cada categoria de N1, N2 ou N3 pode configurar impacto e urgência padrão, inclusive apenas um dos dois ou nenhum. Ao trocar a categoria de um atendimento, aplicam-se exatamente os padrões da categoria escolhida: campos não configurados ficam vazios e não herdam de ancestrais. Limpar a categoria também limpa essa classificação. A equipe pode ajustar impacto e urgência em seguida; ações como troca de status não reaplicam os padrões.
+
+A matriz calcula a prioridade a partir do par aplicado. Se faltar um nível ou combinação, a prioridade fica sem classificação. Categoria e prioridade selecionam a política de SLA pelas regras de precedência descritas acima. Atualizar o padrão de uma categoria não altera retroativamente os atendimentos. No catálogo, as colunas de impacto, urgência e prioridade calculada mostram o efeito esperado. Os padrões são opcionais e o catálogo previamente cadastrado permanece sem classificação automática até que sejam configurados.

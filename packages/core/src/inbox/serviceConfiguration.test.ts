@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { serviceCategoryPath, selectServiceSla, servicePriority, validateServiceConfiguration } from "./serviceConfiguration.js";
+import { serviceCategoryPath, selectServiceSla, servicePriority, resolveServiceClassification, validateServiceConfiguration } from "./serviceConfiguration.js";
 import { ServiceCategorySchema, SlaPolicySchema, ServiceLevelSchema, PriorityMatrixSchema } from "../schema/serviceConfiguration.js";
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
 const base = { orgId: id(90), createdAt: "2026-10-04T12:00:00Z", updatedAt: "2026-10-04T12:00:00Z", sortOrder: 0, archived: false };
@@ -29,5 +29,48 @@ describe("políticas de atendimento", () => {
     expect(servicePriority(id(40),id(41),{ levels,matrix })).toBe(id(10));
     expect(servicePriority(null,id(41),{ levels,matrix })).toBeNull();
     expect(servicePriority(id(40),id(41),{ levels:levels.map(l=>({...l,archived:l.id===id(10)})),matrix })).toBeNull();
+  });
+});
+
+describe("classificação padrão por categoria", () => {
+  const impact = ServiceLevelSchema.parse({ ...base, id:id(40),name:"Impacto",kind:"impact",color:"neutral" });
+  const urgency = ServiceLevelSchema.parse({ ...base, id:id(41),name:"Urgência",kind:"urgency",color:"neutral" });
+  const config = {
+    categories: categories.map(c => ({ ...c, defaultImpactId: impact.id, defaultUrgencyId: urgency.id })),
+    levels: [...priorities, impact, urgency], statuses: [],
+    matrix: [PriorityMatrixSchema.parse({ ...base,id:id(50),impactId:impact.id,urgencyId:urgency.id,priorityId:id(10) })],
+    policies: [policy(20,id(3),id(10)),policy(21,null,null)],
+  };
+  const current = { status:"open",serviceStatusId:null,categoryId:null,impactId:null,urgencyId:null };
+  it("aplica o padrão de qualquer nível e conecta prioridade à política de SLA", () => {
+    for (const category of config.categories) {
+      const result=resolveServiceClassification(current,{categoryId:category.id},config);
+      expect(result.impactId).toBe(impact.id);expect(result.urgencyId).toBe(urgency.id);expect(result.servicePriorityId).toBe(id(10));
+      expect(selectServiceSla(result.categoryId,result.servicePriorityId,config)?.id).toBe(category.id===id(3)?id(20):id(21));
+    }
+  });
+  it("categoria sem padrão limpa a classificação anterior e não herda dos pais", () => {
+    const configured={...config,categories:config.categories.map(c=>c.id===id(3)?{...c,defaultImpactId:null,defaultUrgencyId:null}:c)};
+    const previous={...current,categoryId:id(2),impactId:impact.id,urgencyId:urgency.id};
+    for (const categoryId of [id(3),null]) {
+      const result=resolveServiceClassification(previous,{categoryId},configured);
+      expect(result.impactId).toBeNull();expect(result.urgencyId).toBeNull();expect(result.servicePriorityId).toBeNull();
+    }
+  });
+  it("permite padrão parcial e ajuste explícito, sem reaplicar em troca de status", () => {
+    const partial={...config,categories:config.categories.map(c=>({...c,defaultUrgencyId:null}))};
+    const result=resolveServiceClassification(current,{categoryId:id(1)},partial);
+    expect(result.impactId).toBe(impact.id);expect(result.urgencyId).toBeNull();expect(result.servicePriorityId).toBeNull();
+    const overridden=resolveServiceClassification(current,{categoryId:id(1),impactId:null},config);
+    expect(overridden.impactId).toBeNull();expect(overridden.urgencyId).toBe(urgency.id);
+    const manual={...current,categoryId:id(1),impactId:null,urgencyId:urgency.id};
+    expect(resolveServiceClassification(manual,{status:"snoozed"},config).impactId).toBeNull();
+    expect(resolveServiceClassification(manual,{categoryId:id(1)},config).impactId).toBeNull();
+  });
+  it("recusa padrão com dimensão errada, nível desabilitado ou referência ausente", () => {
+    for (const defaultImpactId of [urgency.id,id(99)]) expect(()=>validateServiceConfiguration({...config,categories:config.categories.map(c=>({...c,defaultImpactId}))})).toThrow("padrões da categoria");
+    const disabled={...config,levels:config.levels.map(l=>({...l,archived:l.id===impact.id}))};
+    expect(()=>validateServiceConfiguration(disabled)).toThrow("padrões da categoria");
+    expect(()=>resolveServiceClassification(current,{categoryId:id(1)},disabled)).toThrow("nível ativo");
   });
 });

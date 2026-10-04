@@ -3,7 +3,7 @@ import { zOrgId, zServerTimestamp } from "./zodHelpers.js";
 import { StageColorSchema } from "./stage.js";
 const identity = { id: z.uuid(), orgId: zOrgId, createdAt: zServerTimestamp, updatedAt: zServerTimestamp };
 const named = { ...identity, name: z.string().trim().min(1).max(160), sortOrder: z.number().int().min(0), archived: z.boolean() };
-export const ServiceCategorySchema = z.object({ ...named, parentId: z.uuid().nullable() });
+export const ServiceCategorySchema = z.object({ ...named, parentId: z.uuid().nullable(), defaultImpactId: z.uuid().nullable().default(null), defaultUrgencyId: z.uuid().nullable().default(null) });
 export const ServiceStatusSchema = z.object({ ...named, color: StageColorSchema, operationalType: z.enum(["active", "waiting", "closed"]), pauseFirstResponse: z.boolean(), pauseTotal: z.boolean(), resumeOnInbound: z.boolean(), budgetMinutes: z.number().int().min(1).nullable() });
 export const ServiceLevelSchema = z.object({ ...named, kind: z.enum(["impact", "urgency", "priority"]), description: z.string().trim().max(2000).default(""), color: StageColorSchema });
 export const PriorityMatrixSchema = z.object({ ...identity, impactId: z.uuid(), urgencyId: z.uuid(), priorityId: z.uuid() });

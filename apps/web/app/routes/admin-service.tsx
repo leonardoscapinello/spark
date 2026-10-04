@@ -1,7 +1,7 @@
 import { CategorySelectors } from "../service/CategorySelectors";
 import { useState } from "react";
 import { useParams } from "react-router";
-import { SaveServiceConfigurationSchema, ServiceCategorySchema, ServiceStatusSchema, ServiceLevelSchema, PriorityMatrixSchema, SlaPolicySchema, serviceCategoryPath, selectServiceSla, type SaveServiceConfiguration, type ServiceConfiguration } from "@spark/core";
+import { SaveServiceConfigurationSchema, ServiceCategorySchema, ServiceStatusSchema, ServiceLevelSchema, PriorityMatrixSchema, SlaPolicySchema, serviceCategoryPath, servicePriority, selectServiceSla, type SaveServiceConfiguration, type ServiceConfiguration } from "@spark/core";
 import { ActionModal, Alert, Button, Checkbox, Chip, CollectionToolbar, ColorPicker, DataTable, Field, Input, Label, PageFrame, PageHeader, SearchField, Select, Text, Textarea, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import { getSession } from "../lib/auth.client";
@@ -23,7 +23,7 @@ export default function AdminService() {
   const title = TITLES[section] ?? "Atendimento";
   const namedBase = { id: crypto.randomUUID(), name: "", sortOrder: 0, archived: false };
   function create() {
-    if (section === "catalog") setDraft({ ...namedBase, kind: "category", parentId: null, sortOrder: Math.max(-1, ...config.categories.filter(c => c.parentId === null).map(c => c.sortOrder)) + 1 });
+    if (section === "catalog") setDraft({ ...namedBase, kind: "category", parentId: null, defaultImpactId: null, defaultUrgencyId: null, sortOrder: Math.max(-1, ...config.categories.filter(c => c.parentId === null).map(c => c.sortOrder)) + 1 });
     if (section === "statuses") setDraft({ ...namedBase, kind: "status", color: "neutral", operationalType: "active", pauseFirstResponse: false, pauseTotal: false, resumeOnInbound: false, budgetMinutes: null });
     if (section === "priorities") setDraft({ ...namedBase, kind: "level", levelKind: "impact", description: "", color: "neutral" });
     if (section === "sla") setDraft({ ...namedBase, kind: "policy", categoryId: null, priorityId: null, firstResponseMinutes: 60, totalMinutes: 480, warningPercent: 80 });
@@ -44,6 +44,9 @@ export default function AdminService() {
   });
   const categoryColumns: TableColumn<(typeof config.categories)[number]>[] = [
     ...[0,1,2].map(depth => ({ id: `n${depth+1}`, label: `${depth+1}º nível`, cell: (row: (typeof config.categories)[number]) => categoryPaths.get(row.id)?.[depth]?.name ?? "—" })),
+    { id: "impact", label: "Impacto padrão", cell: row => nameFor(row.defaultImpactId, config.levels, "Não definido") },
+    { id: "urgency", label: "Urgência padrão", cell: row => nameFor(row.defaultUrgencyId, config.levels, "Não definida") },
+    { id: "priority", label: "Prioridade calculada", cell: row => nameFor(servicePriority(row.defaultImpactId, row.defaultUrgencyId, config), config.levels, "Sem classificação") },
     { id: "state", label: "Estado", cell: row => row.archived ? "Desabilitada" : "Habilitada" },
   ];
   const statusColumns: TableColumn<(typeof config.statuses)[number]>[] = [
@@ -88,6 +91,12 @@ function ConfigurationEditor({ initial, config, onClose }: { initial: SaveServic
     {draft.kind === "category" && <CategoryParentFields categoryId={draft.id} parentId={draft.parentId} config={config} onChange={parentId => setDraft({ ...draft, parentId })} />}
     {draft.kind === "policy" && <><CategorySelectors value={draft.categoryId} onChange={categoryId => setDraft({ ...draft, categoryId })} config={config} /><Select label="Prioridade" value={draft.priorityId ?? ""} options={[{ value: "", label: "Todas as prioridades" }, ...config.levels.filter(l => l.kind === "priority" && !l.archived).map(l => ({ value: l.id, label: l.name }))]} onValueChange={value => setDraft({ ...draft, priorityId: value || null })} /></>}
     {draft.kind !== "matrix" && <><Field><Label>Nome</Label><Input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /></Field><Field><Label>Status</Label><Select label="Status do cadastro" value={draft.archived ? "disabled" : "enabled"} options={[{ value: "enabled", label: "Habilitado" }, { value: "disabled", label: "Desabilitado" }]} onValueChange={value => { if (value) setDraft({ ...draft, archived: value === "disabled" }); }} /></Field></>}
+    {draft.kind === "category" && <>
+      <Field><Label>Impacto padrão</Label><Select label="Impacto padrão da categoria" value={draft.defaultImpactId ?? ""} options={[{ value: "", label: "Não definir impacto" }, ...config.levels.filter(l => l.kind === "impact" && !l.archived).map(l => ({ value: l.id, label: l.name }))]} onValueChange={id => setDraft({ ...draft, defaultImpactId: id || null })} /></Field>
+      <Field><Label>Urgência padrão</Label><Select label="Urgência padrão da categoria" value={draft.defaultUrgencyId ?? ""} options={[{ value: "", label: "Não definir urgência" }, ...config.levels.filter(l => l.kind === "urgency" && !l.archived).map(l => ({ value: l.id, label: l.name }))]} onValueChange={id => setDraft({ ...draft, defaultUrgencyId: id || null })} /></Field>
+      <Text>Prioridade calculada: {config.levels.find(l => l.id === servicePriority(draft.defaultImpactId, draft.defaultUrgencyId, config))?.name ?? "Sem classificação — defina os dois níveis e a combinação na matriz."}</Text>
+      <Text size="pequeno" tone="secondary">Ao escolher esta categoria no atendimento, estes valores preenchem impacto e urgência. Campos sem padrão ficam vazios. A equipe pode ajustar depois; alterações aqui não reclassificam atendimentos existentes.</Text>
+    </>}
     {draft.kind === "level" && <Select label="Dimensão" value={draft.levelKind} options={Object.entries(LEVEL_LABELS).map(([value,label]) => ({ value,label }))} onValueChange={value => { if (value === "impact" || value === "urgency" || value === "priority") setDraft({ ...draft, levelKind: value }); }} />}
     {draft.kind === "level" && <Field><Label>Critérios e exemplos de uso</Label><Textarea rows={5} maxLength={2000} value={draft.description} placeholder="Quando escolher este nível e como reconhecer a situação." onChange={event => setDraft({ ...draft, description: event.target.value })} /></Field>}
     {(draft.kind === "level" || draft.kind === "status") && <ColorPicker label="Cor" value={draft.color} onValueChange={color => setDraft({ ...draft, color })} />}

@@ -10,6 +10,8 @@ export const serviceCategories = pgTable("service_categories", {
   sortOrder: integer("sort_order").notNull(),
   archived: boolean("archived").notNull(),
   parentId: uuid("parent_id"),
+  defaultImpactId: uuid("default_impact_id"),
+  defaultUrgencyId: uuid("default_urgency_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, t => [index("service_categories_org_idx").on(t.orgId), unique("service_categories_org_id_unique").on(t.orgId, t.id), pgPolicy("service_categories_org", { for: "all", to: APP_ROLE, using: sql`${t.orgId} = current_setting('app.current_org_id', true)::uuid` })]).enableRLS();

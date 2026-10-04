@@ -29,6 +29,9 @@ export function selectServiceSla(categoryId: string | null, priorityId: string |
 export function validateServiceConfiguration(config: ServiceConfiguration): void {
   for (const category of config.categories) {
     const path = serviceCategoryPath(category.id, config.categories);
+    for (const [id,kind] of [[category.defaultImpactId,"impact"],[category.defaultUrgencyId,"urgency"]]) {
+      if (id && !config.levels.some(l => l.id === id && l.kind === kind && (category.archived || !l.archived))) throw new Error("Escolha impacto e urgência ativos da organização para os padrões da categoria.");
+    }
     if (!category.archived && path.some(p => p.archived)) throw new Error("Arquive as categorias filhas antes de arquivar a categoria principal.");
   }
   for (const row of config.matrix) {
@@ -67,9 +70,13 @@ export function resolveServiceClassification(current: { status: string; serviceS
   if (status) operational = status.operationalType === "closed" ? "closed" : status.operationalType === "waiting" ? "snoozed" : "open";
   const categoryId = input.categoryId === undefined ? current.categoryId : input.categoryId;
   if (input.categoryId && serviceCategoryPath(input.categoryId, config.categories).some(c => c.archived)) throw new Error("Escolha uma categoria ativa.");
-  const impactId = input.impactId === undefined ? current.impactId : input.impactId;
-  const urgencyId = input.urgencyId === undefined ? current.urgencyId : input.urgencyId;
-  for (const [value,kind] of [[input.impactId,"impact"],[input.urgencyId,"urgency"]]) if (value && !config.levels.some(l => l.id === value && l.kind === kind && !l.archived)) throw new Error("Escolha um nível ativo da organização.");
+  const categoryChanged = input.categoryId !== undefined && input.categoryId !== current.categoryId;
+  const category = config.categories.find(c => c.id === categoryId);
+  // O padrão pertence à categoria selecionada. Sem configuração, fica vazio;
+  // selecionar N2/N3 não herda silenciosamente os padrões de seus ancestrais.
+  const impactId = input.impactId !== undefined ? input.impactId : categoryChanged ? category?.defaultImpactId ?? null : current.impactId;
+  const urgencyId = input.urgencyId !== undefined ? input.urgencyId : categoryChanged ? category?.defaultUrgencyId ?? null : current.urgencyId;
+  for (const [value,kind] of [[input.impactId !== undefined || categoryChanged ? impactId : null,"impact"],[input.urgencyId !== undefined || categoryChanged ? urgencyId : null,"urgency"]]) if (value && !config.levels.some(l => l.id === value && l.kind === kind && !l.archived)) throw new Error("Escolha um nível ativo da organização.");
   const servicePriorityId = servicePriority(impactId,urgencyId,config);
   return { serviceStatusId, categoryId, impactId, urgencyId, servicePriorityId, status: operational === "closed" ? "closed" as const : operational === "snoozed" ? "snoozed" as const : "open" as const, statusDefinition: status ?? null };
 }
