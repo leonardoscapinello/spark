@@ -26,7 +26,14 @@ export const BusinessHourSchema = z.object({
   updatedAt: zServerTimestamp,
 });
 export type BusinessHour = z.infer<typeof BusinessHourSchema>;
-export const SaveBusinessHourInputSchema = BusinessHourSchema.omit({ orgId: true, createdAt: true, updatedAt: true });
+function validTimes(input: { startTime: string | null; endTime: string | null; breakStartTime: string | null; breakEndTime: string | null }): boolean {
+  if (!input.startTime || !input.endTime || input.startTime >= input.endTime) return false;
+  if (input.breakStartTime === null && input.breakEndTime === null) return true;
+  return input.breakStartTime !== null && input.breakEndTime !== null && input.startTime < input.breakStartTime && input.breakStartTime < input.breakEndTime && input.breakEndTime < input.endTime;
+}
+export const SaveBusinessHourInputSchema = BusinessHourSchema.omit({ orgId: true, createdAt: true, updatedAt: true })
+  .refine(input => !input.enabled || validTimes(input), { message: "Informe horários ordenados e preencha as duas pontas do intervalo." })
+  .refine(input => { try { new Intl.DateTimeFormat("pt-BR", { timeZone: input.timeZone }); return true; } catch { return false; } }, { message: "Informe um fuso horário válido.", path: ["timeZone"] });
 export type SaveBusinessHourInput = z.infer<typeof SaveBusinessHourInputSchema>;
 export const BusinessHourWriteResponseSchema = z.object({ businessHour: BusinessHourSchema, txid: z.number().int() });
 
@@ -46,6 +53,8 @@ export const HolidaySchema = z.object({
   updatedAt: zServerTimestamp,
 });
 export type Holiday = z.infer<typeof HolidaySchema>;
-export const SaveHolidayInputSchema = HolidaySchema.omit({ orgId: true, createdAt: true, updatedAt: true });
+export const SaveHolidayInputSchema = HolidaySchema.omit({ orgId: true, createdAt: true, updatedAt: true })
+  .refine(input => input.startDate <= input.endDate, { message: "A data final deve ser igual ou posterior à inicial." })
+  .refine(input => input.kind === "closed" || validTimes(input), { message: "Informe os horários do expediente reduzido e um intervalo válido." });
 export type SaveHolidayInput = z.infer<typeof SaveHolidayInputSchema>;
 export const HolidayWriteResponseSchema = z.object({ holiday: HolidaySchema.nullable(), txid: z.number().int() });

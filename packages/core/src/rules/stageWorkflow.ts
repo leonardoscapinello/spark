@@ -129,7 +129,8 @@ export function operatingMillisecondsBetween(start: Date, end: Date, hours: read
   while (cursor <= last) {
     const day = cursor.toISOString().slice(0, 10);
     const weekday = cursor.getUTCDay();
-    const exception = exceptions.find((item) => dateFallsInException(day, item));
+    const matching = exceptions.filter((item) => dateFallsInException(day, item));
+    const exception = matching.find(item => item.kind === "closed") ?? matching[0];
     const base = hours.find((item) => item.weekday === weekday && item.enabled);
     const periods = exception?.kind === "closed" ? [] : exception?.kind === "reduced"
       ? periodsFromTimes(exception.startTime, exception.breakStartTime, exception.breakEndTime, exception.endTime)
@@ -153,7 +154,9 @@ function periodsFromTimes(start: string | null, breakStart: string | null, break
 function dateFallsInException(day: string, exception: Holiday): boolean {
   if (!exception.repeatsAnnually) return day >= exception.startDate && day <= exception.endDate;
   const value = day.slice(5);
-  return value >= exception.startDate.slice(5) && value <= exception.endDate.slice(5);
+  const from = exception.startDate.slice(5);
+  const to = exception.endDate.slice(5);
+  return from <= to ? value >= from && value <= to : value >= from || value <= to;
 }
 
 function zonedDay(value: Date, timeZone: string): string {

@@ -10,6 +10,7 @@ export class BusinessCalendarRepository {
   saveBusinessHour(orgId: OrgId, input: SaveBusinessHourInput): Promise<{ businessHour: BusinessHour; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
+      await tx.update(businessHours).set({ timeZone: input.timeZone, updatedAt: new Date() }).where(eq(businessHours.orgId, orgId));
       const [row] = await tx.insert(businessHours).values({ ...input, orgId }).onConflictDoUpdate({ target: [businessHours.orgId, businessHours.weekday], set: { enabled: input.enabled, startTime: input.startTime, breakStartTime: input.breakStartTime, breakEndTime: input.breakEndTime, endTime: input.endTime, timeZone: input.timeZone, updatedAt: new Date() } }).returning();
       if (!row) throw new Error("Business hour write returned no row.");
       return { businessHour: toBusinessHour(row), txid };

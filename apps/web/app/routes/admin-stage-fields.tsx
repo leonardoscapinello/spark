@@ -10,12 +10,13 @@ import {
   type StageFieldLevel,
 } from "@spark/core";
 import { optimisticStageFieldRule } from "@spark/data";
-import { Alert, DataTable, EmptyState, PageFrame, PageHeader, Select, Text, notify, type TableColumn } from "@spark/ui-web";
+import { Alert, CollectionToolbar, DataTable, EmptyState, PageFrame, PageHeader, SearchField, SearchSelect, Select, Text, notify, type TableColumn } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collection.client";
 import { requireCapability } from "../lib/route-access.client";
+import { StageSettingsButton } from "../crm/StageSettings";
 import styles from "./admin-stage-fields.module.css";
 
 export async function clientLoader() {
@@ -47,8 +48,12 @@ export default function AdminStageFields() {
   const { data: customFields = [] } = useLiveQuery({ query: (q) => q.from({ fields: getCustomFieldsCollection() }) });
 
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const pipeline = pipelines.find((item) => item.id === selectedPipeline) ?? pipelines[0];
   const pipelineStages = pipeline ? stages.filter((stage) => stage.pipelineId === pipeline.id && !stage.archivedAt) : [];
+
+  const stage = pipelineStages.find(item => item.id === selectedStage) ?? pipelineStages[0];
 
   /** Campos oferecidos: os do próprio negócio, mais os personalizados de negócio. */
   const fields = useMemo(() => [
@@ -63,7 +68,7 @@ export default function AdminStageFields() {
   const firstOfGroup = new Set(fields.filter((field, index) => index === 0 || fields[index - 1]?.group !== field.group).map((field) => field.key));
   const columns: TableColumn<FieldRow>[] = [
     { id: "field", label: "Campo", alwaysVisible: true, cell: (field) => <div className={styles.field}><Text weight="medium">{field.label}</Text>{firstOfGroup.has(field.key) && <Text size="legenda" tone="muted">{field.group}</Text>}</div> },
-    ...pipelineStages.map((stage): TableColumn<FieldRow> => ({ id: stage.id, label: stage.name, cell: (field) => <Select label={`${field.label} em ${stage.name}`} appearance="filter" value={levelAt(stage.id, field.key)} options={LEVEL_OPTIONS} onValueChange={(value) => { if (value) void changeLevel(stage.id, field.key, value); }} /> })),
+    ...(stage ? [stage] : []).map((stage): TableColumn<FieldRow> => ({ id: stage.id, label: stage.name, cell: (field) => <Select label={`${field.label} em ${stage.name}`} appearance="filter" value={levelAt(stage.id, field.key)} options={LEVEL_OPTIONS} onValueChange={(value) => { if (value) void changeLevel(stage.id, field.key, value); }} /> })),
   ];
 
   function levelAt(stageId: string, fieldKey: string): string {
@@ -97,14 +102,18 @@ export default function AdminStageFields() {
   return <PageFrame>
     <PageHeader
       eyebrow="Administração"
-      title="O que cada etapa exige"
-      description="Campo obrigatório impede o negócio de avançar enquanto estiver vazio. Importante apenas sinaliza. Cada funil tem as suas regras."
-      actions={pipelines.length > 1 ? <Select appearance="filter" label="Funil" value={pipeline?.id ?? null} options={pipelines.map((item) => ({ value: item.id, label: item.name }))} onValueChange={setSelectedPipeline} /> : undefined}
+      title="Funis e etapas"
+      description="Escolha um funil e uma etapa para configurar campos, transições e prazo útil."
+      actions={stage ? <StageSettingsButton stage={stage} stages={pipelineStages} /> : undefined}
     />
 
+    <CollectionToolbar search={<SearchField label="Buscar campo" value={search} onValueChange={setSearch} />} filters={<>
+      <SearchSelect label="Funil" searchPlacement="dropdown" value={pipeline ? { value: pipeline.id, label: pipeline.name } : null} options={pipelines.map(item => ({ value: item.id, label: item.name }))} onValueChange={item => { setSelectedPipeline(item?.value ?? null); setSelectedStage(null); }} />
+      <SearchSelect label="Etapa" searchPlacement="dropdown" value={stage ? { value: stage.id, label: stage.name } : null} options={pipelineStages.map(item => ({ value: item.id, label: item.name }))} onValueChange={item => setSelectedStage(item?.value ?? null)} />
+    </>} />
     {!pipeline || pipelineStages.length === 0
       ? <EmptyState variant="featured" icon="briefcase" title="Nenhum funil com etapas" description="Crie um funil e suas etapas no CRM para definir o que cada uma exige." />
-      : <DataTable label={`Campos exigidos em ${pipeline.name}`} rows={fields} columns={columns} rowKey={(field) => field.key} rowLabel={(field) => field.label} />}
+      : <DataTable label={`Campos exigidos em ${pipeline.name}`} rows={fields.filter(field => field.label.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")))} columns={columns} rowKey={(field) => field.key} rowLabel={(field) => field.label} />}
 
     <Alert tone="info" title="Obrigatório vale para sair da etapa">Mover um negócio para uma etapa posterior exige os campos de todas as etapas do caminho. Voltar atrás nunca é bloqueado.</Alert>
   </PageFrame>;

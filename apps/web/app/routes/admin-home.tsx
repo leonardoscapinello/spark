@@ -22,12 +22,13 @@ const sections: { title: string; areas: AdminArea[] }[] = [
   { title: "Canais e integrações", areas: [
     { title: "Integrações", to: "/integrations", icon: "bolt", description: "Conecte canais e serviços externos.", capability: "integrations:read" },
   ] },
-  { title: "Dados", areas: [
+  { title: "CRM e dados compartilhados", areas: [
     { title: "Campos personalizados", to: "/admin/data/custom-fields", icon: "file", description: "Adapte os dados dos seus cadastros.", capability: "settings:manage" },
-    { title: "O que cada etapa exige", to: "/admin/data/stage-fields", icon: "briefcase", description: "Campos obrigatórios e importantes por funil e etapa.", capability: "pipelines:manage" },
+    { title: "Funis e etapas", to: "/admin/data/stage-fields", icon: "briefcase", description: "Selecione a etapa para configurar campos, transições e prazos.", capability: "pipelines:manage" },
     { title: "Auditoria", to: "/admin/audit-log", icon: "chart", description: "Consulte alterações de acesso e equipe.", capability: "audit_logs:read" },
   ] },
-  { title: "Identidade", areas: [
+  { title: "Organização", areas: [
+    { title: "Calendário útil e feriados", to: "/admin/calendar", icon: "calendar", description: "Expediente, intervalos e exceções usados nos prazos.", capability: "pipelines:manage" },
     { title: "Aparência", to: "/admin/appearance", icon: "image", description: "Personalize cores e tipografia da organização.", capability: "settings:manage" },
   ] },
 ];
@@ -40,7 +41,7 @@ export default function AdminHome({ loaderData }: Route.ComponentProps) {
   const allowed = (capability: Capability) => loaderData.session.capabilities.includes(capability);
 
   return <PageFrame>
-    <PageHeader eyebrow="Administração" title="Início" />
+    <PageHeader eyebrow="Administração" title="Configurações" description="Organize os processos, os dados e o acesso da sua equipe." />
     <div className={styles.sections}>{sections.map((section) => {
       const visible = section.areas.filter((area) => allowed(area.capability));
       if (visible.length === 0) return null;

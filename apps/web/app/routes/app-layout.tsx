@@ -105,11 +105,12 @@ const modules: NavModule[] = [
       { label: "Grupos de permissões", to: "/admin/permission-groups", icon: "settings", capability: "permission_groups:manage" },
       { label: "Auditoria", to: "/admin/audit-log", icon: "file", capability: "audit_logs:read" },
     ] },
-    { title: "Dados", icon: "file", items: [
+    { title: "CRM e dados", icon: "file", items: [
       { label: "Campos personalizados", to: "/admin/data/custom-fields", icon: "file", capability: "settings:manage" },
-      { label: "O que cada etapa exige", to: "/admin/data/stage-fields", icon: "briefcase", capability: "pipelines:manage" },
+      { label: "Funis e etapas", to: "/admin/data/stage-fields", icon: "briefcase", capability: "pipelines:manage" },
     ] },
-    { title: "Identidade", icon: "image", items: [
+    { title: "Organização", icon: "building", items: [
+      { label: "Calendário útil e feriados", to: "/admin/calendar", icon: "calendar", capability: "pipelines:manage" },
       { label: "Aparência", to: "/admin/appearance", icon: "image", capability: "settings:manage" },
     ] },
     { title: "Canais e integrações", icon: "bolt", items: [
