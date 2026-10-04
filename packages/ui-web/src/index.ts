@@ -123,7 +123,7 @@ export { Signal, type SignalProps, type SignalTone } from "./Signal/Signal.js";
 // CRM (ADR-0044/0045): lista de escolhas, responsável, kanban com pouso e compromisso no calendário.
 export { ActionList, type ActionListItem, type ActionListProps } from "./ActionList/ActionList.js";
 export { OwnerPicker, type OwnerPickerPerson, type OwnerPickerProps } from "./OwnerPicker/OwnerPicker.js";
-export { KanbanBoard, KanbanColumn, KanbanCard, KanbanCardContent, KanbanPlaceholder, KanbanGhost, KanbanAddButton, KanbanSkeleton, KanbanDropBar, KanbanDropZone, type KanbanColumnProps, type KanbanCardProps, type KanbanCardContentProps } from "./Kanban/Kanban.js";
+export { KanbanTags, KanbanBoard, KanbanColumn, KanbanCard, KanbanCardContent, KanbanPlaceholder, KanbanGhost, KanbanAddButton, KanbanSkeleton, KanbanDropBar, KanbanDropZone, type KanbanColumnProps, type KanbanCardProps, type KanbanCardContentProps } from "./Kanban/Kanban.js";
 export { useKanbanDrag, type KanbanDragState } from "./Kanban/useKanbanDrag.js";
 export { CalendarEntry, type CalendarEntryProps } from "./CalendarEntry/CalendarEntry.js";
 export { landFrom, growIn, ghostTransform, type LandingOrigin } from "./motion/land.js";

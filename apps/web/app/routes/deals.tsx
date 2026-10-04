@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { decodeDealFilters, dealMatchesFilterSet, type DealFilterField, type DealFilterSet, pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, type StagesCollection } from "@spark/data";
-import { CollectionHeader, FilterBar, SearchField, SegmentedControl, DataTable, type FilterFieldDefinition, type TableColumn, ActionModal, CrmWorkspace, CrmSection, CrmLabel, Chip, Button, InlineEdit, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
+import { CollectionHeader, FilterBar, SearchField, SegmentedControl, DataTable, type FilterFieldDefinition, type TableColumn, ActionModal, CrmWorkspace, CrmSection, Chip, Button, InlineEdit, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanTags, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -33,6 +33,7 @@ export default function Deals() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [openedDealId, setOpenedDealId] = useState<string | null>(null);
   const tagsByDeal = useDealTags();
+  const [tagsExpanded, setTagsExpanded] = useState(false);
   const pipelinesCollection = getPipelinesCollection();
   const stagesCollection = getStagesCollection();
   const contactsCollection = getContactsCollection();
@@ -346,7 +347,6 @@ export default function Deals() {
     const chips = [
       ...(isOpen ? [<Chip key="probability" size="sm" title={`Estimativa inicial, não calibrada. ${deal.probabilitySampleSize ?? 0} negócios encerrados no funil. ${deal.probabilityCalculatedAt ? `Calculada em ${new Date(deal.probabilityCalculatedAt).toLocaleString("pt-BR")}.` : "Aguardando processamento."}`}>{deal.probabilityBasisPoints == null ? "Chance em análise" : `${Math.round(deal.probabilityBasisPoints / 100)}% · estimativa`}</Chip>] : []),
       ...(isOpen ? [] : [<Chip key="status" size="sm" dot tone={deal.isArchived ? "neutral" : deal.status === "won" ? "success" : "danger"}>{statusLabel}</Chip>]),
-      ...(tagsByDeal.get(deal.id) ?? []).map((tag) => <CrmLabel key={tag.id} size="sm" color={tag.color}>{tag.name}</CrmLabel>),
     ];
     const subtitle = [deal.contactId ? contactNames.get(deal.contactId) ?? "Contato indisponível" : null, deal.companyId ? companyNames.get(deal.companyId) ?? "Empresa indisponível" : null].filter(Boolean).join(" · ");
     return <KanbanCardContent
@@ -357,6 +357,7 @@ export default function Deals() {
         <MenuItem icon={<Icon name="page" />} render={<Link to={`/deals/${deal.id}`} />}>Abrir página completa</MenuItem>
         {!deal.isArchived && canMove && <><MenuSeparator /><MenuItem icon={<Icon name="right" />} onClick={() => { setMoveCandidate({ dealId: deal.id, stageId: deal.stageId }); setMovePipelineId(deal.pipelineId); setMoveStageId(deal.stageId); }}>Mover negócio</MenuItem>{isOpen && <><MenuItem icon={<Icon name="check" />} onClick={() => void closeDeal(deal, "won")}>Marcar como ganho</MenuItem><MenuItem icon={<Icon name="close" />} onClick={() => { setLossReason(""); setClosingDeal(deal); }}>Marcar como perdido</MenuItem></>}<MenuSeparator /><MenuItem icon={<Icon name="folder" />} onClick={() => void archiveDeal(deal)}>Arquivar negócio</MenuItem></>}
       </>} /> : undefined}
+      tags={<KanbanTags tags={tagsByDeal.get(deal.id) ?? []} expanded={tagsExpanded} onExpandedChange={setTagsExpanded} />}
       chips={chips}
       value={formatBRL(syncedAmount(deal.amount))}
       /* Próximo passo como sinal (ponto + texto curto): vermelho é atraso,

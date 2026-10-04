@@ -174,7 +174,7 @@ label.label { cursor: pointer; }
 /* A regra dá apenas uma pista de cor; o ícone identifica o significado. */
 .field[data-requirement] { --field-tint: var(--wa); }
 .field[data-requirement="required"] { --field-tint: var(--er); }
-.field[data-requirement] > .row::before {
+.field[data-requirement][data-empty] > .row::before {
   content: "";
   position: absolute;
   z-index: -1;

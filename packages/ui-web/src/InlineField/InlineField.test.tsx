@@ -35,6 +35,18 @@ function PersistedExample({ save }: { save: () => Promise<void> }) {
  * dinheiro deixavam de gravar. Estes testes existem para isso não voltar.
  */
 describe("InlineField", () => {
+  it.each(["required", "important"] as const)("retira o destaque de %s ao preencher e o restaura ao limpar", (requirement) => {
+    const { rerender } = render(<TooltipProvider><InlineField label="Origem" value="" empty requirement={requirement} /></TooltipProvider>);
+    const marker = screen.getByRole("button", { name: requirement === "required" ? "Campo obrigatório" : "Campo importante" });
+    const field = marker.closest("[data-requirement]");
+    expect(field).toHaveAttribute("data-empty", "true");
+    rerender(<TooltipProvider><InlineField label="Origem" value="Indicação" requirement={requirement} /></TooltipProvider>);
+    expect(field).not.toHaveAttribute("data-empty");
+    expect(marker).toBeVisible();
+    rerender(<TooltipProvider><InlineField label="Origem" value="" empty requirement={requirement} /></TooltipProvider>);
+    expect(field).toHaveAttribute("data-empty", "true");
+  });
+
   it("clicar no rótulo abre e foca o editor, sem exigir aria-label na tela", async () => {
     const user = userEvent.setup();
     const save = vi.fn();

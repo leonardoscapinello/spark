@@ -6,7 +6,7 @@ import { InlineEdit } from "../InlineEdit/InlineEdit.js";
 import { Icon } from "../Icon/Icon.js";
 import { Signal } from "../Signal/Signal.js";
 import { Fileira, Mesa, Prancha, Secao } from "../storybook/Prancha.js";
-import { KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton } from "./Kanban.js";
+import { KanbanTags, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton } from "./Kanban.js";
 import { useKanbanDrag } from "./useKanbanDrag.js";
 
 const meta: Meta<typeof KanbanBoard> = { title: "Dados/Quadro", component: KanbanBoard, args: { label: "Funil de exemplo", children: null } };
@@ -17,12 +17,12 @@ interface Card { id: string; column: string; name: string; value: string; tags: 
 const COLUMNS = [{ id: "contato", name: "Contato feito", dot: "var(--v2)" }, { id: "proposta", name: "Proposta enviada", dot: "var(--v1)" }, { id: "negociacao", name: "Negociação", dot: "var(--v4)" }];
 const SIGNAL = { danger: "Atrasada: Ligar para Ana", info: "Próxima: Enviar proposta", warning: "Sem próximo passo" } as const;
 
-function content(card: Pick<Card, "name" | "value" | "tags" | "owner" | "signal">, actions = true) {
+function content(card: Pick<Card, "name" | "value" | "tags" | "owner" | "signal">, actions = true, expanded = false, onExpandedChange: (expanded: boolean) => void = () => undefined) {
   return <KanbanCardContent
     title={card.name}
     subtitle="Ana Oliveira · Acme"
     {...(actions ? { actions: <Button size="sm" variant="ghost" iconOnly icon={<Icon name="more" />} aria-label={`Ações de ${card.name}`} /> } : {})}
-    chips={card.tags.map((tag, index) => <Chip key={tag} size="sm" dot={`var(--v${(index % 4) + 1})`}>{tag}</Chip>)}
+    tags={<KanbanTags tags={card.tags.map((tag, index) => ({ id: tag, name: tag, color: ["blue", "green", "purple", "amber"][index % 4] ?? "neutral" }))} expanded={expanded} onExpandedChange={onExpandedChange} />}
     value={card.value}
     signal={<Signal tone={card.signal}>{SIGNAL[card.signal]}</Signal>}
     owner={card.owner ? { name: card.owner } : null}
@@ -32,6 +32,7 @@ function content(card: Pick<Card, "name" | "value" | "tags" | "owner" | "signal"
 
 /** Arraste um cartão: o fantasma inclina, o destino abre o espaço tracejado e o cartão pousa. */
 function Board() {
+  const [tagsExpanded, setTagsExpanded] = useState(false);
   const [cards, setCards] = useState<Card[]>([
     { id: "1", column: "contato", name: "Contrato anual Acme", value: "R$ 48.000,00", tags: ["cliente"], owner: "Carla Prado", signal: "info" },
     { id: "2", column: "contato", name: "Renovação Nimbus", value: "R$ 12.500,00", tags: [], owner: "Rafael Moura", signal: "warning" },
@@ -49,12 +50,12 @@ function Board() {
           onDragOver={(event) => { event.preventDefault(); setOver(column.id); }}
           onDrop={(event) => { event.preventDefault(); setOver(null); const id = kanban.drag?.id; if (id) setCards((current) => current.map((card) => card.id === id ? { ...card, column: column.id } : card)); kanban.land(column.id); }}
           footer={<KanbanAddButton onClick={() => setCards((current) => [...current, { id: String(Date.now()), column: column.id, name: "Novo negócio", value: "R$ 0,00", tags: [], owner: null, signal: "warning" }])}>Adicionar negócio</KanbanAddButton>}>
-          {cards.filter((card) => card.column === column.id).map((card, index) => <KanbanCard key={card.id} cardId={card.id} index={index} away={kanban.isAway(card.id, card.column)} draggable onDragStart={(event) => kanban.start(event, card.id, card.column)} onDragEnd={() => { setOver(null); setAction(null); kanban.end(); }}>{content(card)}</KanbanCard>)}
+          {cards.filter((card) => card.column === column.id).map((card, index) => <KanbanCard key={card.id} cardId={card.id} index={index} away={kanban.isAway(card.id, card.column)} draggable onDragStart={(event) => kanban.start(event, card.id, card.column)} onDragEnd={() => { setOver(null); setAction(null); kanban.end(); }}>{content(card, true, tagsExpanded, setTagsExpanded)}</KanbanCard>)}
           {kanban.drag?.phase === "drag" && over === column.id && <KanbanPlaceholder height={kanban.drag.height} />}
         </KanbanColumn>;
       })}
     </KanbanBoard></div>
-    <KanbanGhost drag={kanban.drag} ghostRef={kanban.ghostRef} origin={kanban.origin}>{dragged && content(dragged, false)}</KanbanGhost>
+    <KanbanGhost drag={kanban.drag} ghostRef={kanban.ghostRef} origin={kanban.origin}>{dragged && content(dragged, false, tagsExpanded, setTagsExpanded)}</KanbanGhost>
     {kanban.drag?.phase === "drag" && <KanbanDropBar label="Soltar o negócio numa ação">
       {(["Ganho", "Perdido", "Arquivar"] as const).map((label) => <KanbanDropZone key={label} over={action === label} tone={label === "Ganho" ? "success" : label === "Perdido" ? "danger" : "neutral"} onDragOver={(event) => { event.preventDefault(); setAction(label); }} onDragLeave={() => setAction(null)} onDrop={(event) => { event.preventDefault(); setAction(null); kanban.land(null); }}>{action === label ? "Soltar aqui" : label}</KanbanDropZone>)}
     </KanbanDropBar>}

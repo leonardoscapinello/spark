@@ -58,7 +58,7 @@ type PersistenceState = "idle" | "saving" | "saved" | "error";
 export function FieldRequirement({ level }: { level: "required" | "important" }) {
   const label = level === "required" ? "Campo obrigatório" : "Campo importante";
   return <Tooltip content={label} size="compact"><button type="button" className={s.requirement} data-level={level} aria-label={label}>
-    <Icon name={level === "required" ? "alert" : "info"} />
+    <Icon name={level === "required" ? "asteriskCircle" : "info"} />
   </button></Tooltip>;
 }
 
@@ -220,7 +220,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
   }
 
   return (
-    <Field className={s.field} disabled={disabled} data-block={block || multiline || undefined} data-multiline={multiline || undefined} data-requirement={fieldRequirement}>
+    <Field className={s.field} disabled={disabled} data-block={block || multiline || undefined} data-multiline={multiline || undefined} data-requirement={fieldRequirement} data-empty={empty || undefined}>
       <div ref={row} className={s.row}>
         {rotulo}
         <div className={s.control}>

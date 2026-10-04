@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
   canMoveBetweenStages,
+  dealFieldValue,
   canCloseAtStage,
   contactId as contactIdFactory,
   companyId as companyIdFactory,
@@ -799,8 +800,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   }
   const openCommercial = () => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); };
   const summaryFields = <div className={styles.fields}>
-    <InlineField label="Produtos" requirement={fieldRequirement("products")} value={dealItems.length ? `${dealItems.length} ${dealItems.length === 1 ? "produto" : "produtos"}` : "Adicionar produto"} action={{ label: "Ver itens e valores", icon: "right", onClick: openCommercial }} />
-    {fieldRequirement("amount") && <InlineField label="Valor" requirement={fieldRequirement("amount")} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} action={{ label: "Editar itens e valores", icon: "right", onClick: openCommercial }} />}
+    <InlineField label="Produtos" empty={dealFieldValue(deal, "products", dealItems.length) == null} requirement={fieldRequirement("products")} value={dealItems.length ? `${dealItems.length} ${dealItems.length === 1 ? "produto" : "produtos"}` : "Adicionar produto"} action={{ label: "Ver itens e valores", icon: "right", onClick: openCommercial }} />
+    {fieldRequirement("amount") && <InlineField label="Valor" empty={dealFieldValue(deal, "amount", dealItems.length) == null} requirement={fieldRequirement("amount")} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} action={{ label: "Editar itens e valores", icon: "right", onClick: openCommercial }} />}
     <InlineField requirement={fieldRequirement("expectedCloseDate")} label="Previsão" numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
       {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
     </InlineField>

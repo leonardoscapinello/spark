@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { useLayoutEffect, useRef, type ComponentPropsWithoutRef, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Avatar } from "../Avatar/Avatar.js";
 import { Button, type ButtonProps } from "../Button/Button.js";
+import { crmColor } from "../CrmWorkspace/CrmWorkspace.js";
 import { Skeleton } from "../Feedback/Feedback.js";
 import { Icon } from "../Icon/Icon.js";
 import { Surface } from "../Surface/Surface.js";
@@ -72,6 +73,8 @@ export function KanbanCard({ cardId, index = 0, entering = false, away = false, 
 }
 
 export interface KanbanCardContentProps {
+  /** Etiquetas recolhíveis no topo do cartão. */
+  tags?: ReactNode;
   /** Nome do registro (normalmente um link para a página dele). */
   title: ReactNode;
   /** Pessoa · empresa, em tinta 3. */
@@ -90,10 +93,11 @@ export interface KanbanCardContentProps {
 }
 
 /** O miolo do cartão — o mesmo no quadro e no fantasma que segue o ponteiro. */
-export function KanbanCardContent({ title, subtitle, actions, chips, value, signal, owner, date }: KanbanCardContentProps) {
+export function KanbanCardContent({ title, subtitle, actions, chips, tags, value, signal, owner, date }: KanbanCardContentProps) {
   const hasChips = Array.isArray(chips) ? chips.length > 0 : Boolean(chips);
   const hasValueLine = (value !== undefined && value !== null) || Boolean(signal);
   return <>
+    {tags}
     <div className={s.line1}>
       <div className={s.heading}>
         <span className={s.name}>{title}</span>
@@ -111,6 +115,30 @@ export function KanbanCardContent({ title, subtitle, actions, chips, value, sign
       {date && <span className={s.date}>{date}</span>}
     </div>}
   </>;
+}
+
+/** Uma barrinha por etiqueta; a expansão é compartilhada pelo quadro. */
+export function KanbanTags({ tags, expanded, onExpandedChange }: {
+  tags: readonly { id: string; name: string; color?: string | null }[];
+  expanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
+}) {
+  if (tags.length === 0) return null;
+  return <button
+    type="button"
+    className={s.tags}
+    data-expanded={expanded}
+    aria-expanded={expanded}
+    aria-label={`${expanded ? "Recolher" : "Expandir"} etiquetas do quadro: ${tags.map(tag => tag.name).join(", ")}`}
+    draggable
+    onPointerDown={event => event.stopPropagation()}
+    onDragStart={event => { event.preventDefault(); event.stopPropagation(); }}
+    onClick={event => { event.stopPropagation(); onExpandedChange(!expanded); }}
+  >
+    {tags.map(tag => <span key={tag.id} className={s.tag} title={tag.name} style={{ backgroundColor: expanded ? undefined : crmColor(tag.color), borderColor: crmColor(tag.color) }}>
+      <span className={s.tagName} hidden={!expanded}>{tag.name}</span>
+    </span>)}
+  </button>;
 }
 
 /** O espaço tracejado do destino, com a altura do cartão na mão; nasce da altura zero. */

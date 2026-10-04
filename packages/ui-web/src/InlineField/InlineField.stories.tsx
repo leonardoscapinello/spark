@@ -92,3 +92,12 @@ export const Painel: Story = {
 export const ColunaEstreita: Story = {
   render: () => <Mesa largura={220}><TextRow label="Cargo" initial="Diretora de operações" /><TextRow label="Origem" initial="" /></Mesa>,
 };
+
+export const RegrasPreenchidasEVazias: Story = {
+  render: () => <Mesa largura={440}>
+    <InlineField label="Pessoa" value="Ana Oliveira" requirement="required" />
+    <InlineField label="Empresa" value="Não informada" empty requirement="required" />
+    <InlineField label="Origem" value="Indicação" requirement="important" />
+    <InlineField label="Previsão" value="Não informada" empty requirement="important" />
+  </Mesa>,
+};
