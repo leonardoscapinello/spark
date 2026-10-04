@@ -51,3 +51,25 @@ export function validateServiceConfiguration(config: ServiceConfiguration): void
     scopes.add(scope);
   }
 }
+
+export function resolveServiceClassification(current: { status: string; serviceStatusId: string | null; categoryId: string | null; impactId: string | null; urgencyId: string | null }, input: { status?: "open" | "snoozed" | "closed" | undefined; serviceStatusId?: string | null | undefined; categoryId?: string | null | undefined; impactId?: string | null | undefined; urgencyId?: string | null | undefined }, config: ServiceConfiguration, inbound = false) {
+  const existingStatus = config.statuses.find(s => s.id === current.serviceStatusId);
+  let serviceStatusId = input.serviceStatusId === undefined ? current.serviceStatusId : input.serviceStatusId;
+  let operational = input.status ?? current.status;
+  if (inbound && (current.status === "closed" || existingStatus?.resumeOnInbound || (!existingStatus && current.status === "snoozed"))) operational = "open";
+  if (input.serviceStatusId === undefined && operational !== current.status) {
+    const target = operational === "closed" ? "closed" : operational === "snoozed" ? "waiting" : "active";
+    serviceStatusId = config.statuses.filter(s => !s.archived && s.operationalType === target).sort((a,b) => a.sortOrder-b.sortOrder)[0]?.id ?? null;
+  }
+  if (!serviceStatusId && current.status !== "closed" && input.serviceStatusId === undefined && input.status === undefined) serviceStatusId = config.statuses.filter(s => !s.archived && s.operationalType === "active").sort((a,b) => a.sortOrder-b.sortOrder)[0]?.id ?? null;
+  const status = config.statuses.find(s => s.id === serviceStatusId);
+  if (input.serviceStatusId && (!status || status.archived)) throw new Error("Escolha um status ativo da organização.");
+  if (status) operational = status.operationalType === "closed" ? "closed" : status.operationalType === "waiting" ? "snoozed" : "open";
+  const categoryId = input.categoryId === undefined ? current.categoryId : input.categoryId;
+  if (input.categoryId && serviceCategoryPath(input.categoryId, config.categories).some(c => c.archived)) throw new Error("Escolha uma categoria ativa.");
+  const impactId = input.impactId === undefined ? current.impactId : input.impactId;
+  const urgencyId = input.urgencyId === undefined ? current.urgencyId : input.urgencyId;
+  for (const [value,kind] of [[input.impactId,"impact"],[input.urgencyId,"urgency"]]) if (value && !config.levels.some(l => l.id === value && l.kind === kind && !l.archived)) throw new Error("Escolha um nível ativo da organização.");
+  const servicePriorityId = servicePriority(impactId,urgencyId,config);
+  return { serviceStatusId, categoryId, impactId, urgencyId, servicePriorityId, status: operational === "closed" ? "closed" as const : operational === "snoozed" ? "snoozed" as const : "open" as const, statusDefinition: status ?? null };
+}

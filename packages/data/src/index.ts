@@ -47,3 +47,5 @@ export { createContactCompaniesCollection } from "./contact-companies-collection
 export { createScoreSnapshotsCollection } from "./score-snapshots-collection.js";
 
 export * from "./service-configuration-collections.js";
+
+export * from "./service-cycle-collections.js";

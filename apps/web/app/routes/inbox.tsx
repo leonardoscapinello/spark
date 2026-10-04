@@ -1,7 +1,9 @@
+import { useConversationSlaSummaries } from "../lib/service-cycles.client";
+import { ConversationService } from "../service/ConversationService";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { availableCannedReplies, personThreads, contactId, conversationId, conversationSlaState, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus, type Identity, type IdentityChannel, type Message } from "@spark/core";
+import { availableCannedReplies, personThreads, contactId, conversationId, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus, type Identity, type IdentityChannel, type Message } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
 import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, PersonIdentity, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
@@ -76,6 +78,7 @@ export default function Inbox() {
   const [layout, setLayout] = useState<InboxLayout>("chat");
   const [mobileView, setMobileView] = useState<"list" | "thread">("list");
   const [now, setNow] = useState(() => new Date());
+  const slaSummaries = useConversationSlaSummaries(now);
   const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get("conversation"));
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">("recent");
@@ -355,7 +358,7 @@ export default function Inbox() {
       dateTime={item.lastMessageAt}
       channels={channels}
       owner={ownerLabel(item)}
-      sla={slaSignal(item, now)}
+      sla={slaSummaries.get(item.id) ?? null}
       unread={awaiting && inbound > (seen[item.contactId] ?? 0) && item.contactId !== personId}
       priority={routes.some((route) => route.priority === "priority")}
       selected={item.contactId === personId}
@@ -444,7 +447,6 @@ export default function Inbox() {
 
   function renderDetails() {
     if (!selected || !personId) return null;
-    const sla = slaSignal(selected, now) ?? { tone: "neutral" as const, label: "Sem prazo" };
     return <Tabs label="Informações do atendimento" items={[
       { value: "conversation", label: "Atendimento", content: <div className={styles.fields}>
         <InlineField label="Responsável" value={selected.assigneeId ? userNames.get(selected.assigneeId) ?? "Responsável" : "Não atribuído"} empty={!selected.assigneeId} disabled={!canWrite || saving}>
@@ -456,7 +458,7 @@ export default function Inbox() {
         <InlineField label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
         <InlineField label="Situação" value={statusLabel(selected.status)} />
         <InlineField label="Prioridade" value={selected.priority === "priority" ? "Prioritária" : "Normal"} />
-        <InlineField label="Primeira resposta" value={<Signal tone={sla.tone}>{sla.label}</Signal>} />
+        <ConversationService key={selected.id} conversation={selected} now={now} canWrite={canWrite} />
         <InlineField label="Aberta em" value={formatDateTime(selected.createdAt)} />
       </div> },
       { value: "person", label: "Pessoa", content: <div className={styles.fields}>
@@ -603,16 +605,6 @@ function dayLabel(value: string, now: Date): string {
   return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }) }).format(date);
 }
 function relativeTime(value: string): string { const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60_000)); return minutes < 1 ? "agora" : minutes < 60 ? `${minutes} min` : minutes < 1_440 ? `${Math.floor(minutes / 60)} h` : `${Math.floor(minutes / 1_440)} d`; }
-/** Prazo da primeira resposta como sinal pequeno (ponto + texto curto); conversa fora da fila aberta não tem prazo. */
-function slaSignal(conversation: Conversation, now: Date): NonNullable<ConversationRowProps["sla"]> | null {
-  if (conversation.status !== "open") return null;
-  const state = conversationSlaState(conversation.firstResponseDueAt, conversation.firstRespondedAt, now);
-  if (state === "met") return { tone: "success", label: "No prazo" };
-  if (state === "breached") return { tone: "danger", label: "Vencido" };
-  if (state === "due_soon") return { tone: "warning", label: `Vence em ${timeUntil(conversation.firstResponseDueAt, now)}` };
-  return { tone: "neutral", label: `SLA ${timeUntil(conversation.firstResponseDueAt, now)}` };
-}
-function timeUntil(value: string, now: Date): string { const minutes = Math.ceil((new Date(value).getTime() - now.getTime()) / 60_000); if (minutes <= 0) return "agora"; if (minutes < 60) return `${minutes} min`; return `${Math.ceil(minutes / 60)} h`; }
 function fillTemplate(bodyText: string, values: string[]): string { return bodyText.replace(/\{\{\s*(\d+)\s*\}\}/g, (_, index: string) => values[Number(index) - 1]?.trim() || `{{${index}}}`); }
 
 /** Busca a URL assinada uma vez, ao montar; a bolha decide entre tocar ali mesmo ou oferecer o arquivo. */

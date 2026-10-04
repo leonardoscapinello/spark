@@ -1,7 +1,9 @@
+import { readServiceConfiguration } from "./service-configuration.repository.js";
+import { advanceServiceCycle } from "./service-cycle.js";
 import { Injectable } from "@nestjs/common";
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { contacts, conversations, createAppDbClient, identities, messages, withOrgContext, type SparkDb } from "@spark/db";
-import { contactId, conversationId, firstResponseDueAt, identityId, normalizeIdentityValue, type ContactId, type ConversationChannel, type ConversationId, type IdentityChannel, type IntegrationConnectionId, type OrgId } from "@spark/core";
+import { resolveServiceClassification, contactId, conversationId, firstResponseDueAt, identityId, normalizeIdentityValue, type ContactId, type ConversationChannel, type ConversationId, type IdentityChannel, type IntegrationConnectionId, type OrgId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 export interface InboundIngestParams {
@@ -50,17 +52,21 @@ export class InboundMessageIngestor {
       }
 
       const connectionFilter = params.connectionId ? eq(conversations.connectionId, params.connectionId) : isNull(conversations.connectionId);
-      const [existing] = await tx.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.orgId, orgId), eq(conversations.contactId, leadId), eq(conversations.channel, params.channel), connectionFilter, inArray(conversations.status, ["open", "snoozed"]))).orderBy(desc(conversations.lastMessageAt)).limit(1);
+      const [existing] = await tx.select().from(conversations).where(and(eq(conversations.orgId, orgId), eq(conversations.contactId, leadId), eq(conversations.channel, params.channel), connectionFilter)).orderBy(sql`CASE WHEN ${conversations.status} = 'closed' THEN 1 ELSE 0 END`, desc(conversations.lastMessageAt)).limit(1).for("update");
+      const config = await readServiceConfiguration(tx, orgId);
+      const { statusDefinition, ...classification } = resolveServiceClassification(existing ?? { status: "open", serviceStatusId: null, categoryId: null, impactId: null, urgencyId: null }, {}, config, true);
       const threadId = (existing?.id ?? conversationId.create()) as ConversationId;
       if (!existing) {
-        await tx.insert(conversations).values({ id: threadId, orgId, contactId: leadId, channel: params.channel, connectionId: params.connectionId ?? null, subject: params.conversationSubject, firstResponseDueAt: new Date(firstResponseDueAt(params.occurredAt, "normal")), lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, createdAt: params.occurredAt });
+        await tx.insert(conversations).values({ ...classification, id: threadId, orgId, contactId: leadId, channel: params.channel, connectionId: params.connectionId ?? null, subject: params.conversationSubject, firstResponseDueAt: new Date(firstResponseDueAt(params.occurredAt, "normal")), lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, createdAt: params.occurredAt });
         await this.events.append(tx, { orgId, contactId: leadId, type: "conversation.created", data: { conversationId: threadId, channel: params.channel } });
       } else {
-        await tx.update(conversations).set({ status: "open", snoozedUntil: null, lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, updatedAt: new Date() }).where(eq(conversations.id, threadId));
+        await tx.update(conversations).set({ ...classification, ...(existing.status === "closed" ? { resolvedAt: null, firstRespondedAt: null } : {}), snoozedUntil: null, lastMessageAt: params.occurredAt, lastInboundMessageAt: params.occurredAt, updatedAt: new Date() }).where(eq(conversations.id, threadId));
       }
 
       const insertedId = await params.insertMessage(tx, leadId, threadId);
       if (!insertedId) return false;
+      const [updated] = await tx.select().from(conversations).where(eq(conversations.id, threadId)).limit(1);
+      if (updated) await advanceServiceCycle(tx, orgId, updated, config, statusDefinition, "inbound", params.occurredAt);
       await this.events.append(tx, { orgId, contactId: leadId, type: "message.received", data: { conversationId: threadId, messageId: insertedId, channel: params.channel } });
       return true;
     });

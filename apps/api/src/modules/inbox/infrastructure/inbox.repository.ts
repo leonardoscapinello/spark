@@ -1,7 +1,9 @@
+import { readServiceConfiguration } from "./service-configuration.repository.js";
+import { advanceServiceCycle } from "./service-cycle.js";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
 import { contacts, conversations, createAppDbClient, messages, teams, users, withOrgContext, type SparkDb } from "@spark/db";
-import { firstResponseDueAt, type AddInternalNoteInput, type Conversation, type ConversationId, type ConversationWriteResponse, type CreateConversationInput, type Message, type MessageWriteResponse, type OrgId, type UpdateConversationInput, type UserId } from "@spark/core";
+import { resolveServiceClassification, firstResponseDueAt, type AddInternalNoteInput, type Conversation, type ConversationId, type ConversationWriteResponse, type CreateConversationInput, type Message, type MessageWriteResponse, type OrgId, type UpdateConversationInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 
 @Injectable()
@@ -16,8 +18,11 @@ export class InboxRepository {
       const contact = await tx.select({ id: contacts.id }).from(contacts).where(and(eq(contacts.id, input.contactId), eq(contacts.orgId, orgId), sql`${contacts.deletedAt} IS NULL`)).limit(1);
       if (!contact[0]) throw new BadRequestException("Contact is not available in this organization.");
       const now = new Date();
+      const config = await readServiceConfiguration(tx, orgId);
+      const { statusDefinition, ...classification } = resolveServiceClassification({ status: "open", serviceStatusId: null, categoryId: null, impactId: null, urgencyId: null }, {}, config);
       const txid = await captureTxid(tx);
       const [row] = await tx.insert(conversations).values({
+        ...classification,
         id: input.id,
         orgId,
         contactId: input.contactId,
@@ -27,6 +32,7 @@ export class InboxRepository {
         firstResponseDueAt: new Date(firstResponseDueAt(now, "normal")),
       }).returning();
       if (!row) throw new Error("Conversation insert returned no row.");
+      await advanceServiceCycle(tx, orgId, row, config, statusDefinition, "open", now);
       const conversation = toConversation(row);
       await this.events.append(tx, { orgId, contactId: conversation.contactId, type: "conversation.created", data: { conversationId: conversation.id, channel: conversation.channel, subject: conversation.subject } });
       return { conversation, txid };
@@ -35,7 +41,7 @@ export class InboxRepository {
 
   updateConversation(orgId: OrgId, actorUserId: UserId, id: ConversationId, input: UpdateConversationInput): Promise<ConversationWriteResponse> {
     return withOrgContext(this.db, orgId, async (tx) => {
-      const [current] = await tx.select().from(conversations).where(and(eq(conversations.id, id), eq(conversations.orgId, orgId))).limit(1);
+      const [current] = await tx.select().from(conversations).where(and(eq(conversations.id, id), eq(conversations.orgId, orgId))).limit(1).for("update");
       if (!current) throw new NotFoundException(`Conversation ${id} not found.`);
       if (input.assigneeId) {
         const assignee = await tx.select({ id: users.id }).from(users).where(and(eq(users.id, input.assigneeId), eq(users.orgId, orgId), sql`${users.deactivatedAt} IS NULL`)).limit(1);
@@ -45,19 +51,25 @@ export class InboxRepository {
         const team = await tx.select({ id: teams.id }).from(teams).where(and(eq(teams.id, input.teamId), eq(teams.orgId, orgId), sql`${teams.archivedAt} IS NULL`)).limit(1);
         if (!team[0]) throw new BadRequestException("Team is not active in this organization.");
       }
+      const config = await readServiceConfiguration(tx, orgId);
+      let classification;
+      try { classification = resolveServiceClassification(current, input, config); } catch (error) { throw new BadRequestException(error instanceof Error ? error.message : "Classificação inválida."); }
+      const { statusDefinition, ...values } = classification;
       const txid = await captureTxid(tx);
       const [row] = await tx.update(conversations).set({
-        ...(input.status !== undefined ? { status: input.status } : {}),
+        ...values,
+
         ...(input.priority !== undefined ? { priority: input.priority } : {}),
         ...(input.assigneeId !== undefined ? { assigneeId: input.assigneeId } : {}),
         ...(input.teamId !== undefined ? { teamId: input.teamId } : {}),
         ...(input.snoozedUntil !== undefined ? { snoozedUntil: input.snoozedUntil ? new Date(input.snoozedUntil) : null } : {}),
         ...(input.priority !== undefined && current.firstRespondedAt === null ? { firstResponseDueAt: new Date(firstResponseDueAt(current.createdAt, input.priority)) } : {}),
-        ...(input.status === "closed" && current.status !== "closed" ? { resolvedAt: new Date() } : {}),
-        ...(input.status === "open" && current.status === "closed" ? { resolvedAt: null } : {}),
+        ...(values.status === "closed" && current.status !== "closed" ? { resolvedAt: new Date() } : {}),
+        ...(values.status !== "closed" && current.status === "closed" ? { resolvedAt: null, firstRespondedAt: null } : {}),
         updatedAt: new Date(),
       }).where(and(eq(conversations.id, id), eq(conversations.orgId, orgId))).returning();
       if (!row) throw new NotFoundException(`Conversation ${id} not found.`);
+      await advanceServiceCycle(tx, orgId, row, config, statusDefinition, "update", new Date(), input.categoryId !== undefined || input.impactId !== undefined || input.urgencyId !== undefined);
       const conversation = toConversation(row);
       const eventType = input.status === "closed" ? "conversation.closed" : input.status === "open" ? "conversation.reopened" : "conversation.updated";
       await this.events.append(tx, { orgId, contactId: conversation.contactId, type: eventType, data: { conversationId: conversation.id, actorUserId, changes: input } });

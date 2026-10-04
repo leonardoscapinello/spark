@@ -9,3 +9,5 @@ export * from "./whatsappWindow.js";
 export * from "./personThreads.js";
 
 export * from "./serviceConfiguration.js";
+
+export * from "./serviceCycle.js";

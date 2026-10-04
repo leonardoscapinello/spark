@@ -26,10 +26,15 @@ export function createConversationsCollection() {
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0];
       if (!mutation) throw new Error("Conversation update has no mutation.");
-      const allowed = new Set(["status", "priority", "assigneeId", "teamId", "snoozedUntil"]);
+      const allowed = new Set(["serviceStatusId", "categoryId", "impactId", "urgencyId", "status", "priority", "assigneeId", "teamId", "snoozedUntil"]);
       const changed = Object.keys(mutation.changes);
       if (!changed.length || !changed.every((field) => allowed.has(field))) throw new Error(`Unsupported conversation field(s): ${changed.join(", ")}.`);
       const response = await inboxControllerUpdate(mutation.original.id, {
+        ...(changed.includes("serviceStatusId") ? { serviceStatusId: mutation.modified.serviceStatusId ?? null } : {}),
+        ...(changed.includes("categoryId") ? { categoryId: mutation.modified.categoryId ?? null } : {}),
+        ...(changed.includes("impactId") ? { impactId: mutation.modified.impactId ?? null } : {}),
+        ...(changed.includes("urgencyId") ? { urgencyId: mutation.modified.urgencyId ?? null } : {}),
+
         ...(changed.includes("status") ? { status: mutation.modified.status } : {}),
         ...(changed.includes("priority") ? { priority: mutation.modified.priority } : {}),
         ...(changed.includes("assigneeId") ? { assigneeId: mutation.modified.assigneeId } : {}),

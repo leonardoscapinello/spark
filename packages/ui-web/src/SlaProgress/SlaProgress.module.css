@@ -1,6 +1,6 @@
 /* Prazo de atendimento: texto curto em tinta 3 e trilho cavado de 4px; a cor
  * do estado fica só no preenchimento (e no texto quando estourou). */
-.root { --sla: var(--tx); display: grid; gap: var(--space-1); min-width: 0; }
+.root { --sla: var(--ok); display: grid; gap: var(--space-1); min-width: 0; }
 .root[data-state="due_soon"] { --sla: var(--wa); }
 .root[data-state="breached"] { --sla: var(--er); }
 .copy { overflow: hidden; color: var(--tx3); font-size: var(--fs-legenda); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }

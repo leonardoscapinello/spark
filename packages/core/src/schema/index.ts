@@ -40,3 +40,5 @@ export * from "./stageWorkflow.js";
 export * from "./chatWidget.js";
 
 export * from "./serviceConfiguration.js";
+
+export * from "./serviceCycle.js";

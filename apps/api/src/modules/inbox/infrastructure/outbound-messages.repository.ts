@@ -1,3 +1,5 @@
+import { readServiceConfiguration } from "./service-configuration.repository.js";
+import { advanceServiceCycle } from "./service-cycle.js";
 import { BadGatewayException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
 import { conversations, createAppDbClient, messages, withOrgContext, type SparkDb } from "@spark/db";
@@ -18,15 +20,18 @@ export class OutboundMessagesRepository {
       await tx.update(conversations).set({ lastMessageAt: now, updatedAt: now }).where(eq(conversations.id, conversationId));
       if (!message) throw new Error("Não foi possível enfileirar a mensagem.");
       await this.events.append(tx, { orgId, contactId: conversation.contactId as ContactId, type: "message.queued", data: { messageId: input.id, conversationId } });
-      return conversation;
+      return { ...conversation, queuedAt: now };
     });
     try {
       const externalId = await this.sender.send(orgId, queued.contactId as Message["contactId"], queued.channel as Conversation["channel"], queued.subject, input.body?.trim() ?? "", input.attachmentFileId, queued.connectionId as Conversation["connectionId"], input.template);
       return withOrgContext(this.db, orgId, async (tx) => {
         const sentAt = new Date();
+        await tx.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.id, conversationId), eq(conversations.orgId, orgId))).for("update");
         const [message] = await tx.update(messages).set({ status: "sent", externalId }).where(and(eq(messages.id, input.id), eq(messages.orgId, orgId))).returning();
-        const [conversation] = await tx.update(conversations).set({ firstRespondedAt: queued.firstRespondedAt ?? sentAt, updatedAt: sentAt }).where(and(eq(conversations.id, conversationId), eq(conversations.orgId, orgId))).returning();
+        const [conversation] = await tx.update(conversations).set({ firstRespondedAt: sql`COALESCE(${conversations.firstRespondedAt}, ${sentAt})`, updatedAt: sentAt }).where(and(eq(conversations.id, conversationId), eq(conversations.orgId, orgId))).returning();
         if (!message || !conversation) throw new Error("Mensagem enviada não encontrada.");
+        const config = await readServiceConfiguration(tx, orgId);
+        await advanceServiceCycle(tx, orgId, conversation, config, config.statuses.find(s => s.id === conversation.serviceStatusId) ?? null, "response", sentAt, false, queued.queuedAt);
         const txid = await captureTxid(tx);
         await this.events.append(tx, { orgId, contactId: message.contactId as ContactId, type: "message.sent", data: { messageId: message.id, conversationId, externalId } });
         return { message: toMessage(message), conversation: toConversation(conversation), txid };

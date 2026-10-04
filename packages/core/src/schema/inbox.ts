@@ -17,6 +17,11 @@ export const ConversationSchema = z.object({
   connectionId: zIntegrationConnectionId.nullable().default(null),
   subject: z.string().trim().min(1).max(300),
   status: z.enum(CONVERSATION_STATUSES).default("open"),
+  serviceStatusId: z.uuid().nullable().optional(),
+  categoryId: z.uuid().nullable().optional(),
+  impactId: z.uuid().nullable().optional(),
+  urgencyId: z.uuid().nullable().optional(),
+  servicePriorityId: z.uuid().nullable().optional(),
   priority: z.enum(CONVERSATION_PRIORITIES).default("normal"),
   assigneeId: zUserId.nullable().default(null),
   teamId: zTeamId.nullable().default(null),
@@ -60,6 +65,10 @@ export const CreateConversationInputSchema = ConversationSchema.pick({ id: true,
 export type CreateConversationInput = z.infer<typeof CreateConversationInputSchema>;
 
 export const UpdateConversationInputSchema = z.object({
+  serviceStatusId: z.uuid().nullable().optional(),
+  categoryId: z.uuid().nullable().optional(),
+  impactId: z.uuid().nullable().optional(),
+  urgencyId: z.uuid().nullable().optional(),
   status: z.enum(CONVERSATION_STATUSES).optional(),
   priority: z.enum(CONVERSATION_PRIORITIES).optional(),
   assigneeId: zUserId.nullable().optional(),

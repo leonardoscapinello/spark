@@ -1,3 +1,4 @@
+import { SlaProgress } from "../SlaProgress/SlaProgress.js";
 import { Children, createContext, isValidElement, useContext, useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
 import { Avatar } from "../Avatar/Avatar.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
@@ -83,7 +84,7 @@ export interface ConversationRowProps {
   /** Quem cuida: responsável ou equipe. */
   owner?: string | null;
   /** Prazo da primeira resposta como sinal: ponto + texto curto («No prazo», «Vencido»). */
-  sla?: { tone: SignalTone; label: string } | null;
+  sla?: { tone: SignalTone; label: string; percent?: number; state?: "on_track" | "due_soon" | "breached" } | null;
   /** Mensagem da pessoa ainda não vista: nome e assunto em tinta 1, ponto de carvão ao lado da hora. */
   unread?: boolean;
   priority?: boolean;
@@ -101,7 +102,7 @@ export function ConversationRow({ name, avatarUrl, title, snippet, time, dateTim
     {channels.slice(0, 3).map((item, position) => <Icon key={`${item.icon}-${position}`} name={item.icon} />)}
     <span className={s.channelLabel}>{primary.label}</span>
   </span> : null;
-  const signal = sla ? <span className={s.sla}><Signal tone={sla.tone}>{sla.label}</Signal></span> : null;
+  const signal = sla ? <span className={s.sla}>{typeof sla.percent === "number" ? <SlaProgress compact percent={sla.percent} state={sla.state ?? "on_track"} label={sla.label} /> : <Signal tone={sla.tone}>{sla.label}</Signal>}</span> : null;
   const when = <span className={s.when}>
     <time className={s.time} {...(dateTime ? { dateTime } : {})}>{time}</time>
     {unread && <span className={s.dot} aria-hidden="true" />}

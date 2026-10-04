@@ -1,3 +1,4 @@
+import { CategorySelectors } from "../service/CategorySelectors";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { SaveServiceConfigurationSchema, ServiceCategorySchema, ServiceStatusSchema, ServiceLevelSchema, PriorityMatrixSchema, SlaPolicySchema, serviceCategoryPath, selectServiceSla, type SaveServiceConfiguration, type ServiceConfiguration } from "@spark/core";
@@ -75,14 +76,6 @@ export default function AdminService() {
     {section === "sla" && <><DataTable label="Políticas de SLA" rows={visible(config.policies)} columns={policyColumns} rowKey={row => row.id} emptyText="Crie uma política geral ou específica por categoria e prioridade." actions={row => <Button size="sm" variant="ghost" onClick={() => edit({ ...row, kind: "policy" })}>Editar</Button>} /><PageHeader title="Simular seleção" /><CategorySelectors value={simulationCategory} onChange={setSimulationCategory} config={config} /><Select label="Prioridade da simulação" value={simulationPriority ?? ""} options={[{ value: "", label: "Não definida" }, ...priorities.map(p => ({ value: p.id, label: p.name }))]} onValueChange={value => setSimulationPriority(value || null)} /><Chip>{chosenPolicy ? `Política selecionada: ${chosenPolicy.name}` : "Sem política de SLA"}</Chip><Alert tone="info" title="Consumo preservado">Mudar categoria, prioridade ou status não reinicia o prazo. Um atendimento encerrado conserva o resultado; a reabertura inicia outro ciclo.</Alert></>}
     {draft && <ConfigurationEditor key={draft.id} initial={draft} config={config} onClose={() => setDraft(null)} />}
   </PageFrame>;
-}
-export function CategorySelectors({ value, onChange, config }: { value: string | null; onChange: (value: string | null) => void; config: Pick<ServiceConfiguration, "categories"> }) {
-  const path = serviceCategoryPath(value, config.categories);
-  return <div className={styles.form}>{[0, 1, 2].map(depth => {
-    const parent = depth === 0 ? null : path[depth - 1]?.id;
-    if (parent === undefined) return null;
-    return <Select key={depth} label={`Categoria de nível ${depth + 1}`} value={path[depth]?.id ?? ""} options={[{ value: "", label: depth === 0 ? "Geral / todas as categorias" : `Todas as categorias de nível ${depth + 1}` }, ...config.categories.filter(c => !c.archived && c.parentId === parent).map(c => ({ value: c.id, label: c.name }))]} onValueChange={id => onChange(id || parent)} />;
-  })}</div>;
 }
 function ConfigurationEditor({ initial, config, onClose }: { initial: SaveServiceConfiguration; config: ServiceConfiguration; onClose: () => void }) {
   const [draft, setDraft] = useState(initial);
