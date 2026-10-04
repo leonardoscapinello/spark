@@ -15,6 +15,8 @@ export interface KpiDelta {
 export interface KpiCardProps {
   label: string;
   value: string | number;
+  /** Mantém o valor visível até a superfície que o encobre terminar de fechar. */
+  animationPaused?: boolean;
   delta?: KpiDelta;
   /** Uma frase de apoio, 11 em tinta 3. */
   hint?: ReactNode;
@@ -32,7 +34,7 @@ export interface KpiCardProps {
  * (300, 32, −0,04em) e rola como odômetro quando muda. Só ergue no hover
  * quando é clicável.
  */
-export function KpiCard({ label, value, delta, hint, trend, state = "ready", onRetry, render }: KpiCardProps) {
+export function KpiCard({ label, value, animationPaused = false, delta, hint, trend, state = "ready", onRetry, render }: KpiCardProps) {
   const content = <>
     <span className={s.head}>
       <span className={s.label}>{label}</span>
@@ -42,7 +44,7 @@ export function KpiCard({ label, value, delta, hint, trend, state = "ready", onR
       ? <span className={s.loading} role="status" aria-label={`Carregando ${label}`}><Skeleton className={s.valueSkeleton} /></span>
       : state === "error"
         ? <span className={s.error} role="alert">Indisponível agora{onRetry && !render && <Button size="sm" variant="ghost" onClick={onRetry}>Tentar de novo</Button>}</span>
-        : <span className={s.value}><AnimatedValue value={value} /></span>}
+        : <span className={s.value}><AnimatedValue value={value} paused={animationPaused} /></span>}
     {hint && state === "ready" && <span className={s.hint}>{hint}</span>}
     {trend && trend.length > 1 && state === "ready" && <svg className={s.spark} viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"><path d={sparkPath(trend)} /></svg>}
   </>;

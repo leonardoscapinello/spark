@@ -143,6 +143,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const { data: transitions = [] } = useLiveQuery({ query: (q) => q.from({ transitions: getStageTransitionsCollection() }) });
   const dealsCollection = getDetailDealsCollection(dealIdFactory.from(params.dealId));
   const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [itemModalClosing, setItemModalClosing] = useState(false);
   const [quickPanel, setQuickPanel] = useState<"stage" | "commercial">("stage");
   const [embeddedItemEditorOpen, setEmbeddedItemEditorOpen] = useState(false);
   const [pageTab, setPageTab] = useState("atividade");
@@ -855,7 +856,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
   const statusChip = deal.status === "open" ? <Chip>{statusLabel(deal.status)}</Chip> : <Chip dot tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Chip>;
   /* Valor do negócio como KPI: o número rola (odômetro) quando os itens mudam. */
-  const valueContent = <KpiCard label="Valor do negócio" value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={<span className={styles.valueHint}>{statusChip}<Button variant="ghost" size="sm" trailingIcon={<Icon name="right" />} onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores</Button></span>} />;
+  const valueContent = <KpiCard animationPaused={itemModalOpen || itemModalClosing} label="Valor do negócio" value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={<span className={styles.valueHint}>{statusChip}<Button variant="ghost" size="sm" trailingIcon={<Icon name="right" />} onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores</Button></span>} />;
   const moveActions = <DealStageActions
     closed={!isOpen}
     destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && (target.id === stage.id || canMoveBetweenStages(stage, target, transitions))).map((target) => ({ id: target.id, label: target.name, color: target.color, current: target.id === stage.id, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []}
@@ -1061,7 +1062,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       </Surface>
       </div>
     </ActionModal>
-    {!embedded && <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalOpen(open); if (!open) setEditingItemId(null); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>{itemEditorContent}</ActionModal>}
+    {!embedded && <ActionModal open={itemModalOpen} onOpenChange={(open) => { setItemModalClosing(!open); setItemModalOpen(open); if (!open) setEditingItemId(null); }} onOpenChangeComplete={(open) => { if (!open) setItemModalClosing(false); }} title={editingItemId ? "Editar item" : "Adicionar produto"} confirmLabel={editingItemId ? "Salvar" : "Adicionar"} errorText="Não foi possível salvar o item. Tente de novo." onConfirm={saveItem}>{itemEditorContent}</ActionModal>}
     <ActionModal open={lossModalOpen} onOpenChange={setLossModalOpen} title="Marcar negócio como perdido" confirmLabel="Confirmar perda" errorText="Informe o motivo da perda." onConfirm={async () => { if (!lossReason.trim()) throw new Error("MISSING_REASON"); await closeDeal("lost", lossReason); setLossReason(""); }}>
       <Field><Label>Motivo da perda</Label><Textarea value={lossReason} onChange={(event) => setLossReason(event.target.value)} placeholder="O que impediu o fechamento?" /></Field>
     </ActionModal>

@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import s from "./AnimatedValue.module.css";
 
 const digits = "0123456789";
@@ -10,8 +10,10 @@ const digits = "0123456789";
  * uma casa não deslocar os dígitos que já estavam lá. A string formatada
  * continua sendo o único valor anunciado por tecnologia assistiva.
  */
-export function AnimatedValue({ value }: { value: string | number }) {
-  const text = String(value);
+export function AnimatedValue({ value, paused = false }: { value: string | number; paused?: boolean }) {
+  const [displayed, setDisplayed] = useState(value);
+  if (!paused && displayed !== value) setDisplayed(value);
+  const text = String(displayed);
   return <span className={s.root}>
     <span className={s.accessible}>{text}</span>
     <span aria-hidden="true" className={s.visual}>{Array.from(text, (character, index) => {
