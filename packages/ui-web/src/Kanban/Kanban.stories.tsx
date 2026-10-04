@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../Button/Button.js";
 import { Chip } from "../Chip/Chip.js";
+import { InlineEdit } from "../InlineEdit/InlineEdit.js";
 import { Icon } from "../Icon/Icon.js";
 import { Signal } from "../Signal/Signal.js";
 import { Fileira, Mesa, Prancha, Secao } from "../storybook/Prancha.js";
@@ -95,3 +96,15 @@ export const MuitosCartoes: Story = {
     </KanbanColumn>)}
   </KanbanBoard></div>,
 };
+
+function EditableHeadings() {
+  const [names, setNames] = useState(["Novo", "Contato feito", "Qualificação e apresentação da proposta comercial"]);
+  return <div style={{ display: "flex", height: 400 }}><KanbanBoard label="Títulos editáveis completos">
+    {names.map((name, index) => <KanbanColumn key={index} columnId={String(index)}
+      title={<InlineEdit label="nome da etapa" value={name} appearance="compact" wrap saveOnBlur onSave={(value) => setNames(current => current.map((item, position) => position === index ? value : item))} />}
+      dot="var(--v1)" count={0} total="R$ 0,00"
+      actions={<Button size="sm" variant="ghost" iconOnly icon={<Icon name="more" />} aria-label="Configurar etapa" />}
+      footer={<KanbanAddButton>Adicionar negócio</KanbanAddButton>} />)}
+  </KanbanBoard></div>;
+}
+export const TitulosEditaveis: Story = { render: () => <EditableHeadings /> };

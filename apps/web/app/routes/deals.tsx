@@ -362,7 +362,7 @@ export default function Deals() {
               /* A cor da etapa vive num ponto de 8px; ganho e perdido usam a tinta do estado. */
               dot={stage.kind === "outcome" ? (stage.id === "won" ? "var(--ok)" : "var(--er)") : crmColor(stage.color)}
               title={stage.kind === "stage" && canManagePipeline
-                ? <InlineEdit label={`nome da etapa ${stage.name}`} value={stage.name} appearance="compact" saveOnBlur onSave={(name) => saveStageName(stage.id, name)} />
+                ? <InlineEdit label={`nome da etapa ${stage.name}`} value={stage.name} appearance="compact" wrap saveOnBlur onSave={(name) => saveStageName(stage.id, name)} />
                 : stage.name}
               count={isLoadingDeals ? "…" : allStageDeals.length - (stageDeals.length === present.length ? 0 : 1)}
               total={isLoadingDeals ? undefined : formatBRL(total)}

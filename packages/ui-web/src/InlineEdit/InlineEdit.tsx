@@ -14,6 +14,8 @@ export interface InlineEditProps {
   errorText?: string;
   /** Salva quando o foco deixa o editor, como os campos da ficha do CRM. */
   saveOnBlur?: boolean;
+  /** Mostra o valor inteiro, quebrando linhas dentro da largura disponível. */
+  wrap?: boolean;
   /** title: título de página (44, herda a tipografia) · compact: rótulo de cabeçalho (28, herda a tipografia). */
   appearance?: "default" | "title" | "compact";
 }
@@ -24,7 +26,7 @@ export interface InlineEditProps {
  * tipografia de quem o envolve; Salvar e Cancelar moram dentro da caixa.
  * Apresentação e rascunho locais; validação e persistência ficam no consumidor.
  */
-export function InlineEdit({ label, value, onSave, options, placeholder = "Não informado", disabled = false, errorText = "Não foi possível salvar. Tente novamente.", saveOnBlur = false, appearance = "default" }: InlineEditProps) {
+export function InlineEdit({ label, value, onSave, options, placeholder = "Não informado", disabled = false, errorText = "Não foi possível salvar. Tente novamente.", saveOnBlur = false, wrap = false, appearance = "default" }: InlineEditProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [pending, setPending] = useState(false);
@@ -42,7 +44,7 @@ export function InlineEdit({ label, value, onSave, options, placeholder = "Não 
     catch { setError(true); }
     finally { busy.current = false; setPending(false); }
   }
-  return <div className={s.root} data-appearance={appearance}>
+  return <div className={s.root} data-appearance={appearance} data-wrap={wrap || undefined}>
     {!editing
       ? <div className={s.box} data-state="display" data-disabled={disabled || undefined}>
           <button type="button" className={s.value} data-empty={!value || undefined} disabled={disabled} aria-label={`Editar ${label}: ${shown}`} ref={(node) => { if (node && restoreFocus.current) { restoreFocus.current = false; node.focus(); } }} onClick={() => { setDraft(value); setError(false); setEditing(true); }}>
