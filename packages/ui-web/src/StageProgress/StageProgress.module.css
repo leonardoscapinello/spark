@@ -34,7 +34,7 @@
   min-height: var(--h-md);
   padding: var(--space-2) var(--space-6);
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: 0;
   background: var(--sf2);
   clip-path: polygon(0 0, calc(100% - var(--space-4)) 0, 100% 50%, calc(100% - var(--space-4)) 100%, 0 100%, var(--space-4) 50%);
   color: var(--tx3);
@@ -47,32 +47,6 @@
 }
 
 .step:first-child .action { clip-path: polygon(0 0, calc(100% - var(--space-4)) 0, 100% 50%, calc(100% - var(--space-4)) 100%, 0 100%); }
-/* Curvas no contorno preservam o encaixe sem a ponta cortante do polígono. */
-@supports (clip-path: shape(from 0 0, line to 100% 0, close)) {
-  .action {
-    clip-path: shape(from var(--space-1) 0,
-      line to calc(100% - var(--space-4)) 0,
-      curve to calc(100% - var(--space-3)) var(--space-1) with calc(100% - var(--space-3)) 0,
-      line to calc(100% - var(--space-1)) calc(50% - var(--space-1)),
-      curve to calc(100% - var(--space-1)) calc(50% + var(--space-1)) with 100% 50%,
-      line to calc(100% - var(--space-3)) calc(100% - var(--space-1)),
-      curve to calc(100% - var(--space-4)) 100% with calc(100% - var(--space-3)) 100%,
-      line to var(--space-1) 100%,
-      curve to 0 calc(100% - var(--space-1)) with 0 100%,
-      line to var(--space-3) calc(50% + var(--space-1)),
-      curve to var(--space-3) calc(50% - var(--space-1)) with var(--space-4) 50%,
-      line to 0 var(--space-1),
-      curve to var(--space-1) 0 with 0 0, close);
-  }
-  .step:first-child .action { clip-path: shape(from 0 0,
-    line to calc(100% - var(--space-4)) 0,
-    curve to calc(100% - var(--space-3)) var(--space-1) with calc(100% - var(--space-3)) 0,
-    line to calc(100% - var(--space-1)) calc(50% - var(--space-1)),
-    curve to calc(100% - var(--space-1)) calc(50% + var(--space-1)) with 100% 50%,
-    line to calc(100% - var(--space-3)) calc(100% - var(--space-1)),
-    curve to calc(100% - var(--space-4)) 100% with calc(100% - var(--space-3)) 100%,
-    line to 0 100%, close); }
-}
 button.action { cursor: pointer; }
 button.action:focus-visible { box-shadow: inset 0 0 0 var(--ui-focusWidth) var(--ring); }
 button.action:active { transform: scale(var(--scale-press)); transition-duration: var(--t-instant); }
