@@ -80,7 +80,7 @@ export const Painel: Story = {
         <InlineField label="Site" value="acme.com.br" href="https://acme.com.br">
           {(close) => <Input aria-label="Site" defaultValue="acme.com.br" onBlur={() => close()} />}
         </InlineField>
-        <InlineField label="Observações" block value={notes} empty={!notes}>
+        <InlineField label="Observações" multiline value={notes} empty={!notes}>
           {(close) => <Textarea aria-label="Observações" rows={3} defaultValue={notes} onBlur={(event) => { setNotes(event.target.value); close(); }} />}
         </InlineField>
       </Mesa>;

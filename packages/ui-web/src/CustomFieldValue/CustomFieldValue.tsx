@@ -8,7 +8,6 @@ import { Select } from "../Select/Select.js";
 import { Textarea } from "../Textarea/Textarea.js";
 import { InlineField } from "../InlineField/InlineField.js";
 import type { IconName } from "../Icon/Icon.js";
-import s from "./CustomFieldValue.module.css";
 
 
 /* Número, data e documento se leem em mono tabular, como no resto da ficha. */
@@ -22,6 +21,7 @@ export interface CustomFieldValueProps {
   disabled?: boolean;
   layout?: "inline" | "stacked";
   hint?: ReactNode;
+  requirement?: "required" | "important" | undefined;
   /** Recebe o valor já normalizado pelo core; lançar aqui volta como erro na tela. */
   onSave: (value: unknown) => Promise<void>;
   /** Como avisar a pessoa — a tela decide (toast, inline). */
@@ -52,7 +52,7 @@ export interface CustomFieldValueProps {
  * mostrando o valor antigo, o editor já com o novo, e nada dizendo o que estava
  * acontecendo. Se a gravação falhar, o valor volta ao que era e o erro aparece.
  */
-export function CustomFieldValue({ field, value, options, disabled = false, layout = "inline", hint, onSave, onError, onSuccess, preview, onPreviewRequest, action }: CustomFieldValueProps) {
+export function CustomFieldValue({ field, value, options, disabled = false, layout = "inline", hint, requirement, onSave, onError, onSuccess, preview, onPreviewRequest, action }: CustomFieldValueProps) {
   const choices = options ?? customFieldOptions(field);
   /* O valor que a tela mostra. Começa igual ao sincronizado e passa a ser o
    * que esta pessoa gravou, na hora — a volta do servidor demora, e mostrar o
@@ -117,8 +117,10 @@ export function CustomFieldValue({ field, value, options, disabled = false, layo
   const row = (control: (close: (persistence?: Promise<unknown>) => void, trackPersistence: (persistence: Promise<unknown>) => void) => ReactNode) => <InlineField
     label={field.label}
     required={field.required}
-    block={layout === "stacked" || field.type === "paragraph"}
+    block={layout === "stacked"}
+    multiline={field.type === "paragraph"}
     hint={hint}
+    requirement={requirement}
     value={shown === "" ? "Adicionar" : shown}
     empty={shown === ""}
     numeric={NUMERIC_TYPES.has(field.type)}
@@ -138,7 +140,7 @@ export function CustomFieldValue({ field, value, options, disabled = false, layo
   if (field.type === "multi_select") return row((_close, trackPersistence) => <Select<true> multiple label={field.label} value={Array.isArray(local) ? local.map(String) : []} placeholder="Selecionar" options={choices.map((option) => ({ value: option, label: option }))} disabled={busy} onValueChange={(next) => trackPersistence(save(next))} />);
   if (field.type === "date") return row((close) => <DatePicker label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); close(save(next)); }} />);
   if (field.type === "datetime") return row((close) => <DateTimePicker mode="datetime" label={field.label} value={draft} disabled={busy} onValueChange={(next) => { setDraft(next); close(save(next)); }} />);
-  if (field.type === "paragraph") return row((close) => <Textarea rows={3} className={s.area} aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
+  if (field.type === "paragraph") return row((close) => <Textarea rows={3} aria-label={field.label} value={draft} disabled={busy} placeholder="Sem valor" onChange={(event) => setDraft(event.target.value)} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
   if (field.type === "phone") return row((close) => <MaskedInput format="(##) #####-####" aria-label={field.label} value={draft} disabled={busy} placeholder="(11) 90000-0000" onValueChange={setDraft} onBlur={() => close(draft !== toDraft(field, local) ? save(draft) : undefined)} />);
   /* CPF e CNPJ no mesmo campo: a máscara troca sozinha ao passar de 11
    * dígitos. Pedir para escolher antes de digitar é uma decisão que o próprio

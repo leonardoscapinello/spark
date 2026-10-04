@@ -1,5 +1,0 @@
-/* A geometria da linha vive em InlineField: campo personalizado e campo do
- * sistema são a mesma coisa para quem usa, e ter duas folhas dizendo a mesma
- * medida foi o que desalinhou o painel antes. Aqui fica só o que é próprio do
- * editor de campo personalizado. */
-.area { width: 100%; min-height: calc(2 * var(--h-md)); resize: vertical; }

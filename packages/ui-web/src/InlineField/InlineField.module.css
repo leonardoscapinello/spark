@@ -18,7 +18,7 @@
 
 .labelColumn { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; min-height: var(--h-md); }
 .label { display: block; min-width: 0; overflow: hidden; color: var(--tx2); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); text-overflow: ellipsis; white-space: nowrap; }
-.required { margin-inline-start: var(--space-1); color: var(--er); }
+.labelRow { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
 .hint { color: var(--tx3); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
 
 .control { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
@@ -151,9 +151,11 @@
 .errorSlot { padding-inline-start: var(--space-3); }
 .error { display: block; color: var(--er); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
 
-.requirement { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--tx2); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
-.requirement > svg { flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--wa); }
-.requirement[data-level="required"] > svg { color: var(--er); }
+.requirement { --requirement-color: var(--wa); display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--ui-icon); height: var(--ui-icon); padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--sobre-cor); cursor: help; }
+.requirement[data-level="required"] { --requirement-color: var(--er); }
+.requirement > svg { width: 100%; height: 100%; }
+.requirement > svg > circle { fill: var(--requirement-color); stroke: var(--requirement-color); }
+.requirement:focus-visible { outline: var(--ui-focusWidth) solid var(--ring); outline-offset: var(--space-1); }
 
 /* Texto longo: o rótulo sobe, a caixa cresce com o conteúdo (raio de lista). */
 .field[data-block] > .row { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
@@ -165,6 +167,23 @@
 .field[data-block] .box[data-state="editing"] { padding-block: var(--space-1); }
 .field[data-block] .box[data-state="editing"] > .editor { align-items: stretch; }
 .field[data-block] .box[data-state="editing"] > .editor > * { height: auto; padding-block: var(--space-1); resize: none; }
+
+/* A regra dá apenas uma pista de cor; o ícone identifica o significado. */
+.field[data-requirement] { --field-tint: var(--wa); }
+.field[data-requirement="required"] { --field-tint: var(--er); }
+.field[data-requirement] > .row { background: linear-gradient(to right, color-mix(in srgb, var(--field-tint) 7%, transparent), transparent); }
+
+/* Texto longo tem espaço próprio, sem comprimir o texto entre controles. */
+.field[data-multiline] { --field-area-height: calc(var(--ui-textareaHeight) + var(--space-4)); }
+.field[data-multiline] > .row { row-gap: var(--space-2); padding-block: var(--space-3); }
+.field[data-multiline] .labelColumn { padding-top: 0; }
+.field[data-multiline] .box { min-height: var(--field-area-height); padding-inline-end: 0; }
+.field[data-multiline] .box[data-state="display"] { background: var(--sf2); box-shadow: var(--deb); }
+.field[data-multiline] .value { min-height: calc(var(--field-area-height) - var(--ui-hairline) * 2); padding: var(--space-4); line-height: var(--ui-bodyLine); }
+.field[data-multiline] .box[data-state="editing"] { padding-block: 0; }
+.field[data-multiline] .editor { height: auto; padding-inline-start: 0; }
+.field[data-multiline] .box[data-state="editing"] > .editor > textarea { min-height: calc(var(--field-area-height) - var(--ui-hairline) * 2); padding: var(--space-4); padding-inline-end: calc(var(--space-4) + var(--h-sm)); resize: vertical; }
+.field[data-multiline] .iconButton { position: absolute; inset-block-start: var(--space-2); inset-inline-end: var(--space-2); }
 
 @container (max-width: 240px) {
   .row { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }

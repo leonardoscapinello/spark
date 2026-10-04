@@ -18,9 +18,13 @@ export interface InlineFieldProps {
   required?: boolean;
   /** Campo que precisa da largura toda (texto longo): o rótulo sobe e a caixa cresce. */
   block?: boolean;
+  /** Área de texto: ocupa a largura toda e preserva a geometria do Textarea. */
+  multiline?: boolean;
   /** Valor em mono tabular: data, dinheiro, documento, telefone. */
   numeric?: boolean;
   hint?: ReactNode;
+  /** Regra sinalizada depois do nome, sem acrescentar uma segunda linha. */
+  requirement?: "required" | "important" | undefined;
   /**
    * Endereço que o valor aponta. Com ele, o valor parado vira link: um clique
    * edita, dois cliques abrem.
@@ -49,10 +53,10 @@ type PersistenceState = "idle" | "saving" | "saved" | "error";
 
 /** Sinal da regra da etapa; não repete o estado do valor ao lado do campo. */
 export function FieldRequirement({ level }: { level: "required" | "important" }) {
-  return <span className={s.requirement} data-level={level}>
+  const label = level === "required" ? "Campo obrigatório" : "Campo importante";
+  return <Tooltip content={label} size="compact"><button type="button" className={s.requirement} data-level={level} aria-label={label}>
     <Icon name={level === "required" ? "alert" : "info"} />
-    {level === "required" ? "Obrigatório" : "Importante"}
-  </span>;
+  </button></Tooltip>;
 }
 
 /**
@@ -81,8 +85,9 @@ export function FieldRequirement({ level }: { level: "required" | "important" })
  * mesma coisa — tiram o foco do controle, e é o `onBlur` dele que grava.
  * `Escape` desiste. Não há passo de confirmação.
  */
-export function InlineField({ label, value, leading, empty = false, disabled = false, required = false, block = false, numeric = false, hint, href, action, preview, onPreviewRequest, onCancel, defaultEditing = false, children }: InlineFieldProps) {
+export function InlineField({ label, value, leading, empty = false, disabled = false, required = false, block = false, multiline = false, numeric = false, hint, requirement, href, action, preview, onPreviewRequest, onCancel, defaultEditing = false, children }: InlineFieldProps) {
   const readOnly = disabled || children === undefined;
+  const fieldRequirement = required ? "required" : requirement;
   const [open, setOpen] = useState(defaultEditing);
   const [persistenceState, setPersistenceState] = useState<PersistenceState>("idle");
   const holder = useRef<HTMLDivElement>(null);
@@ -155,9 +160,11 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
   }, [editing]);
 
   /* Rótulo em UMA linha, cortado com reticências; a dica mostra o inteiro. */
-  const labelText = <>{label}{required && <span className={s.required} aria-label="obrigatório">*</span>}</>;
   const rotulo = <span className={s.labelColumn}>
-    {block ? <span className={s.label}>{labelText}</span> : <Tooltip content={label} pinOnClick={false} size="compact"><span className={s.label}>{labelText}</span></Tooltip>}
+    <span className={s.labelRow}>
+      {block || multiline ? <span className={s.label}>{label}</span> : <Tooltip content={label} pinOnClick={false} size="compact"><span className={s.label}>{label}</span></Tooltip>}
+      {fieldRequirement && <FieldRequirement level={fieldRequirement} />}
+    </span>
     {hint && <small className={s.hint}>{hint}</small>}
   </span>;
 
@@ -205,7 +212,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
   }
 
   return (
-    <div className={s.field} data-block={block || undefined}>
+    <div className={s.field} data-block={block || multiline || undefined} data-multiline={multiline || undefined} data-requirement={fieldRequirement}>
       <div className={s.row}>
         {rotulo}
         <div className={s.control}>

@@ -46,7 +46,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, AmountSummary, Alert, Checkbox, AvatarStack, Chip, RecordWorkspace, RecordSection, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, DatePicker, TimePicker, EmptyState, Field, FieldRequirement, Icon, IconTile, InlineEdit, InlineField, Input, RecordValue, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, AmountSummary, Alert, Checkbox, AvatarStack, Chip, RecordWorkspace, RecordSection, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, RecordValue, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -791,22 +791,22 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     if (!deal) return undefined;
     const rule = fieldRules.find(rule => rule.stageId === deal.stageId && rule.pipelineId === deal.pipelineId && rule.fieldKey === key);
     if (!rule || rule.level === "optional") return undefined;
-    return <FieldRequirement level={rule.level} />;
+    return rule.level;
   }
   const openCommercial = () => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); };
   const summaryFields = <div className={styles.fields}>
-    <InlineField label="Produtos" hint={fieldRequirement("products")} value={dealItems.length ? `${dealItems.length} ${dealItems.length === 1 ? "produto" : "produtos"}` : "Adicionar produto"} action={{ label: "Ver itens e valores", icon: "right", onClick: openCommercial }} />
-    {fieldRequirement("amount") && <InlineField label="Valor" hint={fieldRequirement("amount")} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} action={{ label: "Editar itens e valores", icon: "right", onClick: openCommercial }} />}
-    <InlineField hint={fieldRequirement("expectedCloseDate")} label="Previsão" numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
+    <InlineField label="Produtos" requirement={fieldRequirement("products")} value={dealItems.length ? `${dealItems.length} ${dealItems.length === 1 ? "produto" : "produtos"}` : "Adicionar produto"} action={{ label: "Ver itens e valores", icon: "right", onClick: openCommercial }} />
+    {fieldRequirement("amount") && <InlineField label="Valor" requirement={fieldRequirement("amount")} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} action={{ label: "Editar itens e valores", icon: "right", onClick: openCommercial }} />}
+    <InlineField requirement={fieldRequirement("expectedCloseDate")} label="Previsão" numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
       {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
     </InlineField>
-    <InlineField hint={fieldRequirement("ownerId")} label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>
+    <InlineField requirement={fieldRequirement("ownerId")} label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>
       {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
     </InlineField>
-    <InlineField hint={fieldRequirement("contactId")} label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" />, action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => void navigate(`/contacts/${linkedContact.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedContact} disabled={!canWrite || !canReadContacts}>
+    <InlineField requirement={fieldRequirement("contactId")} label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" />, action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => void navigate(`/contacts/${linkedContact.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedContact} disabled={!canWrite || !canReadContacts}>
       {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : selectParties(next?.value ?? null, deal.companyId))} />}
     </InlineField>
-    <InlineField hint={fieldRequirement("companyId")} label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" />, action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${linkedCompany.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies}>
+    <InlineField requirement={fieldRequirement("companyId")} label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" />, action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${linkedCompany.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies}>
       {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading || linksLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : selectParties(deal.contactId, next?.value ?? null))} />}
     </InlineField>
     {deal.status === "lost" && <InlineField label="Motivo da perda" value={deal.lossReason ?? "Não informado"} empty={!deal.lossReason} disabled />}
@@ -817,7 +817,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       options={fieldOptions.get(field.id) ?? []}
       key={field.id}
       field={field}
-      hint={fieldRequirement(`custom:${field.key}`)}
+      requirement={fieldRequirement(`custom:${field.key}`)}
       value={customValues[field.key]}
       disabled={!canWrite}
       onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
