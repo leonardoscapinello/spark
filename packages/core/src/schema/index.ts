@@ -38,3 +38,5 @@ export * from "./whatsappTemplate.js";
 export * from "./dealPresence.js";
 export * from "./stageWorkflow.js";
 export * from "./chatWidget.js";
+
+export * from "./serviceConfiguration.js";

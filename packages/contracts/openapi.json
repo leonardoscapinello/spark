@@ -2484,6 +2484,42 @@
         ]
       }
     },
+    "/v1/service-configuration": {
+      "post": {
+        "operationId": "ServiceConfigurationController_save",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveServiceConfigurationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceConfigurationWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "service-configuration"
+        ]
+      }
+    },
     "/v1/inbox/conversations": {
       "post": {
         "operationId": "InboxController_create",
@@ -9458,7 +9494,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:44:05.293Z",
+                "default": "2026-10-04T16:26:01.759Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9757,7 +9793,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:44:05.296Z",
+                "default": "2026-10-04T16:26:01.763Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -9978,7 +10014,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:44:05.297Z",
+                "default": "2026-10-04T16:26:01.766Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10203,7 +10239,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:44:05.299Z",
+                "default": "2026-10-04T16:26:01.767Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10408,7 +10444,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-03T23:44:05.300Z",
+                "default": "2026-10-04T16:26:01.769Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -11403,6 +11439,329 @@
         },
         "required": [
           "archived"
+        ]
+      },
+      "SaveServiceConfigurationDto": {
+        "type": "object",
+        "properties": {
+          "configuration": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "archived": {
+                    "type": "boolean"
+                  },
+                  "parentId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "nullable": true
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "category"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "sortOrder",
+                  "archived",
+                  "parentId",
+                  "kind"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "archived": {
+                    "type": "boolean"
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "neutral",
+                          "blue",
+                          "green",
+                          "red",
+                          "amber",
+                          "purple"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                      }
+                    ]
+                  },
+                  "operationalType": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "waiting",
+                      "closed"
+                    ]
+                  },
+                  "pauseFirstResponse": {
+                    "type": "boolean"
+                  },
+                  "pauseTotal": {
+                    "type": "boolean"
+                  },
+                  "resumeOnInbound": {
+                    "type": "boolean"
+                  },
+                  "budgetMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991,
+                    "nullable": true
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "status"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "sortOrder",
+                  "archived",
+                  "color",
+                  "operationalType",
+                  "pauseFirstResponse",
+                  "pauseTotal",
+                  "resumeOnInbound",
+                  "budgetMinutes",
+                  "kind"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "archived": {
+                    "type": "boolean"
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "neutral",
+                          "blue",
+                          "green",
+                          "red",
+                          "amber",
+                          "purple"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "level"
+                    ]
+                  },
+                  "levelKind": {
+                    "type": "string",
+                    "enum": [
+                      "impact",
+                      "urgency",
+                      "priority"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "sortOrder",
+                  "archived",
+                  "color",
+                  "kind",
+                  "levelKind"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "impactId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "urgencyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "priorityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "matrix"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "impactId",
+                  "urgencyId",
+                  "priorityId",
+                  "kind"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "archived": {
+                    "type": "boolean"
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "nullable": true
+                  },
+                  "priorityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "nullable": true
+                  },
+                  "firstResponseMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "totalMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "warningPercent": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 99
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "policy"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "sortOrder",
+                  "archived",
+                  "categoryId",
+                  "priorityId",
+                  "firstResponseMinutes",
+                  "totalMinutes",
+                  "warningPercent",
+                  "kind"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "configuration"
+        ]
+      },
+      "ServiceConfigurationWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "txid"
         ]
       },
       "CreateConversationDto": {

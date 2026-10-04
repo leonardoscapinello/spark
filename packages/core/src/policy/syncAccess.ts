@@ -2,6 +2,12 @@ import type { Capability } from "./capability.js";
 
 export const SYNC_RESOURCES = [
   "organizations",
+  "service_categories",
+  "service_statuses",
+  "service_levels",
+  "priority_matrix",
+  "sla_policies",
+
   "organization_themes",
   "contacts",
   "score_snapshots",
@@ -73,6 +79,11 @@ const READ_REQUIREMENTS: Record<
   Exclude<SyncResource, "organizations" | "organization_themes" | "events" | "users" | "user_preferences" | "user_preference_items" | "link_previews" | "company_registrations" | "company_registration_activities" | "company_registration_members" | "company_registration_tax_regimes">,
   readonly Capability[]
 > = {
+  service_categories: ["inbox:read", "settings:manage"],
+  service_statuses: ["inbox:read", "settings:manage"],
+  service_levels: ["inbox:read", "settings:manage"],
+  priority_matrix: ["inbox:read", "settings:manage"],
+  sla_policies: ["inbox:read", "settings:manage"],
   contacts: ["contacts:read"],
   score_snapshots: ["contacts:read"],
   contact_companies: ["contacts:read", "companies:read", "deals:read"],

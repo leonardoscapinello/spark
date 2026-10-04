@@ -45,3 +45,5 @@ export { subscribeDealPresence, type DealPresenceState } from "./deal-presence.j
 export { createContactCompaniesCollection } from "./contact-companies-collection.js";
 
 export { createScoreSnapshotsCollection } from "./score-snapshots-collection.js";
+
+export * from "./service-configuration-collections.js";

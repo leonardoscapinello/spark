@@ -3480,6 +3480,133 @@ export interface UpdateCompanyArchiveDto {
   archived: boolean;
 }
 
+export type SaveServiceConfigurationDtoConfiguration = {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  archived: boolean;
+  /**
+     * @nullable
+     * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+     */
+  parentId: string | null;
+  kind: 'category';
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  archived: boolean;
+  color: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
+  operationalType: 'active' | 'waiting' | 'closed';
+  pauseFirstResponse: boolean;
+  pauseTotal: boolean;
+  resumeOnInbound: boolean;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  budgetMinutes: number | null;
+  kind: 'status';
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  archived: boolean;
+  color: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
+  kind: 'level';
+  levelKind: 'impact' | 'urgency' | 'priority';
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  impactId: string;
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  urgencyId: string;
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  priorityId: string;
+  kind: 'matrix';
+} | {
+  /** @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$ */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder: number;
+  archived: boolean;
+  /**
+     * @nullable
+     * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+     */
+  categoryId: string | null;
+  /**
+     * @nullable
+     * @pattern ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+     */
+  priorityId: string | null;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     */
+  firstResponseMinutes: number;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     */
+  totalMinutes: number;
+  /**
+     * @minimum 1
+     * @maximum 99
+     */
+  warningPercent: number;
+  kind: 'policy';
+};
+
+export interface SaveServiceConfigurationDto {
+  configuration: SaveServiceConfigurationDtoConfiguration;
+}
+
+export interface ServiceConfigurationWriteResponseDto {
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
 export type CreateConversationDtoChannel = typeof CreateConversationDtoChannel[keyof typeof CreateConversationDtoChannel];
 
 
@@ -10704,6 +10831,68 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getCompaniesControllerArchiveMutationOptions(options), queryClient);
+    }
+
+export const serviceConfigurationControllerSave = (
+    saveServiceConfigurationDto: SaveServiceConfigurationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<ServiceConfigurationWriteResponseDto>(
+      {url: `/v1/service-configuration`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveServiceConfigurationDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getServiceConfigurationControllerSaveMutationKey = () => ['serviceConfigurationControllerSave'] as const;
+
+export const getServiceConfigurationControllerSaveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof serviceConfigurationControllerSave>>, TError,ServiceConfigurationControllerSaveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof serviceConfigurationControllerSave>>, TError,ServiceConfigurationControllerSaveMutationVariables, TContext> => {
+
+const mutationKey = getServiceConfigurationControllerSaveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof serviceConfigurationControllerSave>>, ServiceConfigurationControllerSaveMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  serviceConfigurationControllerSave(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ServiceConfigurationControllerSaveMutationResult = NonNullable<Awaited<ReturnType<typeof serviceConfigurationControllerSave>>>
+    export type ServiceConfigurationControllerSaveMutationBody = SaveServiceConfigurationDto
+    export type ServiceConfigurationControllerSaveMutationError = unknown
+    export type ServiceConfigurationControllerSaveMutationVariables = {data: SaveServiceConfigurationDto}
+
+    export const useServiceConfigurationControllerSave = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof serviceConfigurationControllerSave>>, TError,ServiceConfigurationControllerSaveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof serviceConfigurationControllerSave>>,
+        TError,
+        ServiceConfigurationControllerSaveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getServiceConfigurationControllerSaveMutationOptions(options), queryClient);
     }
 
 export const inboxControllerCreate = (

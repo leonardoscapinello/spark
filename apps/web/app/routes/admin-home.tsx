@@ -14,6 +14,13 @@ interface AdminArea {
 }
 
 const sections: { title: string; areas: AdminArea[] }[] = [
+  { title: "Atendimento", areas: [
+    { title: "Catálogo de serviços", to: "/admin/service/catalog", icon: "folder", description: "Categorias de primeiro, segundo e terceiro nível.", capability: "settings:manage" },
+    { title: "Status do atendimento", to: "/admin/service/statuses", icon: "list", description: "Estados, pausas e prazos de permanência.", capability: "settings:manage" },
+    { title: "Impacto, urgência e prioridade", to: "/admin/service/priorities", icon: "alert", description: "Cadastre os níveis usados pela equipe.", capability: "settings:manage" },
+    { title: "Matriz de prioridade", to: "/admin/service/matrix", icon: "grid", description: "Defina a prioridade de cada combinação.", capability: "settings:manage" },
+    { title: "Políticas de SLA", to: "/admin/service/sla", icon: "clock", description: "Primeira resposta e atendimento total em horas úteis.", capability: "settings:manage" },
+  ] },
   { title: "Pessoas e acesso", areas: [
     { title: "Usuários", to: "/admin/users", icon: "user", description: "Convide pessoas e gerencie o acesso.", capability: "users:manage" },
     { title: "Times", to: "/admin/teams", icon: "team", description: "Organize as equipes de trabalho.", capability: "users:manage" },
