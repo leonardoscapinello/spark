@@ -39,3 +39,15 @@ Vocabulário do produto para acompanhar relações comerciais e atendimentos.
 **SLA**: Compromisso de prazo para um objetivo do atendimento ou de outra operação. O prazo é medido em tempo útil segundo o calendário aplicável.
 
 **Pausa de SLA**: Intervalo em que um relógio de SLA não consome seu orçamento de tempo, conforme a regra do status. É diferente de encerrar o atendimento.
+
+## Campos e relações
+
+**Entidade proprietária do campo**: Tipo de registro ao qual um campo e seus valores pertencem, independentemente da tela que os apresenta.
+
+**Grupo de campos**: Conjunto nomeado e ordenado de campos da mesma entidade para organizar seu preenchimento e apresentação.
+
+**Exigência contextual**: Regra que solicita ou exige um dado para uma ação específica de um processo, inclusive um dado de registro relacionado.
+
+**Referência compartilhada**: Acesso ao mesmo dado de um registro por diferentes contextos, sem criar cópias do valor.
+
+**Cópia entre campos**: Transferência explícita de um valor para outro campo e registro, produzindo um valor independente no destino.
