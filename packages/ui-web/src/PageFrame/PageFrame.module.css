@@ -1,5 +1,4 @@
-/* Área de trabalho (origem: Espaço & grid): padding 32 no desktop e 16 no
- * celular; o cabeçalho encosta no topo e a barra da coleção vem logo abaixo. */
+/* Área de trabalho: cabeçalho, filtros e conteúdo compartilham o mesmo recuo. */
 .root { --gutter: var(--space-8); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-4); width: 100%; min-width: 0; margin-inline: auto; padding: var(--gutter); }
 .content > :not(header:first-child) { box-sizing: border-box; width: 100%; max-width: var(--ui-settingsContentWidth); align-self: center; }
 .root > header:first-child {
@@ -7,13 +6,10 @@
   display: flex;
   align-items: center;
   min-height: var(--space-16);
-  margin: calc(var(--gutter) * -1) calc(var(--gutter) * -1) 0;
-  padding: var(--space-4) var(--gutter);
-  /* Título e barra de busca se encostam com ~8px de respiro: a margem
-   * negativa come metade do gap do frame sem mexer nos demais blocos. */
-  margin-bottom: calc(var(--space-2) * -1);
+  margin: 0;
+  padding: 0;
 }
 @media (max-width: 760px) {
   .root { --gutter: var(--space-4); }
-  .root > header:first-child { padding-block: var(--space-3); }
+  .root > header:first-child { min-height: var(--space-12); }
 }
