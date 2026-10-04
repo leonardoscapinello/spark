@@ -25,3 +25,5 @@ export const Variantes: Story = { render: () => <Prancha>
 
 export const TituloLongo: Story = { render: () => <PageHeader title="Configuração dos campos obrigatórios e importantes de cada etapa do funil comercial" description="Campo obrigatório impede o negócio de avançar enquanto estiver vazio." actions={<Button>Salvar</Button>} /> };
 export const Estreito: Story = { render: () => <Mesa largura={360}><PageHeader eyebrow="Administração" title="Grupos de permissões" description="Defina o que cada equipe pode consultar, criar e administrar." actions={<Button>Novo grupo</Button>} /></Mesa> };
+
+export const Ficha: Story = { args: { variant: "record", title: "Consultoria trimestral", eyebrow: "Funil de demonstração · Qualificado", back: <BackLink href="#negocios">Voltar aos negócios</BackLink> } };

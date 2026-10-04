@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { decodeDealFilters, dealMatchesFilterSet, type DealFilterField, type DealFilterSet, pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, type StagesCollection } from "@spark/data";
-import { CollectionHeader, FilterBar, SearchField, SegmentedControl, DataTable, type FilterFieldDefinition, type TableColumn, ActionModal, CrmWorkspace, CrmSection, CrmLabel, Chip, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
+import { CollectionHeader, FilterBar, SearchField, SegmentedControl, DataTable, type FilterFieldDefinition, type TableColumn, ActionModal, CrmWorkspace, CrmSection, CrmLabel, Chip, Button, InlineEdit, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -65,7 +65,7 @@ export default function Deals() {
   });
   const mainPipeline = pipelines.find((pipeline) => pipeline.id === selectedPipelineId) ?? pipelines.find((pipeline) => pipeline.isDefault) ?? pipelines[0];
   const dealsCollection = useMemo(() => mainPipeline ? getBoardDealsCollection(mainPipeline.id, statusFilter, showArchived) : null, [mainPipeline, statusFilter, showArchived]);
-  const { data: deals = [], isLoading: isLoadingDeals } = useLiveQuery({ query: (q) => dealsCollection ? q.from({ deals: dealsCollection }) : undefined }, [dealsCollection]);
+  const { data: deals = [], isLoading: isLoadingDeals, isError: isDealsError } = useLiveQuery({ query: (q) => dealsCollection ? q.from({ deals: dealsCollection }) : undefined }, [dealsCollection]);
   const session = getSession();
   const canReadContacts = session?.capabilities.includes("contacts:read") ?? false;
   const canReadCompanies = session?.capabilities.includes("companies:read") ?? false;
@@ -375,21 +375,18 @@ export default function Deals() {
           {canManagePipeline && <><MenuSeparator /><MenuItem icon={<Icon name="pencil" />} onClick={() => setPipelineEditorOpen(true)}>Configurar este funil</MenuItem><MenuItem icon={<Icon name="plus" />} onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</MenuItem></>}
         </>}>{mainPipeline.name}</MenuButton>
       }
-        count={isLoadingDeals ? "Carregando…" : filteredDeals.length === deals.length ? `${deals.length} negócios` : `${filteredDeals.length} de ${deals.length} negócios`}
-        value={isLoadingDeals ? "—" : formatBRL(sum(filteredDeals.map(deal => syncedAmount(deal.amount))))}
+        count={isDealsError ? "Sincronização indisponível" : isLoadingDeals ? "Carregando…" : filteredDeals.length === deals.length ? `${deals.length} negócios` : `${filteredDeals.length} de ${deals.length} negócios`}
+        value={isDealsError || isLoadingDeals ? "—" : formatBRL(sum(filteredDeals.map(deal => syncedAmount(deal.amount))))}
         valueLabel={filters.groups.length || search ? "Valor dos negócios filtrados" : "Valor total dos negócios"}
-        actions={canWrite && <Button icon={<Icon name="plus" />} onClick={() => openDealModal()}>Novo negócio</Button>}
-      />
-      <CollectionToolbar
-        search={<SearchField label="Buscar negócios" placeholder="Buscar negócio por nome" value={search} onValueChange={value => updateQuery("q",value)} />}
-        filters={<>
+        controls={<><SearchField label="Buscar negócios" placeholder="Buscar negócio por nome" value={search} onValueChange={value => updateQuery("q",value)} />
           <Select appearance="filter" label="Situação dos negócios" value={showArchived ? "archived" : statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "archived", label: "Arquivados" }, { value: "all", label: "Todas as situações" }]} onValueChange={value => updateQuery("status",value)} />
           <FilterBar fields={filterFields} value={filters} onChange={changeFilters} label="Filtros avançados" />
           {(filters.groups.length > 0 || search) && <Button variant="ghost" onClick={() => setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete("filters"); next.delete("q"); return next; }, { replace: true })}>Limpar</Button>}
           <SegmentedControl label="Visualização dos negócios" value={listView ? "list" : "board"} options={[{value:"board",label:"Kanban"},{value:"list",label:"Lista"}]} onValueChange={value => updateQuery("view",value)} />
         </>}
+        actions={canWrite && <Button icon={<Icon name="plus" />} onClick={() => openDealModal()}>Novo negócio</Button>}
       />
-      {listView ? <div className={styles.listView}>
+      {isDealsError ? <EmptyState icon="folder" title="Não foi possível carregar os negócios" description="A sincronização falhou. Os totais estão indisponíveis; isso não significa que seus negócios foram excluídos." action={<Button onClick={() => window.location.reload()}>Tentar novamente</Button>} /> : listView ? <div className={styles.listView}>
         <DataTable label="Negócios do funil" rows={filteredDeals.slice(listPage * 50, (listPage + 1) * 50)} columns={listColumns} rowKey={deal => deal.id} rowLabel={deal => deal.name} state={isLoadingDeals ? "loading" : "ready"} hiddenColumnIds={hiddenColumns} onHiddenColumnsChange={setHiddenColumns} onRowOpen={(deal, options) => { if (options.newTab) window.open(`/deals/${deal.id}`, "_blank", "noopener,noreferrer"); else setOpenedDealId(deal.id); }} emptyText="Nenhum negócio corresponde aos filtros." />
         {filteredDeals.length > 50 && <div className={styles.listPagination}><Button variant="ghost" disabled={listPage === 0} onClick={() => setListPage(page => page - 1)}>Anterior</Button><Text>Página {listPage + 1} de {Math.ceil(filteredDeals.length / 50)}</Text><Button variant="ghost" disabled={(listPage + 1) * 50 >= filteredDeals.length} onClick={() => setListPage(page => page + 1)}>Próxima</Button></div>}
       </div> :
@@ -415,7 +412,7 @@ export default function Deals() {
               title={stage.kind === "stage" && canManagePipeline
                 ? <InlineEdit label={`nome da etapa ${stage.name}`} value={stage.name} appearance="compact" wrap saveOnBlur onSave={(name) => saveStageName(stage.id, name)} />
                 : stage.name}
-              count={isLoadingDeals ? "…" : allStageDeals.length - (stageDeals.length === present.length ? 0 : 1)}
+              count={isDealsError ? "Sincronização indisponível" : isLoadingDeals ? "…" : allStageDeals.length - (stageDeals.length === present.length ? 0 : 1)}
               total={isLoadingDeals ? undefined : formatBRL(total)}
               actions={stage.kind === "stage" && canManagePipeline ? <StageSettingsButton stage={stage} stages={stages} /> : undefined}
               over={kanban.drag?.phase === "drag" && dropTarget === stage.id}

@@ -5,6 +5,7 @@ import styles from "./PageHeader.module.css";
 export interface PageHeaderProps {
   /** Contexto acima do título (ex.: "Administração"), em mono 11 tinta 3. */
   eyebrow?: string;
+  variant?: "page" | "record";
   title: ReactNode;
   /** @deprecated Mantido por compatibilidade: o título da identidade não leva ícone — a navegação já diz onde se está. */
   icon?: IconName;
@@ -18,13 +19,14 @@ export interface PageHeaderProps {
  * título 500 em 22 no celular e 28 a partir de 1024, tracking negativo, uma
  * frase de apoio em tinta 2 e as ações à direita.
  */
-export function PageHeader({ eyebrow, title, description, actions, back }: PageHeaderProps) {
+export function PageHeader({ eyebrow, title, description, actions, back, variant = "page" }: PageHeaderProps) {
   return (
-    <header className={styles.header}>
+    <header className={styles.header} data-variant={variant}>
       {back && <div className={styles.back}>{back}</div>}
       <div className={styles.copy}>
-        {eyebrow && <p className={styles.eyebrow}>{eyebrow}</p>}
+        {eyebrow && variant === "page" && <p className={styles.eyebrow}>{eyebrow}</p>}
         <h1>{title}</h1>
+        {eyebrow && variant === "record" && <p className={styles.context}>{eyebrow}</p>}
         {description && <p className={styles.description}>{description}</p>}
       </div>
       {actions && <div className={styles.actions}>{actions}</div>}

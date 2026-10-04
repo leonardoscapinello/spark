@@ -678,7 +678,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   }
 
   if (!deal) {
-    return <PageFrame className={styles.page}><BackLink render={<Link to="/deals" />}>Negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton className={styles.loadingLine} /><Skeleton className={styles.loadingLine} /><Skeleton className={styles.loadingLine} /></div> : <Text tone="secondary">Negócio não encontrado.</Text>}</PageFrame>;
+    return <PageFrame className={styles.page}><BackLink render={<Link to="/deals" />}>Voltar aos negócios</BackLink>{isLoading ? <div className={styles.loading} role="status" aria-label="Carregando negócio"><Skeleton className={styles.loadingLine} /><Skeleton className={styles.loadingLine} /><Skeleton className={styles.loadingLine} /></div> : <Text tone="secondary">Negócio não encontrado.</Text>}</PageFrame>;
   }
 
   const nowIso = new Date().toISOString();
@@ -892,8 +892,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   return <PageFrame className={embedded ? styles.embedded : styles.page}>
     {embedded
       ? <div className={styles.quickHeader}><SectionTitle level="section" as="h2" meta={pipeline?.name ?? "Negócio"} actions={ownerPicker}><InlineEdit label="Título do negócio" value={deal.name} disabled={!canWrite} appearance="title" saveOnBlur onSave={async (draft) => { const next = draft.trim(); if (!next || next.length > 200) throw new Error("Informe um título de até 200 caracteres."); if (next !== deal.name) await saveField({ name: next }, "Título"); }} /></SectionTitle></div>
-      : <PageHeader
-        back={<BackLink render={<Link to="/deals" />}>Negócios</BackLink>}
+      : <PageHeader variant="record"
+        back={<BackLink render={<Link to="/deals" />}>Voltar aos negócios</BackLink>}
         eyebrow={[pipeline?.name ?? "Funil", stage?.name].filter(Boolean).join(" · ")}
         title={<InlineEdit
           label="Título do negócio"
