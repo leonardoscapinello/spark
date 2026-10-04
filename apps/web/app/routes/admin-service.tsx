@@ -2,7 +2,7 @@ import { CategorySelectors } from "../service/CategorySelectors";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { SaveServiceConfigurationSchema, ServiceCategorySchema, ServiceStatusSchema, ServiceLevelSchema, PriorityMatrixSchema, SlaPolicySchema, serviceCategoryPath, servicePriority, type SaveServiceConfiguration, type ServiceConfiguration } from "@spark/core";
-import { ActionModal, Alert, Button, Checkbox, CollectionToolbar, ColorPicker, CrmLabel, DataTable, Field, Input, Label, PageFrame, PageHeader, SearchField, Select, SectionTitle, Text, Textarea, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Alert, Button, Checkbox, CollectionToolbar, ColorPicker, ClassificationValue, DataTable, Field, Input, Label, PageFrame, PageHeader, SearchField, Select, SectionTitle, Text, Textarea, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import { getSession } from "../lib/auth.client";
 import { getServiceCategoriesCollection, getServiceStatusesCollection, getServiceLevelsCollection, getPriorityMatrixCollection, getSlaPoliciesCollection, preloadServiceConfiguration, useServiceConfiguration } from "../lib/service-configuration.client";
@@ -30,7 +30,7 @@ export default function AdminService() {
   const visible = <T extends { name: string; archived: boolean }>(rows: readonly T[]) => rows.filter(row => (showArchived || !row.archived) && row.name.toLocaleLowerCase("pt-BR").includes(search));
   const nameFor = (id: string | null, rows: readonly { id: string; name: string }[], empty = "Todas") => {
     const level = config.levels.find(row => row.id === id);
-    return level ? <CrmLabel color={level.color}>{level.name}</CrmLabel> : rows.find(row => row.id === id)?.name ?? empty;
+    return level ? <ClassificationValue kind={level.kind} color={level.color} label={level.name} /> : rows.find(row => row.id === id)?.name ?? empty;
   };
   const edit = (input: unknown) => setDraft(SaveServiceConfigurationSchema.parse(input));
   const categoryPaths = new Map(config.categories.map(row => [row.id, serviceCategoryPath(row.id, config.categories)]));
@@ -56,7 +56,7 @@ export default function AdminService() {
     { id: "total", label: "SLA · atendimento total", cell: row => row.operationalType === "closed" ? "Encerrado" : row.pauseTotal ? "Pausado" : "Em contagem" },
     { id: "budget", label: "Prazo no status", cell: row => row.budgetMinutes ? `${row.budgetMinutes} min úteis` : "Sem prazo" },
   ];
-  const levelColumns: TableColumn<(typeof config.levels)[number]>[] = [{ id: "name", label: "Nome", cell: row => <CrmLabel color={row.color}>{row.name}</CrmLabel> },{ id: "kind", label: "Dimensão", cell: row => LEVEL_LABELS[row.kind] }];
+  const levelColumns: TableColumn<(typeof config.levels)[number]>[] = [{ id: "name", label: "Nome", cell: row => <ClassificationValue kind={row.kind} color={row.color} label={row.name} /> },{ id: "kind", label: "Dimensão", cell: row => LEVEL_LABELS[row.kind] }];
   const policyColumns: TableColumn<(typeof config.policies)[number]>[] = [
     ...[0,1,2].map(depth => ({ id: `n${depth+1}`, label: `${depth+1}º nível`, cell: (row: (typeof config.policies)[number]) => row.categoryId ? categoryPaths.get(row.categoryId)?.[depth]?.name ?? "Todas" : depth === 0 ? "Geral" : "Todas" })),
     { id: "impact", label: "Impacto", cell: row => nameFor(row.impactId, config.levels) },
@@ -71,7 +71,7 @@ export default function AdminService() {
   const missingPairs = impacts.flatMap(i => urgencies.filter(u => !config.matrix.some(m => m.impactId === i.id && m.urgencyId === u.id && priorities.some(p => p.id === m.priorityId))));
   const matrixColumns: TableColumn<(typeof impacts)[number]>[] = [{ id: "impact", label: "Impacto / Urgência", cell: row => row.name }, ...urgencies.map(u => ({ id: u.id, label: u.name, cell: (impact: (typeof impacts)[number]) => {
     const existing = config.matrix.find(m => m.impactId === impact.id && m.urgencyId === u.id);
-    return <Select label={`Prioridade: ${impact.name} × ${u.name}`} disabled={savingPair !== null} value={existing?.priorityId ?? null} placeholder="Definir prioridade" options={priorities.map(p => ({ value: p.id, label: p.name, color: p.color }))} onValueChange={value => { if (!value) return; setSavingPair(`${impact.id}:${u.id}`); setMatrixError(null); void saveConfiguration({ kind: "matrix", id: existing?.id ?? crypto.randomUUID(), impactId: impact.id, urgencyId: u.id, priorityId: value }, config).catch(error => setMatrixError(error instanceof Error ? error.message : "Não foi possível salvar.")).finally(() => setSavingPair(null)); }} />;
+    return <Select label={`Prioridade: ${impact.name} × ${u.name}`} disabled={savingPair !== null} value={existing?.priorityId ?? null} placeholder="Definir prioridade" options={priorities.map(p => ({ value: p.id, label: p.name, color: p.color, classificationKind: p.kind }))} onValueChange={value => { if (!value) return; setSavingPair(`${impact.id}:${u.id}`); setMatrixError(null); void saveConfiguration({ kind: "matrix", id: existing?.id ?? crypto.randomUUID(), impactId: impact.id, urgencyId: u.id, priorityId: value }, config).catch(error => setMatrixError(error instanceof Error ? error.message : "Não foi possível salvar.")).finally(() => setSavingPair(null)); }} />;
   } }))];
   return <PageFrame className={styles.page}>
     <PageHeader eyebrow="Atendimento" title={title} actions={section !== "matrix" ? <Button onClick={create}>Criar {section === "catalog" ? "categoria" : section === "statuses" ? "status" : section === "sla" ? "SLA" : "nível"}</Button> : undefined} />
@@ -96,15 +96,15 @@ function ConfigurationEditor({ initial, config, onClose }: { initial: SaveServic
     {draft.kind === "category" && <CategoryParentFields categoryId={draft.id} parentId={draft.parentId} config={config} onChange={parentId => setDraft({ ...draft, parentId })} />}
     {draft.kind === "policy" && <>
       <CategorySelectors value={draft.categoryId} onChange={categoryId => setDraft({ ...draft, categoryId })} config={config} />
-      <Field><Label>Impacto</Label><Select label="Impacto do SLA" value={draft.impactId ?? ""} options={[{ value: "", label: "Todos" }, ...config.levels.filter(l => l.kind === "impact" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color }))]} onValueChange={id => setDraft({ ...draft, impactId: id || null, priorityId: null })} /></Field>
-      <Field><Label>Urgência</Label><Select label="Urgência do SLA" value={draft.urgencyId ?? ""} options={[{ value: "", label: "Todas" }, ...config.levels.filter(l => l.kind === "urgency" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color }))]} onValueChange={id => setDraft({ ...draft, urgencyId: id || null, priorityId: null })} /></Field>
-      <Field><Label>Prioridade automática</Label><CrmLabel color={priorityLevel?.color}>{priorityLevel?.name ?? (draft.impactId || draft.urgencyId ? "Selecione uma combinação da matriz" : "Todas")}</CrmLabel></Field>
+      <Field><Label>Impacto</Label><Select label="Impacto do SLA" value={draft.impactId ?? ""} options={[{ value: "", label: "Todos" }, ...config.levels.filter(l => l.kind === "impact" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={id => setDraft({ ...draft, impactId: id || null, priorityId: null })} /></Field>
+      <Field><Label>Urgência</Label><Select label="Urgência do SLA" value={draft.urgencyId ?? ""} options={[{ value: "", label: "Todas" }, ...config.levels.filter(l => l.kind === "urgency" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={id => setDraft({ ...draft, urgencyId: id || null, priorityId: null })} /></Field>
+      <ClassificationValue kind="priority" fieldLabel="Prioridade automática" color={priorityLevel?.color} label={priorityLevel?.name ?? (draft.impactId || draft.urgencyId ? "Não definida" : "Todas")} />
     </>}
     {draft.kind !== "matrix" && <>{draft.kind !== "policy" && <Field><Label>Nome</Label><Input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /></Field>}<Field><Label>{draft.kind === "status" ? "Disponibilidade" : "Status"}</Label><Select label="Disponibilidade do cadastro" value={draft.archived ? "disabled" : "enabled"} options={[{ value: "enabled", label: "Habilitado" }, { value: "disabled", label: "Desabilitado" }]} onValueChange={value => { if (value) setDraft({ ...draft, archived: value === "disabled" }); }} /></Field></>}
     {draft.kind === "category" && <>
-      <Field><Label>Impacto padrão</Label><Select label="Impacto padrão da categoria" value={draft.defaultImpactId ?? ""} options={[{ value: "", label: "Não definir impacto" }, ...config.levels.filter(l => l.kind === "impact" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color }))]} onValueChange={id => setDraft({ ...draft, defaultImpactId: id || null })} /></Field>
-      <Field><Label>Urgência padrão</Label><Select label="Urgência padrão da categoria" value={draft.defaultUrgencyId ?? ""} options={[{ value: "", label: "Não definir urgência" }, ...config.levels.filter(l => l.kind === "urgency" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color }))]} onValueChange={id => setDraft({ ...draft, defaultUrgencyId: id || null })} /></Field>
-      <Field><Label>Prioridade automática</Label><CrmLabel color={priorityLevel?.color}>{priorityLevel?.name ?? "—"}</CrmLabel></Field>
+      <Field><Label>Impacto padrão</Label><Select label="Impacto padrão da categoria" value={draft.defaultImpactId ?? ""} options={[{ value: "", label: "Não definir impacto" }, ...config.levels.filter(l => l.kind === "impact" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={id => setDraft({ ...draft, defaultImpactId: id || null })} /></Field>
+      <Field><Label>Urgência padrão</Label><Select label="Urgência padrão da categoria" value={draft.defaultUrgencyId ?? ""} options={[{ value: "", label: "Não definir urgência" }, ...config.levels.filter(l => l.kind === "urgency" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={id => setDraft({ ...draft, defaultUrgencyId: id || null })} /></Field>
+      <ClassificationValue kind="priority" fieldLabel="Prioridade automática" color={priorityLevel?.color} label={priorityLevel?.name ?? "Não definida"} />
     </>}
     {draft.kind === "level" && <Select label="Dimensão" value={draft.levelKind} options={Object.entries(LEVEL_LABELS).map(([value,label]) => ({ value,label }))} onValueChange={value => { if (value === "impact" || value === "urgency" || value === "priority") setDraft({ ...draft, levelKind: value }); }} />}
     {draft.kind === "level" && <Field><Label>Descrição (opcional)</Label><Textarea rows={2} maxLength={2000} value={draft.description}  onChange={event => setDraft({ ...draft, description: event.target.value })} /></Field>}

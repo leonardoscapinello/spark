@@ -7,6 +7,7 @@ type Shape = readonly ["path" | "circle" | "rect", Readonly<Record<string, strin
 export const glyphs = {
   account: [["circle",{"cx":12,"cy":12,"r":9}],["circle",{"cx":12,"cy":10,"r":3}],["path",{"d":"M6.2 18.4a6.5 6.5 0 0 1 11.6 0"}]],
   activity: [["path",{"d":"M3 12h4l2.5-7 5 14L17 12h4"}]],
+  flag: [["path", {"d":"M5 21V3m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0"}]],
   alert: [["circle",{"cx":12,"cy":12,"r":9}],["path",{"d":"M12 8v4M12 16h.01"}]],
   asteriskCircle: [["circle",{"cx":12,"cy":12,"r":9}],["path",{"d":"M12 7.5v9M8.1 9.75l7.8 4.5M8.1 14.25l7.8-4.5"}]],
   arrowDown: [["path",{"d":"M12 5v14M19 12l-7 7-7-7"}]],

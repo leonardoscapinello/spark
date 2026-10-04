@@ -1,10 +1,11 @@
+import type { ClassificationKind } from "../ClassificationValue/ClassificationValue.js";
 import { Glass } from "../Glass/Glass.js";
 import { lightTheme } from "@spark/tokens/native-theme";
 import { Select as BaseSelect } from "@base-ui/react/select";
 import { OptionContent } from "./OptionContent.js";
 import { Icon } from "../Icon/Icon.js";
 import s from "../shared/surfaces.module.css";
-export interface SelectOption { value: string; label: string; color?: string; disabled?: boolean; description?: string; avatar?: string | null; group?: string }
+export interface SelectOption { value: string; label: string; color?: string; classificationKind?: ClassificationKind; disabled?: boolean; description?: string; avatar?: string | null; group?: string }
 export type SelectProps<Multiple extends boolean = false> = Omit<BaseSelect.Root.Props<string, Multiple>, "items" | "children"> & { options: readonly SelectOption[]; label: string; placeholder?: string; appearance?: "field" | "filter" };
 export function Select<Multiple extends boolean = false>({ options, label, placeholder = "Selecionar", appearance = "field", ...props }: SelectProps<Multiple>) {
   return <BaseSelect.Root<string, Multiple> items={options} {...props}>

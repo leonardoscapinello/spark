@@ -1,0 +1,15 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { ClassificationValue } from "./ClassificationValue.js";
+import { Select } from "../Select/Select.js";
+import { Field } from "../Field/Field.js";
+import { Label } from "../Label/Label.js";
+import { Mesa } from "../storybook/Prancha.js";
+const meta = { title: "Campos/Classificação", component: ClassificationValue, args: { kind: "priority", label: "Alto", color: "red" } } satisfies Meta<typeof ClassificationValue>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+export const Prioridade: Story = {};
+export const Impacto: Story = { args: { kind: "impact", label: "Médio", color: "amber" } };
+export const Urgencia: Story = { args: { kind: "urgency", label: "Baixo", color: "green" } };
+export const Automatica: Story = { args: { fieldLabel: "Prioridade automática" } };
+export const SemClassificacao: Story = { args: { fieldLabel: "Prioridade automática", label: "Não definida", color: "neutral" } };
+export const NoFormulario: Story = { render: () => <Mesa><Field><Label>Impacto</Label><Select label="Impacto" defaultValue="high" options={[{value:"high",label:"Alto",color:"red",classificationKind:"impact"}]} /></Field><Field><Label>Urgência</Label><Select label="Urgência" defaultValue="medium" options={[{value:"medium",label:"Médio",color:"amber",classificationKind:"urgency"}]} /></Field><ClassificationValue kind="priority" fieldLabel="Prioridade automática" label="Alto" color="red" /></Mesa> };
