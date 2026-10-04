@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { decodeDealFilters, dealMatchesFilterSet, type DealFilterField, type DealFilterSet, pipelineBoardColumns, dealBoardColumn, sum, formatBRL, companyId as companyIdFactory, contactId as contactIdFactory, userId as userIdFactory, type Deal, type Money, type OrgId, type Pipeline, type Stage, type StageId, type DealStatus } from "@spark/core";
 import { optimisticPipeline, optimisticStage, optimisticDeal, forInsert, syncedAmount, reorderStages, type StagesCollection } from "@spark/data";
-import { FilterBar, SearchField, SegmentedControl, DataTable, type FilterFieldDefinition, type TableColumn, ActionModal, CrmWorkspace, CrmSection, CrmLabel, Chip, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
+import { CollectionHeader, FilterBar, SearchField, SegmentedControl, DataTable, type FilterFieldDefinition, type TableColumn, ActionModal, CrmWorkspace, CrmSection, CrmLabel, Chip, Button, InlineEdit, CollectionToolbar, DatePicker, EmptyState, Field, Icon, Input, Label, ListRow, MenuButton, MenuItem, MenuSeparator, Modal, ModalContent, MoneyInput, PageFrame, PageHeader, RowList, Select, Signal, Skeleton, Checkbox, Text, Textarea, KanbanAddButton, KanbanBoard, KanbanCard, KanbanCardContent, KanbanColumn, KanbanDropBar, KanbanDropZone, KanbanGhost, KanbanPlaceholder, KanbanSkeleton, crmColor, useKanbanDrag, userSelectOption, notify, celebrateDealOutcome, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getBoardDealsCollection, getPipelinesCollection, getStagesCollection } from "../lib/deals-collections.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -369,22 +369,25 @@ export default function Deals() {
 
   return (
     <PageFrame className={styles.pagina}>
-      <PageHeader title={mainPipeline.name} actions={<>
+      <CollectionHeader label="Negócios" selection={
         <MenuButton variant="secondary" menu={<>
           {pipelines.map(pipeline => <MenuItem key={pipeline.id} onClick={() => setSelectedPipelineId(pipeline.id)}>{pipeline.name}</MenuItem>)}
           {canManagePipeline && <><MenuSeparator /><MenuItem icon={<Icon name="pencil" />} onClick={() => setPipelineEditorOpen(true)}>Configurar este funil</MenuItem><MenuItem icon={<Icon name="plus" />} onClick={() => { setPipelineName(""); setPipelineModalOpen(true); }}>Novo funil</MenuItem></>}
-        </>}>Funis</MenuButton>
-        {canWrite && <Button icon={<Icon name="plus" />} onClick={() => openDealModal()}>Novo negócio</Button>}
-      </>} />
+        </>}>{mainPipeline.name}</MenuButton>
+      }
+        count={isLoadingDeals ? "Carregando…" : filteredDeals.length === deals.length ? `${deals.length} negócios` : `${filteredDeals.length} de ${deals.length} negócios`}
+        value={isLoadingDeals ? "—" : formatBRL(sum(filteredDeals.map(deal => syncedAmount(deal.amount))))}
+        valueLabel={filters.groups.length || search ? "Valor dos negócios filtrados" : "Valor total dos negócios"}
+        actions={canWrite && <Button icon={<Icon name="plus" />} onClick={() => openDealModal()}>Novo negócio</Button>}
+      />
       <CollectionToolbar
         search={<SearchField label="Buscar negócios" placeholder="Buscar negócio por nome" value={search} onValueChange={value => updateQuery("q",value)} />}
         filters={<>
           <Select appearance="filter" label="Situação dos negócios" value={showArchived ? "archived" : statusFilter} options={[{ value: "open", label: "Em aberto" }, { value: "won", label: "Ganhos" }, { value: "lost", label: "Perdidos" }, { value: "archived", label: "Arquivados" }, { value: "all", label: "Todas as situações" }]} onValueChange={value => updateQuery("status",value)} />
           <FilterBar fields={filterFields} value={filters} onChange={changeFilters} label="Filtros avançados" />
           {(filters.groups.length > 0 || search) && <Button variant="ghost" onClick={() => setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete("filters"); next.delete("q"); return next; }, { replace: true })}>Limpar</Button>}
+          <SegmentedControl label="Visualização dos negócios" value={listView ? "list" : "board"} options={[{value:"board",label:"Kanban"},{value:"list",label:"Lista"}]} onValueChange={value => updateQuery("view",value)} />
         </>}
-        count={isLoadingDeals ? "Carregando negócios…" : `${filteredDeals.length} de ${deals.length} negócios · ${formatBRL(sum(filteredDeals.map(deal => syncedAmount(deal.amount))))}`}
-        actions={<SegmentedControl label="Visualização dos negócios" value={listView ? "list" : "board"} options={[{value:"board",label:"Kanban"},{value:"list",label:"Lista"}]} onValueChange={value => updateQuery("view",value)} />}
       />
       {listView ? <div className={styles.listView}>
         <DataTable label="Negócios do funil" rows={filteredDeals.slice(listPage * 50, (listPage + 1) * 50)} columns={listColumns} rowKey={deal => deal.id} rowLabel={deal => deal.name} state={isLoadingDeals ? "loading" : "ready"} hiddenColumnIds={hiddenColumns} onHiddenColumnsChange={setHiddenColumns} onRowOpen={(deal, options) => { if (options.newTab) window.open(`/deals/${deal.id}`, "_blank", "noopener,noreferrer"); else setOpenedDealId(deal.id); }} emptyText="Nenhum negócio corresponde aos filtros." />

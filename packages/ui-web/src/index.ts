@@ -136,3 +136,5 @@ export { LinkRecordsPreview, type LinkRecordsPreviewProps } from "./LinkRecordsP
 export { AppShell, AppContent } from "./AppShell/AppShell.js";
 
 export { ScoreGauge, type ScoreGaugeProps } from "./ScoreGauge/ScoreGauge.js";
+
+export { CollectionHeader } from "./CollectionHeader/CollectionHeader.js";
