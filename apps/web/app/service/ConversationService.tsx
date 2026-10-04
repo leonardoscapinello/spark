@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { serviceCycleProgress, type Conversation, type ServiceCycle } from "@spark/core";
-import { Alert, Button, InlineField, Select, SlaProgress, Text, notify } from "@spark/ui-web";
+import { Button, InlineField, Select, SlaProgress, Text, notify } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { useServiceConfiguration } from "../lib/service-configuration.client";
 import { getServiceCyclesCollection, getServiceSegmentsCollection, getServiceCycleHoursCollection, getServiceCycleHolidaysCollection } from "../lib/service-cycles.client";
@@ -27,12 +27,10 @@ export function ConversationService({ conversation, now, canWrite }: { conversat
   return <div className={styles.form}>
     <Select label="Status do atendimento" disabled={!editable} value={conversation.serviceStatusId ?? ""} options={[{ value: "", label: conversation.status === "closed" ? "Encerrado" : conversation.status === "snoozed" ? "Em espera" : "Em atendimento" }, ...config.statuses.filter(s => !s.archived || s.id === conversation.serviceStatusId).map(s => ({ value: s.id, label: s.name }))]} onValueChange={value => { void change("serviceStatusId", value || null); }} />
     <InlineField label="Categoria" value={config.categories.find(c => c.id === conversation.categoryId)?.name ?? "Não classificado"} disabled={!editable}>{() => <CategorySelectors config={config} value={conversation.categoryId ?? null} onChange={value => { void change("categoryId", value); }} />}</InlineField>
-    <Text size="pequeno" tone="secondary">Trocar a categoria aplica os padrões de impacto e urgência dela, inclusive campos vazios. Você pode ajustar os valores abaixo.</Text>
     {(["impact", "urgency"] as const).map(kind => <Select key={kind} label={kind === "impact" ? "Impacto" : "Urgência"} disabled={!editable} value={(kind === "impact" ? conversation.impactId : conversation.urgencyId) ?? ""} options={[{ value: "", label: kind === "impact" ? "Impacto não definido" : "Urgência não definida" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name }))]} onValueChange={value => { void change(kind === "impact" ? "impactId" : "urgencyId", value || null); }} />)}
-    {config.levels.filter(l => l.id === conversation.impactId || l.id === conversation.urgencyId || l.id === conversation.servicePriorityId).filter(l => l.description).map(l => <Text key={l.id} size="pequeno" tone="secondary">{l.name}: {l.description}</Text>)}
     <InlineField label="Prioridade calculada" value={config.levels.find(l => l.id === conversation.servicePriorityId)?.name ?? "Sem combinação definida"} />
     {cycles.length > 1 && <Select label="Ciclo de atendimento" value={cycle?.id ?? null} options={cycles.map((c,i) => ({ value:c.id,label:`${c.closedAt ? "Encerrado" : "Atual"} · ciclo ${cycles.length-i} · ${new Date(c.openedAt).toLocaleDateString("pt-BR")}` }))} onValueChange={setHistoryId} />}
-    {cycle ? <CycleProgress key={cycle.id} cycle={cycle} now={now} /> : <Alert tone="info" title="SLA ainda não iniciado">O acompanhamento começa na próxima ação do atendimento. O histórico anterior não é recalculado.</Alert>}
+    {cycle ? <CycleProgress key={cycle.id} cycle={cycle} now={now} /> : <Text tone="secondary">SLA ainda não iniciado.</Text>}
     <RecordCustomFields entityType="conversation" entityId={conversation.id} disabled={!canWrite} />
     {cycle && <RecordCustomFields key={cycle.id} entityType="service_cycle" entityId={cycle.id} disabled={!canWrite || Boolean(cycle.closedAt)} />}
     {getSession()?.capabilities.includes("settings:manage") && <><Button size="sm" variant="ghost" onClick={() => void navigate("/admin/service/sla")}>Configurar SLA e atendimento</Button><Button size="sm" variant="ghost" onClick={() => void navigate("/admin/data/custom-fields?entity=conversation")}>Gerenciar campos do atendimento</Button></>}

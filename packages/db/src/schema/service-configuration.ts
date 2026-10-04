@@ -58,6 +58,8 @@ export const slaPolicies = pgTable("sla_policies", {
   sortOrder: integer("sort_order").notNull(),
   archived: boolean("archived").notNull(),
   categoryId: uuid("category_id"),
+  impactId: uuid("impact_id"),
+  urgencyId: uuid("urgency_id"),
   priorityId: uuid("priority_id"),
   firstResponseMinutes: integer("first_response_minutes").notNull(),
   totalMinutes: integer("total_minutes").notNull(),

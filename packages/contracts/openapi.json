@@ -10313,7 +10313,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T17:12:54.577Z",
+                "default": "2026-10-04T19:59:42.525Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10612,7 +10612,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T17:12:54.580Z",
+                "default": "2026-10-04T19:59:42.528Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10833,7 +10833,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T17:12:54.581Z",
+                "default": "2026-10-04T19:59:42.529Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -11058,7 +11058,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T17:12:54.582Z",
+                "default": "2026-10-04T19:59:42.530Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -11263,7 +11263,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T17:12:54.583Z",
+                "default": "2026-10-04T19:59:42.531Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -12539,6 +12539,20 @@
                     "type": "string",
                     "format": "uuid",
                     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "nullable": true
+                  },
+                  "impactId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "default": null,
+                    "nullable": true
+                  },
+                  "urgencyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "default": null,
                     "nullable": true
                   },
                   "priorityId": {

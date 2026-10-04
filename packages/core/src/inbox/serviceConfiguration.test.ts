@@ -74,3 +74,26 @@ describe("classificação padrão por categoria", () => {
     expect(()=>resolveServiceClassification(current,{categoryId:id(1)},disabled)).toThrow("nível ativo");
   });
 });
+
+
+describe("SLA por combinação", () => {
+  const impact = ServiceLevelSchema.parse({ ...base, id:id(40), name:"Alto", kind:"impact", color:"red" });
+  const urgency = ServiceLevelSchema.parse({ ...base, id:id(41), name:"Alto", kind:"urgency", color:"red" });
+  const otherUrgency = { ...urgency, id:id(42), name:"Médio" };
+  const config = { categories, statuses:[], levels:[...priorities,impact,urgency,otherUrgency], matrix:[41,42].map(n => PriorityMatrixSchema.parse({ ...base,id:id(n+20),impactId:impact.id,urgencyId:id(n),priorityId:id(10) })), policies:[] };
+  const exact = { ...policy(70,id(2),null), impactId:impact.id, urgencyId:urgency.id };
+  const other = { ...policy(71,id(2),null), impactId:impact.id, urgencyId:otherUrgency.id, totalMinutes:960 };
+  it("distingue pares com a mesma prioridade e preserva a busca por categoria", () => {
+    const configured = { ...config, policies:[exact,other,policy(72,null,null)] };
+    expect(() => validateServiceConfiguration(configured)).not.toThrow();
+    expect(selectServiceSla(id(3),id(10),configured,{impactId:impact.id,urgencyId:urgency.id})?.id).toBe(exact.id);
+    expect(selectServiceSla(id(3),id(10),configured,{impactId:impact.id,urgencyId:otherUrgency.id})?.totalMinutes).toBe(960);
+    expect(selectServiceSla(id(3),id(10),configured,{impactId:null,urgencyId:null})?.id).toBe(id(72));
+    expect(selectServiceSla(id(3),id(10),{...configured,policies:[...configured.policies,policy(73,id(3),null)]},{impactId:impact.id,urgencyId:urgency.id})?.id).toBe(id(73));
+  });
+  it("recusa par parcial, combinação sem matriz e duplicação", () => {
+    expect(() => validateServiceConfiguration({...config,policies:[{...exact,urgencyId:null}]})).toThrow("ambos");
+    expect(() => validateServiceConfiguration({...config,matrix:[],policies:[exact]})).toThrow("matriz");
+    expect(() => validateServiceConfiguration({...config,policies:[exact,{...exact,id:id(74)}]})).toThrow("Já existe");
+  });
+});

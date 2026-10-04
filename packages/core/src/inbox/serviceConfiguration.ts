@@ -16,12 +16,14 @@ export function servicePriority(impactId: string | null, urgencyId: string | nul
   const id = config.matrix.find(row => row.impactId === impactId && row.urgencyId === urgencyId)?.priorityId;
   return config.levels.find(l => l.id === id && l.kind === "priority" && !l.archived)?.id ?? null;
 }
-export function selectServiceSla(categoryId: string | null, priorityId: string | null, config: Pick<ServiceConfiguration, "categories" | "policies">): SlaPolicy | null {
+export function selectServiceSla(categoryId: string | null, priorityId: string | null, config: Pick<ServiceConfiguration, "categories" | "policies">, classification?: { impactId: string | null; urgencyId: string | null }): SlaPolicy | null {
   const path = serviceCategoryPath(categoryId, config.categories);
   for (const scope of [...path].reverse().map(c => c.id).concat([""])) {
     const matches = config.policies.filter(p => !p.archived && p.categoryId === (scope || null));
-    const exact = priorityId ? matches.find(p => p.priorityId === priorityId) : undefined;
-    const chosen = exact ?? matches.find(p => p.priorityId === null);
+    const pair = classification?.impactId && classification.urgencyId ? matches.find(p => p.impactId === classification.impactId && p.urgencyId === classification.urgencyId) : undefined;
+    const legacy = matches.filter(p => !p.impactId && !p.urgencyId);
+    const exact = priorityId ? legacy.find(p => p.priorityId === priorityId) : undefined;
+    const chosen = pair ?? exact ?? legacy.find(p => p.priorityId === null);
     if (chosen) return chosen;
   }
   return null;
@@ -49,8 +51,10 @@ export function validateServiceConfiguration(config: ServiceConfiguration): void
   for (const policy of config.policies.filter(p => !p.archived)) {
     if (policy.categoryId && (!serviceCategoryPath(policy.categoryId, config.categories).length || serviceCategoryPath(policy.categoryId, config.categories).some(c => c.archived))) throw new Error("Escolha uma categoria ativa.");
     if (policy.priorityId && !config.levels.some(l => l.id === policy.priorityId && l.kind === "priority" && !l.archived)) throw new Error("Escolha uma prioridade ativa.");
-    const scope = `${policy.categoryId ?? "all"}:${policy.priorityId ?? "all"}`;
-    if (scopes.has(scope)) throw new Error("Já existe uma política ativa para essa categoria e prioridade.");
+    if (Boolean(policy.impactId) !== Boolean(policy.urgencyId)) throw new Error("Selecione impacto e urgência, ou deixe ambos em Todas.");
+    if (policy.impactId && !servicePriority(policy.impactId, policy.urgencyId, config)) throw new Error("Configure a prioridade deste impacto e urgência na matriz.");
+    const scope = policy.impactId ? `${policy.categoryId ?? "all"}:pair:${policy.impactId}:${policy.urgencyId}` : `${policy.categoryId ?? "all"}:priority:${policy.priorityId ?? "all"}`;
+    if (scopes.has(scope)) throw new Error("Já existe um SLA ativo para essa combinação.");
     scopes.add(scope);
   }
 }

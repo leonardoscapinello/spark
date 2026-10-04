@@ -99,9 +99,9 @@ const modules: NavModule[] = [
     { title: "Atendimento", icon: "inbox", items: [
       { label: "Catálogo de serviços", to: "/admin/service/catalog", icon: "folder", capability: "settings:manage" },
       { label: "Status do atendimento", to: "/admin/service/statuses", icon: "list", capability: "settings:manage" },
-      { label: "Impacto, urgência e prioridade", to: "/admin/service/priorities", icon: "alert", capability: "settings:manage" },
+      { label: "Níveis de classificação", to: "/admin/service/priorities", icon: "alert", capability: "settings:manage" },
       { label: "Matriz de prioridade", to: "/admin/service/matrix", icon: "grid", capability: "settings:manage" },
-      { label: "Políticas de SLA", to: "/admin/service/sla", icon: "clock", capability: "settings:manage" },
+      { label: "SLA", to: "/admin/service/sla", icon: "clock", capability: "settings:manage" },
     ] },
     { title: "Início", items: [{ label: "Início", to: "/admin", icon: "grid" }] },
     // Agrupado por assunto, como Intercom e Pipedrive: quem procura um campo

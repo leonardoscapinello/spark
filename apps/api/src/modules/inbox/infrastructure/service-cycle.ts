@@ -8,7 +8,7 @@ export async function advanceServiceCycle(tx: SparkDb, orgId: OrgId, conversatio
   let [cycle] = await tx.select().from(serviceCycles).where(and(eq(serviceCycles.orgId,orgId),eq(serviceCycles.conversationId,conversation.id),isNull(serviceCycles.closedAt))).limit(1);
   if (!cycle && conversation.status === "closed") return;
   if (event === "response" && (!cycle || (queuedAt && queuedAt < cycle.openedAt))) return;
-  const policy = selectServiceSla(conversation.categoryId, conversation.servicePriorityId, config);
+  const policy = selectServiceSla(conversation.categoryId, conversation.servicePriorityId, config, conversation);
   if (!cycle) {
     [cycle] = await tx.insert(serviceCycles).values({ orgId, conversationId: conversation.id, openedAt: at, policyId: policy?.id ?? null, policyName: policy?.name ?? null, policyVersion: policy?.version ?? null, firstResponseMinutes: policy?.firstResponseMinutes ?? null, totalMinutes: policy?.totalMinutes ?? null, warningPercent: policy?.warningPercent ?? 80, firstInboundAt: event === "inbound" ? at : null }).returning();
     if (!cycle) throw new Error("Não foi possível iniciar o ciclo.");
