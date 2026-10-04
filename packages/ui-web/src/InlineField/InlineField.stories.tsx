@@ -67,6 +67,7 @@ export const Painel: Story = {
       const ownerName = people.find((person) => person.value === owner)?.label;
       return <Mesa largura={440}>
         <TextRow label="Título" initial="Contrato anual Acme" />
+        <InlineField label="Produtos" value="5 produtos" action={{ label: "Ver itens e valores", icon: "right", onClick: () => undefined }} />
         <InlineField label="Previsão" numeric value={date ? new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR") : "Sem previsão"} empty={!date}>
           {(close) => <DatePicker label="Previsão" value={date} onValueChange={(next) => { setDate(next); close(); }} />}
         </InlineField>

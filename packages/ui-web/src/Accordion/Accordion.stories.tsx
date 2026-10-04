@@ -14,6 +14,7 @@ export default meta;
 type Story = StoryObj<typeof Accordion>;
 
 export const Interativo: Story = { render: (args) => <Mesa largura={420}><Accordion {...args} /></Mesa> };
+export const Compacto: Story = { args: { density: "compact", defaultValue: ["dados"] } };
 export const Variantes: Story = { render: () => <Prancha><Secao titulo="Estados" descricao="Marca de campos em branco na aba fechada: obrigatório e importante.">
   <Fileira rotulo="Fechado" topo><Mesa largura={420}><Accordion items={ITENS} /></Mesa></Fileira>
   <Fileira rotulo="Aberto" topo><Mesa largura={420}><Accordion items={ITENS} defaultValue={["dados"]} /></Mesa></Fileira>

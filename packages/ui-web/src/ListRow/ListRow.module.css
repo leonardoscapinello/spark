@@ -2,7 +2,7 @@
  * encaixe de 32, título 13/500, apoio 12 em tinta 3, hora em mono 10,5 à
  * direita. Separador recuado até a coluna do texto; realce --acs em linha que
  * leva a algum lugar; selecionada vira folha em --r-rico. Entra em cascata. */
-.list { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.list { container-type: inline-size; display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; list-style: none; }
 
 .root {
   --row-pad: var(--space-2);
@@ -66,3 +66,9 @@
 .root[draggable="true"] { cursor: grab; }
 .root[data-dragging] { opacity: 0.45; }
 .root[data-done] .title { color: var(--tx3); text-decoration: line-through; text-decoration-color: var(--bd2); }
+
+/* Em listas estreitas, o assunto e o prazo continuam legíveis. */
+@container (max-width: 480px) {
+  .title, .description { white-space: normal; overflow-wrap: anywhere; }
+  .main { align-items: flex-start; }
+}

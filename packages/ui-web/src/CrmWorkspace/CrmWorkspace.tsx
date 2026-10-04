@@ -11,9 +11,8 @@ export const CRM_COLORS = [{ value: "neutral", label: "Cinza" }, { value: "blue"
 const CRM_INK: Readonly<Record<string, string>> = { blue: "var(--v1)", green: "var(--ok)", red: "var(--er)", amber: "var(--wa)", purple: "var(--v4)" };
 
 /**
- * Cor de etiqueta ou etapa → tinta do ponto. A cor de CRM nunca pinta uma
- * área: vira um ponto (6–8px) ou um traço fino. Cinza é a tinta 3; azul e roxo
- * são pigmentos; verde, vermelho e âmbar falam a língua dos estados.
+ * Pigmento de etiqueta ou etapa. Etapas usam um ponto; etiquetas na ficha
+ * usam o pigmento também no fundo, para reconhecimento rápido por cor.
  */
 export function crmColor(color: string | null | undefined): string {
   if (!color || color === "neutral") return "var(--tx3)";

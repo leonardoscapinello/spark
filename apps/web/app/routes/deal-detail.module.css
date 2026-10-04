@@ -17,12 +17,14 @@
 .flow { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; min-height: 0; overflow: hidden; }
 
 /* Abas da área de trabalho: o painel ativo rola por dentro. */
+.workspaceTabs { padding: var(--space-3) var(--space-4) var(--space-4); }
 .workspaceTabs, .workspaceTabs > div { display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.workspaceTabs > div > [role="tablist"] { flex: none; }
+.workspaceTabs > div > [role="tablist"] { flex: none; align-self: flex-start; }
 .workspaceTabs > div > [role="tabpanel"] { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 .workspaceTabs > div > [role="tabpanel"][hidden] { display: none; }
 
 /* Blocos do fluxo (folhas): próximas atividades e histórico. */
+.activityMeta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .pageActivity { display: flex; flex: none; flex-direction: column; gap: var(--space-3); }
 .block { display: flex; flex: none; flex-direction: column; gap: var(--space-3); min-width: 0; padding: var(--space-5) var(--space-6); }
 .focusList { min-width: 0; }
@@ -38,7 +40,7 @@
 .noteActions { display: flex; justify-content: flex-end; gap: var(--space-2); }
 
 /* Campos: linhas «rótulo · valor» uma abaixo da outra. */
-.fields { display: grid; gap: var(--space-2); min-width: 0; }
+.fields { display: grid; gap: 0; min-width: 0; }
 .stack { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .items { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .inlineAction { display: flex; }
@@ -111,3 +113,4 @@
   .quickActions { order: -1; }
   .quickContext, .quickPhase, .quickActions { flex-shrink: 0; }
 }
+

@@ -7,6 +7,7 @@ export default meta;
 type Story = StoryObj<typeof BackLink>;
 
 export const Interativo: Story = {};
+export const NaFicha: Story = { args: { iconOnly: true, children: "Voltar aos negócios" } };
 export const Variantes: Story = { render: () => <Prancha><Secao titulo="Voltar" descricao="Tinta 2, 500 12, pílula de 30; o hover é o realce de tinta.">
   <Fileira rotulo="Curto"><BackLink href="#pessoas">Pessoas</BackLink></Fileira>
   <Fileira rotulo="Descritivo"><BackLink href="#login">Voltar para o login</BackLink></Fileira>

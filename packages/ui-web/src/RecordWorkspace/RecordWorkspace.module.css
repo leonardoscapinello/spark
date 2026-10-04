@@ -1,6 +1,11 @@
-.root { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr); flex: 1; min-height: 0; gap: var(--space-5); }
-.context { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; --ui-fieldLabelColumn: 38%; background: var(--sf2); border-radius: var(--r-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
-.work { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--sf3); border: var(--ui-hairline) solid var(--bd); border-radius: var(--r-md); overflow: hidden; }
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: var(--ui-hairline) solid var(--bd); }
-.content { display: flex; flex: 1; flex-direction: column; min-height: 0; padding: var(--space-4); gap: var(--space-4); }
-@media (max-width: 900px) { .root { display: flex; flex-direction: column; overflow: auto; } .context, .work { flex: none; overflow: visible; } .content { min-height: var(--ui-menuWidth); } }
+.root { display: grid; grid-template-columns: minmax(0, var(--ui-detailPanelWidth)) minmax(0, 1fr); flex: 1; min-height: 0; border: var(--ui-hairline) solid var(--bd); border-radius: var(--r-lg); background: var(--sf3); overflow: hidden; }
+.context { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; --ui-fieldLabelColumn: 36%; background: var(--sf2); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-3); border-inline-end: var(--ui-hairline) solid var(--bd); }
+.work { min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border-bottom: var(--ui-hairline) solid var(--bd); }
+.content { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+@media (max-width: 1000px) {
+  .root { display: flex; flex-direction: column; overflow: visible; }
+  .context, .work { flex: none; overflow: visible; }
+  .work { order: -1; }
+  .context { border-inline-end: 0; border-top: var(--ui-hairline) solid var(--bd); }
+}

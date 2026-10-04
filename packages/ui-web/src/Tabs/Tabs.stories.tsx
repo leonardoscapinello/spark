@@ -23,6 +23,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Interativo: Story = {};
+export const Ficha: Story = { args: { variant: "segmented", items: ITENS.map(item => ({ ...item, ...(item.value === "atividades" ? { count: 3 } : {}) })) } };
 
 export const Variantes: Story = {
   render: () => (

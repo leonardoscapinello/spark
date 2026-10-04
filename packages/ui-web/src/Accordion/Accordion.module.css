@@ -34,3 +34,9 @@
 }
 .badge[data-level="required"] { background: var(--er); color: var(--sobre-cor); }
 .badge[data-level="important"] { background: var(--wa); color: var(--sobre-cor); }
+
+.root[data-density="compact"] .trigger { gap: var(--space-2); min-height: var(--h-md); padding: var(--space-2) var(--space-3); border-radius: var(--r-rico); }
+.root[data-density="compact"] .trigger > svg, .root[data-density="compact"] .chevron > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
+.root[data-density="compact"] .content { padding: var(--space-1) var(--space-3) var(--space-2); }
+.root[data-density="compact"] .item + .item { margin-top: var(--space-2); }
+.root[data-density="compact"] .trigger:hover { background: var(--acs); }

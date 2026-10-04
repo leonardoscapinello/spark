@@ -31,6 +31,19 @@ function PersistedExample({ save }: { save: () => Promise<void> }) {
  * dinheiro deixavam de gravar. Estes testes existem para isso não voltar.
  */
 describe("InlineField", () => {
+  it("usa a ação do registro quando o valor não tem editor", () => {
+    const openProducts = vi.fn();
+    render(<TooltipProvider><InlineField label="Produtos" value="5 produtos" action={{ label: "Ver itens e valores", icon: "right", onClick: openProducts }} /></TooltipProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Ver itens e valores" }));
+    expect(openProducts).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  it("não executa a ação de um campo desabilitado", () => {
+    render(<TooltipProvider><InlineField label="Produtos" value="5 produtos" disabled action={{ label: "Ver itens e valores", icon: "right", onClick: vi.fn() }} /></TooltipProvider>);
+    expect(screen.queryByRole("button", { name: "Ver itens e valores" })).not.toBeInTheDocument();
+  });
+
   it("clicar fora do campo grava o que foi digitado", () => {
     render(<Example />);
     fireEvent.click(screen.getByRole("button", { name: /Alterar Nome/ }));

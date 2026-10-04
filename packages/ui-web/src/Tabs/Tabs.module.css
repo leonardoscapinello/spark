@@ -14,6 +14,9 @@
 }
 
 .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   position: relative;
   z-index: 1;
   box-sizing: border-box;
@@ -48,7 +51,7 @@
   border-radius: var(--r-mark);
   background: var(--tx);
   transform: translateX(var(--active-tab-left));
-  transition: transform var(--t-default) var(--ease), width var(--t-default) var(--ease);
+  transition: transform var(--t-default) var(--ease);
 }
 
 .panel { padding-top: var(--space-5); font-size: var(--fs-corpo); line-height: var(--ui-bodyLine); }
@@ -84,3 +87,8 @@
 .root[data-fill] > .list { flex: none; }
 .root[data-fill] > .panel { flex: 1; min-height: 0; overflow: auto; }
 .root[data-fill] > .panel[hidden] { display: none; }
+
+.icon { display: inline-flex; flex: none; }
+.icon > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
+.count { display: inline-flex; align-items: center; justify-content: center; min-width: var(--ui-icon); padding-inline: var(--space-1); border-radius: var(--r-pill); background: var(--acs); color: var(--tx2); font-size: var(--fs-legenda); font-variant-numeric: tabular-nums; }
+

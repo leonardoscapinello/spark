@@ -24,3 +24,5 @@
 
 .root:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
 .arrow { --icon: var(--ui-iconSm); }
+.root[data-icon-only] { justify-content: center; flex: none; width: var(--h-md); height: var(--h-md); padding: 0; margin: 0; border: var(--ui-hairline) solid var(--bd); border-radius: var(--r-pill); background: var(--sf3); box-shadow: var(--sh1); }
+.root[data-icon-only] > span { position: absolute; width: var(--ui-hairline); height: var(--ui-hairline); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -33,7 +33,7 @@ export interface InlineFieldProps {
   /**
    * Ação sobre o valor (abrir a ficha da pessoa, por exemplo): botão de tinta
    * que aparece no hover, na ponta direita da mesma caixa. Botão irmão do
-   * valor, nunca dentro dele.
+   * valor, nunca dentro dele. Sem editor, o próprio valor abre a ação.
    */
   action?: { label: string; icon: IconName; onClick: () => void };
   /** Começa editando (histórias e telas que abrem já no campo). */
@@ -46,6 +46,14 @@ export interface InlineFieldProps {
 }
 
 type PersistenceState = "idle" | "saving" | "saved" | "error";
+
+/** Sinal da regra da etapa; não repete o estado do valor ao lado do campo. */
+export function FieldRequirement({ level }: { level: "required" | "important" }) {
+  return <span className={s.requirement} data-level={level}>
+    <Icon name={level === "required" ? "alert" : "info"} />
+    {level === "required" ? "Obrigatório" : "Importante"}
+  </span>;
+}
 
 /**
  * Linha «rótulo · valor» que vira campo no lugar (origem: Perfil §11, "linha
@@ -166,13 +174,16 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
         <Icon name="close" />
       </button>
     </>;
+  } else if (readOnly && action && !disabled) {
+    body = <button type="button" className={s.value} title={textOf(value)} aria-label={action.label} onClick={action.onClick}>{content}<span className={s.mark} data-action aria-hidden="true"><Icon name={action.icon} /></span></button>;
   } else if (readOnly) {
-    body = <><span className={s.value}>{content}</span><PersistenceFeedback state={persistenceState} label={label} /></>;
+    body = <><span className={s.value} title={textOf(value)}>{content}</span><PersistenceFeedback state={persistenceState} label={label} /></>;
   } else {
     const valueButton = (
       <button
         type="button"
         className={s.value}
+        title={textOf(value)}
         ref={(node) => { if (node && restoreFocus.current) { restoreFocus.current = false; node.focus(); } }}
         aria-label={`Alterar ${label}. Valor atual: ${empty ? "vazio" : textOf(value)}${href ? ". Dois cliques abrem o endereço." : ""}`}
         onClick={() => setOpen(true)}
@@ -203,7 +214,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
             className={s.box}
             data-state={editing ? "editing" : "display"}
             data-empty={empty && !editing ? "" : undefined}
-            data-readonly={readOnly ? "" : undefined}
+            data-readonly={readOnly && (!action || disabled) ? "" : undefined}
             data-link={href !== undefined && !empty ? "" : undefined}
             data-persistence={persistenceState === "idle" ? undefined : persistenceState}
             onKeyDown={editing ? (event) => {

@@ -18,9 +18,9 @@ export interface AccordionItem {
    */
   badge?: { level: "required" | "important"; count: number; label: string };
 }
-export interface AccordionProps { items: readonly AccordionItem[]; defaultValue?: string[]; value?: string[]; onValueChange?: (value: string[]) => void; multiple?: boolean }
-export function Accordion({ items, multiple = true, ...props }: AccordionProps) {
-  return <BaseAccordion.Root<string> className={styles.root} multiple={multiple} {...props}>
+export interface AccordionProps { items: readonly AccordionItem[]; defaultValue?: string[]; value?: string[]; onValueChange?: (value: string[]) => void; multiple?: boolean; density?: "normal" | "compact" }
+export function Accordion({ items, multiple = true, density = "normal", ...props }: AccordionProps) {
+  return <BaseAccordion.Root<string> className={styles.root} data-density={density} multiple={multiple} {...props}>
     {items.map(item => <BaseAccordion.Item key={item.value} value={item.value} disabled={item.disabled ?? false} className={styles.item}>
       <BaseAccordion.Header className={styles.header}><BaseAccordion.Trigger className={styles.trigger}>
         {item.icon}<span className={styles.title}>{item.title}</span>{item.badge && item.badge.count > 0 && <span className={styles.badge} data-level={item.badge.level} title={item.badge.label} aria-label={item.badge.label}>{item.badge.count}</span>}<span className={styles.chevron}><Icon name="chevron" /></span>

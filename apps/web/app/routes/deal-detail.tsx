@@ -46,7 +46,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, AmountSummary, Alert, AvatarStack, Chip, RecordWorkspace, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, RecordValue, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, AmountSummary, Alert, Checkbox, AvatarStack, Chip, RecordWorkspace, RecordSection, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, DatePicker, TimePicker, EmptyState, Field, FieldRequirement, Icon, IconTile, InlineEdit, InlineField, Input, RecordValue, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -432,7 +432,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       await notesCollection.insert(note).isPersisted.promise;
       setNoteDraft("");
       setNoteEditorOpen(false);
-      notify({ title: "Nota registrada", tone: "success" });
+      notify({ title: "Nota registrada", description: "Disponível no histórico do negócio.", tone: "success" });
     } catch {
       notify({ title: "Não foi possível salvar a nota", tone: "error" });
     } finally {
@@ -684,12 +684,9 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const nowIso = new Date().toISOString();
   const providerLabel = (provider: CalendarEvent["provider"]) => ({ google_calendar: "Google", outlook_calendar: "Outlook", apple_calendar: "Apple" }[provider]);
 
-  /* Registrar no negócio: nota digitada no lugar; as ações abrem espaço
-   * (data-collapse) só quando há texto — nunca aparecem secas. */
-  const quickActions = <>
-    <Button size="sm" variant={noteEditorOpen ? "secondary" : "primary"} icon={<Icon name="file" />} disabled={!canWrite} onClick={() => setNoteEditorOpen(open => !open)}>Adicionar nota</Button>
-    {ACTIVITY_COMPOSER_TABS.filter(tab => tab.id !== "note").map(tab => <Button key={tab.id} size="sm" variant="ghost" icon={<Icon name={tab.icon} />} disabled={!canWriteActivities} onClick={() => { if (tab.id !== "note") openActivityModal(undefined, tab.id); }}>{tab.label}</Button>)}
-  </>;
+  const scheduleAction = canWriteActivities ? <MenuButton size="sm" variant="primary" icon={<Icon name="plus" />} menu={<MenuGroup label="Tipo de atividade">
+    {ACTIVITY_COMPOSER_TABS.filter(tab => tab.id !== "note").map(tab => <MenuItem key={tab.id} icon={<Icon name={tab.icon} />} onClick={() => { if (tab.id !== "note") openActivityModal(undefined, tab.id); }}>{tab.label}</MenuItem>)}
+  </MenuGroup>}>Agendar atividade</MenuButton> : undefined;
   const composerContent = noteEditorOpen && <div className={styles.noteComposer}>
     <Textarea autoFocus aria-label="Nova nota" disabled={!canWrite || savingNote} rows={4} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={event => setNoteDraft(event.target.value)} onKeyDown={event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
     <div className={styles.noteActions}>
@@ -698,49 +695,46 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     </div>
   </div>;
 
-  /** Atividade numa linha de lista: tipo no disco, data em mono, atraso como sinal. */
+  /** A lista mantém a conclusão junto do título e o prazo junto do tipo. */
   const activityRow = (activity: Activity, index: number) => {
     const overdue = !activity.completed && activity.scheduledAt < nowIso;
     const kind = activityTypeLabel(activity.type);
     return <ListRow
       key={activity.id}
       index={index}
-      icon={ACTIVITY_ICONS[activity.type]}
+      leading={canWriteActivities ? <Checkbox aria-label={`${activity.completed ? "Reabrir" : "Concluir"} ${activity.title}`} checked={activity.completed} disabled={busyActivityId === activity.id} onCheckedChange={() => void toggleActivity(activity)}>{null}</Checkbox> : <IconTile icon={ACTIVITY_ICONS[activity.type]} size="sm" />}
       done={activity.completed}
       title={activity.title}
-      description={overdue ? <Signal tone="danger">Atrasada · {kind}</Signal> : activity.description ? `${kind} · ${activity.description}` : kind}
-      meta={formatDateTime(activity.scheduledAt)}
-      trailing={canWriteActivities ? (activity.completed
-        ? <Button size="sm" variant="ghost" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Reabrir</Button>
-        : <><Button size="sm" variant="ghost" onClick={() => openActivityModal(activity)}>Editar</Button><Button size="sm" variant="secondary" loading={busyActivityId === activity.id} onClick={() => void toggleActivity(activity)}>Concluir</Button></>) : undefined}
+      description={<span className={styles.activityMeta}><Text as="span" size="pequeno" tone="secondary">{kind}</Text><Signal tone={overdue ? "danger" : "neutral"}>{overdue ? "Atrasada · " : ""}{formatDateTime(activity.scheduledAt)}</Signal></span>}
+      detail={activity.description || undefined}
+      trailing={canWriteActivities ? <Button size="sm" variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${activity.title}`} onClick={() => openActivityModal(activity)} /> : undefined}
     />;
   };
 
   const activitiesContent = <div className={styles.pageActivity}>
-    {canReadActivities && focusActivities.length === 0 && <EmptyState variant="onboarding" icon="calendar" title="Nenhuma atividade agendada" description="Agende o próximo passo para o negócio não esfriar." action={canWriteActivities ? <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openActivityModal()}>Agendar</Button> : undefined} />}
-    {canReadActivities && focusActivities.length > 0 && <Surface as="section" className={styles.block} aria-label="Próximas atividades">
-      <SectionTitle level="card" meta={`${focusActivities.length} ${focusActivities.length === 1 ? "pendente" : "pendentes"}`}>Próximas atividades</SectionTitle>
-      <div className={styles.focusList}><RowList label="Atividades pendentes">{focusActivities.map(activityRow)}</RowList></div>
-    </Surface>}
-    {canReadActivities && doneActivities.length > 0 && <Surface as="section" className={styles.block} aria-label="Atividades concluídas">
-      <SectionTitle level="card" meta={String(doneActivities.length)}>Concluídas</SectionTitle>
+    <RecordSection title="Próximas atividades" actions={<><Button size="sm" variant="secondary" icon={<Icon name="file" />} disabled={!canWrite} onClick={() => setNoteEditorOpen(open => !open)}>Adicionar nota</Button>{scheduleAction}</>}>
+      {composerContent}
+      {canReadActivities && (focusActivities.length === 0
+        ? <EmptyState variant="onboarding" icon="calendar" title="Nenhuma atividade agendada" description="Agende o próximo passo para este negócio." />
+        : <RowList label="Atividades pendentes">{focusActivities.map(activityRow)}</RowList>)}
+    </RecordSection>
+    {canReadActivities && doneActivities.length > 0 && <RecordSection title="Concluídas" count={doneActivities.length}>
       <RowList label="Atividades concluídas">{doneActivities.map(activityRow)}</RowList>
-    </Surface>}
+    </RecordSection>}
   </div>;
 
-  const historyContent = <Surface as="section" className={styles.block} aria-label="Histórico">
-      <SectionTitle level="card" actions={<Button size="sm" variant="ghost" trailingIcon={<Icon name="right" />} onClick={() => setHistoryOpen(true)}>Expandir histórico</Button>}>Histórico</SectionTitle>
+  const historyContent = <RecordSection title="Histórico" actions={<Button size="sm" variant="ghost" trailingIcon={<Icon name="right" />} onClick={() => setHistoryOpen(true)}>Expandir</Button>}>
       <div className={styles.historyTabs}><Tabs variant="segmented" label="Filtrar o histórico" defaultValue="tudo" items={[
         { value: "tudo", label: "Tudo", content: <Timeline collapseChanges items={timelineItems} initialCount={10} pageSize={10} density="compact" groupByDay emptyText="As próximas alterações deste negócio aparecerão aqui." /> },
         { value: "notas", label: `Notas (${dealNotes.length})`, content: dealNotes.length === 0
-          ? <Text size="pequeno" tone="muted">Nenhuma nota ainda. Use o campo acima para registrar o que foi conversado.</Text>
+          ? <Text size="pequeno" tone="muted">Nenhuma nota registrada neste negócio.</Text>
           : <div className={styles.notes}>{dealNotes.map((note) => { const author = users.find((user) => user.id === note.authorId); return <NoteCard key={note.id} author={author?.name ?? "Alguém"} authorAvatarUrl={author?.avatarUrl ?? null} createdAt={note.createdAt} body={note.body} onRemove={note.authorId === session?.userId ? () => void removeNote(note) : undefined} />; })}</div> },
         { value: "mudancas", label: "Mudanças", content: <Timeline collapseChanges items={groupTimelineEvents(events.filter((item) => item.type !== "activity.created"), { users, stages, contacts, companies, customFields })} initialCount={10} pageSize={10} density="compact" groupByDay emptyText="Nenhuma mudança registrada." /> },
       ]} /></div>
-    </Surface>;
+    </RecordSection>;
   const activityHistoryTabs = [
-    ...(canReadActivities ? [{ value: "atividade", label: "Atividades", content: activitiesContent }] : []),
-    { value: "historico", label: "Histórico", content: historyContent },
+    { value: "atividade", label: "Atividades", icon: <Icon name="calendar" />, ...(canReadActivities ? { count: focusActivities.length } : {}), content: activitiesContent },
+    { value: "historico", label: "Histórico", icon: <Icon name="clock" />, content: historyContent },
   ];
 
   const itemEditorContent = <div className={styles.modalFields}>
@@ -793,18 +787,15 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
 
   /* Resumo: todo valor editável passa pelo InlineField — a mesma caixa
    * parada, vazia e editando. */
-  const missingStageFields = stageFieldGaps({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules });
   function fieldRequirement(key: string) {
     if (!deal) return undefined;
     const rule = fieldRules.find(rule => rule.stageId === deal.stageId && rule.pipelineId === deal.pipelineId && rule.fieldKey === key);
     if (!rule || rule.level === "optional") return undefined;
-    const missing = missingStageFields.some(issue => issue.fieldKey === key);
-    const label = rule.level === "required" ? "Obrigatório" : "Importante";
-    return <Text as="span" size="legenda" tone={missing ? "warning" : "muted"}>{missing ? `${label} · falta preencher` : `${label} · preenchido`}</Text>;
+    return <FieldRequirement level={rule.level} />;
   }
   const openCommercial = () => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); };
   const summaryFields = <div className={styles.fields}>
-    <InlineField label="Produtos" hint={fieldRequirement("products")} value={<Button variant="ghost" size="sm" trailingIcon={<Icon name="right" />} onClick={openCommercial}>{dealItems.length ? `${dealItems.length} ${dealItems.length === 1 ? "produto" : "produtos"}` : "Adicionar produto"}</Button>} />
+    <InlineField label="Produtos" hint={fieldRequirement("products")} value={dealItems.length ? `${dealItems.length} ${dealItems.length === 1 ? "produto" : "produtos"}` : "Adicionar produto"} action={{ label: "Ver itens e valores", icon: "right", onClick: openCommercial }} />
     {fieldRequirement("amount") && <InlineField label="Valor" hint={fieldRequirement("amount")} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} action={{ label: "Editar itens e valores", icon: "right", onClick: openCommercial }} />}
     <InlineField hint={fieldRequirement("expectedCloseDate")} label="Previsão" numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
       {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
@@ -834,7 +825,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     />)}
     {activeCustomFields.length === 0 && <Text size="pequeno" tone="muted">Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</Text>}
   </div>;
-  const summaryContent = <Accordion value={openSections} onValueChange={setOpenSections} items={[
+  const summaryContent = <Accordion density="compact" value={openSections} onValueChange={setOpenSections} items={[
     { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: summaryFields },
     { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: detailsContent },
     /* Pessoa e Empresa não têm seção própria: o resumo já mostra as duas, e
@@ -846,7 +837,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         ? <Text size="pequeno" tone="muted">Nenhuma conversa desta pessoa ainda.</Text>
         : <RowList label="Conversas desta pessoa">{conversations.map((conversation, index) => <ListRow key={conversation.id} index={index} icon="message" title={conversation.subject} description={conversationChannelLabel(conversation.channel)} meta={formatDateTime(conversation.lastMessageAt)} render={<Link to={`/inbox?conversation=${conversation.id}`} />} />)}</RowList> }] : []),
   ]} />;
-  const relatedContent = <RelatedRecords contactId={deal.contactId} companyId={deal.companyId} disabled={!canWrite} onContact={(person) => { void selectParties(person?.id ?? null, deal.companyId); }} onCompany={(company) => { void selectParties(deal.contactId, company?.id ?? null); }} />;
+  const relatedContent = <RelatedRecords compact contactId={deal.contactId} companyId={deal.companyId} disabled={!canWrite} onContact={(person) => { void selectParties(person?.id ?? null, deal.companyId); }} onCompany={(company) => { void selectParties(deal.contactId, company?.id ?? null); }} />;
 
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
   const statusChip = deal.status === "open" ? <Chip>{statusLabel(deal.status)}</Chip> : <Chip dot tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Chip>;
@@ -890,7 +881,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       ? <div className={styles.quickHeader}><SectionTitle level="section" as="h2" meta={pipeline?.name ?? "Negócio"} actions={ownerPicker}><InlineEdit label="Título do negócio" value={deal.name} disabled={!canWrite} appearance="title" saveOnBlur onSave={async (draft) => { const next = draft.trim(); if (!next || next.length > 200) throw new Error("Informe um título de até 200 caracteres."); if (next !== deal.name) await saveField({ name: next }, "Título"); }} /></SectionTitle></div>
       : <PageHeader variant="record"
         summary={valueContent}
-        back={<BackLink render={<Link to="/deals" />}>Voltar aos negócios</BackLink>}
+        back={<BackLink iconOnly render={<Link to="/deals" />}>Voltar aos negócios</BackLink>}
         eyebrow={[pipeline?.name ?? "Funil", stage?.name].filter(Boolean).join(" · ")}
         title={<InlineEdit
           label="Título do negócio"
@@ -944,13 +935,13 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
           { value: "pessoas", label: "Vínculos", content: relatedContent },
         ]} /></Surface>
       </div>
-      <div className={styles.quickPhase}><div className={styles.headerGroup}>{quickActions}</div>{composerContent}{quickPanel === "commercial" ? <Surface className={styles.block}>{commercialPanel}</Surface> : <Tabs label="Atividades e histórico do negócio" defaultValue={canReadActivities ? "atividade" : "historico"} items={activityHistoryTabs} />}</div>
+      <div className={styles.quickPhase}>{quickPanel === "commercial" ? <Surface className={styles.block}>{commercialPanel}</Surface> : <Tabs label="Atividades e histórico do negócio" defaultValue="atividade" items={activityHistoryTabs} />}</div>
       <Surface as="aside" className={styles.quickActions}>{moveActions}</Surface>
-    </div> : <RecordWorkspace context={<>{tagsContent}{summaryContent}</>} actions={quickActions}>
-      {composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={!canReadActivities && pageTab === "atividade" ? "historico" : pageTab} onValueChange={setPageTab} items={[
+    </div> : <RecordWorkspace context={<>{tagsContent}{summaryContent}</>}>
+      <div className={styles.workspaceTabs}><Tabs variant="segmented" label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
         ...activityHistoryTabs,
-        { value: "comercial", label: "Itens e valores", content: <Surface className={styles.block}><SectionTitle level="card" description="Produtos, serviços e composição do valor negociado.">Itens do negócio</SectionTitle>{productsContent}</Surface> },
-        { value: "pessoas", label: "Pessoas e empresa", content: relatedContent },
+        { value: "comercial", label: "Itens e valores", icon: <Icon name="cart" />, count: dealItems.length, content: <RecordSection title="Itens do negócio">{productsContent}</RecordSection> },
+        { value: "pessoas", label: "Pessoas e empresa", icon: <Icon name="team" />, content: relatedContent },
       ]} /></div>
     </RecordWorkspace>}
 
