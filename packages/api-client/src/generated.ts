@@ -3745,6 +3745,8 @@ export type SaveServiceConfigurationDtoConfiguration = {
      */
   sortOrder: number;
   archived: boolean;
+  /** @maxLength 2000 */
+  description?: string;
   color: 'neutral' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | string;
   kind: 'level';
   levelKind: 'impact' | 'urgency' | 'priority';

@@ -32,6 +32,7 @@ export const serviceLevels = pgTable("service_levels", {
   id: idColumn(),
   orgId: uuid("org_id").notNull().references(() => organizations.id),
   name: text("name").notNull(),
+  description: text("description").notNull().default(""),
   sortOrder: integer("sort_order").notNull(),
   archived: boolean("archived").notNull(),
   kind: text("kind").notNull(),

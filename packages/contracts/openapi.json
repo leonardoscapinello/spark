@@ -10313,7 +10313,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T16:51:27.756Z",
+                "default": "2026-10-04T17:05:36.895Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10612,7 +10612,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T16:51:27.760Z",
+                "default": "2026-10-04T17:05:36.899Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10833,7 +10833,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T16:51:27.761Z",
+                "default": "2026-10-04T17:05:36.902Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -11058,7 +11058,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T16:51:27.761Z",
+                "default": "2026-10-04T17:05:36.903Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -11263,7 +11263,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T16:51:27.762Z",
+                "default": "2026-10-04T17:05:36.904Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -12412,6 +12412,11 @@
                   },
                   "archived": {
                     "type": "boolean"
+                  },
+                  "description": {
+                    "default": "",
+                    "type": "string",
+                    "maxLength": 2000
                   },
                   "color": {
                     "anyOf": [
