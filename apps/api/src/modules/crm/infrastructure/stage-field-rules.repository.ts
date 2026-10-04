@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { eq, sql } from "drizzle-orm";
 import { createAppDbClient, stageFieldRules, withOrgContext, type SparkDb } from "@spark/db";
 import type { CreateStageFieldRuleInput, OrgId, StageFieldRule, StageFieldRuleId } from "@spark/core";
+import { toStageFieldRule } from "./stage-field-rule.mapper.js";
 
 /**
  * Regras de campo por etapa. Gravar de novo o mesmo campo na mesma etapa troca
@@ -18,7 +19,7 @@ export class StageFieldRulesRepository {
         .onConflictDoUpdate({ target: [stageFieldRules.orgId, stageFieldRules.stageId, stageFieldRules.fieldKey], set: { level: input.level, updatedAt: new Date() } })
         .returning();
       if (!row) throw new Error("Stage field rule upsert returned no row.");
-      return { rule: toRule(row), txid: await captureTxid(tx) };
+      return { rule: toStageFieldRule(row), txid: await captureTxid(tx) };
     });
   }
 
@@ -36,8 +37,4 @@ async function captureTxid(tx: SparkDb): Promise<number> {
   const row = rows[0];
   if (!row) throw new Error("Could not obtain the transaction's txid.");
   return Number(row.txid);
-}
-
-function toRule(row: typeof stageFieldRules.$inferSelect): StageFieldRule {
-  return { ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() } as StageFieldRule;
 }

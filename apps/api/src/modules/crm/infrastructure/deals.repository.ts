@@ -6,7 +6,6 @@ import { createAppDbClient, withOrgContext, deals, contacts, companies, contactC
 import {
   money,
   evaluateStageFields,
-  StageFieldRuleSchema,
   stageFieldMessage,
   stageFieldLabel,
   dealCompanyIssue,
@@ -28,6 +27,7 @@ import {
   type UserId,
 } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
+import { toStageFieldRule } from "./stage-field-rule.mapper.js";
 
 @Injectable()
 export class DealsRepository {
@@ -109,7 +109,7 @@ export class DealsRepository {
           .where(and(eq(customFieldDefinitions.orgId, orgId), eq(customFieldDefinitions.entityType, "deal"))),
       ]);
       const check = evaluateStageFields({ deal: { ...toDeal(current), customFields: customValues }, productCount: products.length,
-        rules: ruleRows.map((rule) => StageFieldRuleSchema.parse(rule)), stages: pipelineStages, targetStageId: stageId, targetPipelineId });
+        rules: ruleRows.map(toStageFieldRule), stages: pipelineStages, targetStageId: stageId, targetPipelineId });
       if (check.blocking.length) {
         const labels = [...new Set(check.blocking.map((issue) => issue.fieldKey.startsWith("custom:")
           ? definitions.find((field) => field.key === issue.fieldKey.slice(7))?.label ?? stageFieldLabel(issue.fieldKey, [])
