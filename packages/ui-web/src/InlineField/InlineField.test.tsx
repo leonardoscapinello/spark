@@ -1,7 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Input } from "../Input/Input.js";
+import { Textarea } from "../Textarea/Textarea.js";
+import { Select } from "../Select/Select.js";
+import { DatePicker } from "../DateTimePicker/DateTimePicker.js";
 import { TooltipProvider } from "../Tooltip/Tooltip.js";
 import { InlineField } from "./InlineField.js";
 
@@ -31,6 +35,55 @@ function PersistedExample({ save }: { save: () => Promise<void> }) {
  * dinheiro deixavam de gravar. Estes testes existem para isso não voltar.
  */
 describe("InlineField", () => {
+  it("clicar no rótulo abre e foca o editor, sem exigir aria-label na tela", async () => {
+    const user = userEvent.setup();
+    const save = vi.fn();
+    render(<TooltipProvider><InlineField label="Nome" value="Maria">{() => <Input defaultValue="Maria" onBlur={save} />}</InlineField></TooltipProvider>);
+    await user.click(screen.getByText("Nome", { selector: "label" }));
+    const input = screen.getByRole("textbox", { name: "Nome" });
+    expect(input).toHaveFocus();
+    await user.type(input, " Silva");
+    await user.click(screen.getByText("Nome", { selector: "label" }));
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue("Maria Silva");
+    expect(save).not.toHaveBeenCalled();
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("button", { name: /Alterar Nome/ })).toHaveFocus();
+  });
+
+  it("o rótulo da área de texto abre o campo vazio e preserva Enter como nova linha", async () => {
+    const user = userEvent.setup();
+    render(<TooltipProvider><InlineField label="Observações" value="" empty multiline>{() => <Textarea />}</InlineField></TooltipProvider>);
+    await user.click(screen.getByText("Observações", { selector: "label" }));
+    const input = screen.getByRole("textbox", { name: "Observações" });
+    expect(input).toHaveFocus();
+    await user.type(input, "Primeira{Enter}Segunda");
+    expect(input).toHaveValue("Primeira\nSegunda");
+  });
+
+  it("o rótulo abre também o seletor e o calendário", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<TooltipProvider><InlineField label="Etapa" value="Novo">{() => <Select label="Etapa" options={[{ value: "new", label: "Novo" }]} />}</InlineField></TooltipProvider>);
+    await user.click(screen.getByText("Etapa", { selector: "label" }));
+    expect(screen.getByRole("option", { name: "Novo" })).toBeVisible();
+    unmount();
+    render(<TooltipProvider><InlineField label="Previsão" value="">{() => <DatePicker label="Previsão" value="" onValueChange={vi.fn()} />}</InlineField></TooltipProvider>);
+    await user.click(screen.getByText("Previsão", { selector: "label" }));
+    expect(screen.getByRole("dialog", { name: "Previsão" })).toBeVisible();
+  });
+
+  it("a dica da regra não abre a edição e rótulos desabilitados não editam", async () => {
+    const user = userEvent.setup();
+    render(<TooltipProvider>
+      <InlineField label="Nome" value="Maria" requirement="required">{() => <Input />}</InlineField>
+      <InlineField label="Origem" value="Site" disabled>{() => <Input />}</InlineField>
+    </TooltipProvider>);
+    await user.click(screen.getByRole("button", { name: "Campo obrigatório" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Campo obrigatório");
+    await user.click(screen.getByText("Origem", { selector: "span" }));
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
   it("usa a ação do registro quando o valor não tem editor", () => {
     const openProducts = vi.fn();
     render(<TooltipProvider><InlineField label="Produtos" value="5 produtos" action={{ label: "Ver itens e valores", icon: "right", onClick: openProducts }} /></TooltipProvider>);

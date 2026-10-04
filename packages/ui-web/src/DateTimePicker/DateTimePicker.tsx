@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { Popover as BasePopover } from "@base-ui/react/popover";
+import { Field as BaseField } from "@base-ui/react/field";
 import { DayPicker } from "react-day-picker";
 import { ptBR } from "react-day-picker/locale";
 import { lightTheme } from "@spark/tokens/native-theme";
@@ -92,11 +93,11 @@ export function DateTimePicker({ label, value, onValueChange, mode = "date", dis
   </div>;
 
   return <BasePopover.Root open={open} onOpenChange={changeOpen}>
-    <BasePopover.Trigger disabled={disabled} className={`${surface.trigger} ${s.trigger}`} data-empty={!display || undefined} aria-label={`${label}: ${display || hint}`}>
+    <BaseField.Control render={<BasePopover.Trigger />} value={value} disabled={disabled} className={`${surface.trigger} ${s.trigger}`} data-empty={!display || undefined} aria-label={`${label}: ${display || hint}`}>
       <span className={s.triggerIcon} data-picker-icon="" aria-hidden="true"><Icon name={mode === "time" ? "clock" : "calendar"} /></span>
       <span className={`${surface.selectValue} ${s.value}`}>{display || hint}</span>
       <span className={surface.triggerIcon} aria-hidden="true"><Icon name="chevron" /></span>
-    </BasePopover.Trigger>
+    </BaseField.Control>
     <BasePopover.Portal>
       <BasePopover.Positioner sideOffset={Number.parseFloat(lightTheme["pop-gap"])} align="start" className={surface.positioner}>
         <BasePopover.Popup ref={sheet} className={`${surface.popup} ${s.sheet}`} data-mode={mode} data-inline-editor="" aria-label={label}>

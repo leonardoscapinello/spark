@@ -28,7 +28,8 @@ it("usa o texto atual e seleciona pelo teclado sem o Enter disparar blur do Inli
   const save = vi.fn(() => Promise.resolve());
   render(<InlineExample save={save} />);
   await user.click(screen.getByRole("button", { name: /Alterar Pessoa/ }));
-  const input = screen.getByRole("combobox", { name: "Pessoa do negócio" });
+  // O rótulo visível do InlineField é também o nome anunciado ao editar.
+  const input = screen.getByRole("combobox", { name: "Pessoa" });
   expect(input).toHaveValue("Ana Oliveira");
   expect(screen.getAllByRole("option")).toHaveLength(1);
   await user.clear(input);
@@ -60,7 +61,7 @@ it.each(["Escape", "Cancelar", "Fora"])("%s descarta a busca sem limpar o víncu
   const save = vi.fn(() => Promise.resolve());
   render(<InlineExample save={save} />);
   await user.click(screen.getByRole("button", { name: /Alterar Pessoa/ }));
-  const input = screen.getByRole("combobox", { name: "Pessoa do negócio" });
+  const input = screen.getByRole("combobox", { name: "Pessoa" });
   await user.clear(input);
   await user.type(input, "inexistente");
   expect(screen.getByText("Nenhuma pessoa encontrada.")).toBeInTheDocument();

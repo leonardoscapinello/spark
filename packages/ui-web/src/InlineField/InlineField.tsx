@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Field as BaseField } from "@base-ui/react/field";
+import { Field } from "../Field/Field.js";
+import { Label } from "../Label/Label.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
 import { Spinner } from "../Spinner/Spinner.js";
 import { Tooltip } from "../Tooltip/Tooltip.js";
@@ -91,6 +94,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
   const [open, setOpen] = useState(defaultEditing);
   const [persistenceState, setPersistenceState] = useState<PersistenceState>("idle");
   const holder = useRef<HTMLDivElement>(null);
+  const row = useRef<HTMLDivElement>(null);
   const restoreFocus = useRef(false);
   const persistenceRevision = useRef(0);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -150,7 +154,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
     function onPointerDown(event: PointerEvent) {
       const target = event.target;
       if (!(target instanceof Node)) return;
-      if (holder.current?.contains(target)) return;
+      if (row.current?.contains(target)) return;
       // Menu e calendário são desenhados fora da linha, num portal.
       if (target instanceof Element && target.closest("[role='dialog'], [role='listbox'], [role='menu'], [data-inline-editor]")) return;
       close();
@@ -160,9 +164,12 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
   }, [editing]);
 
   /* Rótulo em UMA linha, cortado com reticências; a dica mostra o inteiro. */
+  const labelContent = readOnly && (!action || disabled)
+    ? <span className={s.label}>{label}</span>
+    : <Label className={s.label} onPointerDown={(event) => { if (editing) event.preventDefault(); }}>{label}</Label>;
   const rotulo = <span className={s.labelColumn}>
     <span className={s.labelRow}>
-      {block || multiline ? <span className={s.label}>{label}</span> : <Tooltip content={label} pinOnClick={false} size="compact"><span className={s.label}>{label}</span></Tooltip>}
+      {block || multiline ? labelContent : <Tooltip content={label} pinOnClick={false} size="compact">{labelContent}</Tooltip>}
       {fieldRequirement && <FieldRequirement level={fieldRequirement} />}
     </span>
     {hint && <small className={s.hint}>{hint}</small>}
@@ -182,16 +189,17 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
       </button>
     </>;
   } else if (readOnly && action && !disabled) {
-    body = <button type="button" className={s.value} title={textOf(value)} aria-label={action.label} onClick={action.onClick}>{content}<span className={s.mark} data-action aria-hidden="true"><Icon name={action.icon} /></span></button>;
+    body = <BaseField.Control render={<button type="button" />} className={s.value} title={textOf(value)} aria-labelledby={undefined} aria-label={action.label} onClick={action.onClick}>{content}<span className={s.mark} data-action aria-hidden="true"><Icon name={action.icon} /></span></BaseField.Control>;
   } else if (readOnly) {
     body = <><span className={s.value} title={textOf(value)}>{content}</span><PersistenceFeedback state={persistenceState} label={label} /></>;
   } else {
     const valueButton = (
-      <button
-        type="button"
+      <BaseField.Control
+        render={<button type="button" />}
         className={s.value}
         title={textOf(value)}
         ref={(node) => { if (node && restoreFocus.current) { restoreFocus.current = false; node.focus(); } }}
+        aria-labelledby={undefined}
         aria-label={`Alterar ${label}. Valor atual: ${empty ? "vazio" : textOf(value)}${href ? ". Dois cliques abrem o endereço." : ""}`}
         onClick={() => setOpen(true)}
         onDoubleClick={() => {
@@ -202,7 +210,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
       >
         {content}
         <span className={s.mark} aria-hidden="true"><Icon name={empty ? "plus" : href === undefined ? "pencil" : "link"} /></span>
-      </button>
+      </BaseField.Control>
     );
     body = <>
       {preview ? <Tooltip content={preview} appearance="surface" pinOnClick={false} {...(onPreviewRequest ? { onOpen: onPreviewRequest } : {})}>{valueButton}</Tooltip> : valueButton}
@@ -212,8 +220,8 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
   }
 
   return (
-    <div className={s.field} data-block={block || multiline || undefined} data-multiline={multiline || undefined} data-requirement={fieldRequirement}>
-      <div className={s.row}>
+    <Field className={s.field} disabled={disabled} data-block={block || multiline || undefined} data-multiline={multiline || undefined} data-requirement={fieldRequirement}>
+      <div ref={row} className={s.row}>
         {rotulo}
         <div className={s.control}>
           <div
@@ -245,7 +253,7 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
           </div>
         </div>
       </div>
-    </div>
+    </Field>
   );
 }
 

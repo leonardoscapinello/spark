@@ -6,6 +6,8 @@
 .field { container-type: inline-size; min-width: 0; }
 
 .row {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: var(--ui-fieldLabelColumn) minmax(0, 1fr);
   align-items: start;
@@ -17,7 +19,8 @@
 .field + .field > .row { border-top: var(--ui-hairline) solid var(--bd); }
 
 .labelColumn { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; min-height: var(--h-md); }
-.label { display: block; min-width: 0; overflow: hidden; color: var(--tx2); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); text-overflow: ellipsis; white-space: nowrap; }
+.label { display: block; min-width: 0; overflow: hidden; color: var(--tx2); font-size: var(--fs-pequeno); font-weight: var(--fw-400); line-height: var(--lh-pequeno); text-overflow: ellipsis; white-space: nowrap; }
+label.label { cursor: pointer; }
 .labelRow { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
 .hint { color: var(--tx3); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
 
@@ -171,7 +174,17 @@
 /* A regra dá apenas uma pista de cor; o ícone identifica o significado. */
 .field[data-requirement] { --field-tint: var(--wa); }
 .field[data-requirement="required"] { --field-tint: var(--er); }
-.field[data-requirement] > .row { background: linear-gradient(to right, color-mix(in srgb, var(--field-tint) 7%, transparent), transparent); }
+.field[data-requirement] > .row::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: var(--space-1);
+  inset-inline: calc(-1 * var(--space-3)) 0;
+  border-radius: var(--r-lista);
+  corner-shape: var(--r-shape);
+  background: linear-gradient(to right, color-mix(in srgb, var(--field-tint) 7%, transparent), transparent);
+  pointer-events: none;
+}
 
 /* Texto longo tem espaço próprio, sem comprimir o texto entre controles. */
 .field[data-multiline] { --field-area-height: calc(var(--ui-textareaHeight) + var(--space-4)); }
