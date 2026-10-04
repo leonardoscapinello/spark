@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { Field } from "./Field.js";
@@ -52,7 +52,7 @@ describe("Field + Label + Input + ErrorText", () => {
     render(<Field><Label>Etapa</Label><Select label="Etapa" options={[{ value: "new", label: "Novo" }]} /></Field>);
     await user.click(screen.getByText("Etapa", { selector: "label" }));
     expect(screen.getByRole("combobox", { name: "Etapa" })).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("option", { name: "Novo" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("option", { name: "Novo" })).toBeVisible());
     await user.keyboard("{Escape}");
     expect(screen.getByRole("combobox", { name: "Etapa" })).toHaveFocus();
   });
