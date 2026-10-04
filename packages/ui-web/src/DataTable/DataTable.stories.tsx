@@ -36,8 +36,8 @@ const real = (centavos: number) => new Intl.NumberFormat("pt-BR", { style: "curr
 
 const COLUNAS: readonly TableColumn<Pessoa>[] = [
   { id: "pessoa", label: "Pessoa", cell: linha => <PersonIdentity name={linha.nome} detail={linha.email} />, sortValue: linha => linha.nome, alwaysVisible: true },
-  { id: "empresa", label: "Empresa", cell: linha => linha.empresa, sortValue: linha => linha.empresa, group: "Geral" },
-  { id: "etapa", label: "Etapa", cell: linha => <Chip dot tone={linha.tom}>{linha.etapa}</Chip>, sortValue: linha => linha.etapa, group: "Geral" },
+  { id: "empresa", label: "Empresa", cell: linha => linha.empresa, sortValue: linha => linha.empresa, filterValue: linha=>linha.empresa, group: "Geral" },
+  { id: "etapa", label: "Etapa", cell: linha => <Chip dot tone={linha.tom}>{linha.etapa}</Chip>, sortValue: linha => linha.etapa, filterValue: linha=>linha.etapa, group: "Geral" },
   { id: "valor", label: "Valor", cell: linha => real(linha.valor), sortValue: linha => linha.valor, align: "end", group: "Negócio" },
 ];
 
@@ -145,3 +145,5 @@ export const Estreita: Story = {
   name: "Largura estreita",
   render: () => <Mesa largura={360}><DataTable label="Pessoas no celular" rows={DADOS} columns={COLUNAS} rowKey={linha => linha.id} rowLabel={linha => linha.nome} onRowOpen={() => undefined} /></Mesa>,
 };
+
+export const FiltrosPorColuna: Story = { render: () => <DataTable label="Filtro em todas as páginas" rows={pessoas(80)} columns={COLUNAS} rowKey={r=>r.id} pageSize={20} /> };

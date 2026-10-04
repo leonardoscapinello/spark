@@ -13,7 +13,6 @@ export default function AdminService() {
   const { section = "catalog" } = useParams();
   const config = useServiceConfiguration();
   const [draft, setDraft] = useState<SaveServiceConfiguration | null>(null);
-  const [page, setPage] = useState(0);
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [matrixError, setMatrixError] = useState<string | null>(null);
@@ -43,55 +42,52 @@ export default function AdminService() {
     return left.length-right.length;
   });
   const categoryColumns: TableColumn<(typeof config.categories)[number]>[] = [
-    ...[0,1,2].map(depth => ({ id: `n${depth+1}`, label: `${depth+1}º nível`, cell: (row: (typeof config.categories)[number]) => categoryPaths.get(row.id)?.[depth]?.name ?? "—" })),
-    { id: "impact", label: "Impacto", cell: row => nameFor(row.defaultImpactId, config.levels, "—") },
-    { id: "urgency", label: "Urgência", cell: row => nameFor(row.defaultUrgencyId, config.levels, "—") },
-    { id: "priority", label: "Prioridade", cell: row => nameFor(servicePriority(row.defaultImpactId, row.defaultUrgencyId, config), config.levels, "—") },
-    { id: "state", label: "Estado", cell: row => row.archived ? "Desabilitada" : "Habilitada" },
+    ...[0,1,2].map(depth => ({ id: `n${depth+1}`, label: `${depth+1}º nível`, filterValue: (row: (typeof config.categories)[number]) => categoryPaths.get(row.id)?.[depth]?.name ?? null, cell: (row: (typeof config.categories)[number]) => categoryPaths.get(row.id)?.[depth]?.name ?? "—" })),
+    { id: "impact", label: "Impacto", filterValue: row => config.levels.find(l=>l.id===row.defaultImpactId)?.name ?? null, cell: row => nameFor(row.defaultImpactId, config.levels, "—") },
+    { id: "urgency", label: "Urgência", filterValue: row => config.levels.find(l=>l.id===row.defaultUrgencyId)?.name ?? null, cell: row => nameFor(row.defaultUrgencyId, config.levels, "—") },
+    { id: "priority", label: "Prioridade", filterValue: row => config.levels.find(l=>l.id===servicePriority(row.defaultImpactId,row.defaultUrgencyId,config))?.name ?? null, cell: row => nameFor(servicePriority(row.defaultImpactId, row.defaultUrgencyId, config), config.levels, "—") },
+    { id: "state", label: "Estado", filterValue: row=>row.archived ? "Desabilitada" : "Habilitada", cell: row => row.archived ? "Desabilitada" : "Habilitada" },
   ];
   const statusColumns: TableColumn<(typeof config.statuses)[number]>[] = [
-    { id: "name", label: "Status", cell: row => row.name },
-    { id: "type", label: "Tipo", cell: row => ({ active: "Em atendimento", waiting: "Em espera", closed: "Encerrado" })[row.operationalType] },
-    { id: "first", label: "SLA · primeira resposta", cell: row => row.operationalType === "closed" ? "Encerrado" : row.pauseFirstResponse ? "Pausado" : "Em contagem" },
-    { id: "total", label: "SLA · atendimento total", cell: row => row.operationalType === "closed" ? "Encerrado" : row.pauseTotal ? "Pausado" : "Em contagem" },
-    { id: "budget", label: "Prazo no status", cell: row => row.budgetMinutes ? `${row.budgetMinutes} min úteis` : "Sem prazo" },
+    { id: "name", label: "Status", filterValue: row=>row.name, cell: row => row.name },
+    { id: "type", label: "Tipo", filterValue: row=>({active:"Em atendimento",waiting:"Em espera",closed:"Encerrado"})[row.operationalType], cell: row => ({ active: "Em atendimento", waiting: "Em espera", closed: "Encerrado" })[row.operationalType] },
+    { id: "first", label: "SLA · primeira resposta", filterValue: row=>row.operationalType==="closed" ? "Encerrado" : row.pauseFirstResponse ? "Pausado" : "Em contagem", cell: row => row.operationalType === "closed" ? "Encerrado" : row.pauseFirstResponse ? "Pausado" : "Em contagem" },
+    { id: "total", label: "SLA · atendimento total", filterValue: row=>row.operationalType==="closed" ? "Encerrado" : row.pauseTotal ? "Pausado" : "Em contagem", cell: row => row.operationalType === "closed" ? "Encerrado" : row.pauseTotal ? "Pausado" : "Em contagem" },
+    { id: "budget", label: "Prazo no status", filterValue: row=>row.budgetMinutes ? `${row.budgetMinutes} min úteis` : null, cell: row => row.budgetMinutes ? `${row.budgetMinutes} min úteis` : "Sem prazo" },
   ];
-  const levelColumns: TableColumn<(typeof config.levels)[number]>[] = [{ id: "name", label: "Nome", cell: row => <ClassificationValue kind={row.kind} color={row.color} label={row.name} /> },{ id: "kind", label: "Dimensão", cell: row => LEVEL_LABELS[row.kind] }];
+  const levelColumns: TableColumn<(typeof config.levels)[number]>[] = [{ id: "name", label: "Nome", filterValue: row=>row.name, cell: row => <ClassificationValue kind={row.kind} color={row.color} label={row.name} /> },{ id: "kind", label: "Dimensão", filterValue: row=>LEVEL_LABELS[row.kind], cell: row => LEVEL_LABELS[row.kind] }];
   const slaRows = serviceSlaRows(config).filter(row => !search || [row.categoryId ? categoryPaths.get(row.categoryId)?.map(c => c.name).join(" ") : "Geral", ...[row.impactId,row.urgencyId,row.priorityId].map(id => config.levels.find(l => l.id === id)?.name)].join(" ").toLocaleLowerCase("pt-BR").includes(search));
-  const pageCount = Math.max(1,Math.ceil(slaRows.length / 40));
-  const currentPage = Math.min(page,pageCount-1);
   function editSla(row: ServiceSlaRow) {
     const source = row.ownPolicy ?? row.policy;
     setDraft({ kind:"policy",id:row.ownPolicy?.id ?? crypto.randomUUID(),name:row.ownPolicy?.name ?? "",sortOrder:source?.sortOrder ?? 0,archived:false,categoryId:row.categoryId,impactId:row.impactId,urgencyId:row.urgencyId,priorityId:row.impactId ? null : row.priorityId,firstResponseMinutes:source?.firstResponseMinutes ?? 120,totalMinutes:source?.totalMinutes ?? 480,warningPercent:source?.warningPercent ?? 80 });
   }
   const policyColumns: TableColumn<ServiceSlaRow>[] = [
-    ...[0,1,2].map(depth => ({ id:`n${depth+1}`,label:`${depth+1}º nível`,cell:(row:ServiceSlaRow) => row.categoryId ? categoryPaths.get(row.categoryId)?.[depth]?.name ?? "Todas" : depth === 0 ? "Geral" : "Todas" })),
-    {id:"impact",label:"Impacto",cell:row=>nameFor(row.impactId,config.levels)},
-    {id:"urgency",label:"Urgência",cell:row=>nameFor(row.urgencyId,config.levels)},
-    {id:"priority",label:"Prioridade",cell:row=>nameFor(row.priorityId,config.levels,row.impactId ? "Definir na matriz" : "Todas")},
-    {id:"first",label:"Primeira resposta",cell:row=>row.policy ? `${row.policy.firstResponseMinutes} min úteis` : "Sem prazo"},
-    {id:"total",label:"Atendimento total",cell:row=>row.policy ? `${row.policy.totalMinutes} min úteis` : "Sem prazo"},
-    {id:"source",label:"Origem do prazo",cell:row=>row.ownPolicy ? "Próprio" : row.policy ? row.policy.categoryId ? "Categoria superior" : "Geral" : "Não configurado"},
+    ...[0,1,2].map(depth => ({ id:`n${depth+1}`,label:`${depth+1}º nível`,filterValue:(row:ServiceSlaRow)=>row.categoryId ? categoryPaths.get(row.categoryId)?.[depth]?.name ?? null : depth===0 ? "Geral" : null,cell:(row:ServiceSlaRow) => row.categoryId ? categoryPaths.get(row.categoryId)?.[depth]?.name ?? "Todas" : depth === 0 ? "Geral" : "Todas" })),
+    {id:"impact",label:"Impacto",filterValue:row=>config.levels.find(l=>l.id===row.impactId)?.name ?? null,cell:row=>nameFor(row.impactId,config.levels)},
+    {id:"urgency",label:"Urgência",filterValue:row=>config.levels.find(l=>l.id===row.urgencyId)?.name ?? null,cell:row=>nameFor(row.urgencyId,config.levels)},
+    {id:"priority",label:"Prioridade",filterValue:row=>config.levels.find(l=>l.id===row.priorityId)?.name ?? null,cell:row=>nameFor(row.priorityId,config.levels,row.impactId ? "Definir na matriz" : "Todas")},
+    {id:"first",label:"Primeira resposta",filterValue:row=>row.policy ? `${row.policy.firstResponseMinutes} min úteis` : null,cell:row=>row.policy ? `${row.policy.firstResponseMinutes} min úteis` : "Sem prazo"},
+    {id:"total",label:"Atendimento total",filterValue:row=>row.policy ? `${row.policy.totalMinutes} min úteis` : null,cell:row=>row.policy ? `${row.policy.totalMinutes} min úteis` : "Sem prazo"},
+    {id:"source",label:"Origem do prazo",filterValue:row=>row.ownPolicy ? "Próprio" : row.policy ? row.policy.categoryId ? "Categoria superior" : "Geral" : "Não configurado",cell:row=>row.ownPolicy ? "Próprio" : row.policy ? row.policy.categoryId ? "Categoria superior" : "Geral" : "Não configurado"},
   ];
   const impacts = config.levels.filter(l => l.kind === "impact" && !l.archived);
   const urgencies = config.levels.filter(l => l.kind === "urgency" && !l.archived);
   const priorities = config.levels.filter(l => l.kind === "priority" && !l.archived);
   const missingPairs = impacts.flatMap(i => urgencies.filter(u => !config.matrix.some(m => m.impactId === i.id && m.urgencyId === u.id && priorities.some(p => p.id === m.priorityId))));
-  const matrixColumns: TableColumn<(typeof impacts)[number]>[] = [{ id: "impact", label: "Impacto / Urgência", cell: row => row.name }, ...urgencies.map(u => ({ id: u.id, label: u.name, cell: (impact: (typeof impacts)[number]) => {
+  const matrixColumns: TableColumn<(typeof impacts)[number]>[] = [{ id: "impact", label: "Impacto / Urgência", filterValue: row=>row.name, cell: row => row.name }, ...urgencies.map(u => ({ id: u.id, label: u.name, filterValue: (impact: (typeof impacts)[number])=>config.levels.find(l=>l.id===servicePriority(impact.id,u.id,config))?.name ?? null, cell: (impact: (typeof impacts)[number]) => {
     const existing = config.matrix.find(m => m.impactId === impact.id && m.urgencyId === u.id);
     return <Select label={`Prioridade: ${impact.name} × ${u.name}`} disabled={savingPair !== null} value={existing?.priorityId ?? null} placeholder="Definir prioridade" options={priorities.map(p => ({ value: p.id, label: p.name, color: p.color, classificationKind: p.kind }))} onValueChange={value => { if (!value) return; setSavingPair(`${impact.id}:${u.id}`); setMatrixError(null); void saveConfiguration({ kind: "matrix", id: existing?.id ?? crypto.randomUUID(), impactId: impact.id, urgencyId: u.id, priorityId: value }, config).catch(error => setMatrixError(error instanceof Error ? error.message : "Não foi possível salvar.")).finally(() => setSavingPair(null)); }} />;
   } }))];
   return <PageFrame className={styles.page}>
     <PageHeader eyebrow="Atendimento" title={title} actions={section !== "matrix" && section !== "sla" ? <Button onClick={create}>Criar {section === "catalog" ? "categoria" : section === "statuses" ? "status" : section === "sla" ? "SLA" : "nível"}</Button> : undefined} />
-    {section !== "matrix" && <CollectionToolbar search={<SearchField label="Pesquisar configurações" value={query} onValueChange={value => { setQuery(value); setPage(0); }} />} filters={section !== "sla" ? <Checkbox checked={showArchived} onCheckedChange={setShowArchived}>Mostrar desabilitados</Checkbox> : undefined} />}
+    {section !== "matrix" && <CollectionToolbar search={<SearchField label="Pesquisar configurações" value={query} onValueChange={setQuery} />} filters={section !== "sla" ? <Checkbox checked={showArchived} onCheckedChange={setShowArchived}>Mostrar desabilitados</Checkbox> : undefined} />}
     {section === "catalog" && <DataTable label="Catálogo de serviços" rows={categoryRows} columns={categoryColumns} rowKey={row => row.id} state={config.isLoading ? "loading" : "ready"} emptyText="Nenhuma categoria encontrada." actions={row => <Button size="sm" variant="ghost" aria-label={`Editar ${row.name}`} onClick={() => edit({ ...row, kind: "category" })}>Editar</Button>} />}
     {section === "statuses" && <DataTable label="Status de atendimento" rows={visible(config.statuses)} columns={statusColumns} rowKey={row => row.id} emptyText="Crie os status usados pela sua equipe." actions={row => <Button size="sm" variant="ghost" onClick={() => edit({ ...row, kind: "status" })}>Editar</Button>} />}
     {section === "priorities" && <DataTable label="Impactos, urgências e prioridades" rows={visible(config.levels)} columns={levelColumns} rowKey={row => row.id} emptyText="Cadastre os níveis de impacto, urgência e prioridade para montar a matriz." actions={row => <Button size="sm" variant="ghost" onClick={() => edit({ ...row, kind: "level", levelKind: row.kind })}>Editar</Button>} />}
     {section === "matrix" && <>{matrixError && <Alert tone="danger" title="Falha ao salvar">{matrixError}</Alert>}<DataTable label="Matriz de prioridade" rows={impacts} columns={matrixColumns} rowKey={row => row.id} emptyText="Cadastre impactos, urgências e prioridades antes de preencher a matriz." /><Text tone="secondary">{!impacts.length || !urgencies.length || !priorities.length ? "Cadastros necessários ainda não preenchidos." : missingPairs.length ? `${missingPairs.length} combinações sem prioridade. Elas não recebem prioridade automaticamente.` : "Todas as combinações estão configuradas."}</Text></>}
     {section === "sla" && <>
       <Text size="pequeno" tone="secondary">Categorias aparecem automaticamente. Ajuste uma linha para definir um prazo próprio.</Text>
-      <DataTable label="SLA" rows={slaRows.slice(currentPage*40,(currentPage+1)*40)} columns={policyColumns} rowKey={row=>row.key} state={config.isLoading ? "loading" : "ready"} emptyText="Nenhuma combinação encontrada." actions={row=><Button size="sm" variant="ghost" disabled={Boolean(row.impactId && !row.priorityId)} onClick={()=>editSla(row)}>Ajustar prazo</Button>} />
-      <div className={styles.breadcrumb}><Button size="sm" variant="ghost" disabled={currentPage===0} onClick={()=>setPage(currentPage-1)}>Anterior</Button><Text>Página {currentPage+1} de {pageCount} · {slaRows.length} combinações</Text><Button size="sm" variant="ghost" disabled={currentPage===pageCount-1} onClick={()=>setPage(currentPage+1)}>Próxima</Button></div>
+      <DataTable label="SLA" rows={slaRows} pageSize={40} columns={policyColumns} rowKey={row=>row.key} state={config.isLoading ? "loading" : "ready"} emptyText="Nenhuma combinação encontrada." actions={row=><Button size="sm" variant="ghost" disabled={Boolean(row.impactId && !row.priorityId)} onClick={()=>editSla(row)}>Ajustar prazo</Button>} />
     </>}
     {draft && <ConfigurationEditor key={draft.id} initial={draft} config={config} onClose={() => setDraft(null)} />}
   </PageFrame>;

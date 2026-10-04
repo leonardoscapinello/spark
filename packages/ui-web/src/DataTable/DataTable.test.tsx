@@ -119,3 +119,39 @@ it("não arrasta cabeçalho quando o consumidor não trata ordem",()=>{
  render(<DataTable label="Contatos" rows={[{id:"a",name:"Ana"}]} rowKey={r=>r.id} columns={[{id:"name",label:"Nome",cell:r=>r.name}]}/>);
  expect(screen.getByRole("columnheader")).not.toHaveAttribute("draggable");
 });
+
+
+it("combina filtros por coluna, encontra valores fora da página e limpa tudo",async()=>{
+ const rows=[{id:"1",name:"Ana",team:"Comercial",level:"Alto"},{id:"2",name:"Bia",team:"Suporte",level:"Baixo"},{id:"3",name:"Caio",team:"Suporte",level:"Alto"}];
+ render(<DataTable label="Filtros" rows={rows} pageSize={1} rowKey={r=>r.id} columns={[{id:"name",label:"Pessoa",cell:r=>r.name},{id:"team",label:"Equipe",cell:r=>r.team,filterValue:r=>r.team},{id:"level",label:"Prioridade",cell:r=>r.level,filterValue:r=>r.level}]} />);
+ fireEvent.click(screen.getByRole("button",{name:"Filtrar Equipe"}));
+ fireEvent.click(await screen.findByRole("checkbox",{name:"Comercial"}));
+ expect(screen.getByRole("region",{name:"Filtros"})).toHaveTextContent("Bia");
+ fireEvent.keyDown(document.activeElement ?? document.body,{key:"Escape"});
+ fireEvent.click(screen.getByRole("button",{name:"Filtrar Prioridade"}));
+ fireEvent.click(await screen.findByRole("checkbox",{name:"Baixo"}));
+ expect(screen.getByRole("region",{name:"Filtros"})).toHaveTextContent("Caio");
+ expect(screen.getByRole("region",{name:"Filtros"})).not.toHaveTextContent("Ana");
+ fireEvent.keyDown(document.activeElement ?? document.body,{key:"Escape"});
+ fireEvent.click(screen.getByRole("button",{name:"Limpar todos os filtros"}));
+ expect(screen.getByRole("region",{name:"Filtros"})).toHaveTextContent("Ana");
+ expect(screen.getByText("Página 1 de 3 · 3 registros")).toBeInTheDocument();
+});
+
+it("busca opções e distingue nenhum valor selecionado de filtro limpo",async()=>{
+ const rows=[{id:"1",name:"Ana",team:null},{id:"2",name:"Bia",team:"Suporte"}];
+ render(<DataTable label="Vazios" rows={rows} rowKey={r=>r.id} columns={[{id:"name",label:"Pessoa",cell:r=>r.name},{id:"team",label:"Equipe",cell:r=>r.team,filterValue:r=>r.team}]} />);
+ fireEvent.click(screen.getByRole("button",{name:"Filtrar Equipe"}));
+ const search=await screen.findByRole("textbox",{name:"Buscar valores de Equipe"});
+ fireEvent.change(search,{target:{value:"sup"}});
+ expect(screen.queryByRole("checkbox",{name:"(Vazios)"})).not.toBeInTheDocument();
+ expect(screen.getByRole("checkbox",{name:"Suporte"})).toBeInTheDocument();
+ fireEvent.click(screen.getByRole("button",{name:"Desmarcar todos"}));
+ expect(screen.getByText("Nenhum resultado para os filtros selecionados.")).toBeInTheDocument();
+ fireEvent.change(search,{target:{value:""}});
+ fireEvent.click(screen.getByRole("checkbox",{name:"(Vazios)"}));
+ expect(screen.getByRole("region",{name:"Vazios"})).toHaveTextContent("Ana");
+ expect(screen.getByRole("region",{name:"Vazios"})).not.toHaveTextContent("Bia");
+ fireEvent.click(screen.getByRole("button",{name:"Limpar filtro desta coluna"}));
+ expect(screen.getByRole("region",{name:"Vazios"})).toHaveTextContent("Bia");
+});

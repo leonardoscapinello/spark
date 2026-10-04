@@ -12,3 +12,9 @@ Design system web sobre Base UI (ADR-0020).
 - Cores do consumo de SLA representam o prazo, não a prioridade: verde no prazo, amarelo no limite de alerta configurado e vermelho ao atingir o prazo.
 
 Exemplos no Storybook: **Campos/Classificação**, incluindo formulário completo, valor automático e estado sem classificação. Novas telas devem consumir esses componentes; aparência e semântica visual ficam no design system.
+
+## Filtros de tabela
+
+Colunas filtráveis declaram `filterValue`, um texto ou `null` para vazios. O menu no cabeçalho oferece busca, seleção múltipla e limpeza. Valores dentro da coluna se combinam com OU; colunas diferentes se combinam com E. O filtro ativo fica visível e há limpeza global. Nunca extraia valores de nós React.
+
+Passe o conjunto completo de linhas e `pageSize` para tabelas paginadas: a tabela filtra e ordena antes de paginar. Assim, opções e resultados abrangem todas as páginas. Exemplo no Storybook: Dados/Tabela/FiltrosPorColuna.
