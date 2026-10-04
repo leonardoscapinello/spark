@@ -195,5 +195,5 @@
   white-space: nowrap;
 }
 
-.channels { display: flex; flex-wrap: wrap; gap: var(--space-1-5); margin-top: var(--space-2); }
+.channels { display: flex; flex-wrap: nowrap; gap: var(--space-1-5); margin-top: var(--space-2); overflow-x: auto; padding: var(--ui-focusWidth); }
 .headerActions { display: flex; flex: none; align-items: center; gap: var(--space-2); min-height: 40px; margin-inline-start: auto; }

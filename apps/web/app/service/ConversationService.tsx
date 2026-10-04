@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { serviceCycleProgress, type Conversation, type ServiceCycle } from "@spark/core";
-import { Button, ClassificationValue, InlineField, Select, SlaProgress, Text, notify } from "@spark/ui-web";
-import { getSession } from "../lib/auth.client";
+import { ClassificationValue, Field, Label, Select, SlaProgress, Text, notify } from "@spark/ui-web";
 import { useServiceConfiguration } from "../lib/service-configuration.client";
 import { getServiceCyclesCollection, getServiceSegmentsCollection, getServiceCycleHoursCollection, getServiceCycleHolidaysCollection } from "../lib/service-cycles.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
@@ -12,7 +10,6 @@ import { CategorySelectors } from "./CategorySelectors";
 import styles from "../routes/settings.module.css";
 export function ConversationService({ conversation, now, canWrite }: { conversation: Conversation; now: Date; canWrite: boolean }) {
   const config = useServiceConfiguration();
-  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [historyId, setHistoryId] = useState<string | null>(null);
   const { data: cycles = [] } = useLiveQuery({ query: q => q.from({ row: getServiceCyclesCollection() }).where(({ row }) => eq(row.conversationId, conversation.id)).orderBy(({ row }) => row.openedAt, "desc") });
@@ -26,15 +23,14 @@ export function ConversationService({ conversation, now, canWrite }: { conversat
   const priority = config.levels.find(l => l.id === conversation.servicePriorityId);
   const editable = canWrite && !saving;
   return <div className={styles.form}>
-    <Select label="Status do atendimento" disabled={!editable} value={conversation.serviceStatusId ?? ""} options={[{ value: "", label: conversation.status === "closed" ? "Encerrado" : conversation.status === "snoozed" ? "Em espera" : "Em atendimento" }, ...config.statuses.filter(s => !s.archived || s.id === conversation.serviceStatusId).map(s => ({ value: s.id, label: s.name }))]} onValueChange={value => { void change("serviceStatusId", value || null); }} />
-    <InlineField label="Categoria" value={config.categories.find(c => c.id === conversation.categoryId)?.name ?? "Não classificado"} disabled={!editable}>{() => <CategorySelectors config={config} value={conversation.categoryId ?? null} onChange={value => { void change("categoryId", value); }} />}</InlineField>
-    {(["impact", "urgency"] as const).map(kind => <Select key={kind} label={kind === "impact" ? "Impacto" : "Urgência"} disabled={!editable} value={(kind === "impact" ? conversation.impactId : conversation.urgencyId) ?? ""} options={[{ value: "", label: kind === "impact" ? "Impacto não definido" : "Urgência não definida" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={value => { void change(kind === "impact" ? "impactId" : "urgencyId", value || null); }} />)}
-    <InlineField label="Prioridade calculada" value={<ClassificationValue kind="priority" color={priority?.color} label={priority?.name ?? "Não definida"} />} />
+    <Field><Label>Status do atendimento</Label><Select label="Status do atendimento" disabled={!editable} value={conversation.serviceStatusId ?? ""} options={[{ value: "", label: conversation.status === "closed" ? "Encerrado" : conversation.status === "snoozed" ? "Em espera" : "Em atendimento" }, ...config.statuses.filter(s => !s.archived || s.id === conversation.serviceStatusId).map(s => ({ value: s.id, label: s.name }))]} onValueChange={value => { void change("serviceStatusId", value || null); }} /></Field>
+    <CategorySelectors config={config} disabled={!editable} value={conversation.categoryId ?? null} onChange={value => { void change("categoryId", value); }} />
+    {(["impact", "urgency"] as const).map(kind => <Field key={kind}><Label>{kind === "impact" ? "Impacto" : "Urgência"}</Label><Select label={kind === "impact" ? "Impacto" : "Urgência"} disabled={!editable} value={(kind === "impact" ? conversation.impactId : conversation.urgencyId) ?? ""} options={[{ value: "", label: kind === "impact" ? "Impacto não definido" : "Urgência não definida" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={value => { void change(kind === "impact" ? "impactId" : "urgencyId", value || null); }} /></Field>)}
+    <ClassificationValue fieldLabel="Prioridade automática" kind="priority" color={priority?.color} label={priority?.name ?? "Não definida"} />
     {cycles.length > 1 && <Select label="Ciclo de atendimento" value={cycle?.id ?? null} options={cycles.map((c,i) => ({ value:c.id,label:`${c.closedAt ? "Encerrado" : "Atual"} · ciclo ${cycles.length-i} · ${new Date(c.openedAt).toLocaleDateString("pt-BR")}` }))} onValueChange={setHistoryId} />}
     {cycle ? <CycleProgress key={cycle.id} cycle={cycle} now={now} /> : <Text tone="secondary">SLA ainda não iniciado.</Text>}
-    <RecordCustomFields entityType="conversation" entityId={conversation.id} disabled={!canWrite} />
-    {cycle && <RecordCustomFields key={cycle.id} entityType="service_cycle" entityId={cycle.id} disabled={!canWrite || Boolean(cycle.closedAt)} />}
-    {getSession()?.capabilities.includes("settings:manage") && <><Button size="sm" variant="ghost" onClick={() => void navigate("/admin/service/sla")}>Configurar SLA e atendimento</Button><Button size="sm" variant="ghost" onClick={() => void navigate("/admin/data/custom-fields?entity=conversation")}>Gerenciar campos do atendimento</Button></>}
+    <RecordCustomFields showAdministration={false} entityType="conversation" entityId={conversation.id} disabled={!canWrite} />
+    {cycle && <RecordCustomFields showAdministration={false} key={cycle.id} entityType="service_cycle" entityId={cycle.id} disabled={!canWrite || Boolean(cycle.closedAt)} />}
   </div>;
 }
 function CycleProgress({ cycle, now }: { cycle: ServiceCycle; now: Date }) {
