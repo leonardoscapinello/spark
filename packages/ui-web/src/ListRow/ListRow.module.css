@@ -71,4 +71,13 @@
 @container (max-width: 480px) {
   .title, .description { white-space: normal; overflow-wrap: anywhere; }
   .main { align-items: flex-start; }
+
+  /* O nome usa a largura da linha; preço e ações ficam juntos abaixo dele. */
+  .root:not([data-link]):has(.meta) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-2); padding: var(--row-pad); }
+  .root:not([data-link]):has(.meta) .main { display: contents; }
+  .root:not([data-link]):has(.meta) .copy { grid-column: 1 / -1; }
+  .root:not([data-link]):has(.meta) .leading { position: absolute; inset-block-start: var(--row-pad); inset-inline-start: var(--row-pad); }
+  .root:not([data-link]):has(.meta) .meta { grid-column: 1; align-self: center; }
+  .root:not([data-link]):has(.meta) .trailing { grid-column: 2; grid-row: 2; }
+  .root[data-leading]:not([data-link]):has(.meta) :is(.copy, .meta) { padding-inline-start: calc(var(--row-slot) + var(--space-3)); }
 }

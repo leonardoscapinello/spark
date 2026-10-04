@@ -757,32 +757,36 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   </div>;
 
   /* Itens: o valor do negócio nasce aqui (packages/core/rules/dealProducts). */
+  const addProductAction = canWrite ? <Button size="sm" variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemEditor()}>Adicionar produto</Button> : undefined;
   const productsContent = <div className={styles.items}>
     {dealItems.length === 0
       ? <Text size="pequeno" tone="muted">O valor do negócio é a soma dos produtos. Adicione o que está sendo vendido.</Text>
       : <>
-          <RowList label="Itens do negócio">{dealItems.map((item, index) => {
+          <div className={styles.itemList}><RowList label="Itens do negócio">{dealItems.map((item, index) => {
             const totals = dealProductTotals({ ...item, unitAmount: syncedAmount(item.unitAmount) });
             return <ListRow
               key={item.id}
               index={index}
               icon="cart"
               title={item.name}
-              description={`${formatQuantity(item.quantityMilli)} × ${formatBRL(syncedAmount(item.unitAmount))}${item.discountBasisPoints > 0 ? ` · −${formatBasisPoints(item.discountBasisPoints)}%` : ""}${item.taxBasisPoints > 0 ? ` · +${formatBasisPoints(item.taxBasisPoints)}% imp.` : ""}`}
-              meta={formatBRL(totals.net)}
+              description={`${formatQuantity(item.quantityMilli)} × ${formatBRL(syncedAmount(item.unitAmount))}`}
+              detail={[
+                item.discountBasisPoints > 0 ? `Desconto de ${formatBasisPoints(item.discountBasisPoints)}%` : "",
+                item.taxBasisPoints > 0 ? `Imposto de ${formatBasisPoints(item.taxBasisPoints)}%` : "",
+              ].filter(Boolean).join(" · ") || undefined}
+              meta={<Text size="pequeno" weight="medium" mono>{formatBRL(totals.net)}</Text>}
               trailing={canWrite ? <>
                 <Button size="sm" variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${item.name}`} onClick={() => openItemEditor(item)} />
                 <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} onClick={() => void removeItem(item)} />
               </> : undefined}
             />;
-          })}</RowList>
-          <AmountSummary label="Resumo do negócio" items={[
+          })}</RowList></div>
+          <div className={styles.itemsSummary}><AmountSummary label="Resumo do negócio" items={[
             { label: "Subtotal", value: formatBRL(itemsSummary.gross) },
             { label: "Descontos", value: `−${formatBRL(itemsSummary.discount)}` },
             { label: "Impostos", value: `+${formatBRL(itemsSummary.tax)}` },
-          ]} totalLabel="Valor do negócio" total={formatBRL(itemsSummary.net)} />
+          ]} totalLabel="Valor do negócio" total={formatBRL(itemsSummary.net)} /></div>
         </>}
-    {canWrite && <div className={styles.inlineAction}><Button variant="secondary" icon={<Icon name="plus" />} onClick={() => openItemEditor()}>Adicionar produto</Button></div>}
   </div>;
 
   /* Resumo: todo valor editável passa pelo InlineField — a mesma caixa
@@ -853,7 +857,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const commercialPanel = <div className={styles.quickPanel}>
     <div className={styles.quickPanelHeader}>
       {embedded && <Button variant="ghost" size="sm" icon={<Icon name="left" />} iconOnly aria-label={embeddedItemEditorOpen ? "Voltar aos itens" : "Voltar aos campos"} onClick={() => { if (embeddedItemEditorOpen) setEmbeddedItemEditorOpen(false); else setQuickPanel("stage"); }} />}
-      <SectionTitle level="card" description={embeddedItemEditorOpen ? "Informe os dados do item comercial." : "Produtos, serviços e composição do valor negociado."}>{embeddedItemEditorOpen ? (editingItemId ? "Editar produto" : "Adicionar produto") : "Itens e valores"}</SectionTitle>
+      <SectionTitle level="card" actions={!embeddedItemEditorOpen ? addProductAction : undefined} description={embeddedItemEditorOpen ? "Informe os dados do item comercial." : "Produtos, serviços e composição do valor negociado."}>{embeddedItemEditorOpen ? (editingItemId ? "Editar produto" : "Adicionar produto") : "Itens e valores"}</SectionTitle>
     </div>
     {embeddedItemEditorOpen ? <>
       <div className={styles.quickPanelBody}>{itemEditorContent}</div>
@@ -940,7 +944,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     </div> : <RecordWorkspace context={<>{tagsContent}{summaryContent}</>}>
       <div className={styles.workspaceTabs}><Tabs variant="segmented" label="Área de trabalho do negócio" value={pageTab} onValueChange={setPageTab} items={[
         ...activityHistoryTabs,
-        { value: "comercial", label: "Itens e valores", icon: <Icon name="cart" />, count: dealItems.length, content: <RecordSection title="Itens do negócio">{productsContent}</RecordSection> },
+        { value: "comercial", label: "Itens e valores", icon: <Icon name="cart" />, count: dealItems.length, content: <RecordSection title="Itens do negócio" actions={addProductAction}>{productsContent}</RecordSection> },
         { value: "pessoas", label: "Pessoas e empresa", icon: <Icon name="team" />, content: relatedContent },
       ]} /></div>
     </RecordWorkspace>}

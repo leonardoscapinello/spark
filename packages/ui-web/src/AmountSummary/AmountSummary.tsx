@@ -8,7 +8,7 @@ export interface AmountSummaryProps {
   total: string;
 }
 
-/** Composição compacta de um valor: parcelas lado a lado, total em destaque. */
+/** Composição compacta de um valor: parcelas alinhadas em linhas e total separado. */
 export function AmountSummary({ label, items, totalLabel, total }: AmountSummaryProps) {
   return <dl className={s.root} aria-label={label} aria-live="polite" aria-atomic="true">
     <div className={s.items}>

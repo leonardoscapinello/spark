@@ -42,8 +42,9 @@
 /* Campos: linhas «rótulo · valor» uma abaixo da outra. */
 .fields { display: grid; gap: 0; min-width: 0; }
 .stack { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
-.items { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
-.inlineAction { display: flex; }
+.items { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-5); min-width: 0; }
+.itemList { flex: 1 1 var(--ui-previewColumn); min-width: 0; }
+.itemsSummary { flex: 0 1 var(--ui-cardMinWidth); min-width: min(100%, var(--ui-cardMinWidth)); margin-inline-start: auto; }
 .valueHint { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 
 .modalFields { display: flex; flex-direction: column; gap: var(--space-4); }
@@ -113,4 +114,3 @@
   .quickActions { order: -1; }
   .quickContext, .quickPhase, .quickActions { flex-shrink: 0; }
 }
-
