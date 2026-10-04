@@ -7,7 +7,7 @@ import { Icon, type IconName } from "../Icon/Icon.js";
 import styles from "./ClassificationValue.module.css";
 
 export type ClassificationKind = "impact" | "urgency" | "priority";
-const icons: Record<ClassificationKind, IconName> = { impact: "target", urgency: "bolt", priority: "flag" };
+const icons: Record<ClassificationKind, IconName> = { impact: "alert", urgency: "clock", priority: "flag" };
 export interface ClassificationValueProps {
   kind: ClassificationKind;
   label: string;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { serviceCategoryPath, selectServiceSla, servicePriority, resolveServiceClassification, validateServiceConfiguration } from "./serviceConfiguration.js";
+import { serviceCategoryPath, serviceSlaRows, selectServiceSla, servicePriority, resolveServiceClassification, validateServiceConfiguration } from "./serviceConfiguration.js";
 import { ServiceCategorySchema, SlaPolicySchema, ServiceLevelSchema, PriorityMatrixSchema } from "../schema/serviceConfiguration.js";
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
 const base = { orgId: id(90), createdAt: "2026-10-04T12:00:00Z", updatedAt: "2026-10-04T12:00:00Z", sortOrder: 0, archived: false };
@@ -95,5 +95,30 @@ describe("SLA por combinação", () => {
     expect(() => validateServiceConfiguration({...config,policies:[{...exact,urgencyId:null}]})).toThrow("ambos");
     expect(() => validateServiceConfiguration({...config,matrix:[],policies:[exact]})).toThrow("matriz");
     expect(() => validateServiceConfiguration({...config,policies:[exact,{...exact,id:id(74)}]})).toThrow("Já existe");
+  });
+});
+
+
+describe("grade automática do SLA", () => {
+  const impact=ServiceLevelSchema.parse({...base,id:id(40),name:"Alto",kind:"impact",color:"red"});
+  const urgency=ServiceLevelSchema.parse({...base,id:id(41),name:"Alto",kind:"urgency",color:"red"});
+  const config={categories,statuses:[],levels:[...priorities,impact,urgency],matrix:[PriorityMatrixSchema.parse({...base,id:id(50),impactId:impact.id,urgencyId:urgency.id,priorityId:id(10)})],policies:[policy(20,null,null),policy(21,null,id(10))]};
+  it("inclui categorias e pares novos sem duplicar políticas",()=>{
+    const extra=ServiceCategorySchema.parse({...base,id:id(4),name:"Nova",parentId:null});
+    const rows=serviceSlaRows({...config,categories:[...categories,extra]});
+    expect(rows.find(r=>r.categoryId===extra.id&&r.impactId===impact.id)?.policy?.id).toBe(id(21));
+    expect(rows.find(r=>r.categoryId===extra.id&&r.impactId===null)?.policy?.id).toBe(id(20));
+    expect(rows.filter(r=>r.categoryId===extra.id).every(r=>r.ownPolicy===null)).toBe(true);
+    const newUrgency={...urgency,id:id(42)};
+    expect(serviceSlaRows({...config,levels:[...config.levels,newUrgency]}).some(r=>r.urgencyId===newUrgency.id&&r.priorityId===null)).toBe(true);
+    expect(config.policies).toHaveLength(2);
+  });
+  it("preserva exceções e revela herança novamente ao desabilitá-las",()=>{
+    const custom={...policy(22,id(3),null),impactId:impact.id,urgencyId:urgency.id,totalMinutes:90};
+    const rows=serviceSlaRows({...config,policies:[...config.policies,custom]});
+    const row=rows.find(r=>r.categoryId===id(3)&&r.impactId===impact.id);
+    expect(row?.ownPolicy?.id).toBe(custom.id);expect(row?.policy?.totalMinutes).toBe(90);
+    expect(serviceSlaRows({...config,policies:[...config.policies,{...custom,archived:true}]}).find(r=>r.key===row?.key)?.policy?.id).toBe(id(21));
+    expect(serviceSlaRows({...config,categories:categories.map(c=>({...c,archived:true}))}).every(r=>r.categoryId===null)).toBe(true);
   });
 });

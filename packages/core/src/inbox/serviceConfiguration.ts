@@ -84,3 +84,30 @@ export function resolveServiceClassification(current: { status: string; serviceS
   const servicePriorityId = servicePriority(impactId,urgencyId,config);
   return { serviceStatusId, categoryId, impactId, urgencyId, servicePriorityId, status: operational === "closed" ? "closed" as const : operational === "snoozed" ? "snoozed" as const : "open" as const, statusDefinition: status ?? null };
 }
+
+
+export interface ServiceSlaRow {
+  key: string;
+  categoryId: string | null;
+  impactId: string | null;
+  urgencyId: string | null;
+  priorityId: string | null;
+  policy: SlaPolicy | null;
+  ownPolicy: SlaPolicy | null;
+}
+/** Grade viva do catálogo: nenhuma cópia de política é criada para herdar prazos. */
+export function serviceSlaRows(config: ServiceConfiguration): ServiceSlaRow[] {
+  const categories = config.categories.filter(c => !serviceCategoryPath(c.id, config.categories).some(p => p.archived));
+  const impacts = config.levels.filter(l => l.kind === "impact" && !l.archived);
+  const urgencies = config.levels.filter(l => l.kind === "urgency" && !l.archived);
+  const rows: ServiceSlaRow[] = [];
+  for (const categoryId of [null, ...categories.map(c => c.id)]) {
+    const pairs = [{ impactId: null, urgencyId: null, priorityId: null }, ...impacts.flatMap(i => urgencies.map(u => ({ impactId: i.id, urgencyId: u.id, priorityId: servicePriority(i.id,u.id,config) })))];
+    const priorityRules = config.policies.filter(p => !p.archived && p.categoryId === categoryId && !p.impactId && p.priorityId);
+    for (const scope of [...pairs, ...priorityRules.map(p => ({ impactId:null,urgencyId:null,priorityId:p.priorityId }))]) {
+      const ownPolicy = config.policies.find(p => !p.archived && p.categoryId === categoryId && p.impactId === scope.impactId && p.urgencyId === scope.urgencyId && (scope.impactId !== null || p.priorityId === scope.priorityId)) ?? null;
+      rows.push({ ...scope, categoryId, key:`${categoryId ?? "general"}:${scope.impactId ?? "all"}:${scope.urgencyId ?? "all"}:${scope.impactId ? "pair" : scope.priorityId ?? "all"}`, ownPolicy, policy:selectServiceSla(categoryId,scope.priorityId,config,scope) });
+    }
+  }
+  return rows;
+}

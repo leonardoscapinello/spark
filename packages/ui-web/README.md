@@ -4,7 +4,7 @@ Design system web sobre Base UI (ADR-0020).
 
 ## Classificação e formulários administrativos
 
-- **Impacto:** alvo; **urgência:** raio; **prioridade:** bandeira. Use `ClassificationValue` em tabelas e detalhes e `classificationKind` nas opções de `Select`. Não use chips com bolinhas para essas dimensões.
+- **Impacto:** círculo com exclamação; **urgência:** relógio; **prioridade:** bandeira. Use `ClassificationValue` em tabelas e detalhes e `classificationKind` nas opções de `Select`. Não use chips com bolinhas para essas dimensões.
 - Cor complementa o nome e o ícone: **Baixo verde, Médio amarelo, Alto vermelho**. Preserve cores configuradas pelo usuário; não deduza a cor pelo texto. Valor ausente tem cor neutra e texto “Não definida”.
 - **Valor calculado continua sendo campo.** Use `ClassificationValue` com `fieldLabel` para prioridade automática. Ele reutiliza `Field`, `Label` e `Input readOnly`: mesma altura, largura, tipografia e recuo dos demais campos, sem seta de seleção ou aparência desabilitada. Não estique um chip no lugar de um campo.
 - Rótulos permanecem visíveis. Agrupe controles relacionados sob um título curto; uma frase explica o efeito quando necessário. Em status, “Contagem do SLA” reúne “Continuar contando” e “Pausar contagem”; a ação ao receber mensagem fica separada.
