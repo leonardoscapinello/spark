@@ -2,7 +2,7 @@ import { CategorySelectors } from "../service/CategorySelectors";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { SaveServiceConfigurationSchema, ServiceCategorySchema, ServiceStatusSchema, ServiceLevelSchema, PriorityMatrixSchema, SlaPolicySchema, serviceCategoryPath, servicePriority, type SaveServiceConfiguration, type ServiceConfiguration } from "@spark/core";
-import { ActionModal, Alert, Button, Checkbox, CollectionToolbar, ColorPicker, CrmLabel, DataTable, Field, Input, Label, PageFrame, PageHeader, SearchField, Select, Text, Textarea, type TableColumn } from "@spark/ui-web";
+import { ActionModal, Alert, Button, Checkbox, CollectionToolbar, ColorPicker, CrmLabel, DataTable, Field, Input, Label, PageFrame, PageHeader, SearchField, Select, SectionTitle, Text, Textarea, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import { getSession } from "../lib/auth.client";
 import { getServiceCategoriesCollection, getServiceStatusesCollection, getServiceLevelsCollection, getPriorityMatrixCollection, getSlaPoliciesCollection, preloadServiceConfiguration, useServiceConfiguration } from "../lib/service-configuration.client";
@@ -51,9 +51,9 @@ export default function AdminService() {
   ];
   const statusColumns: TableColumn<(typeof config.statuses)[number]>[] = [
     { id: "name", label: "Status", cell: row => row.name },
-    { id: "type", label: "Tipo", cell: row => ({ active: "Ativo", waiting: "Espera", closed: "Encerrado" })[row.operationalType] },
-    { id: "first", label: "Primeira resposta", cell: row => row.pauseFirstResponse ? "Pausa" : "Conta" },
-    { id: "total", label: "Atendimento total", cell: row => row.pauseTotal ? "Pausa" : "Conta" },
+    { id: "type", label: "Tipo", cell: row => ({ active: "Em atendimento", waiting: "Em espera", closed: "Encerrado" })[row.operationalType] },
+    { id: "first", label: "SLA · primeira resposta", cell: row => row.operationalType === "closed" ? "Encerrado" : row.pauseFirstResponse ? "Pausado" : "Em contagem" },
+    { id: "total", label: "SLA · atendimento total", cell: row => row.operationalType === "closed" ? "Encerrado" : row.pauseTotal ? "Pausado" : "Em contagem" },
     { id: "budget", label: "Prazo no status", cell: row => row.budgetMinutes ? `${row.budgetMinutes} min úteis` : "Sem prazo" },
   ];
   const levelColumns: TableColumn<(typeof config.levels)[number]>[] = [{ id: "name", label: "Nome", cell: row => <CrmLabel color={row.color}>{row.name}</CrmLabel> },{ id: "kind", label: "Dimensão", cell: row => LEVEL_LABELS[row.kind] }];
@@ -100,7 +100,7 @@ function ConfigurationEditor({ initial, config, onClose }: { initial: SaveServic
       <Field><Label>Urgência</Label><Select label="Urgência do SLA" value={draft.urgencyId ?? ""} options={[{ value: "", label: "Todas" }, ...config.levels.filter(l => l.kind === "urgency" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color }))]} onValueChange={id => setDraft({ ...draft, urgencyId: id || null, priorityId: null })} /></Field>
       <Field><Label>Prioridade automática</Label><CrmLabel color={priorityLevel?.color}>{priorityLevel?.name ?? (draft.impactId || draft.urgencyId ? "Selecione uma combinação da matriz" : "Todas")}</CrmLabel></Field>
     </>}
-    {draft.kind !== "matrix" && <>{draft.kind !== "policy" && <Field><Label>Nome</Label><Input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /></Field>}<Field><Label>Status</Label><Select label="Status do cadastro" value={draft.archived ? "disabled" : "enabled"} options={[{ value: "enabled", label: "Habilitado" }, { value: "disabled", label: "Desabilitado" }]} onValueChange={value => { if (value) setDraft({ ...draft, archived: value === "disabled" }); }} /></Field></>}
+    {draft.kind !== "matrix" && <>{draft.kind !== "policy" && <Field><Label>Nome</Label><Input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /></Field>}<Field><Label>{draft.kind === "status" ? "Disponibilidade" : "Status"}</Label><Select label="Disponibilidade do cadastro" value={draft.archived ? "disabled" : "enabled"} options={[{ value: "enabled", label: "Habilitado" }, { value: "disabled", label: "Desabilitado" }]} onValueChange={value => { if (value) setDraft({ ...draft, archived: value === "disabled" }); }} /></Field></>}
     {draft.kind === "category" && <>
       <Field><Label>Impacto padrão</Label><Select label="Impacto padrão da categoria" value={draft.defaultImpactId ?? ""} options={[{ value: "", label: "Não definir impacto" }, ...config.levels.filter(l => l.kind === "impact" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color }))]} onValueChange={id => setDraft({ ...draft, defaultImpactId: id || null })} /></Field>
       <Field><Label>Urgência padrão</Label><Select label="Urgência padrão da categoria" value={draft.defaultUrgencyId ?? ""} options={[{ value: "", label: "Não definir urgência" }, ...config.levels.filter(l => l.kind === "urgency" && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color }))]} onValueChange={id => setDraft({ ...draft, defaultUrgencyId: id || null })} /></Field>
@@ -108,8 +108,24 @@ function ConfigurationEditor({ initial, config, onClose }: { initial: SaveServic
     </>}
     {draft.kind === "level" && <Select label="Dimensão" value={draft.levelKind} options={Object.entries(LEVEL_LABELS).map(([value,label]) => ({ value,label }))} onValueChange={value => { if (value === "impact" || value === "urgency" || value === "priority") setDraft({ ...draft, levelKind: value }); }} />}
     {draft.kind === "level" && <Field><Label>Descrição (opcional)</Label><Textarea rows={2} maxLength={2000} value={draft.description}  onChange={event => setDraft({ ...draft, description: event.target.value })} /></Field>}
-    {(draft.kind === "level" || draft.kind === "status") && <ColorPicker label="Cor" value={draft.color} onValueChange={color => setDraft({ ...draft, color })} />}
-    {draft.kind === "status" && <><Select label="Tipo operacional" value={draft.operationalType} options={[{ value: "active", label: "Ativo" },{ value: "waiting", label: "Em espera" },{ value: "closed", label: "Encerrado" }]} onValueChange={value => { if (value === "active" || value === "waiting" || value === "closed") setDraft({ ...draft, operationalType: value }); }} /><Checkbox checked={draft.pauseFirstResponse} onCheckedChange={pauseFirstResponse => setDraft({ ...draft, pauseFirstResponse })}>Pausar primeira resposta</Checkbox><Checkbox checked={draft.pauseTotal} onCheckedChange={pauseTotal => setDraft({ ...draft, pauseTotal })}>Pausar atendimento total</Checkbox><Checkbox checked={draft.resumeOnInbound} onCheckedChange={resumeOnInbound => setDraft({ ...draft, resumeOnInbound })}>Retomar atendimento quando o cliente responder</Checkbox><Field><Label>Prazo acumulado neste status (minutos úteis)</Label><Input type="number" min="1" value={draft.budgetMinutes ?? ""} onChange={e => setDraft({ ...draft, budgetMinutes: e.target.value ? Number(e.target.value) : null })} /></Field></>}
+    {draft.kind === "level" && <ColorPicker label="Cor" value={draft.color} onValueChange={color => setDraft({ ...draft, color })} />}
+    {draft.kind === "status" && <>
+      <Field><Label>Situação do atendimento</Label><Select label="Situação do atendimento" value={draft.operationalType} options={[{ value: "active", label: "Em atendimento" }, { value: "waiting", label: "Em espera" }, { value: "closed", label: "Encerrado" }]} onValueChange={value => { if (value === "active" || value === "waiting" || value === "closed") setDraft({ ...draft, operationalType: value }); }} /></Field>
+      <div className={styles.form}>
+        <SectionTitle level="card" description={draft.operationalType === "closed" ? "Encerrar finaliza os cronômetros. Uma nova mensagem do cliente inicia outro ciclo de SLA." : "Define se os prazos do SLA atribuído continuam contando neste status."}>Contagem do SLA</SectionTitle>
+        {draft.operationalType !== "closed" && <>
+          <Field><Label>Primeira resposta</Label><Select label="Contagem do SLA de primeira resposta" value={draft.pauseFirstResponse ? "pause" : "count"} options={[{ value: "count", label: "Continuar contando" }, { value: "pause", label: "Pausar contagem" }]} onValueChange={value => { if (value) setDraft({ ...draft, pauseFirstResponse: value === "pause" }); }} /></Field>
+          <Field><Label>Atendimento total</Label><Select label="Contagem do SLA de atendimento total" value={draft.pauseTotal ? "pause" : "count"} options={[{ value: "count", label: "Continuar contando" }, { value: "pause", label: "Pausar contagem" }]} onValueChange={value => { if (value) setDraft({ ...draft, pauseTotal: value === "pause" }); }} /></Field>
+        </>}
+      </div>
+      {draft.operationalType === "waiting" && <Field><Label>Quando o cliente enviar uma mensagem</Label><Select label="Ação ao receber mensagem do cliente" value={draft.resumeOnInbound ? "resume" : "keep"} options={[{ value: "keep", label: "Manter neste status" }, { value: "resume", label: "Voltar para Em atendimento" }]} onValueChange={value => { if (value) setDraft({ ...draft, resumeOnInbound: value === "resume" }); }} />{draft.resumeOnInbound && <Text size="pequeno" tone="secondary">A mudança preserva o tempo já consumido do SLA.</Text>}</Field>}
+      {draft.operationalType !== "closed" && <div className={styles.form}>
+        <SectionTitle level="card" description="Opcional. Soma o tempo útil de todas as passagens por este status, mesmo com o SLA pausado.">Prazo próprio do status</SectionTitle>
+        <Field><Label>Limite em minutos úteis</Label><Input type="number" min="1" placeholder="Sem limite" value={draft.budgetMinutes ?? ""} onChange={e => setDraft({ ...draft, budgetMinutes: e.target.value ? Number(e.target.value) : null })} /></Field>
+      </div>}
+      <div className={styles.form}><SectionTitle level="card">Cor do status</SectionTitle><ColorPicker label="Cor do status" value={draft.color} onValueChange={color => setDraft({ ...draft, color })} /></div>
+    </>}
+
     {draft.kind === "policy" && <><Field><Label>Primeira resposta (minutos úteis)</Label><Input type="number" min="1" value={draft.firstResponseMinutes} onChange={e => setDraft({ ...draft, firstResponseMinutes: Number(e.target.value) })} /></Field><Field><Label>Atendimento total (minutos úteis)</Label><Input type="number" min="1" value={draft.totalMinutes} onChange={e => setDraft({ ...draft, totalMinutes: Number(e.target.value) })} /></Field><Field><Label>Alerta ao consumir (%)</Label><Input type="number" min="1" max="99" value={draft.warningPercent} onChange={e => setDraft({ ...draft, warningPercent: Number(e.target.value) })} /></Field></>}
   </div></ActionModal>;
 }
