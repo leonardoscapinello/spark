@@ -54,6 +54,7 @@ import { getCustomFieldsCollection } from "../lib/custom-fields-collection.clien
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
 import { useCustomFieldOptions, useCustomFieldValues } from "../lib/custom-fields.client";
 import { getDealProductsCollection } from "../lib/deal-products-collection.client";
+import { dealItemRemovalFailure } from "../lib/deal-item-removal";
 import { getDealFollowersCollection } from "../lib/deal-followers-collection.client";
 import { getStageFieldRulesCollection } from "../lib/stage-field-rules-collection.client";
 import { getNotesCollection } from "../lib/notes-collection.client";
@@ -217,6 +218,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [itemProductId, setItemProductId] = useState("");
   const [itemName, setItemName] = useState("");
   const [itemQuantity, setItemQuantity] = useState("1");
@@ -507,12 +509,16 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   }
 
   async function removeItem(item: DealProduct) {
+    if (removingItemId || !canWrite) return;
+    setRemovingItemId(item.id);
     try {
       const transaction = itemsCollection.delete(item.id);
       await transaction.isPersisted.promise;
       notify({ title: "Item removido", description: item.name, tone: "success" });
-    } catch {
-      notify({ title: "Não foi possível remover o item", tone: "error" });
+    } catch (cause) {
+      notify(dealItemRemovalFailure(cause));
+    } finally {
+      setRemovingItemId(null);
     }
   }
 
@@ -778,7 +784,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
               meta={<Text size="pequeno" weight="medium" mono>{formatBRL(totals.net)}</Text>}
               trailing={canWrite ? <>
                 <Button size="sm" variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${item.name}`} onClick={() => openItemEditor(item)} />
-                <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} onClick={() => void removeItem(item)} />
+                <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} loading={removingItemId === item.id} disabled={removingItemId !== null} onClick={() => void removeItem(item)} />
               </> : undefined}
             />;
           })}</RowList></div>
