@@ -1,6 +1,6 @@
 # Classificação e SLA
 
-Impacto, urgência e prioridade usam três níveis: Alto, Médio e Baixo.
+Impacto, urgência e prioridade usam três níveis: Alto (vermelho), Médio (amarelo) e Baixo (verde). O consumo de SLA usa verde no prazo, amarelo no percentual de alerta e vermelho ao atingir o limite.
 
 | Impacto / Urgência | Alto | Médio | Baixo |
 |---|---|---|---|

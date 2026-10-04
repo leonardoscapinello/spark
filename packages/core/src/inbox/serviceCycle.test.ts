@@ -10,6 +10,12 @@ const hour = BusinessHourSchema.parse({ ...base,id:id(1),weekday:1,enabled:true,
 const cycle = ServiceCycleSchema.parse({ ...base,id:id(2),conversationId:id(3),policyId:id(4),policyName:"Geral",policyVersion:1,firstResponseMinutes:60,totalMinutes:480,warningPercent:80,openedAt:"2026-10-05T09:00:00Z",closedAt:null,firstInboundAt:"2026-10-05T09:00:00Z",firstRespondedAt:null });
 const segment = ServiceSegmentSchema.parse({ ...base,id:id(5),conversationId:id(3),cycleId:id(2),statusId:id(6),statusName:"Ativo",startedAt:"2026-10-05T09:00:00Z",endedAt:null,firstCounting:true,totalCounting:true,budgetMinutes:240,elapsedMs:0 });
 describe("ciclos e cronômetros", () => {
+  it("usa os mesmos limites de cor na primeira resposta, total e status", () => {
+    for (const [minutes,state] of [[29,"on_track"],[30,"due_soon"],[60,"breached"]] as const) {
+      const p=serviceCycleProgress({...cycle,totalMinutes:60,warningPercent:50},[{...segment,budgetMinutes:60}],[hour],[],new Date(Date.parse(cycle.openedAt)+minutes*60000));
+      expect(p.first.state).toBe(state);expect(p.total.state).toBe(state);expect(p.currentStatus?.state).toBe(state);
+    }
+  });
   it("conta expediente descontando almoço e mantém prazo vencido", () => {
     const p=serviceCycleProgress(cycle,[segment],[hour],[],new Date("2026-10-05T14:00:00Z"));
     expect(p.total.usedMs).toBe(4*3600000); expect(p.first.state).toBe("breached"); expect(p.first.overtimeMinutes).toBe(180);

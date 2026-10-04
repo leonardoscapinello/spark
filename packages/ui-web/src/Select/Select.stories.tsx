@@ -76,3 +76,5 @@ export const NoFormulario: Story = {
     </Mesa>
   ),
 };
+
+export const Classificacao: Story = { args: { label: "Prioridade", defaultValue: "medium", options: [{value:"high",label:"Alto",color:"red"},{value:"medium",label:"Médio",color:"amber"},{value:"low",label:"Baixo",color:"green"}] } };

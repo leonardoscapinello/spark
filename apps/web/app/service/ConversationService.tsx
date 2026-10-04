@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { serviceCycleProgress, type Conversation, type ServiceCycle } from "@spark/core";
-import { Button, InlineField, Select, SlaProgress, Text, notify } from "@spark/ui-web";
+import { Button, CrmLabel, InlineField, Select, SlaProgress, Text, notify } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { useServiceConfiguration } from "../lib/service-configuration.client";
 import { getServiceCyclesCollection, getServiceSegmentsCollection, getServiceCycleHoursCollection, getServiceCycleHolidaysCollection } from "../lib/service-cycles.client";
@@ -23,12 +23,13 @@ export function ConversationService({ conversation, now, canWrite }: { conversat
     catch (error) { notify({ title: "Não foi possível salvar a classificação", description: error instanceof Error ? error.message : "Tente novamente.", tone: "error" }); }
     finally { setSaving(false); }
   }
+  const priority = config.levels.find(l => l.id === conversation.servicePriorityId);
   const editable = canWrite && !saving;
   return <div className={styles.form}>
     <Select label="Status do atendimento" disabled={!editable} value={conversation.serviceStatusId ?? ""} options={[{ value: "", label: conversation.status === "closed" ? "Encerrado" : conversation.status === "snoozed" ? "Em espera" : "Em atendimento" }, ...config.statuses.filter(s => !s.archived || s.id === conversation.serviceStatusId).map(s => ({ value: s.id, label: s.name }))]} onValueChange={value => { void change("serviceStatusId", value || null); }} />
     <InlineField label="Categoria" value={config.categories.find(c => c.id === conversation.categoryId)?.name ?? "Não classificado"} disabled={!editable}>{() => <CategorySelectors config={config} value={conversation.categoryId ?? null} onChange={value => { void change("categoryId", value); }} />}</InlineField>
-    {(["impact", "urgency"] as const).map(kind => <Select key={kind} label={kind === "impact" ? "Impacto" : "Urgência"} disabled={!editable} value={(kind === "impact" ? conversation.impactId : conversation.urgencyId) ?? ""} options={[{ value: "", label: kind === "impact" ? "Impacto não definido" : "Urgência não definida" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name }))]} onValueChange={value => { void change(kind === "impact" ? "impactId" : "urgencyId", value || null); }} />)}
-    <InlineField label="Prioridade calculada" value={config.levels.find(l => l.id === conversation.servicePriorityId)?.name ?? "Sem combinação definida"} />
+    {(["impact", "urgency"] as const).map(kind => <Select key={kind} label={kind === "impact" ? "Impacto" : "Urgência"} disabled={!editable} value={(kind === "impact" ? conversation.impactId : conversation.urgencyId) ?? ""} options={[{ value: "", label: kind === "impact" ? "Impacto não definido" : "Urgência não definida" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color }))]} onValueChange={value => { void change(kind === "impact" ? "impactId" : "urgencyId", value || null); }} />)}
+    <InlineField label="Prioridade calculada" value={<CrmLabel color={priority?.color}>{priority?.name ?? "—"}</CrmLabel>} />
     {cycles.length > 1 && <Select label="Ciclo de atendimento" value={cycle?.id ?? null} options={cycles.map((c,i) => ({ value:c.id,label:`${c.closedAt ? "Encerrado" : "Atual"} · ciclo ${cycles.length-i} · ${new Date(c.openedAt).toLocaleDateString("pt-BR")}` }))} onValueChange={setHistoryId} />}
     {cycle ? <CycleProgress key={cycle.id} cycle={cycle} now={now} /> : <Text tone="secondary">SLA ainda não iniciado.</Text>}
     <RecordCustomFields entityType="conversation" entityId={conversation.id} disabled={!canWrite} />
@@ -49,5 +50,5 @@ function CycleProgress({ cycle, now }: { cycle: ServiceCycle; now: Date }) {
     if (clock.waiting) return <Text key={kind} tone="secondary">{name}: aguardando mensagem do cliente.</Text>;
     const state = clock.finished ? "Concluído" : cycle.closedAt ? "Encerrado sem resposta" : clock.paused ? "Pausado" : clock.outsideHours ? "Fora do expediente" : "Em andamento";
     return <SlaProgress key={kind} percent={clock.percent} state={clock.state} label={`${name}: ${Math.floor(clock.usedMs/60000)} / ${clock.budget} min úteis · ${state}${clock.overtimeMinutes ? ` · ${clock.overtimeMinutes} min excedidos` : ` · restam ${clock.remainingMinutes} min`}`} />;
-  })}{progress.currentStatus?.budget && <SlaProgress percent={progress.currentStatus.usedMs/(progress.currentStatus.budget*60000)*100} state={progress.currentStatus.usedMs >= progress.currentStatus.budget*60000 ? "breached" : "on_track"} label={`${progress.currentStatus.name}: ${Math.floor(progress.currentStatus.usedMs/60000)} / ${progress.currentStatus.budget} min úteis acumulados`} />}</div>;
+  })}{progress.currentStatus?.budget && <SlaProgress percent={progress.currentStatus.usedMs/(progress.currentStatus.budget*60000)*100} state={progress.currentStatus.state} label={`${progress.currentStatus.name}: ${Math.floor(progress.currentStatus.usedMs/60000)} / ${progress.currentStatus.budget} min úteis acumulados`} />}</div>;
 }
