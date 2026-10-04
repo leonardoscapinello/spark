@@ -69,7 +69,6 @@ import { groupTimelineEvents } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { EnrichedCustomFieldValue } from "../lib/company-registrations.client";
 import { useDealPresence } from "../lib/deal-presence.client";
-import { PhaseFields } from "../crm/PhaseFields";
 import { RelatedRecords } from "../crm/RelatedRecords";
 import { DealTags } from "../crm/DealTags";
 import { useDealTags } from "../lib/tags.client";
@@ -306,7 +305,6 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const selectedStage = pipelineStages.find((item) => item.id === selectedStageId);
   const selectedStageDetails = selectedStageId ? stageTiming.details[selectedStageId] : undefined;
   const selectedStageCheck = deal && selectedStageId ? evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages, targetStageId: selectedStageId }) : null;
-  const fieldWarnings = useMemo(() => (deal ? evaluateStageFields({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules, stages: pipelineStages }).warnings : []), [deal, dealItems.length, fieldRules, pipelineStages]);
 
   /* O que falta na etapa atual, agrupado pela seção do painel onde se
    * preenche. É isso que vira a marca na aba fechada: dizer que «origem está
@@ -803,18 +801,29 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
 
   /* Resumo: todo valor editável passa pelo InlineField — a mesma caixa
    * parada, vazia e editando. */
+  const missingStageFields = stageFieldGaps({ deal: { ...deal, customFields: customValues }, productCount: dealItems.length, rules: fieldRules });
+  function fieldRequirement(key: string) {
+    if (!deal) return undefined;
+    const rule = fieldRules.find(rule => rule.stageId === deal.stageId && rule.pipelineId === deal.pipelineId && rule.fieldKey === key);
+    if (!rule || rule.level === "optional") return undefined;
+    const missing = missingStageFields.some(issue => issue.fieldKey === key);
+    const label = rule.level === "required" ? "Obrigatório" : "Importante";
+    return <Text as="span" size="legenda" tone={missing ? "warning" : "muted"}>{missing ? `${label} · falta preencher` : `${label} · preenchido`}</Text>;
+  }
+  const openCommercial = () => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); };
   const summaryFields = <div className={styles.fields}>
-    {!embedded && fieldWarnings.length > 0 && <Alert tone="warning" title={stageFieldMessage("important", fieldWarnings.map((issue) => stageFieldLabel(issue.fieldKey, customFields)))} />}
-    <InlineField label="Previsão" numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
+    <InlineField label="Produtos" hint={fieldRequirement("products")} value={<Button variant="ghost" size="sm" trailingIcon={<Icon name="right" />} onClick={openCommercial}>{dealItems.length ? `${dealItems.length} ${dealItems.length === 1 ? "produto" : "produtos"}` : "Adicionar produto"}</Button>} />
+    {fieldRequirement("amount") && <InlineField label="Valor" hint={fieldRequirement("amount")} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} action={{ label: "Editar itens e valores", icon: "right", onClick: openCommercial }} />}
+    <InlineField hint={fieldRequirement("expectedCloseDate")} label="Previsão" numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
       {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
     </InlineField>
-    <InlineField label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>
+    <InlineField hint={fieldRequirement("ownerId")} label="Responsável" value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>
       {(close) => <Select label="Responsável pelo negócio" value={deal.ownerId ?? null} placeholder="Não atribuído" options={users.filter((item) => !item.deactivatedAt).map(userSelectOption)} onValueChange={(next) => close(saveField({ ownerId: next ? userIdFactory.from(next) : null }, "Responsável"))} />}
     </InlineField>
-    <InlineField label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" />, action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => void navigate(`/contacts/${linkedContact.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedContact} disabled={!canWrite || !canReadContacts}>
+    <InlineField hint={fieldRequirement("contactId")} label="Pessoa" value={linkedContact?.name ?? "Sem pessoa"} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" />, action: { label: `Abrir ${linkedContact.name}`, icon: "eye" as const, onClick: () => void navigate(`/contacts/${linkedContact.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedContact} disabled={!canWrite || !canReadContacts}>
       {(close) => <RecordSelect label="Pessoa do negócio" placeholder="Nome, e-mail ou telefone…" options={contactOptions} loading={contactsLoading} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} emptyOptionLabel="Sem pessoa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.contactId ? undefined : selectParties(next?.value ?? null, deal.companyId))} />}
     </InlineField>
-    <InlineField label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" />, action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${linkedCompany.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies}>
+    <InlineField hint={fieldRequirement("companyId")} label="Empresa" value={linkedCompany?.name ?? "Sem empresa"} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" />, action: { label: `Abrir ${linkedCompany.name}`, icon: "eye" as const, onClick: () => void navigate(`/companies/${linkedCompany.id}?returnTo=${returnTo}`) } } : {})} empty={!linkedCompany} disabled={!canWrite || !canReadCompanies}>
       {(close) => <RecordSelect label="Empresa do negócio" kind="company" placeholder="Nome, documento ou site…" options={companyOptions} loading={companiesLoading || linksLoading} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} emptyOptionLabel="Sem empresa vinculada" onValueChange={(next) => close((next?.value ?? null) === deal.companyId ? undefined : selectParties(deal.contactId, next?.value ?? null))} />}
     </InlineField>
     {deal.status === "lost" && <InlineField label="Motivo da perda" value={deal.lossReason ?? "Não informado"} empty={!deal.lossReason} disabled />}
@@ -825,6 +834,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       options={fieldOptions.get(field.id) ?? []}
       key={field.id}
       field={field}
+      hint={fieldRequirement(`custom:${field.key}`)}
       value={customValues[field.key]}
       disabled={!canWrite}
       onSave={(value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))}
@@ -832,13 +842,6 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     />)}
     {activeCustomFields.length === 0 && <Text size="pequeno" tone="muted">Nenhum campo personalizado de negócio. Crie em Configurações · Dados.</Text>}
   </div>;
-  const phaseContent = stage && <PhaseFields stage={stage} stages={pipelineStages} values={customValues} disabled={!canWrite} onOpenCommercial={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }} renderBuiltIn={(key, hint) => {
-    if (key === "contactId") return <InlineField label="Pessoa" hint={hint} value={linkedContact?.name ?? "Sem pessoa"} empty={!linkedContact} {...(linkedContact ? { leading: <Avatar name={linkedContact.name} size="small" /> } : {})} disabled={!canWrite || !canReadContacts}>{(close) => <RecordSelect label="Pessoa nesta etapa" options={contactOptions} value={linkedContact ? { value: linkedContact.id, label: linkedContact.name } : null} onCancel={close} onValueChange={(next) => close(selectParties(next?.value ?? null, deal.companyId))} />}</InlineField>;
-    if (key === "companyId") return <InlineField label="Empresa" hint={hint} value={linkedCompany?.name ?? "Sem empresa"} empty={!linkedCompany} {...(linkedCompany ? { leading: <Avatar name={linkedCompany.name} size="small" /> } : {})} disabled={!canWrite || !canReadCompanies}>{(close) => <RecordSelect label="Empresa nesta etapa" kind="company" options={companyOptions} value={linkedCompany ? { value: linkedCompany.id, label: linkedCompany.name } : null} onCancel={close} onValueChange={(next) => close(selectParties(deal.contactId, next?.value ?? null))} />}</InlineField>;
-    if (key === "ownerId") return <InlineField label="Responsável" hint={hint} value={owner?.name ?? "Não atribuído"} empty={!owner} {...(owner ? { leading: <UserAvatar user={owner} size="small" /> } : {})} disabled={!canWrite}>{(close) => <Select label="Responsável nesta etapa" options={users.filter((u) => !u.deactivatedAt).map(userSelectOption)} value={deal.ownerId} onValueChange={(value) => close(saveField({ ownerId: value ? userIdFactory.from(value) : null }, "Responsável"))} />}</InlineField>;
-    if (key === "expectedCloseDate") return <InlineField label="Previsão" hint={hint} numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>{(close) => <DatePicker label="Previsão nesta etapa" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(value) => close(saveField({ expectedCloseDate: value ? new Date(`${value}T12:00:00`).toISOString() : null }, "Previsão"))} />}</InlineField>;
-    return null;
-  }} onSave={(key, value) => writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.customFields = { ...customValues, [key]: value }; }))} />;
   const summaryContent = <Accordion value={openSections} onValueChange={setOpenSections} items={[
     { value: "resumo", title: "Resumo", icon: <Icon name="chart" />, ...(faltando.resumo ? { badge: faltando.resumo } : {}), content: summaryFields },
     { value: "detalhes", title: "Detalhes", icon: <Icon name="file" />, ...(faltando.detalhes ? { badge: faltando.detalhes } : {}), content: detailsContent },
@@ -945,7 +948,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       <div className={styles.quickContext}>
         {valueContent}
         <Surface className={styles.quickTabs}><Tabs label="Contexto do negócio" defaultValue="resumo" items={[
-          { value: "resumo", label: "Resumo", content: <div className={styles.stack}>{phaseContent}{summaryFields}{tagsContent}</div> },
+          { value: "resumo", label: "Resumo", content: <div className={styles.stack}>{summaryFields}{tagsContent}</div> },
           { value: "detalhes", label: "Detalhes", content: detailsContent },
           { value: "pessoas", label: "Vínculos", content: relatedContent },
         ]} /></Surface>
@@ -955,7 +958,6 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     </div> : <div className={styles.contentGrid}>
       <aside className={styles.side}>
         {valueContent}
-        {phaseContent && <Surface className={styles.sideBlock}>{phaseContent}</Surface>}
         {summaryContent}
         <Surface className={styles.sideBlock}>{tagsContent}</Surface>
       </aside>

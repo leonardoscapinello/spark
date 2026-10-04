@@ -1,7 +1,4 @@
-/* Trilha de etapas (origem: Controles §5 "Segmentado" e Navegação §22
- * "Stepper"): trilho cavado em pílula, padding 4, 2 entre etapas. A etapa
- * atual é carvão — a folha [data-ind] desliza até ela em 550 ms. Vencidas em
- * tinta 2, a fazer em tinta 3. Desfecho: fundo suave do estado, nunca cor cheia. */
+/* Fluxo de etapas em setas interligadas. */
 .frame { display: grid; gap: var(--space-1); min-width: 0; }
 .cooldown { display: grid; gap: var(--space-1); color: var(--tx3); font-size: var(--fs-pequeno); text-align: end; }
 .cooldown i { display: block; justify-self: end; width: var(--cooldown-progress); height: 3px; border-radius: var(--r-pill); background: var(--tx); }
@@ -9,24 +6,18 @@
 .root {
   display: flex;
   align-items: stretch;
-  gap: var(--space-2);
+  gap: 0;
   min-width: 0;
   margin: 0;
   padding: var(--space-1);
-  border-radius: var(--r-pill);
-  background: var(--sf2);
-  box-shadow: var(--deb);
   list-style: none;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .root::-webkit-scrollbar { display: none; }
 
-.indicator { border-radius: var(--r-pill); background: var(--ac); box-shadow: var(--ink); }
-.root[data-tone="won"] > .indicator { background: var(--oks); box-shadow: none; }
-.root[data-tone="lost"] > .indicator { background: var(--ers); box-shadow: none; }
-
-.step { display: flex; flex: 1 0 104px; min-width: 104px; }
+.step { display: flex; flex: 1 0 auto; min-width: max-content; }
+.step + .step { margin-inline-start: calc(-1 * var(--space-3)); }
 
 .action {
   position: relative;
@@ -39,10 +30,11 @@
   gap: var(--space-2);
   min-width: 0;
   min-height: var(--h-md);
-  padding: 0 var(--space-4);
+  padding: var(--space-2) var(--space-6);
   border: 0;
-  border-radius: var(--r-pill);
-  background: transparent;
+  border-radius: 0;
+  background: var(--sf2);
+  clip-path: polygon(0 0, calc(100% - var(--space-4)) 0, 100% 50%, calc(100% - var(--space-4)) 100%, 0 100%, var(--space-4) 50%);
   color: var(--tx3);
   font-family: var(--font);
   font-size: var(--fs-pequeno);
@@ -52,8 +44,9 @@
   outline: none;
 }
 
+.step:first-child .action { clip-path: polygon(0 0, calc(100% - var(--space-4)) 0, 100% 50%, calc(100% - var(--space-4)) 100%, 0 100%); }
 button.action { cursor: pointer; }
-button.action:focus-visible { box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
+button.action:focus-visible { box-shadow: inset 0 0 0 var(--ui-focusWidth) var(--ring); }
 button.action:active { transform: scale(var(--scale-press)); transition-duration: var(--t-instant); }
 
 @media (hover: hover) and (pointer: fine) {
@@ -61,9 +54,9 @@ button.action:active { transform: scale(var(--scale-press)); transition-duration
 }
 
 .step[data-state="done"] .action { color: var(--tx2); }
-.step[data-on] .action { color: var(--acf); }
-.root[data-tone="won"] .step[data-on] .action { color: var(--ok); }
-.root[data-tone="lost"] .step[data-on] .action { color: var(--er); }
+.step[data-on] .action { color: var(--acf); background: var(--ac); }
+.root[data-tone="won"] .step[data-on] .action { color: var(--ok); background: var(--oks); }
+.root[data-tone="lost"] .step[data-on] .action { color: var(--er); background: var(--ers); }
 
 .label { display: flex; align-items: center; justify-content: center; gap: var(--space-1); max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .label svg { flex: none; width: 12px; height: 12px; }
@@ -97,7 +90,7 @@ button.action:active { transform: scale(var(--scale-press)); transition-duration
 .transitions > li { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: var(--space-2); }
 .directionIcon { display: grid; place-items: center; width: 20px; height: 20px; border-radius: var(--r-pill); background: var(--sf2); color: var(--tx2); }
 .directionIcon svg { width: 12px; height: 12px; }
-.directionIcon[data-direction="forward"] { background: var(--oks); color: var(--ok); }
+.directionIcon[data-direction="forward"] { background: var(--oks); color: var(--ok); background: var(--oks); }
 .directionIcon[data-direction="backward"] { background: var(--was); color: var(--wa); }
 .directionIcon[data-direction="backward"] svg { transform: rotate(180deg); }
 .transitions div { display: grid; min-width: 0; }
