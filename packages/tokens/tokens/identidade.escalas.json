@@ -791,19 +791,19 @@
     },
     "mask1": {
       "$type": "string",
-      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 0%, #000 35%)"
+      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, #000 0%, transparent 35%)"
     },
     "mask2": {
       "$type": "string",
-      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 10%, #000 55%)"
+      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, #000 10%, transparent 55%)"
     },
     "mask3": {
       "$type": "string",
-      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 25%, #000 75%)"
+      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, #000 25%, transparent 75%)"
     },
     "mask4": {
       "$type": "string",
-      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, transparent 40%, #000 100%)"
+      "$value": "radial-gradient(ellipse 70% 65% at 50% 50%, #000 40%, transparent 100%)"
     },
     "veilCenter": {
       "$type": "string",
@@ -811,19 +811,19 @@
     },
     "maskRight1": {
       "$type": "string",
-      "$value": "linear-gradient(270deg, transparent 0%, #000 35%)"
+      "$value": "linear-gradient(270deg, #000 0%, transparent 35%)"
     },
     "maskRight2": {
       "$type": "string",
-      "$value": "linear-gradient(270deg, transparent 10%, #000 55%)"
+      "$value": "linear-gradient(270deg, #000 10%, transparent 55%)"
     },
     "maskRight3": {
       "$type": "string",
-      "$value": "linear-gradient(270deg, transparent 25%, #000 75%)"
+      "$value": "linear-gradient(270deg, #000 25%, transparent 75%)"
     },
     "maskRight4": {
       "$type": "string",
-      "$value": "linear-gradient(270deg, transparent 40%, #000 100%)"
+      "$value": "linear-gradient(270deg, #000 40%, transparent 100%)"
     },
     "veilRight": {
       "$type": "string",
@@ -831,19 +831,19 @@
     },
     "maskLeft1": {
       "$type": "string",
-      "$value": "linear-gradient(90deg, transparent 0%, #000 35%)"
+      "$value": "linear-gradient(90deg, #000 0%, transparent 35%)"
     },
     "maskLeft2": {
       "$type": "string",
-      "$value": "linear-gradient(90deg, transparent 10%, #000 55%)"
+      "$value": "linear-gradient(90deg, #000 10%, transparent 55%)"
     },
     "maskLeft3": {
       "$type": "string",
-      "$value": "linear-gradient(90deg, transparent 25%, #000 75%)"
+      "$value": "linear-gradient(90deg, #000 25%, transparent 75%)"
     },
     "maskLeft4": {
       "$type": "string",
-      "$value": "linear-gradient(90deg, transparent 40%, #000 100%)"
+      "$value": "linear-gradient(90deg, #000 40%, transparent 100%)"
     },
     "veilLeft": {
       "$type": "string",
@@ -851,19 +851,19 @@
     },
     "maskTop1": {
       "$type": "string",
-      "$value": "linear-gradient(180deg, transparent 0%, #000 35%)"
+      "$value": "linear-gradient(180deg, #000 0%, transparent 35%)"
     },
     "maskTop2": {
       "$type": "string",
-      "$value": "linear-gradient(180deg, transparent 10%, #000 55%)"
+      "$value": "linear-gradient(180deg, #000 10%, transparent 55%)"
     },
     "maskTop3": {
       "$type": "string",
-      "$value": "linear-gradient(180deg, transparent 25%, #000 75%)"
+      "$value": "linear-gradient(180deg, #000 25%, transparent 75%)"
     },
     "maskTop4": {
       "$type": "string",
-      "$value": "linear-gradient(180deg, transparent 40%, #000 100%)"
+      "$value": "linear-gradient(180deg, #000 40%, transparent 100%)"
     },
     "veilTop": {
       "$type": "string",
@@ -871,19 +871,19 @@
     },
     "maskBottom1": {
       "$type": "string",
-      "$value": "linear-gradient(0deg, transparent 0%, #000 35%)"
+      "$value": "linear-gradient(0deg, #000 0%, transparent 35%)"
     },
     "maskBottom2": {
       "$type": "string",
-      "$value": "linear-gradient(0deg, transparent 10%, #000 55%)"
+      "$value": "linear-gradient(0deg, #000 10%, transparent 55%)"
     },
     "maskBottom3": {
       "$type": "string",
-      "$value": "linear-gradient(0deg, transparent 25%, #000 75%)"
+      "$value": "linear-gradient(0deg, #000 25%, transparent 75%)"
     },
     "maskBottom4": {
       "$type": "string",
-      "$value": "linear-gradient(0deg, transparent 40%, #000 100%)"
+      "$value": "linear-gradient(0deg, #000 40%, transparent 100%)"
     },
     "veilBottom": {
       "$type": "string",
