@@ -49,14 +49,11 @@ export function ColorPicker({ label, value, onValueChange, options = CRM_COLOR_O
   }
 
   function chooseCustom(next: string) {
-    const normalized = next.trim().toUpperCase();
-    setDraft(next);
-    if (!isHex(normalized)) {
-      setError(next.trim() !== "");
-      return;
-    }
+    const digits = next.trim().match(/^#?([0-9a-f]{6})$/i)?.[1];
+    const normalized = digits ? `#${digits.toUpperCase()}` : null;
+    setDraft(normalized ?? next);
     setError(false);
-    onValueChange(normalized);
+    if (normalized) onValueChange(normalized);
   }
 
   return <div className={s.root} role="group" aria-label={label}>
@@ -73,7 +70,7 @@ export function ColorPicker({ label, value, onValueChange, options = CRM_COLOR_O
       <Input aria-label="Cor hexadecimal" value={draft} placeholder="#RRGGBB" onChange={(event) => chooseCustom(event.target.value)} onBlur={() => { if (draft && !isHex(draft)) setError(true); }} />
       <input className={s.native} aria-label="Selecionar cor" type="color" value={customValue} onChange={(event) => chooseCustom(event.target.value)} style={{ backgroundColor: customValue }} />
     </div>
-    {error && <span className={s.error} role="alert">Use seis caracteres hexadecimais, como #1B45E8.</span>}
+    {error && <span className={s.error} role="alert">Use seis dígitos de 0 a 9 ou A a F, como 1B45E8.</span>}
   </div>;
 }
 
