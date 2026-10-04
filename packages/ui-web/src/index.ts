@@ -19,6 +19,7 @@ export * from "./Menu/Menu.js";
 export * from "./Select/Select.js";
 export * from "./SearchSelect/SearchSelect.js";
 export * from "./Popover/Popover.js";
+export * from "./RecordValue/RecordValue.js";
 export * from "./Modal/Modal.js";
 export * from "./Tooltip/Tooltip.js";
 export * from "./Checkbox/Checkbox.js";

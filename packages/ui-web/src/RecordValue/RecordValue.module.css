@@ -1,0 +1,7 @@
+.root { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-width: 0; }
+.trigger { display: inline-flex; flex: none; align-items: center; gap: var(--space-2); min-height: var(--h-sm); padding: 0; border: 0; border-radius: var(--r-rico); background: transparent; color: var(--tx); font-family: var(--font); cursor: pointer; }
+.value { font-size: var(--fs-card); font-weight: var(--fw-500); line-height: var(--lh-h4); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.trigger > svg { flex: none; width: var(--ui-iconSm); height: var(--ui-iconSm); color: var(--tx2); }
+.trigger:hover { color: var(--ac); }
+.trigger:focus-visible { outline: var(--ui-focusWidth) solid var(--ring); outline-offset: var(--space-1); }
+.hint { color: var(--tx2); font-size: var(--fs-pequeno); }

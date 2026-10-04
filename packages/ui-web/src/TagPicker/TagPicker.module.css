@@ -37,3 +37,21 @@
 .options { max-height: var(--ui-recordPickerListHeight); overflow: auto; overscroll-behavior: contain; }
 .swatch { width: 8px; height: 8px; border-radius: var(--r-pill); background: var(--tag-dot, var(--tx3)); }
 .empty { display: block; padding: var(--space-2) 10px; color: var(--tx3); font-size: var(--fs-pequeno); }
+
+/* Etiquetas no registro são metadados, sem caixa de formulário permanente. */
+.root[data-appearance="inline"] { min-height: var(--h-sm); padding: var(--space-1) 0; gap: var(--space-2); border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.root[data-appearance="inline"] .chip { border-radius: var(--r-rico); background: var(--sf3); box-shadow: none; border: var(--ui-hairline) solid var(--bd); }
+.root[data-appearance="inline"] .chipLabel { white-space: normal; overflow-wrap: anywhere; }
+.root[data-appearance="inline"] .chip { min-height: var(--h-sm); height: auto; }
+.add { display: inline-flex; flex: none; justify-content: center; align-items: center; gap: var(--space-2); min-width: var(--h-sm); min-height: var(--h-sm); padding: 0 var(--space-2); border: var(--ui-hairline) dashed var(--bd2); border-radius: var(--r-rico); background: transparent; color: var(--tx2); font-family: var(--font); font-size: var(--fs-pequeno); cursor: pointer; }
+.add > svg { width: var(--ui-iconSm); height: var(--ui-iconSm); }
+.add:hover, .add[data-popup-open] { background: var(--acs); color: var(--tx); border-color: var(--tx3); }
+.add:focus-visible, .remove:focus-visible { outline: var(--ui-focusWidth) solid var(--ring); outline-offset: var(--space-1); }
+.search { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); margin-bottom: var(--space-1); border-bottom: var(--ui-hairline) solid var(--bd); color: var(--tx2); }
+.search > svg { flex: none; width: var(--ui-icon); height: var(--ui-icon); }
+.searchInput { width: 100%; min-width: 0; min-height: var(--h-sm); border: 0; outline: none; background: transparent; color: var(--tx); font: inherit; }
+.searchInput::placeholder { color: var(--tx2); }
+
+.menuAction { border: 0; font-family: inherit; }
+.menuAction:is(:hover, :focus-visible) { background: var(--acs); }
+.menuAction:focus-visible { outline: var(--ui-focusWidth) solid var(--ring); outline-offset: calc(var(--ui-focusWidth) * -1); }

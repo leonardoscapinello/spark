@@ -43,3 +43,10 @@
 .header[data-variant="record"] .back { flex: 0 0 auto; }
 .header[data-variant="record"] h1 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); text-wrap: pretty; }
 .context { margin: 0; color: var(--tx2); font-family: var(--font); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); }
+.metadata { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-3); min-width: 0; }
+.context[data-separated] { padding-inline-start: var(--space-3); border-inline-start: var(--ui-hairline) solid var(--bd2); }
+
+@media (max-width: 640px) {
+  .metadata { align-items: flex-start; flex-direction: column; }
+  .context[data-separated] { padding-inline-start: 0; border-inline-start: 0; }
+}

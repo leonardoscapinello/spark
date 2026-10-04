@@ -9,5 +9,5 @@
 .tab[data-disabled] { color: var(--tx4); cursor: not-allowed; }
 .tab:focus-visible { outline: none; box-shadow: 0 0 0 var(--ui-focusWidth) var(--ring); }
 @media (hover: hover) and (pointer: fine) { .tab:hover:not([data-disabled], [data-active]) { color: var(--tx2); } }
-.indicator { position: absolute; z-index: 0; top: 0; left: 0; width: var(--active-tab-width); height: var(--active-tab-height); transform: translate(var(--active-tab-left), var(--active-tab-top)); background: var(--sf3); box-shadow: var(--sh1); border-radius: var(--r-pill); transition: transform var(--t-default) var(--ease), width var(--t-default) var(--ease), height var(--t-default) var(--ease); pointer-events: none; }
+.indicator { position: absolute; z-index: 0; top: 0; left: 0; width: var(--active-tab-width); height: var(--active-tab-height); transform: translate(var(--active-tab-left), var(--active-tab-top)); background: var(--sf3); box-shadow: var(--sh1); border-radius: var(--r-pill); transition: transform var(--t-default) var(--ease); pointer-events: none; }
 .body { padding: 0 var(--space-3) var(--space-3); min-width: 0; animation: var(--anim-item) var(--t-base) var(--ease) backwards; }

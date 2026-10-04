@@ -46,7 +46,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, AmountSummary, Alert, AvatarStack, Chip, RecordWorkspace, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, KpiCard, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, AmountSummary, Alert, AvatarStack, Chip, RecordWorkspace, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, RecordValue, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -850,8 +850,8 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
 
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
   const statusChip = deal.status === "open" ? <Chip>{statusLabel(deal.status)}</Chip> : <Chip dot tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Chip>;
-  /* Valor do negócio como KPI: o número rola (odômetro) quando os itens mudam. */
-  const valueContent = <KpiCard compact animationPaused={itemModalOpen || itemModalClosing} label="Valor do negócio" value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={isOpen && deal.probabilityBasisPoints != null ? <Text size="legenda" tone="secondary" title={`Estimativa inicial, não calibrada. Base: ${deal.probabilitySampleSize ?? 0} negócios encerrados.`}>{Math.round(deal.probabilityBasisPoints / 100)}% de chance estimada</Text> : undefined} />;
+  /* O valor acompanha a identidade e abre sua composição comercial. */
+  const valueContent = <RecordValue onClick={openCommercial} animationPaused={itemModalOpen || itemModalClosing} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={isOpen && deal.probabilityBasisPoints != null ? <Text size="legenda" tone="secondary" title={`Estimativa inicial, não calibrada. Base: ${deal.probabilitySampleSize ?? 0} negócios encerrados.`}>{Math.round(deal.probabilityBasisPoints / 100)}% de chance estimada</Text> : undefined} />;
   const moveActions = <DealStageActions
     closed={!isOpen}
     destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && (target.id === stage.id || canMoveBetweenStages(stage, target, transitions))).map((target) => ({ id: target.id, label: target.name, color: target.color, current: target.id === stage.id, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []}
@@ -889,6 +889,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     {embedded
       ? <div className={styles.quickHeader}><SectionTitle level="section" as="h2" meta={pipeline?.name ?? "Negócio"} actions={ownerPicker}><InlineEdit label="Título do negócio" value={deal.name} disabled={!canWrite} appearance="title" saveOnBlur onSave={async (draft) => { const next = draft.trim(); if (!next || next.length > 200) throw new Error("Informe um título de até 200 caracteres."); if (next !== deal.name) await saveField({ name: next }, "Título"); }} /></SectionTitle></div>
       : <PageHeader variant="record"
+        summary={valueContent}
         back={<BackLink render={<Link to="/deals" />}>Voltar aos negócios</BackLink>}
         eyebrow={[pipeline?.name ?? "Funil", stage?.name].filter(Boolean).join(" · ")}
         title={<InlineEdit
@@ -911,7 +912,6 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
             <ViewerStack viewers={presence.viewers} status={presence.status} {...(session ? { currentUserId: session.userId } : {})} />
           </div>
           <div className={styles.headerGroup}>
-            {valueContent}
             {isOpen && canMove && <>
               <Button variant="secondary" tone="success" icon={<Icon name="check" />} onClick={() => void closeDeal("won").catch(() => notify({ title: "Não foi possível fechar o negócio", tone: "error" }))}>Ganho</Button>
               <Button variant="secondary" tone="danger" icon={<Icon name="close" />} onClick={() => { setLossReason(""); setLossModalOpen(true); }}>Perdido</Button>

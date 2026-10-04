@@ -21,9 +21,12 @@ export interface TagPickerProps {
   onCreate?: ((name: string) => void | Promise<void>) | undefined;
   placeholder?: string;
   disabled?: boolean;
+  /** Na ficha, exibe só etiquetas e o botão de adicionar; busca fica no menu. */
+  appearance?: "field" | "inline";
+  onManage?: (() => void) | undefined;
 }
 
-export function TagPicker({ label, options, value, onValueChange, onCreate, placeholder = "Adicionar etiquetas", disabled = false }: TagPickerProps) {
+export function TagPicker({ label, options, value, onValueChange, onCreate, placeholder = "Adicionar etiquetas", disabled = false, appearance = "field", onManage }: TagPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
@@ -31,10 +34,8 @@ export function TagPicker({ label, options, value, onValueChange, onCreate, plac
   const canCreate = Boolean(onCreate && query.trim() && !options.some((option) => option.label.toLocaleLowerCase("pt-BR") === normalizedQuery));
 
   const suggestions = filtered.filter((option) => !value.includes(option.value)).slice(0, 12);
-  /* Caixa cavada com os chips dentro (origem: Seleção §19, "Multi-select com
-   * chips"): cada etiqueta é uma folha de 28 com o ponto da cor e o × de 26; a
-   * busca continua na mesma linha. */
-  return <div className={styles.root} data-disabled={disabled || undefined}>
+  const inline = appearance === "inline";
+  return <div className={styles.root} data-appearance={appearance} data-disabled={disabled || undefined} role="group" aria-label={label}>
     {value.map((id) => {
       const option = options.find((item) => item.value === id);
       return <span key={id} className={styles.chip} style={{ "--tag-dot": crmColor(option?.color) } as CSSProperties}>
@@ -43,16 +44,20 @@ export function TagPicker({ label, options, value, onValueChange, onCreate, plac
         {!disabled && <button type="button" className={styles.remove} aria-label={"Remover etiqueta " + (option?.label ?? id)} onClick={() => onValueChange(value.filter((item) => item !== id))}><Icon name="close" /></button>}
       </span>;
     })}
-    {!disabled && <Combobox.Root<TagPickerOption> items={suggestions} filter={null} value={null} inputValue={query} onInputValueChange={setQuery} open={open} onOpenChange={setOpen} autoHighlight itemToStringLabel={(item) => item.label} onValueChange={(option) => { if (option) { onValueChange([...value, option.value]); setQuery(""); } }}>
-      <Combobox.Input className={styles.input} aria-label={label} placeholder={value.length ? "Adicionar…" : "Buscar ou criar etiqueta…"} onFocus={() => setOpen(true)} />
+    {!disabled && <Combobox.Root<TagPickerOption> items={suggestions} filter={null} value={null} inputValue={query} onInputValueChange={setQuery} open={open} onOpenChange={(next) => { setOpen(next); if (!next) setQuery(""); }} autoHighlight itemToStringLabel={(item) => item.label} onValueChange={(option) => { if (option) { onValueChange([...value, option.value]); setQuery(""); } }}>
+      {inline
+        ? <Combobox.Trigger className={styles.add} aria-label="Adicionar etiquetas" title="Adicionar etiquetas"><Icon name="plus" />{value.length === 0 && "Adicionar etiqueta"}</Combobox.Trigger>
+        : <Combobox.Input className={styles.input} aria-label={label} placeholder={value.length ? "Adicionar…" : "Buscar ou criar etiqueta…"} onFocus={() => setOpen(true)} />}
       <Combobox.Portal><Combobox.Positioner className={styles.positioner} sideOffset={Number.parseFloat(lightTheme["pop-gap"])} align="start">
-        <Combobox.Popup render={<Glass tier="panel" />} className={`${surface.popup} ${styles.popup}`}>
+        <Combobox.Popup render={<Glass tier="panel" />} className={`${surface.popup} ${styles.popup}`} aria-label={label}>
+          {inline && <div className={styles.search}><Icon name="search" /><Combobox.Input className={styles.searchInput} aria-label="Buscar etiquetas" placeholder="Buscar etiquetas…" /></div>}
           <Combobox.List className={styles.options}>{(option: TagPickerOption) => <Combobox.Item key={option.value} value={option} className={surface.item}>
             <span className={surface.leading} aria-hidden="true"><span className={styles.swatch} style={{ "--tag-dot": crmColor(option.color) } as CSSProperties} /></span><span className={surface.label}>{option.label}</span>
           </Combobox.Item>}</Combobox.List>
           {!suggestions.length && !canCreate && <span className={styles.empty}>Nenhuma outra etiqueta encontrada.</span>}
           {filtered.length > 12 && <span className={styles.empty}>Continue digitando para refinar a busca.</span>}
-          {canCreate && <button type="button" className={surface.item} onClick={() => { void onCreate?.(query.trim()); setQuery(""); }}><span className={surface.leading} aria-hidden="true"><Icon name="plus" /></span><span className={surface.label}>Criar “{query.trim()}”</span></button>}
+          {canCreate && <button type="button" className={`${surface.item} ${styles.menuAction}`} onClick={() => { void onCreate?.(query.trim()); setQuery(""); }}><span className={surface.leading} aria-hidden="true"><Icon name="plus" /></span><span className={surface.label}>Criar “{query.trim()}”</span></button>}
+          {onManage && <><div className={surface.separator} /><button type="button" className={`${surface.item} ${styles.menuAction}`} onClick={() => { setOpen(false); setQuery(""); onManage(); }}><span className={surface.leading} aria-hidden="true"><Icon name="settings" /></span><span className={surface.label}>Gerenciar etiquetas</span></button></>}
         </Combobox.Popup>
       </Combobox.Positioner></Combobox.Portal>
     </Combobox.Root>}

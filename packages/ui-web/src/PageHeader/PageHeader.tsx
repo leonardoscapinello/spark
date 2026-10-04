@@ -12,6 +12,8 @@ export interface PageHeaderProps {
   description?: string;
   actions?: ReactNode;
   back?: ReactNode;
+  /** Dado principal do registro, junto ao contexto e separado das ações. */
+  summary?: ReactNode;
 }
 
 /**
@@ -19,14 +21,17 @@ export interface PageHeaderProps {
  * título 500 em 22 no celular e 28 a partir de 1024, tracking negativo, uma
  * frase de apoio em tinta 2 e as ações à direita.
  */
-export function PageHeader({ eyebrow, title, description, actions, back, variant = "page" }: PageHeaderProps) {
+export function PageHeader({ eyebrow, title, description, actions, back, summary, variant = "page" }: PageHeaderProps) {
   return (
     <header className={styles.header} data-variant={variant}>
       {back && <div className={styles.back}>{back}</div>}
       <div className={styles.copy}>
         {eyebrow && variant === "page" && <p className={styles.eyebrow}>{eyebrow}</p>}
         <h1>{title}</h1>
-        {eyebrow && variant === "record" && <p className={styles.context}>{eyebrow}</p>}
+        {(summary || (eyebrow && variant === "record")) && <div className={styles.metadata}>
+          {summary}
+          {eyebrow && variant === "record" && <p className={styles.context} data-separated={summary ? true : undefined}>{eyebrow}</p>}
+        </div>}
         {description && <p className={styles.description}>{description}</p>}
       </div>
       {actions && <div className={styles.actions}>{actions}</div>}
