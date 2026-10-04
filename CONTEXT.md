@@ -12,13 +12,25 @@ Vocabulário do produto para acompanhar relações comerciais e atendimentos.
 
 **Passagem por status**: Uma permanência contínua em determinado status dentro de um ciclo de atendimento. Retornar ao mesmo status constitui outra passagem.
 
-**Categoria de atendimento**: Classificação configurável do assunto ou serviço solicitado, como suporte técnico ou financeiro.
+**Catálogo de serviços**: Árvore de serviços e solicitações de atendimento da organização, compartilhada por equipes comerciais e de suporte.
 
-**Prioridade de atendimento**: Classificação configurável da urgência de um atendimento, com uma ordem explícita entre seus níveis.
+**Categoria de atendimento**: Nó configurável do catálogo de serviços, em primeiro, segundo ou terceiro nível. Cada filha pertence a um único pai; o caminho representa a classificação do atendimento.
+
+**Impacto**: Classificação configurável da extensão das consequências da solicitação.
+
+**Urgência**: Classificação configurável da necessidade de rapidez no atendimento.
+
+**Prioridade de atendimento**: Ordem de atendimento resultante da combinação de impacto e urgência. Participa da seleção da política de SLA.
+
+**Matriz de prioridade**: Mapeamento configurável de cada combinação de impacto e urgência para uma prioridade.
 
 **Política de SLA**: Conjunto versionado de compromissos de prazo, critérios de aplicação e regras dos cronômetros de um atendimento.
 
 **Cronômetro de SLA**: Medição de tempo útil consumido para um objetivo dentro de um ciclo de atendimento. Pode atravessar várias passagens por status sem perder o consumo acumulado.
+
+**Primeira resposta do ciclo**: Compromisso entre a primeira mensagem do cliente no ciclo e a primeira resposta pública válida da equipe. Novo contato após encerramento inicia outro compromisso.
+
+**Atendimento total**: Compromisso entre abertura e encerramento do ciclo, descontando períodos não úteis e pausas configuradas.
 
 **Rodada de resposta**: Período iniciado pela primeira mensagem do cliente ainda sem resposta e concluído pela resposta pública da equipe. Mensagens adicionais do cliente na mesma rodada não reiniciam seu prazo.
 

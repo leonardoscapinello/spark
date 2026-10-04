@@ -28,10 +28,14 @@ A política define os cronômetros; cada cronômetro pertence a um objetivo e ao
 
 | Relógio | Início | Término |
 |---|---|---|
-| Primeira resposta do ciclo | Abertura ou reabertura | Primeira resposta pública da equipe; nota interna não conta |
+| Primeira resposta do ciclo | Primeira mensagem recebida do cliente no novo ciclo | Primeira resposta pública da equipe; nota interna não conta |
 | Próxima resposta | Primeira mensagem recebida ainda sem resposta, após a primeira resposta do ciclo | Próxima resposta pública enviada com sucesso pela equipe |
-| Resolução do ciclo | Abertura ou reabertura | Encerramento do atendimento |
+| Atendimento total (resolução do ciclo) | Abertura ou reabertura | Encerramento do atendimento |
 | Tempo em um conjunto de status | Primeira entrada em um dos status configurados | Objetivo configurado ou encerramento do ciclo |
+
+Os dois compromissos essenciais são **primeira resposta** e **atendimento total**. Próxima resposta e permanência em status são objetivos adicionais configuráveis. O total acompanha o ciclo inteiro, descontando apenas períodos fora do calendário útil e pausas configuradas; responder não encerra esse relógio.
+
+Uma mensagem recebida após o encerramento inicia um novo ciclo e um novo compromisso de primeira resposta. Mensagens durante um ciclo aberto não viram outra primeira resposta por simples passagem de tempo. Inatividade só encerra um ciclo quando houver uma regra explícita de encerramento. Na abertura manual ou proativa, o relógio de primeira resposta aguarda a primeira mensagem do cliente; o total começa na abertura.
 
 Cada relógio possui orçamento, tempo útil consumido e resultado próprios. Cumprir a primeira resposta não significa cumprir a resolução. O prazo de um status não substitui o prazo total do ciclo.
 
@@ -46,7 +50,7 @@ Um cronômetro opcional de acompanhamento pode contar durante a espera pelo usu�
 Página **Configurações → Operação → Status e SLA** permite criar, ordenar, editar e arquivar status. Cada status define:
 
 - Nome e cor.
-- Categoria operacional: ativo, espera ou encerrado.
+- Tipo operacional: ativo, espera ou encerrado.
 - Participação nos cronômetros da política: contar, pausar ou concluir o objetivo.
 - Prazo acumulado de permanência, quando a política incluir esse objetivo.
 - Destino de abertura/reabertura, quando aplicável.
@@ -87,24 +91,62 @@ Versões de calendário e política usadas por um ciclo/passagem devem continuar
 
 Padrão proposto: novas versões de configuração valem para novos ciclos. Aplicar uma versão a atendimentos em andamento deve ser uma ação explícita, com prévia do impacto e auditoria.
 
+## Catálogo de serviços do atendimento
+
+O catálogo é compartilhado pelos atendimentos da organização, incluindo equipes comerciais e de suporte. Uma categoria comercial pertence ao atendimento; não transforma o catálogo em classificação de negócios ou etapas do CRM. Equipe, categoria e pipeline são conceitos distintos.
+
+Categorias formam uma árvore de até três níveis: **N1 → N2 → N3**. N1 representa a família de serviços; N2 detalha o serviço; N3 detalha a solicitação. Exemplo: Suporte → Acesso → Recuperação de senha. A administração permite expandir os nós e gerenciar as filhas no contexto do pai.
+
+No atendimento e no editor de regras, selecionar N1 filtra N2; selecionar N2 filtra N3. Alterar um ancestral limpa descendentes incompatíveis. Selecionar diretamente uma filha por busca preenche seus ancestrais. Não é possível combinar ramos distintos. Classificações parciais em N1 ou N2 são válidas; uma regra que exige N3 não corresponde a um atendimento classificado apenas até N2.
+
+Cadastros têm identificadores estáveis, ordem e arquivamento. Nomes podem ser alterados sem perder vínculos. Arquivar um pai retira sua subárvore de novas seleções; referências existentes permanecem legíveis. Mover categorias entre pais requer prévia das classificações e políticas afetadas, aplicação consistente e auditoria, preservando o caminho histórico.
+
+## Impacto, urgência e matriz de prioridade
+
+Impactos, urgências e prioridades são cadastros configuráveis da organização, com nome, descrição, ordem e arquivamento. Impacto expressa a extensão da consequência; urgência expressa a necessidade de rapidez. **Impacto × urgência determina a prioridade**, por uma matriz editável, sem fórmula ou enumeração fixa no código.
+
+A matriz mostra impactos nas linhas e urgências nas colunas; cada célula seleciona uma prioridade ativa. Publicar uma versão exige preencher todas as combinações ativas. Criar ou arquivar níveis exige revisar a matriz antes de ativar a alteração. Versões anteriores continuam identificáveis no histórico.
+
+Sem impacto ou urgência informados, mostrar **Prioridade não definida**: somente regras de SLA sem filtro de prioridade podem corresponder. Não assumir uma prioridade silenciosamente. Alterar impacto ou urgência recalcula a prioridade e a política aplicável, preservando o tempo consumido. Mudanças administrativas da matriz seguem a mesma regra de versionamento das políticas: novos ciclos por padrão; aplicação aos abertos com prévia e auditoria.
+
 ## Categoria, prioridade e seleção de política
 
-Status, categorias e prioridades são cadastros da organização, com identificadores estáveis, nomes, ordem e arquivamento. A administração não depende de listas fixas no código. Referências históricas sobrevivem ao arquivamento.
+O editor de políticas apresenta **N1, N2, N3, prioridade, primeira resposta, atendimento total e calendário**, além dos objetivos adicionais e ações dos status. Categoria vazia significa escopo geral; prioridade vazia significa todas as prioridades. Filtrar N2 ou N3 inclui seus ancestrais automaticamente. Todos os oito escopos abaixo são permitidos.
 
-Página **Configurações → Operação → Políticas de SLA**:
+O requisito é selecionar do mais específico para o menos específico. Para o caso concorrente entre profundidade da categoria e prioridade, a **recomendação de desempate** é profundidade primeiro, prioridade depois; essa escolha não foi explicitamente definida pelo usuário:
 
-- Critérios de aplicação por categoria e prioridade; escopo por equipe/canal quando necessário.
-- Calendário aplicável.
-- Orçamento em minutos/horas úteis para cada objetivo habilitado.
-- Ação de cada status em cada cronômetro.
-- Limite de atenção usado na barra e nos avisos.
-- Prévia de quais atendimentos uma regra alcança e simulação de entrada, pausa, resposta e encerramento.
+| Ordem de busca | Categoria | Prioridade |
+|---|---|---|
+| 1 | N1 + N2 + N3 | Específica |
+| 2 | N1 + N2 + N3 | Todas |
+| 3 | N1 + N2 | Específica |
+| 4 | N1 + N2 | Todas |
+| 5 | N1 | Específica |
+| 6 | N1 | Todas |
+| 7 | Geral | Específica |
+| 8 | Geral | Todas |
 
-Uma política padrão pode cobrir os casos sem regra específica. Regras específicas usam precedência explícita; publicar critérios ambíguos com mesma precedência deve ser recusado. Sem correspondência e sem padrão, mostrar **Sem política de SLA**, nunca informar um prazo inventado.
+Somente ancestrais do caminho do atendimento participam da busca; nunca categorias irmãs. Por essa recomendação, uma regra de N3 sem prioridade vence uma de N2 com prioridade. A simulação deve mostrar a regra vencedora, sua posição e os motivos de descarte das demais.
 
-Recomendação para mudança de categoria/prioridade durante um ciclo: selecionar a nova política e reaplicar o orçamento mantendo o consumo acumulado dos objetivos equivalentes. Se passaram 3 horas úteis e a nova prioridade permite 2 horas, o prazo já está vencido em 1 hora. Nunca conceder outras 2 horas silenciosamente.
+Recomendação: selecionar uma política completa, sem misturar silenciosamente prazos de linhas distintas. Cada linha declara os dois objetivos essenciais e seus orçamentos; objetivos desabilitados precisam ser explícitos. Bloquear duas políticas ativas para o mesmo caminho e prioridade. Uma política geral pode cobrir os casos sem regra específica. Sem correspondência e sem padrão, mostrar **Sem política de SLA**, nunca um prazo inventado. Equipe e canal não entram implicitamente nesse desempate.
+
+A política também configura calendário, ação de cada status por cronômetro, limite de atenção da barra e simulação de entrada, pausa, resposta e encerramento.
+
+Recomendação para mudança de categoria/prioridade durante um ciclo: selecionar a nova política e reaplicar o orçamento mantendo o consumo acumulado dos objetivos equivalentes. Se passaram 3 horas úteis e a nova prioridade permite 2 horas, o prazo já está vencido em 1 hora. Nunca conceder outras 2 horas silenciosamente. Segmentos anteriores preservam o calendário e a versão usados; a nova configuração governa os segmentos seguintes.
 
 A migração entre políticas vincula objetivos por identidade estável. Para um objetivo recém-adicionado, a política declara seu marco de início (abertura do ciclo ou evento de ativação), e a prévia mostra o efeito. Objetivos removidos ficam no histórico com motivo; resultados concluídos não são reescritos. Trocar uma política não zera o relógio.
+
+## Organização administrativa proposta
+
+A navegação deve explicitar o domínio configurado e manter as regras próximas do seu contexto:
+
+- **Atendimento:** Catálogo de serviços; Status; Impactos e urgências; Prioridades e matriz; Políticas de SLA.
+- **CRM → Funis e etapas:** busca e seleção de funil, suas etapas e **Regras da etapa** no detalhe da etapa selecionada. Campos obrigatórios/importantes, condições de transição e prazos ficam nesse contexto, substituindo a entrada solta “O que cada etapa exige”.
+- **Organização → Calendário útil e feriados:** configuração compartilhada pelas operações.
+- **Organização → Equipes:** equipes comerciais e de suporte, responsáveis e permissões.
+- **Campos personalizados:** campos organizados por entidade; o cadastro do campo é separado da sua exigência em uma etapa específica.
+
+Esses destinos substituem os nomes provisórios “Operação” das seções anteriores. Muitos funis não devem produzir uma lista única e extensa de todas as etapas. O contexto selecionado precisa permanecer visível e pesquisável. Catálogo usa árvore; matriz usa grade; SLA usa tabela de escopos com editor e simulador. Permissões administrativas são separadas da leitura operacional necessária para classificar e atender.
 
 ## Estado de cada cronômetro
 
@@ -136,10 +178,12 @@ O servidor decide a política aplicável e os carimbos de entrada/saída. O nave
 ## Critérios de entrega
 
 1. Administrador configura expediente, fuso, intervalos e feriados na interface.
-2. Administrador cria status, categorias, prioridades e políticas; configura prazo e pausa por cronômetro sem alteração de código.
-3. Os três relógios usam o calendário útil e mostram barras coerentes.
+2. Administrador gerencia catálogo de três níveis, status, impactos, urgências, prioridades, matriz e políticas sem alteração de código. Seletores filtram descendentes e impedem caminhos inválidos.
+3. Primeira resposta e atendimento total, assim como objetivos adicionais habilitados, usam calendário útil e mostram barras coerentes. Novo contato após encerramento inicia novo ciclo; mensagens adicionais no ciclo não renovam a primeira resposta.
 4. Reabertura conserva o ciclo encerrado e inicia um novo ciclo.
 5. Retorno a status retoma o consumo do mesmo ciclo; troca de categoria/prioridade mantém o consumo e aplica a regra explícita de orçamento.
 6. Mensagens, ações manuais e automações respeitam as mesmas regras.
 7. Testes cobrem fim de semana, intervalo, feriado, virada do ano, fuso, pausa antes/depois do vencimento, primeira/próxima resposta, várias mensagens antes de uma resposta, encerramento, reabertura, idas e voltas de status, concorrência, seleção ambígua de política e alteração de configuração.
-8. Migração compatível, permissões, sincronização e `pnpm check` aprovados antes de declarar a funcionalidade entregue.
+8. Testes cobrem os oito escopos de seleção, conflito entre profundidade e prioridade, classificação parcial, ausência de política, duplicidade, matriz incompleta e recálculo sem reiniciar consumo.
+9. Administração organiza catálogo, matriz e SLA em Atendimento; regras das etapas ficam no contexto do funil e da etapa.
+10. Migração compatível, permissões, sincronização e `pnpm check` aprovados antes de declarar a funcionalidade entregue.
