@@ -78,3 +78,5 @@ export const NoFormulario: Story = {
 };
 
 export const Classificacao: Story = { args: { label: "Prioridade", defaultValue: "medium", options: [{value:"high",label:"Alto",color:"red"},{value:"medium",label:"Médio",color:"amber"},{value:"low",label:"Baixo",color:"green"}] } };
+
+export const NomeCompleto: Story = { render: () => <Mesa largura={240}><Field><Label>Categoria N3</Label><Select wrapValue label="Categoria N3" defaultValue="diagnostico" options={[{ value: "diagnostico", label: "Diagnóstico de processos e oportunidades de inteligência artificial" }]} /></Field></Mesa> };

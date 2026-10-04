@@ -449,15 +449,13 @@ export default function Inbox() {
     if (!selected || !personId) return null;
     return <Tabs label="Informações do atendimento" items={[
       { value: "conversation", label: "Atendimento", content: <div className={styles.fields}>
-        <InlineField label="Responsável" value={selected.assigneeId ? userNames.get(selected.assigneeId) ?? "Responsável" : "Não atribuído"} empty={!selected.assigneeId} disabled={!canWrite || saving}>
-          {(close) => <Select label="Responsável pela conversa" value={selected.assigneeId ?? ""} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ assigneeId: value ? userId.from(value) : null }))} />}
+        <InlineField block label="Responsável" value={selected.assigneeId ? userNames.get(selected.assigneeId) ?? "Responsável" : "Não atribuído"} empty={!selected.assigneeId} disabled={!canWrite || saving}>
+          {(close) => <Select wrapValue label="Responsável pela conversa" value={selected.assigneeId ?? ""} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ assigneeId: value ? userId.from(value) : null }))} />}
         </InlineField>
-        <InlineField label="Equipe" value={selected.teamId ? teamNames.get(selected.teamId) ?? "Equipe" : "Sem equipe"} empty={!selected.teamId} disabled={!canWrite || saving}>
-          {(close) => <Select label="Equipe responsável" value={selected.teamId ?? ""} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ teamId: value ? teamId.from(value) : null }))} />}
+        <InlineField block label="Equipe" value={selected.teamId ? teamNames.get(selected.teamId) ?? "Equipe" : "Sem equipe"} empty={!selected.teamId} disabled={!canWrite || saving}>
+          {(close) => <Select wrapValue label="Equipe responsável" value={selected.teamId ?? ""} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ teamId: value ? teamId.from(value) : null }))} />}
         </InlineField>
         <InlineField label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
-        <InlineField label="Situação" value={statusLabel(selected.status)} />
-        <InlineField label="Prioridade" value={selected.priority === "priority" ? "Prioritária" : "Normal"} />
         <ConversationService key={selected.id} conversation={selected} now={now} canWrite={canWrite} />
         <InlineField label="Aberta em" value={formatDateTime(selected.createdAt)} />
       </div> },

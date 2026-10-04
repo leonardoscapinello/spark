@@ -18,3 +18,7 @@ Exemplos no Storybook: **Campos/Classificação**, incluindo formulário complet
 Colunas filtráveis declaram `filterValue`, um texto ou `null` para vazios. O menu no cabeçalho oferece busca, seleção múltipla e limpeza. Valores dentro da coluna se combinam com OU; colunas diferentes se combinam com E. O filtro ativo fica visível e há limpeza global. Nunca extraia valores de nós React.
 
 Passe o conjunto completo de linhas e `pageSize` para tabelas paginadas: a tabela filtra e ordena antes de paginar. Assim, opções e resultados abrangem todas as páginas. Exemplo no Storybook: Dados/Tabela/FiltrosPorColuna.
+
+### Detalhes do atendimento
+
+Em painéis estreitos, nomes e categorias usam a largura inteira, com rótulo acima. Use `Select wrapValue` para valores longos: a seleção deve ser legível sem depender de tooltip. Separe classificação e SLA em seções; não repita a prioridade manual como se fosse a prioridade calculada. `SlaProgress` aceita `status` e `detail` para separar o nome do prazo, seu estado e os tempos em horas/minutos úteis. Não comprima tudo numa linha com reticências. Exiba apenas o ciclo selecionado; o histórico é acessado pelo seletor de ciclo.

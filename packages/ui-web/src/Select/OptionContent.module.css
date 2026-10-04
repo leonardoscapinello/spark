@@ -5,3 +5,5 @@
 .copy[data-compact="true"] .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .description { color: var(--tx3); font-size: var(--fs-legenda); line-height: var(--lh-legenda); }
 .search { position: sticky; top: 0; background: var(--sf); padding-bottom: var(--space-2); }
+
+.copy[data-wrap] .name { white-space: normal; overflow-wrap: anywhere; }

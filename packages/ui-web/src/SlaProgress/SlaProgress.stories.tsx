@@ -14,3 +14,5 @@ export const Variantes: Story = {
     <Fileira rotulo="Compacto, estreito"><Mesa largura={120}><SlaProgress compact percent={64} label="SLA 64% · 1 h 30 min restantes" state="on_track" /></Mesa></Fileira>
   </Secao></Prancha>,
 };
+
+export const NaSidebar: Story = { render: () => <Mesa largura={240}><SlaProgress percent={25} state="on_track" label="Atendimento total" status="Fora do expediente" detail="4 h de 16 h úteis · restam 12 h" /></Mesa> };

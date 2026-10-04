@@ -10,7 +10,7 @@ export function CategorySelectors({ value, onChange, config, disabled = false }:
     const options = config.categories.filter(category => category.parentId === parent && (!category.archived || category.id === path[depth]?.id));
     return <Field key={depth}>
       <Label>{label}</Label>
-      <Select label={label} disabled={disabled || parent === undefined} value={path[depth]?.id ?? ""} options={[
+      <Select wrapValue label={label} disabled={disabled || parent === undefined} value={path[depth]?.id ?? ""} options={[
         { value: "", label: parent === undefined ? `Selecione a categoria N${depth} primeiro` : "Não definida" },
         ...options.map(category => ({ value: category.id, label: category.name })),
       ]} onValueChange={id => onChange(id || parent || null)} />
