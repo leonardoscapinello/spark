@@ -307,3 +307,6 @@ textarea {
 @keyframes sp-open { from { grid-template-rows: 0fr; opacity: 0; margin-top: calc(var(--g, 0px) * -1); filter: blur(2px); } }
 /* Segura o elemento montado enquanto os filhos animam a saída. */
 @keyframes sp-hold { from { visibility: visible; } to { visibility: visible; } }
+
+/* O campo aberto preserva o halo de foco fora dos seus limites. */
+[data-reveal-field][data-open="true"] > * { overflow: visible; }

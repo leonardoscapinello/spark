@@ -22,3 +22,5 @@ Passe o conjunto completo de linhas e `pageSize` para tabelas paginadas: a tabel
 ### Detalhes do atendimento
 
 Em painéis estreitos, nomes e categorias usam a largura inteira, com rótulo acima. Use `Select wrapValue` para valores longos: a seleção deve ser legível sem depender de tooltip. Separe classificação e SLA em seções; não repita a prioridade manual como se fosse a prioridade calculada. `SlaProgress` aceita `status` e `detail` para separar o nome do prazo, seu estado e os tempos em horas/minutos úteis. Não comprima tudo numa linha com reticências. Exiba apenas o ciclo selecionado; o histórico é acessado pelo seletor de ciclo.
+
+No atendimento, há uma única prioridade: a calculada pela matriz de impacto e urgência, rotulada “Prioridade”. Não adicionar estrela de prioridade manual. Na sidebar, todos os rótulos ficam acima dos valores; categorias dependentes abrem espaço com `data-collapse` após selecionar o nível anterior. Conteúdo recolhido fica `inert` e oculto de leitores de tela. A transição respeita movimento reduzido.

@@ -267,13 +267,12 @@ export default function Inbox() {
     setNewChannel("manual");
   }
 
-  async function updateConversation(changes: Partial<Pick<Conversation, "status" | "priority" | "assigneeId" | "teamId">>) {
+  async function updateConversation(changes: Partial<Pick<Conversation, "status" | "assigneeId" | "teamId">>) {
     if (!selected || saving) return;
     setSaving(true);
     try {
       const transaction = conversationsCollection.update(selected.id, (record) => {
         if (changes.status !== undefined) record.status = changes.status;
-        if (changes.priority !== undefined) record.priority = changes.priority;
         if (changes.assigneeId !== undefined) record.assigneeId = changes.assigneeId;
         if (changes.teamId !== undefined) record.teamId = changes.teamId;
       });
@@ -360,7 +359,6 @@ export default function Inbox() {
       owner={ownerLabel(item)}
       sla={slaSummaries.get(item.id) ?? null}
       unread={awaiting && inbound > (seen[item.contactId] ?? 0) && item.contactId !== personId}
-      priority={routes.some((route) => route.priority === "priority")}
       selected={item.contactId === personId}
       onSelect={() => openPerson(item.contactId)}
     />;
@@ -386,7 +384,6 @@ export default function Inbox() {
         attachment={message.attachmentFileId ? <MessageAttachment fileId={message.attachmentFileId} /> : undefined}
       ><LinkifiedText text={message.body} /></MessageBubble>);
     }
-    const priority = selected.priority === "priority";
     const replyRoute = <MenuButton variant="ghost" size="sm" icon={<Icon name={channelGlyph(selected.channel)} />} aria-label={`Responder por ${inboxTitle(selected)}. Trocar`} menu={<MenuGroup label="Responder por">
       {replyInboxes.length ? replyInboxes.map((inbox) => <MenuItem key={inbox.key} icon={<Icon name={channelGlyph(inbox.channel)} />} {...(inbox.handle ? { shortcut: inbox.handle } : {})} aria-current={inbox.key === selectedInboxKey ? "true" : undefined} onClick={() => setSelectedId(inbox.conversation.id)}>{inbox.title}</MenuItem>) : <MenuNote>Esta pessoa ainda não tem um canal que responda.</MenuNote>}
     </MenuGroup>}>{inboxTitle(selected)}</MenuButton>;
@@ -402,7 +399,6 @@ export default function Inbox() {
         presence={viewers.length > 0 ? <ViewerStack label="Pessoas vendo esta conversa" viewers={viewers.map((viewer) => ({ userId: userId.from(viewer.id), name: viewer.name, avatarUrl: null }))} status="connected" /> : undefined}
         actions={<>
           <Button size="sm" variant="ghost" iconOnly icon={<Icon name="panel" />} aria-label="Abrir detalhes da conversa" className={styles.detailsTrigger} onClick={() => setDetailsOpen(true)} />
-          <Button size="sm" variant={priority ? "raised" : "ghost"} iconOnly icon={<Icon name="star" />} aria-label={priority ? "Remover prioridade" : "Marcar como prioridade"} aria-pressed={priority} disabled={!canWrite || saving} onClick={() => void updateConversation({ priority: priority ? "normal" : "priority" })} />
           <Button size="sm" variant="secondary" icon={<Icon name={selected.status === "closed" ? "undo" : "check"} />} disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
           {layout === "list" && <Button size="sm" variant="ghost" iconOnly icon={<Icon name="close" />} aria-label="Fechar a conversa e voltar para a lista" onClick={() => { setSelectedId(null); setMobileView("list"); }} />}
         </>}
@@ -455,15 +451,15 @@ export default function Inbox() {
         <InlineField block label="Equipe" value={selected.teamId ? teamNames.get(selected.teamId) ?? "Equipe" : "Sem equipe"} empty={!selected.teamId} disabled={!canWrite || saving}>
           {(close) => <Select wrapValue label="Equipe responsável" value={selected.teamId ?? ""} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ teamId: value ? teamId.from(value) : null }))} />}
         </InlineField>
-        <InlineField label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
+        <InlineField block label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
         <ConversationService key={selected.id} conversation={selected} now={now} canWrite={canWrite} />
-        <InlineField label="Aberta em" value={formatDateTime(selected.createdAt)} />
+        <InlineField block label="Aberta em" value={formatDateTime(selected.createdAt)} />
       </div> },
       { value: "person", label: "Pessoa", content: <div className={styles.fields}>
         <PersonIdentity name={personName(personId)} detail={person?.email ?? (person?.phone ? formatPhone(person.phone) : "Sem e-mail")} />
-        <InlineField label="E-mail" value={person?.email ?? "Não informado"} empty={!person?.email} />
-        <InlineField label="Telefone" value={person?.phone ? formatPhone(person.phone) : "Não informado"} empty={!person?.phone} />
-        <InlineField label="Conversas" value={`${personRoutes.length} ${personRoutes.length === 1 ? "caixa" : "caixas"} · ${personRoutes.filter((item) => item.status === "open").length} abertas`} />
+        <InlineField block label="E-mail" value={person?.email ?? "Não informado"} empty={!person?.email} />
+        <InlineField block label="Telefone" value={person?.phone ? formatPhone(person.phone) : "Não informado"} empty={!person?.phone} />
+        <InlineField block label="Conversas" value={`${personRoutes.length} ${personRoutes.length === 1 ? "caixa" : "caixas"} · ${personRoutes.filter((item) => item.status === "open").length} abertas`} />
         {canReadContacts && <Button variant="secondary" size="sm" icon={<Icon name="user" />} onClick={() => navigate(`/contacts/${personId}`)}>Abrir perfil</Button>}
       </div> },
     ]} />;

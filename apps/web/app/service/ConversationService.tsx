@@ -27,7 +27,7 @@ export function ConversationService({ conversation, now, canWrite }: { conversat
     <RecordSection title="Classificação"><div className={styles.form}>
     <CategorySelectors config={config} disabled={!editable} value={conversation.categoryId ?? null} onChange={value => { void change("categoryId", value); }} />
     {(["impact", "urgency"] as const).map(kind => <Field key={kind}><Label>{kind === "impact" ? "Impacto" : "Urgência"}</Label><Select label={kind === "impact" ? "Impacto" : "Urgência"} disabled={!editable} value={(kind === "impact" ? conversation.impactId : conversation.urgencyId) ?? ""} options={[{ value: "", label: kind === "impact" ? "Impacto não definido" : "Urgência não definida" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={value => { void change(kind === "impact" ? "impactId" : "urgencyId", value || null); }} /></Field>)}
-    <ClassificationValue fieldLabel="Prioridade automática" kind="priority" color={priority?.color} label={priority?.name ?? "Não definida"} />
+    <ClassificationValue fieldLabel="Prioridade" kind="priority" color={priority?.color} label={priority?.name ?? "Não definida"} />
     </div></RecordSection>
     <RecordSection title="Prazos de SLA"><div className={styles.form}>
     {cycles.length > 1 && <Select wrapValue label="Ciclo de atendimento" value={cycle?.id ?? null} options={cycles.map((c,i) => ({ value:c.id,label:`${c.closedAt ? "Encerrado" : "Atual"} · ciclo ${cycles.length-i} · ${new Date(c.openedAt).toLocaleDateString("pt-BR")}` }))} onValueChange={setHistoryId} />}
