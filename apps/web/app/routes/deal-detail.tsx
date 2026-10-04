@@ -1,6 +1,6 @@
 import { contactsControllerLinkCompany } from "@spark/api-client";
 import { getContactCompaniesCollection } from "../lib/contact-companies.client";
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import {
@@ -46,7 +46,7 @@ import {
   type User,
 } from "@spark/core";
 import { optimisticActivity, syncedAmount, optimisticDealProduct, itemForInsert, optimisticNote, optimisticDealFollower, writeAccepted } from "@spark/data";
-import { Accordion, AmountSummary, Alert, AvatarStack, Chip, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, Composer, ComposerPrompt, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, KpiCard, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
+import { Accordion, AmountSummary, Alert, AvatarStack, Chip, RecordWorkspace, DealStageActions, ActionModal, Panel, PanelContent, PercentInput, Avatar, UserAvatar, userSelectOption, ViewerStack, RecordSelect, BackLink, Button, DatePicker, TimePicker, EmptyState, Field, Icon, IconTile, InlineEdit, InlineField, Input, KpiCard, Label, LinkRecordsPreview, ListRow, MenuButton, MenuGroup, MenuItem, MenuNote, MoneyInput, NoteCard, OwnerPicker, PageFrame, PageHeader, RowList, SearchSelect, SectionTitle, SegmentedControl, Select, Signal, Skeleton, StagePassageHistory, StageProgress, Surface, Tabs, Text, Textarea, Timeline, notify, celebrateDealOutcome, type IconName, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/deal-detail";
 import { getActivitiesCollection } from "../lib/activities-collection.client";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
@@ -212,7 +212,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const [activityAvailability, setActivityAvailability] = useState<ActivityAvailability>("free");
   const [activityOwnerId, setActivityOwnerId] = useState("");
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
-  const [composerTab, setComposerTab] = useState<ActivityType | "note">("note");
+  const [noteEditorOpen, setNoteEditorOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -431,6 +431,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       const note = optimisticNote({ dealId: dealIdFactory.from(deal.id), contactId: deal.contactId, body }, session.orgId, userIdFactory.from(session.userId));
       await notesCollection.insert(note).isPersisted.promise;
       setNoteDraft("");
+      setNoteEditorOpen(false);
       notify({ title: "Nota registrada", tone: "success" });
     } catch {
       notify({ title: "Não foi possível salvar a nota", tone: "error" });
@@ -685,26 +686,17 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
 
   /* Registrar no negócio: nota digitada no lugar; as ações abrem espaço
    * (data-collapse) só quando há texto — nunca aparecem secas. */
-  const composerContent = <Composer
-    label="Registrar no negócio"
-    value={composerTab}
-    onValueChange={setComposerTab}
-    tabs={ACTIVITY_COMPOSER_TABS.map((tab) => ({ ...tab, disabled: tab.id !== "note" && !canWriteActivities }))}
-  >
-    {composerTab !== "note"
-      ? <ComposerPrompt disabled={!canWriteActivities} onClick={() => openActivityModal(undefined, composerTab)}>
-          {canWriteActivities ? `Agendar ${ACTIVITY_TYPE_LABELS[composerTab].toLocaleLowerCase("pt-BR")}` : "Você não pode agendar atividades."}
-        </ComposerPrompt>
-      : <div className={styles.noteComposer}>
-          <Textarea aria-label="Nova nota" disabled={!canWrite || savingNote} rows={noteDraft.trim() ? 4 : 2} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={(event) => setNoteDraft(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
-          <div data-collapse="" data-open={noteDraft.trim() ? "true" : "false"} style={{ "--g": "var(--space-2)" } as CSSProperties}>
-            <div><div className={styles.noteActions} inert={!noteDraft.trim()}>
-              <Button size="sm" variant="ghost" onClick={() => setNoteDraft("")}>Cancelar</Button>
-              <Button size="sm" loading={savingNote} onClick={() => void saveNote()}>Salvar nota</Button>
-            </div></div>
-          </div>
-        </div>}
-  </Composer>;
+  const quickActions = <>
+    <Button size="sm" variant={noteEditorOpen ? "secondary" : "primary"} icon={<Icon name="file" />} disabled={!canWrite} onClick={() => setNoteEditorOpen(open => !open)}>Adicionar nota</Button>
+    {ACTIVITY_COMPOSER_TABS.filter(tab => tab.id !== "note").map(tab => <Button key={tab.id} size="sm" variant="ghost" icon={<Icon name={tab.icon} />} disabled={!canWriteActivities} onClick={() => { if (tab.id !== "note") openActivityModal(undefined, tab.id); }}>{tab.label}</Button>)}
+  </>;
+  const composerContent = noteEditorOpen && <div className={styles.noteComposer}>
+    <Textarea autoFocus aria-label="Nova nota" disabled={!canWrite || savingNote} rows={4} value={noteDraft} placeholder="Registre o que foi conversado…" onChange={event => setNoteDraft(event.target.value)} onKeyDown={event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && noteDraft.trim() && !savingNote) { event.preventDefault(); void saveNote(); } }} />
+    <div className={styles.noteActions}>
+      <Button size="sm" variant="ghost" onClick={() => setNoteEditorOpen(false)}>Fechar</Button>
+      <Button size="sm" disabled={!noteDraft.trim()} loading={savingNote} onClick={() => void saveNote()}>Salvar nota</Button>
+    </div>
+  </div>;
 
   /** Atividade numa linha de lista: tipo no disco, data em mono, atraso como sinal. */
   const activityRow = (activity: Activity, index: number) => {
@@ -859,7 +851,9 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
   const statusChip = deal.status === "open" ? <Chip>{statusLabel(deal.status)}</Chip> : <Chip dot tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Chip>;
   /* Valor do negócio como KPI: o número rola (odômetro) quando os itens mudam. */
-  const valueContent = <KpiCard animationPaused={itemModalOpen || itemModalClosing} label="Valor do negócio" value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={<span className={styles.valueHint}>{statusChip}<Button variant="ghost" size="sm" trailingIcon={<Icon name="right" />} onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores</Button></span>} />;
+  const valueContent = <KpiCard animationPaused={itemModalOpen || itemModalClosing} label="Valor do negócio" value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={<><span className={styles.valueHint}>{statusChip}<Button variant="ghost" size="sm" trailingIcon={<Icon name="right" />} onClick={() => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); }}>Itens e valores</Button></span>{isOpen && <Signal tone="info">{deal.probabilityBasisPoints == null
+      ? "Probabilidade de fechamento aguardando análise."
+      : `Chance estimada de fechamento: ${Math.round(deal.probabilityBasisPoints / 100)}% · modelo inicial, não calibrado · ${deal.probabilitySampleSize ?? 0} negócios encerrados no funil.`}</Signal>}</>} />;
   const moveActions = <DealStageActions
     closed={!isOpen}
     destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && (target.id === stage.id || canMoveBetweenStages(stage, target, transitions))).map((target) => ({ id: target.id, label: target.name, color: target.color, current: target.id === stage.id, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []}
@@ -929,9 +923,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
         </div>}
       />}
 
-    {isOpen && <Signal tone="info">{deal.probabilityBasisPoints == null
-      ? "Probabilidade de fechamento aguardando análise."
-      : `Chance estimada de fechamento: ${Math.round(deal.probabilityBasisPoints / 100)}% · modelo inicial, não calibrado · ${deal.probabilitySampleSize ?? 0} negócios encerrados no funil.`}</Signal>}
+
 
     {!embedded && pipelineStages.length > 0 && <StageProgress
       stages={pipelineStages.map((item) => ({ id: item.id, label: item.name }))}
@@ -953,20 +945,15 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
           { value: "pessoas", label: "Vínculos", content: relatedContent },
         ]} /></Surface>
       </div>
-      <div className={styles.quickPhase}>{composerContent}{quickPanel === "commercial" ? <Surface className={styles.block}>{commercialPanel}</Surface> : <Tabs label="Atividades e histórico do negócio" defaultValue={canReadActivities ? "atividade" : "historico"} items={activityHistoryTabs} />}</div>
+      <div className={styles.quickPhase}><div className={styles.headerGroup}>{quickActions}</div>{composerContent}{quickPanel === "commercial" ? <Surface className={styles.block}>{commercialPanel}</Surface> : <Tabs label="Atividades e histórico do negócio" defaultValue={canReadActivities ? "atividade" : "historico"} items={activityHistoryTabs} />}</div>
       <Surface as="aside" className={styles.quickActions}>{moveActions}</Surface>
-    </div> : <div className={styles.contentGrid}>
-      <aside className={styles.side}>
-        {valueContent}
-        {summaryContent}
-        <Surface className={styles.sideBlock}>{tagsContent}</Surface>
-      </aside>
-      <section className={styles.flow}>{composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={!canReadActivities && pageTab === "atividade" ? "historico" : pageTab} onValueChange={setPageTab} items={[
+    </div> : <RecordWorkspace context={<>{valueContent}{summaryContent}<Surface className={styles.sideBlock}>{tagsContent}</Surface></>} actions={quickActions}>
+      {composerContent}<div className={styles.workspaceTabs}><Tabs label="Área de trabalho do negócio" value={!canReadActivities && pageTab === "atividade" ? "historico" : pageTab} onValueChange={setPageTab} items={[
         ...activityHistoryTabs,
         { value: "comercial", label: "Itens e valores", content: <Surface className={styles.block}><SectionTitle level="card" description="Produtos, serviços e composição do valor negociado.">Itens do negócio</SectionTitle>{productsContent}</Surface> },
         { value: "pessoas", label: "Pessoas e empresa", content: relatedContent },
-      ]} /></div></section>
-    </div>}
+      ]} /></div>
+    </RecordWorkspace>}
 
     <ActionModal open={pendingLink !== null} onOpenChange={(open) => { if (!open) setPendingLink(null); }} title="Vincular pessoa à empresa?" confirmLabel="Vincular e adicionar" cancelLabel="Não vincular" onConfirm={async () => {
       if (!pendingLink) return;

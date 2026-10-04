@@ -3,7 +3,7 @@
 
 /* Cabeçalho, trilha de etapas e as duas colunas. A ficha à esquerda e o fluxo
  * à direita rolam por dentro, como a tela de negócio do Pipedrive. */
-.page { display: flex; flex-direction: column; gap: var(--space-4); height: 100%; min-height: 0; overflow: hidden; }
+.page { padding: var(--space-4) var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); height: 100%; min-height: 0; overflow: hidden; }
 .loading { display: grid; gap: var(--space-3); width: min(100%, var(--ui-drawerWidth)); padding-block: var(--space-4); }
 .loadingLine { height: var(--space-3); }
 .loadingLine:first-child { width: var(--ui-menuWidth); }

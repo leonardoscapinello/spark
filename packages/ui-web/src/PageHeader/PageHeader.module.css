@@ -40,6 +40,6 @@
 }
 
 .header[data-variant="record"] { gap: var(--space-3) var(--space-5); }
-.header[data-variant="record"] .back { flex-basis: 100%; }
+.header[data-variant="record"] .back { flex: 0 0 auto; }
 .header[data-variant="record"] h1 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); text-wrap: pretty; }
 .context { margin: 0; color: var(--tx2); font-family: var(--font); font-size: var(--fs-pequeno); line-height: var(--lh-pequeno); }
