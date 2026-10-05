@@ -23,6 +23,9 @@ export const SYNC_RESOURCES = [
   "deals",
   "deal_followers",
   "deal_products",
+  "deal_adjustments",
+  "coupons",
+  "installment_policies",
   "activities",
   "calendar_events",
   "notes",
@@ -103,6 +106,11 @@ const READ_REQUIREMENTS: Record<
   deals: ["deals:read"],
   deal_followers: ["deals:read"],
   deal_products: ["deals:read"],
+  deal_adjustments: ["deals:read"],
+  // Códigos de cupom são do comercial e do checkout: quem vende aplica pelo
+  // código (o servidor valida); a lista inteira é de quem configura o catálogo.
+  coupons: ["catalog:read"],
+  installment_policies: ["deals:read", "catalog:read"],
   activities: ["activities:read"],
   calendar_events: ["activities:read"],
   notes: ["contacts:read", "deals:read"],

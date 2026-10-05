@@ -20,6 +20,8 @@ import { StageFieldRulesRepository } from "./infrastructure/stage-field-rules.re
 import { StageFieldRulesController } from "./presentation/stage-field-rules.controller.js";
 import { DealProductsRepository } from "./infrastructure/deal-products.repository.js";
 import { DealProductsController } from "./presentation/deal-products.controller.js";
+import { DealAdjustmentsController, DealTermsController } from "./presentation/deal-pricing.controller.js";
+import { DealPricingRepository } from "./infrastructure/deal-pricing.repository.js";
 import { DealsRepository } from "./infrastructure/deals.repository.js";
 import { GetCurrentUserUseCase } from "../identity/application/get-current-user.usecase.js";
 import { UsersRepository } from "../identity/infrastructure/users.repository.js";
@@ -35,8 +37,8 @@ import { DealFollowersRepository } from "./infrastructure/deal-followers.reposit
 
 @Module({
   imports: [SettingsModule, EventsModule],
-  controllers: [DealFollowersController, BusinessCalendarController, DealPresenceController, StageFieldRulesController, DealProductsController, PipelinesController, StagesController, DealsController],
-  providers: [DealFollowersRepository, BusinessCalendarRepository, DealPresenceService, StageFieldRulesRepository, DealProductsRepository,
+  controllers: [DealFollowersController, BusinessCalendarController, DealPresenceController, StageFieldRulesController, DealProductsController, DealAdjustmentsController, DealTermsController, PipelinesController, StagesController, DealsController],
+  providers: [DealFollowersRepository, BusinessCalendarRepository, DealPresenceService, StageFieldRulesRepository, DealProductsRepository, DealPricingRepository,
     CreatePipelineUseCase,
     CreateStageUseCase,
     RenameStageUseCase,

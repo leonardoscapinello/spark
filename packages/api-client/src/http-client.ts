@@ -58,11 +58,28 @@ export async function sparkHttpClient<T>(config: AxiosRequestConfig): Promise<T>
     headers: { ...config.headers, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
   try {
-    return (await request(getToken?.())).data;
+    try {
+      return (await request(getToken?.())).data;
+    } catch (error) {
+      if (!axios.isAxiosError(error) || error.response?.status !== 401 || !refreshToken) throw error;
+      const renewed = await refreshSparkAuthToken();
+      if (!renewed) throw error;
+      return (await request(renewed)).data;
+    }
   } catch (error) {
-    if (!axios.isAxiosError(error) || error.response?.status !== 401 || !refreshToken) throw error;
-    const renewed = await refreshSparkAuthToken();
-    if (!renewed) throw error;
-    return (await request(renewed)).data;
+    throw withServerMessage(error);
   }
+}
+
+/**
+ * A mensagem que a API escreveu ("Este cupom expirou.") vale mais que a do
+ * axios ("Request failed with status code 422"): é ela que a tela mostra.
+ * Mantém o erro do axios (status e resposta continuam acessíveis).
+ */
+function withServerMessage(error: unknown): unknown {
+  if (!axios.isAxiosError(error)) return error;
+  const body = error.response?.data as { message?: unknown } | undefined;
+  const message = Array.isArray(body?.message) ? body.message.filter((item): item is string => typeof item === "string").join(" ") : body?.message;
+  if (typeof message === "string" && message.trim()) error.message = message;
+  return error;
 }

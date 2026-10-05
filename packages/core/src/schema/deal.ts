@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { zOrgId, zPipelineId, zStageId, zContactId, zCompanyId, zDealId, zMoney, zServerTimestamp, zUserId } from "./zodHelpers.js";
+import { zOrgId, zPipelineId, zStageId, zContactId, zCompanyId, zDealId, zInstallmentPolicyId, zMoney, zServerTimestamp, zUserId } from "./zodHelpers.js";
+import { RecurringIntervalSchema } from "./dealPricing.js";
 
 /** Pipedrive parity — the actual product vocabulary of the tool we're replacing. */
 export const DealStatusSchema = z.enum(["open", "won", "lost"]);
@@ -39,6 +40,13 @@ export const DealSchema = z.object({
   probabilityCalculatedAt: zServerTimestamp.nullable().optional(),
   probabilityVersion: z.string().nullable().optional(),
   probabilitySampleSize: z.number().int().nonnegative().nullable().optional(),
+  /** Condições de cobrança (ADR-0046): assinatura e parcelamento. Mudam pelo
+   * comando de condições, que recalcula o valor do negócio. */
+  subscriptionInterval: RecurringIntervalSchema.nullable().optional(),
+  subscriptionCycles: z.number().int().min(1).max(600).nullable().optional(),
+  contractMonths: z.number().int().min(1).max(120).optional(),
+  installmentPolicyId: zInstallmentPolicyId.nullable().optional(),
+  installments: z.number().int().min(1).max(48).optional(),
 });
 
 export type Deal = z.infer<typeof DealSchema>;
@@ -46,6 +54,11 @@ export type Deal = z.infer<typeof DealSchema>;
 // orgId never comes from the client (docs/adr/0026); id does — optimistic
 // writes need the final key before the server responds (docs/adr/0030).
 export const CreateDealInputSchema = DealSchema.omit({
+  subscriptionInterval: true,
+  subscriptionCycles: true,
+  contractMonths: true,
+  installmentPolicyId: true,
+  installments: true,
   probabilityBasisPoints: true,
   probabilityCalculatedAt: true,
   probabilityVersion: true,

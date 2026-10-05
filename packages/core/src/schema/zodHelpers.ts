@@ -62,6 +62,9 @@ import {
   cannedReplyId as toCannedReplyId,
   savedViewId as toSavedViewId,
   dealProductId as toDealProductId,
+  dealAdjustmentId as toDealAdjustmentId,
+  couponId as toCouponId,
+  installmentPolicyId as toInstallmentPolicyId,
   stageFieldRuleId as toStageFieldRuleId,
   noteId as toNoteId,
   customFieldOptionId as toCustomFieldOptionId,
@@ -118,6 +121,9 @@ import {
   type CannedReplyId,
   type SavedViewId,
   type DealProductId,
+  type DealAdjustmentId,
+  type CouponId,
+  type InstallmentPolicyId,
   type StageFieldRuleId,
   type NoteId,
   type CustomFieldOptionId,
@@ -200,6 +206,9 @@ export const zPageVersionId = bridged<PageVersionId>(toPageVersionId.from);
 export const zCannedReplyId = bridged<CannedReplyId>(toCannedReplyId.from);
 export const zSavedViewId = bridged<SavedViewId>(toSavedViewId.from);
 export const zDealProductId = bridged<DealProductId>(toDealProductId.from);
+export const zDealAdjustmentId = bridged<DealAdjustmentId>(toDealAdjustmentId.from);
+export const zCouponId = bridged<CouponId>(toCouponId.from);
+export const zInstallmentPolicyId = bridged<InstallmentPolicyId>(toInstallmentPolicyId.from);
 export const zStageFieldRuleId = bridged<StageFieldRuleId>(toStageFieldRuleId.from);
 export const zNoteId = bridged<NoteId>(toNoteId.from);
 export const zCustomFieldOptionId = bridged<CustomFieldOptionId>(toCustomFieldOptionId.from);

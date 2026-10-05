@@ -7,6 +7,7 @@ import { stages } from "./stages.js";
 import { contacts } from "./contacts.js";
 import { users } from "./users.js";
 import { companies } from "./companies.js";
+import { installmentPolicies } from "./installment-policies.js";
 import { APP_ROLE } from "../roles.js";
 
 /**
@@ -47,10 +48,19 @@ export const deals = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     isArchived: boolean("is_archived").notNull().default(false),
+    /* Condições de cobrança (ADR-0046). */
+    subscriptionInterval: text("subscription_interval"),
+    subscriptionCycles: integer("subscription_cycles"),
+    contractMonths: integer("contract_months").notNull().default(12),
+    installmentPolicyId: uuid("installment_policy_id").references(() => installmentPolicies.id, { onDelete: "set null" }),
+    installments: integer("installments").notNull().default(1),
   },
   (t) => [
     check("deals_amount_check", sql`${t.amount} >= 0`),
     check("deals_status_check", sql`${t.status} = ANY (ARRAY['open', 'won', 'lost'])`),
+    check("deals_subscription_interval_check", sql`${t.subscriptionInterval} IN ('month', 'quarter', 'semester', 'year')`),
+    check("deals_contract_months_check", sql`${t.contractMonths} BETWEEN 1 AND 120`),
+    check("deals_installments_check", sql`${t.installments} BETWEEN 1 AND 48`),
     index("deals_board_shape_idx").on(t.orgId, t.pipelineId, t.status, t.stageId, t.updatedAt).where(sql`${t.deletedAt} IS NULL`),
     pgPolicy("deals_isolation_by_org", {
       for: "all",

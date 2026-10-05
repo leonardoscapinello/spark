@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { and, asc, eq, sql } from "drizzle-orm";
-import { createAppDbClient, dealProducts, deals, withOrgContext, type SparkDb } from "@spark/db";
-import { auditChanges, dealProductsTotal, money, toCents, type CreateDealProductInput, type DealId, type DealProduct, type DealProductId, type Money, type OrgId, type UpdateDealProductInput, type UserId } from "@spark/core";
+import { eq, sql } from "drizzle-orm";
+import { createAppDbClient, dealProducts, withOrgContext, type SparkDb } from "@spark/db";
+import { auditChanges, money, toCents, type CreateDealProductInput, type DealId, type DealProduct, type DealProductId, type Money, type OrgId, type UpdateDealProductInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
+import { recalculateDealAmount } from "./deal-pricing.repository.js";
 
 /**
  * Itens do negócio. Toda escrita aqui **recalcula `deals.amount`** na mesma
@@ -31,11 +32,13 @@ export class DealProductsRepository {
         unitAmount: toCents(input.unitAmount),
         discountBasisPoints: input.discountBasisPoints ?? 0,
         taxBasisPoints: input.taxBasisPoints ?? 0,
+        discountAmount: input.discountAmount ? toCents(input.discountAmount) : 0,
+        recurring: input.recurring ?? false,
         sortOrder: input.sortOrder ?? 0,
       }).returning();
       if (!row) throw new Error("Deal product insert returned no row.");
       const item = toItem(row);
-      const dealAmount = await this.syncDealAmount(tx, orgId, item.dealId);
+      const dealAmount = await recalculateDealAmount(tx, orgId, item.dealId);
       await this.eventWriter.append(tx, { orgId, actorUserId, dealId: item.dealId, type: "deal.updated", data: { fields: ["products"], changes: [{ field: "products", before: null, after: item.name }] } });
       return { item, dealAmount, txid: await captureTxid(tx) };
     });
@@ -51,6 +54,8 @@ export class DealProductsRepository {
         ...(input.unitAmount !== undefined ? { unitAmount: toCents(input.unitAmount) } : {}),
         ...(input.discountBasisPoints !== undefined ? { discountBasisPoints: input.discountBasisPoints } : {}),
         ...(input.taxBasisPoints !== undefined ? { taxBasisPoints: input.taxBasisPoints } : {}),
+        ...(input.discountAmount !== undefined ? { discountAmount: toCents(input.discountAmount) } : {}),
+        ...(input.recurring !== undefined ? { recurring: input.recurring } : {}),
         ...(input.productId !== undefined ? { productId: input.productId } : {}),
         ...(input.variantId !== undefined ? { variantId: input.variantId } : {}),
         ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),
@@ -58,7 +63,7 @@ export class DealProductsRepository {
       }).where(eq(dealProducts.id, id)).returning();
       if (!row) throw new NotFoundException(`Deal product ${id} not found.`);
       const item = toItem(row);
-      const dealAmount = await this.syncDealAmount(tx, orgId, item.dealId);
+      const dealAmount = await recalculateDealAmount(tx, orgId, item.dealId);
       const fields = Object.keys(input);
       await this.eventWriter.append(tx, { orgId, actorUserId, dealId: item.dealId, type: "deal.updated", data: { fields: fields.map((field) => `product:${field}`), changes: auditChanges(before, row, fields).map((change) => ({ ...change, field: `product:${change.field}` })) } });
       return { item, dealAmount, txid: await captureTxid(tx) };
@@ -69,18 +74,10 @@ export class DealProductsRepository {
     return withOrgContext(this.db, orgId, async (tx) => {
       const [row] = await tx.delete(dealProducts).where(eq(dealProducts.id, id)).returning();
       if (!row) throw new NotFoundException(`Deal product ${id} not found.`);
-      const dealAmount = await this.syncDealAmount(tx, orgId, row.dealId as DealId);
+      const dealAmount = await recalculateDealAmount(tx, orgId, row.dealId as DealId);
       await this.eventWriter.append(tx, { orgId, actorUserId, dealId: row.dealId as DealId, type: "deal.updated", data: { fields: ["products"], changes: [{ field: "products", before: row.name, after: null }] } });
       return { item: null, dealAmount, txid: await captureTxid(tx) };
     });
-  }
-
-  /** Recalcula o valor do negócio pela regra do core e grava. */
-  private async syncDealAmount(tx: SparkDb, orgId: OrgId, dealId: DealId): Promise<Money> {
-    const rows = await tx.select().from(dealProducts).where(and(eq(dealProducts.orgId, orgId), eq(dealProducts.dealId, dealId))).orderBy(asc(dealProducts.sortOrder));
-    const total = dealProductsTotal(rows.map(toItem));
-    await tx.update(deals).set({ amount: toCents(total), updatedAt: new Date() }).where(eq(deals.id, dealId));
-    return total;
   }
 }
 
@@ -95,6 +92,7 @@ function toItem(row: typeof dealProducts.$inferSelect): DealProduct {
   return {
     ...row,
     unitAmount: money(row.unitAmount),
+    discountAmount: money(row.discountAmount),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   } as DealProduct;

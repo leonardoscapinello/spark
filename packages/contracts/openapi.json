@@ -2224,6 +2224,201 @@
         ]
       }
     },
+    "/v1/deal-adjustments": {
+      "post": {
+        "operationId": "DealAdjustmentsController_add",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDealAdjustmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealAdjustmentWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/deal-adjustments/coupon": {
+      "post": {
+        "operationId": "DealAdjustmentsController_applyCoupon",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyCouponDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealAdjustmentWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/deal-adjustments/{id}": {
+      "patch": {
+        "operationId": "DealAdjustmentsController_change",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDealAdjustmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealAdjustmentWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      },
+      "delete": {
+        "operationId": "DealAdjustmentsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealAdjustmentWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/v1/deal-terms/{dealId}": {
+      "patch": {
+        "operationId": "DealTermsController_update",
+        "parameters": [
+          {
+            "name": "dealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDealTermsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealTermsWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "crm"
+        ]
+      }
+    },
     "/v1/pipelines": {
       "post": {
         "operationId": "PipelinesController_create",
@@ -4332,6 +4527,234 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DiscountRuleWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/catalog/coupons": {
+      "post": {
+        "operationId": "CommercialTermsController_createCoupon",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCouponDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/catalog/coupons/{id}": {
+      "patch": {
+        "operationId": "CommercialTermsController_updateCoupon",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCouponDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      },
+      "delete": {
+        "operationId": "CommercialTermsController_removeCoupon",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommercialTermsDeleteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/catalog/installment-policies": {
+      "post": {
+        "operationId": "CommercialTermsController_createPolicy",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInstallmentPolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstallmentPolicyWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/v1/catalog/installment-policies/{id}": {
+      "patch": {
+        "operationId": "CommercialTermsController_updatePolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInstallmentPolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstallmentPolicyWriteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      },
+      "delete": {
+        "operationId": "CommercialTermsController_removePolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommercialTermsDeleteResponseDto"
                 }
               }
             }
@@ -9043,6 +9466,15 @@
             "minimum": 0,
             "maximum": 10000
           },
+          "discountAmount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "recurring": {
+            "default": false,
+            "type": "boolean"
+          },
           "sortOrder": {
             "default": 0,
             "type": "integer",
@@ -9113,6 +9545,15 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 10000
+              },
+              "discountAmount": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "recurring": {
+                "default": false,
+                "type": "boolean"
               },
               "sortOrder": {
                 "default": 0,
@@ -9219,6 +9660,15 @@
             "minimum": 0,
             "maximum": 10000
           },
+          "discountAmount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "recurring": {
+            "default": false,
+            "type": "boolean"
+          },
           "sortOrder": {
             "default": 0,
             "type": "integer",
@@ -9226,6 +9676,339 @@
             "maximum": 9007199254740991
           }
         }
+      },
+      "CreateDealAdjustmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dealId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "discount",
+              "coupon",
+              "fee"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "valueType": {
+            "type": "string",
+            "enum": [
+              "percent",
+              "amount"
+            ]
+          },
+          "basisPoints": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "appliesTo": {
+            "default": "once",
+            "type": "string",
+            "enum": [
+              "once",
+              "recurring"
+            ]
+          },
+          "cycles": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "default": null,
+            "nullable": true
+          },
+          "sortOrder": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "dealId",
+          "kind",
+          "label",
+          "valueType",
+          "amount"
+        ]
+      },
+      "DealAdjustmentWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "adjustment": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "dealId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "discount",
+                  "coupon",
+                  "fee"
+                ]
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "valueType": {
+                "type": "string",
+                "enum": [
+                  "percent",
+                  "amount"
+                ]
+              },
+              "basisPoints": {
+                "default": 0,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "amount": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "appliesTo": {
+                "default": "once",
+                "type": "string",
+                "enum": [
+                  "once",
+                  "recurring"
+                ]
+              },
+              "cycles": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600,
+                "default": null,
+                "nullable": true
+              },
+              "couponId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "sortOrder": {
+                "default": 0,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "dealId",
+              "kind",
+              "label",
+              "valueType",
+              "amount",
+              "createdAt",
+              "updatedAt"
+            ],
+            "nullable": true
+          },
+          "dealAmount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "adjustment",
+          "dealAmount",
+          "txid"
+        ]
+      },
+      "ApplyCouponDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dealId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "id",
+          "dealId",
+          "code"
+        ]
+      },
+      "UpdateDealAdjustmentDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "valueType": {
+            "type": "string",
+            "enum": [
+              "percent",
+              "amount"
+            ]
+          },
+          "basisPoints": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "appliesTo": {
+            "default": "once",
+            "type": "string",
+            "enum": [
+              "once",
+              "recurring"
+            ]
+          },
+          "cycles": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "default": null,
+            "nullable": true
+          },
+          "sortOrder": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "UpdateDealTermsDto": {
+        "type": "object",
+        "properties": {
+          "subscriptionInterval": {
+            "type": "string",
+            "enum": [
+              "month",
+              "quarter",
+              "semester",
+              "year",
+              null
+            ],
+            "nullable": true
+          },
+          "subscriptionCycles": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "nullable": true
+          },
+          "contractMonths": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "installmentPolicyId": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": true
+          },
+          "installments": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 48
+          }
+        }
+      },
+      "DealTermsWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "dealAmount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "dealAmount",
+          "txid"
+        ]
       },
       "CreatePipelineDto": {
         "type": "object",
@@ -10313,7 +11096,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T19:59:42.525Z",
+                "default": "2026-10-05T18:07:49.947Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10412,6 +11195,38 @@
                 "minimum": 0,
                 "maximum": 9007199254740991,
                 "nullable": true
+              },
+              "subscriptionInterval": {
+                "type": "string",
+                "enum": [
+                  "month",
+                  "quarter",
+                  "semester",
+                  "year",
+                  null
+                ],
+                "nullable": true
+              },
+              "subscriptionCycles": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600,
+                "nullable": true
+              },
+              "contractMonths": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 120
+              },
+              "installmentPolicyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "installments": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48
               }
             },
             "required": [
@@ -10612,7 +11427,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T19:59:42.528Z",
+                "default": "2026-10-05T18:07:49.952Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10711,6 +11526,38 @@
                 "minimum": 0,
                 "maximum": 9007199254740991,
                 "nullable": true
+              },
+              "subscriptionInterval": {
+                "type": "string",
+                "enum": [
+                  "month",
+                  "quarter",
+                  "semester",
+                  "year",
+                  null
+                ],
+                "nullable": true
+              },
+              "subscriptionCycles": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600,
+                "nullable": true
+              },
+              "contractMonths": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 120
+              },
+              "installmentPolicyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "installments": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48
               }
             },
             "required": [
@@ -10833,7 +11680,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T19:59:42.529Z",
+                "default": "2026-10-05T18:07:49.953Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -10932,6 +11779,38 @@
                 "minimum": 0,
                 "maximum": 9007199254740991,
                 "nullable": true
+              },
+              "subscriptionInterval": {
+                "type": "string",
+                "enum": [
+                  "month",
+                  "quarter",
+                  "semester",
+                  "year",
+                  null
+                ],
+                "nullable": true
+              },
+              "subscriptionCycles": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600,
+                "nullable": true
+              },
+              "contractMonths": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 120
+              },
+              "installmentPolicyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "installments": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48
               }
             },
             "required": [
@@ -11058,7 +11937,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T19:59:42.530Z",
+                "default": "2026-10-05T18:07:49.954Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -11157,6 +12036,38 @@
                 "minimum": 0,
                 "maximum": 9007199254740991,
                 "nullable": true
+              },
+              "subscriptionInterval": {
+                "type": "string",
+                "enum": [
+                  "month",
+                  "quarter",
+                  "semester",
+                  "year",
+                  null
+                ],
+                "nullable": true
+              },
+              "subscriptionCycles": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600,
+                "nullable": true
+              },
+              "contractMonths": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 120
+              },
+              "installmentPolicyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "installments": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48
               }
             },
             "required": [
@@ -11263,7 +12174,7 @@
                 "nullable": true
               },
               "stageEnteredAt": {
-                "default": "2026-10-04T19:59:42.531Z",
+                "default": "2026-10-05T18:07:49.955Z",
                 "anyOf": [
                   {
                     "type": "string",
@@ -11362,6 +12273,38 @@
                 "minimum": 0,
                 "maximum": 9007199254740991,
                 "nullable": true
+              },
+              "subscriptionInterval": {
+                "type": "string",
+                "enum": [
+                  "month",
+                  "quarter",
+                  "semester",
+                  "year",
+                  null
+                ],
+                "nullable": true
+              },
+              "subscriptionCycles": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600,
+                "nullable": true
+              },
+              "contractMonths": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 120
+              },
+              "installmentPolicyId": {
+                "type": "string",
+                "minLength": 1,
+                "nullable": true
+              },
+              "installments": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48
               }
             },
             "required": [
@@ -15596,6 +16539,578 @@
             "nullable": true
           },
           "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateCouponDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 300,
+            "default": null,
+            "nullable": true
+          },
+          "valueType": {
+            "type": "string",
+            "enum": [
+              "percent",
+              "amount"
+            ]
+          },
+          "basisPoints": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "appliesTo": {
+            "default": "once",
+            "type": "string",
+            "enum": [
+              "once",
+              "recurring"
+            ]
+          },
+          "cycles": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "default": null,
+            "nullable": true
+          },
+          "minimumSubtotal": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "startsAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ],
+            "default": null,
+            "nullable": true
+          },
+          "endsAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ],
+            "default": null,
+            "nullable": true
+          },
+          "maxRedemptions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "default": null,
+            "nullable": true
+          },
+          "active": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "valueType",
+          "amount"
+        ]
+      },
+      "CouponWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "coupon": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "code": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 40,
+                "pattern": "^[A-Z0-9_-]+$"
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 300,
+                "default": null,
+                "nullable": true
+              },
+              "valueType": {
+                "type": "string",
+                "enum": [
+                  "percent",
+                  "amount"
+                ]
+              },
+              "basisPoints": {
+                "default": 0,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "amount": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "appliesTo": {
+                "default": "once",
+                "type": "string",
+                "enum": [
+                  "once",
+                  "recurring"
+                ]
+              },
+              "cycles": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600,
+                "default": null,
+                "nullable": true
+              },
+              "minimumSubtotal": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "nullable": true
+              },
+              "startsAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "default": null,
+                "nullable": true
+              },
+              "endsAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "default": null,
+                "nullable": true
+              },
+              "maxRedemptions": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991,
+                "default": null,
+                "nullable": true
+              },
+              "active": {
+                "default": true,
+                "type": "boolean"
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "code",
+              "valueType",
+              "amount",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "coupon",
+          "txid"
+        ]
+      },
+      "UpdateCouponDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 300,
+            "default": null,
+            "nullable": true
+          },
+          "valueType": {
+            "type": "string",
+            "enum": [
+              "percent",
+              "amount"
+            ]
+          },
+          "basisPoints": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "appliesTo": {
+            "default": "once",
+            "type": "string",
+            "enum": [
+              "once",
+              "recurring"
+            ]
+          },
+          "cycles": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "default": null,
+            "nullable": true
+          },
+          "minimumSubtotal": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "startsAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ],
+            "default": null,
+            "nullable": true
+          },
+          "endsAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ],
+            "default": null,
+            "nullable": true
+          },
+          "maxRedemptions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "default": null,
+            "nullable": true
+          },
+          "active": {
+            "default": true,
+            "type": "boolean"
+          }
+        }
+      },
+      "CommercialTermsDeleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "txid"
+        ]
+      },
+      "CreateInstallmentPolicyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "maxInstallments": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 48
+          },
+          "interestFreeInstallments": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 48
+          },
+          "monthlyInterestBasisPoints": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "minimumInstallment": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "upfrontDiscountBasisPoints": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "isDefault": {
+            "default": false,
+            "type": "boolean"
+          },
+          "active": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "maxInstallments",
+          "interestFreeInstallments",
+          "monthlyInterestBasisPoints",
+          "minimumInstallment"
+        ]
+      },
+      "InstallmentPolicyWriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "orgId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "maxInstallments": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48
+              },
+              "interestFreeInstallments": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48
+              },
+              "monthlyInterestBasisPoints": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "minimumInstallment": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "upfrontDiscountBasisPoints": {
+                "default": 0,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "isDefault": {
+                "default": false,
+                "type": "boolean"
+              },
+              "active": {
+                "default": true,
+                "type": "boolean"
+              },
+              "createdAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              },
+              "updatedAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "orgId",
+              "name",
+              "maxInstallments",
+              "interestFreeInstallments",
+              "monthlyInterestBasisPoints",
+              "minimumInstallment",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "txid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "policy",
+          "txid"
+        ]
+      },
+      "UpdateInstallmentPolicyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "maxInstallments": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 48
+          },
+          "interestFreeInstallments": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 48
+          },
+          "monthlyInterestBasisPoints": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "minimumInstallment": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "upfrontDiscountBasisPoints": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "isDefault": {
+            "default": false,
+            "type": "boolean"
+          },
+          "active": {
+            "default": true,
             "type": "boolean"
           }
         }

@@ -2087,6 +2087,12 @@ export interface CreateDealProductDto {
      */
   taxBasisPoints?: number;
   /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  discountAmount?: number;
+  recurring?: boolean;
+  /**
      * @minimum 0
      * @maximum 9007199254740991
      */
@@ -2138,6 +2144,12 @@ export type DealProductWriteResponseDtoItem = {
      * @maximum 10000
      */
   taxBasisPoints?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  discountAmount?: number;
+  recurring?: boolean;
   /**
      * @minimum 0
      * @maximum 9007199254740991
@@ -2199,10 +2211,276 @@ export interface UpdateDealProductDto {
      */
   taxBasisPoints?: number;
   /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  discountAmount?: number;
+  recurring?: boolean;
+  /**
      * @minimum 0
      * @maximum 9007199254740991
      */
   sortOrder?: number;
+}
+
+export type CreateDealAdjustmentDtoKind = typeof CreateDealAdjustmentDtoKind[keyof typeof CreateDealAdjustmentDtoKind];
+
+
+export const CreateDealAdjustmentDtoKind = {
+  discount: 'discount',
+  coupon: 'coupon',
+  fee: 'fee',
+} as const;
+
+export type CreateDealAdjustmentDtoValueType = typeof CreateDealAdjustmentDtoValueType[keyof typeof CreateDealAdjustmentDtoValueType];
+
+
+export const CreateDealAdjustmentDtoValueType = {
+  percent: 'percent',
+  amount: 'amount',
+} as const;
+
+export type CreateDealAdjustmentDtoAppliesTo = typeof CreateDealAdjustmentDtoAppliesTo[keyof typeof CreateDealAdjustmentDtoAppliesTo];
+
+
+export const CreateDealAdjustmentDtoAppliesTo = {
+  once: 'once',
+  recurring: 'recurring',
+} as const;
+
+export interface CreateDealAdjustmentDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  dealId: string;
+  kind: CreateDealAdjustmentDtoKind;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  valueType: CreateDealAdjustmentDtoValueType;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  basisPoints?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount: number;
+  appliesTo?: CreateDealAdjustmentDtoAppliesTo;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  cycles?: number | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
+}
+
+export type DealAdjustmentWriteResponseDtoAdjustmentKind = typeof DealAdjustmentWriteResponseDtoAdjustmentKind[keyof typeof DealAdjustmentWriteResponseDtoAdjustmentKind];
+
+
+export const DealAdjustmentWriteResponseDtoAdjustmentKind = {
+  discount: 'discount',
+  coupon: 'coupon',
+  fee: 'fee',
+} as const;
+
+export type DealAdjustmentWriteResponseDtoAdjustmentValueType = typeof DealAdjustmentWriteResponseDtoAdjustmentValueType[keyof typeof DealAdjustmentWriteResponseDtoAdjustmentValueType];
+
+
+export const DealAdjustmentWriteResponseDtoAdjustmentValueType = {
+  percent: 'percent',
+  amount: 'amount',
+} as const;
+
+export type DealAdjustmentWriteResponseDtoAdjustmentAppliesTo = typeof DealAdjustmentWriteResponseDtoAdjustmentAppliesTo[keyof typeof DealAdjustmentWriteResponseDtoAdjustmentAppliesTo];
+
+
+export const DealAdjustmentWriteResponseDtoAdjustmentAppliesTo = {
+  once: 'once',
+  recurring: 'recurring',
+} as const;
+
+/**
+ * @nullable
+ */
+export type DealAdjustmentWriteResponseDtoAdjustment = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /** @minLength 1 */
+  dealId: string;
+  kind: DealAdjustmentWriteResponseDtoAdjustmentKind;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  valueType: DealAdjustmentWriteResponseDtoAdjustmentValueType;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  basisPoints?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount: number;
+  appliesTo?: DealAdjustmentWriteResponseDtoAdjustmentAppliesTo;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  cycles?: number | null;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  couponId?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
+  createdAt: string;
+  updatedAt: string;
+} | null;
+
+export interface DealAdjustmentWriteResponseDto {
+  /** @nullable */
+  adjustment: DealAdjustmentWriteResponseDtoAdjustment;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  dealAmount: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface ApplyCouponDto {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  dealId: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  code: string;
+}
+
+export type UpdateDealAdjustmentDtoValueType = typeof UpdateDealAdjustmentDtoValueType[keyof typeof UpdateDealAdjustmentDtoValueType];
+
+
+export const UpdateDealAdjustmentDtoValueType = {
+  percent: 'percent',
+  amount: 'amount',
+} as const;
+
+export type UpdateDealAdjustmentDtoAppliesTo = typeof UpdateDealAdjustmentDtoAppliesTo[keyof typeof UpdateDealAdjustmentDtoAppliesTo];
+
+
+export const UpdateDealAdjustmentDtoAppliesTo = {
+  once: 'once',
+  recurring: 'recurring',
+} as const;
+
+export interface UpdateDealAdjustmentDto {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label?: string;
+  valueType?: UpdateDealAdjustmentDtoValueType;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  basisPoints?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount?: number;
+  appliesTo?: UpdateDealAdjustmentDtoAppliesTo;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  cycles?: number | null;
+  /**
+     * @minimum 0
+     * @maximum 9007199254740991
+     */
+  sortOrder?: number;
+}
+
+/**
+ * @nullable
+ */
+export type UpdateDealTermsDtoSubscriptionInterval = typeof UpdateDealTermsDtoSubscriptionInterval[keyof typeof UpdateDealTermsDtoSubscriptionInterval] | null;
+
+
+export const UpdateDealTermsDtoSubscriptionInterval = {
+  month: 'month',
+  quarter: 'quarter',
+  semester: 'semester',
+  year: 'year',
+} as const;
+
+export interface UpdateDealTermsDto {
+  /** @nullable */
+  subscriptionInterval?: UpdateDealTermsDtoSubscriptionInterval;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  subscriptionCycles?: number | null;
+  /**
+     * @minimum 1
+     * @maximum 120
+     */
+  contractMonths?: number;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  installmentPolicyId?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  installments?: number;
+}
+
+export interface DealTermsWriteResponseDto {
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  dealAmount: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
 }
 
 export interface CreatePipelineDto {
@@ -2598,6 +2876,19 @@ export const EditDealResponseDtoDealStatus = {
 
 export type EditDealResponseDtoDealCustomFields = {[key: string]: unknown};
 
+/**
+ * @nullable
+ */
+export type EditDealResponseDtoDealSubscriptionInterval = typeof EditDealResponseDtoDealSubscriptionInterval[keyof typeof EditDealResponseDtoDealSubscriptionInterval] | null;
+
+
+export const EditDealResponseDtoDealSubscriptionInterval = {
+  month: 'month',
+  quarter: 'quarter',
+  semester: 'semester',
+  year: 'year',
+} as const;
+
 export type EditDealResponseDtoDeal = {
   /** @minLength 1 */
   id: string;
@@ -2666,6 +2957,29 @@ export type EditDealResponseDtoDeal = {
      * @nullable
      */
   probabilitySampleSize?: number | null;
+  /** @nullable */
+  subscriptionInterval?: EditDealResponseDtoDealSubscriptionInterval;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  subscriptionCycles?: number | null;
+  /**
+     * @minimum 1
+     * @maximum 120
+     */
+  contractMonths?: number;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  installmentPolicyId?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  installments?: number;
 };
 
 export interface EditDealResponseDto {
@@ -2748,6 +3062,19 @@ export const CreateDealResponseDtoDealStatus = {
 
 export type CreateDealResponseDtoDealCustomFields = {[key: string]: unknown};
 
+/**
+ * @nullable
+ */
+export type CreateDealResponseDtoDealSubscriptionInterval = typeof CreateDealResponseDtoDealSubscriptionInterval[keyof typeof CreateDealResponseDtoDealSubscriptionInterval] | null;
+
+
+export const CreateDealResponseDtoDealSubscriptionInterval = {
+  month: 'month',
+  quarter: 'quarter',
+  semester: 'semester',
+  year: 'year',
+} as const;
+
 export type CreateDealResponseDtoDeal = {
   /** @minLength 1 */
   id: string;
@@ -2816,6 +3143,29 @@ export type CreateDealResponseDtoDeal = {
      * @nullable
      */
   probabilitySampleSize?: number | null;
+  /** @nullable */
+  subscriptionInterval?: CreateDealResponseDtoDealSubscriptionInterval;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  subscriptionCycles?: number | null;
+  /**
+     * @minimum 1
+     * @maximum 120
+     */
+  contractMonths?: number;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  installmentPolicyId?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  installments?: number;
 };
 
 export interface CreateDealResponseDto {
@@ -2844,6 +3194,19 @@ export const MoveDealResponseDtoDealStatus = {
 } as const;
 
 export type MoveDealResponseDtoDealCustomFields = {[key: string]: unknown};
+
+/**
+ * @nullable
+ */
+export type MoveDealResponseDtoDealSubscriptionInterval = typeof MoveDealResponseDtoDealSubscriptionInterval[keyof typeof MoveDealResponseDtoDealSubscriptionInterval] | null;
+
+
+export const MoveDealResponseDtoDealSubscriptionInterval = {
+  month: 'month',
+  quarter: 'quarter',
+  semester: 'semester',
+  year: 'year',
+} as const;
 
 export type MoveDealResponseDtoDeal = {
   /** @minLength 1 */
@@ -2913,6 +3276,29 @@ export type MoveDealResponseDtoDeal = {
      * @nullable
      */
   probabilitySampleSize?: number | null;
+  /** @nullable */
+  subscriptionInterval?: MoveDealResponseDtoDealSubscriptionInterval;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  subscriptionCycles?: number | null;
+  /**
+     * @minimum 1
+     * @maximum 120
+     */
+  contractMonths?: number;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  installmentPolicyId?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  installments?: number;
 };
 
 export interface MoveDealResponseDto {
@@ -2951,6 +3337,19 @@ export const CloseDealResponseDtoDealStatus = {
 } as const;
 
 export type CloseDealResponseDtoDealCustomFields = {[key: string]: unknown};
+
+/**
+ * @nullable
+ */
+export type CloseDealResponseDtoDealSubscriptionInterval = typeof CloseDealResponseDtoDealSubscriptionInterval[keyof typeof CloseDealResponseDtoDealSubscriptionInterval] | null;
+
+
+export const CloseDealResponseDtoDealSubscriptionInterval = {
+  month: 'month',
+  quarter: 'quarter',
+  semester: 'semester',
+  year: 'year',
+} as const;
 
 export type CloseDealResponseDtoDeal = {
   /** @minLength 1 */
@@ -3020,6 +3419,29 @@ export type CloseDealResponseDtoDeal = {
      * @nullable
      */
   probabilitySampleSize?: number | null;
+  /** @nullable */
+  subscriptionInterval?: CloseDealResponseDtoDealSubscriptionInterval;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  subscriptionCycles?: number | null;
+  /**
+     * @minimum 1
+     * @maximum 120
+     */
+  contractMonths?: number;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  installmentPolicyId?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  installments?: number;
 };
 
 export interface CloseDealResponseDto {
@@ -3041,6 +3463,19 @@ export const ReopenDealResponseDtoDealStatus = {
 } as const;
 
 export type ReopenDealResponseDtoDealCustomFields = {[key: string]: unknown};
+
+/**
+ * @nullable
+ */
+export type ReopenDealResponseDtoDealSubscriptionInterval = typeof ReopenDealResponseDtoDealSubscriptionInterval[keyof typeof ReopenDealResponseDtoDealSubscriptionInterval] | null;
+
+
+export const ReopenDealResponseDtoDealSubscriptionInterval = {
+  month: 'month',
+  quarter: 'quarter',
+  semester: 'semester',
+  year: 'year',
+} as const;
 
 export type ReopenDealResponseDtoDeal = {
   /** @minLength 1 */
@@ -3110,6 +3545,29 @@ export type ReopenDealResponseDtoDeal = {
      * @nullable
      */
   probabilitySampleSize?: number | null;
+  /** @nullable */
+  subscriptionInterval?: ReopenDealResponseDtoDealSubscriptionInterval;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  subscriptionCycles?: number | null;
+  /**
+     * @minimum 1
+     * @maximum 120
+     */
+  contractMonths?: number;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  installmentPolicyId?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  installments?: number;
 };
 
 export interface ReopenDealResponseDto {
@@ -5399,6 +5857,340 @@ export interface UpdateDiscountRuleDto {
   minimumSubtotal?: number;
   startsAt?: string | null;
   endsAt?: string | null;
+  active?: boolean;
+}
+
+export type CreateCouponDtoValueType = typeof CreateCouponDtoValueType[keyof typeof CreateCouponDtoValueType];
+
+
+export const CreateCouponDtoValueType = {
+  percent: 'percent',
+  amount: 'amount',
+} as const;
+
+export type CreateCouponDtoAppliesTo = typeof CreateCouponDtoAppliesTo[keyof typeof CreateCouponDtoAppliesTo];
+
+
+export const CreateCouponDtoAppliesTo = {
+  once: 'once',
+  recurring: 'recurring',
+} as const;
+
+export interface CreateCouponDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 2
+     * @maxLength 40
+     */
+  code: string;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  description?: string | null;
+  valueType: CreateCouponDtoValueType;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  basisPoints?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount: number;
+  appliesTo?: CreateCouponDtoAppliesTo;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  cycles?: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  minimumSubtotal?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  maxRedemptions?: number | null;
+  active?: boolean;
+}
+
+export type CouponWriteResponseDtoCouponValueType = typeof CouponWriteResponseDtoCouponValueType[keyof typeof CouponWriteResponseDtoCouponValueType];
+
+
+export const CouponWriteResponseDtoCouponValueType = {
+  percent: 'percent',
+  amount: 'amount',
+} as const;
+
+export type CouponWriteResponseDtoCouponAppliesTo = typeof CouponWriteResponseDtoCouponAppliesTo[keyof typeof CouponWriteResponseDtoCouponAppliesTo];
+
+
+export const CouponWriteResponseDtoCouponAppliesTo = {
+  once: 'once',
+  recurring: 'recurring',
+} as const;
+
+export type CouponWriteResponseDtoCoupon = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 2
+     * @maxLength 40
+     * @pattern ^[A-Z0-9_-]+$
+     */
+  code: string;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  description?: string | null;
+  valueType: CouponWriteResponseDtoCouponValueType;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  basisPoints?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount: number;
+  appliesTo?: CouponWriteResponseDtoCouponAppliesTo;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  cycles?: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  minimumSubtotal?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  maxRedemptions?: number | null;
+  active?: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface CouponWriteResponseDto {
+  coupon: CouponWriteResponseDtoCoupon;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export type UpdateCouponDtoValueType = typeof UpdateCouponDtoValueType[keyof typeof UpdateCouponDtoValueType];
+
+
+export const UpdateCouponDtoValueType = {
+  percent: 'percent',
+  amount: 'amount',
+} as const;
+
+export type UpdateCouponDtoAppliesTo = typeof UpdateCouponDtoAppliesTo[keyof typeof UpdateCouponDtoAppliesTo];
+
+
+export const UpdateCouponDtoAppliesTo = {
+  once: 'once',
+  recurring: 'recurring',
+} as const;
+
+export interface UpdateCouponDto {
+  /**
+     * @minLength 2
+     * @maxLength 40
+     */
+  code?: string;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  description?: string | null;
+  valueType?: UpdateCouponDtoValueType;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  basisPoints?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  amount?: number;
+  appliesTo?: UpdateCouponDtoAppliesTo;
+  /**
+     * @minimum 1
+     * @maximum 600
+     * @nullable
+     */
+  cycles?: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  minimumSubtotal?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  maxRedemptions?: number | null;
+  active?: boolean;
+}
+
+export interface CommercialTermsDeleteResponseDto {
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface CreateInstallmentPolicyDto {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  maxInstallments: number;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  interestFreeInstallments: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  monthlyInterestBasisPoints: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  minimumInstallment: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  upfrontDiscountBasisPoints?: number;
+  isDefault?: boolean;
+  active?: boolean;
+}
+
+export type InstallmentPolicyWriteResponseDtoPolicy = {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  orgId: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  maxInstallments: number;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  interestFreeInstallments: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  monthlyInterestBasisPoints: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  minimumInstallment: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  upfrontDiscountBasisPoints?: number;
+  isDefault?: boolean;
+  active?: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export interface InstallmentPolicyWriteResponseDto {
+  policy: InstallmentPolicyWriteResponseDtoPolicy;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  txid: number;
+}
+
+export interface UpdateInstallmentPolicyDto {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name?: string;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  maxInstallments?: number;
+  /**
+     * @minimum 1
+     * @maximum 48
+     */
+  interestFreeInstallments?: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  monthlyInterestBasisPoints?: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  minimumInstallment?: number;
+  /**
+     * @minimum 0
+     * @maximum 10000
+     */
+  upfrontDiscountBasisPoints?: number;
+  isDefault?: boolean;
   active?: boolean;
 }
 
@@ -10697,6 +11489,316 @@ const {mutation: mutationOptions} = options ?
       return useMutation(getDealProductsControllerRemoveMutationOptions(options), queryClient);
     }
 
+export const dealAdjustmentsControllerAdd = (
+    createDealAdjustmentDto: CreateDealAdjustmentDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealAdjustmentWriteResponseDto>(
+      {url: `/v1/deal-adjustments`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createDealAdjustmentDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealAdjustmentsControllerAddMutationKey = () => ['dealAdjustmentsControllerAdd'] as const;
+
+export const getDealAdjustmentsControllerAddMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerAdd>>, TError,DealAdjustmentsControllerAddMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerAdd>>, TError,DealAdjustmentsControllerAddMutationVariables, TContext> => {
+
+const mutationKey = getDealAdjustmentsControllerAddMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealAdjustmentsControllerAdd>>, DealAdjustmentsControllerAddMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  dealAdjustmentsControllerAdd(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealAdjustmentsControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof dealAdjustmentsControllerAdd>>>
+    export type DealAdjustmentsControllerAddMutationBody = CreateDealAdjustmentDto
+    export type DealAdjustmentsControllerAddMutationError = unknown
+    export type DealAdjustmentsControllerAddMutationVariables = {data: CreateDealAdjustmentDto}
+
+    export const useDealAdjustmentsControllerAdd = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerAdd>>, TError,DealAdjustmentsControllerAddMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealAdjustmentsControllerAdd>>,
+        TError,
+        DealAdjustmentsControllerAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealAdjustmentsControllerAddMutationOptions(options), queryClient);
+    }
+
+export const dealAdjustmentsControllerApplyCoupon = (
+    applyCouponDto: ApplyCouponDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealAdjustmentWriteResponseDto>(
+      {url: `/v1/deal-adjustments/coupon`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: applyCouponDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealAdjustmentsControllerApplyCouponMutationKey = () => ['dealAdjustmentsControllerApplyCoupon'] as const;
+
+export const getDealAdjustmentsControllerApplyCouponMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerApplyCoupon>>, TError,DealAdjustmentsControllerApplyCouponMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerApplyCoupon>>, TError,DealAdjustmentsControllerApplyCouponMutationVariables, TContext> => {
+
+const mutationKey = getDealAdjustmentsControllerApplyCouponMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealAdjustmentsControllerApplyCoupon>>, DealAdjustmentsControllerApplyCouponMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  dealAdjustmentsControllerApplyCoupon(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealAdjustmentsControllerApplyCouponMutationResult = NonNullable<Awaited<ReturnType<typeof dealAdjustmentsControllerApplyCoupon>>>
+    export type DealAdjustmentsControllerApplyCouponMutationBody = ApplyCouponDto
+    export type DealAdjustmentsControllerApplyCouponMutationError = unknown
+    export type DealAdjustmentsControllerApplyCouponMutationVariables = {data: ApplyCouponDto}
+
+    export const useDealAdjustmentsControllerApplyCoupon = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerApplyCoupon>>, TError,DealAdjustmentsControllerApplyCouponMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealAdjustmentsControllerApplyCoupon>>,
+        TError,
+        DealAdjustmentsControllerApplyCouponMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealAdjustmentsControllerApplyCouponMutationOptions(options), queryClient);
+    }
+
+export const dealAdjustmentsControllerChange = (
+    id: string,
+    updateDealAdjustmentDto: UpdateDealAdjustmentDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealAdjustmentWriteResponseDto>(
+      {url: `/v1/deal-adjustments/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDealAdjustmentDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealAdjustmentsControllerChangeMutationKey = () => ['dealAdjustmentsControllerChange'] as const;
+
+export const getDealAdjustmentsControllerChangeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerChange>>, TError,DealAdjustmentsControllerChangeMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerChange>>, TError,DealAdjustmentsControllerChangeMutationVariables, TContext> => {
+
+const mutationKey = getDealAdjustmentsControllerChangeMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealAdjustmentsControllerChange>>, DealAdjustmentsControllerChangeMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  dealAdjustmentsControllerChange(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealAdjustmentsControllerChangeMutationResult = NonNullable<Awaited<ReturnType<typeof dealAdjustmentsControllerChange>>>
+    export type DealAdjustmentsControllerChangeMutationBody = UpdateDealAdjustmentDto
+    export type DealAdjustmentsControllerChangeMutationError = unknown
+    export type DealAdjustmentsControllerChangeMutationVariables = {id: string;data: UpdateDealAdjustmentDto}
+
+    export const useDealAdjustmentsControllerChange = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerChange>>, TError,DealAdjustmentsControllerChangeMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealAdjustmentsControllerChange>>,
+        TError,
+        DealAdjustmentsControllerChangeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealAdjustmentsControllerChangeMutationOptions(options), queryClient);
+    }
+
+export const dealAdjustmentsControllerRemove = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealAdjustmentWriteResponseDto>(
+      {url: `/v1/deal-adjustments/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealAdjustmentsControllerRemoveMutationKey = () => ['dealAdjustmentsControllerRemove'] as const;
+
+export const getDealAdjustmentsControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerRemove>>, TError,DealAdjustmentsControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerRemove>>, TError,DealAdjustmentsControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getDealAdjustmentsControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealAdjustmentsControllerRemove>>, DealAdjustmentsControllerRemoveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  dealAdjustmentsControllerRemove(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealAdjustmentsControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof dealAdjustmentsControllerRemove>>>
+
+    export type DealAdjustmentsControllerRemoveMutationError = unknown
+    export type DealAdjustmentsControllerRemoveMutationVariables = {id: string}
+
+    export const useDealAdjustmentsControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealAdjustmentsControllerRemove>>, TError,DealAdjustmentsControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealAdjustmentsControllerRemove>>,
+        TError,
+        DealAdjustmentsControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealAdjustmentsControllerRemoveMutationOptions(options), queryClient);
+    }
+
+export const dealTermsControllerUpdate = (
+    dealId: string,
+    updateDealTermsDto: UpdateDealTermsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<DealTermsWriteResponseDto>(
+      {url: `/v1/deal-terms/${dealId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDealTermsDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getDealTermsControllerUpdateMutationKey = () => ['dealTermsControllerUpdate'] as const;
+
+export const getDealTermsControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealTermsControllerUpdate>>, TError,DealTermsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof dealTermsControllerUpdate>>, TError,DealTermsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getDealTermsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dealTermsControllerUpdate>>, DealTermsControllerUpdateMutationVariables> = (props) => {
+          const {dealId,data} = props ?? {};
+
+          return  dealTermsControllerUpdate(dealId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DealTermsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof dealTermsControllerUpdate>>>
+    export type DealTermsControllerUpdateMutationBody = UpdateDealTermsDto
+    export type DealTermsControllerUpdateMutationError = unknown
+    export type DealTermsControllerUpdateMutationVariables = {dealId: string;data: UpdateDealTermsDto}
+
+    export const useDealTermsControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dealTermsControllerUpdate>>, TError,DealTermsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof dealTermsControllerUpdate>>,
+        TError,
+        DealTermsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDealTermsControllerUpdateMutationOptions(options), queryClient);
+    }
+
 export const pipelinesControllerCreate = (
     createPipelineDto: CreatePipelineDto,
  signal?: AbortSignal
@@ -14313,6 +15415,376 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getCatalogControllerUpdateDiscountMutationOptions(options), queryClient);
+    }
+
+export const commercialTermsControllerCreateCoupon = (
+    createCouponDto: CreateCouponDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CouponWriteResponseDto>(
+      {url: `/v1/catalog/coupons`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCouponDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCommercialTermsControllerCreateCouponMutationKey = () => ['commercialTermsControllerCreateCoupon'] as const;
+
+export const getCommercialTermsControllerCreateCouponMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerCreateCoupon>>, TError,CommercialTermsControllerCreateCouponMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerCreateCoupon>>, TError,CommercialTermsControllerCreateCouponMutationVariables, TContext> => {
+
+const mutationKey = getCommercialTermsControllerCreateCouponMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commercialTermsControllerCreateCoupon>>, CommercialTermsControllerCreateCouponMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  commercialTermsControllerCreateCoupon(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommercialTermsControllerCreateCouponMutationResult = NonNullable<Awaited<ReturnType<typeof commercialTermsControllerCreateCoupon>>>
+    export type CommercialTermsControllerCreateCouponMutationBody = CreateCouponDto
+    export type CommercialTermsControllerCreateCouponMutationError = unknown
+    export type CommercialTermsControllerCreateCouponMutationVariables = {data: CreateCouponDto}
+
+    export const useCommercialTermsControllerCreateCoupon = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerCreateCoupon>>, TError,CommercialTermsControllerCreateCouponMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof commercialTermsControllerCreateCoupon>>,
+        TError,
+        CommercialTermsControllerCreateCouponMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCommercialTermsControllerCreateCouponMutationOptions(options), queryClient);
+    }
+
+export const commercialTermsControllerUpdateCoupon = (
+    id: string,
+    updateCouponDto: UpdateCouponDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CouponWriteResponseDto>(
+      {url: `/v1/catalog/coupons/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateCouponDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCommercialTermsControllerUpdateCouponMutationKey = () => ['commercialTermsControllerUpdateCoupon'] as const;
+
+export const getCommercialTermsControllerUpdateCouponMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerUpdateCoupon>>, TError,CommercialTermsControllerUpdateCouponMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerUpdateCoupon>>, TError,CommercialTermsControllerUpdateCouponMutationVariables, TContext> => {
+
+const mutationKey = getCommercialTermsControllerUpdateCouponMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commercialTermsControllerUpdateCoupon>>, CommercialTermsControllerUpdateCouponMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  commercialTermsControllerUpdateCoupon(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommercialTermsControllerUpdateCouponMutationResult = NonNullable<Awaited<ReturnType<typeof commercialTermsControllerUpdateCoupon>>>
+    export type CommercialTermsControllerUpdateCouponMutationBody = UpdateCouponDto
+    export type CommercialTermsControllerUpdateCouponMutationError = unknown
+    export type CommercialTermsControllerUpdateCouponMutationVariables = {id: string;data: UpdateCouponDto}
+
+    export const useCommercialTermsControllerUpdateCoupon = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerUpdateCoupon>>, TError,CommercialTermsControllerUpdateCouponMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof commercialTermsControllerUpdateCoupon>>,
+        TError,
+        CommercialTermsControllerUpdateCouponMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCommercialTermsControllerUpdateCouponMutationOptions(options), queryClient);
+    }
+
+export const commercialTermsControllerRemoveCoupon = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CommercialTermsDeleteResponseDto>(
+      {url: `/v1/catalog/coupons/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCommercialTermsControllerRemoveCouponMutationKey = () => ['commercialTermsControllerRemoveCoupon'] as const;
+
+export const getCommercialTermsControllerRemoveCouponMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerRemoveCoupon>>, TError,CommercialTermsControllerRemoveCouponMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerRemoveCoupon>>, TError,CommercialTermsControllerRemoveCouponMutationVariables, TContext> => {
+
+const mutationKey = getCommercialTermsControllerRemoveCouponMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commercialTermsControllerRemoveCoupon>>, CommercialTermsControllerRemoveCouponMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  commercialTermsControllerRemoveCoupon(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommercialTermsControllerRemoveCouponMutationResult = NonNullable<Awaited<ReturnType<typeof commercialTermsControllerRemoveCoupon>>>
+
+    export type CommercialTermsControllerRemoveCouponMutationError = unknown
+    export type CommercialTermsControllerRemoveCouponMutationVariables = {id: string}
+
+    export const useCommercialTermsControllerRemoveCoupon = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerRemoveCoupon>>, TError,CommercialTermsControllerRemoveCouponMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof commercialTermsControllerRemoveCoupon>>,
+        TError,
+        CommercialTermsControllerRemoveCouponMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCommercialTermsControllerRemoveCouponMutationOptions(options), queryClient);
+    }
+
+export const commercialTermsControllerCreatePolicy = (
+    createInstallmentPolicyDto: CreateInstallmentPolicyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<InstallmentPolicyWriteResponseDto>(
+      {url: `/v1/catalog/installment-policies`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createInstallmentPolicyDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCommercialTermsControllerCreatePolicyMutationKey = () => ['commercialTermsControllerCreatePolicy'] as const;
+
+export const getCommercialTermsControllerCreatePolicyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerCreatePolicy>>, TError,CommercialTermsControllerCreatePolicyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerCreatePolicy>>, TError,CommercialTermsControllerCreatePolicyMutationVariables, TContext> => {
+
+const mutationKey = getCommercialTermsControllerCreatePolicyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commercialTermsControllerCreatePolicy>>, CommercialTermsControllerCreatePolicyMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  commercialTermsControllerCreatePolicy(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommercialTermsControllerCreatePolicyMutationResult = NonNullable<Awaited<ReturnType<typeof commercialTermsControllerCreatePolicy>>>
+    export type CommercialTermsControllerCreatePolicyMutationBody = CreateInstallmentPolicyDto
+    export type CommercialTermsControllerCreatePolicyMutationError = unknown
+    export type CommercialTermsControllerCreatePolicyMutationVariables = {data: CreateInstallmentPolicyDto}
+
+    export const useCommercialTermsControllerCreatePolicy = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerCreatePolicy>>, TError,CommercialTermsControllerCreatePolicyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof commercialTermsControllerCreatePolicy>>,
+        TError,
+        CommercialTermsControllerCreatePolicyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCommercialTermsControllerCreatePolicyMutationOptions(options), queryClient);
+    }
+
+export const commercialTermsControllerUpdatePolicy = (
+    id: string,
+    updateInstallmentPolicyDto: UpdateInstallmentPolicyDto,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<InstallmentPolicyWriteResponseDto>(
+      {url: `/v1/catalog/installment-policies/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateInstallmentPolicyDto, ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCommercialTermsControllerUpdatePolicyMutationKey = () => ['commercialTermsControllerUpdatePolicy'] as const;
+
+export const getCommercialTermsControllerUpdatePolicyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerUpdatePolicy>>, TError,CommercialTermsControllerUpdatePolicyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerUpdatePolicy>>, TError,CommercialTermsControllerUpdatePolicyMutationVariables, TContext> => {
+
+const mutationKey = getCommercialTermsControllerUpdatePolicyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commercialTermsControllerUpdatePolicy>>, CommercialTermsControllerUpdatePolicyMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  commercialTermsControllerUpdatePolicy(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommercialTermsControllerUpdatePolicyMutationResult = NonNullable<Awaited<ReturnType<typeof commercialTermsControllerUpdatePolicy>>>
+    export type CommercialTermsControllerUpdatePolicyMutationBody = UpdateInstallmentPolicyDto
+    export type CommercialTermsControllerUpdatePolicyMutationError = unknown
+    export type CommercialTermsControllerUpdatePolicyMutationVariables = {id: string;data: UpdateInstallmentPolicyDto}
+
+    export const useCommercialTermsControllerUpdatePolicy = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerUpdatePolicy>>, TError,CommercialTermsControllerUpdatePolicyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof commercialTermsControllerUpdatePolicy>>,
+        TError,
+        CommercialTermsControllerUpdatePolicyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCommercialTermsControllerUpdatePolicyMutationOptions(options), queryClient);
+    }
+
+export const commercialTermsControllerRemovePolicy = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return sparkHttpClient<CommercialTermsDeleteResponseDto>(
+      {url: `/v1/catalog/installment-policies/${id}`, method: 'DELETE', ...(signal ? { signal }: {})
+    },
+      );
+    }
+
+
+
+
+export const getCommercialTermsControllerRemovePolicyMutationKey = () => ['commercialTermsControllerRemovePolicy'] as const;
+
+export const getCommercialTermsControllerRemovePolicyMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerRemovePolicy>>, TError,CommercialTermsControllerRemovePolicyMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerRemovePolicy>>, TError,CommercialTermsControllerRemovePolicyMutationVariables, TContext> => {
+
+const mutationKey = getCommercialTermsControllerRemovePolicyMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commercialTermsControllerRemovePolicy>>, CommercialTermsControllerRemovePolicyMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  commercialTermsControllerRemovePolicy(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommercialTermsControllerRemovePolicyMutationResult = NonNullable<Awaited<ReturnType<typeof commercialTermsControllerRemovePolicy>>>
+
+    export type CommercialTermsControllerRemovePolicyMutationError = unknown
+    export type CommercialTermsControllerRemovePolicyMutationVariables = {id: string}
+
+    export const useCommercialTermsControllerRemovePolicy = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commercialTermsControllerRemovePolicy>>, TError,CommercialTermsControllerRemovePolicyMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof commercialTermsControllerRemovePolicy>>,
+        TError,
+        CommercialTermsControllerRemovePolicyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCommercialTermsControllerRemovePolicyMutationOptions(options), queryClient);
     }
 
 export const formsControllerCreate = (

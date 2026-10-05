@@ -1,5 +1,8 @@
 import { money, toCents, type Money } from "../money/index.js";
 import { DomainError } from "../errors/index.js";
+import type { Deal } from "../schema/deal.js";
+import type { DealProduct } from "../schema/dealProduct.js";
+import type { DealAdjustment, InstallmentPolicyRecord } from "../schema/dealPricing.js";
 
 /**
  * Precificação do negócio (ADR-0046). Uma regra só para servidor, telas e
@@ -261,4 +264,30 @@ export function couponRejection(coupon: CouponRule, { subtotal, now, redemptions
   if (coupon.minimumSubtotal && toCents(subtotal) < toCents(coupon.minimumSubtotal)) return "below_minimum";
   if (coupon.maxRedemptions !== null && redemptions >= coupon.maxRedemptions) return "exhausted";
   return null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dos registros para o cálculo — o mesmo caminho no servidor e na tela */
+/* ------------------------------------------------------------------ */
+
+type DealTermsFields = Pick<Deal, "subscriptionInterval" | "subscriptionCycles" | "contractMonths">;
+type ItemFields = Pick<DealProduct, "quantityMilli" | "unitAmount" | "discountBasisPoints" | "taxBasisPoints" | "discountAmount" | "recurring">;
+type AdjustmentFields = Pick<DealAdjustment, "id" | "kind" | "label" | "valueType" | "basisPoints" | "amount" | "appliesTo" | "cycles" | "sortOrder">;
+
+export function toPricingAdjustment(row: AdjustmentFields): PricingAdjustment {
+  return { id: row.id, kind: row.kind, label: row.label, appliesTo: row.appliesTo, cycles: row.cycles, value: row.valueType === "percent" ? { type: "percent", basisPoints: row.basisPoints } : { type: "amount", amount: row.amount } };
+}
+
+export function toInstallmentPolicy(row: Pick<InstallmentPolicyRecord, "maxInstallments" | "interestFreeInstallments" | "monthlyInterestBasisPoints" | "minimumInstallment" | "upfrontDiscountBasisPoints">): InstallmentPolicy {
+  return { maxInstallments: row.maxInstallments, interestFreeInstallments: row.interestFreeInstallments, monthlyInterestBasisPoints: row.monthlyInterestBasisPoints, minimumInstallment: row.minimumInstallment, upfrontDiscountBasisPoints: row.upfrontDiscountBasisPoints };
+}
+
+/** Preço do negócio a partir do que está gravado: itens, ajustes e condições. */
+export function pricingOfDeal(deal: DealTermsFields, items: readonly ItemFields[], adjustments: readonly AdjustmentFields[]): DealPricing {
+  const subscription: Subscription | null = deal.subscriptionInterval ? { interval: deal.subscriptionInterval, cycles: deal.subscriptionCycles ?? null, contractMonths: deal.contractMonths ?? DEFAULT_CONTRACT_MONTHS } : null;
+  return dealPricing({
+    items: items.map(item => ({ quantityMilli: item.quantityMilli, unitAmount: item.unitAmount, discountBasisPoints: item.discountBasisPoints, discountAmount: item.discountAmount, taxBasisPoints: item.taxBasisPoints, recurring: item.recurring })),
+    adjustments: [...adjustments].sort((a, b) => a.sortOrder - b.sortOrder).map(toPricingAdjustment),
+    subscription,
+  });
 }

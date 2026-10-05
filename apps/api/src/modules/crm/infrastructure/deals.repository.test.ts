@@ -51,6 +51,7 @@ function setup(from: 0 | 1, rules: (typeof stageFieldRules.$inferSelect)[], cust
     createdAt: timestamp, updatedAt: timestamp, deletedAt: null, isArchived: false,
     probabilityBasisPoints: null, probabilityCalculatedAt: null,
     probabilityVersion: null, probabilitySampleSize: null,
+    subscriptionInterval: null, subscriptionCycles: null, contractMonths: 12, installmentPolicyId: null, installments: 1,
   };
   const updated = query([{ ...current, stageId: stageIds[to] }]);
   const insertValues = vi.fn().mockResolvedValue(undefined);

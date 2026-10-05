@@ -19,6 +19,8 @@ export function optimisticDealProduct(input: Omit<CreateDealProductInput, "id">,
     unitAmount: input.unitAmount,
     discountBasisPoints: input.discountBasisPoints ?? 0,
     taxBasisPoints: input.taxBasisPoints ?? 0,
+    discountAmount: input.discountAmount,
+    recurring: input.recurring ?? false,
     sortOrder: input.sortOrder ?? 0,
     createdAt: now,
     updatedAt: now,
@@ -45,6 +47,7 @@ export function createDealProductsCollection() {
           id: item.id, dealId: item.dealId, productId: item.productId, variantId: item.variantId,
           name: item.name, quantityMilli: item.quantityMilli, unitAmount: toCents(item.unitAmount),
           discountBasisPoints: item.discountBasisPoints, taxBasisPoints: item.taxBasisPoints, sortOrder: item.sortOrder,
+          ...(item.discountAmount ? { discountAmount: toCents(item.discountAmount) } : {}), recurring: item.recurring,
         });
         return confirmed(response);
       },
@@ -55,6 +58,7 @@ export function createDealProductsCollection() {
         const response = await dealProductsControllerChange(mutation.original.id, {
           name: item.name, quantityMilli: item.quantityMilli, unitAmount: toCents(item.unitAmount),
           discountBasisPoints: item.discountBasisPoints, taxBasisPoints: item.taxBasisPoints, sortOrder: item.sortOrder,
+          discountAmount: item.discountAmount ? toCents(item.discountAmount) : 0, recurring: item.recurring,
         });
         return confirmed(response);
       },
@@ -72,5 +76,6 @@ export type DealProductsCollection = ReturnType<typeof createDealProductsCollect
 
 /** Mesmo motivo de `forInsert` em deals-collection: a coleção guarda centavos. */
 export function itemForInsert(item: DealProduct) {
-  return { ...item, unitAmount: toCents(item.unitAmount) };
+  const { discountAmount, ...rest } = item;
+  return { ...rest, unitAmount: toCents(item.unitAmount), ...(discountAmount ? { discountAmount: toCents(discountAmount) } : {}) };
 }

@@ -8,4 +8,6 @@ import { UsersRepository } from "../identity/infrastructure/users.repository.js"
 import { CatalogService } from "./application/catalog.service.js";
 import { CatalogRepository } from "./infrastructure/catalog.repository.js";
 import { CatalogController } from "./presentation/catalog.controller.js";
-@Module({ imports: [EventsModule, SettingsModule], controllers: [CatalogController], providers: [CatalogService, CatalogRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard] }) export class CatalogModule {}
+import { CommercialTermsController } from "./presentation/commercial-terms.controller.js";
+import { CommercialTermsRepository } from "./infrastructure/commercial-terms.repository.js";
+@Module({ imports: [EventsModule, SettingsModule], controllers: [CatalogController, CommercialTermsController], providers: [CatalogService, CatalogRepository, CommercialTermsRepository, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard] }) export class CatalogModule {}

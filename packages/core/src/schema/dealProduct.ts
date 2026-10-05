@@ -29,6 +29,10 @@ export const DealProductSchema = z.object({
   discountBasisPoints: z.number().int().min(0).max(10_000).default(0),
   /** Imposto do item, em pontos-base (1750 = 17,5%). */
   taxBasisPoints: z.number().int().min(0).max(10_000).default(0),
+  /** Desconto em valor sobre a linha; quando maior que zero, substitui o percentual (ADR-0046). */
+  discountAmount: zMoney.optional(),
+  /** Cobrado a cada ciclo da assinatura do negócio, em vez de uma vez só. */
+  recurring: z.boolean().default(false),
   sortOrder: z.number().int().min(0).default(0),
   createdAt: zServerTimestamp,
   updatedAt: zServerTimestamp,
@@ -39,7 +43,7 @@ export const CreateDealProductInputSchema = DealProductSchema.omit({
   orgId: true,
   createdAt: true,
   updatedAt: true,
-}).partial({ productId: true, variantId: true, discountBasisPoints: true, taxBasisPoints: true, sortOrder: true });
+}).partial({ productId: true, variantId: true, discountBasisPoints: true, taxBasisPoints: true, sortOrder: true, recurring: true });
 export type CreateDealProductInput = z.infer<typeof CreateDealProductInputSchema>;
 
 export const UpdateDealProductInputSchema = CreateDealProductInputSchema.omit({ id: true, dealId: true }).partial();

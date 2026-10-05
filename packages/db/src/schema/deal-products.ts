@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { bigint, check, integer, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, integer, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { APP_ROLE } from "../roles.js";
 import { idColumn } from "./_helpers.js";
 import { organizations } from "./organizations.js";
@@ -24,6 +24,8 @@ export const dealProducts = pgTable(
     unitAmount: bigint("unit_amount", { mode: "number" }).notNull(),
     discountBasisPoints: integer("discount_basis_points").notNull().default(0),
     taxBasisPoints: integer("tax_basis_points").notNull().default(0),
+    discountAmount: bigint("discount_amount", { mode: "number" }).notNull().default(0),
+    recurring: boolean("recurring").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -34,6 +36,7 @@ export const dealProducts = pgTable(
     check("deal_products_discount_check", sql`${t.discountBasisPoints} BETWEEN 0 AND 10000`),
     check("deal_products_tax_check", sql`${t.taxBasisPoints} BETWEEN 0 AND 10000`),
     check("deal_products_sort_order_check", sql`${t.sortOrder} >= 0`),
+    check("deal_products_discount_amount_check", sql`${t.discountAmount} >= 0`),
     pgPolicy("deal_products_isolation_by_org", {
       for: "all",
       to: APP_ROLE,

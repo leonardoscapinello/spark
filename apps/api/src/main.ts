@@ -7,6 +7,7 @@ import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fa
 import { Logger } from "nestjs-pino";
 import { ZodValidationPipe } from "nestjs-zod";
 import { AppModule } from "./app.module.js";
+import { DomainErrorFilter } from "./common/domain-error.filter.js";
 import { startWebhookWorker } from "./modules/inbox/infrastructure/webhook-worker.js";
 
 export async function bootstrap(): Promise<NestFastifyApplication> {
@@ -17,6 +18,7 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
 
   app.useLogger(app.get(Logger));
   app.useGlobalPipes(new ZodValidationPipe());
+  app.useGlobalFilters(new DomainErrorFilter());
   app.setGlobalPrefix("", { exclude: [] });
 
   // apps/web (and desktop/mobile embedding a webview) talk to the API
