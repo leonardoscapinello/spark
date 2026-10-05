@@ -1,12 +1,12 @@
 import { useConversationSlaSummaries } from "../lib/service-cycles.client";
-import { ConversationService } from "../service/ConversationService";
+import { ConversationDeadlines, ConversationService } from "../service/ConversationService";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, personThreads, contactId, conversationId, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus, type Identity, type IdentityChannel, type Message } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, PersonIdentity, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, PersonIdentity, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, SlaRing, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getIdentitiesCollection } from "../lib/identities-collection.client";
@@ -443,6 +443,7 @@ export default function Inbox() {
 
   function renderDetails() {
     if (!selected || !personId) return null;
+    const deadline = slaSummaries.get(selected.id);
     return <Tabs label="Informações do atendimento" items={[
       { value: "conversation", label: "Atendimento", content: <div className={styles.fields}>
         <InlineField block label="Responsável" value={selected.assigneeId ? userNames.get(selected.assigneeId) ?? "Responsável" : "Não atribuído"} empty={!selected.assigneeId} disabled={!canWrite || saving}>
@@ -452,7 +453,7 @@ export default function Inbox() {
           {(close) => <Select wrapValue label="Equipe responsável" value={selected.teamId ?? ""} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ teamId: value ? teamId.from(value) : null }))} />}
         </InlineField>
         <InlineField block label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
-        <ConversationService key={selected.id} conversation={selected} now={now} canWrite={canWrite} />
+        <ConversationService key={selected.id} conversation={selected} canWrite={canWrite} />
         <InlineField block label="Aberta em" value={formatDateTime(selected.createdAt)} />
       </div> },
       { value: "person", label: "Pessoa", content: <div className={styles.fields}>
@@ -462,6 +463,7 @@ export default function Inbox() {
         <InlineField block label="Conversas" value={`${personRoutes.length} ${personRoutes.length === 1 ? "caixa" : "caixas"} · ${personRoutes.filter((item) => item.status === "open").length} abertas`} />
         {canReadContacts && <Button variant="secondary" size="sm" icon={<Icon name="user" />} onClick={() => navigate(`/contacts/${personId}`)}>Abrir perfil</Button>}
       </div> },
+      { value: "deadlines", label: "Prazos", ...(deadline ? { icon: <SlaRing percent={deadline.percent} state={deadline.state} /> } : {}), content: <ConversationDeadlines key={selected.id} conversation={selected} now={now} canWrite={canWrite} /> },
     ]} />;
   }
 
