@@ -354,6 +354,7 @@ export default function Inbox() {
     return <ConversationRow
       key={item.contactId}
       index={index}
+      {...(index < 40 ? { morphId: item.contactId } : {})}
       name={personName(item.contactId)}
       title={item.subject}
       snippet={snippets.get(item.contactId) ?? null}

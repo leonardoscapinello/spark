@@ -23,6 +23,8 @@
   --anim-rise: sp-rise;
   --anim-morph-in: sp-morph-in;
   --anim-morph-out: sp-morph-out;
+  --anim-morph-fade-in: sp-morph-fade-in;
+  --anim-morph-fade-out: sp-morph-fade-out;
   --anim-sink: sp-sink;
   --anim-fade: sp-fade;
   --anim-fade-out: sp-fade-out;
@@ -245,15 +247,37 @@ textarea {
   animation: var(--anim-draw) var(--t-draw) var(--ease-move) both;
 }
 
-/* Morph de layout (withViewTransition). Painel nomeado com
- * view-transition-name muda de lugar e de tamanho na física global; a foto
- * não estica (object-fit: none) e o grupo recorta o que sobra. Quem só existe
- * de um lado entra/sai deslizando 24 px com fusão e um leve desfoque. */
-::view-transition-group(*) { overflow: clip; animation-duration: var(--t-default); animation-timing-function: var(--ease); }
+/* Morph de layout (withViewTransition). Todo elemento com
+ * view-transition-name vai do lugar e do tamanho antigos aos novos numa
+ * mola suave (--motion-spring-smooth, sem quique); a foto nunca estica (object-fit: none) — o conteúdo antigo funde no
+ * novo enquanto a caixa muda de forma. Quem só existe de um lado entra/sai
+ * deslizando 24 px com fusão e desfoque. */
+::view-transition-group(*) { animation-duration: var(--motion-spring-smooth-duration); animation-timing-function: var(--motion-spring-smooth); }
 ::view-transition-old(*),
-::view-transition-new(*) { height: 100%; animation-duration: var(--t-default); animation-timing-function: var(--ease); object-fit: none; object-position: left top; }
-::view-transition-new(*):only-child { animation-name: var(--anim-morph-in); }
-::view-transition-old(*):only-child { animation-name: var(--anim-morph-out); }
+::view-transition-new(*) { height: 100%; animation-timing-function: var(--ease-move); object-fit: none; object-position: left top; }
+::view-transition-old(*) { animation-name: var(--anim-morph-fade-out); animation-duration: var(--t-fast); }
+::view-transition-new(*) { animation-name: var(--anim-morph-fade-in); animation-duration: var(--motion-spring-smooth-duration); }
+/* Quem entra espera um instante: primeiro o vizinho abre espaço, depois a folha chega. */
+::view-transition-new(*):only-child { animation-name: var(--anim-morph-in); animation-duration: var(--motion-spring-smooth-duration); animation-timing-function: var(--motion-spring-smooth); animation-delay: var(--t-instant); animation-fill-mode: both; }
+::view-transition-old(*):only-child { animation-name: var(--anim-morph-out); animation-duration: var(--t-fast); }
+::view-transition-group(root) { animation: none; }
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: none; }
+
+/* view-transition-class: folha — a própria folha morfa: fundo, fio, raio e
+ * sombra moram no grupo, que estica suave; o miolo funde por dentro. Só para
+ * folha que existe dos DOIS lados (muda de tamanho); folha que entra ou sai
+ * não leva a classe — o grupo dela não some, e o fundo ficaria para trás. */
+::view-transition-group(*.folha) {
+  overflow: clip;
+  border: var(--ui-hairline) solid var(--bd);
+  border-radius: var(--r-xl);
+  corner-shape: var(--r-shape);
+  background: var(--sf) var(--grain);
+  box-shadow: var(--sh1);
+}
+/* view-transition-class: linha — item que muda de forma dentro de uma lista. */
+::view-transition-group(*.linha) { overflow: clip; }
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
@@ -276,6 +300,8 @@ textarea {
 @keyframes sp-pop { from { opacity: 0; transform: translateY(var(--pop-y)) scale(var(--scale-pop)); } to { opacity: 1; transform: none; } }
 @keyframes sp-pop-up { from { opacity: 0; transform: translateY(var(--pop-y-up)) scale(var(--scale-sheet)); } to { opacity: 1; transform: none; } }
 @keyframes sp-pop-out { to { opacity: 0; transform: translateY(calc(var(--pop-y-up) * -1)) scale(var(--scale-pop)); filter: blur(1px); } }
+@keyframes sp-morph-fade-in { from { opacity: 0; filter: blur(3px); } }
+@keyframes sp-morph-fade-out { to { opacity: 0; filter: blur(3px); } }
 @keyframes sp-morph-in { from { opacity: 0; transform: translateX(var(--space-6)); filter: blur(2px); } }
 @keyframes sp-morph-out { to { opacity: 0; transform: translateX(var(--space-6)); filter: blur(2px); } }
 @keyframes sp-rise { from { opacity: 0; transform: translateY(var(--rise-y)) scale(var(--scale-rise)); } to { opacity: 1; transform: none; } }

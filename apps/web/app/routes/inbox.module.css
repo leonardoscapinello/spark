@@ -35,9 +35,12 @@
 .details { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
 
 /* Cada painel tem nome próprio: trocar Conversa ↔ Lista, abrir e fechar a
- * conversa morfam o painel do lugar antigo ao novo (withViewTransition). */
-.list { view-transition-name: inbox-list; }
-.thread, .threadEmpty { view-transition-name: inbox-thread; }
+ * conversa morfam o painel do lugar antigo ao novo (withViewTransition). A
+ * lista é a única que existe nos dois formatos: a folha dela estica; conversa
+ * e detalhes entram e saem deslizando. */
+.list { view-transition-name: inbox-list; view-transition-class: folha; }
+.thread { view-transition-name: inbox-thread; }
+.threadEmpty { view-transition-name: inbox-thread; }
 .page .details { display: none; view-transition-name: inbox-details; }
 .details { padding: var(--space-4) var(--space-5); overflow-y: auto; }
 

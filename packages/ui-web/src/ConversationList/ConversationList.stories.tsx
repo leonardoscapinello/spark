@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Select } from "../Select/Select.js";
 import { Surface } from "../Surface/Surface.js";
 import { ViewSwitcher } from "../ViewSwitcher/ViewSwitcher.js";
+import { withViewTransition } from "../motion/viewTransition.js";
 import { Fileira, Matriz, Prancha, Secao } from "../storybook/Prancha.js";
 import { ConversationList, ConversationListHeader, ConversationRow, type ConversationListLayout, type ConversationRowChannel, type ConversationRowProps } from "./ConversationList.js";
 
@@ -114,3 +115,22 @@ export const Vazia: Story = { render: () => <Lista rows={[]} altura={260} /> };
 export const Carregando: Story = { render: () => <Surface style={{ display: "flex", flexDirection: "column", width: 369, height: 260, overflow: "hidden" }}><ConversationListHeader title="Abertas" /><ConversationList label="Conversas" empty="Carregando conversas…" /></Surface> };
 /** Busca sem resultado ou falha de leitura: a mesma frase curta, sem tomar a tela. */
 export const SemResultado: Story = { name: "Sem resultado", render: () => <Surface style={{ display: "flex", flexDirection: "column", width: 369, height: 260, overflow: "hidden" }}><ConversationListHeader title="Abertas" count={0} /><ConversationList label="Conversas" empty="Nenhuma conversa encontrada. Tente outro nome, assunto ou caixa." /></Surface> };
+
+/**
+ * Troca Conversa ↔ Lista como no atendimento: as folhas morfam (a caixa estica
+ * suave e o miolo funde) e cada linha vai do cartão de duas linhas à linha
+ * larga sozinha. Quem sai (conversa, detalhes) desliza e funde.
+ */
+function TrocaDeFormatoDemo() {
+  const [layout, setLayout] = useState<ConversationListLayout>("compact");
+  const folha = (name: string, morfa = false) => ({ viewTransitionName: name, ...(morfa ? { viewTransitionClass: "folha" } : {}), minHeight: 0, overflow: "hidden" }) as CSSProperties;
+  return <div style={{ display: "grid", gridTemplateColumns: layout === "compact" ? "369px minmax(0, 1fr) 320px" : "minmax(0, 1fr)", gap: 8, height: 560 }}>
+    <Surface as="section" style={folha("demo-lista", true)}>
+      <ConversationListHeader title="Abertas" count={PESSOAS.length} actions={<ViewSwitcher label="Formato" value={layout === "compact" ? "chat" : "list"} onValueChange={value => withViewTransition(() => setLayout(value === "chat" ? "compact" : "wide"))} views={[{ value: "chat", label: "Conversa", icon: "message" }, { value: "list", label: "Lista", icon: "list" }]} />} />
+      <ConversationList label="Conversas" layout={layout}>{PESSOAS.map((row, index) => <ConversationRow key={row.id} {...row} index={index} morphId={row.id} onSelect={() => undefined} />)}</ConversationList>
+    </Surface>
+    {layout === "compact" && <Surface as="section" style={folha("demo-conversa")}><div style={{ padding: 24 }}>Conversa com Carla Menezes</div></Surface>}
+    {layout === "compact" && <Surface as="aside" style={folha("demo-detalhes")}><div style={{ padding: 24 }}>Detalhes do atendimento</div></Surface>}
+  </div>;
+}
+export const TrocaDeFormato: Story = { name: "Troca de formato (morph)", render: () => <TrocaDeFormatoDemo /> };

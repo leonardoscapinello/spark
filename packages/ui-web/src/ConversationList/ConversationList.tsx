@@ -92,10 +92,12 @@ export interface ConversationRowProps {
   selected?: boolean;
   /** Posição na lista: a entrada em cascata usa 30 ms por linha. */
   index?: number;
+  /** Id estável da conversa: com ele a linha morfa sozinha numa troca de layout (compacta ↔ larga). */
+  morphId?: string;
   onSelect: () => void;
 }
 
-export function ConversationRow({ name, avatarUrl, title, snippet, time, dateTime, channels = [], owner, sla, unread = false, priority = false, selected = false, index, onSelect }: ConversationRowProps) {
+export function ConversationRow({ name, avatarUrl, title, snippet, time, dateTime, channels = [], owner, sla, unread = false, priority = false, selected = false, index, morphId, onSelect }: ConversationRowProps) {
   const layout = useContext(LayoutContext);
   const wide = layout === "wide";
   const [primary] = channels;
@@ -116,7 +118,7 @@ export function ConversationRow({ name, avatarUrl, title, snippet, time, dateTim
     {priority && <span className={s.star} role="img" aria-label="Prioritária"><Icon name="star" /></span>}
     <span className={s.subject}>{title}</span>
   </>;
-  return <div role="listitem" data-row="" data-on={selected} data-unread={unread || undefined} className={s.item} style={index === undefined ? undefined : { "--i": index } as CSSProperties}>
+  return <div role="listitem" data-row="" data-on={selected} data-unread={unread || undefined} className={s.item} style={{ ...(index === undefined ? {} : { "--i": index }), ...(morphId ? { viewTransitionName: `conversa-${morphId}`, viewTransitionClass: "linha" } : {}) } as CSSProperties}>
     <button type="button" className={s.row} aria-current={selected ? "true" : undefined} onClick={onSelect}>
       {unread && <span className={s.hidden}>Não lida. </span>}
       <span className={s.avatar}><Avatar name={name} src={avatarUrl ?? null} size={wide ? "small" : "medium"} /></span>
