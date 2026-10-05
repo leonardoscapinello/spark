@@ -5,6 +5,7 @@ import { Label } from "../Label/Label.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
 import { Spinner } from "../Spinner/Spinner.js";
 import { Tooltip } from "../Tooltip/Tooltip.js";
+import { startMarquee, stopMarquee } from "../motion/marquee.js";
 import s from "./InlineField.module.css";
 
 export interface InlineFieldProps {
@@ -176,7 +177,8 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
   </span>;
 
   const shown = empty && !readOnly ? "Adicionar" : value;
-  const text = <span className={s.text} data-numeric={numeric && !empty ? "" : undefined}>{shown}</span>;
+  /* Valor cortado com reticências desliza no hover (o mesmo marquee do botão). */
+  const text = <span className={s.text} data-lbl="" data-numeric={numeric && !empty ? "" : undefined}><span>{shown}</span></span>;
   const content = leading && !empty ? <>{<span className={s.leading}>{leading}</span>}{text}</> : text;
 
   let body: ReactNode;
@@ -189,19 +191,20 @@ export function InlineField({ label, value, leading, empty = false, disabled = f
       </button>
     </>;
   } else if (readOnly && action && !disabled) {
-    body = <BaseField.Control render={<button type="button" />} className={s.value} title={textOf(value)} aria-labelledby={undefined} aria-label={action.label} onClick={action.onClick}>{content}<span className={s.mark} data-action aria-hidden="true"><Icon name={action.icon} /></span></BaseField.Control>;
+    body = <BaseField.Control render={<button type="button" />} className={s.value} aria-labelledby={undefined} aria-label={action.label} onClick={action.onClick} onMouseEnter={startMarquee} onMouseLeave={stopMarquee}>{content}<span className={s.mark} data-action aria-hidden="true"><Icon name={action.icon} /></span></BaseField.Control>;
   } else if (readOnly) {
-    body = <><span className={s.value} title={textOf(value)}>{content}</span><PersistenceFeedback state={persistenceState} label={label} /></>;
+    body = <><span className={s.value} onMouseEnter={startMarquee} onMouseLeave={stopMarquee}>{content}</span><PersistenceFeedback state={persistenceState} label={label} /></>;
   } else {
     const valueButton = (
       <BaseField.Control
         render={<button type="button" />}
         className={s.value}
-        title={textOf(value)}
         ref={(node) => { if (node && restoreFocus.current) { restoreFocus.current = false; node.focus(); } }}
         aria-labelledby={undefined}
         aria-label={`Alterar ${label}. Valor atual: ${empty ? "vazio" : textOf(value)}${href ? ". Dois cliques abrem o endereço." : ""}`}
         onClick={() => setOpen(true)}
+        onMouseEnter={startMarquee}
+        onMouseLeave={stopMarquee}
         onDoubleClick={() => {
           if (href === undefined) return;
           setOpen(false);

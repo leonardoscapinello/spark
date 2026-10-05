@@ -1,8 +1,9 @@
 import { Button as BaseButton } from "@base-ui/react/button";
-import { useRef, type ComponentPropsWithoutRef, type MouseEvent, type ReactNode } from "react";
+import { useRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { useLabelMorph } from "../motion/useLabelMorph.js";
 import { Spinner } from "../Spinner/Spinner.js";
 import styles from "./Button.module.css";
+import { startMarquee, stopMarquee } from "../motion/marquee.js";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "raised" | "row" | "link";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -35,21 +36,6 @@ const PRESS: Record<ButtonVariant, "ink" | "sheet" | "ghost"> = {
 function isText(node: ReactNode): boolean {
   if (typeof node === "string" || typeof node === "number") return true;
   return Array.isArray(node) && node.length > 0 && node.every(item => typeof item === "string" || typeof item === "number");
-}
-
-/** Rótulo que não cabe desliza de lado a lado no hover (marquee). */
-function startMarquee(event: MouseEvent<HTMLElement>) {
-  const label = event.currentTarget.querySelector<HTMLElement>("[data-lbl]");
-  if (!label) return;
-  const overflow = label.scrollWidth - label.clientWidth;
-  if (overflow <= 1) return;
-  label.style.setProperty("--mq", `-${overflow + 8}px`);
-  label.style.setProperty("--mqd", `${Math.max(1.6, overflow / 35)}s`);
-  label.setAttribute("data-mq", "");
-}
-
-function stopMarquee(event: MouseEvent<HTMLElement>) {
-  event.currentTarget.querySelector("[data-lbl]")?.removeAttribute("data-mq");
 }
 
 export function Button({

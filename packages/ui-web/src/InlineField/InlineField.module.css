@@ -85,6 +85,8 @@ label.label { cursor: pointer; }
 
 .leading { display: flex; flex: none; align-items: center; }
 .text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* O valor ocupa o miolo mesmo com o [data-lbl] global (que encolhe ao conteúdo). */
+.text[data-lbl] { flex: 1; }
 .text[data-numeric] { font-family: var(--mono); font-size: var(--fs-valor); font-variant-numeric: tabular-nums; }
 .box[data-empty] .text { color: var(--tx3); }
 .box[data-link] .text { text-decoration: underline; text-decoration-color: var(--bd2); text-underline-offset: 3px; }

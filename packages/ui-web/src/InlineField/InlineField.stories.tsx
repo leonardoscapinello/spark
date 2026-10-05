@@ -101,3 +101,11 @@ export const RegrasPreenchidasEVazias: Story = {
     <InlineField label="Previsão" value="Não informada" empty requirement="important" />
   </Mesa>,
 };
+
+/** Valor cortado com reticências: no hover ele desliza (marquee) até o fim. Valor que cabe fica parado. */
+export const ValorLongo: Story = {
+  render: () => <TooltipProvider><Mesa largura={320}>
+    <InlineField label="Categoria" value="Financeiro › Cobrança indevida em cartão de crédito internacional" />
+    <InlineField label="Responsável" value="Leonardo Scapinello" />
+  </Mesa></TooltipProvider>,
+};
