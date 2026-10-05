@@ -42,6 +42,10 @@
 .thread { view-transition-name: inbox-thread; }
 .threadEmpty { view-transition-name: inbox-thread; }
 .page .details { display: none; view-transition-name: inbox-details; }
+/* Na troca de formato conversa e detalhes existem dos dois lados: morfam como
+ * a lista. Ao abrir/fechar a conversa eles só entram e saem. */
+[data-transition="layout"] .thread,
+[data-transition="layout"] .details { view-transition-class: folha; }
 .details { padding: var(--space-4) var(--space-5); overflow-y: auto; }
 
 .threadEmpty { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -51,7 +55,8 @@
 .template { display: flex; flex-direction: column; gap: var(--space-2); }
 .fields { display: flex; flex-direction: column; gap: var(--space-1); }
 
-/* Lista larga: ocupa a mesa inteira; a conversa abre ao lado quando uma linha é escolhida. */
+/* Lista larga: ocupa a mesa inteira sem conversa aberta; com conversa, divide
+ * a mesa com ela (e com os detalhes, quando cabem). */
 .workspace[data-layout="list"] { grid-template-columns: minmax(0, 1fr); }
 .workspace[data-layout="list"][data-open="true"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
 
@@ -60,8 +65,9 @@
  * de trabalho; a conversa fica com o que sobrar. */
 @container inbox-page (min-width: 1340px) {
   .workspace[data-layout="chat"][data-open="true"] { grid-template-columns: var(--ui-inboxListWidth) minmax(calc(var(--ui-cardMinWidth) * 1.2), 1fr) minmax(var(--ui-cardMinWidth), calc(var(--ui-cardMinWidth) * 1.4)); }
-  .workspace[data-layout="chat"] .details { display: flex; }
-  .workspace[data-layout="chat"] .detailsTrigger { display: none; }
+  .workspace[data-layout="list"][data-open="true"] { grid-template-columns: minmax(var(--ui-inboxListWidth), 1fr) minmax(calc(var(--ui-cardMinWidth) * 1.2), 1.2fr) minmax(var(--ui-cardMinWidth), calc(var(--ui-cardMinWidth) * 1.4)); }
+  .workspace .details { display: flex; }
+  .workspace .detailsTrigger { display: none; }
 }
 
 @media (max-width: 1250px) {

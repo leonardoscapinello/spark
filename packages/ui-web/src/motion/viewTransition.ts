@@ -8,10 +8,15 @@ import { prefersReducedMotion } from "./useReducedMotion.js";
  * (identidade.css). Nada teletransporta. Sem suporte ou com movimento
  * reduzido, a mudança acontece direto.
  */
-export function withViewTransition(update: () => void) {
+export function withViewTransition(update: () => void, kind?: string) {
   if (typeof document === "undefined" || typeof document.startViewTransition !== "function" || prefersReducedMotion()) {
     update();
     return;
   }
-  document.startViewTransition(() => flushSync(update));
+  // `kind` vai para <html data-transition> durante a troca: a tela decide,
+  // por CSS, quem morfa (existe dos dois lados) e quem só entra ou sai.
+  const root = document.documentElement;
+  if (kind) root.dataset.transition = kind;
+  const transition = document.startViewTransition(() => flushSync(update));
+  void transition.finished.finally(() => { if (kind && root.dataset.transition === kind) delete root.dataset.transition; });
 }

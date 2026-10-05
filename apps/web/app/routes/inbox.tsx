@@ -244,11 +244,12 @@ export default function Inbox() {
   }
 
   function changeLayout(next: InboxLayout) {
+    // Trocar o formato muda só a lista: a conversa aberta e os detalhes ficam
+    // e morfam para o novo lugar.
     withViewTransition(() => {
+      if (selected) setSelectedId(selected.id);
       setLayout(next);
-      // A lista larga começa inteira; a conversa abre ao lado quando uma linha é escolhida.
-      if (next === "list") setSelectedId(null);
-    });
+    }, "layout");
   }
 
   async function createConversation() {
@@ -510,7 +511,7 @@ export default function Inbox() {
             : <EmptyState icon="message" title={isLoading ? "Preparando o atendimento" : searchTerm ? "Nenhuma conversa encontrada" : "Nenhuma conversa nesta caixa"} description={isLoading ? "As conversas aparecem aqui assim que a caixa estiver pronta." : searchTerm ? "Tente buscar por outro nome, assunto ou caixa." : "Escolha outra caixa para continuar o atendimento."} />}
         </div>}
 
-      {open && layout === "chat" && <Surface as="aside" className={styles.details} aria-label="Detalhes do atendimento">{renderDetails()}</Surface>}
+      {open && <Surface as="aside" className={styles.details} aria-label="Detalhes do atendimento">{renderDetails()}</Surface>}
     </div>
 
     <Modal open={detailsOpen && open} onOpenChange={setDetailsOpen}><ModalContent title="Detalhes do atendimento" placement="right">{renderDetails()}</ModalContent></Modal>
