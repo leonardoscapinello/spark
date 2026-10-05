@@ -254,9 +254,12 @@
   pointer-events: none;
 }
 
-.rail[data-expanded] .railItem { justify-content: flex-start; width: 100%; height: var(--h-md); padding: 0 var(--space-3); }
-.rail[data-expanded] .railItemIcon { width: var(--ui-icon); height: var(--ui-icon); }
-.rail[data-expanded] .railItemIcon:has([data-pigment]) { width: 24px; height: 24px; margin-inline: -4px; }
+/* Abrir o trilho só alarga para o lado: altura, espaçamento e ícone ficam
+ * idênticos, e o ícone fica no mesmo x (centro do trilho recolhido: metade
+ * do trilho menos o recuo de 10px e o fio da borda). Se o item mudasse de altura, o que está
+ * debaixo do mouse fugiria ao abrir, e o clique cairia no item vizinho. */
+.rail[data-expanded] .railItem { justify-content: flex-start; width: 100%; padding: 0 var(--space-3) 0 calc(var(--ui-railWidth) / 2 - var(--ui-iconLg) / 2 - 10px - var(--ui-hairline)); }
+.rail[data-expanded] .railItemIcon:has([data-pigment]) { margin-inline: calc((var(--ui-iconLg) - 24px) / 2); }
 .rail[data-expanded] .railItemLabel { position: static; flex: 1; opacity: 1; visibility: visible; }
 
 @media (hover: hover) and (pointer: fine) {
