@@ -5,3 +5,5 @@
 .categoryFields { display: flex; flex-direction: column; gap: 0; min-width: 0; }
 /* Legenda | valor empilhados sem respiro extra, como a ficha do CRM. */
 .inlineFields { display: grid; gap: 0; min-width: 0; }
+/* Cabeçalho da pessoa alinhado ao recuo dos cabeçalhos do Accordion compacto. */
+.personHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; padding-inline: var(--space-3); }

@@ -1,17 +1,30 @@
 import { useState, type ReactNode } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { formatServiceDuration, serviceCycleProgress, type Conversation, type ServiceCycle } from "@spark/core";
-import { Accordion, ClassificationValue, Icon, InlineField, Select, SlaProgress, Text, notify } from "@spark/ui-web";
+import { Accordion, ClassificationValue, Icon, InlineField, Select, SlaRing, Text, notify, type AccordionItem } from "@spark/ui-web";
 import { useServiceConfiguration } from "../lib/service-configuration.client";
 import { getServiceCyclesCollection, getServiceSegmentsCollection, getServiceCycleHoursCollection, getServiceCycleHolidaysCollection } from "../lib/service-cycles.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
-import { RecordCustomFields } from "./RecordCustomFields";
+import { useCustomFieldSections } from "./RecordCustomFields";
 import { CategorySelectors } from "./CategorySelectors";
 import styles from "../routes/settings.module.css";
-/** Aba "Atendimento": seções recolhíveis com legenda | valor, como a ficha do CRM. */
-export function ConversationService({ conversation, canWrite, ownership, openedAt }: { conversation: Conversation; canWrite: boolean; ownership: ReactNode; openedAt: string }) {
+
+const when = (iso: string) => new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+
+/** Grupos de campos personalizados viram seções irmãs, com o mesmo cabeçalho das demais. */
+function fieldSections(sections: ReturnType<typeof useCustomFieldSections>, prefix: string): AccordionItem[] {
+  return sections.map(section => ({ value: `${prefix}${section.id || "custom"}`, title: section.name, icon: <Icon name="form" />, content: <div className={styles.inlineFields}>{section.content}</div> }));
+}
+
+/**
+ * Aba "Atendimento" — o que quem atende mexe primeiro: quem cuida, como
+ * classificar, os campos do atendimento (um bloco por grupo) e, por último,
+ * os dados fixos da conversa. Tudo legenda | valor, como a ficha do CRM.
+ */
+export function ConversationService({ conversation, canWrite, ownership, details }: { conversation: Conversation; canWrite: boolean; ownership: ReactNode; details: ReactNode }) {
   const config = useServiceConfiguration();
   const [saving, setSaving] = useState(false);
+  const custom = useCustomFieldSections({ entityType: "conversation", entityId: conversation.id, disabled: !canWrite });
   async function change(field: "serviceStatusId" | "categoryId" | "impactId" | "urgencyId", value: string | null) {
     setSaving(true);
     try { await getConversationsCollection().update(conversation.id, draft => { draft[field] = value; }).isPersisted.promise; }
@@ -29,7 +42,7 @@ export function ConversationService({ conversation, canWrite, ownership, openedA
       {close => <Select label={name} value={current?.id ?? ""} options={[{ value: "", label: "Não definido" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={value => close(change(kind === "impact" ? "impactId" : "urgencyId", value || null))} />}
     </InlineField>;
   };
-  return <Accordion density="compact" defaultValue={["ownership", "classification", "details"]} items={[
+  const items: AccordionItem[] = [
     { value: "ownership", title: "Responsáveis", icon: <Icon name="users" />, content: <div className={styles.inlineFields}>{ownership}</div> },
     { value: "classification", title: "Classificação", icon: <Icon name="tag" />, content: <div className={styles.inlineFields}>
       <InlineField label="Status" value={status?.name ?? fallbackStatus} disabled={!editable}>
@@ -40,40 +53,80 @@ export function ConversationService({ conversation, canWrite, ownership, openedA
       {level("urgency")}
       <InlineField label="Prioridade" value={priority ? <ClassificationValue kind="priority" color={priority.color} label={priority.name} /> : "Não definida"} empty={!priority} disabled />
     </div> },
-    { value: "details", title: "Detalhes", icon: <Icon name="file" />, content: <div className={styles.inlineFields}>
-      <InlineField label="Aberta em" numeric value={openedAt} disabled />
-      <RecordCustomFields showAdministration={false} entityType="conversation" entityId={conversation.id} disabled={!canWrite} />
-    </div> },
-  ]} />;
+    ...fieldSections(custom, "conversation:"),
+    { value: "details", title: "Detalhes da conversa", icon: <Icon name="info" />, content: <div className={styles.inlineFields}>{details}</div> },
+  ];
+  return <Accordion density="compact" defaultValue={items.map(item => item.value)} items={items} />;
 }
 
-/** Aba "Prazos": um anel por relógio do ciclo, mais o histórico de ciclos. */
+/** Aba "Prazos": um bloco por relógio (anel no cabeçalho) e o ciclo com seus campos. */
 export function ConversationDeadlines({ conversation, now, canWrite }: { conversation: Conversation; now: Date; canWrite: boolean }) {
   const [historyId, setHistoryId] = useState<string | null>(null);
   const { data: cycles = [] } = useLiveQuery({ query: q => q.from({ row: getServiceCyclesCollection() }).where(({ row }) => eq(row.conversationId, conversation.id)).orderBy(({ row }) => row.openedAt, "desc") });
   const cycle = cycles.find(c => c.id === historyId) ?? cycles[0];
   if (!cycle) return <Text tone="secondary" size="pequeno">Nenhum prazo em andamento nesta conversa.</Text>;
-  return <div className={styles.form}>
-    {cycles.length > 1 && <Select wrapValue label="Ciclo de atendimento" value={cycle.id} options={cycles.map((c,i) => ({ value:c.id,label:`${c.closedAt ? "Encerrado" : "Atual"} · ciclo ${cycles.length-i} · ${new Date(c.openedAt).toLocaleDateString("pt-BR")}` }))} onValueChange={setHistoryId} />}
-    <CycleProgress key={cycle.id} cycle={cycle} now={now} />
-    <RecordCustomFields showAdministration={false} key={`fields-${cycle.id}`} entityType="service_cycle" entityId={cycle.id} disabled={!canWrite || Boolean(cycle.closedAt)} />
-  </div>;
+  return <CycleDeadlines key={cycle.id} cycle={cycle} cycles={cycles} now={now} canWrite={canWrite} onSelectCycle={setHistoryId} />;
 }
-function CycleProgress({ cycle, now }: { cycle: ServiceCycle; now: Date }) {
+
+function CycleDeadlines({ cycle, cycles, now, canWrite, onSelectCycle }: { cycle: ServiceCycle; cycles: readonly ServiceCycle[]; now: Date; canWrite: boolean; onSelectCycle: (id: string) => void }) {
   const { data: segments = [] } = useLiveQuery({ query: q => q.from({ row: getServiceSegmentsCollection() }).where(({ row }) => eq(row.cycleId,cycle.id)) });
   const { data: hours = [], isLoading } = useLiveQuery({ query: q => q.from({ row: getServiceCycleHoursCollection() }).where(({ row }) => eq(row.cycleId,cycle.id)) });
   const { data: holidays = [] } = useLiveQuery({ query: q => q.from({ row: getServiceCycleHolidaysCollection() }).where(({ row }) => eq(row.cycleId,cycle.id)) });
-  const progress = serviceCycleProgress(cycle,segments,hours,holidays,now);
+  const custom = useCustomFieldSections({ entityType: "service_cycle", entityId: cycle.id, disabled: !canWrite || Boolean(cycle.closedAt) });
   if (isLoading) return <Text tone="secondary" size="pequeno">Carregando calendário do ciclo…</Text>;
-  const clocks = (["first","total"] as const).filter(kind => progress[kind].budget);
-  if (clocks.length === 0) return <Text tone="secondary" size="pequeno">Nenhum prazo configurado para esta conversa.</Text>;
-  if (clocks.some(kind => progress[kind].calendarMissing)) return <Text tone="secondary" size="pequeno">Configure o horário de atendimento para os prazos começarem a contar.</Text>;
-  return <div className={styles.form}>{clocks.map(kind => {
-    const clock = progress[kind]; const name = kind === "first" ? "Primeira resposta" : "Atendimento total"; const budget = formatServiceDuration(clock.budget ?? 0);
-    if (clock.waiting) return <SlaProgress key={kind} percent={0} state="on_track" label={name} status="Ainda não começou" detail={`Prazo de ${budget} úteis, a partir da primeira mensagem do cliente`} />;
+  const progress = serviceCycleProgress(cycle,segments,hours,holidays,now);
+  const calendarMissing = progress.first.calendarMissing;
+  const position = cycles.length - cycles.findIndex(c => c.id === cycle.id);
+
+  const clockSection = (kind: "first" | "total"): AccordionItem[] => {
+    const clock = progress[kind];
+    if (!clock.budget || calendarMissing) return [];
+    const title = kind === "first" ? "Primeira resposta" : "Atendimento total";
+    const budget = `${formatServiceDuration(clock.budget)} úteis`;
     const used = formatServiceDuration(Math.floor(clock.usedMs / 60000));
-    const status = kind === "first" && clock.finished ? `Respondida em ${used}` : clock.finished ? `Concluído em ${used}` : cycle.closedAt ? "Encerrado sem resposta" : clock.paused ? "Pausado" : clock.outsideHours ? "Fora do expediente" : clock.overtimeMinutes ? `${formatServiceDuration(clock.overtimeMinutes)} em atraso` : `Restam ${formatServiceDuration(clock.remainingMinutes ?? 0)}`;
-    return <SlaProgress key={kind} percent={clock.percent} state={clock.state} label={name} status={status} detail={`${used} de ${budget} úteis`} />;
-  })}{progress.currentStatus?.budget && <SlaProgress percent={progress.currentStatus.usedMs/(progress.currentStatus.budget*60000)*100} state={progress.currentStatus.state} label={`No status ${progress.currentStatus.name}`} detail={`${formatServiceDuration(Math.floor(progress.currentStatus.usedMs / 60000))} de ${formatServiceDuration(progress.currentStatus.budget)} úteis`} />}
-  {cycle.policyName && <Text size="pequeno" tone="secondary">Política: {cycle.policyName}</Text>}</div>;
+    const left = Math.max(0, Math.round(100 - clock.percent));
+    const situation = clock.waiting ? "Ainda não começou"
+      : kind === "first" && clock.finished ? "Respondida"
+      : clock.finished ? "Concluído"
+      : cycle.closedAt ? "Encerrado sem resposta"
+      : clock.overtimeMinutes ? "Vencido"
+      : clock.paused ? "Pausado"
+      : clock.outsideHours ? "Fora do expediente"
+      : "Em andamento";
+    return [{ value: kind, title, icon: <SlaRing percent={clock.waiting ? 0 : clock.percent} state={clock.waiting ? "on_track" : clock.state} />, content: <div className={styles.inlineFields}>
+      <InlineField label="Situação" value={situation} disabled />
+      <InlineField label="Prazo" numeric value={budget} disabled />
+      {clock.waiting
+        ? <InlineField label="Começa" value="Na primeira mensagem do cliente" disabled />
+        : <>
+          <InlineField label="Consumido" numeric value={`${used} · ${Math.round(clock.percent)}%`} disabled />
+          {!clock.finished && !cycle.closedAt && (clock.overtimeMinutes
+            ? <InlineField label="Em atraso" numeric value={formatServiceDuration(clock.overtimeMinutes)} disabled />
+            : <InlineField label="Restante" numeric value={`${formatServiceDuration(clock.remainingMinutes ?? 0)} · ${left}%`} disabled />)}
+        </>}
+    </div> }];
+  };
+
+  const status = progress.currentStatus;
+  const items: AccordionItem[] = [
+    ...clockSection("first"),
+    ...clockSection("total"),
+    ...(status?.budget ? [{ value: "status", title: `No status ${status.name}`, icon: <SlaRing percent={status.usedMs / (status.budget * 60000) * 100} state={status.state} />, content: <div className={styles.inlineFields}>
+      <InlineField label="Prazo" numeric value={`${formatServiceDuration(status.budget)} úteis`} disabled />
+      <InlineField label="Consumido" numeric value={formatServiceDuration(Math.floor(status.usedMs / 60000))} disabled />
+    </div> }] : []),
+    { value: "cycle", title: "Ciclo", icon: <Icon name="refresh" />, content: <div className={styles.inlineFields}>
+      {calendarMissing && <Text tone="secondary" size="pequeno">Configure o horário de atendimento para os prazos começarem a contar.</Text>}
+      {cycles.length > 1
+        ? <InlineField label="Ciclo" value={`${cycle.closedAt ? "Encerrado" : "Atual"} · ${position} de ${cycles.length}`}>
+          {close => <Select label="Ciclo de atendimento" value={cycle.id} options={cycles.map((c,i) => ({ value:c.id,label:`${c.closedAt ? "Encerrado" : "Atual"} · ciclo ${cycles.length-i} · ${new Date(c.openedAt).toLocaleDateString("pt-BR")}` }))} onValueChange={id => { if (id) onSelectCycle(id); close(); }} />}
+        </InlineField>
+        : <InlineField label="Ciclo" value={cycle.closedAt ? "Encerrado" : "Atual"} disabled />}
+      <InlineField label="Política" value={cycle.policyName ?? "Sem política de SLA"} empty={!cycle.policyName} disabled />
+      <InlineField label="Aberto em" numeric value={when(cycle.openedAt)} disabled />
+      {cycle.closedAt && <InlineField label="Encerrado em" numeric value={when(cycle.closedAt)} disabled />}
+    </div> },
+    ...fieldSections(custom, "cycle:"),
+  ];
+  return <Accordion density="compact" defaultValue={items.map(item => item.value)} items={items} />;
 }
