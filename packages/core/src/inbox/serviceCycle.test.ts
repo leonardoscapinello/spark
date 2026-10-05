@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ServiceCycleSchema, ServiceSegmentSchema } from "../schema/serviceCycle.js";
 import { BusinessHourSchema } from "../schema/stageWorkflow.js";
-import { formatServiceDuration, serviceCycleProgress } from "./serviceCycle.js";
+import { formatServiceDuration, serviceCycleProgress, serviceSlaState } from "./serviceCycle.js";
 import { resolveServiceClassification } from "./serviceConfiguration.js";
 import { ServiceStatusSchema } from "../schema/serviceConfiguration.js";
 const id = (n:number) => `00000000-0000-7000-8000-${String(n).padStart(12,"0")}`;
@@ -10,11 +10,14 @@ const hour = BusinessHourSchema.parse({ ...base,id:id(1),weekday:1,enabled:true,
 const cycle = ServiceCycleSchema.parse({ ...base,id:id(2),conversationId:id(3),policyId:id(4),policyName:"Geral",policyVersion:1,firstResponseMinutes:60,totalMinutes:480,warningPercent:80,openedAt:"2026-10-05T09:00:00Z",closedAt:null,firstInboundAt:"2026-10-05T09:00:00Z",firstRespondedAt:null });
 const segment = ServiceSegmentSchema.parse({ ...base,id:id(5),conversationId:id(3),cycleId:id(2),statusId:id(6),statusName:"Ativo",startedAt:"2026-10-05T09:00:00Z",endedAt:null,firstCounting:true,totalCounting:true,budgetMinutes:240,elapsedMs:0 });
 describe("ciclos e cronômetros", () => {
+  it("escala do prazo: metade amarela, um quarto vermelho, últimos 10% crítico", () => {
+    expect([0,49,50,74,75,89,90,99,100,130].map(serviceSlaState)).toEqual(["on_track","on_track","due_soon","due_soon","at_risk","at_risk","critical","critical","breached","breached"]);
+  });
   it("escreve minutos úteis em horas e minutos", () => {
     expect([0,45,60,140,228,360].map(formatServiceDuration)).toEqual(["0 min","45 min","1 h","2 h 20 min","3 h 48 min","6 h"]);
   });
   it("usa os mesmos limites de cor na primeira resposta, total e status", () => {
-    for (const [minutes,state] of [[29,"on_track"],[30,"due_soon"],[60,"breached"]] as const) {
+    for (const [minutes,state] of [[29,"on_track"],[30,"due_soon"],[45,"at_risk"],[54,"critical"],[60,"breached"]] as const) {
       const p=serviceCycleProgress({...cycle,totalMinutes:60,warningPercent:50},[{...segment,budgetMinutes:60}],[hour],[],new Date(Date.parse(cycle.openedAt)+minutes*60000));
       expect(p.first.state).toBe(state);expect(p.total.state).toBe(state);expect(p.currentStatus?.state).toBe(state);
     }

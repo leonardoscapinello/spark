@@ -1,4 +1,4 @@
-import { SlaProgress } from "../SlaProgress/SlaProgress.js";
+import { SlaProgress, type SlaState } from "../SlaProgress/SlaProgress.js";
 import { Children, createContext, isValidElement, useContext, useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
 import { Avatar } from "../Avatar/Avatar.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
@@ -85,7 +85,7 @@ export interface ConversationRowProps {
   /** Quem cuida: responsável ou equipe. */
   owner?: string | null;
   /** Prazo como sinal («No prazo», «Vencido») ou, com `percent`, percentual + trilho; status e detalhe abrem no hover. */
-  sla?: { tone: SignalTone; label: string; percent?: number; state?: "on_track" | "due_soon" | "breached"; status?: string; detail?: string } | null;
+  sla?: { tone: SignalTone; label: string; percent?: number; state?: SlaState; status?: string; detail?: string } | null;
   /** Mensagem da pessoa ainda não vista: nome e assunto em tinta 1, ponto de carvão ao lado da hora. */
   unread?: boolean;
   priority?: boolean;

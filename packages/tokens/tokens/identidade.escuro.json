@@ -105,6 +105,16 @@
     "$value": "rgba(224,172,106,.16)",
     "$description": "Fundo suave da atenção."
   },
+  "cr": {
+    "$type": "color",
+    "$value": "#c58ef0",
+    "$description": "Crítico: prazo nos últimos 10% ou vencido. Mais alarmante que o erro de propósito."
+  },
+  "crs": {
+    "$type": "color",
+    "$value": "rgba(197,142,240,.16)",
+    "$description": "Fundo suave do crítico."
+  },
   "in": {
     "$type": "color",
     "$value": "#8fabdc",

@@ -134,7 +134,7 @@ function ConfigurationEditor({ initial, config, onClose }: { initial: SaveServic
       <div className={styles.form}><SectionTitle level="card">Cor do status</SectionTitle><ColorPicker label="Cor do status" value={draft.color} onValueChange={color => setDraft({ ...draft, color })} /></div>
     </>}
 
-    {draft.kind === "policy" && <><Field><Label>Primeira resposta (minutos úteis)</Label><Input type="number" min="1" value={draft.firstResponseMinutes} onChange={e => setDraft({ ...draft, firstResponseMinutes: Number(e.target.value) })} /></Field><Field><Label>Atendimento total (minutos úteis)</Label><Input type="number" min="1" value={draft.totalMinutes} onChange={e => setDraft({ ...draft, totalMinutes: Number(e.target.value) })} /></Field><Field><Label>Alerta ao consumir (%)</Label><Input type="number" min="1" max="99" value={draft.warningPercent} onChange={e => setDraft({ ...draft, warningPercent: Number(e.target.value) })} /></Field></>}
+    {draft.kind === "policy" && <><Field><Label>Primeira resposta (minutos úteis)</Label><Input type="number" min="1" value={draft.firstResponseMinutes} onChange={e => setDraft({ ...draft, firstResponseMinutes: Number(e.target.value) })} /></Field><Field><Label>Atendimento total (minutos úteis)</Label><Input type="number" min="1" value={draft.totalMinutes} onChange={e => setDraft({ ...draft, totalMinutes: Number(e.target.value) })} /></Field></>}
   </div></ActionModal>;
 }
 function CategoryParentFields({ categoryId, parentId, config, onChange }: { categoryId: string; parentId: string | null; config: ServiceConfiguration; onChange: (id: string | null) => void }) {

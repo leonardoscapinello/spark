@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
-import { formatServiceDuration, serviceCycleProgress } from "@spark/core";
+import { formatServiceDuration, serviceCycleProgress, type ServiceSlaState } from "@spark/core";
 import { createServiceCyclesCollection, createServiceSegmentsCollection, createServiceCycleHoursCollection, createServiceCycleHolidaysCollection } from "@spark/data";
 let serviceCycles: ReturnType<typeof createServiceCyclesCollection> | undefined;
 export function getServiceCyclesCollection() { return serviceCycles ??= createServiceCyclesCollection(); }
@@ -18,7 +18,7 @@ export function useConversationSlaSummaries(now: Date) {
   return useMemo(() => {
     const group = <T extends { cycleId: string }>(rows: readonly T[]) => { const groups = new Map<string,T[]>(); for (const row of rows) { const bucket=groups.get(row.cycleId) ?? []; bucket.push(row); groups.set(row.cycleId,bucket); } return groups; };
     const bySegment=group(segments),byHour=group(hours),byHoliday=group(holidays);
-    const result = new Map<string, { tone: "neutral" | "warning" | "danger"; label: string; status: string; detail: string; percent: number; state: "on_track" | "due_soon" | "breached" }>();
+    const result = new Map<string, { tone: "neutral" | "warning" | "danger"; label: string; status: string; detail: string; percent: number; state: ServiceSlaState }>();
     for (const cycle of cycles.filter(c => !c.closedAt)) {
       const progress = serviceCycleProgress(cycle,bySegment.get(cycle.id) ?? [],byHour.get(cycle.id) ?? [],byHoliday.get(cycle.id) ?? [],now);
       const firstPending = !progress.first.finished && !progress.first.waiting;
@@ -27,7 +27,7 @@ export function useConversationSlaSummaries(now: Date) {
       const used = Math.floor(clock.usedMs/60000);
       const status = clock.state === "breached" ? "Vencido" : clock.paused ? "Pausado" : clock.outsideHours ? "Fora do expediente" : "Em andamento";
       const left = clock.overtimeMinutes ? `${formatServiceDuration(clock.overtimeMinutes)} em atraso` : `restam ${formatServiceDuration(clock.remainingMinutes ?? 0)}`;
-      result.set(cycle.conversationId,{ tone:clock.state === "breached" ? "danger" : clock.state === "due_soon" ? "warning" : "neutral",percent:clock.percent,state:clock.state,label:firstPending ? "Primeira resposta" : "Atendimento total",status,detail:`${formatServiceDuration(used)} de ${formatServiceDuration(clock.budget)} úteis · ${left}` });
+      result.set(cycle.conversationId,{ tone:clock.state === "on_track" ? "neutral" : clock.state === "due_soon" ? "warning" : "danger",percent:clock.percent,state:clock.state,label:firstPending ? "Primeira resposta" : "Atendimento total",status,detail:`${formatServiceDuration(used)} de ${formatServiceDuration(clock.budget)} úteis · ${left}` });
     }
     return result;
   },[cycles,segments,hours,holidays,now]);

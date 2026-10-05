@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import styles from "./SlaProgress.module.css";
 
-type SlaState = "on_track" | "due_soon" | "breached";
+/** Faixas do prazo restante: > 50% · ≤ 50% atenção · ≤ 25% risco · ≤ 10% crítico · vencido. */
+export type SlaState = "on_track" | "due_soon" | "at_risk" | "critical" | "breached";
 
 export interface SlaRingProps { percent: number; state: SlaState; size?: "small" | "large"; children?: ReactNode }
 /** Anel regressivo do prazo: começa cheio e esvazia conforme `percent` (consumido) sobe. Decorativo — quem usa dá o nome acessível. */

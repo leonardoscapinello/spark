@@ -1,11 +1,25 @@
 import type { ServiceCycle, ServiceSegment } from "../schema/serviceCycle.js";
 import type { BusinessHour, Holiday } from "../schema/stageWorkflow.js";
 import { operatingMillisecondsBetween } from "../rules/stageWorkflow.js";
+/**
+ * Faixa do prazo pelo quanto já foi consumido (o anel mostra o que resta):
+ * resta mais da metade → no prazo; ≤ 50% → atenção; ≤ 25% → em risco;
+ * ≤ 10% → crítico; acabou → vencido. A mesma escala para todo relógio de atendimento.
+ */
+export type ServiceSlaState = "on_track" | "due_soon" | "at_risk" | "critical" | "breached";
+export function serviceSlaState(percentUsed: number): ServiceSlaState {
+  if (percentUsed >= 100) return "breached";
+  if (percentUsed >= 90) return "critical";
+  if (percentUsed >= 75) return "at_risk";
+  if (percentUsed >= 50) return "due_soon";
+  return "on_track";
+}
+
 export function serviceCycleProgress(cycle: ServiceCycle, segments: readonly ServiceSegment[], hours: readonly BusinessHour[], holidays: readonly Holiday[], now: Date) {
   const relevant = segments.filter(s => s.cycleId === cycle.id);
   const current = relevant.find(s => !s.endedAt);
   const elapsed = (s: ServiceSegment) => s.endedAt ? s.elapsedMs : operatingMillisecondsBetween(new Date(s.startedAt), now, hours, holidays);
-  const stateFor = (percent: number) => percent >= 100 ? "breached" as const : percent >= cycle.warningPercent ? "due_soon" as const : "on_track" as const;
+  const stateFor = serviceSlaState;
   const measure = (kind: "first" | "total", budget: number | null) => {
     const usedMs = relevant.reduce((sum, s) => sum + ((kind === "first" ? s.firstCounting : s.totalCounting) ? elapsed(s) : 0), 0);
     const waiting = kind === "first" && cycle.firstInboundAt === null;
