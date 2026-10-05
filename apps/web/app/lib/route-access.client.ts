@@ -12,7 +12,7 @@ const LANDING_ROUTES: ReadonlyArray<readonly [Capability, string]> = [
   ["audit_logs:read", "/admin/audit-log"],
 ];
 
-export const ADMIN_CAPABILITIES: readonly Capability[] = ["users:manage", "permission_groups:manage", "integrations:read", "audit_logs:read", "settings:manage"];
+export const ADMIN_CAPABILITIES: readonly Capability[] = ["users:manage", "permission_groups:manage", "integrations:read", "audit_logs:read", "settings:manage", "catalog:write"];
 
 export async function requireCapability(capability: Capability): Promise<AppSession> {
   const session = await restoreSession();

@@ -34,6 +34,10 @@ const sections: { title: string; areas: AdminArea[] }[] = [
     { title: "Funis e etapas", to: "/admin/data/stage-fields", icon: "briefcase", description: "Selecione a etapa para configurar campos, transições e prazos.", capability: "pipelines:manage" },
     { title: "Auditoria", to: "/admin/audit-log", icon: "chart", description: "Consulte alterações de acesso e equipe.", capability: "audit_logs:read" },
   ] },
+  { title: "Comercial", areas: [
+    { title: "Cupons", to: "/admin/commercial/cupons", icon: "tag", description: "Códigos de desconto pré-configurados para negócios e checkout.", capability: "catalog:write" },
+    { title: "Parcelamento e juros", to: "/admin/commercial/parcelamento", icon: "coin", description: "Máximo de parcelas, sem juros até, juros mensais e parcela mínima.", capability: "catalog:write" },
+  ] },
   { title: "Organização", areas: [
     { title: "Calendário útil e feriados", to: "/admin/calendar", icon: "calendar", description: "Expediente, intervalos e exceções usados nos prazos.", capability: "pipelines:manage" },
     { title: "Aparência", to: "/admin/appearance", icon: "image", description: "Personalize cores e tipografia da organização.", capability: "settings:manage" },

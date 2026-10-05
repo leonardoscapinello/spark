@@ -1,0 +1,8 @@
+/* Configurações → Comercial: a tela só posiciona (ADR-0045). */
+.toolbar { display: flex; justify-content: flex-end; }
+.form { display: grid; gap: var(--space-4); min-width: 0; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(var(--ui-cardMinWidth) * 0.6), 1fr)); gap: var(--space-4); align-items: end; }
+.name { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
+/* Política ao lado da simulação; empilha em tela estreita. */
+.policyEditor { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(var(--ui-cardMinWidth), 1fr); gap: var(--space-6); align-items: start; }
+@media (max-width: 900px) { .policyEditor { grid-template-columns: minmax(0, 1fr); } }

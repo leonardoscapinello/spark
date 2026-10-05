@@ -117,6 +117,10 @@ const modules: NavModule[] = [
       { label: "Campos personalizados", to: "/admin/data/custom-fields", icon: "file", capability: "settings:manage" },
       { label: "Funis e etapas", to: "/admin/data/stage-fields", icon: "briefcase", capability: "pipelines:manage" },
     ] },
+    { title: "Comercial", icon: "wallet", items: [
+      { label: "Cupons", to: "/admin/commercial/cupons", icon: "tag", capability: "catalog:write" },
+      { label: "Parcelamento e juros", to: "/admin/commercial/parcelamento", icon: "coin", capability: "catalog:write" },
+    ] },
     { title: "Organização", icon: "building", items: [
       { label: "Calendário útil e feriados", to: "/admin/calendar", icon: "calendar", capability: "pipelines:manage" },
       { label: "Aparência", to: "/admin/appearance", icon: "image", capability: "settings:manage" },
