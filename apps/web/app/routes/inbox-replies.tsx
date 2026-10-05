@@ -9,6 +9,7 @@ import { getCannedRepliesCollection } from "../lib/canned-replies-collection.cli
 import { requireCapability } from "../lib/route-access.client";
 import { getTeamsCollection } from "../lib/teams-collection.client";
 import styles from "./inbox-replies.module.css";
+import { useUrlEditor } from "../lib/url-state.client";
 
 export async function clientLoader() {
   await requireCapability("inbox:read");
@@ -40,10 +41,12 @@ export default function InboxReplies() {
     { id: "status", label: "Situação", cell: (reply) => <Signal tone={reply.archivedAt ? "neutral" : "success"}>{reply.archivedAt ? "Arquivada" : "Ativa"}</Signal> },
   ];
 
-  function openCreate() {
+  // A edição mora na URL (?editar=): link compartilhável, e o Voltar fecha a modal.
+  const { openCreate, openEdit, close: closeEditor } = useUrlEditor<CannedReply>(replies, modalOpen, { create: () => fillCreate(), edit: (item) => fillEdit(item), close: () => setModalOpen(false) });
+  function fillCreate() {
     setEditingId(null); setTitle(""); setShortcut(""); setBody(""); setTeamId(null); setModalOpen(true);
   }
-  function openEdit(reply: CannedReply) {
+  function fillEdit(reply: CannedReply) {
     setEditingId(reply.id); setTitle(reply.title); setShortcut(reply.shortcut); setBody(reply.body); setTeamId(reply.teamId); setModalOpen(true);
   }
   async function save() {
@@ -75,7 +78,7 @@ export default function InboxReplies() {
       count={`${visible.length} ${visible.length === 1 ? "resposta" : "respostas"}`}
     />}
     {!firstRun && <DataTable label="Respostas prontas" rows={visible} columns={columns} rowKey={(reply) => reply.id} rowLabel={(reply) => reply.title} state={isLoading && !replies.length ? "loading" : "ready"} emptyText={showArchived ? "Nenhuma resposta arquivada." : "Nenhuma resposta pronta."} {...(canWrite ? { onRowOpen: (reply: CannedReply) => openEdit(reply), actions: (reply: CannedReply) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${reply.title}`} loading={busyId === reply.id} menu={<><MenuItem onClick={() => openEdit(reply)}>Editar resposta</MenuItem><MenuItem onClick={() => void toggleArchive(reply)}>{reply.archivedAt ? "Restaurar resposta" : "Arquivar resposta"}</MenuItem></>} /> } : {})} />}
-    <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar resposta pronta" : "Nova resposta pronta"} confirmLabel={editingId ? "Salvar alterações" : "Criar resposta"} errorText="Revise o título, o atalho e o conteúdo. O atalho deve ser único." onConfirm={save}>
+    <ActionModal open={modalOpen} onOpenChange={(next) => { if (!next) closeEditor(); }} title={editingId ? "Editar resposta pronta" : "Nova resposta pronta"} confirmLabel={editingId ? "Salvar alterações" : "Criar resposta"} errorText="Revise o título, o atalho e o conteúdo. O atalho deve ser único." onConfirm={save}>
       <div className={styles.form}><Field><Label>Título</Label><Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Boas-vindas" maxLength={120} /></Field><Field><Label>Atalho</Label><Input value={shortcut} onChange={(event) => setShortcut(event.target.value)} placeholder="boas-vindas" maxLength={50} /></Field><Field><Label>Equipe</Label><Select label="Equipe que pode usar a resposta" value={teamId} options={[{ value: "", label: "Todas as equipes" }, ...teams.filter((team) => !team.archivedAt).map((team) => ({ value: team.id, label: team.name }))]} onValueChange={(value) => setTeamId(value || null)} /></Field><Field><Label>Mensagem</Label><Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={8} maxLength={20_000} placeholder="Olá! Como posso ajudar?" /></Field></div>
     </ActionModal>
   </PageFrame>;

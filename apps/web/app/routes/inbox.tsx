@@ -1,4 +1,5 @@
 import { useConversationSlaSummaries } from "../lib/service-cycles.client";
+import { revalidateOnPathOnly, useUrlState } from "../lib/url-state.client";
 import { ConversationDeadlines, ConversationService } from "../service/ConversationService";
 import { ConversationPerson } from "../service/ConversationPerson";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -43,6 +44,8 @@ type InboxLayout = "chat" | "list";
 /** Uma caixa por onde a pessoa fala: a conexão (ou o canal, sem conexão) e a conversa mais recente nela. */
 interface PersonInbox { key: string; channel: ConversationChannel; title: string; handle: string | null; conversation: Conversation }
 
+export const shouldRevalidate = revalidateOnPathOnly;
+
 export async function clientLoader() {
   const session = await requireCapability("inbox:read");
   void Promise.allSettled([
@@ -76,11 +79,14 @@ export default function Inbox() {
   const { data: connections = [] } = useLiveQuery({ query: (q) => canReadIntegrations ? q.from({ connections: getIntegrationConnectionsCollection() }) : undefined });
   const { data: whatsappTemplates = [] } = useLiveQuery({ query: (q) => q.from({ templates: getWhatsAppTemplatesCollection() }).where(({ templates: item }) => eq(item.status, "APPROVED")) });
   const filter = parseInboxFilter(searchParams.get("box"));
-  const [layout, setLayout] = useState<InboxLayout>("chat");
-  const [mobileView, setMobileView] = useState<"list" | "thread">("list");
+  // Formato e conversa aberta moram na URL: o link copiado abre a mesma tela.
+  const [viewParam, setViewParam] = useUrlState("view");
+  const layout: InboxLayout = viewParam === "lista" ? "list" : "chat";
+  const setLayout = (next: InboxLayout) => setViewParam(next === "list" ? "lista" : null);
+  const [mobileView, setMobileView] = useState<"list" | "thread">(() => searchParams.get("conversation") ? "thread" : "list");
   const [now, setNow] = useState(() => new Date());
   const slaSummaries = useConversationSlaSummaries(now);
-  const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get("conversation"));
+  const [selectedId, setSelectedId] = useUrlState("conversation");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">("recent");
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -215,10 +221,6 @@ export default function Inbox() {
   for (const message of messages) if (!known.current.ids.has(message.id)) { known.current.ids.add(message.id); known.current.fresh.add(message.id); }
 
   useEffect(() => { if (selected && selected.id !== selectedId) setSelectedId(selected.id); }, [selected, selectedId]);
-  useEffect(() => {
-    const linkedConversation = searchParams.get("conversation");
-    if (linkedConversation) { setSelectedId(linkedConversation); setMobileView("thread"); }
-  }, [searchParams]);
   useEffect(() => {
     const createFor = searchParams.get("createFor");
     if (!createFor || !canWrite || !canReadContacts) return;

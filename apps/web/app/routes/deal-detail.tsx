@@ -76,6 +76,8 @@ import { DealTags } from "../crm/DealTags";
 import { useDealTags } from "../lib/tags.client";
 import { getStageTransitionsCollection } from "../lib/deals-collections.client";
 import styles from "./deal-detail.module.css";
+import { RouteTabs } from "../lib/RouteTabs";
+import { revalidateOnPathOnly, useUrlState } from "../lib/url-state.client";
 
 const ACTIVITY_TYPE_OPTIONS = ACTIVITY_TYPES.map((value) => ({ value, label: ACTIVITY_TYPE_LABELS[value] }));
 const ACTIVITY_COMPOSER_TABS: readonly { id: ActivityType | "note"; label: string; icon: IconName }[] = [
@@ -100,6 +102,8 @@ const ACTIVITY_FORM_HINTS: Record<ActivityType, string> = {
   email: "Programe o acompanhamento por e-mail para a pessoa vinculada.",
   lunch: "Reserve o período e informe o local do encontro.",
 };
+
+export const shouldRevalidate = revalidateOnPathOnly;
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("deals:read");
@@ -145,9 +149,13 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const dealsCollection = getDetailDealsCollection(dealIdFactory.from(params.dealId));
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [itemModalClosing, setItemModalClosing] = useState(false);
-  const [quickPanel, setQuickPanel] = useState<"stage" | "commercial">("stage");
+  const [quickPanelParam, setQuickPanelParam] = useUrlState("painel");
+  const quickPanel: "stage" | "commercial" = quickPanelParam === "comercial" ? "commercial" : "stage";
+  const setQuickPanel = (next: "stage" | "commercial") => setQuickPanelParam(next === "commercial" ? "comercial" : null);
   const [embeddedItemEditorOpen, setEmbeddedItemEditorOpen] = useState(false);
-  const [pageTab, setPageTab] = useState("atividade");
+  const [pageTabParam, setPageTabParam] = useUrlState("aba");
+  const pageTab = pageTabParam ?? "atividade";
+  const setPageTab = (next: string) => setPageTabParam(next === "atividade" ? null : next);
   const [openSections, setOpenSections] = useState<string[]>(["resumo", "detalhes"]);
   const stagesCollection = getStagesCollection();
   const pipelinesCollection = getPipelinesCollection();
@@ -926,7 +934,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     {embedded ? <div className={styles.quickGrid}>
       <div className={styles.quickContext}>
         {valueContent}
-        <Surface className={styles.quickTabs}><Tabs label="Contexto do negócio" defaultValue="resumo" items={[
+        <Surface className={styles.quickTabs}><RouteTabs urlKey="contexto" label="Contexto do negócio" items={[
           { value: "resumo", label: "Resumo", content: <div className={styles.stack}>{summaryFields}{tagsContent}</div> },
           { value: "detalhes", label: "Detalhes", content: detailsContent },
           { value: "pessoas", label: "Vínculos", content: relatedContent },

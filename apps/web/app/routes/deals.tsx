@@ -17,7 +17,10 @@ import { PhaseFields } from "../crm/PhaseFields";
 import { StageSettingsButton } from "../crm/StageSettings";
 import { useDealTags } from "../lib/tags.client";
 import styles from "./deals.module.css";
+import { revalidateOnPathOnly, useUrlState } from "../lib/url-state.client";
 const DealWorkspace = lazy(() => import("./deal-detail").then((m) => ({ default: m.DealWorkspace })));
+
+export const shouldRevalidate = revalidateOnPathOnly;
 
 export async function clientLoader() {
   await requireCapability("deals:read");
@@ -31,7 +34,8 @@ export async function clientLoader() {
 
 export default function Deals() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [openedDealId, setOpenedDealId] = useState<string | null>(null);
+  // Negócio aberto na visão rápida mora na URL (?deal=): link compartilhável, e o Voltar fecha.
+  const [openedDealId, setOpenedDealId] = useUrlState("deal", { history: "push" });
   const tagsByDeal = useDealTags();
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const pipelinesCollection = getPipelinesCollection();

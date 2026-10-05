@@ -34,6 +34,7 @@ import {
 } from "@spark/ui-web";
 import { restoreSession } from "../lib/auth.client";
 import styles from "./admin-permission-groups.module.css";
+import { useUrlEditor } from "../lib/url-state.client";
 
 const CAPABILITY_LABELS: Record<Capability, string> = {
   "contacts:read": "Ver pessoas",
@@ -119,14 +120,16 @@ export default function AdminPermissionGroups() {
     { id: "permissions", label: "Permissões", cell: (group) => <div className={styles.groupSummary}><Text weight="medium">{group.capabilities.length} {group.capabilities.length === 1 ? "permissão" : "permissões"}</Text><Text size="pequeno" tone="secondary" truncate>{group.capabilities.length ? group.capabilities.slice(0, 3).map((capability) => CAPABILITY_LABELS[capability as Capability]).join(" · ") : "Sem acesso configurado"}</Text></div>, sortValue: (group) => group.capabilities.length },
   ];
 
-  function openCreate() {
+  // A edição mora na URL (?editar=): link compartilhável, e o Voltar fecha a modal.
+  const { openCreate, openEdit, close: closeEditor } = useUrlEditor<PermissionGroupDto>(groups, modalOpen, { create: () => fillCreate(), edit: (item) => fillEdit(item), close: () => setModalOpen(false) });
+  function fillCreate() {
     setEditingId(null);
     setName("");
     setCapabilities([]);
     setModalOpen(true);
   }
 
-  function openEdit(group: PermissionGroupDto) {
+  function fillEdit(group: PermissionGroupDto) {
     setEditingId(group.id);
     setName(group.name);
     setCapabilities(group.capabilities as Capability[]);
@@ -186,7 +189,7 @@ export default function AdminPermissionGroups() {
 
       <ActionModal
         open={modalOpen}
-        onOpenChange={setModalOpen}
+        onOpenChange={(next) => { if (!next) closeEditor(); }}
         title={editingId ? "Editar grupo" : "Novo grupo"}
         size="wide"
         confirmLabel={editingId ? "Salvar alterações" : "Criar grupo"}

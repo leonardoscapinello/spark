@@ -32,6 +32,10 @@ import layout from "./contact-profile-layout.module.css";
 import { getCustomFieldsCollection } from "../lib/custom-fields-collection.client";
 import { getCustomFieldOptionsCollection, getCustomFieldValuesCollection } from "../lib/custom-field-data.client";
 import { RecordCustomFields } from "../service/RecordCustomFields";
+import { RouteTabs } from "../lib/RouteTabs";
+import { revalidateOnPathOnly } from "../lib/url-state.client";
+
+export const shouldRevalidate = revalidateOnPathOnly;
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("contacts:read");
@@ -333,7 +337,7 @@ export function ContactProfile({ contactId, embedded = false, onBack }: { contac
           }, { value: "custom", title: "Campos e grupos", content: <RecordCustomFields entityType="contact" entityId={data.id} disabled={!canWrite} onSave={(field,value) => writeAccepted((metadata) => collection.update(data.id, { metadata }, draft => { draft.customFields = { ...draft.customFields, [field.key]: value }; }))} /> }]} />
         </div>
         <div className={layout.personWork}>
-          <Tabs fill={!embedded} label="Área de trabalho da pessoa" items={[
+          <RouteTabs urlKey={embedded ? "abaPessoa" : "aba"} fill={!embedded} label="Área de trabalho da pessoa" items={[
             ...(canReadActivities ? [{ value: "atividades", label: "Atividades", content: activitiesContent }] : []),
             ...(canReadDeals ? [{ value: "negocios", label: `Negócios (${deals.length})`, content: <Card title="Negócios" actions={canWriteDeals ? <Button size="sm" variant="secondary" onClick={() => void navigate(`/deals?createFor=${contactId}`)}>Novo negócio</Button> : undefined}>
             {deals.length === 0 ? <Text size="pequeno" tone="muted">Nenhum negócio desta pessoa.</Text> : <RowList label="Negócios desta pessoa">{deals.map((deal, index) => <ListRow key={deal.id} index={index} icon="briefcase" title={deal.name} description={deal.status === "open" ? "Em aberto" : deal.status === "won" ? <Signal tone="success">Ganho</Signal> : <Signal tone="danger">Perdido</Signal>} render={<Link to={`/deals/${deal.id}`} />} />)}</RowList>}

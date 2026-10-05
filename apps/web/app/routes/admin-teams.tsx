@@ -13,6 +13,7 @@ import { teamId as teamIdFactory } from "@spark/core";
 import { ActionModal, Avatar, AvatarStack, Button, Chip, CollectionToolbar, DataTable, EmptyState, Field, Icon, Input, Label, MenuButton, MenuItem, PageFrame, PageHeader, PageState, PersonChoice, RecordIdentity, SearchField, Select, Text, Textarea, notify, type TableColumn } from "@spark/ui-web";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./admin-teams.module.css";
+import { useUrlEditor } from "../lib/url-state.client";
 
 export async function clientLoader() {
   await requireCapability("users:manage");
@@ -64,7 +65,9 @@ export default function AdminTeams() {
     { id: "status", label: "Situação", cell: (team) => <Chip dot={team.archivedAt ? "var(--tx3)" : "var(--ok)"}>{team.archivedAt ? "Arquivado" : "Ativo"}</Chip>, sortValue: (team) => team.archivedAt ?? "" },
   ];
 
-  function openCreate() {
+  // A edição mora na URL (?editar=): link compartilhável, e o Voltar fecha a modal.
+  const { openCreate, openEdit, close: closeEditor } = useUrlEditor<TeamDto>(teams, modalOpen, { create: () => fillCreate(), edit: (item) => fillEdit(item), close: () => setModalOpen(false) });
+  function fillCreate() {
     setEditingId(null);
     setName("");
     setDescription("");
@@ -72,7 +75,7 @@ export default function AdminTeams() {
     setModalOpen(true);
   }
 
-  function openEdit(team: TeamDto) {
+  function fillEdit(team: TeamDto) {
     setEditingId(team.id);
     setName(team.name);
     setDescription(team.description ?? "");
@@ -134,7 +137,7 @@ export default function AdminTeams() {
       onRowOpen={(team) => openEdit(team)}
       actions={(team) => <MenuButton size="sm" variant="ghost" shape="rounded" iconOnly indicator={false} icon={<Icon name="more" />} aria-label={`Ações de ${team.name}`} loading={busyId === team.id} menu={<><MenuItem onClick={() => openEdit(team)}>Editar time</MenuItem><MenuItem onClick={() => void toggleArchive(team)}>{team.archivedAt ? "Restaurar time" : "Arquivar time"}</MenuItem></>} />}
     />}</>}
-    <ActionModal open={modalOpen} onOpenChange={setModalOpen} title={editingId ? "Editar time" : "Novo time"} confirmLabel={editingId ? "Salvar alterações" : "Criar time"} errorText="Não foi possível salvar o time. Revise os dados e tente novamente." onConfirm={save}>
+    <ActionModal open={modalOpen} onOpenChange={(next) => { if (!next) closeEditor(); }} title={editingId ? "Editar time" : "Novo time"} confirmLabel={editingId ? "Salvar alterações" : "Criar time"} errorText="Não foi possível salvar o time. Revise os dados e tente novamente." onConfirm={save}>
       <div className={styles.modalFields}>
         <Field><Label>Nome</Label><Input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Vendas" /></Field>
         <Field><Label>Descrição</Label><Textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Responsabilidade principal deste time" /></Field>

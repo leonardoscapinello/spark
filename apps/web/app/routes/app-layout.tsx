@@ -5,6 +5,7 @@ import type { Capability } from "@spark/core";
 import { RegionBoundary, Alert, AppContent, AppShell, Toolbar, Skeleton, Spinner, Text, Avatar, Button, Icon, LinkTabs, MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem, RailBrand, RailGroup, RailItem, Menu, MenuTrigger, MenuContent } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
+import { revalidateOnPathOnly } from "../lib/url-state.client";
 import { usePreference } from "../lib/preferences.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { ADMIN_CAPABILITIES } from "../lib/route-access.client";
@@ -175,6 +176,8 @@ function usesTopNavigation(moduleId: string, pathname: string) {
 }
 
 /** Session restoration happens on the client because it reads local storage. */
+export const shouldRevalidate = revalidateOnPathOnly;
+
 export async function clientLoader() {
   const session = await restoreSession();
   if (!session) throw redirect("/login");

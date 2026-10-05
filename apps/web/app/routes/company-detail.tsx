@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { companyId as companyIdFactory, email as buildEmail, formatBRL, formatPhone, phone as buildPhone, toCents, userId as userIdFactory } from "@spark/core";
 import { syncedAmount, writeAccepted } from "@spark/data";
-import { Accordion, ActionModal, Avatar, BackLink, Button, Card, Field, InlineField, Icon, Input, Label, ListRow, PageFrame, RecordPageHeader, RowList, SearchSelect, Select, Signal, Skeleton, Tabs, Text, Textarea, Timeline, UserAvatar, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
+import { Accordion, ActionModal, Avatar, BackLink, Button, Card, Field, InlineField, Icon, Input, Label, ListRow, PageFrame, RecordPageHeader, RowList, SearchSelect, Select, Signal, Skeleton, Text, Textarea, Timeline, UserAvatar, userSelectOption, notify, type SelectOption } from "@spark/ui-web";
 import type { Route } from "./+types/company-detail";
 import { getCompaniesCollection } from "../lib/companies-collection.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
@@ -16,6 +16,10 @@ import { groupTimelineEvents } from "../lib/event-presentation";
 import { requireCapability } from "../lib/route-access.client";
 import { useLinkPreviewRequest } from "../lib/link-previews.client";
 import styles from "./company-detail.module.css";
+import { RouteTabs } from "../lib/RouteTabs";
+import { revalidateOnPathOnly } from "../lib/url-state.client";
+
+export const shouldRevalidate = revalidateOnPathOnly;
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const session = await requireCapability("companies:read");
@@ -164,7 +168,7 @@ export function CompanyProfile({ companyId, embedded = false }: { companyId: str
       </div>
 
       <div className={styles.work}>
-        <Tabs fill={!embedded} label="Área de trabalho da empresa" items={[
+        <RouteTabs urlKey={embedded ? "abaEmpresa" : "aba"} fill={!embedded} label="Área de trabalho da empresa" items={[
         ...(canReadContacts ? [{ value: "people", label: "Pessoas", content: <Card title="Pessoas" description="Pessoas que trabalham ou se relacionam com esta empresa." actions={canLinkContacts ? <Button size="sm" variant="secondary" onClick={() => setLinkContactOpen(true)}>Vincular pessoa</Button> : undefined}>
           {linkedContacts.length ? <RowList label="Pessoas desta empresa">{linkedContacts.map((contact, index) => <ListRow key={contact.id} index={index} leading={<Avatar name={contact.name} />} title={contact.name} description={contact.email ?? "Sem e-mail"} render={<Link to={`/contacts/${contact.id}`} />} trailing={canLinkContacts ? <Button size="sm" variant="ghost" loading={busyLink === contact.id} onClick={() => void unlinkContact(contact.id)}>Desvincular</Button> : undefined} />)}</RowList> : <Text size="pequeno" tone="muted">Nenhuma pessoa vinculada.</Text>}
         </Card> }] : []),

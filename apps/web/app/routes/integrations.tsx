@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
 import {
   getSparkApiBaseUrl,
@@ -46,6 +46,7 @@ import { getUsersCollection } from "../lib/users-collection.client";
 import { getSession } from "../lib/auth.client";
 import { requireCapability } from "../lib/route-access.client";
 import styles from "./integrations.module.css";
+import { useUrlState } from "../lib/url-state.client";
 
 interface ProviderDefinition {
   provider: IntegrationProvider;
@@ -185,7 +186,20 @@ export default function Integrations() {
     return matchesSearch && matchesStatus;
   });
 
-  function open(definition: ProviderDefinition, connection?: IntegrationConnection) {
+  // A configuração aberta mora na URL: ?conectar=<provedor> ou ?editar=<conexão>.
+  const [editParam, setEditParam] = useUrlState("editar", { history: "push" });
+  const [connectParam, setConnectParam] = useUrlState("conectar", { history: "push" });
+  const open = (definition: ProviderDefinition, connection?: IntegrationConnection) => { if (connection) setEditParam(connection.id); else setConnectParam(definition.provider); };
+  const closeEditor = () => { setEditParam(null); setConnectParam(null); };
+  useEffect(() => {
+    if (!editParam && !connectParam) { if (editing) setEditing(null); return; }
+    if (editing) return;
+    const connection = editParam ? connections?.find(item => item.id === editParam) : undefined;
+    const definition = PROVIDERS.find(item => item.provider === (connection?.provider ?? connectParam));
+    if (definition) fill(definition, connection);
+  }, [editParam, connectParam, editing, connections]);
+
+  function fill(definition: ProviderDefinition, connection?: IntegrationConnection) {
     setEditing(definition);
     setEditingId(connection?.id ?? null);
     setConnectionName(connection?.name ?? definition.name);
@@ -296,7 +310,7 @@ export default function Integrations() {
       <ActionModal
         open={Boolean(editing)}
         onOpenChange={(open) => {
-          if (!open) setEditing(null);
+          if (!open) closeEditor();
         }}
         title={editing ? `Configurar ${editing.name}` : "Configurar integração"}
         confirmLabel="Salvar configuração"
