@@ -44,6 +44,8 @@
 .stack { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .items { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-5); min-width: 0; }
 .itemList { flex: 1 1 var(--ui-previewColumn); min-width: 0; }
+/* Itens e, logo abaixo, os ajustes do negócio (ADR-0046). */
+.pricingColumn { display: grid; gap: var(--space-6); min-width: 0; }
 .itemsSummary { flex: 0 1 var(--ui-cardMinWidth); min-width: min(100%, var(--ui-cardMinWidth)); margin-inline-start: auto; }
 .valueHint { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 

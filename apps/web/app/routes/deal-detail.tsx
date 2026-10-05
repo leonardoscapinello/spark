@@ -25,8 +25,8 @@ import {
   ACTIVITY_TYPE_LABELS,
   activityEndsAt,
   overlappingScheduleIntervals,
-  dealProductTotals,
-  dealProductsSummary,
+  pricingItemTotals,
+  money,
   formatQuantity,
   parseQuantity,
   formatBasisPoints,
@@ -72,6 +72,7 @@ import { requireCapability } from "../lib/route-access.client";
 import { RecordCustomFields } from "../service/RecordCustomFields";
 import { useDealPresence } from "../lib/deal-presence.client";
 import { RelatedRecords } from "../crm/RelatedRecords";
+import { DealAdjustments, DealPricingSummary, INTERVAL_LABEL, useDealPricing } from "../crm/DealPricing";
 import { DealTags } from "../crm/DealTags";
 import { useDealTags } from "../lib/tags.client";
 import { getStageTransitionsCollection } from "../lib/deals-collections.client";
@@ -232,6 +233,9 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const [itemQuantity, setItemQuantity] = useState("1");
   const [itemUnitAmount, setItemUnitAmount] = useState<Money | null>(null);
   const [itemDiscount, setItemDiscount] = useState<number | null>(0);
+  const [itemDiscountMode, setItemDiscountMode] = useState<"percent" | "amount">("percent");
+  const [itemDiscountAmount, setItemDiscountAmount] = useState<Money | null>(null);
+  const [itemRecurring, setItemRecurring] = useState(false);
   const [itemTax, setItemTax] = useState<number | null>(0);
   const [busyActivityId, setBusyActivityId] = useState<string | null>(null);
   const [lossModalOpen, setLossModalOpen] = useState(false);
@@ -335,17 +339,20 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       detalhes: marca(gaps.filter((issue) => issue.fieldKey.startsWith("custom:"))),
     };
   }, [customFields, customValues, deal, dealItems.length, fieldRules]);
-  const itemsSummary = useMemo(() => dealProductsSummary(dealItems.map((item) => ({ ...item, unitAmount: syncedAmount(item.unitAmount) }))), [dealItems]);
   const itemPreview = useMemo(() => {
     const quantityMilli = parseQuantity(itemQuantity);
-    if (quantityMilli === null || itemUnitAmount === null || itemDiscount === null || itemTax === null) return null;
+    if (quantityMilli === null || itemUnitAmount === null || itemTax === null) return null;
+    if (itemDiscountMode === "percent" ? itemDiscount === null : itemDiscountAmount === null) return null;
     try {
-      return dealProductTotals({ quantityMilli, unitAmount: itemUnitAmount, discountBasisPoints: itemDiscount, taxBasisPoints: itemTax });
+      return pricingItemTotals({ quantityMilli, unitAmount: itemUnitAmount, discountBasisPoints: itemDiscountMode === "percent" ? itemDiscount ?? 0 : 0, discountAmount: itemDiscountMode === "amount" ? itemDiscountAmount ?? undefined : undefined, taxBasisPoints: itemTax });
     } catch (error) {
       if (error instanceof InvalidMoneyError) return null;
       throw error;
     }
-  }, [itemQuantity, itemUnitAmount, itemDiscount, itemTax]);
+  }, [itemQuantity, itemUnitAmount, itemDiscount, itemDiscountMode, itemDiscountAmount, itemTax]);
+  // Precificação do negócio (ADR-0046): a mesma conta que o servidor grava.
+  const pricingState = useDealPricing(deal ?? undefined, dealItems);
+  const dealValue = dealItems.length > 0 ? pricingState.pricing.contractValue : null;
   // «Foco» é o que ainda não foi feito, do mais antigo para o mais novo — o que
   // venceu aparece primeiro; «Histórico» guarda o que já foi concluído.
   const focusActivities = useMemo(() => orderedActivities.filter((activity) => !activity.completed), [orderedActivities]);
@@ -467,9 +474,14 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       setItemQuantity(formatQuantity(item.quantityMilli));
       setItemUnitAmount(syncedAmount(item.unitAmount));
       setItemDiscount(item.discountBasisPoints);
+      const fixedDiscount = item.discountAmount === undefined ? 0 : toCents(syncedAmount(item.discountAmount));
+      setItemDiscountMode(fixedDiscount > 0 ? "amount" : "percent");
+      setItemDiscountAmount(fixedDiscount > 0 ? syncedAmount(item.discountAmount!) : null);
+      setItemRecurring(item.recurring ?? false);
       setItemTax(item.taxBasisPoints);
     } else {
       setEditingItemId(null); setItemProductId(""); setItemName(""); setItemQuantity("1"); setItemUnitAmount(null); setItemDiscount(0); setItemTax(0);
+      setItemDiscountMode("percent"); setItemDiscountAmount(null); setItemRecurring(false);
     }
     if (embedded) setEmbeddedItemEditorOpen(true);
     else setItemModalOpen(true);
@@ -492,11 +504,12 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     if (!itemName.trim()) throw new Error("Escreva o nome do item.");
     if (quantityMilli === null) throw new Error("A quantidade precisa ser um número maior que zero.");
     if (itemUnitAmount === null) throw new Error("Informe o preço unitário.");
-    if (discountBasisPoints === null) throw new Error("O desconto vai de 0% a 100%.");
+    if (itemDiscountMode === "percent" && discountBasisPoints === null) throw new Error("O desconto vai de 0% a 100%.");
     if (taxBasisPoints === null) throw new Error("O imposto vai de 0% a 100%.");
-    const fields = { name: itemName.trim(), quantityMilli, unitAmount: itemUnitAmount, discountBasisPoints, taxBasisPoints };
+    const discountAmount = itemDiscountMode === "amount" ? itemDiscountAmount ?? money(0) : money(0);
+    const fields = { name: itemName.trim(), quantityMilli, unitAmount: itemUnitAmount, discountBasisPoints: itemDiscountMode === "percent" ? discountBasisPoints ?? 0 : 0, discountAmount, taxBasisPoints, recurring: itemRecurring };
     if (editingItemId) {
-      const transaction = itemsCollection.update(editingItemId, (draft) => { Object.assign(draft, { ...fields, unitAmount: toCents(fields.unitAmount) }); });
+      const transaction = itemsCollection.update(editingItemId, (draft) => { Object.assign(draft, { ...fields, unitAmount: toCents(fields.unitAmount), discountAmount: toCents(fields.discountAmount) }); });
       await transaction.isPersisted.promise;
       notify({ title: "Item atualizado", description: fields.name, tone: "success" });
     } else {
@@ -759,14 +772,20 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
       <Field><Label>Preço unitário</Label><MoneyInput label="Preço unitário" value={itemUnitAmount} onValueChange={setItemUnitAmount} /></Field>
     </div>
     <div className={styles.modalLinha}>
-      <Field><Label>Desconto</Label><PercentInput label="Desconto do item" value={itemDiscount} onValueChange={setItemDiscount} /></Field>
+      <Field><Label>Cobrança</Label><Select label="Cobrança do item" value={itemRecurring ? "recurring" : "once"} options={[{ value: "once", label: "Única" }, { value: "recurring", label: `Recorrente (${INTERVAL_LABEL[pricingState.interval].name.toLowerCase()})` }]} onValueChange={(value) => setItemRecurring(value === "recurring")} /></Field>
       <Field><Label>Imposto</Label><PercentInput label="Imposto do item" value={itemTax} onValueChange={setItemTax} /></Field>
+    </div>
+    <div className={styles.modalLinha}>
+      <Field><Label>Tipo de desconto</Label><Select label="Tipo de desconto do item" value={itemDiscountMode} options={[{ value: "percent", label: "Percentual" }, { value: "amount", label: "Valor (R$)" }]} onValueChange={(value) => { if (value === "percent" || value === "amount") setItemDiscountMode(value); }} /></Field>
+      {itemDiscountMode === "percent"
+        ? <Field><Label>Desconto</Label><PercentInput label="Desconto do item" value={itemDiscount} onValueChange={setItemDiscount} /></Field>
+        : <Field><Label>Desconto</Label><MoneyInput label="Desconto do item em reais" value={itemDiscountAmount} onValueChange={setItemDiscountAmount} /></Field>}
     </div>
     <AmountSummary label="Resumo do item" items={[
       { label: "Subtotal", value: itemPreview ? formatBRL(itemPreview.gross) : "—" },
       { label: "Descontos", value: itemPreview ? `−${formatBRL(itemPreview.discount)}` : "—" },
       { label: "Impostos", value: itemPreview ? `+${formatBRL(itemPreview.tax)}` : "—" },
-    ]} totalLabel="Total do item" total={itemPreview ? formatBRL(itemPreview.net) : "—"} />
+    ]} totalLabel={itemRecurring ? `Total do item ${INTERVAL_LABEL[pricingState.interval].per}` : "Total do item"} total={itemPreview ? formatBRL(itemPreview.net) : "—"} />
     {!itemPreview && <Text size="pequeno" tone="muted">Preencha valores válidos para calcular o total.</Text>}
   </div>;
 
@@ -776,30 +795,28 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
     {dealItems.length === 0
       ? <Text size="pequeno" tone="muted">O valor do negócio é a soma dos produtos. Adicione o que está sendo vendido.</Text>
       : <>
-          <div className={styles.itemList}><RowList label="Itens do negócio">{dealItems.map((item, index) => {
-            const totals = dealProductTotals({ ...item, unitAmount: syncedAmount(item.unitAmount) });
+          <div className={styles.itemList}><div className={styles.pricingColumn}><RowList label="Itens do negócio">{dealItems.map((item, index) => {
+            const totals = pricingItemTotals({ ...item, unitAmount: syncedAmount(item.unitAmount), discountAmount: item.discountAmount === undefined ? undefined : syncedAmount(item.discountAmount) });
+            const per = item.recurring ? INTERVAL_LABEL[pricingState.interval].per : "";
             return <ListRow
               key={item.id}
               index={index}
               icon="cart"
               title={item.name}
-              description={`${formatQuantity(item.quantityMilli)} × ${formatBRL(syncedAmount(item.unitAmount))}`}
+              description={`${formatQuantity(item.quantityMilli)} × ${formatBRL(syncedAmount(item.unitAmount))}${per}${item.recurring ? " · recorrente" : ""}`}
               detail={[
-                item.discountBasisPoints > 0 ? `Desconto de ${formatBasisPoints(item.discountBasisPoints)}%` : "",
+                toCents(totals.discount) > 0 ? (item.discountBasisPoints > 0 ? `Desconto de ${formatBasisPoints(item.discountBasisPoints)}%` : `Desconto de ${formatBRL(totals.discount)}`) : "",
                 item.taxBasisPoints > 0 ? `Imposto de ${formatBasisPoints(item.taxBasisPoints)}%` : "",
               ].filter(Boolean).join(" · ") || undefined}
-              meta={<Text size="pequeno" weight="medium" mono>{formatBRL(totals.net)}</Text>}
+              meta={<Text size="pequeno" weight="medium" mono>{formatBRL(totals.net)}{per}</Text>}
               trailing={canWrite ? <>
                 <Button size="sm" variant="ghost" iconOnly icon={<Icon name="pencil" />} aria-label={`Editar ${item.name}`} onClick={() => openItemEditor(item)} />
                 <Button size="sm" variant="ghost" iconOnly icon={<Icon name="trash" />} aria-label={`Remover ${item.name}`} loading={removingItemId === item.id} disabled={removingItemId !== null} onClick={() => void removeItem(item)} />
               </> : undefined}
             />;
-          })}</RowList></div>
-          <div className={styles.itemsSummary}><AmountSummary label="Resumo do negócio" items={[
-            { label: "Subtotal", value: formatBRL(itemsSummary.gross) },
-            { label: "Descontos", value: `−${formatBRL(itemsSummary.discount)}` },
-            { label: "Impostos", value: `+${formatBRL(itemsSummary.tax)}` },
-          ]} totalLabel="Valor do negócio" total={formatBRL(itemsSummary.net)} /></div>
+          })}</RowList>
+          {deal && <DealAdjustments deal={deal} state={pricingState} canWrite={canWrite} />}</div></div>
+          <div className={styles.itemsSummary}>{deal && <DealPricingSummary deal={deal} state={pricingState} canWrite={canWrite} awaitDealTxid={(txid) => dealsCollection.utils.awaitTxId(txid)} />}</div>
         </>}
   </div>;
 
@@ -814,7 +831,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const openCommercial = () => { if (embedded) setQuickPanel("commercial"); else setPageTab("comercial"); };
   const summaryFields = <div className={styles.fields}>
     <InlineField label="Produtos" empty={dealFieldValue(deal, "products", dealItems.length) == null} requirement={fieldRequirement("products")} value={dealItems.length ? `${dealItems.length} ${dealItems.length === 1 ? "produto" : "produtos"}` : "Adicionar produto"} action={{ label: "Ver itens e valores", icon: "right", onClick: openCommercial }} />
-    {fieldRequirement("amount") && <InlineField label="Valor" empty={dealFieldValue(deal, "amount", dealItems.length) == null} requirement={fieldRequirement("amount")} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} action={{ label: "Editar itens e valores", icon: "right", onClick: openCommercial }} />}
+    {fieldRequirement("amount") && <InlineField label="Valor" empty={dealFieldValue(deal, "amount", dealItems.length) == null} requirement={fieldRequirement("amount")} value={formatBRL(dealValue ?? syncedAmount(deal.amount))} action={{ label: "Editar itens e valores", icon: "right", onClick: openCommercial }} />}
     <InlineField requirement={fieldRequirement("expectedCloseDate")} label="Previsão" numeric value={deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "Sem previsão"} empty={!deal.expectedCloseDate} disabled={!canWrite}>
       {(close) => <DatePicker label="Previsão de fechamento" value={deal.expectedCloseDate?.slice(0, 10) ?? ""} onValueChange={(next) => close(saveField({ expectedCloseDate: next ? new Date(`${next}T12:00:00`).toISOString() : null }, "Previsão"))} />}
     </InlineField>
@@ -847,7 +864,7 @@ export function DealWorkspace({ dealId, embedded = false }: { dealId: string; em
   const tagsContent = <DealTags value={(tagsByDeal.get(deal.id) ?? []).map((tag) => tag.name)} disabled={!canWrite} onChange={(tags) => { void writeAccepted((metadata) => dealsCollection.update(deal.id, { metadata }, (draft) => { draft.tags = tags; })).catch(() => notify({ title: "Não foi possível salvar as etiquetas", tone: "error" })); }} />;
   const statusChip = deal.status === "open" ? <Chip>{statusLabel(deal.status)}</Chip> : <Chip dot tone={deal.status === "won" ? "success" : "danger"}>{statusLabel(deal.status)}</Chip>;
   /* O valor acompanha a identidade e abre sua composição comercial. */
-  const valueContent = <RecordValue onClick={openCommercial} animationPaused={itemModalOpen || itemModalClosing} value={formatBRL(dealItems.length > 0 ? itemsSummary.net : syncedAmount(deal.amount))} hint={isOpen && deal.probabilityBasisPoints != null ? <Text size="legenda" tone="secondary" title={`Estimativa inicial, não calibrada. Base: ${deal.probabilitySampleSize ?? 0} negócios encerrados.`}>{Math.round(deal.probabilityBasisPoints / 100)}% de chance estimada</Text> : undefined} />;
+  const valueContent = <RecordValue onClick={openCommercial} animationPaused={itemModalOpen || itemModalClosing} value={formatBRL(dealValue ?? syncedAmount(deal.amount))} hint={isOpen && deal.probabilityBasisPoints != null ? <Text size="legenda" tone="secondary" title={`Estimativa inicial, não calibrada. Base: ${deal.probabilitySampleSize ?? 0} negócios encerrados.`}>{Math.round(deal.probabilityBasisPoints / 100)}% de chance estimada</Text> : undefined} />;
   const moveActions = <DealStageActions
     closed={!isOpen}
     destinations={stage && isOpen && canMove ? pipelineStages.filter((target) => !target.archivedAt && (target.id === stage.id || canMoveBetweenStages(stage, target, transitions))).map((target) => ({ id: target.id, label: target.name, color: target.color, current: target.id === stage.id, detail: target.sortOrder > stage.sortOrder ? "Avançar" : "Retornar" })) : []}
