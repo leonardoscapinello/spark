@@ -9,6 +9,9 @@
   min-width: 0;
   padding-inline-end: var(--space-2);
   overflow: hidden;
+  /* A sidebar de detalhes responde à largura da área, não da janela: recolher
+   * o menu do app libera espaço e ela aparece/cresce na hora. */
+  container: inbox-page / inline-size;
 }
 
 .queueSidebar { height: 100%; min-height: 0; }
@@ -45,10 +48,13 @@
 .workspace[data-layout="list"] { grid-template-columns: minmax(0, 1fr); }
 .workspace[data-layout="list"][data-open="true"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
 
-@media (min-width: 1600px) {
-  .workspace[data-layout="chat"][data-open="true"] { grid-template-columns: var(--ui-inboxListWidth) minmax(0, 1fr) var(--ui-cardMinWidth); }
-  .page .workspace[data-layout="chat"] .details { display: flex; }
-  .page .workspace[data-layout="chat"] .detailsTrigger { display: none; }
+/* Detalhes ao lado quando cabem: a conversa garante o mínimo de leitura e a
+ * sidebar leva o espaço extra primeiro (até 1,4 cartão) — ela é a ferramenta
+ * de trabalho; a conversa fica com o que sobrar. */
+@container inbox-page (min-width: 1340px) {
+  .workspace[data-layout="chat"][data-open="true"] { grid-template-columns: var(--ui-inboxListWidth) minmax(calc(var(--ui-cardMinWidth) * 1.2), 1fr) minmax(var(--ui-cardMinWidth), calc(var(--ui-cardMinWidth) * 1.4)); }
+  .workspace[data-layout="chat"] .details { display: flex; }
+  .workspace[data-layout="chat"] .detailsTrigger { display: none; }
 }
 
 @media (max-width: 1250px) {
