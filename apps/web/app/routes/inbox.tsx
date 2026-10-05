@@ -445,22 +445,20 @@ export default function Inbox() {
     if (!selected || !personId) return null;
     const deadline = slaSummaries.get(selected.id);
     return <Tabs label="Informações do atendimento" items={[
-      { value: "conversation", label: "Atendimento", content: <div className={styles.fields}>
-        <InlineField block label="Responsável" value={selected.assigneeId ? userNames.get(selected.assigneeId) ?? "Responsável" : "Não atribuído"} empty={!selected.assigneeId} disabled={!canWrite || saving}>
+      { value: "conversation", label: "Atendimento", content: <ConversationService key={selected.id} conversation={selected} canWrite={canWrite} openedAt={formatDateTime(selected.createdAt)} ownership={<>
+        <InlineField label="Responsável" value={selected.assigneeId ? userNames.get(selected.assigneeId) ?? "Responsável" : "Não atribuído"} empty={!selected.assigneeId} disabled={!canWrite || saving}>
           {(close) => <Select wrapValue label="Responsável pela conversa" value={selected.assigneeId ?? ""} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ assigneeId: value ? userId.from(value) : null }))} />}
         </InlineField>
-        <InlineField block label="Equipe" value={selected.teamId ? teamNames.get(selected.teamId) ?? "Equipe" : "Sem equipe"} empty={!selected.teamId} disabled={!canWrite || saving}>
+        <InlineField label="Equipe" value={selected.teamId ? teamNames.get(selected.teamId) ?? "Equipe" : "Sem equipe"} empty={!selected.teamId} disabled={!canWrite || saving}>
           {(close) => <Select wrapValue label="Equipe responsável" value={selected.teamId ?? ""} options={[{ value: "", label: "Sem equipe" }, ...teams.filter((item) => !item.archivedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ teamId: value ? teamId.from(value) : null }))} />}
         </InlineField>
-        <InlineField block label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
-        <ConversationService key={selected.id} conversation={selected} canWrite={canWrite} />
-        <InlineField block label="Aberta em" value={formatDateTime(selected.createdAt)} />
-      </div> },
+        <InlineField label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
+      </>} /> },
       { value: "person", label: "Pessoa", content: <div className={styles.fields}>
         <PersonIdentity name={personName(personId)} detail={person?.email ?? (person?.phone ? formatPhone(person.phone) : "Sem e-mail")} />
-        <InlineField block label="E-mail" value={person?.email ?? "Não informado"} empty={!person?.email} />
-        <InlineField block label="Telefone" value={person?.phone ? formatPhone(person.phone) : "Não informado"} empty={!person?.phone} />
-        <InlineField block label="Conversas" value={`${personRoutes.length} ${personRoutes.length === 1 ? "caixa" : "caixas"} · ${personRoutes.filter((item) => item.status === "open").length} abertas`} />
+        <InlineField label="E-mail" value={person?.email ?? "Não informado"} empty={!person?.email} />
+        <InlineField label="Telefone" value={person?.phone ? formatPhone(person.phone) : "Não informado"} empty={!person?.phone} />
+        <InlineField label="Conversas" value={`${personRoutes.length} ${personRoutes.length === 1 ? "caixa" : "caixas"} · ${personRoutes.filter((item) => item.status === "open").length} abertas`} />
         {canReadContacts && <Button variant="secondary" size="sm" icon={<Icon name="user" />} onClick={() => navigate(`/contacts/${personId}`)}>Abrir perfil</Button>}
       </div> },
       { value: "deadlines", label: "Prazos", ...(deadline ? { icon: <SlaRing percent={deadline.percent} state={deadline.state} /> } : {}), content: <ConversationDeadlines key={selected.id} conversation={selected} now={now} canWrite={canWrite} /> },

@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { formatServiceDuration, serviceCycleProgress, type Conversation, type ServiceCycle } from "@spark/core";
-import { ClassificationValue, Field, Label, RecordSection, Select, SlaProgress, Text, notify } from "@spark/ui-web";
+import { Accordion, ClassificationValue, Icon, InlineField, Select, SlaProgress, Text, notify } from "@spark/ui-web";
 import { useServiceConfiguration } from "../lib/service-configuration.client";
 import { getServiceCyclesCollection, getServiceSegmentsCollection, getServiceCycleHoursCollection, getServiceCycleHolidaysCollection } from "../lib/service-cycles.client";
 import { getConversationsCollection } from "../lib/inbox-collections.client";
 import { RecordCustomFields } from "./RecordCustomFields";
 import { CategorySelectors } from "./CategorySelectors";
 import styles from "../routes/settings.module.css";
-export function ConversationService({ conversation, canWrite }: { conversation: Conversation; canWrite: boolean }) {
+/** Aba "Atendimento": seções recolhíveis com legenda | valor, como a ficha do CRM. */
+export function ConversationService({ conversation, canWrite, ownership, openedAt }: { conversation: Conversation; canWrite: boolean; ownership: ReactNode; openedAt: string }) {
   const config = useServiceConfiguration();
   const [saving, setSaving] = useState(false);
   async function change(field: "serviceStatusId" | "categoryId" | "impactId" | "urgencyId", value: string | null) {
@@ -19,15 +20,31 @@ export function ConversationService({ conversation, canWrite }: { conversation: 
   }
   const priority = config.levels.find(l => l.id === conversation.servicePriorityId);
   const editable = canWrite && !saving;
-  return <div className={styles.form}>
-    <Field><Label>Status do atendimento</Label><Select wrapValue label="Status do atendimento" disabled={!editable} value={conversation.serviceStatusId ?? ""} options={[{ value: "", label: conversation.status === "closed" ? "Encerrado" : conversation.status === "snoozed" ? "Em espera" : "Em atendimento" }, ...config.statuses.filter(s => !s.archived || s.id === conversation.serviceStatusId).map(s => ({ value: s.id, label: s.name }))]} onValueChange={value => { void change("serviceStatusId", value || null); }} /></Field>
-    <RecordSection title="Classificação"><div className={styles.form}>
-    <CategorySelectors config={config} disabled={!editable} value={conversation.categoryId ?? null} onChange={value => { void change("categoryId", value); }} />
-    {(["impact", "urgency"] as const).map(kind => <Field key={kind}><Label>{kind === "impact" ? "Impacto" : "Urgência"}</Label><Select label={kind === "impact" ? "Impacto" : "Urgência"} disabled={!editable} value={(kind === "impact" ? conversation.impactId : conversation.urgencyId) ?? ""} options={[{ value: "", label: kind === "impact" ? "Impacto não definido" : "Urgência não definida" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={value => { void change(kind === "impact" ? "impactId" : "urgencyId", value || null); }} /></Field>)}
-    <ClassificationValue fieldLabel="Prioridade" kind="priority" color={priority?.color} label={priority?.name ?? "Não definida"} />
-    </div></RecordSection>
-    <RecordCustomFields showAdministration={false} entityType="conversation" entityId={conversation.id} disabled={!canWrite} />
-  </div>;
+  const fallbackStatus = conversation.status === "closed" ? "Encerrado" : conversation.status === "snoozed" ? "Em espera" : "Em atendimento";
+  const status = config.statuses.find(s => s.id === conversation.serviceStatusId);
+  const level = (kind: "impact" | "urgency") => {
+    const name = kind === "impact" ? "Impacto" : "Urgência";
+    const current = config.levels.find(l => l.id === (kind === "impact" ? conversation.impactId : conversation.urgencyId));
+    return <InlineField key={kind} label={name} value={current ? <ClassificationValue kind={kind} color={current.color} label={current.name} /> : "Não definido"} empty={!current} disabled={!editable}>
+      {close => <Select label={name} value={current?.id ?? ""} options={[{ value: "", label: "Não definido" }, ...config.levels.filter(l => l.kind === kind && !l.archived).map(l => ({ value: l.id, label: l.name, color: l.color, classificationKind: l.kind }))]} onValueChange={value => close(change(kind === "impact" ? "impactId" : "urgencyId", value || null))} />}
+    </InlineField>;
+  };
+  return <Accordion density="compact" defaultValue={["ownership", "classification", "details"]} items={[
+    { value: "ownership", title: "Responsáveis", icon: <Icon name="users" />, content: <div className={styles.inlineFields}>{ownership}</div> },
+    { value: "classification", title: "Classificação", icon: <Icon name="tag" />, content: <div className={styles.inlineFields}>
+      <InlineField label="Status" value={status?.name ?? fallbackStatus} disabled={!editable}>
+        {close => <Select label="Status do atendimento" value={conversation.serviceStatusId ?? ""} options={[{ value: "", label: fallbackStatus }, ...config.statuses.filter(s => !s.archived || s.id === conversation.serviceStatusId).map(s => ({ value: s.id, label: s.name }))]} onValueChange={value => close(change("serviceStatusId", value || null))} />}
+      </InlineField>
+      <CategorySelectors config={config} disabled={!editable} value={conversation.categoryId ?? null} onChange={value => change("categoryId", value)} />
+      {level("impact")}
+      {level("urgency")}
+      <InlineField label="Prioridade" value={priority ? <ClassificationValue kind="priority" color={priority.color} label={priority.name} /> : "Não definida"} empty={!priority} disabled />
+    </div> },
+    { value: "details", title: "Detalhes", icon: <Icon name="file" />, content: <div className={styles.inlineFields}>
+      <InlineField label="Aberta em" numeric value={openedAt} disabled />
+      <RecordCustomFields showAdministration={false} entityType="conversation" entityId={conversation.id} disabled={!canWrite} />
+    </div> },
+  ]} />;
 }
 
 /** Aba "Prazos": um anel por relógio do ciclo, mais o histórico de ciclos. */
