@@ -7,7 +7,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, personThreads, contactId, conversationId, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus, type Identity, type IdentityChannel, type Message } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, SlaRing, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, withViewTransition, RegionBoundary, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, SlaRing, Text, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, withViewTransition, RegionBoundary, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getIdentitiesCollection } from "../lib/identities-collection.client";
@@ -85,6 +85,7 @@ export default function Inbox() {
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">("recent");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
+  const [concludeOpen, setConcludeOpen] = useState(false);
   const [newContact, setNewContact] = useState<SelectOption | null>(null);
   const [newSubject, setNewSubject] = useState("");
   const [newChannel, setNewChannel] = useState<ConversationChannel>("manual");
@@ -287,6 +288,14 @@ export default function Inbox() {
     } finally { setSaving(false); }
   }
 
+  /* Concluir encerra o atendimento e os prazos dele; passa por confirmação.
+   * Erro sobe para a modal mostrar — não é engolido num aviso genérico. */
+  async function concludeConversation() {
+    if (!selected || !personId) return;
+    await conversationsCollection.update(selected.id, (record) => { record.status = "closed"; }).isPersisted.promise;
+    notify({ title: "Atendimento concluído", description: `A conversa com ${personName(personId)} saiu das abertas.`, tone: "success" });
+  }
+
   async function attachFile(files: File[]) {
     const file = files[0];
     if (!file) return;
@@ -405,7 +414,9 @@ export default function Inbox() {
         presence={viewers.length > 0 ? <ViewerStack label="Pessoas vendo esta conversa" viewers={viewers.map((viewer) => ({ userId: userId.from(viewer.id), name: viewer.name, avatarUrl: null }))} status="connected" /> : undefined}
         actions={<>
           <Button size="sm" variant="ghost" iconOnly icon={<Icon name="panel" />} aria-label="Abrir detalhes da conversa" className={styles.detailsTrigger} onClick={() => setDetailsOpen(true)} />
-          <Button size="sm" variant="secondary" icon={<Icon name={selected.status === "closed" ? "undo" : "check"} />} disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
+          {selected.status === "closed"
+            ? <Button size="sm" variant="secondary" icon={<Icon name="undo" />} disabled={!canWrite || saving} onClick={() => void updateConversation({ status: "open" })}>Reabrir atendimento</Button>
+            : <Button size="sm" variant="secondary" icon={<Icon name="checkCircle" />} disabled={!canWrite || saving} onClick={() => setConcludeOpen(true)}>Concluir atendimento</Button>}
           {layout === "list" && <Button size="sm" variant="ghost" iconOnly icon={<Icon name="close" />} aria-label="Fechar a conversa e voltar para a lista" onClick={() => withViewTransition(() => { setSelectedId(null); setMobileView("list"); })} />}
         </>}
       />
@@ -515,6 +526,11 @@ export default function Inbox() {
     </div>
 
     <Modal open={detailsOpen && open} onOpenChange={setDetailsOpen}><ModalContent title="Detalhes do atendimento" placement="right">{renderDetails()}</ModalContent></Modal>
+
+    <ActionModal open={concludeOpen && Boolean(selected)} onOpenChange={setConcludeOpen} title="Concluir atendimento?" confirmLabel="Concluir atendimento" errorText="Não foi possível concluir o atendimento. Tente novamente." onConfirm={concludeConversation}>
+      <Text as="p">A conversa com {personId ? personName(personId) : "esta pessoa"} sai das abertas e os prazos deste atendimento são encerrados.</Text>
+      <Text as="p" tone="secondary" size="pequeno">Se a pessoa escrever de novo, ou se você reabrir, começa um novo atendimento com prazos novos.</Text>
+    </ActionModal>
 
     <ActionModal open={newConversationOpen} onOpenChange={closeNewConversation} title="Nova conversa" confirmLabel="Criar conversa" errorText="Selecione uma pessoa e informe o assunto." onConfirm={createConversation}>
       <div className={styles.fields}>
