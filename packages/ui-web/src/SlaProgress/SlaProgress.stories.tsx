@@ -11,7 +11,8 @@ export const Variantes: Story = {
     <Fileira rotulo="Perto de vencer"><Mesa largura={240}><SlaProgress percent={86} label="SLA 86% · 20 min restantes" state="due_soon" /></Mesa></Fileira>
     <Fileira rotulo="Vencido"><Mesa largura={240}><SlaProgress percent={100} label="SLA vencido há 1 h" state="breached" /></Mesa></Fileira>
     <Fileira rotulo="Começando"><Mesa largura={240}><SlaProgress percent={0} label="SLA 0% · 8 h restantes" state="on_track" /></Mesa></Fileira>
-    <Fileira rotulo="Compacto, estreito"><Mesa largura={120}><SlaProgress compact percent={64} label="SLA 64% · 1 h 30 min restantes" state="on_track" /></Mesa></Fileira>
+    <Fileira rotulo="Compacto (lista)"><Mesa largura={120}><SlaProgress compact percent={64} label="Atendimento total" detail="3 h 50 min de 6 h úteis · restam 2 h 10 min" state="on_track" /></Mesa></Fileira>
+    <Fileira rotulo="Compacto, vencido"><Mesa largura={120}><SlaProgress compact percent={130} label="Primeira resposta" detail="1 h 18 min de 1 h úteis · 18 min em atraso" state="breached" /></Mesa></Fileira>
   </Secao></Prancha>,
 };
 

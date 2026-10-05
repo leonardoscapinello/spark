@@ -3,6 +3,7 @@ import { Children, createContext, isValidElement, useContext, useEffect, useRef,
 import { Avatar } from "../Avatar/Avatar.js";
 import { Icon, type IconName } from "../Icon/Icon.js";
 import { Signal, type SignalTone } from "../Signal/Signal.js";
+import { Tooltip } from "../Tooltip/Tooltip.js";
 import { useSlidingIndicator } from "../motion/useSlidingIndicator.js";
 import s from "./ConversationList.module.css";
 
@@ -83,8 +84,8 @@ export interface ConversationRowProps {
   channels?: readonly ConversationRowChannel[];
   /** Quem cuida: responsável ou equipe. */
   owner?: string | null;
-  /** Prazo da primeira resposta como sinal: ponto + texto curto («No prazo», «Vencido»). */
-  sla?: { tone: SignalTone; label: string; percent?: number; state?: "on_track" | "due_soon" | "breached" } | null;
+  /** Prazo como sinal («No prazo», «Vencido») ou, com `percent`, percentual + trilho; status e detalhe abrem no hover. */
+  sla?: { tone: SignalTone; label: string; percent?: number; state?: "on_track" | "due_soon" | "breached"; status?: string; detail?: string } | null;
   /** Mensagem da pessoa ainda não vista: nome e assunto em tinta 1, ponto de carvão ao lado da hora. */
   unread?: boolean;
   priority?: boolean;
@@ -102,7 +103,11 @@ export function ConversationRow({ name, avatarUrl, title, snippet, time, dateTim
     {channels.slice(0, 3).map((item, position) => <Icon key={`${item.icon}-${position}`} name={item.icon} />)}
     <span className={s.channelLabel}>{primary.label}</span>
   </span> : null;
-  const signal = sla ? <span className={s.sla}>{typeof sla.percent === "number" ? <SlaProgress compact percent={sla.percent} state={sla.state ?? "on_track"} label={sla.label} /> : <Signal tone={sla.tone}>{sla.label}</Signal>}</span> : null;
+  const signal = sla ? typeof sla.percent === "number"
+    ? <Tooltip appearance="surface" pinOnClick={false} content={<span className={s.slaDetail}><SlaProgress percent={sla.percent} state={sla.state ?? "on_track"} label={sla.label} {...(sla.status ? { status: sla.status } : {})} {...(sla.detail ? { detail: sla.detail } : {})} /></span>}>
+        <span className={s.sla}><SlaProgress compact percent={sla.percent} state={sla.state ?? "on_track"} label={sla.label} {...(sla.status ? { status: sla.status } : {})} {...(sla.detail ? { detail: sla.detail } : {})} /></span>
+      </Tooltip>
+    : <span className={s.sla}><Signal tone={sla.tone}>{sla.label}</Signal></span> : null;
   const when = <span className={s.when}>
     <time className={s.time} {...(dateTime ? { dateTime } : {})}>{time}</time>
     {unread && <span className={s.dot} aria-hidden="true" />}

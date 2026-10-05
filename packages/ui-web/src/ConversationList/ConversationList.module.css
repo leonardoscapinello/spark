@@ -126,6 +126,7 @@
 .channel { --icon: 12px; display: inline-flex; flex: 0 1 auto; align-items: center; gap: var(--space-1); min-width: 0; }
 .owner { flex: 0 1 auto; }
 .sla { display: inline-flex; flex: none; min-width: 0; margin-inline-start: auto; }
+.slaDetail { display: block; width: calc(var(--space-16) * 4); padding: var(--space-3); }
 
 .hidden {
   position: absolute;

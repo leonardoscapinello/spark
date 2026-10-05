@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { serviceCycleProgress, type Conversation, type ServiceCycle } from "@spark/core";
+import { formatServiceDuration, serviceCycleProgress, type Conversation, type ServiceCycle } from "@spark/core";
 import { ClassificationValue, Field, Label, RecordSection, Select, SlaProgress, Text, notify } from "@spark/ui-web";
 import { useServiceConfiguration } from "../lib/service-configuration.client";
 import { getServiceCyclesCollection, getServiceSegmentsCollection, getServiceCycleHoursCollection, getServiceCycleHolidaysCollection } from "../lib/service-cycles.client";
@@ -49,12 +49,6 @@ function CycleProgress({ cycle, now }: { cycle: ServiceCycle; now: Date }) {
     if (clock.calendarMissing) return <Text key={kind} tone="secondary">{name}: calendário útil não configurado neste ciclo.</Text>;
     if (clock.waiting) return <div key={kind} className={styles.form}><Text weight="medium" size="pequeno">{name}</Text><Text tone="secondary" size="pequeno">Aguardando mensagem do cliente</Text></div>;
     const state = clock.finished ? "Concluído" : cycle.closedAt ? "Encerrado sem resposta" : clock.paused ? "Pausado" : clock.outsideHours ? "Fora do expediente" : "Em andamento";
-    return <SlaProgress key={kind} percent={clock.percent} state={clock.state} label={name} status={state} detail={`${formatDuration(Math.floor(clock.usedMs / 60000))} de ${formatDuration(clock.budget)} úteis${clock.finished || cycle.closedAt ? "" : clock.overtimeMinutes ? ` · ${formatDuration(clock.overtimeMinutes)} em atraso` : ` · restam ${formatDuration(clock.remainingMinutes ?? 0)}`}`} />;
-  })}{progress.currentStatus?.budget && <SlaProgress percent={progress.currentStatus.usedMs/(progress.currentStatus.budget*60000)*100} state={progress.currentStatus.state} label={progress.currentStatus.name} detail={`${formatDuration(Math.floor(progress.currentStatus.usedMs / 60000))} de ${formatDuration(progress.currentStatus.budget)} úteis neste status`} />}</div>;
-}
-
-function formatDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  return hours ? `${hours} h${remainder ? ` ${remainder} min` : ""}` : `${remainder} min`;
+    return <SlaProgress key={kind} percent={clock.percent} state={clock.state} label={name} status={state} detail={`${formatServiceDuration(Math.floor(clock.usedMs / 60000))} de ${formatServiceDuration(clock.budget)} úteis${clock.finished || cycle.closedAt ? "" : clock.overtimeMinutes ? ` · ${formatServiceDuration(clock.overtimeMinutes)} em atraso` : ` · restam ${formatServiceDuration(clock.remainingMinutes ?? 0)}`}`} />;
+  })}{progress.currentStatus?.budget && <SlaProgress percent={progress.currentStatus.usedMs/(progress.currentStatus.budget*60000)*100} state={progress.currentStatus.state} label={progress.currentStatus.name} detail={`${formatServiceDuration(Math.floor(progress.currentStatus.usedMs / 60000))} de ${formatServiceDuration(progress.currentStatus.budget)} úteis neste status`} />}</div>;
 }

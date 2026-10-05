@@ -7,6 +7,10 @@
 .root[data-state="breached"] .copy { color: var(--er); }
 .track { height: 4px; overflow: hidden; border-radius: var(--r-pill); background: var(--sf2); box-shadow: var(--deb); }
 .fill { display: block; width: var(--sla-progress); height: 100%; border-radius: inherit; background: var(--sla); transition: width var(--t-default) var(--ease); }
-.root[data-compact] { width: 100%; }
+/* Compacto (linha da lista): "63%" e trilho curto lado a lado; o detalhe vai
+ * para quem envolve o componente (dica no hover). */
+.root[data-compact] { grid-auto-flow: column; grid-template-columns: auto var(--space-10); align-items: center; gap: var(--space-1-5); }
+.percent { color: var(--tx3); font-size: var(--fs-legenda); font-variant-numeric: tabular-nums; line-height: var(--lh-pequeno); }
+.root[data-state="breached"] .percent { color: var(--er); }
 
 .heading { color: var(--tx); font-size: var(--fs-pequeno); font-weight: var(--fw-500); line-height: var(--lh-pequeno); overflow-wrap: anywhere; }

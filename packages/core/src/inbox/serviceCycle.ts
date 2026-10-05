@@ -18,3 +18,11 @@ export function serviceCycleProgress(cycle: ServiceCycle, segments: readonly Ser
 }
 
 export type ServiceLifecycleEvent = "open" | "update" | "inbound" | "response";
+
+/** Minutos úteis em leitura humana: "45 min", "3 h", "2 h 20 min". */
+export function formatServiceDuration(minutes: number): string {
+  const total = Math.max(0, Math.floor(minutes));
+  const hours = Math.floor(total / 60);
+  const remainder = total % 60;
+  return hours ? `${hours} h${remainder ? ` ${remainder} min` : ""}` : `${remainder} min`;
+}
