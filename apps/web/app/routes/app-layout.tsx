@@ -2,7 +2,7 @@ import { type MouseEvent, type PointerEvent, useEffect, useMemo, useRef, useStat
 import { Link, Outlet, redirect, useLocation, useNavigate, useNavigation } from "react-router";
 import { useLiveQuery } from "@tanstack/react-db";
 import type { Capability } from "@spark/core";
-import { Alert, AppContent, AppShell, Toolbar, Skeleton, Spinner, Text, Avatar, Button, Icon, LinkTabs, MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem, RailBrand, RailGroup, RailItem, Menu, MenuTrigger, MenuContent } from "@spark/ui-web";
+import { RegionBoundary, Alert, AppContent, AppShell, Toolbar, Skeleton, Spinner, Text, Avatar, Button, Icon, LinkTabs, MenuButton, MenuGroup, MenuIdentity, MenuItem, MenuSeparator, NavigationRail, QuickNavigation, Sidebar, SidebarItem, SidebarSection, type IconName, type QuickNavigationItem, RailBrand, RailGroup, RailItem, Menu, MenuTrigger, MenuContent } from "@spark/ui-web";
 import type { Route } from "./+types/app-layout";
 import { refreshSessionProfile, restoreSession, signOut } from "../lib/auth.client";
 import { usePreference } from "../lib/preferences.client";
@@ -369,7 +369,7 @@ export default function AppLayout({ loaderData: session }: Route.ComponentProps)
         {/* O provedor do cadastro da Receita não sincroniza nada até alguém
             olhar um CNPJ: montá-lo aqui custa zero e evita repeti-lo em cada
             tela que mostra campo personalizado. */}
-          <OrganizationThemeProvider orgId={session.orgId}><LinkPreviewDataProvider><CompanyRegistrationDataProvider><Outlet /></CompanyRegistrationDataProvider></LinkPreviewDataProvider></OrganizationThemeProvider>
+          <OrganizationThemeProvider orgId={session.orgId}><LinkPreviewDataProvider><CompanyRegistrationDataProvider><RegionBoundary label="Tela" resetKey={location.pathname}><Outlet /></RegionBoundary></CompanyRegistrationDataProvider></LinkPreviewDataProvider></OrganizationThemeProvider>
       </AppContent>
       <QuickNavigation open={quickNavigationOpen} onOpenChange={setQuickNavigationOpen} items={quickNavigationItems} onSelect={(to) => { markNavigation(to); void navigate(to); }} />
     </AppShell>

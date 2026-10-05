@@ -7,7 +7,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, personThreads, contactId, conversationId, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus, type Identity, type IdentityChannel, type Message } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, SlaRing, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, withViewTransition, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, SlaRing, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, withViewTransition, RegionBoundary, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getIdentitiesCollection } from "../lib/identities-collection.client";
@@ -451,7 +451,7 @@ export default function Inbox() {
     if (!selected || !personId) return null;
     const deadline = slaSummaries.get(selected.id);
     return <Tabs label="Informações do atendimento" items={[
-      { value: "conversation", label: "Atendimento", content: <ConversationService key={selected.id} conversation={selected} canWrite={canWrite} ownership={<>
+      { value: "conversation", label: "Atendimento", content: <RegionBoundary label="Atendimento" resetKey={selected.id}><ConversationService key={selected.id} conversation={selected} canWrite={canWrite} ownership={<>
         <InlineField label="Responsável" value={selected.assigneeId ? userNames.get(selected.assigneeId) ?? "Responsável" : "Não atribuído"} empty={!selected.assigneeId} disabled={!canWrite || saving}>
           {(close) => <Select wrapValue label="Responsável pela conversa" value={selected.assigneeId ?? ""} options={[{ value: "", label: "Não atribuído" }, ...users.filter((item) => !item.deactivatedAt).map((item) => ({ value: item.id, label: item.name }))]} onValueChange={(value) => close(updateConversation({ assigneeId: value ? userId.from(value) : null }))} />}
         </InlineField>
@@ -461,9 +461,9 @@ export default function Inbox() {
       </>} details={<>
         <InlineField label="Caixa" value={inboxTitle(selected)} leading={<Icon name={channelGlyph(selected.channel)} />} />
         <InlineField label="Aberta em" numeric value={formatDateTime(selected.createdAt)} disabled />
-      </>} /> },
-      { value: "deadlines", label: "Prazos", ...(deadline ? { icon: <SlaRing percent={deadline.percent} state={deadline.state} /> } : {}), content: <ConversationDeadlines key={selected.id} conversation={selected} now={now} canWrite={canWrite} /> },
-      { value: "person", label: "Pessoa", content: <ConversationPerson key={personId} person={person} name={personName(personId)} conversation={selected} conversations={personRoutes} inboxTitle={inboxTitle} /> },
+      </>} /></RegionBoundary> },
+      { value: "deadlines", label: "Prazos", ...(deadline ? { icon: <SlaRing percent={deadline.percent} state={deadline.state} /> } : {}), content: <RegionBoundary label="Prazos" resetKey={selected.id}><ConversationDeadlines key={selected.id} conversation={selected} now={now} canWrite={canWrite} /></RegionBoundary> },
+      { value: "person", label: "Pessoa", content: <RegionBoundary label="Pessoa" resetKey={personId}><ConversationPerson key={personId} person={person} name={personName(personId)} conversation={selected} conversations={personRoutes} inboxTitle={inboxTitle} /></RegionBoundary> },
     ]} />;
   }
 
@@ -504,7 +504,7 @@ export default function Inbox() {
         </ConversationList>
       </Surface>
 
-      {open ? <Surface as="section" className={styles.thread} aria-label={`Conversa com ${personName(personId!)}`}>{renderThread()}</Surface>
+      {open ? <Surface as="section" className={styles.thread} aria-label={`Conversa com ${personName(personId!)}`}><RegionBoundary label="Conversa" resetKey={personId}>{renderThread()}</RegionBoundary></Surface>
         : layout === "chat" && <div className={styles.threadEmpty}>
           {firstRun || (!isLoading && conversations.length === 0)
             ? <EmptyState variant="featured" icon="message" title="Sua caixa de atendimento está pronta" description="Comece uma conversa ou conecte um canal para receber as mensagens das pessoas da sua base." action={startConversationAction()} secondaryAction={canReadIntegrations ? <Button variant="secondary" onClick={() => navigate("/integrations")}>Conectar canal</Button> : undefined} />

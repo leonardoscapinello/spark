@@ -22,10 +22,11 @@ export function ConversationPerson({ person, name, conversation, conversations, 
   const canReadCompanies = capabilities.includes("companies:read");
   const canReadDeals = capabilities.includes("deals:read");
   const contactId = person?.id ?? conversation.contactId;
-  const { data: users = [] } = useLiveQuery({ query: q => q.from({ users: getUsersCollection() }) });
-  const { data: companies = [] } = useLiveQuery({ query: q => canReadCompanies && person?.companyId ? q.from({ companies: getCompaniesCollection() }).where(({ companies: item }) => eq(item.id, person.companyId!)) : undefined }, [canReadCompanies, person?.companyId]);
-  const { data: deals = [] } = useLiveQuery({ query: q => canReadDeals ? q.from({ deals: getDealsCollection() }).where(({ deals: item }) => eq(item.contactId, contactId)).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined }, [canReadDeals, contactId]);
-  const { data: stages = [] } = useLiveQuery({ query: q => canReadDeals ? q.from({ stages: getStagesCollection() }) : undefined }, [canReadDeals]);
+  const companyId = person?.companyId ?? null;
+  const { data: users = [] } = useLiveQuery(q => q.from({ users: getUsersCollection() }), []);
+  const { data: companies = [] } = useLiveQuery(q => canReadCompanies && companyId ? q.from({ companies: getCompaniesCollection() }).where(({ companies: item }) => eq(item.id, companyId)) : undefined, [canReadCompanies, companyId]);
+  const { data: deals = [] } = useLiveQuery(q => canReadDeals ? q.from({ deals: getDealsCollection() }).where(({ deals: item }) => eq(item.contactId, contactId)).orderBy(({ deals: item }) => item.updatedAt, "desc") : undefined, [canReadDeals, contactId]);
+  const { data: stages = [] } = useLiveQuery(q => canReadDeals ? q.from({ stages: getStagesCollection() }) : undefined, [canReadDeals]);
   const custom = useCustomFieldSections({ entityType: "contact", entityId: contactId, disabled: true });
   const owner = users.find(user => user.id === person?.ownerId);
   const company = companies[0];
