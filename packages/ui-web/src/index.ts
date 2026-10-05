@@ -97,6 +97,7 @@ export * from "./CrmWorkspace/CrmWorkspace.js";
 // Física da identidade para telas que compõem os próprios controles (ADR-0044).
 export { useSlidingIndicator } from "./motion/useSlidingIndicator.js";
 export { useLabelMorph } from "./motion/useLabelMorph.js";
+export { withViewTransition } from "./motion/viewTransition.js";
 export { prefersReducedMotion, useReducedMotion } from "./motion/useReducedMotion.js";
 export { Surface, type SurfaceProps, type SurfaceElevation, type SurfaceRadius } from "./Surface/Surface.js";
 export { SectionTitle } from "./SectionTitle/SectionTitle.js";

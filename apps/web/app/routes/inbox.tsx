@@ -7,7 +7,7 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { availableCannedReplies, personThreads, contactId, conversationId, fileId, formatPhone, integrationConnectionId, isWithinWhatsAppSessionWindow, messageId, teamId, userId, type Conversation, type ConversationChannel, type ConversationStatus, type Identity, type IdentityChannel, type Message } from "@spark/core";
 import { filesControllerComplete, filesControllerDownload, filesControllerUpload, inboxControllerSend } from "@spark/api-client";
 import { optimisticConversation, optimisticInternalNote } from "@spark/data";
-import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, SlaRing, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
+import { ActionModal, Button, ChannelChip, ChatAttachment, ChatDay, ChatThread, ChatTyping, ConversationHeader, ConversationList, ConversationListHeader, ConversationRow, EmptyState, Field, Icon, InlineField, Input, Label, MenuButton, MenuGroup, MenuItem, MenuNote, MenuSeparator, MessageBubble, Modal, ModalContent, ReplyComposer, ReplyComposerPreview, SearchSelect, Select, Sidebar, SidebarItem, SidebarSearch, SidebarSection, Signal, SlaRing, Surface, Tabs, Textarea, ViewSwitcher, ViewerStack, channelGlyph, notify, withViewTransition, type ChatAttachmentState, type ConversationRowProps, type ReplyComposerMode, type SelectOption } from "@spark/ui-web";
 import { getSession } from "../lib/auth.client";
 import { getContactsCollection } from "../lib/contacts-collection.client";
 import { getIdentitiesCollection } from "../lib/identities-collection.client";
@@ -238,14 +238,17 @@ export default function Inbox() {
   function openPerson(contact: string) {
     const route = defaultRoute(conversations.filter((item) => item.contactId === contact), queueByPerson.get(contact));
     if (!route) return;
-    setSelectedId(route.id);
-    setMobileView("thread");
+    // Na lista larga a conversa abre ao lado: a lista encolhe e o painel entra deslizando.
+    const open = () => { setSelectedId(route.id); setMobileView("thread"); };
+    if (layout === "list" && !personId) withViewTransition(open); else open();
   }
 
   function changeLayout(next: InboxLayout) {
-    setLayout(next);
-    // A lista larga começa inteira; a conversa abre ao lado quando uma linha é escolhida.
-    if (next === "list") setSelectedId(null);
+    withViewTransition(() => {
+      setLayout(next);
+      // A lista larga começa inteira; a conversa abre ao lado quando uma linha é escolhida.
+      if (next === "list") setSelectedId(null);
+    });
   }
 
   async function createConversation() {
@@ -401,7 +404,7 @@ export default function Inbox() {
         actions={<>
           <Button size="sm" variant="ghost" iconOnly icon={<Icon name="panel" />} aria-label="Abrir detalhes da conversa" className={styles.detailsTrigger} onClick={() => setDetailsOpen(true)} />
           <Button size="sm" variant="secondary" icon={<Icon name={selected.status === "closed" ? "undo" : "check"} />} disabled={!canWrite || saving} onClick={() => void updateConversation({ status: selected.status === "closed" ? "open" : "closed" })}>{selected.status === "closed" ? "Reabrir" : "Fechar"}</Button>
-          {layout === "list" && <Button size="sm" variant="ghost" iconOnly icon={<Icon name="close" />} aria-label="Fechar a conversa e voltar para a lista" onClick={() => { setSelectedId(null); setMobileView("list"); }} />}
+          {layout === "list" && <Button size="sm" variant="ghost" iconOnly icon={<Icon name="close" />} aria-label="Fechar a conversa e voltar para a lista" onClick={() => withViewTransition(() => { setSelectedId(null); setMobileView("list"); })} />}
         </>}
       />
       <ChatThread label={`Conversa com ${personName(personId)}`} threadKey={personId} empty="Conversa iniciada. Registre o contexto do atendimento numa nota para a equipe.">
