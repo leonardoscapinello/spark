@@ -29,7 +29,7 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
   // (packages/api-client/src/http-client.ts).
   app.enableCors({
     origin: process.env.WEB_ORIGIN ?? "http://localhost:3100",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   });
 

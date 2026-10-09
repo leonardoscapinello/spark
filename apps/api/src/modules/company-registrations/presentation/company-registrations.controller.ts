@@ -1,13 +1,14 @@
 import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from "@nestjs/swagger";
-import { CurrentSupabaseUser, SupabaseJwtGuard, type SupabaseJwtClaims } from "../../../auth/index.js";
+import { CapabilityGuard, RequireResourceAccess, CurrentSupabaseUser, SupabaseJwtGuard, type SupabaseJwtClaims } from "../../../auth/index.js";
 import { GetCurrentUserUseCase } from "../../identity/application/get-current-user.usecase.js";
 import { ResolveCompanyRegistrationUseCase } from "../application/resolve-company-registration.usecase.js";
 import { ResolveCompanyRegistrationDto, ResolveCompanyRegistrationResponseDto } from "../dto/company-registration.dto.js";
 
 @ApiTags("company-registrations")
 @ApiBearerAuth()
-@UseGuards(SupabaseJwtGuard)
+@UseGuards(SupabaseJwtGuard, CapabilityGuard)
+@RequireResourceAccess("company_registrations")
 @Controller("v1/company-registrations")
 export class CompanyRegistrationsController {
   constructor(

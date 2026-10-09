@@ -2,8 +2,8 @@ import { ForbiddenException, Injectable } from "@nestjs/common";
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { FastifyRequest } from "fastify";
-import { hasCapability, type Capability } from "@spark/core";
-import { REQUIRED_CAPABILITY_KEY } from "./require-capability.decorator.js";
+import { hasCapability, effectiveCapabilities, canReadSyncResource, type SyncResource, type Capability } from "@spark/core";
+import { REQUIRED_CAPABILITY_KEY, REQUIRED_RESOURCE_KEY } from "./require-capability.decorator.js";
 import { GetCurrentUserUseCase } from "../modules/identity/application/get-current-user.usecase.js";
 import { PermissionGroupsRepository } from "../modules/identity/infrastructure/permission-groups.repository.js";
 
@@ -29,7 +29,9 @@ export class CapabilityGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (!requiredCapability) {
+    const requiredResource = this.reflector.getAllAndOverride<SyncResource | undefined>(REQUIRED_RESOURCE_KEY, [context.getHandler(), context.getClass()]);
+
+    if (!requiredCapability && !requiredResource) {
       throw new ForbiddenException("Route has no declared capability.");
     }
 
@@ -41,8 +43,9 @@ export class CapabilityGuard implements CanActivate {
     const user = await this.getCurrentUser.execute(request.supabaseUser.sub);
     const groups = await this.permissionGroups.getUserCapabilities(user.id);
 
-    if (!hasCapability(groups, requiredCapability)) {
-      throw new ForbiddenException(`Missing the "${requiredCapability}" capability.`);
+    if ((requiredCapability && !hasCapability(groups, requiredCapability))
+      || (requiredResource && !canReadSyncResource(effectiveCapabilities(groups), requiredResource))) {
+      throw new ForbiddenException("Missing access to the requested resource.");
     }
 
     return true;
