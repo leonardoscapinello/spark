@@ -170,8 +170,8 @@ export function ConversationHeader({ name, avatarUrl, subtitle, channels, leadin
     <div className={s.identity}>
       <h2 className={s.name}>{name}</h2>
       {subtitle && <p className={s.subtitle}>{subtitle}</p>}
-      {channels && <div className={s.channels} role="group" aria-label={`Canais de ${name}`}>{channels}</div>}
     </div>
     {(presence || actions) && <div className={s.headerActions}>{presence}{actions}</div>}
+    {channels && <div className={s.channelSection}><span className={s.channelLabel}>Canais</span><div className={s.channels} role="group" aria-label={`Canais de ${name}`}>{channels}</div></div>}
   </header>;
 }

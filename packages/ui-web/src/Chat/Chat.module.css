@@ -163,13 +163,13 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--space-3);
-  padding: 18px 22px var(--space-4);
+  padding: var(--space-4) var(--space-5);
   border-bottom: var(--ui-hairline) solid var(--bd);
 }
 
 /* Voltar (celular) e avatar no mesmo encaixe: botão escondido não deixa vão. */
 .headerLeading { display: flex; flex: none; align-items: center; gap: var(--space-2); min-height: 40px; }
-.identity { display: flex; flex: 1 1 calc(var(--space-16) * 2); flex-direction: column; gap: 3px; min-width: 0; padding-top: 1px; }
+.identity { display: flex; flex: 1 1 calc(var(--space-16) * 2); flex-direction: column; gap: var(--space-1-5); min-width: 0; }
 
 .name {
   margin: 0;
@@ -192,8 +192,10 @@
   font-size: var(--fs-pequeno);
   line-height: var(--lh-pequeno);
   text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
-.channels { display: flex; flex-wrap: nowrap; gap: var(--space-1-5); margin-top: var(--space-2); overflow-x: auto; padding: var(--ui-focusWidth); }
-.headerActions { display: flex; flex: none; align-items: center; gap: var(--space-2); min-height: 40px; margin-inline-start: auto; }
+.channelSection { display: flex; flex-basis: 100%; align-items: center; gap: var(--space-3); min-width: 0; padding-top: var(--space-3); border-top: var(--ui-hairline) solid var(--bd); }
+.channelLabel { flex: none; color: var(--tx3); font-size: var(--fs-pequeno); font-weight: var(--fw-500); }
+.channels { display: flex; min-width: 0; gap: var(--space-2); overflow-x: auto; padding: var(--ui-focusWidth); }
+.headerActions { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-height: 40px; margin-inline-start: auto; }

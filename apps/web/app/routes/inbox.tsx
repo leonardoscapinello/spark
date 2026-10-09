@@ -161,6 +161,12 @@ export default function Inbox() {
   if (person?.email && !inboxes.some((item) => item.channel === "email") && !idleChannels.some((item) => item.channel === "email")) idleChannels.push({ key: "contact-email", channel: "email", title: "E-mail", handle: person.email });
   if (person?.phone && !inboxes.some((item) => item.channel === "whatsapp") && !idleChannels.some((item) => item.channel === "whatsapp" || item.channel === "phone")) idleChannels.push({ key: "contact-phone", channel: "phone", title: "Telefone", handle: formatPhone(person.phone) });
 
+  // O catálogo continua visível antes do primeiro contato, sem inventar uma rota de envio.
+  for (const channel of CHANNELS) {
+    if (channel.value === "manual" || inboxes.some((item) => item.channel === channel.value) || idleChannels.some((item) => item.channel === channel.value)) continue;
+    idleChannels.push({ key: `available:${channel.value}`, channel: channel.value, title: channel.label, handle: null });
+  }
+
   const self = useMemo(() => session ? { id: session.userId, name: userNames.get(userId.from(session.userId)) ?? "Você" } : null, [session, userNames]);
   const { viewers, typingUsers, notifyTyping } = useConversationPresence(selected ? `conversation:${selected.id}` : null, self);
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
@@ -415,6 +421,10 @@ export default function Inbox() {
         </> : undefined}
         presence={viewers.length > 0 ? <ViewerStack label="Pessoas vendo esta conversa" viewers={viewers.map((viewer) => ({ userId: userId.from(viewer.id), name: viewer.name, avatarUrl: null }))} status="connected" /> : undefined}
         actions={<>
+          <MenuButton size="sm" variant="ghost" iconOnly indicator={false} icon={<Icon name="settings" />} aria-label="Ferramentas da conversa" menu={<MenuGroup label="Ferramentas da conversa">
+            <MenuItem icon={<Icon name="panel" />} onClick={() => setDetailsOpen(true)}>Detalhes do atendimento</MenuItem>
+            <MenuItem icon={<Icon name="text" />} onClick={() => void navigate("/inbox/replies")}>Respostas prontas</MenuItem>
+          </MenuGroup>} />
           <Button size="sm" variant="ghost" iconOnly icon={<Icon name="panel" />} aria-label="Abrir detalhes da conversa" className={styles.detailsTrigger} onClick={() => setDetailsOpen(true)} />
           {selected.status === "closed"
             ? <Button size="sm" variant="secondary" icon={<Icon name="undo" />} disabled={!canWrite || saving} onClick={() => void updateConversation({ status: "open" })}>Reabrir atendimento</Button>

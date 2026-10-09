@@ -37,9 +37,12 @@ function Cabecalho({ name = "Carla Menezes", presence = false }: { name?: string
       <ChannelChip channel="whatsapp" title="WhatsApp Vendas" handle="+55 11 98765-4321" selected onSelect={() => undefined} />
       <ChannelChip channel="instagram" title="Instagram Loja Centro" handle="@carla.menezes" onSelect={() => undefined} />
       <ChannelChip channel="email" title="E-mail" handle="carla@acme.com.br" idle />
+      <ChannelChip channel="telegram" title="Telegram" idle />
+      <ChannelChip channel="messenger" title="Messenger" idle />
+      <ChannelChip channel="widget" title="Chat do site" idle />
     </>}
     {...(presence ? { presence: <ViewerStack status="connected" viewers={[{ userId: "00000000-0000-7000-8000-000000000001" as DealViewer["userId"], name: "Carlos Dias", avatarUrl: null }, { userId: "00000000-0000-7000-8000-000000000002" as DealViewer["userId"], name: "Beatriz Lopes", avatarUrl: null }]} /> } : {})}
-    actions={<><Button variant="ghost" size="sm" iconOnly icon={<Icon name="star" />} aria-label="Marcar como prioridade" /><Button variant="secondary" size="sm" icon={<Icon name="check" />}>Fechar</Button></>}
+    actions={<><Button variant="ghost" size="sm" iconOnly icon={<Icon name="settings" />} aria-label="Ferramentas da conversa" /><Button variant="secondary" size="sm" icon={<Icon name="check" />}>Fechar</Button></>}
   />;
 }
 

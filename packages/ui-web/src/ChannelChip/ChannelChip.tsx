@@ -47,7 +47,7 @@ export function ChannelChip({ channel, title, handle, selected = false, idle = f
     <span className={s.title}>{title}</span>
     {handle && <span className={s.handle}>{handle}</span>}
   </>;
-  const full = handle ? `${title} · ${handle}` : title;
+  const full = `${handle ? `${title} · ${handle}` : title}${idle ? " · Sem histórico neste canal" : ""}`;
   if (!onSelect) return <span className={s.root} data-idle={idle || undefined} title={full}>{content}</span>;
   return <button type="button" className={s.root} data-press="ghost" data-selected={selected || undefined} data-idle={idle || undefined} aria-pressed={selected} disabled={disabled} title={full} onClick={onSelect}>{content}</button>;
 }
