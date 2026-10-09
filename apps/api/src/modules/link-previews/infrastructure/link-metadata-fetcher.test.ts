@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LinkMetadataFetcher } from "./link-metadata-fetcher.js";
 
+vi.mock("undici", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("undici")>();
+  return { ...actual, fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args) };
+});
+
 describe("LinkMetadataFetcher", () => {
   afterEach(() => vi.unstubAllGlobals());
 

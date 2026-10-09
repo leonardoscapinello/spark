@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
+import { Injectable } from "@nestjs/common";
+import { fetch, type RequestInit, type Response } from "undici";
+import { publicAddressAgent } from "./public-address.js";
 import { normalizeLinkPreviewUrl } from "@spark/core";
 
 const MAX_HTML_BYTES = 512 * 1024;
@@ -28,8 +28,10 @@ export class LinkMetadataFetcher {
     // Reiniciar cinco segundos a cada redirect permitia uma espera longa.
     const signal = AbortSignal.timeout(3_500);
     for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
-      await assertPublicUrl(current, signal);
-      const response = await fetch(current, {
+      const dispatcher = await publicAddressAgent(current, signal);
+      try {
+      const options: RequestInit = {
+        dispatcher,
         redirect: "manual",
         signal,
         headers: {
@@ -38,7 +40,8 @@ export class LinkMetadataFetcher {
           ...(validators?.etag ? { "if-none-match": validators.etag } : {}),
           ...(validators?.lastModified ? { "if-modified-since": validators.lastModified } : {}),
         },
-      });
+      };
+      const response = await fetch(current, options);
       const maxAgeSeconds = cacheMaxAge(response.headers.get("cache-control"));
       if (response.status === 304) return { notModified: true, maxAgeSeconds };
       if (response.status >= 300 && response.status < 400) {
@@ -60,37 +63,10 @@ export class LinkMetadataFetcher {
         lastModified: clipped(response.headers.get("last-modified"), 500),
         maxAgeSeconds,
       };
+      } finally { await dispatcher.destroy(); }
     }
     throw new Error("Não foi possível buscar o link.");
   }
-}
-
-async function assertPublicUrl(raw: string, signal: AbortSignal): Promise<void> {
-  const parsed = new URL(normalizeLinkPreviewUrl(raw));
-  const hostname = parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) throw new BadRequestException("Esse endereço não pode ser consultado.");
-  const addresses = isIP(hostname) ? [{ address: hostname }] : await Promise.race([
-    lookup(hostname, { all: true, verbatim: true }),
-    aborted(signal),
-  ]);
-  if (addresses.length === 0 || addresses.some(({ address }) => isPrivateAddress(address))) throw new BadRequestException("Esse endereço não pode ser consultado.");
-}
-
-function aborted(signal: AbortSignal): Promise<never> {
-  return new Promise((_, reject) => {
-    if (signal.aborted) { reject(signal.reason); return; }
-    signal.addEventListener("abort", () => reject(signal.reason), { once: true });
-  });
-}
-
-function isPrivateAddress(address: string): boolean {
-  const normalized = address.toLowerCase();
-  if (normalized === "::" || normalized === "::1" || normalized.startsWith("fc") || normalized.startsWith("fd") || normalized.startsWith("fe8") || normalized.startsWith("fe9") || normalized.startsWith("fea") || normalized.startsWith("feb")) return true;
-  const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)?.[1];
-  const ipv4 = mapped ?? (isIP(normalized) === 4 ? normalized : null);
-  if (!ipv4) return false;
-  const [a = 0, b = 0] = ipv4.split(".").map(Number);
-  return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 198 && (b === 18 || b === 19));
 }
 
 async function limitedText(response: Response): Promise<string> {

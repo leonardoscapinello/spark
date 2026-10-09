@@ -37,4 +37,5 @@ Status: em andamento. Não equivale a certificação de ausência de vulnerabili
 - Arquivos: controlador exige capacidades distintas de leitura/escrita; pendente revisão do conteúdo e armazenamento.
 - Busca de sinks no frontend: sem `eval`, `new Function` ou HTML bruto nos diretórios de aplicação, UI e blocos. Mensagens do widget limitadas a tamanho/posição; aperfeiçoar validação de origem.
 - Fila offline corrigida: registro explícito de POST/PATCH/PUT/DELETE, token renovado somente para mesmo `sub` e `iss`, retenção de 401/408/429/5xx e fechamento do MessagePort. Quatro testes novos; `pnpm check` passou (62 tarefas, 7,031 s; `/tmp/spark-check-offline.log`).
-- Link previews: checa DNS antes de fetch, mas a conexão resolve novamente (risco de rebinding); IPv6 mapeado hexadecimal escapa da checagem atual. Correção pendente.
+- Link previews corrigido: conexão fixa o IP público validado, rejeita IPv6 mapeado interno e encerra o dispatcher em cada redirecionamento/erro. DNS compartilha o prazo da requisição. Segunda checagem passou: 20 tarefas, 3,644 s; `/tmp/spark-check-ssrf-2.log`.
+- Cabeçalho do atendimento reorganizado e catálogo de canais visível, mantendo histórico por pessoa. `e802fea`; `pnpm check`: 20 tarefas, 18,433 s.
