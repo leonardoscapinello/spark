@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -18,7 +19,7 @@ export function optimisticUserPreference(key: string, value: UserPreferenceValue
  * coleção é pequena: uma linha por chave.
  */
 export function createUserPreferencesCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "user_preferences",
       schema: UserPreferenceRowSchema,
@@ -39,19 +40,19 @@ export function createUserPreferencesCollection() {
         return confirmed(response);
       },
     }),
-  );
+  ));
 }
 
 /** Os itens das preferências que são lista ou objeto (ADR-0035), só leitura. */
 export function createUserPreferenceItemsCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "user_preference_items",
       schema: UserPreferenceItemSchema,
       getKey: (item) => item.id,
       shapeOptions: sparkShapeOptions("user_preference_items"),
     }),
-  );
+  ));
 }
 
 export type UserPreferencesCollection = ReturnType<typeof createUserPreferencesCollection>;

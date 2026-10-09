@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -33,7 +34,7 @@ export function optimisticDealProduct(input: Omit<CreateDealProductInput, "id">,
  * atualizar o total à mão (docs/adr/0018).
  */
 export function createDealProductsCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "deal_products",
       schema: DealProductSchema,
@@ -69,7 +70,7 @@ export function createDealProductsCollection() {
         return confirmed(response);
       },
     }),
-  );
+  ));
 }
 
 export type DealProductsCollection = ReturnType<typeof createDealProductsCollection>;

@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 /**
  * Local-first deals collection — same pattern as contacts-collection.ts
@@ -126,7 +127,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
   if (scope.pipelineId) shapeUrl.searchParams.set("pipelineId", scope.pipelineId);
   if (scope.status && scope.status !== "all") shapeUrl.searchParams.set("status", scope.status);
   if (scope.isArchived !== undefined) shapeUrl.searchParams.set("isArchived", String(scope.isArchived));
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: scope.collectionId ?? "deals",
       schema: DealCollectionSchema,
@@ -220,7 +221,7 @@ export function createDealsCollection(scope: DealsCollectionScope = {}) {
         }));
       },
     }),
-  );
+  ));
 }
 
 export type DealsCollection = ReturnType<typeof createDealsCollection>;

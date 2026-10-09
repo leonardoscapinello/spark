@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { DealFollowerSchema, type DealFollower, type DealId, type OrgId, type UserId } from "@spark/core";
@@ -19,7 +20,7 @@ export function createDealFollowersCollection(scope: DealFollowersCollectionScop
   const sharedShapeOptions = sparkShapeOptions("deal_followers");
   const shapeUrl = new URL(sharedShapeOptions.url);
   shapeUrl.searchParams.set("dealId", scope.dealId);
-  return createCollection(electricCollectionOptions({
+  return registerSessionCollection(createCollection(electricCollectionOptions({
     gcTime: INACTIVE_COLLECTION_GC_MS,
     id: scope.collectionId ?? `deal-followers-${scope.dealId}`,
     schema: DealFollowerSchema,
@@ -36,7 +37,7 @@ export function createDealFollowersCollection(scope: DealFollowersCollectionScop
       if (!mutation) throw new Error("onDelete called with no pending mutation.");
       return confirmed(await dealFollowersControllerRemove(mutation.original.dealId, mutation.original.userId));
     },
-  }));
+  })));
 }
 
 export type DealFollowersCollection = ReturnType<typeof createDealFollowersCollection>;

@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 /**
  * Local-first pipelines collection — same pattern as contacts-collection.ts
@@ -24,7 +25,7 @@ export function optimisticPipeline(input: Omit<CreatePipelineInput, "id">, orgId
 }
 
 export function createPipelinesCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "pipelines",
       schema: PipelineSchema,
@@ -45,7 +46,7 @@ export function createPipelinesCollection() {
         return confirmed(response);
       },
     }),
-  );
+  ));
 }
 
 export type PipelinesCollection = ReturnType<typeof createPipelinesCollection>;

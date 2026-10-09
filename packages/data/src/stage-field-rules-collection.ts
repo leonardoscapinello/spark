@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -13,7 +14,7 @@ export function optimisticStageFieldRule(input: Omit<CreateStageFieldRuleInput, 
 
 /** Regras de campo por etapa — pequenas e lidas por toda tela de negócio. */
 export function createStageFieldRulesCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "stage_field_rules",
       schema: StageFieldRuleSchema,
@@ -40,7 +41,7 @@ export function createStageFieldRulesCollection() {
         return confirmed(response);
       },
     }),
-  );
+  ));
 }
 
 export type StageFieldRulesCollection = ReturnType<typeof createStageFieldRulesCollection>;

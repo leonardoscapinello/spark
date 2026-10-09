@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { sparkShapeOptions } from "./shape-options.js";
 /**
@@ -39,7 +40,7 @@ export function optimisticActivity(input: Omit<CreateActivityInput, "id">, orgId
 }
 
 export function createActivitiesCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "activities",
       schema: ActivitySchema,
@@ -101,7 +102,7 @@ export function createActivitiesCollection() {
         return confirmed(response);
       },
     }),
-  );
+  ));
 }
 
 export type ActivitiesCollection = ReturnType<typeof createActivitiesCollection>;

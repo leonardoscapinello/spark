@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -17,7 +18,7 @@ export function optimisticNote(input: Omit<CreateNoteInput, "id">, orgId: OrgId,
 }
 
 export function createNotesCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "notes",
       schema: NoteSchema,
@@ -43,7 +44,7 @@ export function createNotesCollection() {
         return confirmed(response);
       },
     }),
-  );
+  ));
 }
 
 export type NotesCollection = ReturnType<typeof createNotesCollection>;

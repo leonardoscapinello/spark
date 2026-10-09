@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -29,7 +30,7 @@ export function optimisticCompany(input: Omit<CreateCompanyInput, "id">, orgId: 
 }
 
 export function createCompaniesCollection() {
-  return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
+  return registerSessionCollection(createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
     id: "companies",
     schema: CompanySchema,
     getKey: (company) => company.id,
@@ -73,7 +74,7 @@ export function createCompaniesCollection() {
         return confirmed(response);
       }));
     },
-  }));
+  })));
 }
 
 export type CompaniesCollection = ReturnType<typeof createCompaniesCollection>;

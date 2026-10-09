@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -12,7 +13,7 @@ import { sparkShapeOptions } from "./shape-options.js";
  * foi salvo. A tela junta catálogo e vínculo localmente (CLAUDE.md regra 5).
  */
 export function createTagsCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({
       gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "tags",
@@ -20,11 +21,11 @@ export function createTagsCollection() {
       getKey: (tag) => tag.id,
       shapeOptions: sparkShapeOptions("tags"),
     }),
-  );
+  ));
 }
 
 export function createContactTagsCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({
       gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "contact_tags",
@@ -33,11 +34,11 @@ export function createContactTagsCollection() {
       getKey: (link) => `${link.contactId}:${link.tagId}`,
       shapeOptions: sparkShapeOptions("contact_tags"),
     }),
-  );
+  ));
 }
 
 export function createCompanyTagsCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({
       gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "company_tags",
@@ -45,11 +46,11 @@ export function createCompanyTagsCollection() {
       getKey: (link) => `${link.companyId}:${link.tagId}`,
       shapeOptions: sparkShapeOptions("company_tags"),
     }),
-  );
+  ));
 }
 
 export function createProductTagsCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({
       gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "product_tags",
@@ -57,7 +58,7 @@ export function createProductTagsCollection() {
       getKey: (link) => `${link.productId}:${link.tagId}`,
       shapeOptions: sparkShapeOptions("product_tags"),
     }),
-  );
+  ));
 }
 
 export type TagsCollection = ReturnType<typeof createTagsCollection>;
@@ -66,6 +67,6 @@ export type CompanyTagsCollection = ReturnType<typeof createCompanyTagsCollectio
 export type ProductTagsCollection = ReturnType<typeof createProductTagsCollection>;
 
 export function createDealTagsCollection() {
-  return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS, id: "deal_tags", schema: DealTagSchema, getKey: (link) => `${link.dealId}:${link.tagId}`, shapeOptions: sparkShapeOptions("deal_tags") }));
+  return registerSessionCollection(createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS, id: "deal_tags", schema: DealTagSchema, getKey: (link) => `${link.dealId}:${link.tagId}`, shapeOptions: sparkShapeOptions("deal_tags") })));
 }
 export type DealTagsCollection = ReturnType<typeof createDealTagsCollection>;

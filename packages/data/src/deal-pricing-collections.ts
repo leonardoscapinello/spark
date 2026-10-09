@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -15,7 +16,7 @@ import { confirmed } from "./confirmed.js";
  * que valida e grava a foto — a linha chega aqui pelo Electric.
  */
 export function createDealAdjustmentsCollection() {
-  return createCollection(electricCollectionOptions({
+  return registerSessionCollection(createCollection(electricCollectionOptions({
     gcTime: INACTIVE_COLLECTION_GC_MS,
     id: "deal_adjustments",
     schema: DealAdjustmentSchema,
@@ -37,7 +38,7 @@ export function createDealAdjustmentsCollection() {
       if (!mutation) throw new Error("onDelete called with no pending mutation.");
       return confirmed(await dealAdjustmentsControllerRemove(mutation.original.id));
     },
-  }));
+  })));
 }
 export type DealAdjustmentsCollection = ReturnType<typeof createDealAdjustmentsCollection>;
 
@@ -45,7 +46,7 @@ export type DealAdjustmentsCollection = ReturnType<typeof createDealAdjustmentsC
 export function adjustmentForInsert(item: DealAdjustment) { return { ...item, amount: toCents(item.amount) }; }
 
 export function createCouponsCollection() {
-  return createCollection(electricCollectionOptions({
+  return registerSessionCollection(createCollection(electricCollectionOptions({
     gcTime: INACTIVE_COLLECTION_GC_MS,
     id: "coupons",
     schema: CouponSchema,
@@ -66,7 +67,7 @@ export function createCouponsCollection() {
       if (!mutation) throw new Error("onDelete called with no pending mutation.");
       return confirmed(await commercialTermsControllerRemoveCoupon(mutation.original.id));
     },
-  }));
+  })));
 }
 export type CouponsCollection = ReturnType<typeof createCouponsCollection>;
 
@@ -81,7 +82,7 @@ function couponBody(item: Coupon, withId: boolean) {
 export function couponForInsert(item: Coupon) { return { ...item, amount: toCents(item.amount), minimumSubtotal: item.minimumSubtotal === null ? null : toCents(item.minimumSubtotal) }; }
 
 export function createInstallmentPoliciesCollection() {
-  return createCollection(electricCollectionOptions({
+  return registerSessionCollection(createCollection(electricCollectionOptions({
     gcTime: INACTIVE_COLLECTION_GC_MS,
     id: "installment_policies",
     schema: InstallmentPolicySchema,
@@ -102,7 +103,7 @@ export function createInstallmentPoliciesCollection() {
       if (!mutation) throw new Error("onDelete called with no pending mutation.");
       return confirmed(await commercialTermsControllerRemovePolicy(mutation.original.id));
     },
-  }));
+  })));
 }
 export type InstallmentPoliciesCollection = ReturnType<typeof createInstallmentPoliciesCollection>;
 

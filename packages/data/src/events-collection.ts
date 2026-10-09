@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -17,11 +18,11 @@ export function createEventsCollection(scope: EventsCollectionScope = {}) {
   if (scope.dealId) shapeUrl.searchParams.set("dealId", scope.dealId);
   if (scope.contactId) shapeUrl.searchParams.set("contactId", scope.contactId);
   if (scope.companyId) shapeUrl.searchParams.set("companyId", scope.companyId);
-  return createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
+  return registerSessionCollection(createCollection(electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
     id: scope.collectionId ?? "events",
     schema: EventSchema,
     getKey: (event) => event.id,
     shapeOptions: { ...sharedShapeOptions, url: shapeUrl.toString() },
-  }));
+  })));
 }
 export type EventsCollection = ReturnType<typeof createEventsCollection>;

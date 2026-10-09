@@ -1,3 +1,4 @@
+import { leaveSessionDocument } from "./session-boundary.client";
 import type { Capability, OrgId } from "@spark/core";
 import { meControllerMe, setSparkApiBaseUrl, setSparkAuthTokenProvider, setSparkAuthTokenRefreshProvider } from "@spark/api-client";
 import { getImplicitRecoveryClient, getSupabaseClient } from "./supabase.client";
@@ -13,6 +14,7 @@ if (API_BASE_URL) setSparkApiBaseUrl(API_BASE_URL);
 export interface AppSession {
   orgId: OrgId;
   userId: string;
+  authUserId?: string;
   capabilities: Capability[];
   name?: string;
   avatarUrl?: string | null;
@@ -45,13 +47,16 @@ export interface AuthSessionDetails {
 }
 
 let accessToken: string | null = null;
+let authenticatedUserId: string | null = null;
+let sessionVersion = 0;
 let listening = false;
 let restoringSession: Promise<AppSession | null> | null = null;
 
 function readProfile(): AppSession | null {
   try {
     const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? (JSON.parse(raw) as AppSession) : null;
+    const profile = raw ? JSON.parse(raw) as AppSession : null;
+    return profile?.authUserId === authenticatedUserId && authenticatedUserId ? profile : null;
   } catch {
     return null;
   }
@@ -69,14 +74,31 @@ function listenForTokenRotation(): void {
   if (listening) return;
   listening = true;
   getSupabaseClient().auth.onAuthStateChange((_event, session) => {
-    accessToken = session?.access_token ?? null;
-    if (!session) clearProfile();
+    acceptSession(session);
   });
 }
 
+function acceptSession(session: { access_token: string; user: { id: string } } | null): boolean {
+  const nextUserId = session?.user.id ?? null;
+  const previousProfile = readProfile();
+  if (authenticatedUserId !== nextUserId) sessionVersion += 1;
+  if (authenticatedUserId && authenticatedUserId !== nextUserId && previousProfile) {
+    accessToken = null;
+    clearProfile();
+    leaveSessionDocument();
+    return false;
+  }
+  authenticatedUserId = nextUserId;
+  accessToken = session?.access_token ?? null;
+  if (!session) clearProfile();
+  return true;
+}
+
 async function resolveAppSession(): Promise<AppSession> {
+  const version = sessionVersion;
   const user = await meControllerMe();
-  const profile = { orgId: user.orgId as OrgId, userId: user.id, capabilities: user.capabilities, ...(user.name ? { name: user.name } : {}), ...(user.avatarUrl !== undefined ? { avatarUrl: user.avatarUrl } : {}) };
+  if (version !== sessionVersion || !accessToken) throw new Error("SESSION_CHANGED");
+  const profile = { ...(authenticatedUserId ? { authUserId: authenticatedUserId } : {}), orgId: user.orgId as OrgId, userId: user.id, capabilities: user.capabilities, ...(user.name ? { name: user.name } : {}), ...(user.avatarUrl !== undefined ? { avatarUrl: user.avatarUrl } : {}) };
   saveProfile(profile);
   return profile;
 }
@@ -103,7 +125,7 @@ export function getToken(): string | null {
  */
 export async function freshToken(): Promise<string | null> {
   const { data } = await getSupabaseClient().auth.getSession();
-  accessToken = data.session?.access_token ?? accessToken;
+  acceptSession(data.session);
   return accessToken;
 }
 
@@ -123,7 +145,7 @@ async function loadSession(): Promise<AppSession | null> {
     return null;
   }
 
-  accessToken = data.session.access_token;
+  if (!acceptSession(data.session)) return null;
   try {
     return await resolveAppSession();
   } catch (error) {
@@ -151,7 +173,7 @@ export async function signIn(email: string, password: string, totpCode?: string)
   if (error) throw new AuthFlowError(error.code === "invalid_credentials" ? "INVALID_CREDENTIALS" : "AUTH_UNAVAILABLE");
   if (!data.session) throw new AuthFlowError("AUTH_UNAVAILABLE");
 
-  accessToken = data.session.access_token;
+  if (!acceptSession(data.session)) throw new AuthFlowError("AUTH_UNAVAILABLE");
   const { data: assurance, error: assuranceError } = await getSupabaseClient().auth.mfa.getAuthenticatorAssuranceLevel();
   if (assuranceError) {
     await signOut();
@@ -262,8 +284,8 @@ async function passwordRecoveryProvider(): Promise<SupabaseClient | null> {
 }
 
 export async function signOut(): Promise<void> {
-  accessToken = null;
-  clearProfile();
+  acceptSession(null);
+  authenticatedUserId = null;
   await getSupabaseClient().auth.signOut({ scope: "local" });
 }
 
@@ -274,8 +296,8 @@ export async function signOutOtherSessions(): Promise<void> {
 
 export async function signOutEverywhere(): Promise<void> {
   const { error } = await getSupabaseClient().auth.signOut({ scope: "global" });
-  accessToken = null;
-  clearProfile();
+  acceptSession(null);
+  authenticatedUserId = null;
   if (error) throw new Error("SIGN_OUT_GLOBAL_FAILED");
 }
 

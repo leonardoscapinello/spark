@@ -44,3 +44,5 @@ Status: em andamento. Não equivale a certificação de ausência de vulnerabili
 
 - Orçamento de bundle: `pnpm size` aprovado (19 tarefas, 9,814 s), incluindo build cliente/SSR/service worker; `/tmp/spark-audit-size.log`.
 - Próxima revisão delimitada: isolamento do perfil/coleções ao trocar de sessão, MFA e autorização de presença; validação de entradas do widget e fechamento da matriz de endpoints.
+
+- Fronteira de sessão: perfil offline vinculado ao ID do Supabase; troca/logout limpa coleções e reinicia documento para descartar rascunhos React; refresh sem sessão não reutiliza token antigo. Teste com coleção TanStack real e regressões de troca de usuário. Segunda checagem passou: 41 tarefas, 10,551 s; `/tmp/spark-check-session-boundary-2.log`.

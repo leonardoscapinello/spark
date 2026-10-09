@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
@@ -26,7 +27,7 @@ export function optimisticSavedView(input: { name: string; entityType: SavedView
 }
 
 export function createSavedViewsCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "saved_views",
       schema: SavedViewSchema,
@@ -50,7 +51,7 @@ export function createSavedViewsCollection() {
         return confirmed(response);
       },
     }),
-  );
+  ));
 }
 
 export type SavedViewsCollection = ReturnType<typeof createSavedViewsCollection>;

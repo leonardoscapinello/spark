@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 /**
  * Local-first contacts collection — TanStack DB + Electric (docs/adr/0018).
@@ -55,7 +56,7 @@ export function optimisticContact(input: Omit<CreateContactInput, "id">, orgId: 
 }
 
 export function createContactsCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "contacts",
       schema: ContactSchema,
@@ -136,7 +137,7 @@ export function createContactsCollection() {
         }));
       },
     }),
-  );
+  ));
 }
 
 export type ContactsCollection = ReturnType<typeof createContactsCollection>;

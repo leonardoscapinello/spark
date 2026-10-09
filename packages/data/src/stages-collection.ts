@@ -1,3 +1,4 @@
+import { registerSessionCollection } from "./session-collections.js";
 import { INACTIVE_COLLECTION_GC_MS } from "./collection-lifecycle.js";
 /**
  * Local-first stages collection — same pattern as contacts-collection.ts
@@ -31,7 +32,7 @@ export function optimisticStage(input: Omit<CreateStageInput, "id">, orgId: OrgI
 }
 
 export function createStagesCollection() {
-  return createCollection(
+  return registerSessionCollection(createCollection(
     electricCollectionOptions({ gcTime: INACTIVE_COLLECTION_GC_MS,
       id: "stages",
       schema: StageSchema,
@@ -76,7 +77,7 @@ export function createStagesCollection() {
         );
       },
     }),
-  );
+  ));
 }
 
 export type StagesCollection = ReturnType<typeof createStagesCollection>;
