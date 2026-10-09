@@ -46,3 +46,5 @@ Status: em andamento. Não equivale a certificação de ausência de vulnerabili
 - Próxima revisão delimitada: isolamento do perfil/coleções ao trocar de sessão, MFA e autorização de presença; validação de entradas do widget e fechamento da matriz de endpoints.
 
 - Fronteira de sessão: perfil offline vinculado ao ID do Supabase; troca/logout limpa coleções e reinicia documento para descartar rascunhos React; refresh sem sessão não reutiliza token antigo. Teste com coleção TanStack real e regressões de troca de usuário. Segunda checagem passou: 41 tarefas, 10,551 s; `/tmp/spark-check-session-boundary-2.log`.
+
+- MFA: guard da API no modo JWKS de nuvem consulta o nível exigido pelo Supabase para tokens sem AAL2. Rejeita segundo fator pendente e falha de consulta; requisições simultâneas compartilham somente a consulta em curso. AAL2 assinado não acrescenta chamada remota. Quatro regressões; `pnpm check`: 23 tarefas, 5,574 s; `/tmp/spark-check-mfa.log`. Referência: https://supabase.com/docs/guides/auth/auth-mfa.

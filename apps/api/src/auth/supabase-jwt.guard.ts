@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { ConfigService } from "@nestjs/config";
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from "jose";
 import type { FastifyRequest } from "fastify";
@@ -22,6 +23,8 @@ declare module "fastify" {
 @Injectable()
 export class SupabaseJwtGuard implements CanActivate {
   private jwks?: JWTVerifyGetKey;
+  private assuranceClient?: SupabaseClient;
+  private readonly checkingAssurance = new Map<string, Promise<void>>();
 
   constructor(private readonly config: ConfigService) {}
 
@@ -50,10 +53,28 @@ export class SupabaseJwtGuard implements CanActivate {
         ...(issuer ? { issuer } : {}),
         ...(jwksUrl ? { audience: "authenticated" } : {}),
       });
+      if (jwksUrl && payload.aal !== "aal2") await this.requireAssurance(token);
       request.supabaseUser = SupabaseJwtClaimsSchema.parse(payload);
       return true;
     } catch {
       throw new UnauthorizedException("Invalid or expired token");
     }
   }
+
+  /** AAL1 só entra se não houver fator ativado. Sem cache que sobreviva à requisição. */
+  private requireAssurance(token: string): Promise<void> {
+    const pending = this.checkingAssurance.get(token);
+    if (pending) return pending;
+    this.assuranceClient ??= createClient(
+      this.config.getOrThrow<string>("SUPABASE_URL"),
+      this.config.getOrThrow<string>("SUPABASE_SECRET_KEY"),
+      { auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false } },
+    );
+    const check = this.assuranceClient.auth.mfa.getAuthenticatorAssuranceLevel(token).then(({ data, error }) => {
+      if (error || !data || (data.nextLevel === "aal2" && data.currentLevel !== "aal2")) throw new UnauthorizedException("Second factor required.");
+    }).finally(() => { this.checkingAssurance.delete(token); });
+    this.checkingAssurance.set(token, check);
+    return check;
+  }
+
 }
