@@ -25,7 +25,7 @@ Status: em andamento. Não equivale a certificação de ausência de vulnerabili
 
 - Dependências atualizadas: Fastify, adaptador Nest e Nodemailer; overrides de correções compatíveis para transitivas. `pnpm audit --prod --json`: zero alertas em 508 dependências. Checagem completa de compatibilidade passou: 72 tarefas, 36,639 s; log `/tmp/spark-check-dependencies.log`.
 - Revisar concorrência do recálculo de itens/ajustes e termos sem itens.
-- Revisar encerramento dos streams de sync (listener de close no request).
+- Sync corrigido: cancelamento ligado ao fechamento da resposta; teste HTTP real prova que GET encerrado não cancela SSE ativo. `pnpm check`: 20 tarefas, 3,772 s; `/tmp/spark-check-sync-lifecycle.log`.
 - Completar matriz de autorização/API/sync e entradas públicas; SSRF/XSS/arquivos.
 - Completar revisão de frontend e performance, rodar orçamento, documentar cobertura e limitações.
 - Commitar unidades validadas, enviar commits locais autorizados e conferir SHA remoto.
@@ -33,7 +33,7 @@ Status: em andamento. Não equivale a certificação de ausência de vulnerabili
 ## Evidências da revisão de código
 
 - Auth: guard valida JWT via JWKS; resolução de usuário nega usuário desativado; CapabilityGuard nega rota sem capacidade declarada.
-- Sync: tabela permitida explicitamente, organização e usuário determinados no servidor, visões desconhecidas recusadas; pendente revisão do ciclo de vida do stream.
+- Sync: tabela permitida explicitamente, organização e usuário determinados no servidor, visões desconhecidas recusadas; ciclo de vida corrigido e testado em HTTP real.
 - Arquivos: controlador exige capacidades distintas de leitura/escrita; pendente revisão do conteúdo e armazenamento.
 - Busca de sinks no frontend: sem `eval`, `new Function` ou HTML bruto nos diretórios de aplicação, UI e blocos. Mensagens do widget limitadas a tamanho/posição; aperfeiçoar validação de origem.
 - Fila offline corrigida: registro explícito de POST/PATCH/PUT/DELETE, token renovado somente para mesmo `sub` e `iss`, retenção de 401/408/429/5xx e fechamento do MessagePort. Quatro testes novos; `pnpm check` passou (62 tarefas, 7,031 s; `/tmp/spark-check-offline.log`).

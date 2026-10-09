@@ -15,6 +15,7 @@ import { PermissionGroupsRepository } from "../../identity/infrastructure/permis
 import { appendDealShapeScope } from "./deal-shape-scope.js";
 import { appendDealFollowerShapeScope } from "./deal-follower-shape-scope.js";
 import { appendEventShapeScope } from "./event-shape-scope.js";
+import { responseAbortSignal } from "./response-abort.js";
 
 /**
  * Authorization proxy in front of Electric (docs/adr/0018, docs/adr/0026).
@@ -159,9 +160,7 @@ export class ShapesController {
     // The browser closing its request (tab closed, shape unsubscribed) must
     // close ours to Electric too — otherwise every abandoned SSE stream
     // stays open upstream for as long as the process lives.
-    const abort = new AbortController();
-    request.raw.on("close", () => abort.abort());
-    const response = await fetch(upstream, { signal: abort.signal });
+    const response = await fetch(upstream, { signal: responseAbortSignal(reply.raw) });
 
     // Streamed by hand (hijack): Node only sends headers with the first body
     // byte, and an idle SSE stream (liveSse in packages/data) writes nothing
