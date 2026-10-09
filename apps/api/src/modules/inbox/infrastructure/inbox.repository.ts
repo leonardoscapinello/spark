@@ -13,6 +13,14 @@ export class InboxRepository {
     this.db = createAppDbClient();
   }
 
+  exists(orgId: OrgId, id: ConversationId): Promise<boolean> {
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [row] = await tx.select({ id: conversations.id }).from(conversations)
+        .where(and(eq(conversations.id, id), eq(conversations.orgId, orgId))).limit(1);
+      return !!row;
+    });
+  }
+
   createConversation(orgId: OrgId, actorUserId: UserId, input: CreateConversationInput): Promise<ConversationWriteResponse> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const contact = await tx.select({ id: contacts.id }).from(contacts).where(and(eq(contacts.id, input.contactId), eq(contacts.orgId, orgId), sql`${contacts.deletedAt} IS NULL`)).limit(1);

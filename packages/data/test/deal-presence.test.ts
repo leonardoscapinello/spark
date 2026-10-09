@@ -44,3 +44,39 @@ describe("deal presence transport", () => {
     try { await unavailable; expect(fetch).toHaveBeenCalledOnce(); } finally { stop(); }
   });
 });
+
+it("receives conversation typing separately from the viewer list and authenticates both paths", async () => {
+  const { subscribeConversationPresence, sendConversationTyping } = await import("../src/deal-presence.js");
+  const viewer = { userId: userId.create(), name: "Beatriz", avatarUrl: null };
+  let source: ReadableStreamDefaultController<Uint8Array> | undefined;
+  const body = new ReadableStream<Uint8Array>({ start(controller) {
+    source = controller;
+    const frames = `data: ${JSON.stringify([viewer])}\n\nevent: typing\ndata: ${JSON.stringify(viewer)}\n\n`;
+    const bytes = new TextEncoder().encode(frames);
+    controller.enqueue(bytes.slice(0, bytes.length - 5));
+    controller.enqueue(bytes.slice(bytes.length - 5));
+  } });
+  const fetchMock = vi.fn(async (_url: string, options: RequestInit) => {
+    if (options.method === "POST") return new Response(null, { status: 204 });
+    options.signal?.addEventListener("abort", () => source?.error(new Error("aborted")), { once: true });
+    return new Response(body);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  setSparkApiBaseUrl("https://api.example.test");
+  setSparkAuthTokenProvider(() => "private-token");
+  let receive!: (value: typeof viewer) => void;
+  const typing = new Promise<typeof viewer>((resolve) => { receive = resolve; });
+  const states: DealPresenceState[] = [];
+  const stop = subscribeConversationPresence("conversation", (state) => states.push(state), receive);
+  try {
+    expect(await typing).toEqual(viewer);
+    expect(states.at(-1)).toEqual({ status: "connected", viewers: [viewer] });
+    await sendConversationTyping("conversation", new AbortController().signal);
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "https://api.example.test/v1/conversations/conversation/presence",
+      "https://api.example.test/v1/conversations/conversation/typing",
+    ]);
+    for (const [, options] of fetchMock.mock.calls) expect(options.headers).toEqual({ authorization: "Bearer private-token" });
+    expect(fetchMock.mock.calls[1]?.[1].body).toBeUndefined();
+  } finally { stop(); vi.unstubAllGlobals(); }
+});

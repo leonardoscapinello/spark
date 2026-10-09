@@ -1,3 +1,5 @@
+import { ConversationPresenceController } from "./presentation/conversation-presence.controller.js";
+import { PresenceModule } from "../../common/presence.module.js";
 import { ServiceConfigurationRepository } from "./infrastructure/service-configuration.repository.js";
 import { ServiceConfigurationController } from "./presentation/service-configuration.controller.js";
 import { Module } from "@nestjs/common";
@@ -38,8 +40,8 @@ import { WidgetRepository } from "./infrastructure/widget.repository.js";
 import { PublicWidgetController } from "./presentation/widget-public.controller.js";
 
 @Module({
-  imports: [EventsModule, IntegrationsModule, FilesModule],
-  controllers: [ServiceConfigurationController, InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController, PostmarkWebhookController, WhatsAppTemplatesController, PublicWidgetController],
+  imports: [PresenceModule, EventsModule, IntegrationsModule, FilesModule],
+  controllers: [ConversationPresenceController, ServiceConfigurationController, InboxController, InstagramWebhookController, WhatsAppWebhookController, MessengerWebhookController, TelegramWebhookController, PostmarkWebhookController, WhatsAppTemplatesController, PublicWidgetController],
   providers: [ServiceConfigurationRepository, CreateConversationUseCase, UpdateConversationUseCase, AddInternalNoteUseCase, SendMessageUseCase, InboxRepository, OutboundMessagesRepository, CannedRepliesRepository, InstagramWebhookRepository, WhatsAppWebhookRepository, MessengerWebhookRepository, TelegramWebhookRepository, PostmarkWebhookRepository, InboundMediaStorage, InboundMessageIngestor, WebhookQueue, WhatsAppTemplatesRepository, ListWhatsAppTemplatesUseCase, SyncWhatsAppTemplatesUseCase, WidgetRepository, ChannelSender, GetCurrentUserUseCase, UsersRepository, PermissionGroupsRepository, SupabaseJwtGuard, CapabilityGuard],
 })
 export class InboxModule {}

@@ -1,77 +1,65 @@
 import { useEffect, useRef, useState } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
-import { getSupabaseClient } from "./supabase.client";
+import { sendConversationTyping, subscribeConversationPresence } from "@spark/data";
 
 export interface PresenceUser { id: string; name: string }
-
 interface UseConversationPresenceResult {
   viewers: PresenceUser[];
   typingUsers: PresenceUser[];
   notifyTyping: () => void;
 }
-
-const TYPING_EVENT = "typing";
 const TYPING_TTL_MS = 4_000;
 const TYPING_THROTTLE_MS = 2_000;
 
-/** Presença (quem está vendo) + "digitando..." por canal, via Supabase Realtime — broadcast e presence não passam pela API (ADR-0005). */
-export function useConversationPresence(channelKey: string | null, self: PresenceUser | null): UseConversationPresenceResult {
+/** Authenticated ephemeral presence; server determines organization and author. */
+export function useConversationPresence(conversationId: string | null, self: PresenceUser | null): UseConversationPresenceResult {
   const [viewers, setViewers] = useState<PresenceUser[]>([]);
   const [typingUsers, setTypingUsers] = useState<PresenceUser[]>([]);
-  const channelRef = useRef<RealtimeChannel | null>(null);
-  const lastTypingSentAt = useRef(0);
-  const typingTimers = useRef(new Map<string, number>());
+  const notifyRef = useRef<() => void>(() => undefined);
+  const selfId = self?.id;
 
   useEffect(() => {
-    for (const timer of typingTimers.current.values()) window.clearTimeout(timer);
-    typingTimers.current.clear();
     setTypingUsers([]);
     setViewers([]);
-    channelRef.current = null;
-    if (!channelKey || !self) return;
-
-    const client = getSupabaseClient();
-    const channel = client.channel(`inbox:${channelKey}`, { config: { presence: { key: self.id } } });
-
-    channel.on("presence", { event: "sync" }, () => {
-      const state = channel.presenceState<PresenceUser>();
-      const peers = Object.values(state).flat().filter((peer) => peer.id !== self.id);
-      setViewers(dedupeById(peers));
-    });
-    channel.on("broadcast", { event: TYPING_EVENT }, ({ payload }: { payload: PresenceUser }) => {
-      if (payload.id === self.id) return;
-      setTypingUsers((current) => dedupeById([...current.filter((item) => item.id !== payload.id), payload]));
-      const existingTimer = typingTimers.current.get(payload.id);
-      if (existingTimer) window.clearTimeout(existingTimer);
-      typingTimers.current.set(payload.id, window.setTimeout(() => {
-        setTypingUsers((current) => current.filter((item) => item.id !== payload.id));
-        typingTimers.current.delete(payload.id);
+    if (!conversationId || !selfId) return;
+    const timers = new Map<string, ReturnType<typeof setTimeout>>();
+    const abort = new AbortController();
+    let connected = false;
+    let pending = false;
+    let lastSentAt = 0;
+    const clearTyping = () => {
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+      setTypingUsers([]);
+    };
+    const stop = subscribeConversationPresence(conversationId, (state) => {
+      connected = state.status === "connected";
+      setViewers(state.viewers.filter((viewer) => viewer.userId !== selfId).map((viewer) => ({ id: viewer.userId, name: viewer.name })));
+      if (!connected) clearTyping();
+    }, (viewer) => {
+      if (viewer.userId === selfId) return;
+      const peer = { id: viewer.userId, name: viewer.name };
+      setTypingUsers((current) => [...current.filter((item) => item.id !== peer.id), peer]);
+      clearTimeout(timers.get(peer.id));
+      timers.set(peer.id, setTimeout(() => {
+        setTypingUsers((current) => current.filter((item) => item.id !== peer.id));
+        timers.delete(peer.id);
       }, TYPING_TTL_MS));
     });
-    channel.subscribe((status) => { if (status === "SUBSCRIBED") void channel.track(self); });
-    channelRef.current = channel;
-
-    return () => {
-      for (const timer of typingTimers.current.values()) window.clearTimeout(timer);
-      typingTimers.current.clear();
-      void channel.untrack();
-      void client.removeChannel(channel);
-      channelRef.current = null;
+    notifyRef.current = () => {
+      const now = Date.now();
+      if (!connected || pending || now - lastSentAt < TYPING_THROTTLE_MS) return;
+      lastSentAt = now;
+      pending = true;
+      void sendConversationTyping(conversationId, abort.signal).catch(() => undefined).finally(() => { pending = false; });
     };
-  }, [channelKey, self?.id, self?.name]);
+    return () => {
+      notifyRef.current = () => undefined;
+      stop();
+      abort.abort();
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+    };
+  }, [conversationId, selfId]);
 
-  function notifyTyping() {
-    const channel = channelRef.current;
-    if (!channel || !self) return;
-    const now = Date.now();
-    if (now - lastTypingSentAt.current < TYPING_THROTTLE_MS) return;
-    lastTypingSentAt.current = now;
-    void channel.send({ type: "broadcast", event: TYPING_EVENT, payload: self });
-  }
-
-  return { viewers, typingUsers, notifyTyping };
-}
-
-function dedupeById(items: PresenceUser[]): PresenceUser[] {
-  return [...new Map(items.map((item) => [item.id, item])).values()];
+  return { viewers, typingUsers, notifyTyping: () => notifyRef.current() };
 }

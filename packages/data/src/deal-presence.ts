@@ -1,10 +1,27 @@
-import { DealPresenceSchema, type DealViewer } from "@spark/core";
+import { DealPresenceSchema, DealViewerSchema, type DealViewer } from "@spark/core";
 import { getSparkApiBaseUrl, getSparkAuthToken, refreshSparkAuthToken } from "@spark/api-client";
 
 export interface DealPresenceState { status: "connecting" | "connected" | "unavailable"; viewers: DealViewer[] }
 
 /** Ephemeral presence uses the same HTTP/2 origin, never the save queue. */
 export function subscribeDealPresence(dealId: string, onState: (state: DealPresenceState) => void): () => void {
+  return subscribePresence("deals", dealId, onState);
+}
+
+export function subscribeConversationPresence(id: string, onState: (state: DealPresenceState) => void, onTyping: (viewer: DealViewer) => void): () => void {
+  return subscribePresence("conversations", id, onState, onTyping);
+}
+
+/** Never queued offline: a typing event has no value after its moment has passed. */
+export async function sendConversationTyping(id: string, signal: AbortSignal): Promise<void> {
+  const response = await fetch(`${getSparkApiBaseUrl()}/v1/conversations/${encodeURIComponent(id)}/typing`, {
+    method: "POST", headers: { authorization: `Bearer ${getSparkAuthToken() ?? ""}` },
+    signal: AbortSignal.any([signal, AbortSignal.timeout(5_000)]),
+  });
+  await response.body?.cancel();
+}
+
+function subscribePresence(resource: "deals" | "conversations", id: string, onState: (state: DealPresenceState) => void, onTyping?: (viewer: DealViewer) => void): () => void {
   let stopped = false;
   let active: AbortController | undefined;
   let retry: ReturnType<typeof setTimeout> | undefined;
@@ -18,7 +35,7 @@ export function subscribeDealPresence(dealId: string, onState: (state: DealPrese
     const renewDeadline = () => { clearTimeout(deadline); deadline = setTimeout(() => abort.abort(), 45_000); };
     renewDeadline();
     try {
-      const request = () => fetch(`${getSparkApiBaseUrl()}/v1/deals/${encodeURIComponent(dealId)}/presence`, {
+      const request = () => fetch(`${getSparkApiBaseUrl()}/v1/${resource}/${encodeURIComponent(id)}/presence`, {
         headers: { authorization: `Bearer ${getSparkAuthToken() ?? ""}` }, signal: abort.signal,
       });
       let response = await request();
@@ -50,6 +67,10 @@ export function subscribeDealPresence(dealId: string, onState: (state: DealPrese
           while ((boundary = buffer.indexOf("\n\n")) >= 0) {
             const frame = buffer.slice(0, boundary);
             buffer = buffer.slice(boundary + 2);
+            if (frame.startsWith("event: typing\ndata: ")) {
+              if (!stopped) onTyping?.(DealViewerSchema.parse(JSON.parse(frame.slice("event: typing\ndata: ".length))));
+              continue;
+            }
             if (!frame.startsWith("data: ")) continue;
             const viewers = DealPresenceSchema.parse(JSON.parse(frame.slice(6)));
             attempts = 0;

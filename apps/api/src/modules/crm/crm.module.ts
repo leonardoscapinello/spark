@@ -1,3 +1,4 @@
+import { PresenceModule } from "../../common/presence.module.js";
 import { Module } from "@nestjs/common";
 import { SettingsModule } from "../settings/settings.module.js";
 import { PipelinesController } from "./presentation/pipelines.controller.js";
@@ -28,7 +29,6 @@ import { UsersRepository } from "../identity/infrastructure/users.repository.js"
 import { PermissionGroupsRepository } from "../identity/infrastructure/permission-groups.repository.js";
 import { SupabaseJwtGuard, CapabilityGuard } from "../../auth/index.js";
 import { EventsModule } from "../events/events.module.js";
-import { DealPresenceService } from "./infrastructure/deal-presence.service.js";
 import { DealPresenceController } from "./presentation/deal-presence.controller.js";
 import { BusinessCalendarController } from "./presentation/business-calendar.controller.js";
 import { BusinessCalendarRepository } from "./infrastructure/business-calendar.repository.js";
@@ -36,9 +36,9 @@ import { DealFollowersController } from "./presentation/deal-followers.controlle
 import { DealFollowersRepository } from "./infrastructure/deal-followers.repository.js";
 
 @Module({
-  imports: [SettingsModule, EventsModule],
+  imports: [PresenceModule, SettingsModule, EventsModule],
   controllers: [DealFollowersController, BusinessCalendarController, DealPresenceController, StageFieldRulesController, DealProductsController, DealAdjustmentsController, DealTermsController, PipelinesController, StagesController, DealsController],
-  providers: [DealFollowersRepository, BusinessCalendarRepository, DealPresenceService, StageFieldRulesRepository, DealProductsRepository, DealPricingRepository,
+  providers: [DealFollowersRepository, BusinessCalendarRepository, StageFieldRulesRepository, DealProductsRepository, DealPricingRepository,
     CreatePipelineUseCase,
     CreateStageUseCase,
     RenameStageUseCase,

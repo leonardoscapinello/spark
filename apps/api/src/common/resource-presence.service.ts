@@ -1,7 +1,7 @@
 import { Injectable, type OnModuleDestroy } from "@nestjs/common";
 import { Redis } from "ioredis";
 import { randomUUID } from "node:crypto";
-import { DealPresenceSchema, uniqueDealViewers, type DealId, type DealViewer, type OrgId } from "@spark/core";
+import { DealPresenceSchema, DealViewerSchema, uniqueDealViewers, type ConversationId, type DealId, type DealViewer, type OrgId } from "@spark/core";
 
 // Ephemeral leases, not business data. A crashed API cannot leave a ghost
 // viewer indefinitely; all API replicas use the same Valkey transport.
@@ -30,14 +30,23 @@ if changed then redis.call('PUBLISH', KEYS[3], payload) end
 return payload
 `;
 
+export type PresenceResource = { kind: "deal"; id: DealId } | { kind: "conversation"; id: ConversationId };
+type TypingListener = (viewer: DealViewer) => void;
+
+function resourcePrefix(orgId: OrgId, resource: PresenceResource): string {
+  return `spark:presence:${resource.kind}:{${orgId}:${resource.id}}`;
+}
+
 type Listener = (viewers: DealViewer[] | null) => void;
 
 @Injectable()
-export class DealPresenceService implements OnModuleDestroy {
+export class ResourcePresenceService implements OnModuleDestroy {
   private commands?: Redis;
   private subscriber?: Redis;
   private ready: Promise<void> | undefined;
   private readonly listeners = new Map<string, Set<Listener>>();
+
+  private readonly typingListeners = new Map<string, Set<TypingListener>>();
 
   private ensureReady(): Promise<void> {
     if (this.ready) return this.ready;
@@ -50,6 +59,15 @@ export class DealPresenceService implements OnModuleDestroy {
     this.subscriber.on("error", unavailable);
     this.subscriber.on("close", unavailable);
     this.subscriber.on("pmessage", (_pattern: string, channel: string, payload: string) => {
+      if (channel.endsWith(":typing")) {
+        const listeners = this.typingListeners.get(channel);
+        if (!listeners) return;
+        try {
+          const viewer = DealViewerSchema.parse(JSON.parse(payload));
+          for (const listener of listeners) listener(viewer);
+        } catch { /* Invalid ephemeral events are discarded. */ }
+        return;
+      }
       const listeners = this.listeners.get(channel);
       if (!listeners) return;
       try {
@@ -58,7 +76,7 @@ export class DealPresenceService implements OnModuleDestroy {
       } catch { for (const listener of listeners) listener(null); }
     });
     this.ready = Promise.all([this.commands.connect(), this.subscriber.connect()])
-      .then(async () => { await this.subscriber!.psubscribe("spark:presence:deal:*:updates"); })
+      .then(async () => { await this.subscriber!.psubscribe("spark:presence:deal:*:updates", "spark:presence:conversation:*:updates", "spark:presence:conversation:*:typing"); })
       .catch((error: unknown) => {
         this.commands?.disconnect();
         this.subscriber?.disconnect();
@@ -68,9 +86,9 @@ export class DealPresenceService implements OnModuleDestroy {
     return this.ready;
   }
 
-  async join(orgId: OrgId, dealId: DealId, viewer: DealViewer, listener: Listener) {
+  async join(orgId: OrgId, resource: PresenceResource, viewer: DealViewer, listener: Listener) {
     await this.ensureReady();
-    const prefix = `spark:presence:deal:{${orgId}:${dealId}}`;
+    const prefix = resourcePrefix(orgId, resource);
     const channel = `${prefix}:updates`;
     const sessionId = randomUUID();
     const listeners = this.listeners.get(channel) ?? new Set<Listener>();
@@ -95,6 +113,20 @@ export class DealPresenceService implements OnModuleDestroy {
       renew: async () => { if (!closed) listener(await update(JSON.stringify(viewer))); },
       leave,
     };
+  }
+
+  async listenTyping(orgId: OrgId, id: ConversationId, listener: TypingListener): Promise<() => void> {
+    await this.ensureReady();
+    const channel = `${resourcePrefix(orgId, { kind: "conversation", id })}:typing`;
+    const listeners = this.typingListeners.get(channel) ?? new Set<TypingListener>();
+    listeners.add(listener);
+    this.typingListeners.set(channel, listeners);
+    return () => { listeners.delete(listener); if (!listeners.size) this.typingListeners.delete(channel); };
+  }
+
+  async publishTyping(orgId: OrgId, id: ConversationId, viewer: DealViewer): Promise<void> {
+    await this.ensureReady();
+    await this.commands!.publish(`${resourcePrefix(orgId, { kind: "conversation", id })}:typing`, JSON.stringify(viewer));
   }
 
   onModuleDestroy(): void {

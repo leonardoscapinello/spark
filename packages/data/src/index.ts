@@ -41,7 +41,7 @@ export * from "./company-registrations-collections.js";
 export * from "./whatsapp-templates-collection.js";
 export * from "./calendar-events-collection.js";
 export * from "./tag-collections.js";
-export { subscribeDealPresence, type DealPresenceState } from "./deal-presence.js";
+export { subscribeDealPresence, subscribeConversationPresence, sendConversationTyping, type DealPresenceState } from "./deal-presence.js";
 
 export { createContactCompaniesCollection } from "./contact-companies-collection.js";
 

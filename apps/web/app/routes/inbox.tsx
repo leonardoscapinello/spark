@@ -168,7 +168,7 @@ export default function Inbox() {
   }
 
   const self = useMemo(() => session ? { id: session.userId, name: userNames.get(userId.from(session.userId)) ?? "Você" } : null, [session, userNames]);
-  const { viewers, typingUsers, notifyTyping } = useConversationPresence(selected ? `conversation:${selected.id}` : null, self);
+  const { viewers, typingUsers, notifyTyping } = useConversationPresence(selected?.id ?? null, self);
   const usableReplies = availableCannedReplies(cannedReplies, selected?.teamId ?? null);
   const replyable = selected ? REPLYABLE_CHANNELS.has(selected.channel) : false;
   const windowClosed = Boolean(selected) && selected!.channel === "whatsapp" && !isWithinWhatsAppSessionWindow(selected!.lastInboundMessageAt, now);
