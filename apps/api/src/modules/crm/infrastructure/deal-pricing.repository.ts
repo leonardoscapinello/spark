@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { and, asc, count, eq, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNull, sql } from "drizzle-orm";
 import { coupons, createAppDbClient, dealAdjustments, dealProducts, deals, installmentPolicies, withOrgContext, type SparkDb } from "@spark/db";
 import {
   COUPON_REJECTION_MESSAGE, DomainError, couponRejection, installmentQuote, money, normalizeCouponCode, pricingOfDeal, toCents, toInstallmentPolicy,
@@ -14,6 +14,13 @@ import { DomainEventWriter } from "../../events/application/domain-event-writer.
  * que grava em `deals.amount` o valor do contrato calculado pelo core. O funil
  * soma esse campo; a tela calcula o mesmo número com a mesma função.
  */
+/** A linha pai é travada antes de qualquer escrita nos itens, ajustes ou condições. */
+export async function lockDealPricing(tx: SparkDb, orgId: OrgId, dealId: DealId) {
+  const [deal] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1).for("update");
+  if (!deal) throw new NotFoundException("Negócio não encontrado.");
+  return deal;
+}
+
 export async function loadDealPricing(tx: SparkDb, orgId: OrgId, dealId: DealId): Promise<DealPricing> {
   const [deal] = await tx.select({ subscriptionInterval: deals.subscriptionInterval, subscriptionCycles: deals.subscriptionCycles, contractMonths: deals.contractMonths }).from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId))).limit(1);
   if (!deal) throw new NotFoundException("Negócio não encontrado.");
@@ -41,6 +48,7 @@ export class DealPricingRepository {
 
   addAdjustment(orgId: OrgId, actorUserId: UserId, input: CreateDealAdjustmentInput): Promise<{ adjustment: DealAdjustment; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      await lockDealPricing(tx, orgId, input.dealId);
       await requireItems(tx, orgId, input.dealId);
       const [row] = await tx.insert(dealAdjustments).values({
         id: input.id, orgId, dealId: input.dealId, kind: input.kind, label: input.label, valueType: input.valueType,
@@ -55,6 +63,7 @@ export class DealPricingRepository {
 
   changeAdjustment(orgId: OrgId, actorUserId: UserId, id: DealAdjustmentId, input: UpdateDealAdjustmentInput): Promise<{ adjustment: DealAdjustment; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      await lockAdjustmentDeal(tx, orgId, id);
       const [before] = await tx.select().from(dealAdjustments).where(eq(dealAdjustments.id, id)).limit(1);
       if (!before) throw new NotFoundException("Ajuste não encontrado.");
       if (before.couponId) throw new DomainError("INVALID_STATE", "Cupom aplicado não se edita: remova e aplique de novo.");
@@ -77,6 +86,7 @@ export class DealPricingRepository {
 
   removeAdjustment(orgId: OrgId, actorUserId: UserId, id: DealAdjustmentId): Promise<{ adjustment: null; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      await lockAdjustmentDeal(tx, orgId, id);
       const [row] = await tx.delete(dealAdjustments).where(eq(dealAdjustments.id, id)).returning();
       if (!row) throw new NotFoundException("Ajuste não encontrado.");
       const dealAmount = await recalculateDealAmount(tx, orgId, row.dealId as DealId);
@@ -88,6 +98,7 @@ export class DealPricingRepository {
   /** Valida o cupom pelo código (janela, mínimo, usos) e grava a foto dele como ajuste. */
   applyCoupon(orgId: OrgId, actorUserId: UserId, input: ApplyCouponInput, now: Date): Promise<{ adjustment: DealAdjustment; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      await lockDealPricing(tx, orgId, input.dealId);
       await requireItems(tx, orgId, input.dealId);
       const code = normalizeCouponCode(input.code);
       const [coupon] = await tx.select().from(coupons).where(and(eq(coupons.orgId, orgId), eq(coupons.code, code))).limit(1).for("update");
@@ -116,8 +127,7 @@ export class DealPricingRepository {
   /** Assinatura e parcelamento. O parcelamento é conferido contra a política (máximo e parcela mínima). */
   updateTerms(orgId: OrgId, actorUserId: UserId, dealId: DealId, input: UpdateDealTermsInput): Promise<{ dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
-      const [before] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId))).limit(1);
-      if (!before) throw new NotFoundException("Negócio não encontrado.");
+      const before = await lockDealPricing(tx, orgId, dealId);
       const changes = {
         ...(input.subscriptionInterval !== undefined ? { subscriptionInterval: input.subscriptionInterval } : {}),
         ...(input.subscriptionCycles !== undefined ? { subscriptionCycles: input.subscriptionCycles } : {}),
@@ -126,7 +136,8 @@ export class DealPricingRepository {
         ...(input.installments !== undefined ? { installments: input.installments } : {}),
       };
       await tx.update(deals).set({ ...changes, updatedAt: new Date() }).where(eq(deals.id, dealId));
-      const dealAmount = await recalculateDealAmount(tx, orgId, dealId);
+      const [item] = await tx.select({ id: dealProducts.id }).from(dealProducts).where(and(eq(dealProducts.orgId, orgId), eq(dealProducts.dealId, dealId))).limit(1);
+      const dealAmount = item ? await recalculateDealAmount(tx, orgId, dealId) : money(before.amount);
 
       const policyId = input.installmentPolicyId !== undefined ? input.installmentPolicyId : before.installmentPolicyId;
       const installments = input.installments ?? before.installments;
@@ -134,7 +145,7 @@ export class DealPricingRepository {
         const [policy] = await tx.select().from(installmentPolicies).where(and(eq(installmentPolicies.orgId, orgId), eq(installmentPolicies.id, policyId))).limit(1);
         if (!policy) throw new DomainError("NOT_FOUND", "Política de parcelamento não encontrada.");
         const { once } = await loadDealPricing(tx, orgId, dealId);
-        installmentQuote(once.total, toInstallmentPolicy({ ...policy, minimumInstallment: money(policy.minimumInstallment) }), installments);
+        installmentQuote(item ? once.total : dealAmount, toInstallmentPolicy({ ...policy, minimumInstallment: money(policy.minimumInstallment) }), installments);
       }
 
       const fields = Object.keys(changes);
@@ -163,4 +174,10 @@ async function captureTxid(tx: SparkDb): Promise<number> {
 
 function toAdjustment(row: typeof dealAdjustments.$inferSelect): DealAdjustment {
   return { ...row, amount: money(row.amount), createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() } as DealAdjustment;
+}
+
+async function lockAdjustmentDeal(tx: SparkDb, orgId: OrgId, id: DealAdjustmentId) {
+  const [adjustment] = await tx.select({ dealId: dealAdjustments.dealId }).from(dealAdjustments).where(and(eq(dealAdjustments.orgId, orgId), eq(dealAdjustments.id, id))).limit(1);
+  if (!adjustment) throw new NotFoundException("Ajuste não encontrado.");
+  await lockDealPricing(tx, orgId, adjustment.dealId as DealId);
 }

@@ -24,7 +24,7 @@ Status: em andamento. Não equivale a certificação de ausência de vulnerabili
 ## Pendências de revisão
 
 - Dependências atualizadas: Fastify, adaptador Nest e Nodemailer; overrides de correções compatíveis para transitivas. `pnpm audit --prod --json`: zero alertas em 508 dependências. Checagem completa de compatibilidade passou: 72 tarefas, 36,639 s; log `/tmp/spark-check-dependencies.log`.
-- Revisar concorrência do recálculo de itens/ajustes e termos sem itens.
+- Itens, ajustes, cupons e condições agora adquirem lock no negócio antes das escritas dependentes. Alterar condições sem itens preserva valor manual. Três regressões exercitam preservação, recálculo e espera do lock (fronteira de banco simulada; sem teste concorrente no banco de produção). `pnpm check`: 20 tarefas, 3,821 s; `/tmp/spark-check-pricing-lock.log`.
 - Sync corrigido: cancelamento ligado ao fechamento da resposta; teste HTTP real prova que GET encerrado não cancela SSE ativo. `pnpm check`: 20 tarefas, 3,772 s; `/tmp/spark-check-sync-lifecycle.log`.
 - Completar matriz de autorização/API/sync e entradas públicas; SSRF/XSS/arquivos.
 - Completar revisão de frontend e performance, rodar orçamento, documentar cobertura e limitações.

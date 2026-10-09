@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { createAppDbClient, dealProducts, withOrgContext, type SparkDb } from "@spark/db";
 import { auditChanges, money, toCents, type CreateDealProductInput, type DealId, type DealProduct, type DealProductId, type Money, type OrgId, type UpdateDealProductInput, type UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
-import { recalculateDealAmount } from "./deal-pricing.repository.js";
+import { lockDealPricing, recalculateDealAmount } from "./deal-pricing.repository.js";
 
 /**
  * Itens do negócio. Toda escrita aqui **recalcula `deals.amount`** na mesma
@@ -21,6 +21,7 @@ export class DealProductsRepository {
 
   add(orgId: OrgId, actorUserId: UserId, input: CreateDealProductInput): Promise<{ item: DealProduct; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      await lockDealPricing(tx, orgId, input.dealId);
       const [row] = await tx.insert(dealProducts).values({
         id: input.id,
         orgId,
@@ -46,6 +47,7 @@ export class DealProductsRepository {
 
   change(orgId: OrgId, actorUserId: UserId, id: DealProductId, input: UpdateDealProductInput): Promise<{ item: DealProduct; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      await lockProductDeal(tx, orgId, id);
       const [before] = await tx.select().from(dealProducts).where(eq(dealProducts.id, id)).limit(1);
       if (!before) throw new NotFoundException(`Deal product ${id} not found.`);
       const [row] = await tx.update(dealProducts).set({
@@ -72,6 +74,7 @@ export class DealProductsRepository {
 
   remove(orgId: OrgId, actorUserId: UserId, id: DealProductId): Promise<{ item: null; dealAmount: Money; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
+      await lockProductDeal(tx, orgId, id);
       const [row] = await tx.delete(dealProducts).where(eq(dealProducts.id, id)).returning();
       if (!row) throw new NotFoundException(`Deal product ${id} not found.`);
       const dealAmount = await recalculateDealAmount(tx, orgId, row.dealId as DealId);
@@ -96,4 +99,10 @@ function toItem(row: typeof dealProducts.$inferSelect): DealProduct {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   } as DealProduct;
+}
+
+async function lockProductDeal(tx: SparkDb, orgId: OrgId, id: DealProductId) {
+  const [item] = await tx.select({ dealId: dealProducts.dealId }).from(dealProducts).where(and(eq(dealProducts.orgId, orgId), eq(dealProducts.id, id))).limit(1);
+  if (!item) throw new NotFoundException("Item não encontrado.");
+  await lockDealPricing(tx, orgId, item.dealId as DealId);
 }
