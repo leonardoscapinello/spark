@@ -82,6 +82,11 @@ export class WidgetRepository {
     // Bootstrap público: nenhuma org conhecida ainda, por isso a tabela sem RLS — o publicKey em si é o controle de acesso.
     const [row] = await this.db.select().from(widgetPublicKeys).where(eq(widgetPublicKeys.publicKey, publicKey)).limit(1);
     if (!row) throw new NotFoundException("Widget indisponível.");
+    const connected = await withOrgContext(this.db, row.orgId as OrgId, async tx => {
+      const [connection] = await tx.select({ id: integrationConnections.id }).from(integrationConnections).where(and(eq(integrationConnections.orgId, row.orgId), eq(integrationConnections.id, row.connectionId), eq(integrationConnections.provider, "widget"), eq(integrationConnections.status, "connected"))).limit(1);
+      return Boolean(connection);
+    });
+    if (!connected) throw new NotFoundException("Widget indisponível.");
     return { orgId: row.orgId as OrgId, connectionId: row.connectionId as IntegrationConnectionId };
   }
 }

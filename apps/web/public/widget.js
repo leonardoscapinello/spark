@@ -31,14 +31,15 @@
 
   window.addEventListener("message", function (event) {
     var data = event.data;
-    if (!data || data.source !== "spark-widget" || event.source !== iframe.contentWindow) return;
+    if (!data || data.source !== "spark-widget" || event.source !== iframe.contentWindow || event.origin !== origin) return;
     if (data.type === "size") {
-      iframe.style.width = data.width + "px";
-      iframe.style.height = data.height + "px";
+      if (!Number.isFinite(data.width) || !Number.isFinite(data.height) || data.width < BUBBLE || data.height < BUBBLE) return;
+      iframe.style.width = Math.min(data.width, Math.max(BUBBLE, window.innerWidth - 40)) + "px";
+      iframe.style.height = Math.min(data.height, Math.max(BUBBLE, window.innerHeight - 40)) + "px";
     }
     if (data.type === "position") {
       if (data.position === "left") { iframe.style.left = "20px"; iframe.style.right = "auto"; }
-      else { iframe.style.right = "20px"; iframe.style.left = "auto"; }
+      else if (data.position === "right") { iframe.style.right = "20px"; iframe.style.left = "auto"; }
     }
   });
 })();

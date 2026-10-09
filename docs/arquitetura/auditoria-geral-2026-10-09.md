@@ -48,3 +48,28 @@ Status: em andamento. Não equivale a certificação de ausência de vulnerabili
 - Fronteira de sessão: perfil offline vinculado ao ID do Supabase; troca/logout limpa coleções e reinicia documento para descartar rascunhos React; refresh sem sessão não reutiliza token antigo. Teste com coleção TanStack real e regressões de troca de usuário. Segunda checagem passou: 41 tarefas, 10,551 s; `/tmp/spark-check-session-boundary-2.log`.
 
 - MFA: guard da API no modo JWKS de nuvem consulta o nível exigido pelo Supabase para tokens sem AAL2. Rejeita segundo fator pendente e falha de consulta; requisições simultâneas compartilham somente a consulta em curso. AAL2 assinado não acrescenta chamada remota. Quatro regressões; `pnpm check`: 23 tarefas, 5,574 s; `/tmp/spark-check-mfa.log`. Referência: https://supabase.com/docs/guides/auth/auth-mfa.
+
+## Fechamento de cobertura — estado atual
+
+| Frente | Evidência | Situação |
+|---|---|---|
+| Atualização e publicação | Pull concluído; remoto confirmado em `afa16ff` antes desta revisão | Correções validadas publicadas; widget e este relatório ainda locais |
+| Tipos, lint, testes e build | Checagens completas e por unidade acima; `pnpm size` incluiu cliente, SSR e worker | Check do widget aprovado após corrigir o ambiente do teste |
+| Dependências | Zero alertas no checkpoint registrado | Não equivale a garantia sobre vulnerabilidades ainda não publicadas |
+| Dinheiro e concorrência | Regressões de parcelamento, preço manual, recorrência e lock | Corrigido no código; sem ensaio concorrente no banco de produção |
+| Sessão e MFA | Coleção TanStack real limpa; regressões de perfil, token e MFA | Corrigido e enviado |
+| Endpoints | Inventário de 47 controladores; seis sem JWT, todos webhooks ou widget | Exceções autenticadas identificadas abaixo |
+| Sync | Whitelist e recortes por org/usuário/capacidade; secrets fora da whitelist | Revisão concluída; cancelamento SSE corrigido |
+| Webhooks | Meta usa HMAC SHA-256 do corpo bruto; Telegram e Postmark usam comparação de segredo em tempo constante | Revisão de código concluída; sem disparar entregas reais |
+| Segredos | Vault usa AES-256-GCM, IV aleatório de 12 bytes e chave de 32 bytes; tabela de segredos fora do sync | Revisão de código concluída; não houve exportação de credenciais |
+| Recursos no frontend | Drag do editor remove listeners/cancela RAF; layout remove atalhos; ficha limpa intervalo; presença limpa timers | Presença de atendimento ainda usa canal público do Supabase e precisa de autorização |
+| Interface | Cabeçalho e canais ajustados; contratos de componentes no check | Revisão visual final dos fluxos não concluída |
+
+### Achados restantes
+
+- Widget corrigido: origem e dimensões do embed validadas, conexão desativada recusada, entrada de visitante validada e polling cancelável sem sobreposição. Teste de embed corrigido para leitura local; `pnpm check` passou: 20 tarefas, 12,567 s; `/tmp/spark-check-widget-final.log`.
+- O CORS em `apps/api/src/main.ts` permite GET/POST/PATCH/DELETE, mas preferências usam PUT (`UserPreferencesController`). Navegador em origem distinta não consegue realizar esse preflight. Correção pendente.
+- Cinco controladores autenticados não usam `CapabilityGuard`: `/me` e preferências são do próprio usuário; sync aplica política compartilhada; resolução de CNPJ e de prévias de link ainda precisam ter a autorização confrontada com a política de leitura correspondente.
+- Presença do atendimento: o hook cria canal Supabase sem `private: true` e publica nome/ID escolhidos pelo cliente. A troca para transporte autenticado ainda não foi implementada.
+
+Não houve teste destrutivo, envio real a terceiros, modificação de dados do Postgres de produção, teste de carga ou certificação de segurança. Esses limites não apagam os achados pendentes acima.

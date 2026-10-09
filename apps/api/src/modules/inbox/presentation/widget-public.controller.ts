@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { SendWidgetMessageInputSchema } from "@spark/core";
+import { BadRequestException, Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { WidgetRepository } from "../infrastructure/widget.repository.js";
 import { SendWidgetMessageDto, StartWidgetConversationDto, WidgetConfigDto, WidgetConversationStateDto } from "../dto/inbox.dto.js";
@@ -22,5 +23,9 @@ export class PublicWidgetController {
   send(@Param("publicKey") publicKey: string, @Body() body: SendWidgetMessageDto): Promise<WidgetConversationStateDto> { return this.widget.send(publicKey, body) as Promise<WidgetConversationStateDto>; }
 
   @Get(":publicKey/messages") @ApiOkResponse({ type: WidgetConversationStateDto })
-  poll(@Param("publicKey") publicKey: string, @Query("visitorId") visitorId: string): Promise<WidgetConversationStateDto> { return this.widget.state(publicKey, visitorId) as Promise<WidgetConversationStateDto>; }
+  poll(@Param("publicKey") publicKey: string, @Query("visitorId") visitorId: string): Promise<WidgetConversationStateDto> {
+    const parsed = SendWidgetMessageInputSchema.shape.visitorId.safeParse(visitorId);
+    if (!parsed.success) throw new BadRequestException("Identificação do visitante inválida.");
+    return this.widget.state(publicKey, parsed.data) as Promise<WidgetConversationStateDto>;
+  }
 }

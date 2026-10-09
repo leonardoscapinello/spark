@@ -23,7 +23,13 @@ export default function Widget() {
   const [open, setOpen] = useState(false);
 
   // A página inteira é o conteúdo do <iframe> que o loader.js injeta no site do cliente — o fundo da página do cliente tem que aparecer ao redor da bolha/painel.
-  useEffect(() => { document.documentElement.style.background = "transparent"; document.body.style.background = "transparent"; }, []);
+  useEffect(() => {
+    const rootBackground = document.documentElement.style.background;
+    const bodyBackground = document.body.style.background;
+    document.documentElement.style.background = "transparent";
+    document.body.style.background = "transparent";
+    return () => { document.documentElement.style.background = rootBackground; document.body.style.background = bodyBackground; };
+  }, []);
   useEffect(() => { postToParent({ type: "position", position: config.position }); }, [config.position]);
   useEffect(() => {
     postToParent(open
@@ -33,7 +39,7 @@ export default function Widget() {
 
   return <div className={styles.root}>
     {open
-      ? <Panel config={config} onClose={() => setOpen(false)} />
+      ? <Panel key={config.publicKey} config={config} onClose={() => setOpen(false)} />
       : <ChatLauncher brand={config.color} onOpen={() => setOpen(true)} />}
   </div>;
 }
@@ -45,24 +51,31 @@ function Panel({ config, onClose }: { config: WidgetConfig; onClose: () => void 
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   useEffect(() => {
-    let cancelled = false;
+    const abort = new AbortController();
     const stored = readConversation(config.publicKey);
     if (!stored) return;
-    publicWidgetControllerPoll(config.publicKey, { visitorId }).then((state) => {
-      if (cancelled) return;
+    publicWidgetControllerPoll(config.publicKey, { visitorId }, abort.signal).then((state) => {
+      if (abort.signal.aborted) return;
       setConversationId(state.conversationId);
       setMessages(state.messages);
     }).catch(() => undefined);
-    return () => { cancelled = true; };
+    return () => abort.abort();
   }, [config.publicKey, visitorId]);
 
   useEffect(() => {
-    if (!conversationId) return;
-    const timer = window.setInterval(() => {
-      publicWidgetControllerPoll(config.publicKey, { visitorId }).then((state) => setMessages(state.messages)).catch(() => undefined);
-    }, POLL_INTERVAL_MS);
-    return () => window.clearInterval(timer);
-  }, [conversationId, config.publicKey, visitorId]);
+    if (!conversationId || sending) return;
+    const abort = new AbortController();
+    let timer: number;
+    const poll = async () => {
+      try {
+        const state = await publicWidgetControllerPoll(config.publicKey, { visitorId }, abort.signal);
+        if (!abort.signal.aborted) setMessages(state.messages);
+      } catch { /* A próxima consulta recupera falhas transitórias. */ }
+      finally { if (!abort.signal.aborted) timer = window.setTimeout(() => void poll(), POLL_INTERVAL_MS); }
+    };
+    timer = window.setTimeout(() => void poll(), POLL_INTERVAL_MS);
+    return () => { abort.abort(); window.clearTimeout(timer); };
+  }, [conversationId, config.publicKey, visitorId, sending]);
 
   async function submit() {
     const body = text.trim();
