@@ -35,7 +35,7 @@ self.addEventListener("activate", () => {
  * Fila de envio (docs/adr/0017): escrita feita sem sinal não vira erro.
  *
  * Só escrita para a API (POST/PATCH/PUT/DELETE em /v1/, nunca o proxy de
- * shapes, que é leitura do Electric). Quando o fetch falha por rede — e só
+ * shapes, que é leitura do Electric, nem digitação efêmera). Quando o fetch falha por rede — e só
  * por rede: resposta HTTP de erro passa direto, é a API dizendo "não" — a
  * requisição vai para a fila e a página recebe 202 {queued:true}. As
  * coleções (packages/data confirmed()) leem isso como "sem txid ainda" e
@@ -111,7 +111,8 @@ self.addEventListener("message", (event) => {
 });
 
 for (const method of WRITE_METHODS) registerRoute(
-  ({ request, url }) => url.origin === API_ORIGIN && url.pathname.startsWith("/v1/") && !url.pathname.startsWith("/v1/shapes") && request.method === method,
+  ({ request, url }) => url.origin === API_ORIGIN && url.pathname.startsWith("/v1/") && !url.pathname.startsWith("/v1/shapes")
+    && !/^\/v1\/conversations\/[^/]+\/typing\/?$/.test(url.pathname) && request.method === method,
   async ({ request }) => {
     try {
       return await fetch(request.clone());
