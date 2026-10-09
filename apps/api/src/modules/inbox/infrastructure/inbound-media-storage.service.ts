@@ -15,7 +15,7 @@ export class InboundMediaStorage {
   async store(orgId: OrgId, fileId: FileId, name: string, mimeType: string, bytes: Buffer): Promise<{ storageConnectionId: string; objectKey: string }> {
     const { connectionId, storage } = await this.resolver.forNewUpload(orgId);
     const objectKey = `${fileId}/${safeName(name)}`;
-    const target = await storage.createUpload(orgId, objectKey, mimeType);
+    const target = await storage.createUpload(orgId, objectKey, mimeType, bytes.byteLength);
     const response = await fetch(target.uploadUrl, { method: "PUT", headers: { "Content-Type": mimeType }, body: bytes });
     if (!response.ok) throw new ServiceUnavailableException("Não foi possível guardar a mídia recebida.");
     // `files.objectKey` guarda a chave SEM o prefixo de org — download()/remove() reaplicam

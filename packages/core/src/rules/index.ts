@@ -13,3 +13,5 @@ export * from "./customFieldKey.js";
 export * from "./tag.js";
 export * from "./preferenceStorage.js";
 export * from "./contactMerge.js";
+
+export * from "./fileUpload.js";

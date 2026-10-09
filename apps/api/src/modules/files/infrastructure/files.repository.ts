@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
 import { createAppDbClient, files, withOrgContext, type SparkDb } from "@spark/db";
+import { assertUploadedFile } from "@spark/core";
 import type { CreateFileUploadInput, FileDownloadResponse, FileId, FileUploadResponse, FileWriteResponse, OrgId, StoredFile, UserId } from "@spark/core";
 import { DomainEventWriter } from "../../events/application/domain-event-writer.js";
 import { StorageResolver } from "./storage-resolver.service.js";
@@ -11,7 +12,7 @@ export class FilesRepository {
   constructor(private readonly resolver: StorageResolver, private readonly events: DomainEventWriter) {}
   async createUpload(orgId: OrgId, userId: UserId, input: CreateFileUploadInput): Promise<FileUploadResponse> {
     const resolved = await this.resolver.forNewUpload(orgId); const objectKey = `${input.id}/${safeName(input.name)}`;
-    const target = await resolved.storage.createUpload(orgId, objectKey, input.mimeType);
+    const target = await resolved.storage.createUpload(orgId, objectKey, input.mimeType, input.sizeBytes);
     return withOrgContext(this.db, orgId, async (tx) => {
       const [row] = await tx.insert(files).values({ id: input.id, orgId, storageConnectionId: resolved.connectionId, createdBy: userId, name: input.name, objectKey, mimeType: input.mimeType, sizeBytes: input.sizeBytes, folder: input.folder ?? null }).returning();
       if (!row) throw new Error("File insert returned no row."); const txid = await captureTxid(tx);
@@ -19,8 +20,23 @@ export class FilesRepository {
       return { file: toFile(row), uploadUrl: target.uploadUrl, expiresAt: target.expiresAt, txid };
     });
   }
-  complete(orgId: OrgId, userId: UserId, id: FileId): Promise<FileWriteResponse> {
-    return withOrgContext(this.db, orgId, async (tx) => { const [row] = await tx.update(files).set({ status: "ready", updatedAt: new Date() }).where(and(eq(files.id, id), eq(files.orgId, orgId), eq(files.status, "pending"))).returning(); if (!row) throw new NotFoundException("Arquivo pendente não encontrado."); const txid = await captureTxid(tx); await this.events.append(tx, { orgId, type: "file.upload_completed", data: { fileId: id, actorUserId: userId } }); return { file: toFile(row), txid }; });
+  async complete(orgId: OrgId, userId: UserId, id: FileId): Promise<FileWriteResponse> {
+    const pending = await withOrgContext(this.db, orgId, async (tx) => {
+      const [row] = await tx.select().from(files).where(and(eq(files.id, id), eq(files.orgId, orgId), eq(files.status, "pending"), sql`${files.deletedAt} is null`)).limit(1);
+      if (!row) throw new NotFoundException("Arquivo pendente não encontrado.");
+      return row;
+    });
+    const storage = await this.resolver.byConnection(orgId, pending.storageConnectionId as StoredFile["storageConnectionId"]);
+    const uploaded = await storage.metadata(orgId, pending.objectKey);
+    if (!uploaded) throw new BadRequestException("O envio ainda não chegou ao armazenamento. Aguarde o upload terminar.");
+    assertUploadedFile(pending, uploaded);
+    return withOrgContext(this.db, orgId, async (tx) => {
+      const [row] = await tx.update(files).set({ status: "ready", updatedAt: new Date() }).where(and(eq(files.id, id), eq(files.orgId, orgId), eq(files.status, "pending"), sql`${files.deletedAt} is null`)).returning();
+      if (!row) throw new NotFoundException("Arquivo pendente não encontrado.");
+      const txid = await captureTxid(tx);
+      await this.events.append(tx, { orgId, type: "file.upload_completed", data: { fileId: id, actorUserId: userId } });
+      return { file: toFile(row), txid };
+    });
   }
   async download(orgId: OrgId, id: FileId): Promise<FileDownloadResponse> {
     const row = await this.findReady(orgId, id); const storage = await this.resolver.byConnection(orgId, row.storageConnectionId as FileUploadResponse["file"]["storageConnectionId"]); const target = await storage.createDownload(orgId, row.objectKey);
