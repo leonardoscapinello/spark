@@ -90,7 +90,7 @@ export class DealPricingRepository {
     return withOrgContext(this.db, orgId, async (tx) => {
       await requireItems(tx, orgId, input.dealId);
       const code = normalizeCouponCode(input.code);
-      const [coupon] = await tx.select().from(coupons).where(and(eq(coupons.orgId, orgId), eq(coupons.code, code))).limit(1);
+      const [coupon] = await tx.select().from(coupons).where(and(eq(coupons.orgId, orgId), eq(coupons.code, code))).limit(1).for("update");
       if (!coupon) throw new DomainError("NOT_FOUND", `Cupom ${code} não existe.`);
       const [already] = await tx.select({ id: dealAdjustments.id }).from(dealAdjustments).where(and(eq(dealAdjustments.orgId, orgId), eq(dealAdjustments.dealId, input.dealId), eq(dealAdjustments.couponId, coupon.id))).limit(1);
       if (already) throw new DomainError("ALREADY_EXISTS", `O cupom ${code} já está aplicado neste negócio.`);

@@ -103,3 +103,13 @@ describe("cupom", () => {
     expect(couponRejection(coupon, { subtotal: money(10_000), now: at("2026-11-10T12:00:00Z"), redemptions: 100 })).toBe("exhausted");
   });
 });
+
+ describe("limites das opções de parcelamento", () => {
+  const policy: InstallmentPolicy = { maxInstallments: 3, interestFreeInstallments: 2, monthlyInterestBasisPoints: 10000, minimumInstallment: money(6000), upfrontDiscountBasisPoints: 0 };
+  it("continua após uma opção abaixo do mínimo quando juros tornam a seguinte válida", () => {
+    expect(installmentOptions(money(10000), policy).map(option => option.installments)).toEqual([1, 3]);
+  });
+  it("recusa quantidade fracionária e não finita sem arredondar silenciosamente", () => {
+    for (const n of [1.5, NaN, Infinity]) expect(() => installmentQuote(money(10000), policy, n)).toThrow(DomainError);
+  });
+});

@@ -30,6 +30,8 @@ const ELEMENTS = [
 export default tseslint.config(
   {
     ignores: [
+      // Material de referência importado; não faz parte do código executável.
+      "packages/tokens/fonts/brockmann/Claude outputs/**",
       "**/dist/**",
       "**/build/**",
       "**/.output/**",

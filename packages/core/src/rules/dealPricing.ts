@@ -197,8 +197,8 @@ export interface InstallmentQuote {
 
 /** Uma condição: n parcelas para um valor. Juros pela Tabela Price, arredondando a parcela uma vez. */
 export function installmentQuote(amount: Money, policy: InstallmentPolicy, installments: number): InstallmentQuote {
-  const n = Math.floor(installments);
-  if (n < 1 || n > policy.maxInstallments) throw new DomainError("VALIDATION_FAILED", `Parcelamento aceita de 1 a ${policy.maxInstallments} parcelas.`, { installments });
+  const n = installments;
+  if (!Number.isSafeInteger(n) || n < 1 || n > policy.maxInstallments) throw new DomainError("VALIDATION_FAILED", `Parcelamento aceita de 1 a ${policy.maxInstallments} parcelas.`, { installments });
   const base = Math.max(0, toCents(amount));
   const upfrontDiscount = n === 1 ? percentOf(base, policy.upfrontDiscountBasisPoints) : 0;
   const principal = base - upfrontDiscount;
@@ -223,7 +223,10 @@ export function installmentQuote(amount: Money, policy: InstallmentPolicy, insta
 export function installmentOptions(amount: Money, policy: InstallmentPolicy): InstallmentQuote[] {
   const options: InstallmentQuote[] = [];
   for (let n = 1; n <= policy.maxInstallments; n++) {
-    try { options.push(installmentQuote(amount, policy, n)); } catch { break; }
+    try { options.push(installmentQuote(amount, policy, n)); } catch (error) {
+      // Ao começar a cobrar juros, uma parcela posterior pode voltar ao mínimo.
+      if (!(error instanceof DomainError)) throw error;
+    }
   }
   return options;
 }
