@@ -5,6 +5,7 @@ import { and, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { createAppDbClient, withOrgContext, deals, contacts, companies, contactCompanies, stages, stageFieldRules, customFieldDefinitions, dealProducts, stageTransitions, dealStageMoves, type SparkDb } from "@spark/db";
 import {
   money,
+  assertManualDealAmount,
   evaluateStageFields,
   stageFieldMessage,
   stageFieldLabel,
@@ -168,8 +169,12 @@ export class DealsRepository {
   async edit(orgId: OrgId, actorUserId: UserId, dealId: DealId, input: EditDealInput): Promise<{ deal: Deal; txid: number }> {
     return withOrgContext(this.db, orgId, async (tx) => {
       const txid = await captureTxid(tx);
-      const [before] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1);
+      const [before] = await tx.select().from(deals).where(and(eq(deals.orgId, orgId), eq(deals.id, dealId), isNull(deals.deletedAt))).limit(1).for("update");
       if (!before) throw new NotFoundException(`Deal ${dealId} not found.`);
+      if (input.amount !== undefined) {
+        const items = await tx.select({ id: dealProducts.id }).from(dealProducts).where(and(eq(dealProducts.orgId, orgId), eq(dealProducts.dealId, dealId))).limit(1);
+        assertManualDealAmount(items.length);
+      }
       if (input.contactId !== undefined || input.companyId !== undefined) await validateCompany(tx, orgId, input.contactId === undefined ? before.contactId : input.contactId, input.companyId === undefined ? before.companyId : input.companyId);
       const [row] = await tx
         .update(deals)

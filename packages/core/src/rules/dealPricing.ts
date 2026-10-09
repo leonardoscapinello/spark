@@ -294,3 +294,8 @@ export function pricingOfDeal(deal: DealTermsFields, items: readonly ItemFields[
     subscription,
   });
 }
+
+/** Com itens, o total pertence ao cálculo; a edição manual não pode sobrescrevê-lo. */
+export function assertManualDealAmount(productCount: number): void {
+  if (productCount > 0) throw new DomainError("INVALID_STATE", "O valor deste negócio é calculado pelos itens. Altere os itens ou os ajustes.");
+}

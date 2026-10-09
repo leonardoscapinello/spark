@@ -1,3 +1,4 @@
+import { assertManualDealAmount } from "./dealPricing.js";
 import { describe, expect, it } from "vitest";
 import { money, toCents } from "../money/index.js";
 import { DomainError } from "../errors/index.js";
@@ -111,5 +112,12 @@ describe("cupom", () => {
   });
   it("recusa quantidade fracionária e não finita sem arredondar silenciosamente", () => {
     for (const n of [1.5, NaN, Infinity]) expect(() => installmentQuote(money(10000), policy, n)).toThrow(DomainError);
+  });
+});
+
+describe("valor manual do negócio", () => {
+  it("permite valor manual sem itens e rejeita sobrescrever o total calculado", () => {
+    expect(() => assertManualDealAmount(0)).not.toThrow();
+    expect(() => assertManualDealAmount(1)).toThrow("calculado pelos itens");
   });
 });
