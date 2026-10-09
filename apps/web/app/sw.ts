@@ -17,6 +17,7 @@
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { Queue } from "workbox-background-sync";
+import { refreshQueuedAuthorization, retryQueuedResponse } from "./lib/queued-request";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -44,7 +45,7 @@ self.addEventListener("activate", () => {
  * Retenção: 24 h.
  */
 const API_ORIGIN = new URL(import.meta.env.VITE_API_BASE_URL || "http://localhost:3000").origin;
-const WRITE_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
+const WRITE_METHODS = ["POST", "PATCH", "PUT", "DELETE"] as const;
 const sendQueue = new Queue("spark-send-queue", {
   maxRetentionTime: 24 * 60,
   // Repete e, saia como sair, conta para a página o que ficou — é o que
@@ -62,16 +63,18 @@ const sendQueue = new Queue("spark-send-queue", {
  * (app/lib/send-queue.client.ts → auth.client freshToken); sem janela
  * aberta, ou sem resposta em 3 s, vai o token guardado mesmo. Falha de
  * rede devolve a entrada à frente da fila e lança — é assim que o Workbox
- * sabe que deve agendar outro `sync`. Resposta HTTP, qualquer uma, tira
- * a entrada da fila: a API falou, e repetir um 4xx só repetiria o erro.
+ * sabe que deve agendar outro `sync`. Falhas temporárias (401, 408, 429 e 5xx) preservam a entrada.
+ * Rejeições definitivas retiram a entrada da fila. O token só é renovado
+ * quando emissor e pessoa coincidem com os do envio original.
  */
 async function replaySendQueue(queue: Queue): Promise<void> {
   const token = await freshTokenFromPage();
   let entry = await queue.shiftRequest();
   while (entry) {
-    const request = token ? withAuthorization(entry.request, token) : entry.request.clone();
+    const request = refreshQueuedAuthorization(entry.request, token);
     try {
-      await fetch(request);
+      const response = await fetch(request);
+      if (retryQueuedResponse(response.status)) throw new Error(`Envio pendente: HTTP ${response.status}.`);
     } catch (error) {
       await queue.unshiftRequest(entry);
       throw new Error("Fila de envio: ainda sem rede, tentando de novo depois.", { cause: error });
@@ -80,22 +83,17 @@ async function replaySendQueue(queue: Queue): Promise<void> {
   }
 }
 
-function withAuthorization(request: Request, token: string): Request {
-  const headers = new Headers(request.headers);
-  headers.set("Authorization", `Bearer ${token}`);
-  return new Request(request, { headers });
-}
-
 async function freshTokenFromPage(): Promise<string | null> {
   const [client] = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
   if (!client) return null;
   return new Promise((resolve) => {
     const channel = new MessageChannel();
-    const timer = setTimeout(() => resolve(null), 3000);
+    const finish = (token: string | null) => { channel.port1.close(); resolve(token); };
+    const timer = setTimeout(() => finish(null), 3000);
     channel.port1.onmessage = (event) => {
       clearTimeout(timer);
       const data = event.data as { token?: string | null } | null;
-      resolve(typeof data?.token === "string" ? data.token : null);
+      finish(typeof data?.token === "string" ? data.token : null);
     };
     client.postMessage({ type: "spark:send-queue:token?" }, [channel.port2]);
   });
@@ -112,8 +110,8 @@ self.addEventListener("message", (event) => {
   if (data?.type === "spark:send-queue:query") void broadcastQueueSize();
 });
 
-registerRoute(
-  ({ request, url }) => url.origin === API_ORIGIN && url.pathname.startsWith("/v1/") && !url.pathname.startsWith("/v1/shapes") && WRITE_METHODS.has(request.method),
+for (const method of WRITE_METHODS) registerRoute(
+  ({ request, url }) => url.origin === API_ORIGIN && url.pathname.startsWith("/v1/") && !url.pathname.startsWith("/v1/shapes") && request.method === method,
   async ({ request }) => {
     try {
       return await fetch(request.clone());
@@ -123,4 +121,5 @@ registerRoute(
       return new Response(JSON.stringify({ queued: true }), { status: 202, headers: { "content-type": "application/json" } });
     }
   },
+  method,
 );
