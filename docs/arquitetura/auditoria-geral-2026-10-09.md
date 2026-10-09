@@ -23,9 +23,18 @@ Status: em andamento. Não equivale a certificação de ausência de vulnerabili
 
 ## Pendências de revisão
 
-- Atualizar dependências vulneráveis com avaliação de compatibilidade.
+- Dependências atualizadas: Fastify, adaptador Nest e Nodemailer; overrides de correções compatíveis para transitivas. `pnpm audit --prod --json`: zero alertas em 508 dependências. Checagem completa de compatibilidade passou: 72 tarefas, 36,639 s; log `/tmp/spark-check-dependencies.log`.
 - Revisar concorrência do recálculo de itens/ajustes e termos sem itens.
 - Revisar encerramento dos streams de sync (listener de close no request).
 - Completar matriz de autorização/API/sync e entradas públicas; SSRF/XSS/arquivos.
 - Completar revisão de frontend e performance, rodar orçamento, documentar cobertura e limitações.
 - Commitar unidades validadas, enviar commits locais autorizados e conferir SHA remoto.
+
+## Evidências da revisão de código
+
+- Auth: guard valida JWT via JWKS; resolução de usuário nega usuário desativado; CapabilityGuard nega rota sem capacidade declarada.
+- Sync: tabela permitida explicitamente, organização e usuário determinados no servidor, visões desconhecidas recusadas; pendente revisão do ciclo de vida do stream.
+- Arquivos: controlador exige capacidades distintas de leitura/escrita; pendente revisão do conteúdo e armazenamento.
+- Busca de sinks no frontend: sem `eval`, `new Function` ou HTML bruto nos diretórios de aplicação, UI e blocos. Mensagens do widget limitadas a tamanho/posição; aperfeiçoar validação de origem.
+- Fila offline: confirmar correção do método de registro (Workbox default GET), vincular token renovado ao `sub` e `iss` originais, preservar falhas transitórias. Achados ainda não corrigidos.
+- Link previews: checa DNS antes de fetch, mas a conexão resolve novamente (risco de rebinding); IPv6 mapeado hexadecimal escapa da checagem atual. Correção pendente.
